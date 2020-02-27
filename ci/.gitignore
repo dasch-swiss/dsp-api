@@ -1,7 +1,0 @@
-# Ignore everything in this directory
-*
-# Except this file and the encrypted graphdb license
-!.gitignore
-!decrypt_secrets.sh
-!secrets.tar.gpg
-!README.md

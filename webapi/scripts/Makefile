@@ -10,6 +10,10 @@ graphdb-se-docker-init-knora-test-minimal: ## initializes docker GraphDB-SE with
 graphdb-se-docker-init-knora-test-unit: ## initializes docker GraphDB-SE with the knora-test-unit repository
 	./graphdb-se-docker-init-knora-test-unit.sh
 
+.PHONY: graphdb-se-docker-init-knora-test-unit-minimal
+graphdb-se-docker-init-knora-test-unit-minimal: ## initializes docker GraphDB-SE with the knora-test-unit repository and minimal data
+	./graphdb-se-docker-init-knora-test-unit-minimal.sh
+
 .PHONY: graphdb-free-docker-init-knora-test
 graphdb-free-docker-init-knora-test: ## initializes docker GraphDB-Free with the knora-test repository
 	./graphdb-free-docker-init-knora-test.sh

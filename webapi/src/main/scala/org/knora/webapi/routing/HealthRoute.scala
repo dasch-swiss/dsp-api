@@ -43,7 +43,7 @@ case class HealthCheckResult(name: String,
 trait HealthCheck {
     this: HealthRoute =>
 
-    override implicit val timeout: Timeout = 1.second
+    override implicit val timeout: Timeout = 2997.millis
 
     protected def healthcheck(): Future[HttpResponse] = for {
 
