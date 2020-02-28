@@ -500,13 +500,13 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-10-06T11:05:37Z"
     },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537Z"
     },
-    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
+    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see"
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
     "@type" : "anything:Thing",
@@ -596,13 +596,13 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-10-06T11:05:37Z"
     },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537Z"
     },
-    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
+    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see"
   }, {
     "@id" : "http://rdfh.ch/0000/forbiddenResource",
     "@type" : "knora-api:ForbiddenResource",
@@ -620,13 +620,13 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-10-06T11:05:37Z"
     },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537Z"
     },
-    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
+    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see"
   }, {
     "@id" : "http://rdfh.ch/0000/forbiddenResource",
     "@type" : "knora-api:ForbiddenResource",
@@ -644,13 +644,13 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-10-06T11:05:37Z"
     },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537Z"
     },
-    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
+    "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see"
   } ],
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

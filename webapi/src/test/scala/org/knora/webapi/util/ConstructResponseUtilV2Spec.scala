@@ -51,20 +51,12 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
 
             val resourceFuture: Future[ReadResourceV2] = for {
-                forbiddenResourceSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
-                    resourceIris = Seq(StringFormatter.ForbiddenResourceIri),
-                    targetSchema = ApiV2Complex, // This has no effect, because ForbiddenResource has no values.
-                    requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[ReadResourcesSequenceV2]
-
-                forbiddenResource = forbiddenResourceSeq.toResource(StringFormatter.ForbiddenResourceIri)
-
                 resourceResponse <- ConstructResponseUtilV2.createFullResourceResponse(
                     resourceIri = resourceIri,
                     resourceRdfData = queryResultsSeparated(resourceIri),
                     mappings = Map.empty,
                     queryStandoff = false,
                     versionDate = None,
-                    forbiddenResource = forbiddenResource,
                     responderManager = responderManager,
                     targetSchema = ApiV2Complex,
                     settings = settings,

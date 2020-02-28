@@ -22,8 +22,8 @@ package org.knora.webapi
 import org.knora.webapi.util.SmartIri
 
 /**
-  * Contains string constants for IRIs from ontologies used by the application.
-  */
+ * Contains string constants for IRIs from ontologies used by the application.
+ */
 object OntologyConstants {
 
     object Rdf {
@@ -71,9 +71,9 @@ object OntologyConstants {
         val OnDatatype: IRI = OwlPrefixExpansion + "onDatatype"
 
         /**
-          * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
-          * a particular type can have.
-          */
+         * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
+         * a particular type can have.
+         */
         val cardinalityOWLRestrictions: Set[IRI] = Set(
             Cardinality,
             MinCardinality,
@@ -83,8 +83,8 @@ object OntologyConstants {
         val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
 
         /**
-          * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-          */
+         * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+         */
         val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
             Ontology,
             Class,
@@ -120,8 +120,8 @@ object OntologyConstants {
     }
 
     /**
-      * http://schema.org
-      */
+     * http://schema.org
+     */
     object SchemaOrg {
         val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
         val Name: IRI = SchemaOrgPrefixExpansion + "name"
@@ -134,8 +134,8 @@ object OntologyConstants {
     }
 
     /**
-      * Ontology labels that are reserved for built-in ontologies.
-      */
+     * Ontology labels that are reserved for built-in ontologies.
+     */
     val BuiltInOntologyLabels: Set[String] = Set(
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraAdmin.KnoraAdminOntologyLabel,
@@ -165,6 +165,8 @@ object OntologyConstants {
         val MovingImageRepresentation: IRI = KnoraBasePrefixExpansion + "MovingImageRepresentation"
         val StillImageRepresentation: IRI = KnoraBasePrefixExpansion + "StillImageRepresentation"
         val TextRepresentation: IRI = KnoraBasePrefixExpansion + "TextRepresentation"
+
+        val ForbiddenResource: IRI = KnoraBasePrefixExpansion + "ForbiddenResource"
 
         val XMLToStandoffMapping: IRI = KnoraBasePrefixExpansion + "XMLToStandoffMapping"
         val HasMappingElement: IRI = KnoraBasePrefixExpansion + "hasMappingElement"
@@ -528,14 +530,14 @@ object OntologyConstants {
         val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
 
         /**
-          * The system user is the owner of objects that are created by the system, rather than directly by the user,
-          * such as link values for standoff resource references.
-          */
+         * The system user is the owner of objects that are created by the system, rather than directly by the user,
+         * such as link values for standoff resource references.
+         */
         val SystemUser: IRI = KnoraAdminPrefixExpansion + "SystemUser"
 
         /**
-          * Every user not logged-in is per default an anonymous user.
-          */
+         * Every user not logged-in is per default an anonymous user.
+         */
         val AnonymousUser: IRI = KnoraAdminPrefixExpansion + "AnonymousUser"
     }
 
@@ -752,17 +754,17 @@ object OntologyConstants {
         val KnoraApiPrefix: String = KnoraApiOntologyLabel + ":"
 
         /**
-          * Returns `true` if the specified IRI is `knora-api:Resource` in Knora API v2, in the simple
-          * or complex schema.
-          */
+         * Returns `true` if the specified IRI is `knora-api:Resource` in Knora API v2, in the simple
+         * or complex schema.
+         */
         def isKnoraApiV2Resource(iri: SmartIri): Boolean = {
             val iriStr = iri.toString
             iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2Complex.Resource
         }
 
         /**
-          * Returns the IRI of `knora-api:subjectType` in the specified schema.
-          */
+         * Returns the IRI of `knora-api:subjectType` in the specified schema.
+         */
         def getSubjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
             apiV2Schema match {
                 case ApiV2Simple => KnoraApiV2Simple.SubjectType
@@ -771,8 +773,8 @@ object OntologyConstants {
         }
 
         /**
-          * Returns the IRI of `knora-api:objectType` in the specified schema.
-          */
+         * Returns the IRI of `knora-api:objectType` in the specified schema.
+         */
         def getObjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
             apiV2Schema match {
                 case ApiV2Simple => KnoraApiV2Simple.ObjectType
@@ -1125,9 +1127,9 @@ object OntologyConstants {
     }
 
     /**
-      * A map of IRIs in each possible source schema to the corresponding IRIs in each possible target schema, for the
-      * cases where this can't be done formally by [[org.knora.webapi.util.SmartIri]].
-      */
+     * A map of IRIs in each possible source schema to the corresponding IRIs in each possible target schema, for the
+     * cases where this can't be done formally by [[org.knora.webapi.util.SmartIri]].
+     */
     val CorrespondingIris: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
         (InternalSchema, ApiV2Simple) -> Map(
             // All the values of this map must be either properties or datatypes. PropertyInfoContentV2.toOntologySchema

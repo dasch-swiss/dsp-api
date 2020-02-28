@@ -854,7 +854,6 @@ object ConstructResponseUtilV2 {
      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
      * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
      * @param versionDate               if defined, represents the requested time in the the resources' version history.
-     * @param forbiddenResource         the `ForbiddenResource`.
      * @param responderManager          the Knora responder manager.
      * @param targetSchema              the schema of the response.
      * @param settings                  the application's settings.
@@ -867,7 +866,6 @@ object ConstructResponseUtilV2 {
                                        mappings: Map[IRI, MappingAndXSLTransformation],
                                        queryStandoff: Boolean,
                                        versionDate: Option[Instant],
-                                       forbiddenResource: ReadResourceV2,
                                        responderManager: ActorRef,
                                        targetSchema: ApiV2Schema,
                                        settings: SettingsImpl,
@@ -894,7 +892,7 @@ object ConstructResponseUtilV2 {
                     // Yes. Replace it with the forbidden resource.
                     Future {
                         linkValue.copy(
-                            nestedResource = Some(forbiddenResource)
+                            nestedResource = Some(stringFormatter.forbiddenResource)
                         )
                     }
                 } else {
@@ -906,7 +904,6 @@ object ConstructResponseUtilV2 {
                             mappings = mappings,
                             queryStandoff = queryStandoff,
                             versionDate = versionDate,
-                            forbiddenResource = forbiddenResource,
                             responderManager = responderManager,
                             requestingUser = requestingUser,
                             targetSchema = targetSchema,
@@ -930,7 +927,6 @@ object ConstructResponseUtilV2 {
      * @param mappings          the mappings needed for standoff conversions and XSL transformations.
      * @param queryStandoff     if `true`, make separate queries to get the standoff for text values.
      * @param versionDate       if defined, represents the requested time in the the resources' version history.
-     * @param forbiddenResource the ForbiddenResource.
      * @param responderManager  the Knora responder manager.
      * @param targetSchema      the schema of the response.
      * @param settings          the application's settings.
@@ -942,7 +938,6 @@ object ConstructResponseUtilV2 {
                                                      mappings: Map[IRI, MappingAndXSLTransformation],
                                                      queryStandoff: Boolean,
                                                      versionDate: Option[Instant] = None,
-                                                     forbiddenResource: ReadResourceV2,
                                                      responderManager: ActorRef,
                                                      targetSchema: ApiV2Schema,
                                                      settings: SettingsImpl,
@@ -1080,7 +1075,6 @@ object ConstructResponseUtilV2 {
                     mappings = mappings,
                     queryStandoff = queryStandoff,
                     versionDate = versionDate,
-                    forbiddenResource = forbiddenResource,
                     responderManager = responderManager,
                     requestingUser = requestingUser,
                     targetSchema = targetSchema,
@@ -1111,7 +1105,6 @@ object ConstructResponseUtilV2 {
      * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
      * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
      * @param versionDate              if defined, represents the requested time in the the resources' version history.
-     * @param forbiddenResource        the ForbiddenResource.
      * @param responderManager         the Knora responder manager.
      * @param targetSchema             the schema of the response.
      * @param settings                 the application's settings.
@@ -1123,7 +1116,6 @@ object ConstructResponseUtilV2 {
                                         mappings: Map[IRI, MappingAndXSLTransformation],
                                         queryStandoff: Boolean,
                                         versionDate: Option[Instant],
-                                        forbiddenResource: ReadResourceV2,
                                         responderManager: ActorRef,
                                         targetSchema: ApiV2Schema,
                                         settings: SettingsImpl,
@@ -1171,7 +1163,6 @@ object ConstructResponseUtilV2 {
                                 valueObject = valObj,
                                 mappings = mappings,
                                 queryStandoff = queryStandoff,
-                                forbiddenResource = forbiddenResource,
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
                                 targetSchema = targetSchema,
@@ -1263,7 +1254,6 @@ object ConstructResponseUtilV2 {
      * @param mappings          the mappings needed for standoff conversions and XSL transformations.
      * @param queryStandoff     if `true`, make separate queries to get the standoff for text values.
      * @param versionDate       if defined, represents the requested time in the the resources' version history.
-     * @param forbiddenResource the ForbiddenResource.
      * @param responderManager  the Knora responder manager.
      * @param targetSchema      the schema of response.
      * @param settings          the application's settings.
@@ -1275,7 +1265,6 @@ object ConstructResponseUtilV2 {
                                    mappings: Map[IRI, MappingAndXSLTransformation],
                                    queryStandoff: Boolean,
                                    versionDate: Option[Instant],
-                                   forbiddenResource: ReadResourceV2,
                                    responderManager: ActorRef,
                                    targetSchema: ApiV2Schema,
                                    settings: SettingsImpl,
@@ -1287,7 +1276,6 @@ object ConstructResponseUtilV2 {
             mappings = mappings,
             queryStandoff = queryStandoff,
             versionDate = versionDate,
-            forbiddenResource = forbiddenResource,
             responderManager = responderManager,
             requestingUser = requestingUser,
             targetSchema = targetSchema,
@@ -1302,7 +1290,6 @@ object ConstructResponseUtilV2 {
      * @param orderByResourceIri the order in which the resources should be returned.
      * @param mappings           the mappings to convert standoff to XML, if any.
      * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
-     * @param forbiddenResource  the ForbiddenResource.
      * @param responderManager   the Knora responder manager.
      * @param targetSchema       the schema of response.
      * @param settings           the application's settings.
@@ -1313,7 +1300,6 @@ object ConstructResponseUtilV2 {
                              orderByResourceIri: Seq[IRI],
                              mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
                              queryStandoff: Boolean,
-                             forbiddenResource: ReadResourceV2,
                              responderManager: ActorRef,
                              targetSchema: ApiV2Schema,
                              settings: SettingsImpl,
@@ -1335,7 +1321,6 @@ object ConstructResponseUtilV2 {
                             mappings = mappings,
                             queryStandoff = queryStandoff,
                             versionDate = None,
-                            forbiddenResource = forbiddenResource,
                             responderManager = responderManager,
                             targetSchema = targetSchema,
                             settings = settings,
@@ -1344,7 +1329,7 @@ object ConstructResponseUtilV2 {
 
                     case None =>
                         // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)
-                        Future(forbiddenResource)
+                        Future(stringFormatter.forbiddenResource)
 
                 }
         }.toVector

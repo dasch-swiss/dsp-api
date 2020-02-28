@@ -1122,7 +1122,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             versionDate: Option[Instant],
                                             queryStandoff: Boolean,
                                             requestingUser: UserADM): Future[RdfResources] = {
-
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1134,6 +1133,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         )
 
         for {
+            _ <- Future {
+                if (resourceIrisDistinct.toSet.contains(StringFormatter.ForbiddenResourceIri)) {
+                    throw BadRequestException(s"<${StringFormatter.ForbiddenResourceIri}> cannot be requested")
+                }
+            }
+
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = resourceIrisDistinct,
@@ -1183,7 +1188,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1210,8 +1214,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
-
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
                     ConstructResponseUtilV2.createFullResourceResponse(
@@ -1220,7 +1222,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = mappingsAsMap,
                         queryStandoff = queryStandoff,
                         versionDate = versionDate,
-                        forbiddenResource = forbiddenResource,
                         responderManager = responderManager,
                         targetSchema = targetSchema,
                         settings = settings,
@@ -1266,8 +1267,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
-
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
                     ConstructResponseUtilV2.createFullResourceResponse(
@@ -1276,7 +1275,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
                         queryStandoff = false,
                         versionDate = None,
-                        forbiddenResource = forbiddenResource,
                         responderManager = responderManager,
                         targetSchema = targetSchema,
                         settings = settings,

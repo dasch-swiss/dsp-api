@@ -24,10 +24,9 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesGetRequestV2}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -108,16 +107,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     /**
      * Provides logging
      */
-    val log: Logger = logger
-
-    protected lazy val forbiddenResourceFuture: Future[ReadResourceV2] = {
-        for {
-            forbiddenResourceSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
-                resourceIris = Seq(StringFormatter.ForbiddenResourceIri),
-                targetSchema = ApiV2Complex, // This has no effect, because ForbiddenResource has no values.
-                requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[ReadResourcesSequenceV2]
-        } yield forbiddenResourceSeq.toResource(StringFormatter.ForbiddenResourceIri)
-    }
+    protected val log: Logger = logger
 
     /**
      * Checks whether an entity is used in the triplestore.

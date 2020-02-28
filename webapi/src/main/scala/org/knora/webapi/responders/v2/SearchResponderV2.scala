@@ -265,14 +265,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(mappingsAsMap)
 
-            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
-
             resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
-                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
@@ -535,14 +532,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
-
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
-                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
@@ -671,15 +665,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
                     }
 
-                    forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
-
                     // Construct a ReadResourceV2 for each resource that the user has permission to see.
                     searchResponse <- ConstructResponseUtilV2.createSearchResponse(
                         searchResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
                         mappings = mappings,
                         queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
-                        forbiddenResource = forbiddenResource,
                         responderManager = responderManager,
                         targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
@@ -803,13 +794,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             //_ = println(queryResultsSeparated)
 
-            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
-
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparated,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
                 queryStandoff = false,
-                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
