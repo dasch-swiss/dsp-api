@@ -268,6 +268,7 @@
   anything:hasRichtext <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg>;
   anything:hasDate <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q>;
   anything:hasInteger <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg>;
+  anything:hasTimeStamp <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw>;
   anything:hasDecimal <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg>;
   anything:hasBoolean <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ>;
   anything:hasUri <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg>;
@@ -309,6 +310,16 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "0 - 216000";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw> a knora-base:TimeValue;
+  knora-base:valueHasUUID "l6DhS5SCT9WhXSoYEZRTRw"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:valueCreationDate "2019-12-16T09:31:16.095523Z"^^xsd:dateTime;
+  knora-base:valueHasTimeStamp "2019-08-30T10:45:20.173572Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "2019-08-30T10:45:20.173572Z";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ> a knora-base:TextValue;
@@ -643,6 +654,66 @@
   rdfs:label "A thing";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime .
+
+<http://rdfh.ch/0001/nsWBzKwETHCUckokeQm6FA> a anything:Thing;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  rdfs:label "A thing with a timestamp";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:creationDate "2019-08-30T10:45:40Z"^^xsd:dateTime ;
+  anything:hasTimeStamp <http://rdfh.ch/0001/nsWBzKwETHCUckokeQm6FA/values/OBsgI4gkQx67aLeaMjOYEg>;
+  anything:hasInteger <http://rdfh.ch/0001/nsWBzKwETHCUckokeQm6FA/values/lsJayQ5KSa6ck44NrojHDg> .
+
+<http://rdfh.ch/0001/nsWBzKwETHCUckokeQm6FA/values/OBsgI4gkQx67aLeaMjOYEg> a knora-base:TimeValue;
+  knora-base:valueHasUUID "OBsgI4gkQx67aLeaMjOYEg"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:valueCreationDate "2019-08-30T10:45:47.173572Z"^^xsd:dateTime;
+  knora-base:valueHasTimeStamp "2019-08-30T10:45:26.365863Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "2019-08-30T10:45:26.365863Z";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/nsWBzKwETHCUckokeQm6FA/values/lsJayQ5KSa6ck44NrojHDg> a knora-base:IntValue;
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
+  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+  knora-base:valueHasUUID "lsJayQ5KSa6ck44NrojHDg"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2019-08-30T10:45:47.173572Z"^^xsd:dateTime;
+  knora-base:valueHasInteger 999999999;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "999999999" .
+
+<http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ> a anything:Thing;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  rdfs:label "Another thing with a timestamp";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime ;
+  anything:hasTimeStamp <http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ/values/9br5Xy7TTWi6I0uMBOCIfw>;
+  anything:hasInteger <http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ/values/0UfC9GpnSV6tPk7QTrf8qw> .
+
+<http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ/values/9br5Xy7TTWi6I0uMBOCIfw> a knora-base:TimeValue;
+  knora-base:valueHasUUID "9br5Xy7TTWi6I0uMBOCIfw"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:valueCreationDate "2019-08-30T10:47:23.420867Z"^^xsd:dateTime;
+  knora-base:valueHasTimeStamp "2019-08-30T10:47:20.684093Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "2019-08-30T10:47:20.684093Z";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ/values/0UfC9GpnSV6tPk7QTrf8qw> a knora-base:IntValue;
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
+  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+  knora-base:valueHasUUID "0UfC9GpnSV6tPk7QTrf8qw"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2019-08-30T10:47:23.420867Z"^^xsd:dateTime;
+  knora-base:valueHasInteger 999999999;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "999999999" .
 
 <http://rdfh.ch/0001/a-thing-picture> a anything:ThingPicture;
   knora-base:isDeleted false;
@@ -1624,3 +1695,25 @@
   knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList>;
   knora-base:listNodePosition 1;
   rdfs:label "Tree list node 11"@en .
+
+<http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg> a knora-base:XSLTransformation;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>;
+  knora-base:attachedToUser <http://rdfh.ch/users/root>;
+  knora-base:creationDate "2020-02-06T11:55:47.860023Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:hasTextFileValue <http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg/values/geQNPU4USB61YhNHHarQ5A>;
+  knora-base:isDeleted false;
+  rdfs:label "BEOL header XSLT" .
+
+<http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg/values/geQNPU4USB61YhNHHarQ5A> a knora-base:TextFileValue;
+  knora-base:attachedToUser <http://rdfh.ch/users/root>;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:internalFilename "missing.xsl";
+  knora-base:internalMimeType "text/xml";
+  knora-base:isDeleted false;
+  knora-base:originalFilename "header.xsl";
+  knora-base:originalMimeType "text/xml";
+  knora-base:valueCreationDate "2020-02-06T11:55:47.860023Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "header.xsl";
+  knora-base:valueHasUUID "geQNPU4USB61YhNHHarQ5A" .

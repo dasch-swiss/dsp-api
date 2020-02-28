@@ -37,6 +37,9 @@ with existing data, the following must happen:
   existing repositories so that they are compatible with the code changes
   introduced in the pull request.
 
+The order of version numbers must correspond to the order in which the pull requests
+are merged.
+
 ## Adding an Upgrade Plugin
 
 An upgrade plugin is a Scala class that extends `UpgradePlugin`. The name of the plugin

@@ -125,6 +125,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         "boolean-value" -> SharedTestDataADM.TestDing.booleanValueUuid,
         "uri-value" -> SharedTestDataADM.TestDing.uriValueUuid,
         "interval-value" -> SharedTestDataADM.TestDing.intervalValueUuid,
+        "time-value" -> SharedTestDataADM.TestDing.timeValueUuid,
         "color-value" -> SharedTestDataADM.TestDing.colorValueUuid,
         "geom-value" -> SharedTestDataADM.TestDing.geomValueUuid,
         "geoname-value" -> SharedTestDataADM.TestDing.geonameValueUuid,
@@ -312,6 +313,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-time-value-request"),
+                    text = SharedTestDataADM.createTimeValueRequest(
+                        resourceIri = SharedTestDataADM.AThing.iri,
+                        timeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
+                    )
+                ),
+                SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-list-value-request"),
                     text = SharedTestDataADM.createListValueRequest(
                         resourceIri = SharedTestDataADM.AThing.iri,
@@ -348,6 +356,26 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
             )
         )
+    }
+
+    private def createValueTestResponse: Future[SourceCodeFileContent] = {
+        val createValueResponseV2: CreateValueResponseV2 = CreateValueResponseV2(
+            valueIri = SharedTestDataADM.testResponseValueIri,
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueUUID = SharedTestDataADM.testResponseValueUUID,
+            projectADM = SharedTestDataADM.anythingProject
+        )
+
+        Future {
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-value-response"),
+                text = createValueResponseV2.toJsonLDDocument(
+                    targetSchema = ApiV2Complex,
+                    settings = settings,
+                    schemaOptions = Set.empty
+                ).toPrettyString
+            )
+        }
     }
 
     private def updateValue: Route = path(ValuesBasePath) {
@@ -516,6 +544,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("update-time-value-request"),
+                    text = SharedTestDataADM.updateTimeValueRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.timeValueIri,
+                        timeStamp = Instant.parse("2019-12-16T09:33:22.082549Z")
+                    )
+                ),
+                SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("update-list-value-request"),
                     text = SharedTestDataADM.updateListValueRequest(
                         resourceIri = SharedTestDataADM.TestDing.iri,
@@ -565,6 +601,26 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
             )
         )
+    }
+
+    private def updateValueTestResponse: Future[SourceCodeFileContent] = {
+        val createValueResponseV2: UpdateValueResponseV2 = UpdateValueResponseV2(
+            valueIri = SharedTestDataADM.testResponseValueIri,
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueUUID = SharedTestDataADM.testResponseValueUUID,
+            projectADM = SharedTestDataADM.anythingProject
+        )
+
+        Future {
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-value-response"),
+                text = createValueResponseV2.toJsonLDDocument(
+                    targetSchema = ApiV2Complex,
+                    settings = settings,
+                    schemaOptions = Set.empty
+                ).toPrettyString
+            )
+        }
     }
 
     private def deleteValue: Route = path(ValuesBasePath / "delete") {
@@ -631,6 +687,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             createRequests: Set[SourceCodeFileContent] <- createValueTestRequests
             updateRequests: Set[SourceCodeFileContent] <- updateValueTestRequests
             deleteRequests: Set[SourceCodeFileContent] <- deleteValueTestRequests
-        } yield getResponses ++ createRequests ++ updateRequests ++ deleteRequests
+            createValueResponse: SourceCodeFileContent <- createValueTestResponse
+            updateValueResponse: SourceCodeFileContent <- updateValueTestResponse
+        } yield getResponses ++ createRequests ++ updateRequests ++ deleteRequests + createValueResponse + updateValueResponse
     }
 }

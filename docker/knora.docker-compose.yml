@@ -7,9 +7,8 @@ services:
     ports:
       - "7200:7200"
     volumes:
-      - ${KNORA_GDB_LICENSE_FILE}:/graphdb/graphdb.license
-      - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import
-      - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home
+      - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import:delegated
+      - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home:delegated
     networks:
       - knora-net
     environment:
@@ -23,9 +22,9 @@ services:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
-      - ${PWD}/sipi/config:/sipi/config
-      - ${PWD}/sipi/images:/sipi/images:delegated
-      - ${PWD}/sipi/server:/sipi/server:delegated
+      - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
+      - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
+      - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
     networks:
       - knora-net
     restart: unless-stopped
@@ -56,10 +55,11 @@ services:
     environment:
       - KNORA_AKKA_LOGLEVEL=DEBUG
       - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
+      - KNORA_WEBAPI_DB_CONNECTIONS=${KNORA_WEBAPI_DB_CONNECTIONS}
       - KNORA_WEBAPI_TRIPLESTORE_HOST=db
       - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=${KNORA_GDB_TYPE}
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
-      - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=knora-test
+      - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=${KNORA_GRAPHDB_REPOSITORY_NAME}
       - KNORA_WEBAPI_CACHE_SERVICE_ENABLED=true
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT=6379

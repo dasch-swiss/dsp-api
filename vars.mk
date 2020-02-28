@@ -1,7 +1,7 @@
 SIPI_VERSION := 2.0.1
 GRAPHDB_SE_VERSION := 9.0.0
 GRAPHDB_FREE_VERSION := 9.0.0
-GRAPHDB_HEAP_SIZE := 5G
+_GRAPHDB_HEAP_SIZE := 5G
 
 REPO_PREFIX := daschswiss
 KNORA_API_REPO := knora-api
@@ -11,6 +11,8 @@ KNORA_SIPI_REPO := knora-sipi
 KNORA_ASSETS_REPO := knora-assets
 KNORA_UPGRADE_REPO := knora-upgrade
 KNORA_SALSAH1_REPO := knora-salsah1
+KNORA_WEBAPI_DB_CONNECTIONS := 2
+KNORA_GRAPHDB_REPOSITORY_NAME := knora-test
 
 ifeq ($(BUILD_TAG),)
   BUILD_TAG := $(shell git describe --tag --dirty --abbrev=7)
@@ -63,8 +65,15 @@ ifeq ($(KNORA_GDB_HOME),)
   KNORA_GDB_HOME := unknown
 endif
 
-ifeq ($(GDB_HEAP_SIZE),)
-  KNORA_GDB_HEAP_SIZE := $(GRAPHDB_HEAP_SIZE)
+ifeq ($(GRAPHDB_HEAP_SIZE),)
+  KNORA_GDB_HEAP_SIZE := $(_GRAPHDB_HEAP_SIZE)
 else
-  KNORA_GDB_HEAP_SIZE := $(GDB_HEAP_SIZE)
+  KNORA_GDB_HEAP_SIZE := $(GRAPHDB_HEAP_SIZE)
+endif
+
+UNAME := $(shell uname)
+ifeq ($(UNAME),Darwin)
+  DOCKERHOST :=  $(shell ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2)
+else
+  DOCKERHOST := $(shell ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+')
 endif

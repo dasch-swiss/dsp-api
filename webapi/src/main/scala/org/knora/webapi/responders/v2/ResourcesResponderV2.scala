@@ -1333,7 +1333,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
             gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = gravsearchTemplateUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
+                fileUrl = gravsearchTemplateUrl,
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
+                senderName = this.getClass.getName
+            )).mapTo[SipiGetTextFileResponse]
             gravsearchTemplate: String = response.content
 
         } yield gravsearchTemplate
