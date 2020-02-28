@@ -30,15 +30,13 @@ import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
-import org.knora.webapi.util.clientapi._
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object PermissionsRouteADM {
-    val PermissionsBasePath = PathMatcher("admin" / "permissions")
+    val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
     val PermissionsBasePathString: String = "/admin/permissions"
 }
 
@@ -49,28 +47,9 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     import PermissionsRouteADM._
 
     /**
-     * The name of this [[ClientEndpoint]].
-     */
-    override val name: String = "PermissionsEndpoint"
-
-    /**
      * The directory name to be used for this endpoint's code.
      */
     override val directoryName: String = "permissions"
-
-    /**
-     * The URL path of of this [[ClientEndpoint]].
-     */
-    override val urlPath: String = "/permissions"
-
-    /**
-     * A description of this [[ClientEndpoint]].
-     */
-    override val description: String = "An endpoint for working with Knora permissions."
-
-    // Classes used in client function definitions.
-
-    private val AdministrativePermissionResponse = classRef(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse.toSmartIri)
 
     private val projectIri: String = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
     private val groupIri: String = URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
@@ -101,54 +80,21 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         }
     }
 
-    private val getAdministrativePermissionFunction: ClientFunction =
-        "getAdministrativePermission" description "Gets the administrative permission for a project and group." params(
-            "projectIri" description "The project IRI." paramType UriDatatype,
-            "groupIri" description "The group IRI." paramType UriDatatype,
-        ) doThis {
-            httpGet(
-                path = arg("projectIri") / arg("groupIri")
-            )
-        } returns AdministrativePermissionResponse
-
-    /*
-    // Commented out because the 'projectType' parameter is ignored.
-
-    private val getAdministrativePermissionByTypeFunction: ClientFunction =
-        "getAdministrativePermissionByType" description "Gets the administrative permission for a project and group, specifying a permission type." params(
-            "projectIri" description "The project IRI." paramType UriDatatype,
-            "groupIri" description "The group IRI." paramType UriDatatype,
-            "permissionType" description "The permission type." paramType StringDatatype
-        ) doThis {
-            httpGet(
-                path = arg("projectIri") / arg("groupIri"),
-                params = Seq("permissionType" -> arg("permissionType"))
-            )
-        } returns AdministrativePermissionResponse
-     */
-
-    private def getAdministrativePermissionTestResponse: Future[SourceCodeFileContent] = {
+    private def getAdministrativePermissionTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/$projectIri/$groupIri"))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-administrative-permission-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-response"),
             text = responseStr
         )
     }
-
-    /**
-     * The functions defined by this [[ClientEndpoint]].
-     */
-    override val functions: Seq[ClientFunction] = Seq(
-        getAdministrativePermissionFunction
-    )
 
     /**
      * Returns test data for this endpoint.
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
         Future.sequence {
             Set(
                 getAdministrativePermissionTestResponse

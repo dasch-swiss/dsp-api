@@ -19,7 +19,6 @@
 
 package org.knora.webapi.util
 
-import java.net.URLDecoder
 import java.nio.ByteBuffer
 import java.text.ParseException
 import java.time._
@@ -45,7 +44,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.JavaUtil.Optional
-import org.knora.webapi.util.clientapi.{ClientCollectionTypeParser, CollectionType}
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -365,22 +363,20 @@ object StringFormatter {
     /**
      * Holds information extracted from the IRI.
      *
-     * @param iriType              the type of the IRI.
-     * @param projectCode          the IRI's project code, if any.
-     * @param ontologyName         the IRI's ontology name, if any.
-     * @param entityName           the IRI's entity name, if any.
-     * @param clientCollectionType the [[CollectionType]] represented by this IRI, if any.
-     * @param resourceID           if this is a resource IRI or value IRI, its resource ID.
-     * @param valueID              if this is a value IRI, its value ID.
-     * @param standoffStartIndex   if this is a standoff IRI, its start index.
-     * @param ontologySchema       the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
-     * @param isBuiltInDef         `true` if the IRI refers to a built-in Knora ontology or ontology entity.
+     * @param iriType            the type of the IRI.
+     * @param projectCode        the IRI's project code, if any.
+     * @param ontologyName       the IRI's ontology name, if any.
+     * @param entityName         the IRI's entity name, if any.
+     * @param resourceID         if this is a resource IRI or value IRI, its resource ID.
+     * @param valueID            if this is a value IRI, its value ID.
+     * @param standoffStartIndex if this is a standoff IRI, its start index.
+     * @param ontologySchema     the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
+     * @param isBuiltInDef       `true` if the IRI refers to a built-in Knora ontology or ontology entity.
      */
     private case class SmartIriInfo(iriType: IriType,
                                     projectCode: Option[String] = None,
                                     ontologyName: Option[String] = None,
                                     entityName: Option[String] = None,
-                                    clientCollectionType: Option[CollectionType] = None,
                                     resourceID: Option[String] = None,
                                     valueID: Option[String] = None,
                                     standoffStartIndex: Option[Int] = None,
@@ -516,11 +512,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def isKnoraApiV2EntityIri: Boolean
 
     /**
-     * Returns `true` if this IRI represents a collection type for use in client code generation.
-     */
-    def isClientCollectionTypeIri: Boolean
-
-    /**
      * Returns the IRI's project code, if any.
      */
     def getProjectCode: Option[String]
@@ -554,11 +545,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
      * If this is a Knora entity IRI, returns the name of the entity. Otherwise, throws [[DataConversionException]].
      */
     def getEntityName: String
-
-    /**
-     * If this IRI represents a collection type for use in client code generation, returns the collection type.
-     */
-    def getClientCollectionType: CollectionType
 
     /**
      * If this is a Knora ontology IRI, constructs a Knora entity IRI based on it. Otherwise, throws [[DataConversionException]].
@@ -1027,22 +1013,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
 
                     val hashPos = iri.lastIndexOf('#')
 
-                    val (namespace: String, entityName: Option[String], maybeClientCollectionType: Option[CollectionType]) = if (hashPos >= 0 && hashPos < iri.length) {
+                    val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
                         val namespace = iri.substring(0, hashPos)
                         val entityName = iri.substring(hashPos + 1)
 
-                        // Is the entity a type annotation representing a collection type for client code generation?
-                        if (entityName.startsWith(ClientCollectionTypeKeyword)) {
-                            // Yes. Parse it.
-                            val typeStr = URLDecoder.decode(entityName, "UTF-8").substring(ClientCollectionTypeKeyword.length)
-                            val clientCollectionType = ClientCollectionTypeParser.parse(typeStr = typeStr, ontologyIri = toSmartIri(namespace))
-                            (namespace, Some(entityName), Some(clientCollectionType))
-                        } else {
-                            // No. Validate the entity name as an NCName.
-                            (namespace, Some(validateNCName(entityName, errorFun)), None)
-                        }
+                        // Validate the entity name as an NCName.
+                        (namespace, Some(validateNCName(entityName, errorFun)))
                     } else {
-                        (iri, None, None)
+                        (iri, None)
                     }
 
                     // Remove the URL scheme (http://), and split the remainder of the namespace into slash-delimited segments.
@@ -1151,7 +1129,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
                             projectCode = projectCode,
                             ontologyName = Some(ontologyName),
                             entityName = entityName,
-                            clientCollectionType = maybeClientCollectionType,
                             ontologySchema = ontologySchema,
                             isBuiltInDef = hasBuiltInOntologyName,
                             sharedOntology = sharedOntology
@@ -1189,9 +1166,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
 
         override def isKnoraOntologyIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologyName.nonEmpty && iriInfo.entityName.isEmpty
 
-        override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty && iriInfo.clientCollectionType.isEmpty
-
-        override def isClientCollectionTypeIri: Boolean = iriInfo.clientCollectionType.nonEmpty
+        override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty
 
         override def getProjectCode: Option[String] = iriInfo.projectCode
 
@@ -1245,13 +1220,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
             iriInfo.entityName match {
                 case Some(name) => name
                 case None => throw DataConversionException(s"Expected a Knora entity IRI: $iri")
-            }
-        }
-
-        override def getClientCollectionType: CollectionType = {
-            iriInfo.clientCollectionType match {
-                case Some(collectionType) => collectionType
-                case None => throw DataConversionException(s"Expected a client collection type IRI: $iri")
             }
         }
 

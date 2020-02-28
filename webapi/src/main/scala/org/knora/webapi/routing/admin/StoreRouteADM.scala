@@ -41,7 +41,7 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath = Route {
+    override def knoraApiPath: Route = Route {
         path("admin" / "store") {
             get {
                 requestContext =>
