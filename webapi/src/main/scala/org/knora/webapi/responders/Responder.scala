@@ -27,7 +27,7 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesGetRequestV2}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{ApiV2Complex, InconsistentTriplestoreDataException, KnoraDispatchers, KnoraSystemInstances, Settings, SettingsImpl, UnexpectedMessageException}
+import org.knora.webapi._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps

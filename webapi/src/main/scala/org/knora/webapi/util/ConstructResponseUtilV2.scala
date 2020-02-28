@@ -37,7 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetRemainingStandoffFromTextValueRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, ViewPermission}
 import org.knora.webapi.util.date.{CalendarNameV2, DatePrecisionV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
@@ -52,66 +52,66 @@ object ConstructResponseUtilV2 {
     )
 
     /**
-      * A map of resource IRIs to resource RDF data.
-      */
+     * A map of resource IRIs to resource RDF data.
+     */
     type RdfResources = Map[IRI, ResourceWithValueRdfData]
 
     /**
-      * Makes an empty instance of [[RdfResources]].
-      */
+     * Makes an empty instance of [[RdfResources]].
+     */
     def emptyRdfResources: RdfResources = Map.empty
 
     /**
-      * A map of property IRIs to value RDF data.
-      */
+     * A map of property IRIs to value RDF data.
+     */
     type RdfPropertyValues = Map[SmartIri, Seq[ValueRdfData]]
 
     /**
-      * Makes an empty instance of [[RdfPropertyValues]].
-      */
+     * Makes an empty instance of [[RdfPropertyValues]].
+     */
     def emptyRdfPropertyValues: RdfPropertyValues = Map.empty
 
     /**
-      * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
-      */
+     * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
+     */
     type Statements = Map[IRI, ConstructPredicateObjects]
 
     /**
-      * A flattened map of predicates to objects. This assumes that each predicate has
-      * * only one object.
-      */
+     * A flattened map of predicates to objects. This assumes that each predicate has
+     * * only one object.
+     */
     type FlatPredicateObjects = Map[SmartIri, LiteralV2]
 
     /**
-      * A map of subject IRIs to flattened maps of predicates to objects.
-      */
+     * A map of subject IRIs to flattened maps of predicates to objects.
+     */
     type FlatStatements = Map[IRI, Map[SmartIri, LiteralV2]]
 
     /**
-      * Makes an empty instance of [[FlatStatements]].
-      */
+     * Makes an empty instance of [[FlatStatements]].
+     */
     def emptyFlatStatements: FlatStatements = Map.empty
 
     /**
-      * Represents assertions about an RDF subject.
-      */
+     * Represents assertions about an RDF subject.
+     */
     sealed trait RdfData {
         /**
-          * The IRI of the subject.
-          */
+         * The IRI of the subject.
+         */
         val subjectIri: IRI
 
         /**
-          * Assertions about the subject.
-          */
+         * Assertions about the subject.
+         */
         val assertions: FlatPredicateObjects
 
         /**
-          * Returns the optional string object of the specified predicate. Throws an exception if the object is not a string.
-          *
-          * @param predicateIri the predicate.
-          * @return the string object of the predicate.
-          */
+         * Returns the optional string object of the specified predicate. Throws an exception if the object is not a string.
+         *
+         * @param predicateIri the predicate.
+         * @return the string object of the predicate.
+         */
         def maybeStringObject(predicateIri: SmartIri): Option[String] = {
             assertions.get(predicateIri).map {
                 literal => literal.asStringLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
@@ -119,22 +119,22 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Returns the required string object of the specified predicate. Throws an exception if the object is not found or
-          * is not a string.
-          *
-          * @param predicateIri the predicate.
-          * @return the string object of the predicate.
-          */
+         * Returns the required string object of the specified predicate. Throws an exception if the object is not found or
+         * is not a string.
+         *
+         * @param predicateIri the predicate.
+         * @return the string object of the predicate.
+         */
         def requireStringObject(predicateIri: SmartIri): String = {
             maybeStringObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
-          * Returns the optional IRI object of the specified predicate. Throws an exception if the object is not an IRI.
-          *
-          * @param predicateIri the predicate.
-          * @return the IRI object of the predicate.
-          */
+         * Returns the optional IRI object of the specified predicate. Throws an exception if the object is not an IRI.
+         *
+         * @param predicateIri the predicate.
+         * @return the IRI object of the predicate.
+         */
         def maybeIriObject(predicateIri: SmartIri): Option[IRI] = {
             assertions.get(predicateIri).map {
                 literal => literal.asIriLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
@@ -142,22 +142,22 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Returns the required IRI object of the specified predicate. Throws an exception if the object is not found or
-          * is not an IRI.
-          *
-          * @param predicateIri the predicate.
-          * @return the IRI object of the predicate.
-          */
+         * Returns the required IRI object of the specified predicate. Throws an exception if the object is not found or
+         * is not an IRI.
+         *
+         * @param predicateIri the predicate.
+         * @return the IRI object of the predicate.
+         */
         def requireIriObject(predicateIri: SmartIri): IRI = {
             maybeIriObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
-          * Returns the optional integer object of the specified predicate. Throws an exception if the object is not an integer.
-          *
-          * @param predicateIri the predicate.
-          * @return the integer object of the predicate.
-          */
+         * Returns the optional integer object of the specified predicate. Throws an exception if the object is not an integer.
+         *
+         * @param predicateIri the predicate.
+         * @return the integer object of the predicate.
+         */
         def maybeIntObject(predicateIri: SmartIri): Option[Int] = {
             assertions.get(predicateIri).map {
                 literal => literal.asIntLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
@@ -165,22 +165,22 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Returns the required integer object of the specified predicate. Throws an exception if the object is not found or
-          * is not an integer.
-          *
-          * @param predicateIri the predicate.
-          * @return the integer object of the predicate.
-          */
+         * Returns the required integer object of the specified predicate. Throws an exception if the object is not found or
+         * is not an integer.
+         *
+         * @param predicateIri the predicate.
+         * @return the integer object of the predicate.
+         */
         def requireIntObject(predicateIri: SmartIri): Int = {
             maybeIntObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
-          * Returns the optional boolean object of the specified predicate. Throws an exception if the object is not a boolean.
-          *
-          * @param predicateIri the predicate.
-          * @return the boolean object of the predicate.
-          */
+         * Returns the optional boolean object of the specified predicate. Throws an exception if the object is not a boolean.
+         *
+         * @param predicateIri the predicate.
+         * @return the boolean object of the predicate.
+         */
         def maybeBooleanObject(predicateIri: SmartIri): Option[Boolean] = {
             assertions.get(predicateIri).map {
                 literal => literal.asBooleanLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
@@ -188,22 +188,22 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Returns the required boolean object of the specified predicate. Throws an exception if the object is not found or
-          * is not an boolean value.
-          *
-          * @param predicateIri the predicate.
-          * @return the boolean object of the predicate.
-          */
+         * Returns the required boolean object of the specified predicate. Throws an exception if the object is not found or
+         * is not an boolean value.
+         *
+         * @param predicateIri the predicate.
+         * @return the boolean object of the predicate.
+         */
         def requireBooleanObject(predicateIri: SmartIri): Boolean = {
             maybeBooleanObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
-          * Returns the optional decimal object of the specified predicate. Throws an exception if the object is not a decimal.
-          *
-          * @param predicateIri the predicate.
-          * @return the decimal object of the predicate.
-          */
+         * Returns the optional decimal object of the specified predicate. Throws an exception if the object is not a decimal.
+         *
+         * @param predicateIri the predicate.
+         * @return the decimal object of the predicate.
+         */
         def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] = {
             assertions.get(predicateIri).map {
                 literal => literal.asDecimalLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
@@ -211,23 +211,23 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Returns the required decimal object of the specified predicate. Throws an exception if the object is not found or
-          * is not an decimal value.
-          *
-          * @param predicateIri the predicate.
-          * @return the decimal object of the predicate.
-          */
+         * Returns the required decimal object of the specified predicate. Throws an exception if the object is not found or
+         * is not an decimal value.
+         *
+         * @param predicateIri the predicate.
+         * @return the decimal object of the predicate.
+         */
         def requireDecimalObject(predicateIri: SmartIri): BigDecimal = {
             maybeDecimalObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
 
         /**
-          * Returns the optional timestamp object of the specified predicate. Throws an exception if the object is not a timestamp.
-          *
-          * @param predicateIri the predicate.
-          * @return the timestamp object of the predicate.
-          */
+         * Returns the optional timestamp object of the specified predicate. Throws an exception if the object is not a timestamp.
+         *
+         * @param predicateIri the predicate.
+         * @return the timestamp object of the predicate.
+         */
         def maybeDateTimeObject(predicateIri: SmartIri): Option[Instant] = {
             assertions.get(predicateIri).map {
                 literal => literal.asDateTimeLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
@@ -235,28 +235,28 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Returns the required timestamp object of the specified predicate. Throws an exception if the object is not found or
-          * is not an timestamp value.
-          *
-          * @param predicateIri the predicate.
-          * @return the timestamp object of the predicate.
-          */
+         * Returns the required timestamp object of the specified predicate. Throws an exception if the object is not found or
+         * is not an timestamp value.
+         *
+         * @param predicateIri the predicate.
+         * @return the timestamp object of the predicate.
+         */
         def requireDateTimeObject(predicateIri: SmartIri): Instant = {
             maybeDateTimeObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
     }
 
     /**
-      * Represents the RDF data about a value, possibly including standoff.
-      *
-      * @param subjectIri       the value object's IRI.
-      * @param valueObjectClass the type (class) of the value object.
-      * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
-      * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
-      * @param userPermission   the permission that the requesting user has on the value.
-      * @param assertions       the value objects assertions.
-      * @param standoff         standoff assertions, if any.
-      */
+     * Represents the RDF data about a value, possibly including standoff.
+     *
+     * @param subjectIri       the value object's IRI.
+     * @param valueObjectClass the type (class) of the value object.
+     * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
+     * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
+     * @param userPermission   the permission that the requesting user has on the value.
+     * @param assertions       the value objects assertions.
+     * @param standoff         standoff assertions, if any.
+     */
     case class ValueRdfData(subjectIri: IRI,
                             valueObjectClass: SmartIri,
                             nestedResource: Option[ResourceWithValueRdfData] = None,
@@ -266,14 +266,14 @@ object ConstructResponseUtilV2 {
                             standoff: FlatStatements) extends RdfData
 
     /**
-      * Represents a resource and its values.
-      *
-      * @param subjectIri              the resource IRI.
-      * @param assertions              assertions about the resource (direct statements).
-      * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
-      * @param userPermission          the permission that the requesting user has on the resource.
-      * @param valuePropertyAssertions assertions about value properties.
-      */
+     * Represents a resource and its values.
+     *
+     * @param subjectIri              the resource IRI.
+     * @param assertions              assertions about the resource (direct statements).
+     * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
+     * @param userPermission          the permission that the requesting user has on the resource.
+     * @param valuePropertyAssertions assertions about value properties.
+     */
     case class ResourceWithValueRdfData(subjectIri: IRI,
                                         assertions: FlatPredicateObjects,
                                         isMainResource: Boolean,
@@ -281,23 +281,35 @@ object ConstructResponseUtilV2 {
                                         valuePropertyAssertions: RdfPropertyValues) extends RdfData
 
     /**
-      * Represents a mapping including information about the standoff entities.
-      * May include a default XSL transformation.
-      *
-      * @param mapping           the mapping from XML to standoff and vice versa.
-      * @param standoffEntities  information about the standoff entities referred to in the mapping.
-      * @param XSLTransformation the default XSL transformation to convert the resulting XML (e.g., to HTML), if any.
-      */
+     * A [[ResourceWithValueRdfData]] representing a placeholder for a dependent resource that the user doesn't
+     * have permission to see. It is replaced by `ForbiddenResource` during processing.
+     */
+    val ForbiddenDependentResourcePlaceholder: ResourceWithValueRdfData = ResourceWithValueRdfData(
+        subjectIri = StringFormatter.ForbiddenResourceIri,
+        assertions = Map.empty,
+        isMainResource = false,
+        userPermission = ViewPermission,
+        valuePropertyAssertions = Map.empty
+    )
+
+    /**
+     * Represents a mapping including information about the standoff entities.
+     * May include a default XSL transformation.
+     *
+     * @param mapping           the mapping from XML to standoff and vice versa.
+     * @param standoffEntities  information about the standoff entities referred to in the mapping.
+     * @param XSLTransformation the default XSL transformation to convert the resulting XML (e.g., to HTML), if any.
+     */
     case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV2, XSLTransformation: Option[String])
 
     /**
-      * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
-      * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
-      * The resource Iris represent main resources, dependent resources are contained in the link values as nested structures.
-      *
-      * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
-      * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
-      */
+     * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
+     * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
+     * The resource Iris represent main resources, dependent resources are contained in the link values as nested structures.
+     *
+     * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
+     * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
+     */
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse, requestingUser: UserADM)(implicit stringFormatter: StringFormatter): RdfResources = {
 
         // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
@@ -545,13 +557,13 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Given a resource IRI, finds any link values in the resource, and recursively embeds the target resource in each link value.
-          *
-          * @param resourceIri      the IRI of the resource to start with.
-          * @param alreadyTraversed a set (initially empty) of the IRIs of resources that this function has already
-          *                         traversed, to prevent an infinite loop if a cycle is encountered.
-          * @return the same resource, with any nested resources attached to it.
-          */
+         * Given a resource IRI, finds any link values in the resource, and recursively embeds the target resource in each link value.
+         *
+         * @param resourceIri      the IRI of the resource to start with.
+         * @param alreadyTraversed a set (initially empty) of the IRIs of resources that this function has already
+         *                         traversed, to prevent an infinite loop if a cycle is encountered.
+         * @return the same resource, with any nested resources attached to it.
+         */
         def nestResources(resourceIri: IRI, alreadyTraversed: Set[IRI] = Set.empty[IRI]): ResourceWithValueRdfData = {
             val resource = flatResourcesWithValues(resourceIri)
 
@@ -565,16 +577,23 @@ object ConstructResponseUtilV2 {
                                 if (alreadyTraversed(dependentResourceIri)) {
                                     value
                                 } else {
-                                    // If we don't have the dependent resource, that means that the user doesn't have
-                                    // permission to see it, or it's been marked as deleted. Just return the link
-                                    // value without a nested resource.
+                                    // Do we have the dependent resource?
                                     if (flatResourcesWithValues.contains(dependentResourceIri)) {
+                                        // Yes. Nest it in the link value.
                                         val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
                                         value.copy(
                                             nestedResource = Some(dependentResource)
                                         )
+                                    } else if (resourceIrisNotVisible.contains(dependentResourceIri)) {
+                                        // No, because the user doesn't have permission to see it. Nest a placeholder for
+                                        // ForbiddenResource in the link value.
+                                        value.copy(
+                                            nestedResource = Some(ForbiddenDependentResourcePlaceholder)
+                                        )
                                     } else {
+                                        // We don't have the dependent resource because it is marked as deleted. Just
+                                        // return the link value without a nested resource.
                                         value
                                     }
                                 }
@@ -661,11 +680,11 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Collect all mapping Iris referred to in the given value assertions.
-      *
-      * @param valuePropertyAssertions the given assertions (property -> value object).
-      * @return a set of mapping Iris.
-      */
+     * Collect all mapping Iris referred to in the given value assertions.
+     *
+     * @param valuePropertyAssertions the given assertions (property -> value object).
+     * @return a set of mapping Iris.
+     */
     def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: RdfPropertyValues)(implicit stringFormatter: StringFormatter): Set[IRI] = {
         valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
@@ -693,19 +712,19 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]]. This method is used to process a text value
-      * as returned in an API response, as well as to process a page of standoff markup that is being queried
-      * separately from its text value.
-      *
-      * @param valueObject               the given [[ValueRdfData]].
-      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
-      * @param valueCommentOption        the value's comment, if any.
-      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
-      * @param responderManager          the Knora responder manager.
-      * @param requestingUser            the user making the request.
-      * @return a [[TextValueContentV2]].
-      */
+     * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]]. This method is used to process a text value
+     * as returned in an API response, as well as to process a page of standoff markup that is being queried
+     * separately from its text value.
+     *
+     * @param valueObject               the given [[ValueRdfData]].
+     * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+     * @param valueCommentOption        the value's comment, if any.
+     * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+     * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
+     * @param responderManager          the Knora responder manager.
+     * @param requestingUser            the user making the request.
+     * @return a [[TextValueContentV2]].
+     */
     private def makeTextValueContentV2(resourceIri: IRI,
                                        valueObject: ValueRdfData,
                                        valueObjectValueHasString: Option[String],
@@ -772,17 +791,17 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueRdfData]], constructs a [[FileValueContentV2]].
-      *
-      * @param valueType                 the IRI of the file value type
-      * @param valueObject               the given [[ValueRdfData]].
-      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
-      * @param valueCommentOption        the value's comment, if any.
-      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-      * @param responderManager          the Knora responder manager.
-      * @param requestingUser            the user making the request.
-      * @return a [[FileValueContentV2]].
-      */
+     * Given a [[ValueRdfData]], constructs a [[FileValueContentV2]].
+     *
+     * @param valueType                 the IRI of the file value type
+     * @param valueObject               the given [[ValueRdfData]].
+     * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+     * @param valueCommentOption        the value's comment, if any.
+     * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+     * @param responderManager          the Knora responder manager.
+     * @param requestingUser            the user making the request.
+     * @return a [[FileValueContentV2]].
+     */
     private def makeFileValueContentV2(valueType: IRI,
                                        valueObject: ValueRdfData,
                                        valueObjectValueHasString: String,
@@ -827,21 +846,21 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueRdfData]], constructs a [[LinkValueContentV2]].
-      *
-      * @param valueObject               the given [[ValueRdfData]].
-      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
-      * @param valueCommentOption        the value's comment, if any.
-      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
-      * @param versionDate               if defined, represents the requested time in the the resources' version history.
-      * @param forbiddenResource  the ForbiddenResource.
-      * @param responderManager          the Knora responder manager.
-      * @param targetSchema              the schema of the response.
-      * @param settings                  the application's settings.
-      * @param requestingUser            the user making the request.
-      * @return a [[LinkValueContentV2]].
-      */
+     * Given a [[ValueRdfData]], constructs a [[LinkValueContentV2]].
+     *
+     * @param valueObject               the given [[ValueRdfData]].
+     * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+     * @param valueCommentOption        the value's comment, if any.
+     * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+     * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
+     * @param versionDate               if defined, represents the requested time in the the resources' version history.
+     * @param forbiddenResource         the `ForbiddenResource`.
+     * @param responderManager          the Knora responder manager.
+     * @param targetSchema              the schema of the response.
+     * @param settings                  the application's settings.
+     * @param requestingUser            the user making the request.
+     * @return a [[LinkValueContentV2]].
+     */
     private def makeLinkValueContentV2(valueObject: ValueRdfData,
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
@@ -867,48 +886,57 @@ object ConstructResponseUtilV2 {
             comment = valueCommentOption
         )
 
+        // Is there a nested resource in the link value?
         valueObject.nestedResource match {
-
             case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
-
-                // add information about the referred resource
-
-                for {
-                    nestedResource <- constructReadResourceV2(
-                        resourceIri = referredResourceIri,
-                        resourceWithValueRdfData = nestedResourceAssertions,
-                        mappings = mappings,
-                        queryStandoff = queryStandoff,
-                        versionDate = versionDate,
-                        forbiddenResource = forbiddenResource,
-                        responderManager = responderManager,
-                        requestingUser = requestingUser,
-                        targetSchema = targetSchema,
-                        settings = settings
+                // Yes. Is the nested resource a placeholder for the forbidden resource?
+                if (nestedResourceAssertions.subjectIri == StringFormatter.ForbiddenResourceIri) {
+                    // Yes. Replace it with the forbidden resource.
+                    Future {
+                        linkValue.copy(
+                            nestedResource = Some(forbiddenResource)
+                        )
+                    }
+                } else {
+                    // No. Construct a ReadResourceV2 representing the nested resource.
+                    for {
+                        nestedResource <- constructReadResourceV2(
+                            resourceIri = referredResourceIri,
+                            resourceWithValueRdfData = nestedResourceAssertions,
+                            mappings = mappings,
+                            queryStandoff = queryStandoff,
+                            versionDate = versionDate,
+                            forbiddenResource = forbiddenResource,
+                            responderManager = responderManager,
+                            requestingUser = requestingUser,
+                            targetSchema = targetSchema,
+                            settings = settings
+                        )
+                    } yield linkValue.copy(
+                        nestedResource = Some(nestedResource)
                     )
-                } yield linkValue.copy(
-                    nestedResource = Some(nestedResource) // construct a `ReadResourceV2`
-                )
+                }
 
-
-            case None => FastFuture.successful(linkValue) // do not include information about the referred resource
+            case None =>
+                // There is no nested resource.
+                FastFuture.successful(linkValue)
         }
     }
 
     /**
-      * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
-      *
-      * @param valueObject      the given [[ValueRdfData]].
-      * @param mappings         the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
-      * @param versionDate      if defined, represents the requested time in the the resources' version history.
-      * @param forbiddenResource  the ForbiddenResource.
-      * @param responderManager the Knora responder manager.
-      * @param targetSchema     the schema of the response.
-      * @param settings         the application's settings.
-      * @param requestingUser   the user making the request.
-      * @return a [[ValueContentV2]] representing a value.
-      */
+     * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
+     *
+     * @param valueObject       the given [[ValueRdfData]].
+     * @param mappings          the mappings needed for standoff conversions and XSL transformations.
+     * @param queryStandoff     if `true`, make separate queries to get the standoff for text values.
+     * @param versionDate       if defined, represents the requested time in the the resources' version history.
+     * @param forbiddenResource the ForbiddenResource.
+     * @param responderManager  the Knora responder manager.
+     * @param targetSchema      the schema of the response.
+     * @param settings          the application's settings.
+     * @param requestingUser    the user making the request.
+     * @return a [[ValueContentV2]] representing a value.
+     */
     private def createValueContentV2FromValueRdfData(resourceIri: IRI,
                                                      valueObject: ValueRdfData,
                                                      mappings: Map[IRI, MappingAndXSLTransformation],
@@ -1075,21 +1103,21 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      *
-      * Creates a [[ReadResourceV2]] from a [[ResourceWithValueRdfData]].
-      *
-      * @param resourceIri              the IRI of the resource.
-      * @param resourceWithValueRdfData the Rdf data belonging to the resource.
-      * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
-      * @param versionDate              if defined, represents the requested time in the the resources' version history.
-      * @param forbiddenResource  the ForbiddenResource.
-      * @param responderManager         the Knora responder manager.
-      * @param targetSchema             the schema of the response.
-      * @param settings                 the application's settings.
-      * @param requestingUser           the user making the request.
-      * @return a [[ReadResourceV2]].
-      */
+     *
+     * Creates a [[ReadResourceV2]] from a [[ResourceWithValueRdfData]].
+     *
+     * @param resourceIri              the IRI of the resource.
+     * @param resourceWithValueRdfData the Rdf data belonging to the resource.
+     * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
+     * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
+     * @param versionDate              if defined, represents the requested time in the the resources' version history.
+     * @param forbiddenResource        the ForbiddenResource.
+     * @param responderManager         the Knora responder manager.
+     * @param targetSchema             the schema of the response.
+     * @param settings                 the application's settings.
+     * @param requestingUser           the user making the request.
+     * @return a [[ReadResourceV2]].
+     */
     private def constructReadResourceV2(resourceIri: IRI,
                                         resourceWithValueRdfData: ResourceWithValueRdfData,
                                         mappings: Map[IRI, MappingAndXSLTransformation],
@@ -1228,20 +1256,20 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Creates a response to a full resource request.
-      *
-      * @param resourceIri      the IRI of the requested resource.
-      * @param resourceRdfData  the results returned by the triplestore.
-      * @param mappings         the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
-      * @param versionDate      if defined, represents the requested time in the the resources' version history.
-      * @param forbiddenResource  the ForbiddenResource.
-      * @param responderManager the Knora responder manager.
-      * @param targetSchema     the schema of response.
-      * @param settings         the application's settings.
-      * @param requestingUser   the user making the request.
-      * @return a [[ReadResourceV2]].
-      */
+     * Creates a response to a full resource request.
+     *
+     * @param resourceIri       the IRI of the requested resource.
+     * @param resourceRdfData   the results returned by the triplestore.
+     * @param mappings          the mappings needed for standoff conversions and XSL transformations.
+     * @param queryStandoff     if `true`, make separate queries to get the standoff for text values.
+     * @param versionDate       if defined, represents the requested time in the the resources' version history.
+     * @param forbiddenResource the ForbiddenResource.
+     * @param responderManager  the Knora responder manager.
+     * @param targetSchema      the schema of response.
+     * @param settings          the application's settings.
+     * @param requestingUser    the user making the request.
+     * @return a [[ReadResourceV2]].
+     */
     def createFullResourceResponse(resourceIri: IRI,
                                    resourceRdfData: ResourceWithValueRdfData,
                                    mappings: Map[IRI, MappingAndXSLTransformation],
@@ -1268,19 +1296,19 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Creates a response to a fulltext or extended search.
-      *
-      * @param searchResults      the resources that matched the query and the client has permissions to see.
-      * @param orderByResourceIri the order in which the resources should be returned.
-      * @param mappings           the mappings to convert standoff to XML, if any.
-      * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
-      * @param forbiddenResource  the ForbiddenResource.
-      * @param responderManager   the Knora responder manager.
-      * @param targetSchema       the schema of response.
-      * @param settings           the application's settings.
-      * @param requestingUser     the user making the request.
-      * @return a collection of [[ReadResourceV2]] representing the search results.
-      */
+     * Creates a response to a fulltext or extended search.
+     *
+     * @param searchResults      the resources that matched the query and the client has permissions to see.
+     * @param orderByResourceIri the order in which the resources should be returned.
+     * @param mappings           the mappings to convert standoff to XML, if any.
+     * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
+     * @param forbiddenResource  the ForbiddenResource.
+     * @param responderManager   the Knora responder manager.
+     * @param targetSchema       the schema of response.
+     * @param settings           the application's settings.
+     * @param requestingUser     the user making the request.
+     * @return a collection of [[ReadResourceV2]] representing the search results.
+     */
     def createSearchResponse(searchResults: RdfResources,
                              orderByResourceIri: Seq[IRI],
                              mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
