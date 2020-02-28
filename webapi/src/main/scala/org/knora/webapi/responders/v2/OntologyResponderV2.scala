@@ -1135,8 +1135,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 case (acc, classIri) =>
                     // Is this class IRI hard-coded in the requested schema?
                     if (KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.contains(classIri) ||
-                        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri) ||
-                        KnoraAdminToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
+                        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1163,8 +1162,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 case (acc, propertyIri) =>
                     // Is this property IRI hard-coded in the requested schema?
                     if (KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.contains(propertyIri) ||
-                        KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri) ||
-                        KnoraAdminToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
+                        KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1204,12 +1202,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             // See if any of the requested entities are hard-coded for knora-api.
 
             hardCodedExternalClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
-                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
-                KnoraAdminToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
+                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
 
             hardCodedExternalPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraAdminToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
+                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
 
             // Convert the remaining external entity IRIs to internal ones.
 

@@ -539,109 +539,6 @@ object OntologyConstants {
         val AnonymousUser: IRI = KnoraAdminPrefixExpansion + "AnonymousUser"
     }
 
-    object KnoraAdminV2 {
-        val VersionSegment = "/v2"
-        val KnoraAdminOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraAdmin.KnoraAdminOntologyLabel + VersionSegment
-        val KnoraAdminPrefixExpansion: IRI = KnoraAdminOntologyIri + "#"
-        val UserResponse: IRI = KnoraAdminPrefixExpansion + "UserResponse"
-        val UsersResponse: IRI = KnoraAdminPrefixExpansion + "UsersResponse"
-        val ProjectResponse: IRI = KnoraAdminPrefixExpansion + "ProjectResponse"
-        val ProjectsResponse: IRI = KnoraAdminPrefixExpansion + "ProjectsResponse"
-        val GroupResponse: IRI = KnoraAdminPrefixExpansion + "GroupResponse"
-        val GroupsResponse: IRI = KnoraAdminPrefixExpansion + "GroupsResponse"
-        val Lists: IRI = KnoraAdminPrefixExpansion + "lists"
-        val ListsResponse: IRI = KnoraAdminPrefixExpansion + "ListsResponse"
-        val NodeInfo: IRI = KnoraAdminPrefixExpansion + "nodeinfo"
-        val ListNodeInfo: IRI = KnoraAdminPrefixExpansion + "ListNodeInfo"
-        val ListNode: IRI = KnoraAdminPrefixExpansion + "ListNode"
-        val CreateListRequest: IRI = KnoraAdminPrefixExpansion + "CreateListRequest"
-        val CreateChildNodeRequest: IRI = KnoraAdminPrefixExpansion + "CreateChildNodeRequest"
-        val ListResponse: IRI = KnoraAdminPrefixExpansion + "ListResponse"
-        val UpdateListInfoRequest: IRI = KnoraAdminPrefixExpansion + "UpdateListInfoRequest"
-        val ListNodeInfoResponse: IRI = KnoraAdminPrefixExpansion + "ListNodeInfoResponse"
-        val ListInfoResponse: IRI = KnoraAdminPrefixExpansion + "ListInfoResponse"
-        val ListClass: IRI = KnoraAdminPrefixExpansion + "List"
-        val ListIri: IRI = KnoraAdminPrefixExpansion + "listIri"
-        val ParentNodeIri: IRI = KnoraAdminPrefixExpansion + "parentNodeIri"
-        val Labels: IRI = KnoraAdminPrefixExpansion + "labels"
-        val Comments: IRI = KnoraAdminPrefixExpansion + "comments"
-        val Position: IRI = KnoraAdminPrefixExpansion + "position"
-        val IsRootNode: IRI = KnoraAdminPrefixExpansion + "isRootNode"
-        val HasRootNode: IRI = KnoraAdminPrefixExpansion + "hasRootNode"
-        val Children: IRI = KnoraAdminPrefixExpansion + "children"
-        val Members: IRI = KnoraAdminPrefixExpansion + "members"
-        val MembersResponse: IRI = KnoraAdminPrefixExpansion + "MembersResponse"
-        val AdministrativePermissionResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionResponse"
-        val AdministrativePermissionsResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionsResponse"
-        val Users: IRI = KnoraAdminPrefixExpansion + "users"
-        val UserClass: IRI = KnoraAdminPrefixExpansion + "User"
-        val UpdateUserRequest: IRI = KnoraAdminPrefixExpansion + "UpdateUserRequest"
-        val UserProperty: IRI = KnoraAdminPrefixExpansion + "user"
-        val Username: IRI = KnoraAdminPrefixExpansion + "username"
-        val Email: IRI = KnoraAdminPrefixExpansion + "email"
-        val GivenName: IRI = KnoraAdminPrefixExpansion + "givenName"
-        val FamilyName: IRI = KnoraAdminPrefixExpansion + "familyName"
-        val Lang: IRI = KnoraAdminPrefixExpansion + "lang"
-        val Projects: IRI = KnoraAdminPrefixExpansion + "projects"
-        val ProjectsAdmin: IRI = KnoraAdminPrefixExpansion + "projectsAdmin"
-        val Groups: IRI = KnoraAdminPrefixExpansion + "groups"
-        val SystemAdmin: IRI = KnoraAdminPrefixExpansion + "systemAdmin"
-        val ProjectClass: IRI = KnoraAdminPrefixExpansion + "Project"
-        val ID: IRI = KnoraAdminPrefixExpansion + "id"
-        val Token: IRI = KnoraAdminPrefixExpansion + "token"
-        val Password: IRI = KnoraAdminPrefixExpansion + "password"
-        val SessionID: IRI = KnoraAdminPrefixExpansion + "sessionId"
-        val Shortname: IRI = KnoraAdminPrefixExpansion + "shortname"
-        val Longname: IRI = KnoraAdminPrefixExpansion + "longname"
-        val Shortcode: IRI = KnoraAdminPrefixExpansion + "shortcode"
-        val ProjectDescription: IRI = KnoraAdminPrefixExpansion + "projectDescription"
-        val GroupDescription: IRI = KnoraAdminPrefixExpansion + "groupDescription"
-        val Status: IRI = KnoraAdminPrefixExpansion + "status"
-        val Keywords: IRI = KnoraAdminPrefixExpansion + "keywords"
-        val Logo: IRI = KnoraAdminPrefixExpansion + "logo"
-        val Ontologies: IRI = KnoraAdminPrefixExpansion + "ontologies"
-        val SelfJoin: IRI = KnoraAdminPrefixExpansion + "selfjoin"
-        val GroupClass: IRI = KnoraAdminPrefixExpansion + "Group"
-        val GroupProperty: IRI = KnoraAdminPrefixExpansion + "group"
-        val ProjectProperty: IRI = KnoraAdminPrefixExpansion + "project"
-        val ProjectIri: IRI = KnoraAdminPrefixExpansion + "projectIri"
-        val ProjectWithIriObj: IRI = KnoraAdminPrefixExpansion + "projectWithIriObj"
-        val AdministrativePermissionProperty: IRI = KnoraAdminPrefixExpansion + "administrative_permission"
-        val AdministrativePermissions: IRI = KnoraAdminPrefixExpansion + "administrative_permissions"
-        val AdministrativePermissionClass: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
-        val ProjectRestrictedViewSettings: IRI = KnoraAdminPrefixExpansion + "ProjectRestrictedViewSettings"
-        val ProjectRestrictedViewSettingsResponse: IRI = KnoraAdminPrefixExpansion + "ProjectRestrictedViewSettingsResponse"
-        val Settings: IRI = KnoraAdminPrefixExpansion + "settings"
-        val Size: IRI = KnoraAdminPrefixExpansion + "size"
-        val Watermark: IRI = KnoraAdminPrefixExpansion + "watermark"
-        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
-        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
-        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
-        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
-        val Permission: IRI = KnoraAdminPrefixExpansion + "Permission"
-        val HasPermissions: IRI = KnoraAdminPrefixExpansion + "hasPermissions"
-        val AdditionalInformation: IRI = KnoraAdminPrefixExpansion + "additionalInformation"
-        val PermissionCode: IRI = KnoraAdminPrefixExpansion + "permissionCode"
-        val Iri: IRI = KnoraAdminPrefixExpansion + "iri"
-        val Name: IRI = KnoraAdminPrefixExpansion + "name"
-        val ListProperty: IRI = KnoraAdminPrefixExpansion + "list"
-        val ListInfoProperty: IRI = KnoraAdminPrefixExpansion + "listinfo"
-        val KeywordsProperty: IRI = KnoraAdminPrefixExpansion + "keywords"
-        val KeywordsResponse: IRI = KnoraAdminPrefixExpansion + "KeywordsResponse"
-        val CreateGroupRequest: IRI = KnoraAdminPrefixExpansion + "CreateGroupRequest"
-        val UpdateGroupRequest: IRI = KnoraAdminPrefixExpansion + "UpdateGroupRequest"
-        val UpdateProjectRequest: IRI = KnoraAdminPrefixExpansion + "UpdateProjectRequest"
-        val StringLiteral: IRI = KnoraAdminPrefixExpansion + "StringLiteral"
-        val Value: IRI = KnoraAdminPrefixExpansion + "value"
-        val Language: IRI = KnoraAdminPrefixExpansion + "language"
-        val Permissions: IRI = KnoraAdminPrefixExpansion + "permissions"
-        val PermissionsData: IRI = KnoraAdminPrefixExpansion + "PermissionsData"
-        val GroupsPerProject: IRI = KnoraAdminPrefixExpansion + "groupsPerProject"
-        val AdministrativePermissionsPerProject: IRI = KnoraAdminPrefixExpansion + "administrativePermissionsPerProject"
-        val AdministrativePermissionsPerProjectCollectionType: IRI = KnoraAdminPrefixExpansion + "collection: Map[URI, Array[Permission]]"
-        val GroupsPerProjectCollectionType: IRI = KnoraAdminPrefixExpansion + "collection: Map[URI, Array[URI]]"
-    }
-
     object Standoff {
         val StandoffOntologyLabel: String = "standoff"
         val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + StandoffOntologyLabel
@@ -1180,18 +1077,8 @@ object OntologyConstants {
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
             KnoraBase.PageCount -> KnoraApiV2Complex.DocumentFileValueHasPageCount,
-            KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
-            KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
-            KnoraAdmin.IsInSystemAdminGroup -> KnoraAdminV2.SystemAdmin,
-            KnoraAdmin.KnoraProject -> KnoraAdminV2.ProjectClass,
-            KnoraAdmin.ProjectShortname -> KnoraAdminV2.Shortname,
-            KnoraAdmin.ProjectLongname -> KnoraAdminV2.Longname,
-            KnoraAdmin.ProjectShortcode -> KnoraAdminV2.Shortcode,
-            KnoraAdmin.ProjectKeyword -> KnoraAdminV2.Keywords,
-            KnoraAdmin.ProjectLogo -> KnoraAdminV2.Logo,
-            KnoraAdmin.UserGroup -> KnoraAdminV2.GroupClass,
-            KnoraAdmin.BelongsToProject -> KnoraAdminV2.ProjectProperty,
-            KnoraAdmin.HasSelfJoinEnabled -> KnoraAdminV2.SelfJoin
+            KnoraAdmin.KnoraProject -> Xsd.Uri,
+            KnoraAdmin.User -> Xsd.Uri
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -1231,19 +1118,7 @@ object OntologyConstants {
             KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
             KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
             KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
-            KnoraApiV2Complex.DocumentFileValueHasPageCount -> KnoraBase.PageCount,
-            KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
-            KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
-            KnoraAdminV2.SystemAdmin -> KnoraAdmin.IsInSystemAdminGroup,
-            KnoraAdminV2.ProjectClass -> KnoraAdmin.KnoraProject,
-            KnoraAdminV2.Shortname -> KnoraAdmin.ProjectShortname,
-            KnoraAdminV2.Longname -> KnoraAdmin.ProjectLongname,
-            KnoraAdminV2.Shortcode -> KnoraAdmin.ProjectShortcode,
-            KnoraAdminV2.Keywords -> KnoraAdmin.ProjectKeyword,
-            KnoraAdminV2.Logo -> KnoraAdmin.ProjectLogo,
-            KnoraAdminV2.GroupClass -> KnoraAdmin.UserGroup,
-            KnoraAdminV2.ProjectProperty -> KnoraAdmin.BelongsToProject,
-            KnoraAdminV2.SelfJoin -> KnoraAdmin.HasSelfJoinEnabled
+            KnoraApiV2Complex.DocumentFileValueHasPageCount -> KnoraBase.PageCount
         )
     )
 

@@ -19,13 +19,16 @@
 
 package org.knora.webapi.util.jsonld
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.util.StringFormatter
+import org.scalatest.{Matchers, WordSpecLike}
 import spray.json.{JsValue, JsonParser}
 
 /**
   * Tests [[JsonLDUtil]].
   */
-class JsonLDUtilSpec extends CoreSpec {
+class JsonLDUtilSpec extends WordSpecLike with Matchers {
+
+    StringFormatter.initForTest()
 
     "The JSON-LD utility" should {
         "parse JSON-LD text, compact it with an empty context, convert the result to a JsonLDDocument, and convert that back to text" in {
