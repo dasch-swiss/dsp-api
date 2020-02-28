@@ -94,8 +94,12 @@ If permissions are not given, configurable default permissions are used
 
 To create a value, the user must have **modify permission** on the containing resource.
 
-The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
-and type of the value that was created.
+The response is a JSON-LD document containing:
+ 
+- `@id`: the IRI of the value that was created.
+- `@type`: the value's type.
+- `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions
+  (except for link values, as explained below).
 
 ### Creating a Link Between Resources
 
@@ -126,6 +130,15 @@ we can create a link like this:
 ```
 
 As with ordinary values, permissions on links can be specified by adding `knora-api:hasPermissions`.
+
+The response is a JSON-LD document containing:
+ 
+- `@id`: the IRI of the value that was created.
+- `@type`: the value's type.
+- `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions,
+  unless the link is changed to point to a different resource, in which case it is
+  considered a new link and gets a new UUID. Changing a link's metadata, without
+  changing its target, creates a new version of the link value with the same UUID.
 
 ### Creating a Text Value Without Standoff Markup
 
@@ -356,6 +369,14 @@ and type of the new value version.
 
 If you submit an outdated value ID in a request to update a value, the response will be
 an HTTP 404 (Not Found) error.
+
+The response to a value update request contains:
+
+- `@id`: the IRI of the value that was created.
+- `@type`: the value's type.
+- `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions,
+  unless the value is a link value and is changed to point to a different resource, in which
+  case it is considered a new link and gets a new UUID.
 
 ## Deleting a Value
 

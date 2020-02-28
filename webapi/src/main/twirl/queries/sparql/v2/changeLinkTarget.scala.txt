@@ -44,6 +44,7 @@
   linkSourceIri: IRI,
   linkUpdateForCurrentLink: SparqlTemplateLinkUpdate,
   linkUpdateForNewLink: SparqlTemplateLinkUpdate,
+  newLinkValueUUID: UUID,
   maybeComment: Option[String],
   currentTime: Instant,
   requestingUser: IRI,
@@ -127,7 +128,7 @@ INSERT {
             knora-base:valueHasRefCount @linkUpdateForNewLink.newReferenceCount ;
             knora-base:valueHasOrder ?order ;
             knora-base:isDeleted false ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newLinkValueUUID)}" ;
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
 
         ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueCreator> ;

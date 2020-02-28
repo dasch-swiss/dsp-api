@@ -53,8 +53,8 @@ import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Provides instances of [[StringFormatter]], as well as string formatting constants.
-  */
+ * Provides instances of [[StringFormatter]], as well as string formatting constants.
+ */
 object StringFormatter {
 
     // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
@@ -80,116 +80,116 @@ object StringFormatter {
     val ANSI_RESET = "\u001B[0m"
 
     /**
-      * Separates the calendar name from the rest of a Knora date.
-      */
+     * Separates the calendar name from the rest of a Knora date.
+     */
     val CalendarSeparator: String = ":"
 
     /**
-      * Separates year, month, and day in a Knora date.
-      */
+     * Separates year, month, and day in a Knora date.
+     */
     val PrecisionSeparator: String = "-"
 
     /**
-      * Separates a date (year, month, day) from the era in a Knora date.
-      */
+     * Separates a date (year, month, day) from the era in a Knora date.
+     */
     val EraSeparator: String = " "
 
     /**
-      * Before Christ (equivalent to BCE)
-      */
+     * Before Christ (equivalent to BCE)
+     */
     val Era_BC: String = "BC"
 
     /**
-      * Before Common Era (equivalent to BC)
-      */
+     * Before Common Era (equivalent to BC)
+     */
     val Era_BCE: String = "BCE"
 
     /**
-      * Anno Domini (equivalent to CE)
-      */
+     * Anno Domini (equivalent to CE)
+     */
     val Era_AD: String = "AD"
 
     /**
-      * Common Era (equivalent to AD)
-      */
+     * Common Era (equivalent to AD)
+     */
     val Era_CE: String = "CE"
 
     /**
-      * String representation of the name of the Gregorian calendar.
-      */
+     * String representation of the name of the Gregorian calendar.
+     */
     val CalendarGregorian: String = "GREGORIAN"
 
     /**
-      * String representation of the name of the Julian calendar.
-      */
+     * String representation of the name of the Julian calendar.
+     */
     val CalendarJulian: String = "JULIAN"
 
     /**
-      * String representation of day precision in a date.
-      */
+     * String representation of day precision in a date.
+     */
     val PrecisionDay: String = "DAY"
 
     /**
-      * String representation of month precision in a date.
-      */
+     * String representation of month precision in a date.
+     */
     val PrecisionMonth: String = "MONTH"
 
     /**
-      * String representation of year precision in a date.
-      */
+     * String representation of year precision in a date.
+     */
     val PrecisionYear: String = "YEAR"
 
     /**
-      * The version number of the current version of Knora's ARK URL format.
-      */
+     * The version number of the current version of Knora's ARK URL format.
+     */
     val ArkVersion: String = "1"
 
     /**
-      * The length of the canonical representation of a UUID.
-      */
+     * The length of the canonical representation of a UUID.
+     */
     val CanonicalUuidLength = 36
 
     /**
-      * The length of a Base64-encoded UUID.
-      */
+     * The length of a Base64-encoded UUID.
+     */
     val Base64UuidLength = 22
 
     /**
-      * The maximum number of times that `makeUnusedIri` will try to make a new, unused IRI.
-      */
+     * The maximum number of times that `makeUnusedIri` will try to make a new, unused IRI.
+     */
     val MAX_IRI_ATTEMPTS: Int = 5
 
     /**
-      * The domain name used to construct Knora IRIs.
-      */
+     * The domain name used to construct Knora IRIs.
+     */
     val IriDomain: String = "rdfh.ch"
 
     /**
-      * A keyword used in IRI entity names to introduce a collection type annotation for client code generation.
-      */
+     * A keyword used in IRI entity names to introduce a collection type annotation for client code generation.
+     */
     val ClientCollectionTypeKeyword: String = "collection:"
 
     /**
-      * A string found in IRIs representing collection type annotations for client code generation.
-      */
+     * A string found in IRIs representing collection type annotations for client code generation.
+     */
     val ClientCollectionEntityNameStart: String = "#" + ClientCollectionTypeKeyword
 
     /**
-      * A container for an XML import namespace and its prefix label.
-      *
-      * @param namespace   the namespace.
-      * @param prefixLabel the prefix label.
-      */
+     * A container for an XML import namespace and its prefix label.
+     *
+     * @param namespace   the namespace.
+     * @param prefixLabel the prefix label.
+     */
     case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
 
     /**
-      * Represents a parsed object of the property `salsah-gui:guiAttributeDefinition`.
-      *
-      * @param attributeName    the name of the attribute.
-      * @param isRequired       `true` if the attribute is required.
-      * @param allowedType      the type of the attribute's value.
-      * @param enumeratedValues the allowed values, if this is an enumerated string attribute.
-      */
+     * Represents a parsed object of the property `salsah-gui:guiAttributeDefinition`.
+     *
+     * @param attributeName    the name of the attribute.
+     * @param isRequired       `true` if the attribute is required.
+     * @param allowedType      the type of the attribute's value.
+     * @param enumeratedValues the allowed values, if this is an enumerated string attribute.
+     */
     case class SalsahGuiAttributeDefinition(attributeName: String,
                                             isRequired: Boolean,
                                             allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value,
@@ -197,61 +197,61 @@ object StringFormatter {
                                             unparsedString: String)
 
     /**
-      * Represents a parsed object of the property `salsah-gui:guiAttribute`.
-      *
-      * @param attributeName  the name of the attribute.
-      * @param attributeValue the value of the attribute.
-      */
+     * Represents a parsed object of the property `salsah-gui:guiAttribute`.
+     *
+     * @param attributeName  the name of the attribute.
+     * @param attributeValue the value of the attribute.
+     */
     case class SalsahGuiAttribute(attributeName: String, attributeValue: SalsahGuiAttributeValue)
 
     /**
-      * Represents a parsed value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-      */
+     * Represents a parsed value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+     */
     sealed trait SalsahGuiAttributeValue {
         def attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value
     }
 
     /**
-      * Represents a parsed integer value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-      *
-      * @param value the integer value.
-      */
+     * Represents a parsed integer value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+     *
+     * @param value the integer value.
+     */
     case class SalsahGuiIntegerAttributeValue(value: Int) extends SalsahGuiAttributeValue {
         override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer
     }
 
     /**
-      * Represents a parsed percent value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-      *
-      * @param value the percent value.
-      */
+     * Represents a parsed percent value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+     *
+     * @param value the percent value.
+     */
     case class SalsahGuiPercentAttributeValue(value: Int) extends SalsahGuiAttributeValue {
         override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent
     }
 
     /**
-      * Represents a parsed decimal value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-      *
-      * @param value the decimal value.
-      */
+     * Represents a parsed decimal value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+     *
+     * @param value the decimal value.
+     */
     case class SalsahGuiDecimalAttributeValue(value: BigDecimal) extends SalsahGuiAttributeValue {
         override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal
     }
 
     /**
-      * Represents a parsed string value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-      *
-      * @param value the string value.
-      */
+     * Represents a parsed string value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+     *
+     * @param value the string value.
+     */
     case class SalsahGuiStringAttributeValue(value: String) extends SalsahGuiAttributeValue {
         override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str
     }
 
     /**
-      * Represents a parsed IRI value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-      *
-      * @param value the IRI value.
-      */
+     * Represents a parsed IRI value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+     *
+     * @param value the IRI value.
+     */
     case class SalsahGuiIriAttributeValue(value: IRI) extends SalsahGuiAttributeValue {
         override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri
     }
@@ -268,23 +268,23 @@ object StringFormatter {
      */
 
     /**
-      * The instance of [[StringFormatter]] that is initialised after the ActorSystem starts,
-      * and can parse project-specific API v2 ontology IRIs. This instance is used almost
-      * everywhere in the API server.
-      */
+     * The instance of [[StringFormatter]] that is initialised after the ActorSystem starts,
+     * and can parse project-specific API v2 ontology IRIs. This instance is used almost
+     * everywhere in the API server.
+     */
     private var generalInstance: Option[StringFormatter] = None
 
     /**
-      * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
-      * can't parse project-specific API v2 ontology IRIs. This instance is used
-      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2SimpleTransformationRules]]
-      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules]].
-      */
+     * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
+     * can't parse project-specific API v2 ontology IRIs. This instance is used
+     * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2SimpleTransformationRules]]
+     * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules]].
+     */
     private val instanceForConstantOntologies = new StringFormatter(None)
 
     /**
-      * Gets the singleton instance of [[StringFormatter]] that handles IRIs from data.
-      */
+     * Gets the singleton instance of [[StringFormatter]] that handles IRIs from data.
+     */
     def getGeneralInstance: StringFormatter = {
         generalInstance match {
             case Some(instance) => instance
@@ -293,16 +293,16 @@ object StringFormatter {
     }
 
     /**
-      * Gets the singleton instance of [[StringFormatter]] that can only handle the IRIs in built-in
-      * ontologies.
-      */
+     * Gets the singleton instance of [[StringFormatter]] that can only handle the IRIs in built-in
+     * ontologies.
+     */
     def getInstanceForConstantOntologies: StringFormatter = instanceForConstantOntologies
 
     /**
-      * Initialises the general instance of [[StringFormatter]].
-      *
-      * @param settings the application settings.
-      */
+     * Initialises the general instance of [[StringFormatter]].
+     *
+     * @param settings the application settings.
+     */
     def init(settings: SettingsImpl): Unit = {
         this.synchronized {
             generalInstance match {
@@ -313,8 +313,8 @@ object StringFormatter {
     }
 
     /**
-      * Initialises the singleton instance of [[StringFormatter]] for use in a client program that will connect to Knora.
-      */
+     * Initialises the singleton instance of [[StringFormatter]] for use in a client program that will connect to Knora.
+     */
     def initForClient(knoraHostAndPort: String): Unit = {
         this.synchronized {
             generalInstance match {
@@ -325,8 +325,8 @@ object StringFormatter {
     }
 
     /**
-      * Initialises the singleton instance of [[StringFormatter]] for a test.
-      */
+     * Initialises the singleton instance of [[StringFormatter]] for a test.
+     */
     def initForTest(): Unit = {
         this.synchronized {
             generalInstance match {
@@ -337,39 +337,39 @@ object StringFormatter {
     }
 
     /**
-      * Indicates whether the IRI is a data IRI, a definition IRI, or an IRI of an unknown type.
-      */
+     * Indicates whether the IRI is a data IRI, a definition IRI, or an IRI of an unknown type.
+     */
     private sealed trait IriType
 
     /**
-      * Indicates that the IRI is a data IRI.
-      */
+     * Indicates that the IRI is a data IRI.
+     */
     private case object KnoraDataIri extends IriType
 
     /**
-      * Indicates that the IRI is an ontology or ontology entity IRI.
-      */
+     * Indicates that the IRI is an ontology or ontology entity IRI.
+     */
     private case object KnoraDefinitionIri extends IriType
 
     /**
-      * Indicates that the type of the IRI is unknown.
-      */
+     * Indicates that the type of the IRI is unknown.
+     */
     private case object UnknownIriType extends IriType
 
     /**
-      * Holds information extracted from the IRI.
-      *
-      * @param iriType              the type of the IRI.
-      * @param projectCode          the IRI's project code, if any.
-      * @param ontologyName         the IRI's ontology name, if any.
-      * @param entityName           the IRI's entity name, if any.
-      * @param clientCollectionType the [[CollectionType]] represented by this IRI, if any.
-      * @param resourceID           if this is a resource IRI or value IRI, its resource ID.
-      * @param valueID              if this is a value IRI, its value ID.
-      * @param standoffStartIndex   if this is a standoff IRI, its start index.
-      * @param ontologySchema       the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
-      * @param isBuiltInDef         `true` if the IRI refers to a built-in Knora ontology or ontology entity.
-      */
+     * Holds information extracted from the IRI.
+     *
+     * @param iriType              the type of the IRI.
+     * @param projectCode          the IRI's project code, if any.
+     * @param ontologyName         the IRI's ontology name, if any.
+     * @param entityName           the IRI's entity name, if any.
+     * @param clientCollectionType the [[CollectionType]] represented by this IRI, if any.
+     * @param resourceID           if this is a resource IRI or value IRI, its resource ID.
+     * @param valueID              if this is a value IRI, its value ID.
+     * @param standoffStartIndex   if this is a standoff IRI, its start index.
+     * @param ontologySchema       the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
+     * @param isBuiltInDef         `true` if the IRI refers to a built-in Knora ontology or ontology entity.
+     */
     private case class SmartIriInfo(iriType: IriType,
                                     projectCode: Option[String] = None,
                                     ontologyName: Option[String] = None,
@@ -383,18 +383,18 @@ object StringFormatter {
                                     sharedOntology: Boolean = false)
 
     /**
-      * A cache that maps IRI strings to [[SmartIri]] instances. To keep the cache from getting too large,
-      * only IRIs from known ontologies are cached.
-      */
+     * A cache that maps IRI strings to [[SmartIri]] instances. To keep the cache from getting too large,
+     * only IRIs from known ontologies are cached.
+     */
     private lazy val smartIriCache = new ConcurrentHashMap[IRI, SmartIri](2048)
 
     /**
-      * Gets a cached smart IRI, or constructs and caches one.
-      *
-      * @param iriStr      the IRI in string form.
-      * @param creationFun a function that creates the smart IRI to be cached.
-      * @return the smart IRI.
-      */
+     * Gets a cached smart IRI, or constructs and caches one.
+     *
+     * @param iriStr      the IRI in string form.
+     * @param creationFun a function that creates the smart IRI to be cached.
+     * @return the smart IRI.
+     */
     private def getOrCacheSmartIri(iriStr: IRI, creationFun: () => SmartIri): SmartIri = {
         smartIriCache.computeIfAbsent(
             iriStr,
@@ -404,13 +404,13 @@ object StringFormatter {
 }
 
 /**
-  * Represents a parsed IRI with Knora-specific functionality. To construct a `SmartIri`,
-  * `import org.knora.webapi.util.IriConversions.ConvertibleIri`, then call one of the methods that
-  * it implicitly defines on `String`, e.g.:
-  *
-  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIri
-  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIriWithErr(throw BadRequestException("Invalid IRI"))
-  */
+ * Represents a parsed IRI with Knora-specific functionality. To construct a `SmartIri`,
+ * `import org.knora.webapi.util.IriConversions.ConvertibleIri`, then call one of the methods that
+ * it implicitly defines on `String`, e.g.:
+ *
+ * - "http://knora.example.org/ontology/0000/example#Something".toSmartIri
+ * - "http://knora.example.org/ontology/0000/example#Something".toSmartIriWithErr(throw BadRequestException("Invalid IRI"))
+ */
 sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
     /*
@@ -431,199 +431,199 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     */
 
     /**
-      * Returns this IRI as a string in angle brackets.
-      */
+     * Returns this IRI as a string in angle brackets.
+     */
     def toSparql: String
 
     /**
-      * Returns `true` if this is a Knora data or definition IRI.
-      */
+     * Returns `true` if this is a Knora data or definition IRI.
+     */
     def isKnoraIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora data IRI.
-      */
+     * Returns `true` if this is a Knora data IRI.
+     */
     def isKnoraDataIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora resource IRI.
-      */
+     * Returns `true` if this is a Knora resource IRI.
+     */
     def isKnoraResourceIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora value IRI.
-      */
+     * Returns `true` if this is a Knora value IRI.
+     */
     def isKnoraValueIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora standoff IRI.
-      */
+     * Returns `true` if this is a Knora standoff IRI.
+     */
     def isKnoraStandoffIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora ontology or entity IRI.
-      */
+     * Returns `true` if this is a Knora ontology or entity IRI.
+     */
     def isKnoraDefinitionIri: Boolean
 
     /**
-      * Returns `true` if this is a built-in Knora ontology or entity IRI.
-      *
-      * @return
-      */
+     * Returns `true` if this is a built-in Knora ontology or entity IRI.
+     *
+     * @return
+     */
     def isKnoraBuiltInDefinitionIri: Boolean
 
     /**
-      * Returns `true` if this IRI belongs to a shared ontology.
-      */
+     * Returns `true` if this IRI belongs to a shared ontology.
+     */
     def isKnoraSharedDefinitionIri: Boolean
 
     /**
-      * Returns `true` if this is an internal Knora ontology or entity IRI.
-      *
-      * @return
-      */
+     * Returns `true` if this is an internal Knora ontology or entity IRI.
+     *
+     * @return
+     */
     def isKnoraInternalDefinitionIri: Boolean
 
     /**
-      * Returns `true` if this is an internal Knora ontology entity IRI.
-      */
+     * Returns `true` if this is an internal Knora ontology entity IRI.
+     */
     def isKnoraInternalEntityIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora ontology IRI.
-      */
+     * Returns `true` if this is a Knora ontology IRI.
+     */
     def isKnoraOntologyIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora entity IRI.
-      */
+     * Returns `true` if this is a Knora entity IRI.
+     */
     def isKnoraEntityIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora API v2 ontology or entity IRI.
-      */
+     * Returns `true` if this is a Knora API v2 ontology or entity IRI.
+     */
     def isKnoraApiV2DefinitionIri: Boolean
 
     /**
-      * Returns `true` if this is a Knora API v2 ontology entity IRI.
-      */
+     * Returns `true` if this is a Knora API v2 ontology entity IRI.
+     */
     def isKnoraApiV2EntityIri: Boolean
 
     /**
-      * Returns `true` if this IRI represents a collection type for use in client code generation.
-      */
+     * Returns `true` if this IRI represents a collection type for use in client code generation.
+     */
     def isClientCollectionTypeIri: Boolean
 
     /**
-      * Returns the IRI's project code, if any.
-      */
+     * Returns the IRI's project code, if any.
+     */
     def getProjectCode: Option[String]
 
     /**
-      * Returns the IRI's resource ID, if any.
-      */
+     * Returns the IRI's resource ID, if any.
+     */
     def getResourceID: Option[String]
 
     /**
-      * Returns the IRI's value ID, if any.
-      */
+     * Returns the IRI's value ID, if any.
+     */
     def getValueID: Option[String]
 
     /**
-      * Returns the IRI's standoff start index, if any.
-      */
+     * Returns the IRI's standoff start index, if any.
+     */
     def getStandoffStartIndex: Option[Int]
 
     /**
-      * If this is an ontology entity IRI, returns its ontology IRI.
-      */
+     * If this is an ontology entity IRI, returns its ontology IRI.
+     */
     def getOntologyFromEntity: SmartIri
 
     /**
-      * If this is a Knora ontology or entity IRI, returns the name of the ontology. Otherwise, throws [[DataConversionException]].
-      */
+     * If this is a Knora ontology or entity IRI, returns the name of the ontology. Otherwise, throws [[DataConversionException]].
+     */
     def getOntologyName: String
 
     /**
-      * If this is a Knora entity IRI, returns the name of the entity. Otherwise, throws [[DataConversionException]].
-      */
+     * If this is a Knora entity IRI, returns the name of the entity. Otherwise, throws [[DataConversionException]].
+     */
     def getEntityName: String
 
     /**
-      * If this IRI represents a collection type for use in client code generation, returns the collection type.
-      */
+     * If this IRI represents a collection type for use in client code generation, returns the collection type.
+     */
     def getClientCollectionType: CollectionType
 
     /**
-      * If this is a Knora ontology IRI, constructs a Knora entity IRI based on it. Otherwise, throws [[DataConversionException]].
-      *
-      * @param entityName the name of the entity.
-      */
+     * If this is a Knora ontology IRI, constructs a Knora entity IRI based on it. Otherwise, throws [[DataConversionException]].
+     *
+     * @param entityName the name of the entity.
+     */
     def makeEntityIri(entityName: String): SmartIri
 
     /**
-      * Returns the IRI's [[OntologySchema]], or `None` if this is not a Knora definition IRI.
-      */
+     * Returns the IRI's [[OntologySchema]], or `None` if this is not a Knora definition IRI.
+     */
     def getOntologySchema: Option[OntologySchema]
 
     /**
-      * Checks that the IRI's ontology schema, if present, corresponds to the specified schema. If the IRI
-      * has no schema, does nothing. If the IRI has a schema that's different to the specified schema, calls
-      * `errorFun`.
-      *
-      * @param allowedSchema the schema to be allowed.
-      * @param errorFun      a function that throws an exception. It will be called if the IRI has a different schema
-      *                      to the one specified.
-      * @return the same IRI
-      */
+     * Checks that the IRI's ontology schema, if present, corresponds to the specified schema. If the IRI
+     * has no schema, does nothing. If the IRI has a schema that's different to the specified schema, calls
+     * `errorFun`.
+     *
+     * @param allowedSchema the schema to be allowed.
+     * @param errorFun      a function that throws an exception. It will be called if the IRI has a different schema
+     *                      to the one specified.
+     * @return the same IRI
+     */
     def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri
 
     /**
-      * Converts this IRI to another ontology schema.
-      *
-      * @param targetSchema the target schema.
-      */
+     * Converts this IRI to another ontology schema.
+     *
+     * @param targetSchema the target schema.
+     */
     override def toOntologySchema(targetSchema: OntologySchema): SmartIri
 
     /**
-      * Constructs a short prefix label for the ontology that the IRI belongs to.
-      */
+     * Constructs a short prefix label for the ontology that the IRI belongs to.
+     */
     def getShortPrefixLabel: String
 
     /**
-      * Constructs a longer prefix label than the one returned by `getShortPrefixLabel`, which may be needed
-      * if there are ontology name collisions.
-      */
+     * Constructs a longer prefix label than the one returned by `getShortPrefixLabel`, which may be needed
+     * if there are ontology name collisions.
+     */
     def getLongPrefixLabel: String
 
     /**
-      * If this is the IRI of a link value property, returns the IRI of the corresponding link property. Throws
-      * [[DataConversionException]] if this IRI is not a Knora entity IRI.
-      */
+     * If this is the IRI of a link value property, returns the IRI of the corresponding link property. Throws
+     * [[DataConversionException]] if this IRI is not a Knora entity IRI.
+     */
     def fromLinkValuePropToLinkProp: SmartIri
 
     /**
-      * If this is the IRI of a link property, returns the IRI of the corresponding link value property. Throws
-      * [[DataConversionException]] if this IRI is not a Knora entity IRI.
-      */
+     * If this is the IRI of a link property, returns the IRI of the corresponding link value property. Throws
+     * [[DataConversionException]] if this IRI is not a Knora entity IRI.
+     */
     def fromLinkPropToLinkValueProp: SmartIri
 
     /**
-      * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource. Throws
-      * [[DataConversionException]] if this IRI is not a Knora resource IRI.
-      *
-      * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
-      *                       cite.
-      */
+     * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource. Throws
+     * [[DataConversionException]] if this IRI is not a Knora resource IRI.
+     *
+     * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
+     *                       cite.
+     */
     def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String
 
     /**
-      * If this is a Knora data IRI representing a value, returns an ARK URL for the value. Throws
-      * [[DataConversionException]] if this IRI is not a Knora value IRI.
-      *
-      * @param maybeTimestamp an optional timestamp indicating the point in the value's version history that the ARK URL should
-      *                       cite.
-      */
+     * If this is a Knora data IRI representing a value, returns an ARK URL for the value. Throws
+     * [[DataConversionException]] if this IRI is not a Knora value IRI.
+     *
+     * @param maybeTimestamp an optional timestamp indicating the point in the value's version history that the ARK URL should
+     *                       cite.
+     */
     def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String
 
     override def equals(obj: scala.Any): Boolean = {
@@ -640,8 +640,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 }
 
 /**
-  * Provides `apply` and `unapply` methods to for `SmartIri`.
-  */
+ * Provides `apply` and `unapply` methods to for `SmartIri`.
+ */
 object SmartIri {
     def apply(iriStr: IRI)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(iriStr)
 
@@ -649,31 +649,31 @@ object SmartIri {
 }
 
 /**
-  * Provides automatic conversion of IRI strings to [[SmartIri]] objects. See [[https://www.scala-lang.org/api/current/scala/AnyVal.html]]
-  * for details.
-  */
+ * Provides automatic conversion of IRI strings to [[SmartIri]] objects. See [[https://www.scala-lang.org/api/current/scala/AnyVal.html]]
+ * for details.
+ */
 object IriConversions {
 
     implicit class ConvertibleIri(val self: IRI) extends AnyVal {
         /**
-          * Converts an IRI string to a [[SmartIri]].
-          */
+         * Converts an IRI string to a [[SmartIri]].
+         */
         def toSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self)
 
         /**
-          * Converts an IRI string to a [[SmartIri]]. If the string cannot be converted, a function is called to report
-          * the error. Use this function to parse IRIs from client input.
-          *
-          * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
-          */
+         * Converts an IRI string to a [[SmartIri]]. If the string cannot be converted, a function is called to report
+         * the error. Use this function to parse IRIs from client input.
+         *
+         * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
+         */
         def toSmartIriWithErr(errorFun: => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
     }
 
 }
 
 /**
-  * Handles string parsing, formatting, conversion, and validation.
-  */
+ * Handles string parsing, formatting, conversion, and validation.
+ */
 class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, maybeKnoraHostAndPort: Option[String] = None, initForTest: Boolean = false) {
 
     import StringFormatter._
@@ -875,26 +875,26 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
         """0+$""".r
 
     /**
-      * A regex that matches a valid username
-      * - 4 - 50 characters long
-      * - Only contains alphanumeric characters, underscore and dot.
-      * - Underscore and dot can't be at the end or start of a username
-      * - Underscore or dot can't be used multiple times in a row
-      */
+     * A regex that matches a valid username
+     * - 4 - 50 characters long
+     * - Only contains alphanumeric characters, underscore and dot.
+     * - Underscore and dot can't be at the end or start of a username
+     * - Underscore or dot can't be used multiple times in a row
+     */
     private val UsernameRegex: Regex =
         """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
     /**
-      * A regex that matches a valid project shortname
-      * - 4 - 50 characters long
-      * - Only contains alphanumeric characters.
-      */
+     * A regex that matches a valid project shortname
+     * - 4 - 50 characters long
+     * - Only contains alphanumeric characters.
+     */
     private val ProjectShortnameRegex: Regex =
         """^(?=.{4,50}$)[a-zA-Z0-9]+$""".r
 
     /**
-      * The information that is stored about non-Knora IRIs.
-      */
+     * The information that is stored about non-Knora IRIs.
+     */
     private val UnknownIriInfo = SmartIriInfo(
         iriType = UnknownIriType,
         projectCode = None,
@@ -904,14 +904,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     )
 
     /**
-      * The implementation of [[SmartIri]]. An instance of this class can only be constructed by [[StringFormatter]].
-      * The constructor validates and parses the IRI.
-      *
-      * @param iriStr        the IRI string to be parsed.
-      * @param parsedIriInfo if this smart IRI is the result of a conversion from another smart IRI, information
-      *                      about the IRI being constructed.
-      * @param errorFun      a function that throws an exception. It will be called if the IRI is invalid.
-      */
+     * The implementation of [[SmartIri]]. An instance of this class can only be constructed by [[StringFormatter]].
+     * The constructor validates and parses the IRI.
+     *
+     * @param iriStr        the IRI string to be parsed.
+     * @param parsedIriInfo if this smart IRI is the result of a conversion from another smart IRI, information
+     *                      about the IRI being constructed.
+     * @param errorFun      a function that throws an exception. It will be called if the IRI is invalid.
+     */
     private class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: => Nothing) extends SmartIri {
         def this(iriStr: IRI) = this(iriStr, None, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
@@ -920,11 +920,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
         private val iri: IRI = validateAndEscapeIri(iriStr, errorFun)
 
         /**
-          * Determines the API v2 schema of an external IRI.
-          *
-          * @param segments the segments of the namespace.
-          * @return the IRI's API schema.
-          */
+         * Determines the API v2 schema of an external IRI.
+         *
+         * @param segments the segments of the namespace.
+         * @return the IRI's API schema.
+         */
         private def parseApiV2VersionSegments(segments: Vector[String]): ApiV2Schema = {
             if (segments.length < 2) {
                 errorFun
@@ -1587,11 +1587,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI. Throws
-      * [[DataConversionException]] if the IRI is invalid.
-      *
-      * @param iri the IRI string to be parsed.
-      */
+     * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI. Throws
+     * [[DataConversionException]] if the IRI is invalid.
+     *
+     * @param iri the IRI string to be parsed.
+     */
     def toSmartIri(iri: IRI, requireInternal: Boolean = false): SmartIri = {
         // Is this a Knora definition IRI?
         val smartIri: SmartIri = if (CacheableIriStarts.exists(start => iri.startsWith(start))) {
@@ -1610,11 +1610,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI.
-      *
-      * @param iri      the IRI string to be parsed.
-      * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
-      */
+     * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI.
+     *
+     * @param iri      the IRI string to be parsed.
+     * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
+     */
     def toSmartIriWithErr(iri: IRI, errorFun: => Nothing): SmartIri = {
         // Is this a Knora definition IRI?
         if (CacheableIriStarts.exists(start => iri.startsWith(start))) {
@@ -1627,13 +1627,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a string represents a valid integer.
-      *
-      * @param s        the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a
-      *                 valid integer.
-      * @return the integer value of the string.
-      */
+     * Checks that a string represents a valid integer.
+     *
+     * @param s        the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a
+     *                 valid integer.
+     * @return the integer value of the string.
+     */
     def validateInt(s: String, errorFun: => Nothing): Int = {
         try {
             s.toInt
@@ -1643,13 +1643,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a string represents a valid decimal number.
-      *
-      * @param s        the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a
-      *                 valid decimal number.
-      * @return the decimal value of the string.
-      */
+     * Checks that a string represents a valid decimal number.
+     *
+     * @param s        the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a
+     *                 valid decimal number.
+     * @return the decimal value of the string.
+     */
     def validateBigDecimal(s: String, errorFun: => Nothing): BigDecimal = {
         try {
             BigDecimal(s)
@@ -1659,23 +1659,23 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Returns `true` if a string is an IRI.
-      *
-      * @param s the string to be checked.
-      * @return `true` if the string is an IRI.
-      */
+     * Returns `true` if a string is an IRI.
+     *
+     * @param s the string to be checked.
+     * @return `true` if the string is an IRI.
+     */
     def isIri(s: String): Boolean = {
         urlValidator.isValid(s)
     }
 
     /**
-      * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
-      *
-      * @param s        the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-      *                 IRI.
-      * @return the same string.
-      */
+     * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
+     *
+     * @param s        the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 IRI.
+     * @return the same string.
+     */
     def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
         val urlEncodedStr = encodeAllowEscapes(s)
 
@@ -1687,13 +1687,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid IRI.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    IRI.
-      * @return the same optional string.
-      */
+     * Check that an optional string represents a valid IRI.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    IRI.
+     * @return the same optional string.
+     */
     def toOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeIri(s, errorFun))
@@ -1702,21 +1702,21 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora project IRI
-      *
-      * @param iri the IRI to be checked.
-      */
+     * Returns `true` if an IRI string looks like a Knora project IRI
+     *
+     * @param iri the IRI to be checked.
+     */
     def isKnoraProjectIriStr(iri: IRI): Boolean = {
         isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora built-in IRI:
-      *  - http://www.knora.org/ontology/knora-admin#SystemProject
-      *  - http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
-      *
-      * @param iri the IRI to be checked.
-      */
+     * Returns `true` if an IRI string looks like a Knora built-in IRI:
+     *  - http://www.knora.org/ontology/knora-admin#SystemProject
+     *  - http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
+     *
+     * @param iri the IRI to be checked.
+     */
     def isKnoraBuiltInProjectIriStr(iri: IRI): Boolean = {
 
         val builtInProjects = Seq(
@@ -1728,33 +1728,33 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora list IRI.
-      *
-      * @param iri the IRI to be checked.
-      */
+     * Returns `true` if an IRI string looks like a Knora list IRI.
+     *
+     * @param iri the IRI to be checked.
+     */
     def isKnoraListIriStr(iri: IRI): Boolean = {
         isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora user IRI.
-      *
-      * @param iri the IRI to be checked.
-      */
+     * Returns `true` if an IRI string looks like a Knora user IRI.
+     *
+     * @param iri the IRI to be checked.
+     */
     def isKnoraUserIriStr(iri: IRI): Boolean = {
         isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
     }
 
     /**
-      * Checks that a string represents a valid resource identifier in a standoff link.
-      *
-      * @param s               the string to be checked.
-      * @param acceptClientIDs if `true`, the function accepts either an IRI or an XML NCName prefixed by `ref:`.
-      *                        The latter is used to refer to a client's ID for a resource that is described in an XML bulk import.
-      *                        If `false`, only an IRI is accepted.
-      * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
-      * @return the same string.
-      */
+     * Checks that a string represents a valid resource identifier in a standoff link.
+     *
+     * @param s               the string to be checked.
+     * @param acceptClientIDs if `true`, the function accepts either an IRI or an XML NCName prefixed by `ref:`.
+     *                        The latter is used to refer to a client's ID for a resource that is described in an XML bulk import.
+     *                        If `false`, only an IRI is accepted.
+     * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
+     * @return the same string.
+     */
     def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI = {
         if (acceptClientIDs) {
             s match {
@@ -1767,11 +1767,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
-      *
-      * @param s the string to be checked.
-      * @return `true` if the string is an XML NCName prefixed by `ref:`.
-      */
+     * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
+     *
+     * @param s the string to be checked.
+     * @return `true` if the string is an XML NCName prefixed by `ref:`.
+     */
     def isStandoffLinkReferenceToClientIDForResource(s: String): Boolean = {
         s match {
             case StandoffLinkReferenceToClientIDForResourceRegex(_) => true
@@ -1780,14 +1780,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
-      * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
-      * described in an XML bulk import. Returns the real IRI of the target resource.
-      *
-      * @param iri                             an IRI from a standoff link, either in the form of a real resource IRI or in the form of
-      *                                        a reference to a client's ID for a resource.
-      * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
-      */
+     * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
+     * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
+     * described in an XML bulk import. Returns the real IRI of the target resource.
+     *
+     * @param iri                             an IRI from a standoff link, either in the form of a real resource IRI or in the form of
+     *                                        a reference to a client's ID for a resource.
+     * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
+     */
     def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): IRI = {
         iri match {
             case StandoffLinkReferenceToClientIDForResourceRegex(clientResourceID) => clientResourceIDsToResourceIris(clientResourceID)
@@ -1796,15 +1796,15 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Makes a string safe to be entered in the triplestore by escaping special chars.
-      *
-      * If the param `revert` is set to `true`, the string is unescaped.
-      *
-      * @param s        a string.
-      * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
-      *                 a carriage return (`\r`).
-      * @return the same string, escaped or unescaped as requested.
-      */
+     * Makes a string safe to be entered in the triplestore by escaping special chars.
+     *
+     * If the param `revert` is set to `true`, the string is unescaped.
+     *
+     * @param s        a string.
+     * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
+     *                 a carriage return (`\r`).
+     * @return the same string, escaped or unescaped as requested.
+     */
     def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
         if (s.isEmpty || s.contains("\r")) errorFun
 
@@ -1818,11 +1818,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Unescapes a string that has been escaped for SPARQL.
-      *
-      * @param s the string to be unescaped.
-      * @return the unescaped string.
-      */
+     * Unescapes a string that has been escaped for SPARQL.
+     *
+     * @param s the string to be unescaped.
+     * @return the unescaped string.
+     */
     def fromSparqlEncodedString(s: String): String = {
         StringUtils.replaceEach(
             s,
@@ -1832,22 +1832,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Encodes a string for use in JSON, and encloses it in quotation marks.
-      *
-      * @param s the string to be encoded.
-      * @return the encoded string.
-      */
+     * Encodes a string for use in JSON, and encloses it in quotation marks.
+     *
+     * @param s the string to be encoded.
+     * @return the encoded string.
+     */
     def toJsonEncodedString(s: String): String = {
         JsString(s).compactPrint
     }
 
     /**
-      * Parses an object of `salsah-gui:guiAttributeDefinition`.
-      *
-      * @param s        the string to be parsed.
-      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-      * @return a [[SalsahGuiAttributeDefinition]].
-      */
+     * Parses an object of `salsah-gui:guiAttributeDefinition`.
+     *
+     * @param s        the string to be parsed.
+     * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+     * @return a [[SalsahGuiAttributeDefinition]].
+     */
     def toSalsahGuiAttributeDefinition(s: String, errorFun: => Nothing): SalsahGuiAttributeDefinition = {
         s match {
             case SalsahGuiAttributeDefinitionRegex(attributeName, Optional(maybeRequired), allowedTypeStr, _, Optional(maybeEnumeratedValuesStr)) =>
@@ -1877,13 +1877,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Parses an object of `salsah-gui:guiAttribute`.
-      *
-      * @param s             the string to be parsed.
-      * @param attributeDefs the values of `salsah-gui:guiAttributeDefinition` for the property.
-      * @param errorFun      a function that throws an exception. It will be called if the string is invalid.
-      * @return a [[SalsahGuiAttribute]].
-      */
+     * Parses an object of `salsah-gui:guiAttribute`.
+     *
+     * @param s             the string to be parsed.
+     * @param attributeDefs the values of `salsah-gui:guiAttributeDefinition` for the property.
+     * @param errorFun      a function that throws an exception. It will be called if the string is invalid.
+     * @return a [[SalsahGuiAttribute]].
+     */
     def toSalsahGuiAttribute(s: String, attributeDefs: Set[SalsahGuiAttributeDefinition], errorFun: => Nothing): SalsahGuiAttribute = {
         // Try to parse the expression using a regex.
         s match {
@@ -1941,12 +1941,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Parses an `xsd:dateTimeStamp`.
-      *
-      * @param s        the string to be parsed.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-      * @return an [[Instant]].
-      */
+     * Parses an `xsd:dateTimeStamp`.
+     *
+     * @param s        the string to be parsed.
+     * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+     * @return an [[Instant]].
+     */
     def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant = {
         try {
             val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
@@ -1957,12 +1957,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Parses a Knora ARK timestamp.
-      *
-      * @param timestampStr the string to be parsed.
-      * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
-      * @return an [[Instant]].
-      */
+     * Parses a Knora ARK timestamp.
+     *
+     * @param timestampStr the string to be parsed.
+     * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
+     * @return an [[Instant]].
+     */
     def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = {
         timestampStr match {
             case ArkTimestampRegex(year, month, day, hour, minute, second, Optional(maybeFraction)) =>
@@ -1997,11 +1997,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Formats a Knora ARK timestamp.
-      *
-      * @param timestamp the timestamp to be formatted.
-      * @return a string representation of the timestamp.
-      */
+     * Formats a Knora ARK timestamp.
+     *
+     * @param timestamp the timestamp to be formatted.
+     * @return a string representation of the timestamp.
+     */
     def formatArkTimestamp(timestamp: Instant): String = {
         val offsetDateTime: OffsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
 
@@ -2025,13 +2025,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a geometry string contains valid JSON.
-      *
-      * @param s        a geometry string.
-      * @param errorFun a function that throws an exception. It will be called if the string does not contain valid
-      *                 JSON.
-      * @return the same string.
-      */
+     * Checks that a geometry string contains valid JSON.
+     *
+     * @param s        a geometry string.
+     * @param errorFun a function that throws an exception. It will be called if the string does not contain valid
+     *                 JSON.
+     * @return the same string.
+     */
     def validateGeometryString(s: String, errorFun: => Nothing): String = {
         // TODO: For now, we just make sure that the string is valid JSON. We should stop storing JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
@@ -2044,13 +2044,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a hexadecimal color code string is valid.
-      *
-      * @param s        a string containing a hexadecimal color code.
-      * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
-      *                 hexadecimal color code.
-      * @return the same string.
-      */
+     * Checks that a hexadecimal color code string is valid.
+     *
+     * @param s        a string containing a hexadecimal color code.
+     * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
+     *                 hexadecimal color code.
+     * @return the same string.
+     */
     def validateColor(s: String, errorFun: => Nothing): String = {
         ColorRegex.findFirstIn(s) match {
             case Some(dateStr) => dateStr
@@ -2059,12 +2059,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that the format of a Knora date string is valid.
-      *
-      * @param s        a Knora date string.
-      * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
-      * @return the same string.
-      */
+     * Checks that the format of a Knora date string is valid.
+     *
+     * @param s        a Knora date string.
+     * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
+     * @return the same string.
+     */
     def validateDate(s: String, errorFun: => Nothing): String = {
         // if the pattern doesn't match (=> None), the date string is formally invalid
         // Please note that this is a mere formal validation,
@@ -2076,13 +2076,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a string contains a valid boolean value.
-      *
-      * @param s        a string containing a boolean value.
-      * @param errorFun a function that throws an exception. It will be called if the string does not contain
-      *                 a boolean value.
-      * @return the boolean value of the string.
-      */
+     * Checks that a string contains a valid boolean value.
+     *
+     * @param s        a string containing a boolean value.
+     * @param errorFun a function that throws an exception. It will be called if the string does not contain
+     *                 a boolean value.
+     * @return the boolean value of the string.
+     */
     def validateBoolean(s: String, errorFun: => Nothing): Boolean = {
         try {
             s.toBoolean
@@ -2092,11 +2092,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
-      *
-      * @param standoffTags The list of [[StandoffTagV2]].
-      * @return a set of Iris referred to in the [[StandoffTagV2]].
-      */
+     * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
+     *
+     * @param standoffTags The list of [[StandoffTagV2]].
+     * @return a set of Iris referred to in the [[StandoffTagV2]].
+     */
     def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] = {
         standoffTags.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
@@ -2113,14 +2113,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Turn a possibly empty string value into a boolean value.
-      * Returns false if the value is empty or if the given string is cannot be converted to a Boolean `true`.
-      *
-      * @param maybe    an optional string representation of a boolean value.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
-      *                 as a boolean value.
-      * @return a Boolean.
-      */
+     * Turn a possibly empty string value into a boolean value.
+     * Returns false if the value is empty or if the given string is cannot be converted to a Boolean `true`.
+     *
+     * @param maybe    an optional string representation of a boolean value.
+     * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
+     *                 as a boolean value.
+     * @return a Boolean.
+     */
     def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = {
         try {
             maybe.exists(_.toBoolean)
@@ -2130,13 +2130,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Converts a string to a boolean.
-      *
-      * @param s        the string to be converted.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
-      *                 as a boolean value.
-      * @return a Boolean.
-      */
+     * Converts a string to a boolean.
+     *
+     * @param s        the string to be converted.
+     * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
+     *                 as a boolean value.
+     * @return a Boolean.
+     */
     def toBoolean(s: String, errorFun: => Nothing): Boolean = {
         try {
             s.toBoolean
@@ -2146,12 +2146,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-      *
-      * @param ncName   the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-      * @return the same string.
-      */
+     * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+     *
+     * @param ncName   the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+     * @return the same string.
+     */
     def validateNCName(ncName: String, errorFun: => Nothing): String = {
         NCNameRegex.findFirstIn(ncName) match {
             case Some(value) => value
@@ -2160,22 +2160,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Returns `true` if an ontology name is reserved for a built-in ontology.
-      *
-      * @param ontologyName the ontology name to be checked.
-      * @return `true` if the ontology name is reserved for a built-in ontology.
-      */
+     * Returns `true` if an ontology name is reserved for a built-in ontology.
+     *
+     * @param ontologyName the ontology name to be checked.
+     * @return `true` if the ontology name is reserved for a built-in ontology.
+     */
     def isBuiltInOntologyName(ontologyName: String): Boolean = {
         OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
     }
 
     /**
-      * Checks that a name is valid as a project-specific ontology name.
-      *
-      * @param ontologyName the ontology name to be checked.
-      * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
-      * @return the same ontology name.
-      */
+     * Checks that a name is valid as a project-specific ontology name.
+     *
+     * @param ontologyName the ontology name to be checked.
+     * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
+     * @return the same ontology name.
+     */
     def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = {
         ontologyName match {
             case NCNameRegex(_*) => ()
@@ -2203,13 +2203,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Given a valid internal (built-in or project-specific) ontology name and an optional project code, constructs the
-      * corresponding internal ontology IRI.
-      *
-      * @param internalOntologyName the ontology name.
-      * @param projectCode          the project code.
-      * @return the ontology IRI.
-      */
+     * Given a valid internal (built-in or project-specific) ontology name and an optional project code, constructs the
+     * corresponding internal ontology IRI.
+     *
+     * @param internalOntologyName the ontology name.
+     * @param projectCode          the project code.
+     * @return the ontology IRI.
+     */
     private def makeInternalOntologyIriStr(internalOntologyName: String, isShared: Boolean, projectCode: Option[String]): IRI = {
         val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
@@ -2230,24 +2230,24 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Given a valid internal ontology name and an optional project code, constructs the corresponding internal
-      * ontology IRI.
-      *
-      * @param internalOntologyName the ontology name.
-      * @param projectCode          the project code.
-      * @return the ontology IRI.
-      */
+     * Given a valid internal ontology name and an optional project code, constructs the corresponding internal
+     * ontology IRI.
+     *
+     * @param internalOntologyName the ontology name.
+     * @param projectCode          the project code.
+     * @return the ontology IRI.
+     */
     def makeProjectSpecificInternalOntologyIri(internalOntologyName: String, isShared: Boolean, projectCode: String): SmartIri = {
         toSmartIri(makeInternalOntologyIriStr(internalOntologyName, isShared, Some(projectCode)))
     }
 
     /**
-      * Converts an internal ontology name to an external ontology name. This only affects `knora-base`, whose
-      * external equivalent is `knora-api.`
-      *
-      * @param ontologyName an internal ontology name.
-      * @return the corresponding external ontology name.
-      */
+     * Converts an internal ontology name to an external ontology name. This only affects `knora-base`, whose
+     * external equivalent is `knora-api.`
+     *
+     * @param ontologyName an internal ontology name.
+     * @return the corresponding external ontology name.
+     */
     private def internalToExternalOntologyName(ontologyName: String): String = {
         if (ontologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) {
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel
@@ -2257,12 +2257,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Converts an external ontology name to an internal ontology name. This only affects `knora-api`, whose
-      * internal equivalent is `knora-base.`
-      *
-      * @param ontologyName an external ontology name.
-      * @return the corresponding internal ontology name.
-      */
+     * Converts an external ontology name to an internal ontology name. This only affects `knora-api`, whose
+     * internal equivalent is `knora-base.`
+     *
+     * @param ontologyName an external ontology name.
+     * @return the corresponding internal ontology name.
+     */
     private def externalToInternalOntologyName(ontologyName: String): String = {
         if (ontologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) {
             OntologyConstants.KnoraBase.KnoraBaseOntologyLabel
@@ -2272,13 +2272,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
-      * namespace for use in data import.
-      *
-      * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
-      *                            stripped before the conversion.
-      * @return the corresponding XML prefix label and import namespace.
-      */
+     * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
+     * namespace for use in data import.
+     *
+     * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
+     *                            stripped before the conversion.
+     * @return the corresponding XML prefix label and import namespace.
+     */
     def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: SmartIri): XmlImportNamespaceInfoV1 = {
         val namespace = new StringBuilder(OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart)
 
@@ -2300,14 +2300,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Converts an XML namespace (used in XML data import) to the IRI of a project-specific internal ontology (used
-      * in the triplestore). The resulting IRI will not end in a # character.
-      *
-      * @param namespace the XML namespace.
-      * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
-      *                  valid for a Knora XML import namespace.
-      * @return the corresponding project-specific internal ontology IRI.
-      */
+     * Converts an XML namespace (used in XML data import) to the IRI of a project-specific internal ontology (used
+     * in the triplestore). The resulting IRI will not end in a # character.
+     *
+     * @param namespace the XML namespace.
+     * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
+     *                  valid for a Knora XML import namespace.
+     * @return the corresponding project-specific internal ontology IRI.
+     */
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri = {
         namespace match {
             case ProjectSpecificXmlImportNamespaceRegex(Optional(maybeShared), _, Optional(maybeProjectCode), ontologyName) if !isBuiltInOntologyName(ontologyName) =>
@@ -2329,28 +2329,28 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Converts a XML element name in a particular namespace (used in XML data import) to the IRI of a
-      * project-specific internal ontology entity (used in the triplestore).
-      *
-      * @param namespace    the XML namespace.
-      * @param elementLabel the XML element label.
-      * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
-      *                     valid for a Knora XML import namespace.
-      * @return the corresponding project-specific internal ontology entity IRI.
-      */
+     * Converts a XML element name in a particular namespace (used in XML data import) to the IRI of a
+     * project-specific internal ontology entity (used in the triplestore).
+     *
+     * @param namespace    the XML namespace.
+     * @param elementLabel the XML element label.
+     * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
+     *                     valid for a Knora XML import namespace.
+     * @return the corresponding project-specific internal ontology entity IRI.
+     */
     def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String, errorFun: => Nothing): IRI = {
         val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
         ontologyIri + "#" + elementLabel
     }
 
     /**
-      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
-      * may start with a project ID (prefixed with 'p') and a hyphen. This function attempts to parse a property name in
-      * that format.
-      *
-      * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
-      * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
-      */
+     * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
+     * may start with a project ID (prefixed with 'p') and a hyphen. This function attempts to parse a property name in
+     * that format.
+     *
+     * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
+     * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
+     */
     def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
         prefixLabelAndLocalName match {
             case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
@@ -2377,14 +2377,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks that a string represents a valid path for a `knora-base:Map`. A valid path must be a sequence of names
-      * separated by slashes (`/`). Each name must be a valid XML
-      * [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-      *
-      * @param mapPath  the path to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the path is invalid.
-      * @return the same path.
-      */
+     * Checks that a string represents a valid path for a `knora-base:Map`. A valid path must be a sequence of names
+     * separated by slashes (`/`). Each name must be a valid XML
+     * [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+     *
+     * @param mapPath  the path to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the path is invalid.
+     * @return the same path.
+     */
     def validateMapPath(mapPath: String, errorFun: => Nothing): String = {
         val splitPath: Array[String] = mapPath.split('/')
 
@@ -2396,11 +2396,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
-      *
-      * @param urlPath the URL path.
-      * @return true if the path refers to a built-in API v2 ontology.
-      */
+     * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
+     *
+     * @param urlPath the URL path.
+     * @return true if the path refers to a built-in API v2 ontology.
+     */
     def isBuiltInApiV2OntologyUrlPath(urlPath: String): Boolean = {
         urlPath match {
             case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if isBuiltInOntologyName(ontologyName) => true
@@ -2409,11 +2409,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Determines whether a URL path refers to a project-specific API v2 ontology (simple or complex).
-      *
-      * @param urlPath the URL path.
-      * @return true if the path refers to a project-specific API v2 ontology.
-      */
+     * Determines whether a URL path refers to a project-specific API v2 ontology (simple or complex).
+     *
+     * @param urlPath the URL path.
+     * @return true if the path refers to a project-specific API v2 ontology.
+     */
     def isProjectSpecificApiV2OntologyUrlPath(urlPath: String): Boolean = {
         urlPath match {
             case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if !isBuiltInOntologyName(ontologyName) => true
@@ -2422,31 +2422,31 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Given the projectInfo calculates the project's data named graph.
-      *
-      * @param projectInfo the project's [[ProjectInfoV1]].
-      * @return the IRI of the project's data named graph.
-      */
+     * Given the projectInfo calculates the project's data named graph.
+     *
+     * @param projectInfo the project's [[ProjectInfoV1]].
+     * @return the IRI of the project's data named graph.
+     */
     def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
         OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
     }
 
     /**
-      * Given the [[ProjectADM]] calculates the project's data named graph.
-      *
-      * @param project the project's [[ProjectADM]].
-      * @return the IRI of the project's data named graph.
-      */
+     * Given the [[ProjectADM]] calculates the project's data named graph.
+     *
+     * @param project the project's [[ProjectADM]].
+     * @return the IRI of the project's data named graph.
+     */
     def projectDataNamedGraphV2(project: ProjectADM): IRI = {
         OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
     }
 
     /**
-      * Given the project IRI, checks if it is in a valid format.
-      *
-      * @param iri the project's IRI.
-      * @return the IRI of the project.
-      */
+     * Given the project IRI, checks if it is in a valid format.
+     *
+     * @param iri the project's IRI.
+     * @return the IRI of the project.
+     */
     def validateProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
         if (isKnoraProjectIriStr(iri)) {
             iri
@@ -2456,13 +2456,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the supplied IRI represents a valid project IRI.
-      *
-      * @param iri      the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-      *                 project IRI.
-      * @return the same string but escaped.
-      */
+     * Check that the supplied IRI represents a valid project IRI.
+     *
+     * @param iri      the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 project IRI.
+     * @return the same string but escaped.
+     */
     def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
         if (isKnoraProjectIriStr(iri)) {
             toSparqlEncodedString(iri, errorFun)
@@ -2472,13 +2472,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid project IRI.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    project IRI.
-      * @return the same optional string but escaped.
-      */
+     * Check that an optional string represents a valid project IRI.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    project IRI.
+     * @return the same optional string but escaped.
+     */
     def validateAndEscapeOptionalProjectIri(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
@@ -2487,13 +2487,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the string represents a valid project shortname.
-      *
-      * @param value    the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-      *                 project shortname.
-      * @return the same string.
-      */
+     * Check that the string represents a valid project shortname.
+     *
+     * @param value    the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 project shortname.
+     * @return the same string.
+     */
     def validateAndEscapeProjectShortname(value: String, errorFun: => Nothing): String = {
         ProjectShortnameRegex.findFirstIn(value) match {
             case Some(shortname) => toSparqlEncodedString(shortname, errorFun)
@@ -2502,13 +2502,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid project shortname.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    project shortname.
-      * @return the same optional string.
-      */
+     * Check that an optional string represents a valid project shortname.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    project shortname.
+     * @return the same optional string.
+     */
     def validateAndEscapeOptionalProjectShortname(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeProjectShortname(s, errorFun))
@@ -2517,11 +2517,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
-      *
-      * @param shortcode the project's shortcode.
-      * @return the shortcode in upper case.
-      */
+     * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
+     *
+     * @param shortcode the project's shortcode.
+     * @return the shortcode in upper case.
+     */
     def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
             case Some(value) => value
@@ -2530,11 +2530,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
-      *
-      * @param shortcode the project's shortcode.
-      * @return the shortcode in upper case.
-      */
+     * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
+     *
+     * @param shortcode the project's shortcode.
+     * @return the shortcode in upper case.
+     */
     def validateProjectShortcodeOption(shortcode: String): Option[String] = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
             case Some(value) => Some(value)
@@ -2543,13 +2543,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that a string represents a valid project shortcode.
-      *
-      * @param shortcode the optional string to be checked.
-      * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
-      *                  project shortcode.
-      * @return the same string.
-      */
+     * Check that a string represents a valid project shortcode.
+     *
+     * @param shortcode the optional string to be checked.
+     * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
+     *                  project shortcode.
+     * @return the same string.
+     */
     def validateAndEscapeProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
             case Some(definedShortcode) => toSparqlEncodedString(definedShortcode, errorFun)
@@ -2558,13 +2558,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid project shortcode.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    project shortcode.
-      * @return the same optional string.
-      */
+     * Check that an optional string represents a valid project shortcode.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    project shortcode.
+     * @return the same optional string.
+     */
     def validateAndEscapeOptionalProjectShortcode(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeProjectShortcode(s, errorFun))
@@ -2573,13 +2573,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the supplied IRI represents a valid user IRI.
-      *
-      * @param iri      the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-      *                 user IRI.
-      * @return the same string.
-      */
+     * Check that the supplied IRI represents a valid user IRI.
+     *
+     * @param iri      the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 user IRI.
+     * @return the same string.
+     */
     def validateUserIri(iri: IRI, errorFun: => Nothing): IRI = {
         if (isKnoraUserIriStr(iri)) {
             iri
@@ -2589,13 +2589,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the supplied IRI represents a valid user IRI.
-      *
-      * @param iri      the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-      *                 user IRI.
-      * @return the same string but escaped.
-      */
+     * Check that the supplied IRI represents a valid user IRI.
+     *
+     * @param iri      the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 user IRI.
+     * @return the same string but escaped.
+     */
     def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = {
         if (isKnoraUserIriStr(iri)) {
             toSparqlEncodedString(iri, errorFun)
@@ -2605,13 +2605,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid user IRI.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    user IRI.
-      * @return the same optional string.
-      */
+     * Check that an optional string represents a valid user IRI.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    user IRI.
+     * @return the same optional string.
+     */
     def validateAndEscapeOptionalUserIri(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeUserIri(s, errorFun))
@@ -2620,21 +2620,21 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Given an email address, checks if it is in a valid format.
-      *
-      * @param email the email.
-      * @return the email
-      */
+     * Given an email address, checks if it is in a valid format.
+     *
+     * @param email the email.
+     * @return the email
+     */
     def validateEmail(email: String): Option[String] = {
         EmailAddressRegex.findFirstIn(email)
     }
 
     /**
-      * Given an email address, checks if it is in a valid format.
-      *
-      * @param email the email.
-      * @return the email
-      */
+     * Given an email address, checks if it is in a valid format.
+     *
+     * @param email the email.
+     * @return the email
+     */
     def validateEmailAndThrow(email: String, errorFun: => Nothing): String = {
         EmailAddressRegex.findFirstIn(email) match {
             case Some(value) => value
@@ -2643,13 +2643,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid email address.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    email address.
-      * @return the same optional string.
-      */
+     * Check that an optional string represents a valid email address.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    email address.
+     * @return the same optional string.
+     */
     def validateAndEscapeOptionalEmail(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(toSparqlEncodedString(validateEmailAndThrow(s, errorFun), errorFun))
@@ -2673,13 +2673,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the string represents a valid username and escape any special characters.
-      *
-      * @param value    the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-      *                 username.
-      * @return the same string with escaped special characters.
-      */
+     * Check that the string represents a valid username and escape any special characters.
+     *
+     * @param value    the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 username.
+     * @return the same string with escaped special characters.
+     */
     def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = {
         UsernameRegex.findFirstIn(value) match {
             case Some(username) => toSparqlEncodedString(username, errorFun)
@@ -2688,13 +2688,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that an optional string represents a valid username.
-      *
-      * @param maybeString the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    username.
-      * @return the same optional string.
-      */
+     * Check that an optional string represents a valid username.
+     *
+     * @param maybeString the optional string to be checked.
+     * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+     *                    username.
+     * @return the same optional string.
+     */
     def validateAndEscapeOptionalUsername(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeUsername(s, errorFun))
@@ -2703,22 +2703,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
-      *
-      * @param projectID      the shortcode of the project that the resource belongs to.
-      * @param resourceID     the resource's ID (the last component of its IRI).
-      * @param maybeValueUUID if this is an ARK URL for a value, the value's UUID.
-      * @param maybeTimestamp a timestamp indicating the point in the resource's version history that the ARK URL should
-      *                       cite.
-      * @return an ARK URL that can be resolved to obtain the resource or value.
-      */
+     * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
+     *
+     * @param projectID      the shortcode of the project that the resource belongs to.
+     * @param resourceID     the resource's ID (the last component of its IRI).
+     * @param maybeValueUUID if this is an ARK URL for a value, the value's UUID.
+     * @param maybeTimestamp a timestamp indicating the point in the resource's version history that the ARK URL should
+     *                       cite.
+     * @return an ARK URL that can be resolved to obtain the resource or value.
+     */
     private def makeArkUrl(projectID: String, resourceID: String, maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String = {
         /**
-          * Adds a check digit to a Base64-encoded ID, and escapes '-' as '=', because '-' can be ignored in ARK URLs.
-          *
-          * @param id a Base64-encoded ID.
-          * @return the ID with a check digit added.
-          */
+         * Adds a check digit to a Base64-encoded ID, and escapes '-' as '=', because '-' can be ignored in ARK URLs.
+         *
+         * @param id a Base64-encoded ID.
+         * @return the ID with a check digit added.
+         */
         def addCheckDigitAndEscape(id: String): String = {
             val checkDigitTry: Try[String] = Try {
                 base64UrlCheckDigit.calculate(id)
@@ -2761,12 +2761,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Attempts to create a new IRI that isn't already used in the triplestore. Will try up to [[MAX_IRI_ATTEMPTS]]
-      * times, then throw an exception if an unused IRI could not be created.
-      *
-      * @param iriFun       a function that generates a random IRI.
-      * @param storeManager a reference to the Knora store manager actor.
-      */
+     * Attempts to create a new IRI that isn't already used in the triplestore. Will try up to [[MAX_IRI_ATTEMPTS]]
+     * times, then throw an exception if an unused IRI could not be created.
+     *
+     * @param iriFun       a function that generates a random IRI.
+     * @param storeManager a reference to the Knora store manager actor.
+     */
     def makeUnusedIri(iriFun: => IRI,
                       storeManager: ActorRef,
                       log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IRI] = {
@@ -2792,24 +2792,24 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
-      * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
-      * can be used as a unique identifier in IRIs.
-      *
-      * @return a random, Base64-encoded UUID.
-      */
+     * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
+     * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
+     * can be used as a unique identifier in IRIs.
+     *
+     * @return a random, Base64-encoded UUID.
+     */
     def makeRandomBase64EncodedUuid: String = {
         val uuid = UUID.randomUUID
         base64EncodeUuid(uuid)
     }
 
     /**
-      * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
-      * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
-      *
-      * @param uuid the [[UUID]] to be encoded.
-      * @return a 22-character string representing the UUID.
-      */
+     * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
+     * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
+     *
+     * @param uuid the [[UUID]] to be encoded.
+     * @return a 22-character string representing the UUID.
+     */
     def base64EncodeUuid(uuid: UUID): String = {
         val bytes = Array.ofDim[Byte](16)
         val byteBuffer = ByteBuffer.wrap(bytes)
@@ -2819,11 +2819,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Decodes a Base64-encoded UUID.
-      *
-      * @param base64Uuid the Base64-encoded UUID to be decoded.
-      * @return the equivalent [[UUID]].
-      */
+     * Decodes a Base64-encoded UUID.
+     *
+     * @param base64Uuid the Base64-encoded UUID to be decoded.
+     * @return the equivalent [[UUID]].
+     */
     def base64DecodeUuid(base64Uuid: String): UUID = {
         val bytes = base64Decoder.decode(base64Uuid)
         val byteBuffer = ByteBuffer.wrap(bytes)
@@ -2831,15 +2831,33 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Encodes a [[UUID]] as a string in one of two formats:
-      *
-      * - The canonical 36-character format.
-      * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
-      *
-      * @param uuid      the UUID to be encoded.
-      * @param useBase64 if `true`, uses Base64 encoding.
-      * @return the encoded UUID.
-      */
+     * Validates and decodes a Base64-encoded UUID.
+     *
+     * @param base64Uuid the UUID to be validated.
+     * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
+     * @return the decoded UUID.
+     */
+    def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = {
+        val decodeTry = Try {
+            base64DecodeUuid(base64Uuid)
+        }
+
+        decodeTry match {
+            case Success(uuid) => uuid
+            case Failure(_) => errorFun
+        }
+    }
+
+    /**
+     * Encodes a [[UUID]] as a string in one of two formats:
+     *
+     * - The canonical 36-character format.
+     * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
+     *
+     * @param uuid      the UUID to be encoded.
+     * @param useBase64 if `true`, uses Base64 encoding.
+     * @return the encoded UUID.
+     */
     def encodeUuid(uuid: UUID, useBase64: Boolean): String = {
         if (useBase64) {
             base64EncodeUuid(uuid)
@@ -2849,25 +2867,25 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Calls `decodeUuidWithErr`, throwing [[InconsistentTriplestoreDataException]] if the string cannot be parsed.
-      */
+     * Calls `decodeUuidWithErr`, throwing [[InconsistentTriplestoreDataException]] if the string cannot be parsed.
+     */
     def decodeUuid(uuidStr: String): UUID = {
         decodeUuidWithErr(uuidStr, throw InconsistentTriplestoreDataException(s"Invalid UUID: $uuidStr"))
     }
 
     /**
-      * Decodes a string representing a UUID in one of two formats:
-      *
-      * - The canonical 36-character format.
-      * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
-      *
-      * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
-      * (this is non-reversible, and is needed only for working with test data).
-      *
-      * @param uuidStr  the string to be decoded.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-      * @return the decoded [[UUID]].
-      */
+     * Decodes a string representing a UUID in one of two formats:
+     *
+     * - The canonical 36-character format.
+     * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
+     *
+     * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
+     * (this is non-reversible, and is needed only for working with test data).
+     *
+     * @param uuidStr  the string to be decoded.
+     * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+     * @return the decoded [[UUID]].
+     */
     def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = {
         if (uuidStr.length == CanonicalUuidLength) {
             UUID.fromString(uuidStr)
@@ -2881,43 +2899,43 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
-      *
-      * @param idStr the string to check.
-      * @return `true` if the string is the right length to be a canonical or Base64-encoded UUID.
-      */
+     * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
+     *
+     * @param idStr the string to check.
+     * @return `true` if the string is the right length to be a canonical or Base64-encoded UUID.
+     */
     def couldBeUuid(idStr: String): Boolean = {
         idStr.length == CanonicalUuidLength || idStr.length == Base64UuidLength
     }
 
     /**
-      * Creates a new resource IRI based on a UUID.
-      *
-      * @param projectShortcode the project's shortcode.
-      * @return a new resource IRI.
-      */
+     * Creates a new resource IRI based on a UUID.
+     *
+     * @param projectShortcode the project's shortcode.
+     * @return a new resource IRI.
+     */
     def makeRandomResourceIri(projectShortcode: String): IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
         s"http://$IriDomain/$projectShortcode/$knoraResourceID"
     }
 
     /**
-      * Creates a new value IRI based on a UUID.
-      *
-      * @param resourceIri the IRI of the resource that will contain the value.
-      * @return a new value IRI.
-      */
+     * Creates a new value IRI based on a UUID.
+     *
+     * @param resourceIri the IRI of the resource that will contain the value.
+     * @return a new value IRI.
+     */
     def makeRandomValueIri(resourceIri: IRI): IRI = {
         val knoraValueUuid = makeRandomBase64EncodedUuid
         s"$resourceIri/values/$knoraValueUuid"
     }
 
     /**
-      * Creates a mapping IRI based on a project IRI and a mapping name.
-      *
-      * @param projectIri the IRI of the project the mapping will belong to.
-      * @return a mapping IRI.
-      */
+     * Creates a mapping IRI based on a project IRI and a mapping name.
+     *
+     * @param projectIri the IRI of the project the mapping will belong to.
+     * @return a mapping IRI.
+     */
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
         // check that the mapping IRI is valid (mappingName is user input)
@@ -2925,86 +2943,86 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Creates a random IRI for an element of a mapping based on a mapping IRI.
-      *
-      * @param mappingIri the IRI of the mapping the element belongs to.
-      * @return a new mapping element IRI.
-      */
+     * Creates a random IRI for an element of a mapping based on a mapping IRI.
+     *
+     * @param mappingIri the IRI of the mapping the element belongs to.
+     * @return a new mapping element IRI.
+     */
     def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
         val knoraMappingElementUuid = makeRandomBase64EncodedUuid
         s"$mappingIri/elements/$knoraMappingElementUuid"
     }
 
     /**
-      * Creates an IRI used as a lock for the creation of mappings inside a given project.
-      * This method will always return the same IRI for the given project IRI.
-      *
-      * @param projectIri the IRI of the project the mapping will belong to.
-      * @return an IRI used as a lock for the creation of mappings inside a given project.
-      */
+     * Creates an IRI used as a lock for the creation of mappings inside a given project.
+     * This method will always return the same IRI for the given project IRI.
+     *
+     * @param projectIri the IRI of the project the mapping will belong to.
+     * @return an IRI used as a lock for the creation of mappings inside a given project.
+     */
     def createMappingLockIriForProject(projectIri: IRI): IRI = {
         s"$projectIri/mappings"
     }
 
     /**
-      * Creates a new project IRI based on a UUID or project shortcode.
-      *
-      * @param shortcode the required project shortcode.
-      * @return a new project IRI.
-      */
+     * Creates a new project IRI based on a UUID or project shortcode.
+     *
+     * @param shortcode the required project shortcode.
+     * @return a new project IRI.
+     */
     def makeRandomProjectIri(shortcode: String): IRI = {
         s"http://$IriDomain/projects/$shortcode"
     }
 
     /**
-      * Creates a new group IRI based on a UUID.
-      *
-      * @param shortcode the required project shortcode.
-      * @return a new group IRI.
-      */
+     * Creates a new group IRI based on a UUID.
+     *
+     * @param shortcode the required project shortcode.
+     * @return a new group IRI.
+     */
     def makeRandomGroupIri(shortcode: String): String = {
         val knoraGroupUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
     }
 
     /**
-      * Creates a new person IRI based on a UUID.
-      *
-      * @return a new person IRI.
-      */
+     * Creates a new person IRI based on a UUID.
+     *
+     * @return a new person IRI.
+     */
     def makeRandomPersonIri: IRI = {
         val knoraPersonUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/users/$knoraPersonUuid"
     }
 
     /**
-      * Creates a new list IRI based on a UUID.
-      *
-      * @param shortcode the required project shortcode.
-      * @return a new list IRI.
-      */
+     * Creates a new list IRI based on a UUID.
+     *
+     * @param shortcode the required project shortcode.
+     * @return a new list IRI.
+     */
     def makeRandomListIri(shortcode: String): String = {
         val knoraListUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
     }
 
     /**
-      * Creates a new standoff tag IRI based on a UUID.
-      *
-      * @param valueIri   the IRI of the text value containing the standoff tag.
-      * @param startIndex the standoff tag's start index.
-      * @return a standoff tag IRI.
-      */
+     * Creates a new standoff tag IRI based on a UUID.
+     *
+     * @param valueIri   the IRI of the text value containing the standoff tag.
+     * @param startIndex the standoff tag's start index.
+     * @return a standoff tag IRI.
+     */
     def makeRandomStandoffTagIri(valueIri: IRI, startIndex: Int): IRI = {
         s"$valueIri/standoff/$startIndex"
     }
 
     /**
-      * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.
-      *
-      * @param linkPropertyIri the IRI of the property that points to a resource.
-      * @return the IRI of the corresponding link value property.
-      */
+     * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.
+     *
+     * @param linkPropertyIri the IRI of the property that points to a resource.
+     * @return the IRI of the corresponding link value property.
+     */
     def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = {
         implicit val stringFormatter: StringFormatter = this
 
@@ -3012,11 +3030,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
-      *
-      * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
-      * @return the IRI of the corresponding link property.
-      */
+     * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
+     *
+     * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
+     * @return the IRI of the corresponding link property.
+     */
     def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
         implicit val stringFormatter: StringFormatter = this
 
@@ -3024,52 +3042,52 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Creates a new permission IRI based on a UUID.
-      *
-      * @param shortcode the required project shortcode.
-      * @return the IRI of the permission object.
-      */
+     * Creates a new permission IRI based on a UUID.
+     *
+     * @param shortcode the required project shortcode.
+     * @return the IRI of the permission object.
+     */
     def makeRandomPermissionIri(shortcode: String): IRI = {
         val knoraPermissionUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
     }
 
     /**
-      * Creates an IRI for a `knora-base:Map`.
-      *
-      * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
-      *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-      * @return the IRI of the map.
-      */
+     * Creates an IRI for a `knora-base:Map`.
+     *
+     * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+     *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+     * @return the IRI of the map.
+     */
     def makeMapIri(mapPath: String): IRI = {
         s"http://$IriDomain/maps/$mapPath"
     }
 
     /**
-      * Extracts the path of a persistent map from the IRI of a `knora-base:Map`.
-      *
-      * @param mapIri the IRI of the `knora-base:Map`.
-      * @return the map's path.
-      */
+     * Extracts the path of a persistent map from the IRI of a `knora-base:Map`.
+     *
+     * @param mapIri the IRI of the `knora-base:Map`.
+     * @return the map's path.
+     */
     def mapIriToMapPath(mapIri: IRI): String = {
         mapIri.stripPrefix(s"http://$IriDomain/maps/")
     }
 
     /**
-      * Creates a random IRI for a `knora-base:MapEntry`.
-      */
+     * Creates a random IRI for a `knora-base:MapEntry`.
+     */
     def makeRandomMapEntryIri: IRI = {
         val mapEntryUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/map-entries/$mapEntryUuid"
     }
 
     /**
-      * Converts a camel-case string like `FooBar` into a string like `foo-bar`.
-      *
-      * @param str       the string to be converted.
-      * @param separator the word separator (defaults to `-`).
-      * @return the converted string.
-      */
+     * Converts a camel-case string like `FooBar` into a string like `foo-bar`.
+     *
+     * @param str       the string to be converted.
+     * @param separator the word separator (defaults to `-`).
+     * @return the converted string.
+     */
     def camelCaseToSeparatedLowerCase(str: String, separator: String = "-"): String = {
         str.replaceAll(
             "([A-Z]+)([A-Z][a-z])",
