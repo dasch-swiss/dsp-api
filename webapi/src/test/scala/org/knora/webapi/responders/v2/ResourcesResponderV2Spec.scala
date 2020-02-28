@@ -488,7 +488,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         val resourceInfo = readResourcesSequence.resources.head
 
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
+        if (resourceInfo.resourceIri == StringFormatter.ForbiddenResourceIri) {
             throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
         }
 

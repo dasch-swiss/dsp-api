@@ -116,7 +116,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                 resourceIris = Seq(StringFormatter.ForbiddenResourceIri),
                 targetSchema = ApiV2Complex, // This has no effect, because ForbiddenResource has no values.
                 requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[ReadResourcesSequenceV2]
-        } yield forbiddenResourceSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"${StringFormatter.ForbiddenResourceIri} was not returned"))
+        } yield forbiddenResourceSeq.toResource(StringFormatter.ForbiddenResourceIri)
     }
 
     /**
