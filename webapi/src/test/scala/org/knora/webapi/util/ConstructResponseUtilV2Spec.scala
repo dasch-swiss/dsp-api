@@ -21,12 +21,11 @@ package org.knora.webapi.util
 
 import java.io.File
 
-import akka.pattern.ask
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
 import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
 import org.knora.webapi.util.ConstructResponseUtilV2.RdfResources
 
@@ -50,19 +49,17 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
             val queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
 
-            val resourceFuture: Future[ReadResourceV2] = for {
-                resourceResponse <- ConstructResponseUtilV2.createFullResourceResponse(
-                    resourceIri = resourceIri,
-                    resourceRdfData = queryResultsSeparated(resourceIri),
-                    mappings = Map.empty,
-                    queryStandoff = false,
-                    versionDate = None,
-                    responderManager = responderManager,
-                    targetSchema = ApiV2Complex,
-                    settings = settings,
-                    requestingUser = incunabulaUser
-                )
-            } yield resourceResponse
+            val resourceFuture: Future[ReadResourceV2] = ConstructResponseUtilV2.createFullResourceResponse(
+                resourceIri = resourceIri,
+                resourceRdfData = queryResultsSeparated(resourceIri),
+                mappings = Map.empty,
+                queryStandoff = false,
+                versionDate = None,
+                responderManager = responderManager,
+                targetSchema = ApiV2Complex,
+                settings = settings,
+                requestingUser = incunabulaUser
+            )
 
             val resource: ReadResourceV2 = Await.result(resourceFuture, 10.seconds)
             val resourceSequence = ReadResourcesSequenceV2(numberOfResources = 1, resources = Seq(resource))
