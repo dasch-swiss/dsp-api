@@ -889,13 +889,12 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     // #toJsonLDDocument
 
     /**
-     * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
-     * is not present, or if it's `ForbiddenResource`, throws an exception.
+     * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource.
      *
      * @param requestedResourceIri the IRI of the expected resource.
      * @return the resource.
      */
-    def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
+    def toResource(requestedResourceIri: IRI)(implicit stringFormatter: StringFormatter): ReadResourceV2 = {
         if (numberOfResources == 0) {
             throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
         }
@@ -904,13 +903,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
         }
 
-        val resourceInfo = resources.head
-
-        if (resourceInfo.resourceIri == StringFormatter.ForbiddenResourceIri) { // TODO: #1543
-            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
-        }
-
-        resourceInfo
+        resources.head
     }
 
     /**

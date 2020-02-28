@@ -1157,14 +1157,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
-            queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
-
-            // check if all the requested resources were returned
-            requestedButMissing: Set[IRI] = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
-
-            _ = if (requestedButMissing.nonEmpty) {
-                throw NotFoundException(s"One or more requested resources were not found (maybe you do not have permission to see them, or they are marked as deleted): ${requestedButMissing.map(resourceIri => s"<$resourceIri>").mkString(", ")}")
-            }
+            queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = requestingUser
+            )
         } yield queryResultsSeparated
 
     }
@@ -1214,22 +1210,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
-                resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(
-                        resourceIri = resIri,
-                        resourceRdfData = queryResultsSeparated(resIri),
-                        mappings = mappingsAsMap,
-                        queryStandoff = queryStandoff,
-                        versionDate = versionDate,
-                        responderManager = responderManager,
-                        targetSchema = targetSchema,
-                        settings = settings,
-                        requestingUser = requestingUser
-                    )
-            }.toVector
-
-            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
+            resourcesResponse: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparated,
+                orderByResourceIri = resourceIrisDistinct,
+                mappings = mappingsAsMap,
+                queryStandoff = queryStandoff,
+                versionDate = versionDate,
+                responderManager = responderManager,
+                targetSchema = targetSchema,
+                settings = settings,
+                requestingUser = requestingUser
+            )
 
             _ = valueUuid match {
                 case Some(definedValueUuid) =>
@@ -1267,23 +1258,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
-                resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(
-                        resourceIri = resIri,
-                        resourceRdfData = queryResultsSeparated(resIri),
-                        mappings = Map.empty[IRI, MappingAndXSLTransformation],
-                        queryStandoff = false,
-                        versionDate = None,
-                        responderManager = responderManager,
-                        targetSchema = targetSchema,
-                        settings = settings,
-                        requestingUser = requestingUser
-                    )
-            }.toVector
-
-            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
-
+            resourcesResponse: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparated,
+                orderByResourceIri = resourceIrisDistinct,
+                mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                queryStandoff = false,
+                versionDate = None,
+                responderManager = responderManager,
+                targetSchema = targetSchema,
+                settings = settings,
+                requestingUser = requestingUser
+            )
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
     }

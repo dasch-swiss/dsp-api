@@ -265,11 +265,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(mappingsAsMap)
 
-            resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparatedWithFullGraphPattern,
+            resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
+                versionDate = None,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
@@ -532,11 +533,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            resources <- ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparatedWithFullGraphPattern,
+            resources <- ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
+                versionDate = None,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
@@ -666,11 +668,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     }
 
                     // Construct a ReadResourceV2 for each resource that the user has permission to see.
-                    searchResponse <- ConstructResponseUtilV2.createSearchResponse(
-                        searchResults = queryResultsSeparated,
+                    searchResponse <- ConstructResponseUtilV2.createApiResponse(
+                        queryResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
                         mappings = mappings,
                         queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
+                        versionDate = None,
                         responderManager = responderManager,
                         targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
@@ -794,10 +797,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             //_ = println(queryResultsSeparated)
 
-            resources <- ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparated,
+            resources <- ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparated,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
                 queryStandoff = false,
+                versionDate = None,
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,

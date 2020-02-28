@@ -108,9 +108,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> was not found (maybe you do not have permission to see it, or it is marked as deleted)")
             }
 
-            readResourceV2: ReadResourceV2 <- ConstructResponseUtilV2.createFullResourceResponse(
-                resourceIri = getStandoffRequestV2.resourceIri,
-                resourceRdfData = queryResultsSeparated(getStandoffRequestV2.resourceIri),
+            resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparated,
+                orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
                 mappings = Map.empty,
                 queryStandoff = false,
                 versionDate = None,
@@ -119,6 +119,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 settings = settings,
                 requestingUser = getStandoffRequestV2.requestingUser
             )
+
+            readResourceV2 = resources.headOption.getOrElse(throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> not found"))
 
             valueObj: ReadValueV2 = readResourceV2.values.values.flatten.find(_.valueIri == getStandoffRequestV2.valueIri).getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"))
 

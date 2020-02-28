@@ -49,9 +49,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
             val queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
 
-            val resourceFuture: Future[ReadResourceV2] = ConstructResponseUtilV2.createFullResourceResponse(
-                resourceIri = resourceIri,
-                resourceRdfData = queryResultsSeparated(resourceIri),
+            val resourcesFuture: Future[Vector[ReadResourceV2]] = ConstructResponseUtilV2.createApiResponse(
+                queryResults = queryResultsSeparated,
+                orderByResourceIri = Seq(resourceIri),
                 mappings = Map.empty,
                 queryStandoff = false,
                 versionDate = None,
@@ -61,8 +61,8 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = incunabulaUser
             )
 
-            val resource: ReadResourceV2 = Await.result(resourceFuture, 10.seconds)
-            val resourceSequence = ReadResourcesSequenceV2(numberOfResources = 1, resources = Seq(resource))
+            val resources: Vector[ReadResourceV2] = Await.result(resourcesFuture, 10.seconds)
+            val resourceSequence = ReadResourcesSequenceV2(numberOfResources = 1, resources = resources)
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = resourceSequence)
         }
     }
