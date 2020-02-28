@@ -254,7 +254,11 @@ test-unit-ci: stack-without-api ## runs the unit tests (equivalent to 'sbt webap
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: test-e2e
-test-e2e: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
+test-e2e: stack-up-ci ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
+	@echo $@  # print target name
+	@sleep 5
+	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
+	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -266,10 +270,11 @@ test-e2e: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent 
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
+				daschswiss/scala-sbt sbt 'webapi/testOnly *.UsersADME2ESpec'
+				# daschswiss/scala-sbt sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: test-e2e-ci
-test-e2e-ci: stack-without-api ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+test-e2e-ci: stack-up-ci ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit

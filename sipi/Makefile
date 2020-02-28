@@ -1,4 +1,10 @@
-include ../vars.mk
+# Determine this makefile's path.
+# Be sure to place this BEFORE `include` directives, if any.
+# THIS_FILE := $(lastword $(MAKEFILE_LIST))
+THIS_FILE := $(abspath $(lastword $(MAKEFILE_LIST)))
+CURRENT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
+include $(CURRENT_DIR)/../vars.mk
 
 .PHONY: print-env-file
 print-env-file: env-file ## prints the env file used by sipi
@@ -7,7 +13,7 @@ print-env-file: env-file ## prints the env file used by sipi
 .PHONY: env-file
 env-file: ## write the env file used by sipi
 	@echo SIPI_VERSION=$(SIPI_VERSION) > .env
-	@echo DOCKERHOST=$(DOCKERHOST) > .env
+	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 
 .PHONY: up
 up: env-file ## start sipi
@@ -20,6 +26,10 @@ logs: env-file ## follow logs
 .PHONY: down
 down: env-file ## stop sipi
 	docker-compose down
+
+.PHONY: clean
+clean:
+	@rm -rf .env
 
 .PHONY: help
 help: ## this help

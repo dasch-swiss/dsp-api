@@ -33,10 +33,9 @@ import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
-import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
+import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import resource.managed
 import spray.json._
@@ -54,18 +53,12 @@ object E2ESpec {
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+class E2ESpec(_system: ActorSystem) extends TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
-    /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
-
     def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
-
     def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
-
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
-
-    /* needed by the core trait */
 
     implicit lazy val system: ActorSystem = _system
     implicit lazy val settings: SettingsImpl = Settings(system)
@@ -80,20 +73,19 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
 
     val log = akka.event.Logging(system, this.getClass)
 
-    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
-
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     override def beforeAll: Unit = {
 
         // set allow reload over http
-        appActor ! SetAllowReloadOverHTTPState(true)
+        // appActor ! SetAllowReloadOverHTTPState(true)
 
         // start the knora service without loading of the ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        // appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
 
         // waits until knora is up and running
-        applicationStateRunning()
+        // applicationStateRunning()
+        // FIXME: Need something here that does a quick check if the API is up
 
         // loadTestData
         loadTestData(rdfDataObjects)
@@ -101,7 +93,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
-        appActor ! AppStop()
+        // appActor ! AppStop()
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
