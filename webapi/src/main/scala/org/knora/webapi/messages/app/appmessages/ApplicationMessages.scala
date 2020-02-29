@@ -25,16 +25,6 @@ case class ActorReady() extends ApplicationRequest
 case class ActorReadyAck()
 
 /**
-  * Setter message for storing the LoadDemoData flag.
-  */
-case class SetLoadDemoDataState(value: Boolean) extends ApplicationRequest
-
-/**
-  * Getter message for retrieving the LoadDemoData flag value.
-  */
-case class GetLoadDemoDataState() extends ApplicationRequest
-
-/**
   * Setter message for storing the llowReloadOverHTTP flag.
   */
 case class SetAllowReloadOverHTTPState(value: Boolean) extends ApplicationRequest

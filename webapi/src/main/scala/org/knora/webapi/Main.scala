@@ -34,11 +34,6 @@ object Main extends App with LiveCore {
 
     val arglist = args.toList
 
-    // loads demo data
-    if (arglist.contains("loadDemoData")) appActor ! SetLoadDemoDataState(true)
-    if (arglist.contains("--load-demo-data")) appActor ! SetLoadDemoDataState(true)
-    if (arglist.contains("-d")) appActor ! SetLoadDemoDataState(true)
-
     // allows reloading of data over HTTP
     if (arglist.contains("allowReloadOverHTTP")) appActor ! SetAllowReloadOverHTTPState(true)
     if (arglist.contains("--allow-reload-over-http")) appActor ! SetAllowReloadOverHTTPState(true)
