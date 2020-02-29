@@ -372,7 +372,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(response.status === StatusCodes.OK)
 
                 val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-                keywords.size should be (18)
+                keywords.size should be (20)
             }
 
             "return all keywords for a single project" in {
@@ -387,8 +387,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return empty list for a project without keywords" in {
-                val anythingIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$dokubibIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)

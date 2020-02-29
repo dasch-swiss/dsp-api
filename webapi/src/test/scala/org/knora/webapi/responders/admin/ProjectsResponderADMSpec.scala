@@ -549,7 +549,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             "return all unique keywords for all projects" in {
                 responderManager ! ProjectsKeywordsGetRequestADM(SharedTestDataADM.rootUser)
                 val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
-                received.keywords.size should be (18)
+                received.keywords.size should be (20)
             }
 
             "return all keywords for a single project" in {
@@ -563,7 +563,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return empty list for a project without keywords" in {
                 responderManager ! ProjectKeywordsGetRequestADM(
-                    projectIri = SharedTestDataADM.anythingProject.id,
+                    projectIri = SharedTestDataADM.dokubibProject.id,
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
