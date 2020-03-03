@@ -117,17 +117,18 @@ HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI[/PROJECT_IRI...]
 
 The project IRIs must be URL-encoded.
 
-Example response for the `images` test project
-(project IRI `http://rdfh.ch/projects/00FF`):
+Example response for the `anything` test project
+(project IRI `http://rdfh.ch/projects/0001`):
 
 ```jsonld
 {
-  "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
+  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/00FF"
+    "@id" : "http://rdfh.ch/projects/0001"
   },
-  "rdfs:label" : "The images demo ontology",
+  "knora-api:lastModificationDate": "2017-12-19T15:23:42.166Z",
+  "rdfs:label" : "The anything ontology",
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
