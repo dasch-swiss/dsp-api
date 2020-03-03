@@ -318,6 +318,8 @@ object OntologyConstants {
             TextFileValue
         )
 
+        val ForbiddenValue: IRI = KnoraBasePrefixExpansion + "ForbiddenValue"
+
         val ListNode: IRI = KnoraBasePrefixExpansion + "ListNode"
         val ListNodeName: IRI = KnoraBasePrefixExpansion + "listNodeName"
         val IsRootNode: IRI = KnoraBasePrefixExpansion + "isRootNode"

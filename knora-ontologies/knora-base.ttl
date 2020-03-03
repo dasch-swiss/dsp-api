@@ -2564,15 +2564,24 @@
 
 :ForbiddenResource  rdf:type owl:Class ;
 
-                    rdfs:subClassOf :Resource ,
-                    [ rdf:type owl:Restriction ;
-                      owl:onProperty :hasComment ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ];
+                    rdfs:subClassOf :Resource;
 
-                    rdfs:label """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en ;
+                    rdfs:label "Forbidden resource"@en ;
 
-                    rdfs:comment """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en .
+                    rdfs:comment "Represents a resource that the client does not have permission to see."@en .
+
+
+### http://www.knora.org/ontology/knora-base#ForbiddenValue
+
+:ForbiddenValue rdf:type owl:Class ;
+
+                rdfs:subClassOf :Value ;
+
+                rdfs:label "Forbidden value"@en ;
+
+                rdfs:comment "Represents a value that the client does not have permission to see."@en .
+
+
 
 ### http://www.knora.org/ontology/knora-base#XSLTransformation
 

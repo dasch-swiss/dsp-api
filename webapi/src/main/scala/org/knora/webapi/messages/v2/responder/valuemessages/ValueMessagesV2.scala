@@ -2394,6 +2394,33 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
 }
 
 /**
+ * Represents a value that the user does not have permission to see.
+ */
+case class ForbiddenValueContentV2(ontologySchema: OntologySchema) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.ForbiddenValue.toSmartIri
+    }
+
+    override def valueHasString: String = "Forbidden value"
+
+    override def comment: Option[String] = None
+
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = this.copy(ontologySchema = targetSchema)
+
+    override def toJsonLDValue(targetSchema: ApiV2Schema,
+                               projectADM: ProjectADM,
+                               settings: SettingsImpl,
+                               schemaOptions: Set[SchemaOption]): JsonLDValue = JsonLDObject(Map.empty)
+
+    override def unescape: ValueContentV2 = this
+
+    override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = false
+
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = false
+}
+
+/**
  * Represents a Knora URI value.
  *
  * @param valueHasUri the URI value.
