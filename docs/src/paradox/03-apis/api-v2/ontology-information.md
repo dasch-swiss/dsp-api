@@ -915,9 +915,8 @@ order:
 
 When changing an existing ontology, the client must always supply the
 ontology's `knora-api:lastModificationDate`, which is returned in the
-response to each update or with the
-[ontologies meta data](#querying-ontology-metadata). If user A attempts
-to update an ontology, but
+response to each update or when [querying the ontology](#querying-an-ontology).
+If user A attempts to update an ontology, but
 user B has already updated it since the last time user A received the
 ontology's `knora-api:lastModificationDate`, user A's update will be
 rejected with an HTTP 409 Conflict error. This means that it is possible
