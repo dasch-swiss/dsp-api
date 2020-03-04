@@ -2560,28 +2560,6 @@
                     rdfs:comment "A resource containing a text file"@en .
 
 
-### http://www.knora.org/ontology/knora-base#ForbiddenResource
-
-:ForbiddenResource  rdf:type owl:Class ;
-
-                    rdfs:subClassOf :Resource;
-
-                    rdfs:label "Forbidden resource"@en ;
-
-                    rdfs:comment "Represents a resource that the client does not have permission to see."@en .
-
-
-### http://www.knora.org/ontology/knora-base#ForbiddenValue
-
-:ForbiddenValue rdf:type owl:Class ;
-
-                rdfs:subClassOf :Value ;
-
-                rdfs:label "Forbidden value"@en ;
-
-                rdfs:comment "Represents a value that the client does not have permission to see."@en .
-
-
 
 ### http://www.knora.org/ontology/knora-base#XSLTransformation
 

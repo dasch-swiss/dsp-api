@@ -47,23 +47,30 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
             val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/Zeitglöcklein.ttl"))
             val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
-            val queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
+            val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+            )
 
-            val resourcesFuture: Future[Vector[ReadResourceV2]] = ConstructResponseUtilV2.createApiResponse(
-                queryResults = queryResultsSeparated,
+            val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = Seq(resourceIri),
                 mappings = Map.empty,
                 queryStandoff = false,
                 versionDate = None,
+                calculateMayHaveMoreResults = false,
                 responderManager = responderManager,
                 targetSchema = ApiV2Complex,
                 settings = settings,
                 requestingUser = incunabulaUser
             )
 
-            val resources: Vector[ReadResourceV2] = Await.result(resourcesFuture, 10.seconds)
-            val resourceSequence = ReadResourcesSequenceV2(numberOfResources = 1, resources = resources)
-            ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = resourceSequence)
+            val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
+
+            ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
+                expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+                received = resourceSequence
+            )
         }
     }
 }

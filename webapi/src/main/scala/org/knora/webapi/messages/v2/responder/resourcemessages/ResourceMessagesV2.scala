@@ -193,7 +193,7 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
         if (headerXSLT.nonEmpty) {
 
-            val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+            val headerJSONLD = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
             val stringReader = new StringReader(headerJSONLD.toCompactString)
@@ -810,10 +810,9 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 /**
  * Represents a sequence of resources read back from Knora.
  *
- * @param numberOfResources the amount of resources returned.
  * @param resources         a sequence of resources.
  */
-case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
+case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2], mayHaveMoreResults: Boolean = false) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
         copy(
@@ -852,14 +851,14 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
         // Make the knora-api prefix for the target schema.
 
-        val knoraApiPrefixExpansion = targetSchema match {
+        val knoraApiPrefixExpansion: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
             case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         }
 
         // Make the JSON-LD document.
 
-        val context = JsonLDUtil.makeContext(
+        val context: JsonLDObject = JsonLDUtil.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -869,9 +868,22 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
         )
 
-        val body = JsonLDObject(Map(
-            JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
-        ))
+        val mayHaveMoreResultsStatement: Option[(IRI, JsonLDBoolean)] = if (mayHaveMoreResults) {
+            val mayHaveMoreResultsProp: IRI = targetSchema match {
+                case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.MayHaveMoreResults
+                case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.MayHaveMoreResults
+            }
+
+            Some(mayHaveMoreResultsProp -> JsonLDBoolean(mayHaveMoreResults))
+        } else {
+            None
+        }
+
+        val body = JsonLDObject(
+            Map(
+                JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
+            ) ++ mayHaveMoreResultsStatement
+        )
 
         JsonLDDocument(body = body, context = context)
 
@@ -885,7 +897,6 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             schemaOptions = schemaOptions
         )
     }
-
     // #toJsonLDDocument
 
     /**
@@ -895,12 +906,12 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
      * @return the resource.
      */
     def toResource(requestedResourceIri: IRI)(implicit stringFormatter: StringFormatter): ReadResourceV2 = {
-        if (numberOfResources == 0) {
+        if (resources.isEmpty) {
             throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
         }
 
-        if (numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
+        if (resources.size > 1) {
+            throw AssertionException(s"More than one resource returned")
         }
 
         resources.head

@@ -166,8 +166,6 @@ object OntologyConstants {
         val StillImageRepresentation: IRI = KnoraBasePrefixExpansion + "StillImageRepresentation"
         val TextRepresentation: IRI = KnoraBasePrefixExpansion + "TextRepresentation"
 
-        val ForbiddenResource: IRI = KnoraBasePrefixExpansion + "ForbiddenResource"
-
         val XMLToStandoffMapping: IRI = KnoraBasePrefixExpansion + "XMLToStandoffMapping"
         val HasMappingElement: IRI = KnoraBasePrefixExpansion + "hasMappingElement"
         val MappingElement: IRI = KnoraBasePrefixExpansion + "MappingElement"
@@ -317,8 +315,6 @@ object OntologyConstants {
             MovingImageFileValue,
             TextFileValue
         )
-
-        val ForbiddenValue: IRI = KnoraBasePrefixExpansion + "ForbiddenValue"
 
         val ListNode: IRI = KnoraBasePrefixExpansion + "ListNode"
         val ListNodeName: IRI = KnoraBasePrefixExpansion + "listNodeName"
@@ -691,6 +687,7 @@ object OntologyConstants {
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
         val Error: IRI = KnoraApiV2PrefixExpansion + "error"
+        val MayHaveMoreResults: IRI = KnoraApiV2PrefixExpansion + "mayHaveMoreResults"
 
         val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
         val IsBuiltIn: IRI = KnoraApiV2PrefixExpansion + "isBuiltIn"
@@ -735,7 +732,6 @@ object OntologyConstants {
         val Author: IRI = KnoraApiV2PrefixExpansion + "author"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
-        val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
         val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
         val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
         val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
@@ -950,6 +946,7 @@ object OntologyConstants {
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
         val Error: IRI = KnoraApiV2PrefixExpansion + "error"
+        val MayHaveMoreResults: IRI = KnoraApiV2PrefixExpansion + "mayHaveMoreResults"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 
@@ -979,7 +976,6 @@ object OntologyConstants {
         val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
-        val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 

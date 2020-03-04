@@ -42,7 +42,7 @@ import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources}
+import org.knora.webapi.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.util._
@@ -314,8 +314,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     requestingUser = updateResourceMetadataRequestV2.requestingUser
                 )
 
-                _ = if (updatedResourcesSeq.numberOfResources != 1) {
-                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
+                _ = if (updatedResourcesSeq.resources.size != 1) {
+                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}")
                 }
 
                 updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
@@ -1066,7 +1066,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     }
             }
         } yield ReadResourcesSequenceV2(
-            numberOfResources = 1,
             resources = Seq(resource.copy(values = Map.empty))
         )
     }
@@ -1121,7 +1120,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             valueUuid: Option[UUID],
                                             versionDate: Option[Instant],
                                             queryStandoff: Boolean,
-                                            requestingUser: UserADM): Future[RdfResources] = {
+                                            requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1133,12 +1132,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         )
 
         for {
-            _ <- Future {
-                if (resourceIrisDistinct.toSet.contains(StringFormatter.ForbiddenResourceIri)) {
-                    throw BadRequestException(s"<${StringFormatter.ForbiddenResourceIri}> cannot be requested")
-                }
-            }
-
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = resourceIrisDistinct,
@@ -1157,11 +1150,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
-            queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
                 requestingUser = requestingUser
             )
-        } yield queryResultsSeparated
+        } yield mainResourcesAndValueRdfData
 
     }
 
@@ -1193,7 +1186,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
 
-            queryResultsSeparated: RdfResources <- getResourcesFromTriplestore(
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
                 resourceIris = resourceIris,
                 preview = false,
                 propertyIri = propertyIri,
@@ -1205,17 +1198,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
+                getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, requestingUser)
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            resourcesResponse: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createApiResponse(
-                queryResults = queryResultsSeparated,
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = resourceIrisDistinct,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
                 versionDate = versionDate,
+                calculateMayHaveMoreResults = false,
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
@@ -1224,14 +1218,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             _ = valueUuid match {
                 case Some(definedValueUuid) =>
-                    if (!resourcesResponse.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
+                    if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
                         throw NotFoundException(s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it, or it is marked as deleted)")
                     }
 
                 case None => ()
             }
 
-        } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
+        } yield apiResponse
 
     }
 
@@ -1248,7 +1242,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: RdfResources <- getResourcesFromTriplestore(
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
                 resourceIris = resourceIris,
                 preview = true,
                 propertyIri = None,
@@ -1258,18 +1252,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            resourcesResponse: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createApiResponse(
-                queryResults = queryResultsSeparated,
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = resourceIrisDistinct,
                 mappings = Map.empty[IRI, MappingAndXSLTransformation],
                 queryStandoff = false,
                 versionDate = None,
+                calculateMayHaveMoreResults = false,
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
                 requestingUser = requestingUser
             )
-        } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
+        } yield apiResponse
 
     }
 

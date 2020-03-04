@@ -174,11 +174,6 @@ object StringFormatter {
     val ClientCollectionEntityNameStart: String = "#" + ClientCollectionTypeKeyword
 
     /**
-     * The IRI of the singleton instance of `ForbiddenResource`.
-     */
-    val ForbiddenResourceIri: IRI = s"http://$IriDomain/0000/forbiddenResource"
-
-    /**
      * A container for an XML import namespace and its prefix label.
      *
      * @param namespace   the namespace.
@@ -893,24 +888,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
         ontologyName = None,
         entityName = None,
         ontologySchema = None
-    )
-
-    /**
-     * The singleton instance of `knora-base:ForbiddenResource`.
-     */
-    val forbiddenResource: ReadResourceV2 = ReadResourceV2(
-        resourceIri = StringFormatter.ForbiddenResourceIri,
-        label = "This resource is a proxy for a resource you are not allowed to see",
-        resourceClassIri = toSmartIri(OntologyConstants.KnoraBase.ForbiddenResource),
-        attachedToUser = SharedTestDataADM.rootUser.id,
-        projectADM = SharedTestDataADM.systemProject,
-        permissions = "V knora-admin:UnknownUser",
-        userPermission = PermissionUtilADM.ViewPermission,
-        values = Map.empty,
-        creationDate = Instant.parse("2017-10-06T11:05:37Z"),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
     )
 
     /**

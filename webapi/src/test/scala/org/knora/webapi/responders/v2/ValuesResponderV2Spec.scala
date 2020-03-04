@@ -178,13 +178,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
 
         expectMsgPF(timeout) {
-            case searchResponse: ReadResourcesSequenceV2 =>
-                // Get the resource from the response.
-                resourcesSequenceToResource(
-                    requestedresourceIri = resourceIri,
-                    readResourcesSequence = searchResponse,
-                    requestingUser = requestingUser
-                )
+            case searchResponse: ReadResourcesSequenceV2 => searchResponse.toResource(resourceIri).toOntologySchema(ApiV2Complex)
         }
     }
 
@@ -266,35 +260,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
     }
 
-    private def resourcesSequenceToResource(requestedresourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
-        if (readResourcesSequence.numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedresourceIri>, but no resources were returned")
-        }
-
-        if (readResourcesSequence.numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedresourceIri>")
-        }
-
-        val resourceInfo = readResourcesSequence.resources.head
-
-        if (resourceInfo.resourceIri == StringFormatter.ForbiddenResourceIri) {
-            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
-        }
-
-        resourceInfo.toOntologySchema(ApiV2Complex)
-    }
-
     private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
         responderManager ! ResourcesPreviewGetRequestV2(resourceIris = Seq(resourceIri), targetSchema = ApiV2Complex, requestingUser = requestingUser)
 
         expectMsgPF(timeout) {
             case previewResponse: ReadResourcesSequenceV2 =>
-                val resourcePreview: ReadResourceV2 = resourcesSequenceToResource(
-                    requestedresourceIri = resourceIri,
-                    readResourcesSequence = previewResponse,
-                    requestingUser = requestingUser
-                )
-
+                val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
                 resourcePreview.lastModificationDate
         }
     }

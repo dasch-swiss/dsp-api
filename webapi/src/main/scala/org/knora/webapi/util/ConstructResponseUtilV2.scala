@@ -37,7 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetRemainingStandoffFromTextValueRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, ViewPermission}
+import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.date.{CalendarNameV2, DatePrecisionV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
@@ -280,31 +280,6 @@ object ConstructResponseUtilV2 {
                                         userPermission: Option[EntityPermission],
                                         valuePropertyAssertions: RdfPropertyValues) extends RdfData
 
-
-    /**
-     * A [[ResourceWithValueRdfData]] representing a placeholder for a main resource that the user doesn't
-     * have permission to see. It is replaced by `ForbiddenResource` during processing.
-     */
-    val ForbiddenMainResourcePlaceholder: ResourceWithValueRdfData = ResourceWithValueRdfData(
-        subjectIri = StringFormatter.ForbiddenResourceIri,
-        assertions = Map.empty,
-        isMainResource = true,
-        userPermission = Some(ViewPermission),
-        valuePropertyAssertions = Map.empty
-    )
-
-    /**
-     * A [[ResourceWithValueRdfData]] representing a placeholder for a dependent resource that the user doesn't
-     * have permission to see. It is replaced by `ForbiddenResource` during processing.
-     */
-    val ForbiddenDependentResourcePlaceholder: ResourceWithValueRdfData = ResourceWithValueRdfData(
-        subjectIri = StringFormatter.ForbiddenResourceIri,
-        assertions = Map.empty,
-        isMainResource = false,
-        userPermission = Some(ViewPermission),
-        valuePropertyAssertions = Map.empty
-    )
-
     /**
      * Represents a mapping including information about the standoff entities.
      * May include a default XSL transformation.
@@ -315,6 +290,8 @@ object ConstructResponseUtilV2 {
      */
     case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV2, XSLTransformation: Option[String])
 
+    case class MainResourcesAndValueRdfData(resources: RdfResources, hiddenResourceCount: Int)
+
     /**
      * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
      * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
@@ -323,7 +300,7 @@ object ConstructResponseUtilV2 {
      * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
      * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
      */
-    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse, requestingUser: UserADM)(implicit stringFormatter: StringFormatter): RdfResources = {
+    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse, requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
 
         // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
         case class RdfWithUserPermission(assertions: ConstructPredicateObjects, maybeUserPermission: Option[EntityPermission])
@@ -521,9 +498,9 @@ object ConstructResponseUtilV2 {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
         }.toSet
 
-        val mainResourceIrisNotVisible: Set[IRI] = hiddenResources.collect {
+        val mainResourceIrisNotVisibleCount: Int = hiddenResources.collect {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
-        }.toSet
+        }.toSet.size
 
         val dependentResourceIrisVisible: Set[IRI] = visibleResources.collect {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
@@ -590,36 +567,33 @@ object ConstructResponseUtilV2 {
 
             val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
                 case (propIri, values) =>
-                    val transformedValues = values.map {
-                        value: ValueRdfData =>
+                    val transformedValues: Seq[ValueRdfData] = values.foldLeft(Vector.empty[ValueRdfData]) {
+                        case (acc: Vector[ValueRdfData], value: ValueRdfData) =>
                             if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
                                 val dependentResourceIri: IRI = value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri)
 
                                 if (alreadyTraversed(dependentResourceIri)) {
-                                    value
+                                    acc :+ value
                                 } else {
                                     // Do we have the dependent resource?
                                     if (dependentResourceIrisVisible.contains(dependentResourceIri)) {
                                         // Yes. Nest it in the link value.
                                         val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
-                                        value.copy(
+                                        acc :+ value.copy(
                                             nestedResource = Some(dependentResource)
                                         )
                                     } else if (dependentResourceIrisNotVisible.contains(dependentResourceIri)) {
-                                        // No, because the user doesn't have permission to see it. Nest a placeholder for
-                                        // ForbiddenResource in the link value.
-                                        value.copy(
-                                            nestedResource = Some(ForbiddenDependentResourcePlaceholder)
-                                        )
+                                        // No, because the user doesn't have permission to see it. Skip the link value.
+                                        acc
                                     } else {
                                         // We don't have the dependent resource because it is marked as deleted. Just
                                         // return the link value without a nested resource.
-                                        value
+                                        acc :+ value
                                     }
                                 }
                             } else {
-                                value
+                                acc :+ value
                             }
                     }
 
@@ -693,11 +667,7 @@ object ConstructResponseUtilV2 {
                 resourceIri -> transformedResource
         }.toMap
 
-        val forbiddenResourcesForHiddenMainResources: Map[IRI, ResourceWithValueRdfData] = mainResourceIrisNotVisible.map {
-            resourceIri => resourceIri -> ForbiddenMainResourcePlaceholder
-        }.toMap
-
-        mainResourcesNested ++ forbiddenResourcesForHiddenMainResources
+        MainResourcesAndValueRdfData(resources = mainResourcesNested, hiddenResourceCount = mainResourceIrisNotVisibleCount)
     }
 
     /**
@@ -908,32 +878,22 @@ object ConstructResponseUtilV2 {
         // Is there a nested resource in the link value?
         valueObject.nestedResource match {
             case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
-                // Yes. Is the nested resource a placeholder for the forbidden resource?
-                if (nestedResourceAssertions.subjectIri == StringFormatter.ForbiddenResourceIri) {
-                    // Yes. Replace it with the forbidden resource.
-                    Future {
-                        linkValue.copy(
-                            nestedResource = Some(stringFormatter.forbiddenResource)
-                        )
-                    }
-                } else {
-                    // No. Construct a ReadResourceV2 representing the nested resource.
-                    for {
-                        nestedResource <- constructReadResourceV2(
-                            resourceIri = referredResourceIri,
-                            resourceWithValueRdfData = nestedResourceAssertions,
-                            mappings = mappings,
-                            queryStandoff = queryStandoff,
-                            versionDate = versionDate,
-                            responderManager = responderManager,
-                            requestingUser = requestingUser,
-                            targetSchema = targetSchema,
-                            settings = settings
-                        )
-                    } yield linkValue.copy(
-                        nestedResource = Some(nestedResource)
+                // Yes. Construct a ReadResourceV2 representing the nested resource.
+                for {
+                    nestedResource <- constructReadResourceV2(
+                        resourceIri = referredResourceIri,
+                        resourceWithValueRdfData = nestedResourceAssertions,
+                        mappings = mappings,
+                        queryStandoff = queryStandoff,
+                        versionDate = versionDate,
+                        responderManager = responderManager,
+                        requestingUser = requestingUser,
+                        targetSchema = targetSchema,
+                        settings = settings
                     )
-                }
+                } yield linkValue.copy(
+                    nestedResource = Some(nestedResource)
+                )
 
             case None =>
                 // There is no nested resource.
@@ -1159,153 +1119,147 @@ object ConstructResponseUtilV2 {
             }
         }
 
-        if (resourceWithValueRdfData.subjectIri == StringFormatter.ForbiddenResourceIri) {
-            FastFuture.successful(stringFormatter.forbiddenResource)
-        } else {
-            val resourceLabel: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.Rdfs.Label.toSmartIri)
-            val resourceClassStr: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri)
-            val resourceClass = resourceClassStr.toSmartIriWithErr(throw InconsistentTriplestoreDataException(s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>"))
-            val resourceAttachedToUser: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
-            val resourceAttachedToProject: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri)
-            val resourcePermissions: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
-            val resourceCreationDate: Instant = resourceWithValueRdfData.requireDateTimeObject(OntologyConstants.KnoraBase.CreationDate.toSmartIri)
-            val resourceLastModificationDate: Option[Instant] = resourceWithValueRdfData.maybeDateTimeObject(OntologyConstants.KnoraBase.LastModificationDate.toSmartIri)
-            val resourceDeletionInfo = getDeletionInfo(resourceWithValueRdfData)
+        val resourceLabel: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.Rdfs.Label.toSmartIri)
+        val resourceClassStr: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri)
+        val resourceClass = resourceClassStr.toSmartIriWithErr(throw InconsistentTriplestoreDataException(s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>"))
+        val resourceAttachedToUser: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
+        val resourceAttachedToProject: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri)
+        val resourcePermissions: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+        val resourceCreationDate: Instant = resourceWithValueRdfData.requireDateTimeObject(OntologyConstants.KnoraBase.CreationDate.toSmartIri)
+        val resourceLastModificationDate: Option[Instant] = resourceWithValueRdfData.maybeDateTimeObject(OntologyConstants.KnoraBase.LastModificationDate.toSmartIri)
+        val resourceDeletionInfo = getDeletionInfo(resourceWithValueRdfData)
 
-            // get the resource's values
-            val valueObjectFutures: Map[SmartIri, Seq[Future[ReadValueV2]]] = resourceWithValueRdfData.valuePropertyAssertions.map {
-                case (property: SmartIri, valObjs: Seq[ValueRdfData]) =>
-                    val readValues: Seq[Future[ReadValueV2]] = valObjs.sortBy(_.subjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
-                        valObj: ValueRdfData =>
-                            // set order to zero if not given
-                            valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasOrder.toSmartIri).getOrElse(0)
-                    }.map {
-                        valObj: ValueRdfData =>
-                            for {
-                                valueContent: ValueContentV2 <- createValueContentV2FromValueRdfData(
-                                    resourceIri = resourceIri,
-                                    valueObject = valObj,
-                                    mappings = mappings,
-                                    queryStandoff = queryStandoff,
-                                    responderManager = responderManager,
-                                    requestingUser = requestingUser,
-                                    targetSchema = targetSchema,
-                                    settings = settings
+        // get the resource's values
+        val valueObjectFutures: Map[SmartIri, Seq[Future[ReadValueV2]]] = resourceWithValueRdfData.valuePropertyAssertions.map {
+            case (property: SmartIri, valObjs: Seq[ValueRdfData]) =>
+                val readValues: Seq[Future[ReadValueV2]] = valObjs.sortBy(_.subjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
+                    valObj: ValueRdfData =>
+                        // set order to zero if not given
+                        valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasOrder.toSmartIri).getOrElse(0)
+                }.map {
+                    valObj: ValueRdfData =>
+                        for {
+                            valueContent: ValueContentV2 <- createValueContentV2FromValueRdfData(
+                                resourceIri = resourceIri,
+                                valueObject = valObj,
+                                mappings = mappings,
+                                queryStandoff = queryStandoff,
+                                responderManager = responderManager,
+                                requestingUser = requestingUser,
+                                targetSchema = targetSchema,
+                                settings = settings
+                            )
+
+                            attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
+                            permissions = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+                            valueCreationDate: Instant = valObj.requireDateTimeObject(OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri)
+                            valueDeletionInfo = getDeletionInfo(valObj)
+                            valueHasUUID: UUID = stringFormatter.decodeUuid(valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri))
+                            previousValueIri: Option[IRI] = valObj.maybeIriObject(OntologyConstants.KnoraBase.PreviousValue.toSmartIri)
+
+                        } yield valueContent match {
+                            case linkValueContentV2: LinkValueContentV2 =>
+                                val valueHasRefCount: Int = valObj.requireIntObject(OntologyConstants.KnoraBase.ValueHasRefCount.toSmartIri)
+
+                                ReadLinkValueV2(
+                                    valueIri = valObj.subjectIri,
+                                    attachedToUser = attachedToUser,
+                                    permissions = permissions,
+                                    userPermission = valObj.userPermission,
+                                    valueCreationDate = valueCreationDate,
+                                    valueHasUUID = valueHasUUID,
+                                    valueContent = linkValueContentV2,
+                                    valueHasRefCount = valueHasRefCount,
+                                    previousValueIri = previousValueIri,
+                                    deletionInfo = valueDeletionInfo
                                 )
 
-                                attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
-                                permissions = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
-                                valueCreationDate: Instant = valObj.requireDateTimeObject(OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri)
-                                valueDeletionInfo = getDeletionInfo(valObj)
-                                valueHasUUID: UUID = stringFormatter.decodeUuid(valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri))
-                                previousValueIri: Option[IRI] = valObj.maybeIriObject(OntologyConstants.KnoraBase.PreviousValue.toSmartIri)
+                            case textValueContentV2: TextValueContentV2 =>
+                                val maybeValueHasMaxStandoffStartIndex: Option[Int] = valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
 
-                            } yield valueContent match {
-                                case linkValueContentV2: LinkValueContentV2 =>
-                                    val valueHasRefCount: Int = valObj.requireIntObject(OntologyConstants.KnoraBase.ValueHasRefCount.toSmartIri)
+                                ReadTextValueV2(
+                                    valueIri = valObj.subjectIri,
+                                    attachedToUser = attachedToUser,
+                                    permissions = permissions,
+                                    userPermission = valObj.userPermission,
+                                    valueCreationDate = valueCreationDate,
+                                    valueHasUUID = valueHasUUID,
+                                    valueContent = textValueContentV2,
+                                    valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
+                                    previousValueIri = previousValueIri,
+                                    deletionInfo = valueDeletionInfo
+                                )
 
-                                    ReadLinkValueV2(
-                                        valueIri = valObj.subjectIri,
-                                        attachedToUser = attachedToUser,
-                                        permissions = permissions,
-                                        userPermission = valObj.userPermission,
-                                        valueCreationDate = valueCreationDate,
-                                        valueHasUUID = valueHasUUID,
-                                        valueContent = linkValueContentV2,
-                                        valueHasRefCount = valueHasRefCount,
-                                        previousValueIri = previousValueIri,
-                                        deletionInfo = valueDeletionInfo
-                                    )
+                            case otherValueContentV2: ValueContentV2 =>
+                                ReadOtherValueV2(
+                                    valueIri = valObj.subjectIri,
+                                    attachedToUser = attachedToUser,
+                                    permissions = permissions,
+                                    userPermission = valObj.userPermission,
+                                    valueCreationDate = valueCreationDate,
+                                    valueHasUUID = valueHasUUID,
+                                    valueContent = otherValueContentV2,
+                                    previousValueIri = previousValueIri,
+                                    deletionInfo = valueDeletionInfo
+                                )
+                        }
+                }
 
-                                case textValueContentV2: TextValueContentV2 =>
-                                    val maybeValueHasMaxStandoffStartIndex: Option[Int] = valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
-
-                                    ReadTextValueV2(
-                                        valueIri = valObj.subjectIri,
-                                        attachedToUser = attachedToUser,
-                                        permissions = permissions,
-                                        userPermission = valObj.userPermission,
-                                        valueCreationDate = valueCreationDate,
-                                        valueHasUUID = valueHasUUID,
-                                        valueContent = textValueContentV2,
-                                        valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
-                                        previousValueIri = previousValueIri,
-                                        deletionInfo = valueDeletionInfo
-                                    )
-
-                                case otherValueContentV2: ValueContentV2 =>
-                                    ReadOtherValueV2(
-                                        valueIri = valObj.subjectIri,
-                                        attachedToUser = attachedToUser,
-                                        permissions = permissions,
-                                        userPermission = valObj.userPermission,
-                                        valueCreationDate = valueCreationDate,
-                                        valueHasUUID = valueHasUUID,
-                                        valueContent = otherValueContentV2,
-                                        previousValueIri = previousValueIri,
-                                        deletionInfo = valueDeletionInfo
-                                    )
-                            }
-                    }
-
-                    property -> readValues
-            }
-
-            for {
-                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
-                valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
-            } yield ReadResourceV2(
-                resourceIri = resourceIri,
-                resourceClassIri = resourceClass,
-                label = resourceLabel,
-                attachedToUser = resourceAttachedToUser,
-                projectADM = projectResponse.project,
-                permissions = resourcePermissions,
-                userPermission = resourceWithValueRdfData.userPermission.get,
-                values = valueObjects,
-                creationDate = resourceCreationDate,
-                lastModificationDate = resourceLastModificationDate,
-                versionDate = versionDate,
-                deletionInfo = resourceDeletionInfo
-            )
+                property -> readValues
         }
+
+        for {
+            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
+            valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
+        } yield ReadResourceV2(
+            resourceIri = resourceIri,
+            resourceClassIri = resourceClass,
+            label = resourceLabel,
+            attachedToUser = resourceAttachedToUser,
+            projectADM = projectResponse.project,
+            permissions = resourcePermissions,
+            userPermission = resourceWithValueRdfData.userPermission.get,
+            values = valueObjects,
+            creationDate = resourceCreationDate,
+            lastModificationDate = resourceLastModificationDate,
+            versionDate = versionDate,
+            deletionInfo = resourceDeletionInfo
+        )
     }
 
     /**
      * Creates an API response.
      *
-     * @param queryResults      the query results.
-     * @param orderByResourceIri the order in which the resources should be returned.
-     * @param mappings           the mappings to convert standoff to XML, if any.
-     * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
-     * @param versionDate      if defined, represents the requested time in the the resources' version history.
-     * @param responderManager   the Knora responder manager.
-     * @param targetSchema       the schema of response.
-     * @param settings           the application's settings.
-     * @param requestingUser     the user making the request.
+     * @param mainResourcesAndValueRdfData the query results.
+     * @param orderByResourceIri           the order in which the resources should be returned.
+     * @param mappings                     the mappings to convert standoff to XML, if any.
+     * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
+     * @param versionDate                  if defined, represents the requested time in the the resources' version history.
+     * @param responderManager             the Knora responder manager.
+     * @param targetSchema                 the schema of response.
+     * @param settings                     the application's settings.
+     * @param requestingUser               the user making the request.
      * @return a collection of [[ReadResourceV2]] representing the search results.
      */
-    def createApiResponse(queryResults: RdfResources,
+    def createApiResponse(mainResourcesAndValueRdfData: MainResourcesAndValueRdfData,
                           orderByResourceIri: Seq[IRI],
                           mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
                           queryStandoff: Boolean,
+                          calculateMayHaveMoreResults: Boolean,
                           versionDate: Option[Instant],
                           responderManager: ActorRef,
                           targetSchema: ApiV2Schema,
                           settings: SettingsImpl,
-                          requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
+                          requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourcesSequenceV2] = {
+
+        val visibleResourceIris: Seq[IRI] = orderByResourceIri.filter(resourceIri => mainResourcesAndValueRdfData.resources.keySet.contains(resourceIri))
 
         // iterate over orderByResourceIris and construct the response in the correct order
-        val readResourceFutures: Vector[Future[ReadResourceV2]] = orderByResourceIri.map {
+        val readResourceFutures: Vector[Future[ReadResourceV2]] = visibleResourceIris.map {
             resourceIri: IRI =>
-                val resource: ResourceWithValueRdfData = queryResults(resourceIri)
-
-                // If the user doesn't have permission to see the resource, its IRI will be mapped
-                // to ForbiddenMainResourcePlaceholder. Therefore use the IRI from the ResourceWithValueRdfData,
-                // not the actual resource IRI.
                 constructReadResourceV2(
-                    resourceIri = resource.subjectIri,
-                    resourceWithValueRdfData = resource,
+                    resourceIri = resourceIri,
+                    resourceWithValueRdfData = mainResourcesAndValueRdfData.resources(resourceIri),
                     mappings = mappings,
                     queryStandoff = queryStandoff,
                     versionDate = None,
@@ -1317,6 +1271,10 @@ object ConstructResponseUtilV2 {
 
         }.toVector
 
-        Future.sequence(readResourceFutures)
+        for {
+            resources <- Future.sequence(readResourceFutures)
+            mayHaveMoreResults = calculateMayHaveMoreResults &&
+                settings.maxResultsPerSearchResultPage > (visibleResourceIris.size + mainResourcesAndValueRdfData.hiddenResourceCount)
+        } yield ReadResourcesSequenceV2(resources = resources, mayHaveMoreResults = mayHaveMoreResults)
     }
 }
