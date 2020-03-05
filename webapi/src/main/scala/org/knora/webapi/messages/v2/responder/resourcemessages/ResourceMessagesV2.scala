@@ -908,9 +908,14 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
      * @param requestedResourceIri the IRI of the expected resource.
      * @return the resource.
      * @throws NotFoundException   if the resource is not found.
+     * @throws ForbiddenException  if the user does not have permission to see the requested resource.
      * @throws BadRequestException if more than one resource was returned.
      */
     def toResource(requestedResourceIri: IRI)(implicit stringFormatter: StringFormatter): ReadResourceV2 = {
+        if (hiddenResourceIris.contains(requestedResourceIri)) {
+            throw ForbiddenException(s"You do not have permission to see resource <$requestedResourceIri>")
+        }
+
         if (resources.isEmpty) {
             throw NotFoundException(s"Expected <$requestedResourceIri>, but no resources were returned")
         }
