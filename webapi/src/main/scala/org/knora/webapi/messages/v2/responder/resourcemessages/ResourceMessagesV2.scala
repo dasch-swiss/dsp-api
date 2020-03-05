@@ -810,7 +810,9 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 /**
  * Represents a sequence of resources read back from Knora.
  *
- * @param resources a sequence of resources.
+ * @param resources          a sequence of resources.
+ * @param hiddenResourceIris the IRIs of resources that were requested but that the user did not have permission to see.
+ * @param mayHaveMoreResults `true` if more resources matching the request may be available.
  */
 case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
                                    hiddenResourceIris: Set[IRI] = Set.empty,
@@ -937,6 +939,8 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
      *
      * @param targetResourceIris the IRIs to be checked.
      * @param resourcesSequence  the result of requesting those IRIs.
+     * @throws NotFoundException  if the requested resources are not found.
+     * @throws ForbiddenException if the user does not have permission to see the requested resources.
      */
     def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Unit = {
         val hiddenTargetResourceIris: Set[IRI] = targetResourceIris.intersect(resourcesSequence.hiddenResourceIris)
