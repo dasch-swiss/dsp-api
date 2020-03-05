@@ -103,10 +103,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             // separate resources and values
             mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)
 
-            _ = if (mainResourcesAndValueRdfData.resources.keySet != Set(getStandoffRequestV2.resourceIri)) {
-                throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> was not found (maybe you do not have permission to see it, or it is marked as deleted)")
-            }
-
             readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
@@ -120,7 +116,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 requestingUser = getStandoffRequestV2.requestingUser
             )
 
-            readResourceV2 = readResourcesSequenceV2.resources.headOption.getOrElse(throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> not found"))
+            readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
             valueObj: ReadValueV2 = readResourceV2.values.values.flatten.find(_.valueIri == getStandoffRequestV2.valueIri).getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"))
 
