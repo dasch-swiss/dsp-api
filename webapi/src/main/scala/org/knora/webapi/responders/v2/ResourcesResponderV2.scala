@@ -1216,7 +1216,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            _ = checkResourceIris(
+            _ = apiResponse.checkResourceIris(
                 targetResourceIris = resourceIris.toSet,
                 resourcesSequence = apiResponse
             )
@@ -1270,7 +1270,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            _ = checkResourceIris(
+            _ = apiResponse.checkResourceIris(
                 targetResourceIris = resourceIris.toSet,
                 resourcesSequence = apiResponse
             )
@@ -1539,26 +1539,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             )
 
         } yield tei
-    }
-
-    /**
-     * Checks that requested resources were found and that the user has permission to see them. If not, throws an exception.
-     *
-     * @param targetResourceIris the IRIs to be checked.
-     * @param resourcesSequence  the result of requesting those IRIs.
-     */
-    private def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Unit = {
-        val hiddenTargetResourceIris: Set[IRI] = targetResourceIris.intersect(resourcesSequence.hiddenResourceIris)
-
-        if (hiddenTargetResourceIris.nonEmpty) {
-            throw ForbiddenException(s"You do not have permission to view one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}")
-        }
-
-        val missingResourceIris: Set[IRI] = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
-
-        if (missingResourceIris.nonEmpty) {
-            throw NotFoundException(s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}")
-        }
     }
 
     /**

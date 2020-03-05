@@ -931,6 +931,27 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
         resources.head
     }
 
+
+    /**
+     * Checks that requested resources were found and that the user has permission to see them. If not, throws an exception.
+     *
+     * @param targetResourceIris the IRIs to be checked.
+     * @param resourcesSequence  the result of requesting those IRIs.
+     */
+    def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Unit = {
+        val hiddenTargetResourceIris: Set[IRI] = targetResourceIris.intersect(resourcesSequence.hiddenResourceIris)
+
+        if (hiddenTargetResourceIris.nonEmpty) {
+            throw ForbiddenException(s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}")
+        }
+
+        val missingResourceIris: Set[IRI] = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
+
+        if (missingResourceIris.nonEmpty) {
+            throw NotFoundException(s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}")
+        }
+    }
+
     /**
      * Considers this [[ReadResourcesSequenceV2]] to be the result of an update operation in a single project
      * (since Knora never updates resources in more than one project at a time), and returns information about that
