@@ -225,29 +225,6 @@ knora-api:File a rdfs:Datatype;
   rdfs:label "File URI";
   owl:onDatatype xsd:anyURI .
 
-knora-api:ForbiddenResource a owl:Class;
-  rdfs:comment "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
-  rdfs:label "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasComment
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
-
 knora-api:Geom a rdfs:Datatype;
   rdfs:comment "Represents a geometry specification in JSON.";
   rdfs:label "Geometry specification";
@@ -517,6 +494,11 @@ knora-api:isPartOf a owl:ObjectProperty;
   rdfs:comment "Indicates that this resource is part of another resource";
   rdfs:label "is part of";
   rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:mayHaveMoreResults a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  rdfs:comment "Indicates whether more results may be available for a search query";
+  rdfs:label "May have more results" .
 
 knora-api:objectType a rdf:Property;
   rdfs:comment "Specifies the required type of the objects of a property";

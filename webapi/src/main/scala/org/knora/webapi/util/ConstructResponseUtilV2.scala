@@ -290,17 +290,31 @@ object ConstructResponseUtilV2 {
      */
     case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV2, XSLTransformation: Option[String])
 
-    case class MainResourcesAndValueRdfData(resources: RdfResources, hiddenResourceCount: Int)
+    /**
+     * Represents a tree structure of resources, values and dependent resources returned by a SPARQL CONSTRUCT query.
+     *
+     * @param resources                   a map of resource Iris to [[ResourceWithValueRdfData]]. The resource Iris represent main resources, dependent
+     *                                    resources are contained in the link values as nested structures.
+     * @param hiddenMainResourceIris      the IRIs of main resources that were hidden because the user does not have permission
+     *                                    to see them.
+     * @param hiddenDependentResourceIris the IRIs of dependent resources that were hidden because the user does not have
+     *                                    permission to see them.
+     */
+    case class MainResourcesAndValueRdfData(resources: RdfResources,
+                                            hiddenMainResourceIris: Set[IRI] = Set.empty,
+                                            hiddenDependentResourceIris: Set[IRI] = Set.empty)
 
     /**
      * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
-     * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
+     * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values,
+     * i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
      * The resource Iris represent main resources, dependent resources are contained in the link values as nested structures.
      *
      * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
-     * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
+     * @return an instance of [[MainResourcesAndValueRdfData]].
      */
-    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse, requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
+    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse,
+                                          requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
 
         // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
         case class RdfWithUserPermission(assertions: ConstructPredicateObjects, maybeUserPermission: Option[EntityPermission])
@@ -498,9 +512,9 @@ object ConstructResponseUtilV2 {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
         }.toSet
 
-        val mainResourceIrisNotVisibleCount: Int = hiddenResources.collect {
+        val mainResourceIrisNotVisible: Set[IRI] = hiddenResources.collect {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
-        }.toSet.size
+        }.toSet
 
         val dependentResourceIrisVisible: Set[IRI] = visibleResources.collect {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
@@ -667,7 +681,11 @@ object ConstructResponseUtilV2 {
                 resourceIri -> transformedResource
         }.toMap
 
-        MainResourcesAndValueRdfData(resources = mainResourcesNested, hiddenResourceCount = mainResourceIrisNotVisibleCount)
+        MainResourcesAndValueRdfData(
+            resources = mainResourcesNested,
+            hiddenMainResourceIris = mainResourceIrisNotVisible,
+            hiddenDependentResourceIris = dependentResourceIrisNotVisible
+        )
     }
 
     /**
@@ -1262,7 +1280,7 @@ object ConstructResponseUtilV2 {
                     resourceWithValueRdfData = mainResourcesAndValueRdfData.resources(resourceIri),
                     mappings = mappings,
                     queryStandoff = queryStandoff,
-                    versionDate = None,
+                    versionDate = versionDate,
                     responderManager = responderManager,
                     targetSchema = targetSchema,
                     settings = settings,
@@ -1274,7 +1292,11 @@ object ConstructResponseUtilV2 {
         for {
             resources <- Future.sequence(readResourceFutures)
             mayHaveMoreResults = calculateMayHaveMoreResults &&
-                settings.maxResultsPerSearchResultPage > (visibleResourceIris.size + mainResourcesAndValueRdfData.hiddenResourceCount)
-        } yield ReadResourcesSequenceV2(resources = resources, mayHaveMoreResults = mayHaveMoreResults)
+                settings.v2ResultsPerPage == (visibleResourceIris.size + mainResourcesAndValueRdfData.hiddenMainResourceIris.size)
+        } yield ReadResourcesSequenceV2(
+            resources = resources,
+            hiddenResourceIris = mainResourcesAndValueRdfData.hiddenMainResourceIris ++ mainResourcesAndValueRdfData.hiddenDependentResourceIris,
+            mayHaveMoreResults = mayHaveMoreResults
+        )
     }
 }

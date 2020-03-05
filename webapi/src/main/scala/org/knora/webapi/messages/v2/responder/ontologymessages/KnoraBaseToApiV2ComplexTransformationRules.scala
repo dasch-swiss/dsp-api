@@ -86,6 +86,26 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
+    private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.MayHaveMoreResults,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "May have more results"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether more results may be available for a search query"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
     private val UserHasPermission: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Complex.UserHasPermission,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1764,6 +1784,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Label,
         Result,
+        MayHaveMoreResults,
         Error,
         UserHasPermission,
         VersionDate,

@@ -95,7 +95,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 // Convert the resource to the internal ontology schema.
                 internalCreateResource: CreateResourceV2 <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
-                // Check standoff link targets and list nodes that should exist.
+                // Check link targets and list nodes that should exist.
 
                 _ <- checkStandoffLinkTargets(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
                 _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
@@ -695,7 +695,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      */
     private def getLinkTargetClasses(internalCreateResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
         // Get the IRIs of the new and existing resources that are targets of links.
-        val (existingTargets: Set[IRI], newTargets: Set[IRI]) = internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
+        val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) = internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
             case ((accExisting: Set[IRI], accNew: Set[IRI]), valueToCreate: CreateValueInNewResourceV2) =>
                 valueToCreate.valueContent match {
                     case linkValueContentV2: LinkValueContentV2 =>
@@ -717,7 +717,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         for {
             // Get information about the existing resources that are targets of links.
             existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                resourceIris = existingTargets.toSeq,
+                resourceIris = existingTargetIris.toSeq,
                 targetSchema = ApiV2Complex,
                 requestingUser = requestingUser
             )
@@ -851,7 +851,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
         }
 
-        checkResourceIris(standoffLinkTargetsThatShouldExist, requestingUser)
+        getResourcePreviewV2(standoffLinkTargetsThatShouldExist.toSeq, targetSchema = ApiV2Complex, requestingUser).map(_ => ())
     }
 
     /**
@@ -1006,7 +1006,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
-        for {
+        val resourceFuture: Future[ReadResourcesSequenceV2] = for {
             resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
                 resourceIris = Seq(resourceIri),
                 requestingUser = requestingUser,
@@ -1014,11 +1014,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues
             )
 
-            resource: ReadResourceV2 = try {
-                resourcesResponse.toResource(requestedResourceIri = resourceIri)
-            } catch {
-                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
-            }
+            resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
 
             _ = if (resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri) {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
@@ -1068,6 +1064,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         } yield ReadResourcesSequenceV2(
             resources = Seq(resource.copy(values = Map.empty))
         )
+
+        resourceFuture.recover {
+            case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
+        }
     }
 
     /**
@@ -1216,6 +1216,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
+            _ = checkResourceIris(
+                targetResourceIris = resourceIris.toSet,
+                resourcesSequence = apiResponse
+            )
+
             _ = valueUuid match {
                 case Some(definedValueUuid) =>
                     if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
@@ -1264,8 +1269,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 settings = settings,
                 requestingUser = requestingUser
             )
-        } yield apiResponse
 
+            _ = checkResourceIris(
+                targetResourceIris = resourceIris.toSet,
+                resourcesSequence = apiResponse
+            )
+        } yield apiResponse
     }
 
     /**
@@ -1533,17 +1542,22 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     }
 
     /**
-     * Given a set of resource IRIs, checks that they point to Knora resources.
-     * If not, throws an exception.
+     * Checks that requested resources were found and that the user has permission to see them. If not, throws an exception.
      *
      * @param targetResourceIris the IRIs to be checked.
-     * @param requestingUser     the user making the request.
+     * @param resourcesSequence  the result of requesting those IRIs.
      */
-    private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
-        if (targetResourceIris.isEmpty) {
-            FastFuture.successful(())
-        } else {
-            getResourcePreviewV2(targetResourceIris.toSeq, targetSchema = ApiV2Complex, requestingUser).map(_ => ())
+    private def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Unit = {
+        val hiddenTargetResourceIris: Set[IRI] = targetResourceIris.intersect(resourcesSequence.hiddenResourceIris)
+
+        if (hiddenTargetResourceIris.nonEmpty) {
+            throw ForbiddenException(s"You do not have permission to view one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}")
+        }
+
+        val missingResourceIris: Set[IRI] = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
+
+        if (missingResourceIris.nonEmpty) {
+            throw NotFoundException(s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}")
         }
     }
 

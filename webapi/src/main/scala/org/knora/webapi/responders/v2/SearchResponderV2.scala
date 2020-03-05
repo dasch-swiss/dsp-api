@@ -215,10 +215,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                 // the prequery returned no results, no further query is necessary
                 Future(
-                    ConstructResponseUtilV2.MainResourcesAndValueRdfData(
-                    resources = Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData],
-                        hiddenResourceCount = 0
-                    )
+                    ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
                 )
             }
 
@@ -482,11 +479,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         inputQuery
                     )
 
-                } yield ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = queryResWithFullGraphPatternOnlyRequestedValues, queryResultsFilteredForPermissions.hiddenResourceCount)
+                } yield ConstructResponseUtilV2.MainResourcesAndValueRdfData(
+                    resources = queryResWithFullGraphPatternOnlyRequestedValues,
+                    hiddenMainResourceIris = queryResultsFilteredForPermissions.hiddenMainResourceIris,
+                    hiddenDependentResourceIris = queryResultsFilteredForPermissions.hiddenDependentResourceIris
+                )
 
             } else {
                 // the prequery returned no results, no further query is necessary
-                Future(ConstructResponseUtilV2.MainResourcesAndValueRdfData(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], 0))
+                Future(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]))
             }
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to

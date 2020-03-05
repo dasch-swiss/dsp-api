@@ -810,9 +810,11 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 /**
  * Represents a sequence of resources read back from Knora.
  *
- * @param resources         a sequence of resources.
+ * @param resources a sequence of resources.
  */
-case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2], mayHaveMoreResults: Boolean = false) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
+case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
+                                   hiddenResourceIris: Set[IRI] = Set.empty,
+                                   mayHaveMoreResults: Boolean = false) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
         copy(
@@ -897,6 +899,7 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2], mayHaveMoreRe
             schemaOptions = schemaOptions
         )
     }
+
     // #toJsonLDDocument
 
     /**
@@ -904,14 +907,20 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2], mayHaveMoreRe
      *
      * @param requestedResourceIri the IRI of the expected resource.
      * @return the resource.
+     * @throws NotFoundException   if the resource is not found.
+     * @throws BadRequestException if more than one resource was returned.
      */
     def toResource(requestedResourceIri: IRI)(implicit stringFormatter: StringFormatter): ReadResourceV2 = {
         if (resources.isEmpty) {
-            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
+            throw NotFoundException(s"Expected <$requestedResourceIri>, but no resources were returned")
         }
 
         if (resources.size > 1) {
-            throw AssertionException(s"More than one resource returned")
+            throw BadRequestException(s"Expected one resource, <$requestedResourceIri>, but more than one was returned")
+        }
+
+        if (resources.head.resourceIri != requestedResourceIri) {
+            throw NotFoundException(s"Expected resource <$requestedResourceIri>, but <${resources.head.resourceIri}> was returned")
         }
 
         resources.head

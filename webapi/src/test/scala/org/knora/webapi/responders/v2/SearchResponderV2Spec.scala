@@ -174,8 +174,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 =>
-                    assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
+                case response: ResourceCountV2 =>
+                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
             }
 
         }
@@ -190,8 +190,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 =>
-                    assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
+                case response: ResourceCountV2 =>
+                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
             }
 
         }
