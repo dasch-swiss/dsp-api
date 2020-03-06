@@ -243,7 +243,3 @@ For each main resource, a check is performed for the presence of all resources a
 
 The method `getRequestedValuesFromResultsWithFullGraphPattern` filters out those resources and values that the user does not want to be returned by the query.
 All the resources and values not present in the input query's CONSTRUCT clause are filtered out. This only happens after permission checking.
-
-The main resources that have been filtered out due to insufficient permissions are represented by the placeholder `ForbiddenResource`.
-This placeholder stands for a main resource that cannot be returned, nevertheless it informs the client that such a resource exists.
-This is necessary for a consistent behaviour when doing paging.
