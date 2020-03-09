@@ -56,8 +56,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     // println(system.settings.config.getConfig("app.triplestore").root().render())
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     val countTriplesQuery = if (tsType.startsWith("graphdb"))
@@ -84,7 +83,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         WHERE {
                 {
               GRAPH ?namedGraph {
-                BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") as ?s)
+                BIND(IRI("www.knora.org/ontology/0001/anything#Thing") as ?s)
                 ?s ?p ?obj
                 BIND(str(?obj) as ?o)
                 BIND(lang(?obj) as ?lang)
@@ -152,7 +151,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         SELECT DISTINCT *
         WHERE {
             ?iri knora-base:valueHasString ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'narrenschiff' .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'test' .
         }
     """
 
@@ -163,7 +162,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         SELECT DISTINCT *
         WHERE {
             ?iri rdfs:label ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'Reise' .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'Papa' .
         }
     """
 
@@ -173,7 +172,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
         SELECT DISTINCT *
         WHERE {
-            ?iri <http://jena.apache.org/text#query> 'narrenschiff' .
+            ?iri <http://jena.apache.org/text#query> 'test' .
             ?iri knora-base:valueHasString ?literal .
         }
     """
@@ -184,7 +183,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
         SELECT DISTINCT *
         WHERE {
-            ?iri <http://jena.apache.org/text#query> 'Reise' .
+            ?iri <http://jena.apache.org/text#query> 'Papa' .
             ?iri rdfs:label ?literal .
         }
     """
@@ -205,7 +204,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 storeManager ! CheckRepositoryRequest()
                 val response = expectMsgType[CheckRepositoryResponse](1.second)
 
-                response.repositoryStatus should be (RepositoryStatus.ServiceAvailable)
+                response.repositoryStatus should be(RepositoryStatus.ServiceAvailable)
             }
         }
 
@@ -332,7 +331,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                     expectMsgPF(timeout) {
                         case msg: SparqlSelectResponse => {
                             //println(msg)
-                            msg.results.bindings.size should ===(35)
+                            msg.results.bindings.size should ===(3)
                         }
                     }
                 }
