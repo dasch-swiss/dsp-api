@@ -8061,6 +8061,45 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "count gets the right match count on query with order_by and union" in {
+            val gravsearchQuery =
+                s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasInteger ?int .
+                   |} WHERE {
+                   |    ?thing a knora-api:Resource .
+                   |    ?thing a anything:Thing .
+                   |    {
+                   |        ?thing anything:hasRichtext ?richtext .
+                   |        ?richtext knora-api:valueAsString ?richtextLitteral
+                   |        FILTER knora-api:match(?richtextLitteral, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |    UNION
+                   |    {
+                   |        ?thing anything:hasText ?text .
+                   |        ?text knora-api:valueAsString ?textLitteral
+                   |        FILTER knora-api:match(?textLitteral, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |}
+                   |order by (?int)""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val resourceResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(searchResponseStr)
+                val count = resourceResponseAsJsonLD.body.maybeArray(JsonLDConstants.GRAPH).size
+                assert(count == 1, "there should be one match")
+            }
+        }
+
         "search for a resource containing a time value tag" in {
             // Create a resource containing a time value.
 
