@@ -133,8 +133,9 @@ object MainQueryResultProcessor {
                         dependentResIriOption match {
                             case Some(depResIri: IRI) =>
 
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                depResIri.split(transformer.groupConcatSeparator).toSeq
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them. Ignore empty
+                                // strings, which could result from unbound variables in the query.
+                                depResIri.split(transformer.groupConcatSeparator).toSeq.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
                         }
@@ -184,8 +185,9 @@ object MainQueryResultProcessor {
 
                             case Some(valObjIris) =>
 
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                valObjIris.split(transformer.groupConcatSeparator).toSet
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them. Ignore empty
+                                // strings, which could result from unbound variables in the query.
+                                valObjIris.split(transformer.groupConcatSeparator).toSet.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 

@@ -74,10 +74,10 @@ case class QueryVariable(variableName: String) extends SelectQueryColumn {
  */
 case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVariableName: String) extends SelectQueryColumn {
 
-    val outputVariable = QueryVariable(outputVariableName)
+    val outputVariable: QueryVariable = QueryVariable(outputVariableName)
 
     override def toSparql: String = {
-        s"(GROUP_CONCAT(DISTINCT(${inputVariable.toSparql}); SEPARATOR='$separator') AS ${outputVariable.toSparql})"
+        s"""(GROUP_CONCAT(DISTINCT(IF(BOUND(${inputVariable.toSparql}), STR(${inputVariable.toSparql}), "")); SEPARATOR='$separator') AS ${outputVariable.toSparql})"""
     }
 }
 
@@ -90,7 +90,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
  */
 case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariableName: String) extends SelectQueryColumn {
 
-    val outputVariable = QueryVariable(outputVariableName)
+    val outputVariable: QueryVariable = QueryVariable(outputVariableName)
 
     val distinctAsStr: String = if (distinct) {
         "DISTINCT"

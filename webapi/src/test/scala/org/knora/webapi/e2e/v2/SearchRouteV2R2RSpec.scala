@@ -138,7 +138,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearch-${settings.triplestoreType}.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -150,7 +150,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple-${settings.triplestoreType}.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -194,7 +194,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
 
-        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date t1" in {
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
 
             val gravsearchQuery =
                 """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -7669,7 +7669,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema) t1" in {
+        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
             // First, create a standoff-to-XML mapping that can handle standoff date tags.
 
             val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
