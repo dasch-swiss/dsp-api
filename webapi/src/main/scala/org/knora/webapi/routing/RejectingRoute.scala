@@ -34,7 +34,7 @@ import scala.util.{Failure, Success}
 trait AppStateAccess {
     this: RejectingRoute =>
 
-    override implicit val timeout: Timeout = 1.second
+    override implicit val timeout: Timeout = 2998.millis
 
     protected def getAppState(): Future[AppState] = for {
 

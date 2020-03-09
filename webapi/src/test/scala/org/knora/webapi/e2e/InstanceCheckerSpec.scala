@@ -43,7 +43,6 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
-    private val jsonInstanceChecker: InstanceChecker = InstanceChecker.getJsonChecker
 
     "The InstanceChecker" should {
         "accept a JSON-LD instance of anything:Thing" in {
@@ -138,50 +137,6 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
             }
 
             assert(exception.getMessage == "Property http://www.w3.org/2000/01/rdf-schema#label has 0 objects, but its cardinality is 1")
-        }
-
-        "accept a correct JSON instance of an admin:User" in {
-            jsonInstanceChecker.check(
-                instanceResponse = InstanceCheckerSpec.correctUser,
-                expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                knoraRouteGet = doGetRequest
-            )
-        }
-
-        "reject a JSON instance of an admin:User with an extra property" in {
-            val exception = intercept[AssertionException] {
-                jsonInstanceChecker.check(
-                    instanceResponse = InstanceCheckerSpec.userWithExtraProperty,
-                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                    knoraRouteGet = doGetRequest
-                )
-            }
-
-            assert(exception.getMessage == "One or more instance properties are not allowed by cardinalities: extraProperty")
-        }
-
-        "reject a JSON instance of an admin:User without a username" in {
-            val exception = intercept[AssertionException] {
-                jsonInstanceChecker.check(
-                    instanceResponse = InstanceCheckerSpec.userWithMissingUsername,
-                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                    knoraRouteGet = doGetRequest
-                )
-            }
-
-            assert(exception.getMessage == "Property username has 0 objects, but its cardinality is 1")
-        }
-
-        "reject a JSON instance of an admin:User with an invalid literal object type" in {
-            val exception = intercept[AssertionException] {
-                jsonInstanceChecker.check(
-                    instanceResponse = InstanceCheckerSpec.userWithInvalidObjectType,
-                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                    knoraRouteGet = doGetRequest
-                )
-            }
-
-            assert(exception.getMessage == "Property status has an object of type String with literal content 'invalidValue', but type http://www.w3.org/2001/XMLSchema#boolean was expected")
         }
     }
 }

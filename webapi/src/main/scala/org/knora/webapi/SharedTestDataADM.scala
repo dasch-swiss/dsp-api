@@ -21,6 +21,7 @@ package org.knora.webapi
 
 import java.net.URLEncoder
 import java.time.Instant
+import java.util.UUID
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -481,7 +482,7 @@ object SharedTestDataADM {
         shortcode = "0001",
         longname = Some("Anything Project"),
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
-        keywords = Seq.empty[String],
+        keywords = Seq("things", "arbitrary test data"),
         logo = None,
         ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
         status = true,
@@ -1005,22 +1006,44 @@ object SharedTestDataADM {
     }
 
     def createLinkValueRequest(resourceIri: IRI,
-                               targetResourceIri: IRI): String = {
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasOtherThingValue" : {
-           |    "@type" : "knora-api:LinkValue",
-           |    "knora-api:linkValueHasTargetIri" : {
-           |      "@id" : "$targetResourceIri"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+                               targetResourceIri: IRI,
+                               valueHasComment: Option[String] = None): String = {
+        valueHasComment match {
+            case Some(comment) =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    },
+                   |    "knora-api:valueHasComment" : "$comment"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            case None =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+        }
     }
 
     def updateIntValueRequest(resourceIri: IRI,
@@ -1430,23 +1453,46 @@ object SharedTestDataADM {
 
     def updateLinkValueRequest(resourceIri: IRI,
                                valueIri: IRI,
-                               targetResourceIri: IRI): String = {
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasOtherThingValue" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:LinkValue",
-           |    "knora-api:linkValueHasTargetIri" : {
-           |      "@id" : "$targetResourceIri"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+                               targetResourceIri: IRI,
+                               comment: Option[String] = None): String = {
+        comment match {
+            case Some(definedComment) =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    },
+                   |    "knora-api:valueHasComment" : "$definedComment"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            case None =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+        }
     }
 
     def updateStillImageFileValueRequest(resourceIri: IRI,
@@ -1550,6 +1596,18 @@ object SharedTestDataADM {
           |    ?region knora-api:hasGeometry ?geom .
           |    ?region knora-api:hasComment ?comment .
           |    ?region knora-api:hasColor ?color .
+          |}""".stripMargin
+
+    val gravsearchThingLinks: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
           |}""".stripMargin
 
     val createResourceWithValues: String =
@@ -1854,4 +1912,7 @@ object SharedTestDataADM {
     val treeListNode: IRI = "http://rdfh.ch/lists/0001/treeList01"
 
     val otherTreeList: IRI = "http://rdfh.ch/lists/0001/otherTreeList"
+
+    val testResponseValueIri: IRI = "http://rdfh.ch/0001/_GlNQXdYRTyQPhpdh76U1w/values/OGbYaSgNSUCKQtmn9suXlw"
+    val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
 }

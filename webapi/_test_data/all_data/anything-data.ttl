@@ -1695,3 +1695,25 @@
   knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList>;
   knora-base:listNodePosition 1;
   rdfs:label "Tree list node 11"@en .
+
+<http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg> a knora-base:XSLTransformation;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>;
+  knora-base:attachedToUser <http://rdfh.ch/users/root>;
+  knora-base:creationDate "2020-02-06T11:55:47.860023Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:hasTextFileValue <http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg/values/geQNPU4USB61YhNHHarQ5A>;
+  knora-base:isDeleted false;
+  rdfs:label "BEOL header XSLT" .
+
+<http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg/values/geQNPU4USB61YhNHHarQ5A> a knora-base:TextFileValue;
+  knora-base:attachedToUser <http://rdfh.ch/users/root>;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:internalFilename "missing.xsl";
+  knora-base:internalMimeType "text/xml";
+  knora-base:isDeleted false;
+  knora-base:originalFilename "header.xsl";
+  knora-base:originalMimeType "text/xml";
+  knora-base:valueCreationDate "2020-02-06T11:55:47.860023Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "header.xsl";
+  knora-base:valueHasUUID "geQNPU4USB61YhNHHarQ5A" .

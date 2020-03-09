@@ -236,7 +236,7 @@ same timestamp.
 To get a specific value of a resource, use this route:
 
 ```
-HTTP GET to http://host//v2/values/resourceIRI/valueUUID
+HTTP GET to http://host/v2/values/resourceIRI/valueUUID
 ```
 
 The resource IRI must be URL-encoded. The path element `valueUUID` is the

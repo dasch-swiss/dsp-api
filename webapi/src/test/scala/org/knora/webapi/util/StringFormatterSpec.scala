@@ -25,7 +25,6 @@ import java.util.UUID
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.SalsahGuiAttributeDefinition
-import org.knora.webapi.util.clientapi.{ArrayType, ClassRef, MapType, UriDatatype}
 
 /**
   * Tests [[StringFormatter]].
@@ -886,30 +885,6 @@ class StringFormatterSpec extends CoreSpec() {
             assert(isResource)
         }
 
-        "parse a type annotation representing a collection type for use in generated client code" in {
-            val ontologyIri: SmartIri = OntologyConstants.KnoraAdminV2.KnoraAdminOntologyIri.toSmartIri
-            val permissionClassIri: SmartIri = ontologyIri.makeEntityIri("Permission")
-            val permissionClassRef = ClassRef(className = "Permission", classIri = permissionClassIri)
-            val collectionTypeIri = ontologyIri.makeEntityIri("collection: Array[Map[URI, Array[Map[URI, Permission]]]]")
-
-            assert(collectionTypeIri.isClientCollectionTypeIri)
-            val collectionType = collectionTypeIri.getClientCollectionType
-
-            assert(collectionType == ArrayType(
-                elementType = MapType(
-                    keyType = UriDatatype,
-                    valueType = ArrayType(
-                        elementType = MapType(
-                            keyType = UriDatatype,
-                            valueType = permissionClassRef
-                        )
-                    )
-                )
-            ))
-
-            assert(collectionType.getClassIri.contains(permissionClassIri))
-        }
-
         "convert 100,000 IRIs" ignore {
             val totalIris = 100000
 
@@ -1158,6 +1133,11 @@ class StringFormatterSpec extends CoreSpec() {
                 stringFormatter.validateAndEscapeUsername("a_2.3-4", throw AssertionException("not valid"))
             }
 
+            // not allow @
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateUsername("donald.duck@example.com", throw AssertionException("not valid"))
+            }
+
             // Underscore and dot can't be at the end or start of a username
             an[AssertionException] should be thrownBy {
                 stringFormatter.validateAndEscapeUsername("_username", throw AssertionException("not valid"))
@@ -1181,6 +1161,15 @@ class StringFormatterSpec extends CoreSpec() {
             }
 
 
+        }
+
+        "validate email" in {
+
+            stringFormatter.validateEmailAndThrow("donald.duck@example.com", throw AssertionException("not valid")) should be ("donald.duck@example.com")
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateEmailAndThrow("donald.duck", throw AssertionException("not valid"))
+            }
         }
 
         "convert a UUID to Base-64 encoding and back again" in {
