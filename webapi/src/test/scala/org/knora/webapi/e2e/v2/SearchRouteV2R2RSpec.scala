@@ -1892,7 +1892,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
+        "search for a book whose title contains 'Zeitglöcklein' using the match function t1" in {
 
             val gravsearchQuery =
                 """

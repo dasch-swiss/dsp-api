@@ -38,6 +38,7 @@ object SparqlTransformer {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val transformedPattern = statement.copy(
+            // Replace the deprecated property knora-base:matchesTextIndex with a GraphDB-specific one.
             pred = statement.pred match {
                 case iri: IriRef if iri.iri == OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri => IriRef(OntologyConstants.Ontotext.LuceneFulltext.toSmartIri) // convert to special Lucene property
                 case other => other // no conversion needed
@@ -65,6 +66,8 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
     }
 
     /**
@@ -84,6 +87,8 @@ object SparqlTransformer {
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             moveIsDeletedToEnd(patterns)
         }
+
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
     }
 
     /**
@@ -99,6 +104,8 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
     }
 
     /**
@@ -118,6 +125,8 @@ object SparqlTransformer {
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             moveIsDeletedToEnd(patterns)
         }
+
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
     }
 
     /**

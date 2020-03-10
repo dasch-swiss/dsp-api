@@ -198,6 +198,19 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
 }
 
 /**
+ * A virtual query pattern representing a Lucene full-text index search. Will be replaced by a triplestore-specific
+ * [[StatementPattern]] during Gravsearch processing.
+ *
+ * @param subj a variable representing the subject to be found.
+ * @param pred the predicate that connects the subject to the literal value that is indexed.
+ * @param obj  a variable representing the literal that is indexed.
+ * @param queryString the Lucene query string to be matched.
+ */
+case class LuceneQueryPattern(subj: QueryVariable, pred: IriRef, obj: QueryVariable, queryString: String) extends QueryPattern {
+    override def toSparql: String = throw AssertionException("LuceneQueryPattern should have been transformed into a StatementPattern")
+}
+
+/**
  * Represents a BIND command in a query.
  *
  * @param variable   the variable in the BIND.

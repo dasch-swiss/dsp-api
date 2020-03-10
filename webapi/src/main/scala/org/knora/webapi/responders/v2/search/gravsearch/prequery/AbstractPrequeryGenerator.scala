@@ -1171,6 +1171,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
+        // Replace the filter with a statement using the deprecated knora-base:matchesTextIndex property.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
             valueHasStringStatement ++ Seq(
@@ -1212,6 +1213,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
+        // Replace the filter with a statement using the deprecated knora-base:matchesTextIndex property.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
             Seq(
