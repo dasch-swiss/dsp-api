@@ -175,10 +175,11 @@ jobs:
         run: |
           make env-file
           make print-env-file
-      - name: run JS lib tests
+      - name: setup required node version
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: run JS lib tests
         run: make test-js-lib-integration
 
   upgrade-unit-tests:
