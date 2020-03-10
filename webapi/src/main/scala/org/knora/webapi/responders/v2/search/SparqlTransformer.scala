@@ -24,16 +24,16 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Methods and classes for Sparql transformation.
-  */
+ * Methods and classes for Sparql transformation.
+ */
 object SparqlTransformer {
 
     /**
-      * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
-      *
-      * @param statement the given statement whose graph name has to be renamed.
-      * @return the statement with the renamed graph, if given.
-      */
+     * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
+     *
+     * @param statement the given statement whose graph name has to be renamed.
+     * @return the statement with the renamed graph, if given.
+     */
     def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -53,8 +53,8 @@ object SparqlTransformer {
     }
 
     /**
-      * Transforms a non-triplestore-specific SELECT query for GraphDB.
-      */
+     * Transforms a non-triplestore-specific SELECT query for GraphDB.
+     */
     class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
@@ -68,8 +68,8 @@ object SparqlTransformer {
     }
 
     /**
-      * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
-      */
+     * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
+     */
     class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -87,8 +87,8 @@ object SparqlTransformer {
     }
 
     /**
-      * Transforms a non-triplestore-specific CONSTRUCT query for GraphDB.
-      */
+     * Transforms a non-triplestore-specific CONSTRUCT query for GraphDB.
+     */
     class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
@@ -102,8 +102,8 @@ object SparqlTransformer {
     }
 
     /**
-      * Transforms a non-triplestore-specific CONSTRUCT query for a triplestore that does not have inference enabled (e.g., Fuseki).
-      */
+     * Transforms a non-triplestore-specific CONSTRUCT query for a triplestore that does not have inference enabled (e.g., Fuseki).
+     */
     class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -121,11 +121,11 @@ object SparqlTransformer {
     }
 
     /**
-      * Creates a syntactically valid variable base name, based on the given entity.
-      *
-      * @param entity the entity to be used to create a base name for a variable.
-      * @return a base name for a variable.
-      */
+     * Creates a syntactically valid variable base name, based on the given entity.
+     *
+     * @param entity the entity to be used to create a base name for a variable.
+     * @return a base name for a variable.
+     */
     def escapeEntityForVariable(entity: Entity): String = {
         val entityStr = entity match {
             case QueryVariable(varName) => varName
@@ -138,12 +138,12 @@ object SparqlTransformer {
     }
 
     /**
-      * Creates a unique variable name from the given entity and the local part of a property IRI.
-      *
-      * @param base        the entity to use to create the variable base name.
-      * @param propertyIri the IRI of the property whose local part will be used to form the unique name.
-      * @return a unique variable.
-      */
+     * Creates a unique variable name from the given entity and the local part of a property IRI.
+     *
+     * @param base        the entity to use to create the variable base name.
+     * @param propertyIri the IRI of the property whose local part will be used to form the unique name.
+     * @return a unique variable.
+     */
     def createUniqueVariableNameFromEntityAndProperty(base: Entity, propertyIri: IRI): QueryVariable = {
         val propertyHashIndex = propertyIri.lastIndexOf('#')
 
@@ -156,6 +156,17 @@ object SparqlTransformer {
     }
 
     /**
+     * Creates a unique variable name representing the `rdf:type` of an entity with a given base class.
+     *
+     * @param base         the entity to use to create the variable base name.
+     * @param baseClassIri a base class of the entity's type.
+     * @return a unique variable.
+     */
+    def createUniqueVariableNameForEntityAndBaseClass(base: Entity, baseClassIri: IriRef): QueryVariable = {
+        QueryVariable(escapeEntityForVariable(base) + "__subClassOf__" + escapeEntityForVariable(baseClassIri))
+    }
+
+    /**
      * Create a unique variable from a whole statement.
      *
      * @param baseStatement the statement to be used to create the variable base name.
@@ -163,7 +174,7 @@ object SparqlTransformer {
      * @return a unique variable.
      */
     def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
-        QueryVariable(SparqlTransformer.escapeEntityForVariable(baseStatement.subj) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.pred) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
+        QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
     }
 
     /**
@@ -177,11 +188,11 @@ object SparqlTransformer {
     }
 
     /**
-      * Optimises `knora-base:isDeleted` by moving it to the end of a block.
-      *
-      * @param patterns the block of patterns to be optimised.
-      * @return the result of the optimisation.
-      */
+     * Optimises `knora-base:isDeleted` by moving it to the end of a block.
+     *
+     * @param patterns the block of patterns to be optimised.
+     * @return the result of the optimisation.
+     */
     private def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
             case statementPattern: StatementPattern =>
@@ -197,12 +208,12 @@ object SparqlTransformer {
     }
 
     /**
-      * If inference is not being used, expands non-explicit statements to simulate inference using `rdfs:subClassOf*`
-      * and `rdfs:subPropertyOf*`.
-      *
-      * @param statementPattern the statement to be expanded.
-      * @return the result of the expansion.
-      */
+     * If inference is not being used, expands non-explicit statements to simulate inference using `rdfs:subClassOf*`
+     * and `rdfs:subPropertyOf*`.
+     *
+     * @param statementPattern the statement to be expanded.
+     * @return the result of the expansion.
+     */
     private def expandStatementForNoInference(statementPattern: StatementPattern)(implicit stringFormatter: StringFormatter): Seq[StatementPattern] = {
         // Is the statement in KnoraExplicitNamedGraph?
         statementPattern.namedGraph match {
@@ -221,7 +232,12 @@ object SparqlTransformer {
                         if (propertyIri == OntologyConstants.Rdf.Type) {
                             // Yes. Expand using rdfs:subClassOf*.
 
-                            val rdfTypeVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = statementPattern.subj, propertyIri = propertyIri)
+                            val baseClassIri: IriRef = statementPattern.obj match {
+                                case iriRef: IriRef => iriRef
+                                case other => throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
+                            }
+
+                            val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(base = statementPattern.subj, baseClassIri = baseClassIri)
 
                             Seq(
                                 StatementPattern(

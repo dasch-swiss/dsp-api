@@ -23,7 +23,6 @@ import org.knora.webapi._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
 
 /**
   * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
