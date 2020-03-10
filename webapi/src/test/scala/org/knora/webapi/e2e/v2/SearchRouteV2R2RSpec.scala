@@ -8091,12 +8091,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |}
                    |order by (?int)""".stripMargin
 
+            val expectedCount = 1
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkCountResponse(responseAs[String], expectedCount)
+            }
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val resourceResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(searchResponseStr)
-                val count = resourceResponseAsJsonLD.body.maybeArray(JsonLDConstants.GRAPH).size
-                assert(count == 1, "there should be one match")
+                checkSearchResponseNumberOfResults(responseAs[String], expectedCount)
             }
         }
 
