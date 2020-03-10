@@ -482,7 +482,7 @@ object SharedTestDataADM {
         shortcode = "0001",
         longname = Some("Anything Project"),
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
-        keywords = Seq.empty[String],
+        keywords = Seq("things", "arbitrary test data"),
         logo = None,
         ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
         status = true,
@@ -1596,6 +1596,18 @@ object SharedTestDataADM {
           |    ?region knora-api:hasGeometry ?geom .
           |    ?region knora-api:hasComment ?comment .
           |    ?region knora-api:hasColor ?color .
+          |}""".stripMargin
+
+    val gravsearchThingLinks: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
           |}""".stripMargin
 
     val createResourceWithValues: String =
