@@ -17,8 +17,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
-    val fulltextSearchForNarr = ReadResourcesSequenceV2(
-        numberOfResources = 25,
+    val fulltextSearchForNarr: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(
             ReadResourceV2(
                 label = "p7v",
@@ -773,8 +772,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         )
     )
 
-    val fulltextSearchForDinge = ReadResourcesSequenceV2(
-        numberOfResources = 1,
+    val fulltextSearchForDinge: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(ReadResourceV2(
             label = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
             resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
@@ -1465,7 +1463,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     )
 
     // Dear Ben: I am aware of the fact that this code is not formatted properly and I know that this deeply disturbs you. But please leave it like this since otherwise I cannot possibly read and understand this query.
-    val constructQueryForBooksWithTitleZeitgloecklein = ConstructQuery(
+    val constructQueryForBooksWithTitleZeitgloecklein: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(QueryVariable("book"), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None), XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri), None),
@@ -1496,8 +1494,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         querySchema = Some(ApiV2Simple)
     )
 
-    val booksWithTitleZeitgloeckleinResponse = ReadResourcesSequenceV2(
-        numberOfResources = 2,
+    val booksWithTitleZeitgloeckleinResponse: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(
             ReadResourceV2(
                 label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
@@ -1563,7 +1560,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     )
 
     // Dear Ben: please see my comment above
-    val constructQueryForBooksWithoutTitleZeitgloecklein = ConstructQuery(
+    val constructQueryForBooksWithoutTitleZeitgloecklein: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(QueryVariable("book"), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None), XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri), None),

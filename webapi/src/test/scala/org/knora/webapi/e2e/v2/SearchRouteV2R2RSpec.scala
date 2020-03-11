@@ -126,7 +126,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // the response involves forbidden resource
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithforbiddenResource.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithHiddenResource.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 

@@ -24,9 +24,9 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl, UnexpectedMessageException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -107,7 +107,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     /**
      * Provides logging
      */
-    val log: Logger = logger
+    protected val log: Logger = logger
 
     /**
      * Checks whether an entity is used in the triplestore.

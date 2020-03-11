@@ -1387,83 +1387,6 @@ knora-api:hasDocumentFileValue a owl:ObjectProperty;
   rdfs:label "has document";
   rdfs:subPropertyOf knora-api:hasFileValue .
 
-knora-api:ForbiddenResource a owl:Class;
-  knora-api:isResourceClass true;
-  rdfs:comment "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
-  rdfs:label "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToUser
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:creationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deleteComment
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deleteDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deletedBy
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasComment
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLinkValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasPermissions
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkToValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:isDeleted
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:lastModificationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:userHasPermission
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:versionDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
-
 knora-api:GeomValue a owl:Class;
   knora-api:isValueClass true;
   rdfs:comment "Represents a geometrical objects as JSON string";
@@ -3835,6 +3758,11 @@ knora-api:mappingHasName a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
   rdfs:comment "Represents the name of a mapping";
   rdfs:label "Name of a mapping (will be part of the mapping's Iri)" .
+
+knora-api:mayHaveMoreResults a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  rdfs:comment "Indicates whether more results may be available for a search query";
+  rdfs:label "May have more results" .
 
 knora-api:newModificationDate a owl:DatatypeProperty;
   knora-api:objectType xsd:dateTimeStamp;

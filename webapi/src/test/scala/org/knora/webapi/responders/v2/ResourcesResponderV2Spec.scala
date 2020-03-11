@@ -65,7 +65,7 @@ object ResourcesResponderV2Spec {
 class GraphTestData {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val graphForAnythingUser1 = GraphDataGetResponseV2(
+    val graphForAnythingUser1: GraphDataGetResponseV2 = GraphDataGetResponseV2(
         edges = Vector(
             GraphEdgeV2(
                 target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
@@ -223,7 +223,7 @@ class GraphTestData {
         ontologySchema = InternalSchema
     )
 
-    val graphForIncunabulaUser = GraphDataGetResponseV2(
+    val graphForIncunabulaUser: GraphDataGetResponseV2 = GraphDataGetResponseV2(
         edges = Vector(
             GraphEdgeV2(
                 target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
@@ -351,7 +351,7 @@ class GraphTestData {
         ontologySchema = InternalSchema
     )
 
-    val graphWithStandoffLink = GraphDataGetResponseV2(
+    val graphWithStandoffLink: GraphDataGetResponseV2 = GraphDataGetResponseV2(
         edges = Vector(GraphEdgeV2(
             target = "http://rdfh.ch/0001/a-thing",
             propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri,
@@ -372,7 +372,7 @@ class GraphTestData {
         ontologySchema = InternalSchema
     )
 
-    val graphWithOneNode = GraphDataGetResponseV2(
+    val graphWithOneNode: GraphDataGetResponseV2 = GraphDataGetResponseV2(
         edges = Nil,
         nodes = Vector(GraphNodeV2(
             resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -468,31 +468,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         responderManager ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), targetSchema = ApiV2Complex, requestingUser = anythingUserProfile)
 
         expectMsgPF(timeout) {
-            case response: ReadResourcesSequenceV2 =>
-                resourcesSequenceToResource(
-                    requestedresourceIri = resourceIri,
-                    readResourcesSequence = response,
-                    requestingUser = anythingUserProfile
-                )
+            case response: ReadResourcesSequenceV2 => response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
         }
-    }
-
-    private def resourcesSequenceToResource(requestedresourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
-        if (readResourcesSequence.numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedresourceIri>, but no resources were returned")
-        }
-
-        if (readResourcesSequence.numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedresourceIri>")
-        }
-
-        val resourceInfo = readResourcesSequence.resources.head
-
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
-            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
-        }
-
-        resourceInfo.toOntologySchema(ApiV2Complex)
     }
 
     private def checkCreateResource(inputResource: CreateResourceV2,
@@ -860,11 +837,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    val outputResource: ReadResourceV2 = resourcesSequenceToResource(
-                        requestedresourceIri = resourceIri,
-                        readResourcesSequence = response,
-                        requestingUser = anythingUserProfile
-                    )
+                    val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
 
                     checkCreateResource(
                         inputResource = inputResource,
@@ -2172,8 +2145,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val isEntityUsedSparql: String = queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
                 entityIri = resourceIriToErase.get.toSmartIri,
-                ignoreKnoraConstraints = true,
-                ignoreRdfSubjectAndObject = false
+                ignoreKnoraConstraints = true
             ).toString()
 
             storeManager ! SparqlSelectRequest(isEntityUsedSparql)
