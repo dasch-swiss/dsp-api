@@ -146,6 +146,9 @@ jobs:
     name: JS Lib Tests
     needs: compile
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [11.x]
     steps:
       - name: Checkout source
         uses: actions/checkout@v1
@@ -172,6 +175,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
+      - name: setup required node version
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
       - name: run JS lib tests
         run: make test-js-lib-integration
 
