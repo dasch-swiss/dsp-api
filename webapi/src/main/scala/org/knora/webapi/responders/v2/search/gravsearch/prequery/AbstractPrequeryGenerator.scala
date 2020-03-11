@@ -50,9 +50,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     // in order to prevent duplicates
     protected val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
-    // variables representing dependent resources
-    protected var dependentResourceVariables: mutable.Set[QueryVariable] = mutable.Set.empty
-
     // separator used by GroupConcat
     val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
 
@@ -61,9 +58,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
     // getter method for public access
     def getDependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceVariablesGroupConcat
-
-    // variables representing value objects (including those for link values)
-    protected var valueObjectVariables: mutable.Set[QueryVariable] = mutable.Set.empty
 
     // variables representing aggregated value objects
     protected var valueObjectVarsGroupConcat: Set[QueryVariable] = Set.empty
@@ -178,25 +172,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             // inputEntity is either source or target of a linking property
             // create additional statements in order to query permissions and other information for a resource
 
-            // add the inputEntity (a variable representing a resource) to the SELECT
-            inputEntity match {
-                case queryVar: QueryVariable =>
-                    // make sure that this is not the mainVar
-                    mainResourceVariable match {
-                        case Some(mainVar: QueryVariable) =>
-
-                            if (mainVar != queryVar) {
-                                // it is a variable representing a dependent resource
-                                dependentResourceVariables += queryVar
-                            }
-
-                        case None => () // TODO: What happens if the main resource variable has not been processed yet (Option would be None)? Shall rather an error be thrown here?
-
-                    }
-
-                case _ => ()
-            }
-
             Seq(
                 StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
                 StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
@@ -226,9 +201,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 obj = linkTarget
             )
         )
-
-        // add variable to collection representing value objects
-        valueObjectVariables += linkValueObjVar
 
         // create an Entity that connects the subject of the linking property with the link value object
         val linkValueProp: Entity = linkPred match {
@@ -355,8 +327,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2Complex.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
 
                 if (objectVarIsValueObject) {
-                    // The variable refers to a value object. Add it to the collection representing value objects.
-                    valueObjectVariables += objectVar
+                    // The variable refers to a value object.
 
                     // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
                     val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
@@ -418,7 +389,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                     propertyTypeInfo.objectTypeIri match {
                         case SmartIri(OntologyConstants.KnoraApiV2Complex.ListNode) =>
                             // Yes, transform statement so it also matches any of the subnodes of the given node
-                            handleListNode
+                            handleListNode()
                         case _ =>
                             // No, just convert the statement pattern to the internal schema.
                             Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))

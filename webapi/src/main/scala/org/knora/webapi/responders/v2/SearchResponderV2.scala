@@ -334,7 +334,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-        import org.knora.webapi.responders.v2.search.MainQueryResultProcessor
         import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
         for {
@@ -351,7 +350,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Create a Select prequery
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator = new NonTriplestoreSpecificGravsearchToPrequeryGenerator(
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer = new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
+                constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
                 settings = settings
@@ -397,16 +397,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            queryResultsSeparatedWithFullGraphPattern: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- if (mainResourceIris.nonEmpty) {
+            mainQueryResults: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
                 // get all the IRIs for variables representing dependent resources per main resource
-                val dependentResourceIrisPerMainResource: MainQueryResultProcessor.DependentResourcesPerMainResource = MainQueryResultProcessor.getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
-
-                // collect all variables representing resources
-                val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
-                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) => QueryVariable(queryVar.variableName)
-                }.toSet
+                val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource = GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // the user may have defined IRIs of dependent resources in the input query (type annotations)
                 // only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS)
@@ -419,7 +414,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
                 // for each main resource, create a Map of value object variables and their Iris
-                val valueObjectVarsAndIrisPerMainResource: MainQueryResultProcessor.ValueObjectVariablesAndValueObjectIris = MainQueryResultProcessor.getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val valueObjectVarsAndIrisPerMainResource: GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris = GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
+                    prequeryResponse = prequeryResponse,
+                    transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+                    mainResourceVar = mainResourceVar
+                )
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
                 val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris.values.foldLeft(Set.empty[IRI]) {
@@ -467,21 +466,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         constructQueryResults = mainQueryResponse,
                         requestingUser = requestingUser
                     )
-
-                    // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
-                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern(
-                        queryResultsFilteredForPermissions.resources,
-                        valueObjectVarsAndIrisPerMainResource,
-                        allResourceVariablesFromTypeInspection,
-                        dependentResourceIrisFromTypeInspection,
-                        nonTriplestoreSpecificConstructToSelectTransformer,
-                        typeInspectionResult,
-                        inputQuery
-                    )
-
-                } yield queryResultsFilteredForPermissions.copy(
-                    resources = queryResWithFullGraphPatternOnlyRequestedValues
-                )
+                } yield queryResultsFilteredForPermissions
 
             } else {
                 // the prequery returned no results, no further query is necessary
@@ -494,13 +479,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern.resources, requestingUser)
+                getMappingsFromQueryResultsSeparated(mainQueryResults.resources, requestingUser)
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
             apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                mainResourcesAndValueRdfData = queryResultsSeparatedWithFullGraphPattern,
+                mainResourcesAndValueRdfData = mainQueryResults,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,

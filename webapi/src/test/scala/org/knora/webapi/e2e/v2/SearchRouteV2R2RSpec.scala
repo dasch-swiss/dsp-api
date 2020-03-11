@@ -194,7 +194,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
 
-        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date t1" in {
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
 
             val gravsearchQuery =
                 """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -2849,7 +2849,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
+        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi' t1" in {
 
             val gravsearchQuery =
                 """
@@ -3169,8 +3169,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -5460,8 +5459,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -7669,7 +7667,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema) t1" in {
+        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
             // First, create a standoff-to-XML mapping that can handle standoff date tags.
 
             val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")

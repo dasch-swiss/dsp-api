@@ -39,7 +39,8 @@ private object QueryHandler {
 
         // Create a Select prequery
 
-        val nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator = new NonTriplestoreSpecificGravsearchToPrequeryGenerator(
+        val nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer = new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
+            constructClause = constructQuery.constructClause,
             typeInspectionResult = typeInspectionResult,
             querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
             settings = settings
