@@ -276,7 +276,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Create a Select prequery
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryGenerator = new NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer = new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
             )
@@ -403,6 +403,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 // get all the IRIs for variables representing dependent resources per main resource
                 val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource = GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
+                // collect all variables representing resources
+                val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) => QueryVariable(queryVar.variableName)
+                }.toSet
+
                 // the user may have defined IRIs of dependent resources in the input query (type annotations)
                 // only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS)
                 val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.entities.collect {
@@ -466,7 +471,20 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         constructQueryResults = mainQueryResponse,
                         requestingUser = requestingUser
                     )
-                } yield queryResultsFilteredForPermissions
+
+                    // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
+                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern(
+                        queryResultsFilteredForPermissions.resources,
+                        valueObjectVarsAndIrisPerMainResource,
+                        allResourceVariablesFromTypeInspection,
+                        dependentResourceIrisFromTypeInspection,
+                        nonTriplestoreSpecificConstructToSelectTransformer,
+                        typeInspectionResult,
+                        inputQuery
+                    )
+                } yield queryResultsFilteredForPermissions.copy(
+                    resources = queryResWithFullGraphPatternOnlyRequestedValues
+                )
 
             } else {
                 // the prequery returned no results, no further query is necessary

@@ -167,7 +167,7 @@ object GravsearchMainQueryGenerator {
                                                  mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
 
         // value objects variables present in the prequery's WHERE clause
-        val valueObjectVariablesConcat = transformer.getValueObjectVarsGroupConcat
+        val valueObjectVariablesConcat = transformer.getValueObjectVariablesGroupConcat
 
         val valueObjVarsAndIris: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
             (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>

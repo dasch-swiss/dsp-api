@@ -2849,7 +2849,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi' t1" in {
+        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
 
             val gravsearchQuery =
                 """
@@ -8059,13 +8059,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "count gets the right match count on query with order_by and union" in {
+        "count gets the right match count on query with order_by and union t1" in {
             val gravsearchQuery =
                 s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
                    |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
                    |CONSTRUCT {
                    |    ?thing knora-api:isMainResource true .
                    |    ?thing anything:hasInteger ?int .
+                   |    ?thing anything:hasRichtext ?richtext .
+                   |    ?thing anything:hasText ?text .
                    |} WHERE {
                    |    ?thing a knora-api:Resource .
                    |    ?thing a anything:Thing .

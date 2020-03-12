@@ -60,10 +60,10 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     def getDependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceVariablesGroupConcat
 
     // variables representing aggregated value objects
-    protected var valueObjectVarsGroupConcat: Set[QueryVariable] = Set.empty
+    protected var valueObjectVariablesGroupConcat: Set[QueryVariable] = Set.empty
 
     // getter method for public access
-    def getValueObjectVarsGroupConcat: Set[QueryVariable] = valueObjectVarsGroupConcat
+    def getValueObjectVariablesGroupConcat: Set[QueryVariable] = valueObjectVariablesGroupConcat
 
     // suffix appended to variables that are returned by a SPARQL aggregation function.
     val groupConcatVariableSuffix = "__Concat"

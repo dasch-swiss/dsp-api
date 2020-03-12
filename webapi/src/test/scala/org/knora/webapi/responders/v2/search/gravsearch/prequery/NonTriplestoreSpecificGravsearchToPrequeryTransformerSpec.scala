@@ -56,107 +56,9 @@ private object QueryHandler {
 
 }
 
-class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec() {
+class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec() {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
-
-        "transform an input query with a date as a non optional sort criterion" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterion, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
-
-        }
-
-        "transform an input query with a date as a non optional sort criterion (submitted in complex schema)" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionComplex, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
-
-        }
-
-        "transform an input query with a date as non optional sort criterion and a filter" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
-
-        }
-
-        "transform an input query with a date as non optional sort criterion and a filter (submitted in complex schema)" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
-
-        }
-
-        "transform an input query with a date as an optional sort criterion" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterion, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
-
-        }
-
-        "transform an input query with a date as an optional sort criterion (submitted in complex schema)" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionComplex, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
-
-        }
-
-        "transform an input query with a date as an optional sort criterion and a filter" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionAndFilter, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
-
-        }
-
-        "transform an input query with a date as an optional sort criterion and a filter (submitted in complex schema)" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionAndFilterComplex, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
-
-        }
-
-
-        "transform an input query with a decimal as an optional sort criterion" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterion, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
-        }
-
-        "transform an input query with a decimal as an optional sort criterion (submitted in complex schema)" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionComplex, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
-        }
-
-        "transform an input query with a decimal as an optional sort criterion and a filter" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter, responderData, settings)
-            
-            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
-        }
-
-        "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex, responderData, settings)
-
-            // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
-            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-        }
-
-    }
 
     val inputQueryWithDateNonOptionalSortCriterion: String =
         """
@@ -198,7 +100,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
-    val transformedQueryWithDateNonOptionalSortCriterion =
+    val transformedQueryWithDateNonOptionalSortCriterion: SelectQuery =
         SelectQuery(
             variables = Vector(
                 QueryVariable(variableName = "thing"),
@@ -682,7 +584,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
-    val transformedQueryWithDateOptionalSortCriterionAndFilter =
+    val transformedQueryWithDateOptionalSortCriterionAndFilter: SelectQuery =
     SelectQuery(
         variables = Vector(
             QueryVariable(variableName = "thing"),
@@ -802,7 +704,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
         useDistinct = true
     )
 
-    val inputQueryWithDecimalOptionalSortCriterion =
+    val inputQueryWithDecimalOptionalSortCriterion: String =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -825,7 +727,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |} ORDER BY ASC(?decimal)
         """.stripMargin
 
-    val inputQueryWithDecimalOptionalSortCriterionComplex =
+    val inputQueryWithDecimalOptionalSortCriterionComplex: String =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -845,7 +747,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |} ORDER BY ASC(?decimal)
         """.stripMargin
 
-    val transformedQueryWithDecimalOptionalSortCriterion =
+    val transformedQueryWithDecimalOptionalSortCriterion: SelectQuery =
         SelectQuery(
             variables = Vector(
                 QueryVariable(variableName = "thing"),
@@ -957,7 +859,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             useDistinct = true
         )
 
-    val inputQueryWithDecimalOptionalSortCriterionAndFilter =
+    val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -982,7 +884,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |} ORDER BY ASC(?decimal)
         """.stripMargin
 
-    val inputQueryWithDecimalOptionalSortCriterionAndFilterComplex =
+    val inputQueryWithDecimalOptionalSortCriterionAndFilterComplex: String =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -1006,7 +908,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |} ORDER BY ASC(?decimal)
         """.stripMargin
 
-    val transformedQueryWithDecimalOptionalSortCriterionAndFilter =
+    val transformedQueryWithDecimalOptionalSortCriterionAndFilter: SelectQuery =
         SelectQuery(
             variables = Vector(
                 QueryVariable(variableName = "thing"),
@@ -1126,7 +1028,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             useDistinct = true
         )
 
-        val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex =
+        val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
             SelectQuery(
                 variables = Vector(
                     QueryVariable(variableName = "thing"),
@@ -1255,5 +1157,101 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
                 useDistinct = true
             )
 
+    "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
+        "transform an input query with a date as a non optional sort criterion" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterion, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
+
+        }
+
+        "transform an input query with a date as a non optional sort criterion (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
+
+        }
+
+        "transform an input query with a date as non optional sort criterion and a filter" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
+
+        }
+
+        "transform an input query with a date as non optional sort criterion and a filter (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
+
+        }
+
+        "transform an input query with a date as an optional sort criterion" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterion, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
+
+        }
+
+        "transform an input query with a date as an optional sort criterion (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
+
+        }
+
+        "transform an input query with a date as an optional sort criterion and a filter" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionAndFilter, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
+
+        }
+
+        "transform an input query with a date as an optional sort criterion and a filter (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionAndFilterComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
+
+        }
+
+
+        "transform an input query with a decimal as an optional sort criterion" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterion, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
+        }
+
+        "transform an input query with a decimal as an optional sort criterion (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
+        }
+
+        "transform an input query with a decimal as an optional sort criterion and a filter" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
+        }
+
+        "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex, responderData, settings)
+
+            // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
+            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
+        }
+
+    }
 }

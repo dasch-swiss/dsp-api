@@ -50,7 +50,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
             case Some(queryVariable: QueryVariable) => mainResourceVariable = Some(queryVariable)
             case None => ()
         }
-
     }
 
     /**
@@ -89,54 +88,129 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     }
 
     /**
+     * Determines whether an entity has a non-property type that meets the specified condition.
+     *
+     * @param entity    the entity.
+     * @param condition the condition.
+     * @return `true` if the variable has a non-property type and the condition is met.
+     */
+    private def entityHasNonPropertyType(entity: Entity, condition: NonPropertyTypeInfo => Boolean): Boolean = {
+        GravsearchTypeInspectionUtil.maybeTypeableEntity(entity) match {
+            case Some(typeableEntity) =>
+                typeInspectionResult.entities.get(typeableEntity) match {
+                    case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) => condition(nonPropertyTypeInfo)
+                    case Some(_: PropertyTypeInfo) => false
+                    case None => false
+                }
+
+            case None => false
+        }
+    }
+
+    /**
+     * Checks that an [[Entity]] is a [[QueryVariable]].
+     *
+     * @param entity the entity.
+     * @return the entity as a [[QueryVariable]].
+     */
+    private def entityToQueryVariable(entity: Entity): QueryVariable = {
+        entity match {
+            case queryVariable: QueryVariable => queryVariable
+            case other => throw GravsearchException(s"Expected a variable in CONSTRUCT clause, but found ${other.toSparql}")
+        }
+    }
+
+    /**
+     * All the variables used in the Gravsearch CONSTRUCT clause.
+     */
+    private lazy val variablesInConstruct: Set[QueryVariable] = constructClause.statements.flatMap {
+        statementPattern: StatementPattern =>
+            Seq(statementPattern.subj, statementPattern.obj).flatMap {
+                case queryVariable: QueryVariable => Some(queryVariable)
+                case _ => None
+            }
+    }.toSet
+
+    /**
+     * The variables representing values in the CONSTRUCT clause, grouped by resource.
+     */
+    private lazy val valueVariablesPerResourceInConstruct: Map[Entity, Set[QueryVariable]] =
+        constructClause.statements.filter {
+            statementPattern: StatementPattern =>
+                entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
+                    entityHasNonPropertyType(entity = statementPattern.obj, condition = _.isValueType)
+        }.map {
+            statementPattern => statementPattern.subj -> entityToQueryVariable(statementPattern.obj)
+        }.groupBy {
+            case (resourceEntity, _) => resourceEntity
+        }.map {
+            case (resourceEntity, resourceValueTuples) => resourceEntity -> resourceValueTuples.map(_._2).toSet
+        }
+
+    /**
+     * The [[GroupConcat]] expressions generated for values in the prequery, grouped by resource entity.
+     */
+    private lazy val valueGroupConcatsPerResource: Map[Entity, Set[GroupConcat]] = {
+        // Generate variables representing link values and group them by containing resource entity.
+        val linkValueVariablesPerResourceGeneratedForConstruct: Map[Entity, Set[QueryVariable]] = constructClause.statements.filter {
+            statementPattern: StatementPattern =>
+                entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
+                    entityHasNonPropertyType(entity = statementPattern.obj, condition = _.isResourceType)
+        }.map {
+            statementPattern =>
+                statementPattern.subj -> SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
+                    baseStatement = statementPattern
+                )
+        }.groupBy {
+            case (resourceEntity, _) => resourceEntity
+        }.map {
+            case (resourceEntity, resourceValueTuples) => resourceEntity -> resourceValueTuples.map(_._2).toSet
+        }
+
+        // Make a GroupConcat for each value variable.
+        (valueVariablesPerResourceInConstruct.keySet ++ linkValueVariablesPerResourceGeneratedForConstruct.keySet).map {
+            resourceEntity: Entity =>
+                val valueVariables: Set[QueryVariable] = valueVariablesPerResourceInConstruct.getOrElse(resourceEntity, Set.empty) ++
+                    linkValueVariablesPerResourceGeneratedForConstruct.getOrElse(resourceEntity, Set.empty)
+
+                val groupConcats: Set[GroupConcat] = valueVariables.map {
+                    valueObjVar: QueryVariable =>
+                        GroupConcat(inputVariable = valueObjVar,
+                            separator = groupConcatSeparator,
+                            outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix)
+                }
+
+                resourceEntity -> groupConcats
+        }
+    }.toMap
+
+    /**
+     * The variables used in [[GroupConcat]] expressions in the prequery, grouped by resource entity.
+     */
+    private lazy val valueGroupConcatVariablesPerResource: Map[Entity, Set[QueryVariable]] = {
+        valueGroupConcatsPerResource.map {
+            case (resourceEntity: Entity, groupConcats: Set[GroupConcat]) =>
+                resourceEntity -> groupConcats.map(_.outputVariable)
+        }
+    }
+
+    /**
      * Returns the variables that should be included in the results of the SELECT query. This method will be called
      * by [[QueryTraverser]] after the whole input query has been traversed.
      *
      * @return the variables that should be returned by the SELECT.
      */
     override def getSelectVariables: Seq[SelectQueryColumn] = {
-        /**
-         * Determines whether an entity has a non-property type that meets the specified condition.
-         *
-         * @param entity    the entity.
-         * @param condition the condition.
-         * @return `true` if the variable has a non-property type and the condition is met.
-         */
-        def entityHasNonPropertyType(entity: Entity, condition: NonPropertyTypeInfo => Boolean): Boolean = {
-            GravsearchTypeInspectionUtil.maybeTypeableEntity(entity) match {
-                case Some(typeableEntity) =>
-                    typeInspectionResult.entities.get(typeableEntity) match {
-                        case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) => condition(nonPropertyTypeInfo)
-                        case Some(_: PropertyTypeInfo) => false
-                        case None => false
-                    }
+        // If a variable is used as the subject or object of a statement pattern in the CONSTRUCT clause, and it
+        // doesn't represent a resource or a value, that's an error.
 
-                case None => false
-            }
-        }
+        val valueVariablesInConstruct: Set[QueryVariable] = valueVariablesPerResourceInConstruct.values.flatten.toSet
 
-        // Collect the query variables used in the Gravsearch CONSTRUCT clause.
-        val variablesInConstruct = constructClause.statements.flatMap {
-            statementPattern: StatementPattern =>
-                Seq(statementPattern.subj, statementPattern.obj).flatMap {
-                    case queryVariable: QueryVariable => Some(queryVariable)
-                    case _ => None
-                }
-        }.toSet
-
-        // Identify the variables representing resources.
         val resourceVariablesInConstruct: Set[QueryVariable] = variablesInConstruct.filter {
             queryVariable => entityHasNonPropertyType(entity = queryVariable, condition = _.isResourceType)
         }
 
-        // Identify the variables representing values.
-        val valueVariablesInConstruct: Set[QueryVariable] = variablesInConstruct.filter {
-            queryVariable => entityHasNonPropertyType(entity = queryVariable, condition = _.isValueType)
-        }
-
-        // If a variable is used as the subject or object of a statement pattern in the CONSTRUCT clause, and it
-        // doesn't represent a resource or a value, that's an error.
-        val invalidVariablesInConstruct = variablesInConstruct -- valueVariablesInConstruct -- resourceVariablesInConstruct
+        val invalidVariablesInConstruct: Set[QueryVariable] = variablesInConstruct -- valueVariablesInConstruct -- resourceVariablesInConstruct
 
         if (invalidVariablesInConstruct.nonEmpty) {
             val invalidVariablesWithTypes: Set[String] = invalidVariablesInConstruct.map {
@@ -153,22 +227,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
 
             throw GravsearchException(s"One or more variables in the Gravsearch CONSTRUCT clause have unknown or invalid types: ${invalidVariablesWithTypes.mkString(", ")}")
         }
-
-        // Generate variables representing link values.
-        val linkValueVariables: Set[QueryVariable] = constructClause.statements.filter {
-            statementPattern: StatementPattern =>
-                entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
-                    entityHasNonPropertyType(entity = statementPattern.obj, condition = _.isResourceType)
-        }.map {
-            statementPattern =>
-                SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
-                    baseStatement = StatementPattern(
-                        subj = statementPattern.subj,
-                        pred = statementPattern.pred,
-                        obj = statementPattern.obj
-                    )
-                )
-        }.toSet
 
         // Make sure the CONSTRUCT clause mentions the main resource variable.
         val mainResVar: QueryVariable = mainResourceVariable match {
@@ -197,19 +255,22 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
         // Store the variable names used in those GROUP_CONCAT expressions.
         dependentResourceVariablesGroupConcat = dependentResourceGroupConcat.map(_.outputVariable)
 
-        // Generate a GROUP_CONCAT expression for each value variable.
-        val valueObjectGroupConcat = (valueVariablesInConstruct ++ linkValueVariables).map {
-            valueObjVar: QueryVariable =>
-                GroupConcat(inputVariable = valueObjVar,
-                    separator = groupConcatSeparator,
-                    outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix)
-        }
+        // Collect all the GROUP_CONCAT expressions for values.
+        val valueObjectGroupConcat = valueGroupConcatsPerResource.values.flatten.toSet
 
         // Store the variable names used in those GROUP_CONCAT expressions.
-        valueObjectVarsGroupConcat = valueObjectGroupConcat.map(_.outputVariable)
+        valueObjectVariablesGroupConcat = valueGroupConcatVariablesPerResource.values.flatten.toSet
 
-        // Return columns for the main resource variable and for the GROUP_CONCAT expressions.
+        // Return columns for the main resource variable and for all the GROUP_CONCAT expressions.
         Seq(mainResVar) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
+    }
+
+    /**
+     * Returns the variables that were used in [[GroupConcat]] expressions in the prequery to represent values
+     * that were mentioned in the CONSTRUCT clause of the input query, for the given entity representing a resource.
+     */
+    def getValueGroupConcatVariablesForResource(resourceEntity: Entity): Set[QueryVariable] = {
+        valueGroupConcatVariablesPerResource.getOrElse(resourceEntity, Set.empty)
     }
 
     /**

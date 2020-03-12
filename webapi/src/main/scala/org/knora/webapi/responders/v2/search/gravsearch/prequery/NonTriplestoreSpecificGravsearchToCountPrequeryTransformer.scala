@@ -31,7 +31,7 @@ import org.knora.webapi.{ApiV2Schema, GravsearchException, OntologyConstants}
   *
   * @param typeInspectionResult the result of type inspection of the original query.
   */
-class NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
+class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
 
     def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
         // Just identify the main resource variable and put it in mainResourceVariable.
