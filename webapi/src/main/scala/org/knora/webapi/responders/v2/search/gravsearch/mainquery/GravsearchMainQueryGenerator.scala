@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2.search.gravsearch.mainquery
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
+import org.knora.webapi.responders.v2.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter}
@@ -140,7 +140,7 @@ object GravsearchMainQueryGenerator {
                             case Some(depResIri: IRI) =>
 
                                 // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                depResIri.split(transformer.groupConcatSeparator).toSeq
+                                depResIri.split(AbstractPrequeryGenerator.groupConcatSeparator).toSeq
 
                             case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
                         }
@@ -191,7 +191,7 @@ object GravsearchMainQueryGenerator {
                             case Some(valObjIris) =>
 
                                 // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                valObjIris.split(transformer.groupConcatSeparator).toSet
+                                valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet
 
                             case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 

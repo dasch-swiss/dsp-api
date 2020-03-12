@@ -395,17 +395,58 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
                 resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
+            }.distinct
+
+            // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
+            prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponse.results.bindings.groupBy {
+                row => row.rowMap(mainResourceVar.variableName)
+            }.map {
+                case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
+                    val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
+
+                    val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
+                        columnName =>
+                            val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
+
+                            // Is this is the column containing the main resource IRI?
+                            val mergedColumnValue: String = if (columnName == mainResourceVar.variableName) {
+                                // Yes. Use that IRI as the merged value.
+                                resourceIri
+                            } else {
+                                // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
+                                // separator to concatenate the column values.
+                                columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
+                            }
+
+                            columnName -> mergedColumnValue
+                    }.toMap
+
+                    resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
             }
+
+            prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
+                resourceIri => prequeryRowsMergedMap(resourceIri)
+            }
+
+            prequeryResponseMerged: SparqlSelectResponse = prequeryResponse.copy(
+                results = SparqlSelectResponseBody(prequeryRowsMerged)
+            )
 
             mainQueryResults: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
                 // get all the IRIs for variables representing dependent resources per main resource
-                val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource = GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource =
+                    GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(
+                        prequeryResponse = prequeryResponseMerged,
+                        transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+                        mainResourceVar = mainResourceVar
+                    )
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
-                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) => QueryVariable(queryVar.variableName)
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) =>
+                        QueryVariable(queryVar.variableName)
                 }.toSet
 
                 // the user may have defined IRIs of dependent resources in the input query (type annotations)
@@ -420,7 +461,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                 // for each main resource, create a Map of value object variables and their Iris
                 val valueObjectVarsAndIrisPerMainResource: GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris = GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
-                    prequeryResponse = prequeryResponse,
+                    prequeryResponse = prequeryResponseMerged,
                     transformer = nonTriplestoreSpecificConstructToSelectTransformer,
                     mainResourceVar = mainResourceVar
                 )

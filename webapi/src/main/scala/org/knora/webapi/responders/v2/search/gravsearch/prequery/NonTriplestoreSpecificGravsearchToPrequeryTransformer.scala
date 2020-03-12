@@ -37,6 +37,8 @@ import org.knora.webapi.util.IriConversions._
 class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: ConstructClause, typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema, settings: SettingsImpl)
     extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
 
+    import AbstractPrequeryGenerator._
+
     /**
      * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
      * that need to be returned by the SELECT.
@@ -123,7 +125,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     /**
      * All the variables used in the Gravsearch CONSTRUCT clause.
      */
-    private lazy val variablesInConstruct: Set[QueryVariable] = constructClause.statements.flatMap {
+    private val variablesInConstruct: Set[QueryVariable] = constructClause.statements.flatMap {
         statementPattern: StatementPattern =>
             Seq(statementPattern.subj, statementPattern.obj).flatMap {
                 case queryVariable: QueryVariable => Some(queryVariable)
@@ -134,7 +136,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     /**
      * The variables representing values in the CONSTRUCT clause, grouped by resource.
      */
-    private lazy val valueVariablesPerResourceInConstruct: Map[Entity, Set[QueryVariable]] =
+    private val valueVariablesPerResourceInConstruct: Map[Entity, Set[QueryVariable]] =
         constructClause.statements.filter {
             statementPattern: StatementPattern =>
                 entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
@@ -150,7 +152,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     /**
      * The [[GroupConcat]] expressions generated for values in the prequery, grouped by resource entity.
      */
-    private lazy val valueGroupConcatsPerResource: Map[Entity, Set[GroupConcat]] = {
+    private val valueGroupConcatsPerResource: Map[Entity, Set[GroupConcat]] = {
         // Generate variables representing link values and group them by containing resource entity.
         val linkValueVariablesPerResourceGeneratedForConstruct: Map[Entity, Set[QueryVariable]] = constructClause.statements.filter {
             statementPattern: StatementPattern =>
@@ -187,7 +189,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     /**
      * The variables used in [[GroupConcat]] expressions in the prequery, grouped by resource entity.
      */
-    private lazy val valueGroupConcatVariablesPerResource: Map[Entity, Set[QueryVariable]] = {
+    private val valueGroupConcatVariablesPerResource: Map[Entity, Set[QueryVariable]] = {
         valueGroupConcatsPerResource.map {
             case (resourceEntity: Entity, groupConcats: Set[GroupConcat]) =>
                 resourceEntity -> groupConcats.map(_.outputVariable)
