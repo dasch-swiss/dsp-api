@@ -824,6 +824,17 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
         )
     }
 
+    private def getOntologiesFromResource(resource: ReadResourceV2): Set[SmartIri] = {
+        val propertyIriOntologies: Set[SmartIri] = resource.values.keySet.map(_.getOntologyFromEntity)
+
+        val valueOntologies: Set[SmartIri] = resource.values.values.flatten.collect {
+            case readLinkValueV2: ReadLinkValueV2 =>
+                readLinkValueV2.valueContent.nestedResource.map(nested => getOntologiesFromResource(nested))
+        }.flatten.flatten.toSet
+
+        propertyIriOntologies ++ valueOntologies + resource.resourceClassIri.getOntologyFromEntity
+    }
+
     // #generateJsonLD
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         // #generateJsonLD
@@ -843,14 +854,7 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
         val projectSpecificOntologiesUsed: Set[SmartIri] = resources.flatMap {
-            resource =>
-                val resourceOntology = resource.resourceClassIri.getOntologyFromEntity
-
-                val propertyOntologies = resource.values.keySet.map {
-                    property => property.getOntologyFromEntity
-                }
-
-                propertyOntologies + resourceOntology
+            resource => getOntologiesFromResource(resource)
         }.toSet.filter(!_.isKnoraBuiltInDefinitionIri)
 
         // Make the knora-api prefix for the target schema.

@@ -145,7 +145,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       * @return a [[SparqlSelectResponse]].
       */
     private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResponse] = {
-        // println(sparql)
+        println(sparql)
 
         def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResponse] = {
             val parseTry = Try {
@@ -325,7 +325,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       * @return a [[SparqlExtendedConstructResponse]]
       */
     private def sparqlHttpExtendedConstruct(sparql: String): Try[SparqlExtendedConstructResponse] = {
-        // println(sparql)
+        println(sparql)
 
         val parseTry = for {
             turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
