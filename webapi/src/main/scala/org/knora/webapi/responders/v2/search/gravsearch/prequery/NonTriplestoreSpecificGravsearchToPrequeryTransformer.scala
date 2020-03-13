@@ -248,12 +248,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     val valueObjectVariablesGroupConcat: Set[QueryVariable] = valueGroupConcatVariablesPerResource.values.flatten.toSet
 
     /**
-     * Returns the variables that should be included in the results of the SELECT query. This method will be called
-     * by [[QueryTraverser]] after the whole input query has been traversed.
-     *
-     * @return the variables that should be returned by the SELECT.
+     * Returns the columns to be specified in the SELECT query.
      */
-    override def getSelectVariables: Seq[SelectQueryColumn] = {
+    override def getSelectColumns: Seq[SelectQueryColumn] = {
         Seq(mainResourceVariable) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
     }
 

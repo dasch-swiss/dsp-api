@@ -116,7 +116,7 @@ trait ConstructToSelectTransformer extends WhereTransformer {
       *
       * @return the variables that should be returned by the SELECT.
       */
-    def getSelectVariables: Seq[SelectQueryColumn]
+    def getSelectColumns: Seq[SelectQueryColumn]
 
     /**
       * Returns the variables that the query result rows are grouped by (aggregating rows into one).
@@ -307,7 +307,7 @@ object QueryTraverser {
         val offset = transformer.getOffset(inputQuery.offset, limit)
 
         SelectQuery(
-            variables = transformer.getSelectVariables,
+            variables = transformer.getSelectColumns,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
             groupBy = groupBy,
             orderBy = transformedOrderBy.orderBy,
