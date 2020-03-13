@@ -61,7 +61,6 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(constructClause
     }
 
     def getSelectColumns: Seq[SelectQueryColumn] = {
-
         // return count aggregation function for main variable
         Seq(Count(inputVariable = mainResourceVariable, distinct = true, outputVariableName = "count"))
     }
