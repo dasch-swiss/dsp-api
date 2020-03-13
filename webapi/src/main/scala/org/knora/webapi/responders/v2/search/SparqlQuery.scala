@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2.search
 
 import akka.http.scaladsl.model.{HttpCharsets, MediaType}
 import org.knora.webapi._
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
@@ -202,11 +203,10 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
  * [[StatementPattern]] during Gravsearch processing.
  *
  * @param subj a variable representing the subject to be found.
- * @param pred the predicate that connects the subject to the literal value that is indexed.
  * @param obj  a variable representing the literal that is indexed.
  * @param queryString the Lucene query string to be matched.
  */
-case class LuceneQueryPattern(subj: QueryVariable, pred: IriRef, obj: QueryVariable, queryString: String) extends QueryPattern {
+case class LuceneQueryPattern(subj: QueryVariable, obj: QueryVariable, queryString: LuceneQueryString) extends QueryPattern {
     override def toSparql: String = throw AssertionException("LuceneQueryPattern should have been transformed into a StatementPattern")
 }
 
