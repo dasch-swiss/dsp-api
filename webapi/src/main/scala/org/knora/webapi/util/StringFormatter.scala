@@ -3004,7 +3004,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
      * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
      * @return the IRI of the corresponding link property.
      */
-    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
+    def linkValuePropertyIriToLinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
         implicit val stringFormatter: StringFormatter = this
 
         linkValuePropertyIri.toSmartIri.fromLinkValuePropToLinkProp.toString

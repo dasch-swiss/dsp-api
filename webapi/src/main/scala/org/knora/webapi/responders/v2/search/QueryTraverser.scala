@@ -111,14 +111,6 @@ case class TransformedOrderBy(statementPatterns: Seq[StatementPattern] = Vector.
   */
 trait ConstructToSelectTransformer extends WhereTransformer {
     /**
-      * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
-      * that need to be returned by the SELECT.
-      *
-      * @param statementPattern the statement to be handled.
-      */
-    def handleStatementInConstruct(statementPattern: StatementPattern): Unit
-
-    /**
       * Returns the variables that should be included in the results of the SELECT query. This method will be called
       * by [[QueryTraverser]] after the whole input query has been traversed.
       *
@@ -299,10 +291,6 @@ object QueryTraverser {
       * @return the transformed query.
       */
     def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer): SelectQuery = {
-
-        for (statement <- inputQuery.constructClause.statements) {
-            transformer.handleStatementInConstruct(statement)
-        }
 
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,

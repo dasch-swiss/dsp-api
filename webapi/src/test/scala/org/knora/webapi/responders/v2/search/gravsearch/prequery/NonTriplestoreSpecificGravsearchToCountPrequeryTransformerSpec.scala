@@ -39,6 +39,7 @@ private object CountQueryHandler {
         // Create a Select prequery
 
         val nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer = new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+            constructClause = constructQuery.constructClause,
             typeInspectionResult = typeInspectionResult,
             querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
         )

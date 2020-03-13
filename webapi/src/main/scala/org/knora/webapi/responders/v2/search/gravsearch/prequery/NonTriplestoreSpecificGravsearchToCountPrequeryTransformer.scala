@@ -19,28 +19,23 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
+import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.{ApiV2Schema, GravsearchException, OntologyConstants}
 
 /**
-  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
-  * the search criteria. This query will be used to get resource IRIs for a single page of results. These IRIs will be included in a CONSTRUCT
-  * query to get the actual results for the page.
-  *
-  * @param typeInspectionResult the result of type inspection of the original query.
-  */
-class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
-
-    def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
-        // Just identify the main resource variable and put it in mainResourceVariable.
-
-        isMainResourceVariable(statementPattern) match {
-            case Some(queryVariable: QueryVariable) => mainResourceVariable = Some(queryVariable)
-            case None => ()
-        }
-    }
+ * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
+ * the search criteria. This query will be used to get resource IRIs for a single page of results. These IRIs will be included in a CONSTRUCT
+ * query to get the actual results for the page.
+ *
+ * @param typeInspectionResult the result of type inspection of the original query.
+ */
+class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(constructClause: ConstructClause,
+                                                                 typeInspectionResult: GravsearchTypeInspectionResult,
+                                                                 querySchema: ApiV2Schema)
+    extends AbstractPrequeryGenerator(constructClause = constructClause,
+        typeInspectionResult = typeInspectionResult,
+        querySchema = querySchema) with ConstructToSelectTransformer {
 
     def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
@@ -67,14 +62,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(typeInspectionR
 
     def getSelectVariables: Seq[SelectQueryColumn] = {
 
-        val mainResVar = mainResourceVariable match {
-            case Some(mainVar: QueryVariable) => mainVar
-
-            case None => throw GravsearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource.toSmartIri.toSparql} found in CONSTRUCT query.")
-        }
-
         // return count aggregation function for main variable
-        Seq(Count(inputVariable = mainResVar, distinct = true, outputVariableName = "count"))
+        Seq(Count(inputVariable = mainResourceVariable, distinct = true, outputVariableName = "count"))
     }
 
     def getGroupBy(orderByCriteria: TransformedOrderBy): Seq[QueryVariable] = {

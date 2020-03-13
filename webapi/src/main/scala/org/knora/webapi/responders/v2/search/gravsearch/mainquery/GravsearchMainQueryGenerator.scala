@@ -23,17 +23,16 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
-import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter}
 
 object GravsearchMainQueryGenerator {
 
     /**
-      * Constants used in the processing of Gravsearch queries.
-      *
-      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
-      */
+     * Constants used in the processing of Gravsearch queries.
+     *
+     * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
+     */
     private object GravsearchConstants {
 
         // SPARQL variable representing the main resource and its properties
@@ -114,7 +113,7 @@ object GravsearchMainQueryGenerator {
                                                 mainResourceVar: QueryVariable): DependentResourcesPerMainResource = {
 
         // variables representing dependent resources
-        val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.getDependentResourceVariablesGroupConcat
+        val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.dependentResourceVariablesGroupConcat
 
         val dependentResourcesPerMainRes = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
             case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
@@ -167,7 +166,7 @@ object GravsearchMainQueryGenerator {
                                                  mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
 
         // value objects variables present in the prequery's WHERE clause
-        val valueObjectVariablesConcat = transformer.getValueObjectVariablesGroupConcat
+        val valueObjectVariablesConcat = transformer.valueObjectVariablesGroupConcat
 
         val valueObjVarsAndIris: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
             (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
@@ -208,16 +207,16 @@ object GravsearchMainQueryGenerator {
     }
 
     /**
-      * Creates the main query to be sent to the triplestore.
-      * Requests two sets of information: about the main resources and the dependent resources.
-      *
-      * @param mainResourceIris      IRIs of main resources to be queried.
-      * @param dependentResourceIris IRIs of dependent resources to be queried.
-      * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
-      * @param targetSchema          the target API schema.
-      * @param schemaOptions         the schema options submitted with the request.
-      * @return the main [[ConstructQuery]] query to be executed.
-      */
+     * Creates the main query to be sent to the triplestore.
+     * Requests two sets of information: about the main resources and the dependent resources.
+     *
+     * @param mainResourceIris      IRIs of main resources to be queried.
+     * @param dependentResourceIris IRIs of dependent resources to be queried.
+     * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
+     * @param targetSchema          the target API schema.
+     * @param schemaOptions         the schema options submitted with the request.
+     * @return the main [[ConstructQuery]] query to be executed.
+     */
     def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: SettingsImpl): ConstructQuery = {
         import GravsearchConstants._
 

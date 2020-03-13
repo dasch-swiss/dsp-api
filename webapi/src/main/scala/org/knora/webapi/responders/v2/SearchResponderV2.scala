@@ -277,6 +277,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // Create a Select prequery
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer = new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+                constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
             )
@@ -388,7 +389,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
             // variable representing the main resources
-            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable
+            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
 
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far

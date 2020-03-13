@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v2.search.gravsearch.prequery
 import org.knora.webapi._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.IriConversions._
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -34,25 +33,17 @@ import org.knora.webapi.util.IriConversions._
  * @param querySchema          ontology schema used in the input query.
  * @param settings             application settings.
  */
-class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: ConstructClause, typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema, settings: SettingsImpl)
-    extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
+class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: ConstructClause,
+                                                            typeInspectionResult: GravsearchTypeInspectionResult,
+                                                            querySchema: ApiV2Schema,
+                                                            settings: SettingsImpl)
+    extends AbstractPrequeryGenerator(
+        constructClause = constructClause,
+        typeInspectionResult = typeInspectionResult,
+        querySchema = querySchema
+    ) with ConstructToSelectTransformer {
 
     import AbstractPrequeryGenerator._
-
-    /**
-     * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
-     * that need to be returned by the SELECT.
-     *
-     * @param statementPattern the statement to be handled.
-     */
-    override def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
-        // Just identify the main resource variable and put it in mainResourceVariable.
-
-        isMainResourceVariable(statementPattern) match {
-            case Some(queryVariable: QueryVariable) => mainResourceVariable = Some(queryVariable)
-            case None => ()
-        }
-    }
 
     /**
      * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -150,6 +141,36 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
         }
 
     /**
+     * The variables representing resources in the CONSTRUCT clause.
+     */
+    private val resourceVariablesInConstruct: Set[QueryVariable] = variablesInConstruct.filter {
+        queryVariable => entityHasNonPropertyType(entity = queryVariable, condition = _.isResourceType)
+    }
+
+    // If a variable is used as the subject or object of a statement pattern in the CONSTRUCT clause, and it
+    // doesn't represent a resource or a value, that's an error.
+
+    private val valueVariablesInConstruct: Set[QueryVariable] = valueVariablesPerResourceInConstruct.values.flatten.toSet
+
+    private val invalidVariablesInConstruct: Set[QueryVariable] = variablesInConstruct -- valueVariablesInConstruct -- resourceVariablesInConstruct
+
+    if (invalidVariablesInConstruct.nonEmpty) {
+        val invalidVariablesWithTypes: Set[String] = invalidVariablesInConstruct.map {
+            queryVariable =>
+                val typeableEntity = GravsearchTypeInspectionUtil.toTypeableEntity(queryVariable)
+
+                val typeName = typeInspectionResult.entities.get(typeableEntity).map {
+                    case _: PropertyTypeInfo => "property"
+                    case nonPropertyTypeInfo: NonPropertyTypeInfo => s"<${nonPropertyTypeInfo.typeIri}>"
+                }.getOrElse("unknown type")
+
+                s"${queryVariable.toSparql} ($typeName)"
+        }
+
+        throw GravsearchException(s"One or more variables in the Gravsearch CONSTRUCT clause have unknown or invalid types: ${invalidVariablesWithTypes.mkString(", ")}")
+    }
+
+    /**
      * The [[GroupConcat]] expressions generated for values in the prequery, grouped by resource entity.
      */
     private val valueGroupConcatsPerResource: Map[Entity, Set[GroupConcat]] = {
@@ -197,74 +218,43 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     }
 
     /**
+     * A GROUP_CONCAT expression for each value variable.
+     */
+    private val valueObjectGroupConcat: Set[GroupConcat] = valueGroupConcatsPerResource.values.flatten.toSet
+
+    /**
+     * Variables representing dependent resources in the CONSTRUCT clause.
+     */
+    private val dependentResourceVariablesInConstruct: Set[QueryVariable] = resourceVariablesInConstruct - mainResourceVariable
+
+    /**
+     * A GROUP_CONCAT expression for each dependent resource variable.
+     */
+    private val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariablesInConstruct.map {
+        dependentResVar: QueryVariable =>
+            GroupConcat(inputVariable = dependentResVar,
+                separator = groupConcatSeparator,
+                outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix)
+    }
+
+    /**
+     * The variable names used in the GROUP_CONCAT expressions for dependent resources.
+     */
+    val dependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceGroupConcat.map(_.outputVariable)
+
+    /**
+     * The variable names used in the GROUP_CONCAT expressions for values.
+     */
+    val valueObjectVariablesGroupConcat: Set[QueryVariable] = valueGroupConcatVariablesPerResource.values.flatten.toSet
+
+    /**
      * Returns the variables that should be included in the results of the SELECT query. This method will be called
      * by [[QueryTraverser]] after the whole input query has been traversed.
      *
      * @return the variables that should be returned by the SELECT.
      */
     override def getSelectVariables: Seq[SelectQueryColumn] = {
-        // If a variable is used as the subject or object of a statement pattern in the CONSTRUCT clause, and it
-        // doesn't represent a resource or a value, that's an error.
-
-        val valueVariablesInConstruct: Set[QueryVariable] = valueVariablesPerResourceInConstruct.values.flatten.toSet
-
-        val resourceVariablesInConstruct: Set[QueryVariable] = variablesInConstruct.filter {
-            queryVariable => entityHasNonPropertyType(entity = queryVariable, condition = _.isResourceType)
-        }
-
-        val invalidVariablesInConstruct: Set[QueryVariable] = variablesInConstruct -- valueVariablesInConstruct -- resourceVariablesInConstruct
-
-        if (invalidVariablesInConstruct.nonEmpty) {
-            val invalidVariablesWithTypes: Set[String] = invalidVariablesInConstruct.map {
-                queryVariable =>
-                    val typeableEntity = GravsearchTypeInspectionUtil.toTypeableEntity(queryVariable)
-
-                    val typeName = typeInspectionResult.entities.get(typeableEntity).map {
-                        case _: PropertyTypeInfo => "property"
-                        case nonPropertyTypeInfo: NonPropertyTypeInfo => s"<${nonPropertyTypeInfo.typeIri}>"
-                    }.getOrElse("unknown type")
-
-                    s"${queryVariable.toSparql} ($typeName)"
-            }
-
-            throw GravsearchException(s"One or more variables in the Gravsearch CONSTRUCT clause have unknown or invalid types: ${invalidVariablesWithTypes.mkString(", ")}")
-        }
-
-        // Make sure the CONSTRUCT clause mentions the main resource variable.
-        val mainResVar: QueryVariable = mainResourceVariable match {
-            case Some(mainVar: QueryVariable) =>
-                if (resourceVariablesInConstruct.contains(mainVar)) {
-                    mainVar
-                } else {
-                    throw GravsearchException(s"The Gravsearch CONSTRUCT clause does not refer to the main resource variable")
-                }
-
-            case None =>
-                throw GravsearchException(s"The Gravsearch query does not specify a main resource variable")
-        }
-
-        // Make a set of dependent resource variables.
-        val dependentResourceVariablesInConstruct = resourceVariablesInConstruct - mainResVar
-
-        // Generate a GROUP_CONCAT expression for each dependent resource variable.
-        val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariablesInConstruct.map {
-            dependentResVar: QueryVariable =>
-                GroupConcat(inputVariable = dependentResVar,
-                    separator = groupConcatSeparator,
-                    outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix)
-        }
-
-        // Store the variable names used in those GROUP_CONCAT expressions.
-        dependentResourceVariablesGroupConcat = dependentResourceGroupConcat.map(_.outputVariable)
-
-        // Collect all the GROUP_CONCAT expressions for values.
-        val valueObjectGroupConcat = valueGroupConcatsPerResource.values.flatten.toSet
-
-        // Store the variable names used in those GROUP_CONCAT expressions.
-        valueObjectVariablesGroupConcat = valueGroupConcatVariablesPerResource.values.flatten.toSet
-
-        // Return columns for the main resource variable and for all the GROUP_CONCAT expressions.
-        Seq(mainResVar) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
+        Seq(mainResourceVariable) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
     }
 
     /**
@@ -303,7 +293,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
 
         // main resource variable as order by criterion
         val orderByMainResVar: OrderCriterion = OrderCriterion(
-            queryVariable = mainResourceVariable.getOrElse(throw GravsearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource.toSmartIri.toSparql} found in CONSTRUCT query")),
+            queryVariable = mainResourceVariable,
             isAscending = true
         )
 
