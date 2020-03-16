@@ -193,7 +193,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                             case Some(valObjIris) =>
 
-                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet)
+                                // Filter out empty IRIs (which we could get if a variable used in GROUP_CONCAT is unbound)
+                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet.filterNot(_.isEmpty))
 
                             case None => acc
                         }

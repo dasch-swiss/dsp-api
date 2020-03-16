@@ -27,32 +27,6 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
  * Methods and classes for Sparql transformation.
  */
 object SparqlTransformer {
-
-    /**
-     * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
-     *
-     * @param statement the given statement whose graph name has to be renamed.
-     * @return the statement with the renamed graph, if given.
-     */
-    def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        val transformedPattern = statement.copy(
-            // Replace the deprecated property knora-base:matchesTextIndex with a GraphDB-specific one.
-            pred = statement.pred match {
-                case iri: IriRef if iri.iri == OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri => IriRef(OntologyConstants.Ontotext.LuceneFulltext.toSmartIri) // convert to special Lucene property
-                case other => other // no conversion needed
-            },
-            namedGraph = statement.namedGraph match {
-                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
-                case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
-                case None => None
-            }
-        )
-
-        Seq(transformedPattern)
-    }
-
     /**
      * Transforms a non-triplestore-specific SELECT query for GraphDB.
      */
@@ -67,7 +41,8 @@ object SparqlTransformer {
 
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
-        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
+            transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
     }
 
     /**
@@ -78,9 +53,8 @@ object SparqlTransformer {
 
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            expandStatementForNoInference(statementPattern)
-        }
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] =
+            transformStatementInWhereForNoInference(statementPattern)
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
@@ -88,7 +62,8 @@ object SparqlTransformer {
             moveIsDeletedToEnd(patterns)
         }
 
-        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
+            transformLuceneQueryPatternForFuseki(luceneQueryPattern)
     }
 
     /**
@@ -105,7 +80,8 @@ object SparqlTransformer {
 
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
-        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
+            transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
     }
 
     /**
@@ -116,9 +92,8 @@ object SparqlTransformer {
 
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            expandStatementForNoInference(statementPattern)
-        }
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] =
+            transformStatementInWhereForNoInference(statementPattern)
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
@@ -126,7 +101,8 @@ object SparqlTransformer {
             moveIsDeletedToEnd(patterns)
         }
 
-        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern) // TODO
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
+            transformLuceneQueryPatternForFuseki(luceneQueryPattern)
     }
 
     /**
@@ -217,6 +193,27 @@ object SparqlTransformer {
     }
 
     /**
+     * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
+     *
+     * @param statementPattern the statement pattern.
+     * @return the statement pattern as expanded to work without inference.
+     */
+    private def transformStatementInWhereForNoInference(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        statementPattern.pred match {
+            case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor  =>
+                Seq(
+                    statementPattern.copy(
+                        pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
+                    )
+                )
+
+            case _ => expandStatementForNoInference(statementPattern)
+        }
+    }
+
+    /**
      * If inference is not being used, expands non-explicit statements to simulate inference using `rdfs:subClassOf*`
      * and `rdfs:subPropertyOf*`.
      *
@@ -290,5 +287,72 @@ object SparqlTransformer {
                         Seq(statementPattern)
                 }
         }
+    }
+
+    /**
+     * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
+     *
+     * @param statement the given statement whose graph name has to be renamed.
+     * @return the statement with the renamed graph, if given.
+     */
+    private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val transformedPattern = statement.copy(
+            // Replace the deprecated property knora-base:matchesTextIndex with a GraphDB-specific one.
+            pred = statement.pred match {
+                case iri: IriRef if iri.iri == OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri => IriRef(OntologyConstants.Ontotext.LuceneFulltext.toSmartIri) // convert to special Lucene property
+                case other => other // no conversion needed
+            },
+            namedGraph = statement.namedGraph match {
+                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
+                case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
+                case None => None
+            }
+        )
+
+        Seq(transformedPattern)
+    }
+
+    /**
+     * Transforms a [[LuceneQueryPattern]] for GraphDB.
+     *
+     * @param luceneQueryPattern the query pattern.
+     * @return GraphDB-specific statements implementing the query.
+     */
+    private def transformLuceneQueryPatternForGraphDB(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        Seq(
+            StatementPattern(
+                subj = luceneQueryPattern.obj, // In GraphDB, an index entry is associated with a literal.
+                pred = IriRef("http://www.ontotext.com/owlim/lucene#fullTextSearchIndex".toSmartIri),
+                obj = XsdLiteral(
+                    value = luceneQueryPattern.queryString.getQueryString,
+                    datatype = OntologyConstants.Xsd.String.toSmartIri
+                )
+            )
+        )
+    }
+
+    /**
+     * Transforms a [[LuceneQueryPattern]] for Fuseki.
+     *
+     * @param luceneQueryPattern the query pattern.
+     * @return Fuseki-specific statements implementing the query.
+     */
+    private def transformLuceneQueryPatternForFuseki(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        Seq(
+            StatementPattern(
+                subj = luceneQueryPattern.subj, // In Fuseki, an index entry is associated with an entity that has a literal.
+                pred = IriRef("http://jena.apache.org/text#query".toSmartIri),
+                obj = XsdLiteral(
+                    value = luceneQueryPattern.queryString.getQueryString,
+                    datatype = OntologyConstants.Xsd.String.toSmartIri
+                )
+            )
+        )
     }
 }

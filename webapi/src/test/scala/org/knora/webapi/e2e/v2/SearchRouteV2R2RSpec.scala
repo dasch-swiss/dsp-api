@@ -138,7 +138,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearch-${settings.triplestoreType}.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -150,7 +150,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple-${settings.triplestoreType}.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1892,7 +1892,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' using the match function t1" in {
+        "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
 
             val gravsearchQuery =
                 """
@@ -1913,7 +1913,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -1954,7 +1954,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -4572,7 +4572,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -4611,7 +4611,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -6645,9 +6645,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?title, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -6686,9 +6684,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?title, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -7651,10 +7647,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |} WHERE {
                   |    ?thing a anything:Thing .
                   |    ?thing anything:hasRichtext ?text .
-                  |    ?text knora-api:valueAsString ?textStr .
                   |    ?text knora-api:textValueHasStandoff ?standoffTag .
                   |    ?standoffTag a standoff:StandoffItalicTag .
-                  |    FILTER knora-api:matchInStandoff(?textStr, ?standoffTag, "interesting text")
+                  |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
                   |}
                 """.stripMargin
 

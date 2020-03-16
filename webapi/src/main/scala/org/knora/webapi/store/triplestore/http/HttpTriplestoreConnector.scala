@@ -217,8 +217,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 FakeTriplestore.add(sparql, resultStr, log)
             }
 
-            _ = println(s"SPARQL: $logDelimiter$sparql")
-            _ = println(s"Result: $logDelimiter$resultStr")
+            // _ = println(s"SPARQL: $logDelimiter$sparql")
+            // _ = println(s"Result: $logDelimiter$resultStr")
 
             // Parse the response as a JSON object and generate a response message.
             responseMessage <- parseJsonResponse(sparql, resultStr)
