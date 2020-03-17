@@ -29,12 +29,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.ResponderData
-import org.knora.webapi.util.ApacheLuceneSupport._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources, ResourceWithValueRdfData}
+import org.knora.webapi.util.ApacheLuceneSupport._
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -42,8 +42,8 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import scala.concurrent.Future
 
 /**
-  * Constants used in [[SearchResponderV2]].
-  */
+ * Constants used in [[SearchResponderV2]].
+ */
 object SearchResponderV2Constants {
 
     val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
@@ -55,8 +55,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
 
     /**
-      * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
+     */
     def receive(msg: SearchResponderRequestV2) = msg match {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
         case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser)
@@ -69,11 +69,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     }
 
     /**
-      * Gets the forbidden resource.
-      *
-      * @param requestingUser the user making the request.
-      * @return the forbidden resource.
-      */
+     * Gets the forbidden resource.
+     *
+     * @param requestingUser the user making the request.
+     * @return the forbidden resource.
+     */
     private def getForbiddenResource(requestingUser: UserADM): Future[Some[ReadResourceV2]] = {
         import SearchResponderV2Constants.forbiddenResourceIri
 
@@ -87,17 +87,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     }
 
     /**
-      * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
-      * without taking into consideration permission checking.
-      *
-      * This method does not return the resources themselves.
-      *
-      * @param searchValue          the values to search for.
-      * @param limitToProject       limit search to given project.
-      * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser       the the client making the request.
-      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
-      */
+     * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
+     * without taking into consideration permission checking.
+     *
+     * This method does not return the resources themselves.
+     *
+     * @param searchValue          the values to search for.
+     * @param limitToProject       limit search to given project.
+     * @param limitToResourceClass limit search to given resource class.
+     * @param requestingUser       the the client making the request.
+     * @return a [[ResourceCountV2]] representing the number of resources that have been found.
+     */
     private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
@@ -130,17 +130,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     }
 
     /**
-      * Performs a fulltext search (simple search).
-      *
-      * @param searchValue          the values to search for.
-      * @param offset               the offset to be used for paging.
-      * @param limitToProject       limit search to given project.
-      * @param limitToResourceClass limit search to given resource class.
-      * @param targetSchema         the target API schema.
-      * @param schemaOptions        the schema options submitted with the request.
-      * @param requestingUser       the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-      */
+     * Performs a fulltext search (simple search).
+     *
+     * @param searchValue          the values to search for.
+     * @param offset               the offset to be used for paging.
+     * @param limitToProject       limit search to given project.
+     * @param limitToResourceClass limit search to given resource class.
+     * @param targetSchema         the target API schema.
+     * @param schemaOptions        the schema options submitted with the request.
+     * @param requestingUser       the the client making the request.
+     * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+     */
     private def fulltextSearchV2(searchValue: String,
                                  offset: Int,
                                  limitToProject: Option[IRI],
@@ -170,7 +170,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(searchSparql)
 
-            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+
+            mainResourceVar = QueryVariable("resource")
+
+            prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged, mainResourceVar)
 
             // _ = println(prequeryResponse)
 
@@ -323,12 +327,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
 
     /**
-      * Performs a count query for a Gravsearch query provided by the user.
-      *
-      * @param inputQuery     a Gravsearch query provided by the client.
-      * @param requestingUser the the client making the request.
-      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
-      */
+     * Performs a count query for a Gravsearch query provided by the user.
+     *
+     * @param inputQuery     a Gravsearch query provided by the client.
+     * @param requestingUser the the client making the request.
+     * @return a [[ResourceCountV2]] representing the number of resources that have been found.
+     */
     private def gravsearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
 
         // make sure that OFFSET is 0
@@ -395,14 +399,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     }
 
     /**
-      * Performs a search using a Gravsearch query provided by the client.
-      *
-      * @param inputQuery     a Gravsearch query provided by the client.
-      * @param targetSchema   the target API schema.
-      * @param schemaOptions  the schema options submitted with the request.
-      * @param requestingUser the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-      */
+     * Performs a search using a Gravsearch query provided by the client.
+     *
+     * @param inputQuery     a Gravsearch query provided by the client.
+     * @param targetSchema   the target API schema.
+     * @param schemaOptions  the schema options submitted with the request.
+     * @param requestingUser the the client making the request.
+     * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+     */
     private def gravsearchV2(inputQuery: ConstructQuery,
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
@@ -458,10 +462,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(triplestoreSpecificPrequery.toSparql)
 
-            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
             // variable representing the main resources
             mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable
+
+            prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged = prequeryResponseNotMerged, mainResourceVar = mainResourceVar)
 
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
@@ -600,11 +606,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
 
     /**
-      * Gets resources from a project.
-      *
-      * @param resourcesInProjectGetRequestV2 the request message.
-      * @return a [[ReadResourcesSequenceV2]].
-      */
+     * Gets resources from a project.
+     *
+     * @param resourcesInProjectGetRequestV2 the request message.
+     * @return a [[ReadResourcesSequenceV2]].
+     */
     private def searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2): Future[ReadResourcesSequenceV2] = {
         val internalClassIri = resourcesInProjectGetRequestV2.resourceClass.toOntologySchema(InternalSchema)
         val maybeInternalOrderByPropertyIri: Option[SmartIri] = resourcesInProjectGetRequestV2.orderByProperty.map(_.toOntologySchema(InternalSchema))
@@ -747,14 +753,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     }
 
     /**
-      * Performs a count query for a search for resources by their rdfs:label.
-      *
-      * @param searchValue          the values to search for.
-      * @param limitToProject       limit search to given project.
-      * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser       the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-      */
+     * Performs a count query for a search for resources by their rdfs:label.
+     *
+     * @param searchValue          the values to search for.
+     * @param limitToProject       limit search to given project.
+     * @param limitToResourceClass limit search to given resource class.
+     * @param requestingUser       the the client making the request.
+     * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+     */
     private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM) = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
@@ -789,18 +795,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     }
 
 
-
     /**
-      * Performs a search for resources by their rdfs:label.
-      *
-      * @param searchValue          the values to search for.
-      * @param offset               the offset to be used for paging.
-      * @param limitToProject       limit search to given project.
-      * @param limitToResourceClass limit search to given resource class.
-      * @param targetSchema         the schema of the response.
-      * @param requestingUser       the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-      */
+     * Performs a search for resources by their rdfs:label.
+     *
+     * @param searchValue          the values to search for.
+     * @param offset               the offset to be used for paging.
+     * @param limitToProject       limit search to given project.
+     * @param limitToResourceClass limit search to given resource class.
+     * @param targetSchema         the schema of the response.
+     * @param requestingUser       the the client making the request.
+     * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+     */
     private def searchResourcesByLabelV2(searchValue: String,
                                          offset: Int,
                                          limitToProject: Option[IRI],
@@ -880,4 +885,54 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     }
 
+    /**
+     * Given a prequery result, merges rows with the same main resource IRI. This could happen if there are unbound
+     * variables in GROUP_CONCAT expressions.
+     *
+     * @param prequeryResponseNotMerged the prequery response before merging.
+     * @param mainResourceVar           the name of the column representing the main resource.
+     * @return the merged results.
+     */
+    private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResponse, mainResourceVar: QueryVariable): SparqlSelectResponse = {
+        // a sequence of resource IRIs that match the search criteria
+        // attention: no permission checking has been done so far
+        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
+            resultRow: VariableResultsRow =>
+                resultRow.rowMap(mainResourceVar.variableName)
+        }.distinct
+
+        val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
+            row => row.rowMap(mainResourceVar.variableName)
+        }.map {
+            case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
+                val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
+
+                val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
+                    columnName =>
+                        val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
+
+                        // Is this is the column containing the main resource IRI?
+                        val mergedColumnValue: String = if (columnName == mainResourceVar.variableName) {
+                            // Yes. Use that IRI as the merged value.
+                            resourceIri
+                        } else {
+                            // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
+                            // separator to concatenate the column values.
+                            columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
+                        }
+
+                        columnName -> mergedColumnValue
+                }.toMap
+
+                resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
+        }
+
+        val prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
+            resourceIri => prequeryRowsMergedMap(resourceIri)
+        }
+
+        prequeryResponseNotMerged.copy(
+            results = SparqlSelectResponseBody(prequeryRowsMerged)
+        )
+    }
 }
