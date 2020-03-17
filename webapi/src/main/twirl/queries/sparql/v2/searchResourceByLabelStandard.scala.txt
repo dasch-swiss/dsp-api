@@ -63,18 +63,18 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
     } WHERE {
         {
-            @{
-                queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
-                    searchTerm = searchTerm,
-                    limitToProject = limitToProject,
-                    limitToResourceClass = limitToResourceClass,
-                    limit = limit,
-                    offset = offset,
-                    countQuery = countQuery)
+            {
+                @{
+                    queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectStandard(
+                        searchTerm = searchTerm,
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        limit = limit,
+                        offset = offset,
+                        countQuery = countQuery)
+                }
             }
-        }
 
-        {
             ?resource a ?resourceType ;
                 knora-base:attachedToUser ?resourceCreator ;
                 knora-base:hasPermissions ?resourcePermissions ;
@@ -88,6 +88,18 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
         }
         # there might be resources that have neither values nor links
         UNION {
+            {
+                @{
+                    queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectStandard(
+                        searchTerm = searchTerm,
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        limit = limit,
+                        offset = offset,
+                        countQuery = countQuery)
+                }
+            }
+
             ?resource ?resourceValueProperty ?valueObject .
             ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
 

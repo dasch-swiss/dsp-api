@@ -99,7 +99,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
         val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariables.map {
             dependentResVar: QueryVariable =>
                 GroupConcat(inputVariable = dependentResVar,
-                    separator = groupConcatSeparator,
+                    separator = AbstractPrequeryGenerator.groupConcatSeparator,
                     outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix)
         }.toSet
 
@@ -108,7 +108,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
         val valueObjectGroupConcat = valueObjectVariables.map {
             valueObjVar: QueryVariable =>
                 GroupConcat(inputVariable = valueObjVar,
-                    separator = groupConcatSeparator,
+                    separator = AbstractPrequeryGenerator.groupConcatSeparator,
                     outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix)
         }.toSet
 

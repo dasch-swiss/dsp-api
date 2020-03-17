@@ -30,6 +30,11 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.mutable
 
+object AbstractPrequeryGenerator {
+    // separator used by GroupConcat
+    val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
+}
+
 /**
  * An abstract base class for [[WhereTransformer]] instances that generate SPARQL prequeries from Gravsearch input.
  *
@@ -52,9 +57,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
     // variables representing dependent resources
     protected var dependentResourceVariables: mutable.Set[QueryVariable] = mutable.Set.empty
-
-    // separator used by GroupConcat
-    val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
 
     // variables representing aggregated dependent resources
     protected var dependentResourceVariablesGroupConcat: Set[QueryVariable] = Set.empty

@@ -20,10 +20,9 @@
 package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructResponse, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryGenerator
+import org.knora.webapi.responders.v2.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryGenerator}
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.util.ConstructResponseUtilV2.{RdfPropertyValues, RdfResources, ResourceWithValueRdfData, ValueRdfData}
 import org.knora.webapi.util.IriConversions._
@@ -135,7 +134,7 @@ object MainQueryResultProcessor {
 
                                 // IRIs are concatenated by GROUP_CONCAT using a separator, split them. Ignore empty
                                 // strings, which could result from unbound variables in the query.
-                                depResIri.split(transformer.groupConcatSeparator).toSeq.filter(_.nonEmpty)
+                                depResIri.split(AbstractPrequeryGenerator.groupConcatSeparator).toSeq.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
                         }
@@ -187,7 +186,7 @@ object MainQueryResultProcessor {
 
                                 // IRIs are concatenated by GROUP_CONCAT using a separator, split them. Ignore empty
                                 // strings, which could result from unbound variables in the query.
-                                valObjIris.split(transformer.groupConcatSeparator).toSet.filter(_.nonEmpty)
+                                valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 

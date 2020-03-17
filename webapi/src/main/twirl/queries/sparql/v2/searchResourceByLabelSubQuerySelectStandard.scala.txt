@@ -45,6 +45,8 @@
     SELECT (count(distinct ?resource) as ?count)
 }
 WHERE {
+    ?resource <http://jena.apache.org/text#query> "@searchTerm.generateLiteralForLuceneIndexWithoutExactSequence" .
+
     ?resource a ?resourceClass ;
         knora-base:isDeleted false ;
         rdfs:label ?label .
@@ -58,8 +60,6 @@ WHERE {
     @if(limitToProject.nonEmpty) {
         ?resource knora-base:attachedToProject <@limitToProject.get>
     }
-
-    ?resource <http://jena.apache.org/text#query> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
 }
 @if(!countQuery) {
 ORDER BY ?resource @* Needed for paging: order needs to be deterministic *@
