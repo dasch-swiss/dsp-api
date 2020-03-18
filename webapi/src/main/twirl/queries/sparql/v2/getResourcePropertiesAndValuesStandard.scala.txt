@@ -85,7 +85,8 @@ CONSTRUCT {
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
         ?valueObject knora-base:valueHasStandoff ?standoffNode .
-        ?standoffNode ?standoffProperty ?standoffValue .
+        ?standoffNode ?standoffProperty ?standoffValue  ;
+            knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
     }
 
     @if(queryAllNonStandoff) {
@@ -251,6 +252,11 @@ CONSTRUCT {
                         ?valueObject knora-base:valueHasStandoff ?standoffNode .
                         ?standoffNode ?standoffProperty ?standoffValue ;
                             knora-base:standoffTagHasStartIndex ?startIndex .
+
+                        OPTIONAL {
+                            ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                            ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+                        }
 
                         FILTER(?startIndex >= @standoffMinStartIndex && ?startIndex <= @{maybeStandoffMaxStartIndex.get})
                     }
