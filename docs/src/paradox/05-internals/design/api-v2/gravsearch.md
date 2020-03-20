@@ -248,3 +248,9 @@ allowed number of results per page, even if more pages of results are available.
 `MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern`
 then filters out values that the user did not explicitly ask for in the input
 query.
+
+Finally, `ConstructResponseUtilV2.createApiResponse` transforms the query
+results into an API response (a `ReadResourcesSequenceV2`). If the number
+of main resources found (even if filtered out because of permissions) is equal
+to the maximum allowed page size, the predicate
+`knora-api:mayHaveMoreResults: true` is included in the response.

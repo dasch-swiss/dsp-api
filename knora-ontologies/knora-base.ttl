@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v7" .
+    :ontologyVersion "knora-base v8" .
 
 
 
