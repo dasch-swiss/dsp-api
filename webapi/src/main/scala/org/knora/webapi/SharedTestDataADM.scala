@@ -1610,6 +1610,16 @@ object SharedTestDataADM {
           |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
           |}""".stripMargin
 
+    val gravsearchThingsWithPaging: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |}""".stripMargin
+
     val createResourceWithValues: String =
         """{
           |  "@type" : "anything:Thing",
