@@ -20,8 +20,7 @@
 package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructResponse, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryGenerator
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult

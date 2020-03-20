@@ -221,25 +221,30 @@ the main query can specifically ask for more detailed information on these resou
 
 #### Generating the Main Query
 
-The classes involved in generating prequeries can be found in `org.knora.webapi.responders.v2.search.gravsearch.mainquery`.
+The classes involved in generating the main query can be found in
+`org.knora.webapi.responders.v2.search.gravsearch.mainquery`.
 
-The main query is a SPARQL CONSTRUCT query. Its generation is handled by the method `GravsearchMainQueryGenerator.createMainQuery`.
-It takes three arguments: `mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]`.
-From the given Iris, statements are generated that ask for complete information on *exactly* these resources and values.
-For any given resource Iri, only the values present in `valueObjectIris` are to be queried.
-This is achieved by using SPARQL's `VALUES` expression for the main resource and dependent resources as well as for values.
+The main query is a SPARQL CONSTRUCT query. Its generation is handled by the
+method `GravsearchMainQueryGenerator.createMainQuery`.
+It takes three arguments: `mainResourceIris: Set[IriRef], dependentResourceIris:
+Set[IriRef], valueObjectIris: Set[IRI]`. From the given Iris, statements are
+generated that ask for complete information on *exactly* these resources and
+values. For any given resource Iri, only the values present in
+`valueObjectIris` are to be queried. This is achieved by using SPARQL's
+`VALUES` expression for the main resource and dependent resources as well as
+for values.
 
 #### Processing the Main Query's results
 
-When processing the main query's results, permissions are checked and resources and values that the user did not explicitly ask for in the input query are filtered out. This is implemented in `MainQueryResultProcessor`.
+To do the permission checking, the results of the main query are passed to
+`ConstructResponseUtilV2.splitMainResourcesAndValueRdfData`,
+which transforms a `SparqlConstructResponse` (a set of RDF triples)
+into a structure organized by main resource Iris. In this structure, dependent
+resources and values are nested can be accessed via their main resource,
+and resources and values that the user does not have permission to see are
+filtered out. As a result, a page of results may contain fewer than the maximum
+allowed number of results per page, even if more pages of results are available.
 
-The method `getMainQueryResultsWithFullGraphPattern` takes the main query's results as an input and makes sure that the client has sufficient permissions on the results.
-A main resource and its dependent resources and values are only returned if the user has view permissions on all the resources and value objects present in the main query.
-Otherwise the method suppresses the main resource.
-To do the permission checking, the results of the main query are passed to `ConstructResponseUtilV2` which transforms a `SparqlConstructResponse` (a set of RDF triples)
-into a structure organized by main resource Iris. In this structure, dependent resources and values are nested can be accessed via their main resource.
-`SparqlConstructResponse` suppresses all resources and values the user has insufficient permissions on.
-For each main resource, a check is performed for the presence of all resources and values after permission checking.
-
-The method `getRequestedValuesFromResultsWithFullGraphPattern` filters out those resources and values that the user does not want to be returned by the query.
-All the resources and values not present in the input query's CONSTRUCT clause are filtered out. This only happens after permission checking.
+`MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern`
+then filters out values that the user did not explicitly ask for in the input
+query.
