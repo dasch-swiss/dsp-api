@@ -55,6 +55,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = Seq(resourceIri),
+                pageSizeBeforeFiltering = 1,
                 mappings = Map.empty,
                 queryStandoff = false,
                 versionDate = None,

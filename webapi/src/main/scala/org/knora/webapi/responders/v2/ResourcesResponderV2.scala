@@ -1206,6 +1206,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = resourceIrisDistinct,
+                pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
                 versionDate = versionDate,
@@ -1260,6 +1261,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = resourceIrisDistinct,
+                pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
                 mappings = Map.empty[IRI, MappingAndXSLTransformation],
                 queryStandoff = false,
                 versionDate = None,

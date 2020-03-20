@@ -295,14 +295,11 @@ object ConstructResponseUtilV2 {
      *
      * @param resources                   a map of resource Iris to [[ResourceWithValueRdfData]]. The resource Iris represent main resources, dependent
      *                                    resources are contained in the link values as nested structures.
-     * @param hiddenMainResourceIris      the IRIs of main resources that were hidden because the user does not have permission
+     * @param hiddenResourceIris          the IRIs of resources that were hidden because the user does not have permission
      *                                    to see them.
-     * @param hiddenDependentResourceIris the IRIs of dependent resources that were hidden because the user does not have
-     *                                    permission to see them.
      */
     case class MainResourcesAndValueRdfData(resources: RdfResources,
-                                            hiddenMainResourceIris: Set[IRI] = Set.empty,
-                                            hiddenDependentResourceIris: Set[IRI] = Set.empty)
+                                            hiddenResourceIris: Set[IRI] = Set.empty)
 
     /**
      * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
@@ -683,8 +680,7 @@ object ConstructResponseUtilV2 {
 
         MainResourcesAndValueRdfData(
             resources = mainResourcesNested,
-            hiddenMainResourceIris = mainResourceIrisNotVisible,
-            hiddenDependentResourceIris = dependentResourceIrisNotVisible
+            hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible
         )
     }
 
@@ -1250,6 +1246,7 @@ object ConstructResponseUtilV2 {
      *
      * @param mainResourcesAndValueRdfData the query results.
      * @param orderByResourceIri           the order in which the resources should be returned.
+     * @param pageSizeBeforeFiltering      the number of resources returned before filtering for permissions and duplicates.
      * @param mappings                     the mappings to convert standoff to XML, if any.
      * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
      * @param versionDate                  if defined, represents the requested time in the the resources' version history.
@@ -1261,6 +1258,7 @@ object ConstructResponseUtilV2 {
      */
     def createApiResponse(mainResourcesAndValueRdfData: MainResourcesAndValueRdfData,
                           orderByResourceIri: Seq[IRI],
+                          pageSizeBeforeFiltering: Int,
                           mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
                           queryStandoff: Boolean,
                           calculateMayHaveMoreResults: Boolean,
@@ -1291,11 +1289,10 @@ object ConstructResponseUtilV2 {
 
         for {
             resources <- Future.sequence(readResourceFutures)
-            mayHaveMoreResults = calculateMayHaveMoreResults &&
-                settings.v2ResultsPerPage == (visibleResourceIris.size + mainResourcesAndValueRdfData.hiddenMainResourceIris.size)
+            mayHaveMoreResults = calculateMayHaveMoreResults && pageSizeBeforeFiltering == settings.v2ResultsPerPage
         } yield ReadResourcesSequenceV2(
             resources = resources,
-            hiddenResourceIris = mainResourcesAndValueRdfData.hiddenMainResourceIris ++ mainResourcesAndValueRdfData.hiddenDependentResourceIris,
+            hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,
             mayHaveMoreResults = mayHaveMoreResults
         )
     }

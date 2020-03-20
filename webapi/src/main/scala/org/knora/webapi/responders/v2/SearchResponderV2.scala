@@ -145,9 +145,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(searchSparql)
 
-            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
 
-            // _ = println(prequeryResponse)
+            // _ = println(prequeryResponseNotMerged)
+
+            mainResourceVar = QueryVariable("resource")
+
+            // Merge rows with the same resource IRI.
+            prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged, mainResourceVar)
 
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
@@ -168,7 +173,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                             case Some(valObjIris) =>
 
-                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet)
+                                // Filter out empty IRIs (which we could get if a variable used in GROUP_CONCAT is unbound)
+                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet.filterNot(_.isEmpty))
 
                             case None => acc
                         }
@@ -235,6 +241,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = resourceIris,
+                pageSizeBeforeFiltering = resourceIris.size,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
                 calculateMayHaveMoreResults = true,
@@ -362,10 +369,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
             // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-            nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
+            nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
                 inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
                 transformer = nonTriplestoreSpecificConstructToSelectTransformer
             )
+
+            // variable representing the main resources
+            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
@@ -380,58 +390,24 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
-                inputQuery = nonTriplestoreSpecficPrequery,
+                inputQuery = nonTriplestoreSpecificPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
             // _ = println(triplestoreSpecificPrequery.toSparql)
 
-            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
-            // variable representing the main resources
-            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
+            // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
+            prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged = prequeryResponseNotMerged, mainResourceVar = mainResourceVar)
 
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
             mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
                 resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
-            }.distinct
-
-            // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
-            prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponse.results.bindings.groupBy {
-                row => row.rowMap(mainResourceVar.variableName)
-            }.map {
-                case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
-                    val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
-
-                    val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
-                        columnName =>
-                            val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
-
-                            // Is this is the column containing the main resource IRI?
-                            val mergedColumnValue: String = if (columnName == mainResourceVar.variableName) {
-                                // Yes. Use that IRI as the merged value.
-                                resourceIri
-                            } else {
-                                // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
-                                // separator to concatenate the column values.
-                                columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
-                            }
-
-                            columnName -> mergedColumnValue
-                    }.toMap
-
-                    resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
             }
-
-            prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
-                resourceIri => prequeryRowsMergedMap(resourceIri)
-            }
-
-            prequeryResponseMerged: SparqlSelectResponse = prequeryResponse.copy(
-                results = SparqlSelectResponseBody(prequeryRowsMerged)
-            )
 
             mainQueryResults: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
@@ -439,7 +415,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 // get all the IRIs for variables representing dependent resources per main resource
                 val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource =
                     GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(
-                        prequeryResponse = prequeryResponseMerged,
+                        prequeryResponse = prequeryResponse,
                         transformer = nonTriplestoreSpecificConstructToSelectTransformer,
                         mainResourceVar = mainResourceVar
                     )
@@ -462,7 +438,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                 // for each main resource, create a Map of value object variables and their Iris
                 val valueObjectVarsAndIrisPerMainResource: GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris = GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
-                    prequeryResponse = prequeryResponseMerged,
+                    prequeryResponse = prequeryResponse,
                     transformer = nonTriplestoreSpecificConstructToSelectTransformer,
                     mainResourceVar = mainResourceVar
                 )
@@ -547,6 +523,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainQueryResults,
                 orderByResourceIri = mainResourceIris,
+                pageSizeBeforeFiltering = pageSizeBeforeFiltering,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
                 versionDate = None,
@@ -680,6 +657,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     readResourcesSequence: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                         mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                         orderByResourceIri = mainResourceIris,
+                        pageSizeBeforeFiltering = mainResourceIris.size,
                         mappings = mappings,
                         queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
                         versionDate = None,
@@ -804,6 +782,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
+                pageSizeBeforeFiltering = mainResourceIris.size,
                 queryStandoff = false,
                 versionDate = None,
                 calculateMayHaveMoreResults = true,
@@ -816,4 +795,54 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         } yield apiResponse
     }
 
+    /**
+     * Given a prequery result, merges rows with the same main resource IRI. This could happen if there are unbound
+     * variables in GROUP_CONCAT expressions.
+     *
+     * @param prequeryResponseNotMerged the prequery response before merging.
+     * @param mainResourceVar           the name of the column representing the main resource.
+     * @return the merged results.
+     */
+    private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResponse, mainResourceVar: QueryVariable): SparqlSelectResponse = {
+        // a sequence of resource IRIs that match the search criteria
+        // attention: no permission checking has been done so far
+        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
+            resultRow: VariableResultsRow =>
+                resultRow.rowMap(mainResourceVar.variableName)
+        }.distinct
+
+        val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
+            row => row.rowMap(mainResourceVar.variableName)
+        }.map {
+            case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
+                val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
+
+                val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
+                    columnName =>
+                        val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
+
+                        // Is this is the column containing the main resource IRI?
+                        val mergedColumnValue: String = if (columnName == mainResourceVar.variableName) {
+                            // Yes. Use that IRI as the merged value.
+                            resourceIri
+                        } else {
+                            // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
+                            // separator to concatenate the column values.
+                            columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
+                        }
+
+                        columnName -> mergedColumnValue
+                }.toMap
+
+                resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
+        }
+
+        val prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
+            resourceIri => prequeryRowsMergedMap(resourceIri)
+        }
+
+        prequeryResponseNotMerged.copy(
+            results = SparqlSelectResponseBody(prequeryRowsMerged)
+        )
+    }
 }

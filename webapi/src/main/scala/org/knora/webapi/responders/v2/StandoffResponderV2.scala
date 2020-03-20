@@ -106,6 +106,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
+                pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
                 mappings = Map.empty,
                 queryStandoff = false,
                 calculateMayHaveMoreResults = false,
