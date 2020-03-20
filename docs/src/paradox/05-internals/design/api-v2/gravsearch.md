@@ -174,16 +174,10 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     }
 ```
 
-The prequery's SELECT clause is built using the member variables defined in `AbstractPrequeryGenerator`.
-State of member variables after transformation of the input query into the prequery:
-
-- `mainResourceVariable`: `QueryVariable(page)`
-- `dependentResourceVariables`: `Set(QueryVariable(book))`
-- `dependentResourceVariablesGroupConcat`: `Set(QueryVariable(book__Concat))`
-- `valueObjectVariables`: `Set(QueryVariable(book__LinkValue), QueryVariable(seqnum))`: `?book` represents the dependent resource and `?book__LinkValue` the link value connecting `?page` and `?book`.
-- `valueObjectVariablesGroupConcat`: `Set(QueryVariable(seqnum__Concat), QueryVariable(book__LinkValue__Concat))`
-
-The resulting SELECT clause of the prequery looks as follows:
+The prequery's SELECT clause is built by
+`NonTriplestoreSpecificGravsearchToPrequeryTransformer.getSelectColumns`,
+based on the variables used in the input query's `CONSTRUCT` clause.
+The resulting SELECT clause looks as follows:
 
 ```sparql
 SELECT DISTINCT
@@ -196,6 +190,7 @@ SELECT DISTINCT
     ORDER BY ASC(?page)
     LIMIT 25
 ```
+
 `?page` represents the main resource. When accessing the prequery's result rows, `?page` contains the Iri of the main resource.
 The prequery's results are grouped by the main resource so that there is exactly one result row per matching main resource.
 `?page` is also used as a sort criterion although none has been defined in the input query.
@@ -212,6 +207,11 @@ When accessing `?book__Concat` in the prequery's results containing the Iris of 
 The result is a collection of Iris representing dependent resources.
 The same logic applies to value objects.
 
+If the input query contains a `UNION`, and a variable is bound in one branch
+ of the `UNION` and not in another branch, it is possible that the prequery
+ will return more than one row per main resource. To deal with this situation,
+ `SearchResponderV2` merges rows that contain the same main resource IRI.
+
 ### Main Query
 
 The purpose of the main query is to get all requested information about the main resource, dependent resources, and value objects.
@@ -226,8 +226,17 @@ The classes involved in generating the main query can be found in
 
 The main query is a SPARQL CONSTRUCT query. Its generation is handled by the
 method `GravsearchMainQueryGenerator.createMainQuery`.
-It takes three arguments: `mainResourceIris: Set[IriRef], dependentResourceIris:
-Set[IriRef], valueObjectIris: Set[IRI]`. From the given Iris, statements are
+It takes three arguments:
+`mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]`.
+
+These sets are constructed based on information about variables representing
+dependent resources and value objects in the prequery, which is provided by
+`NonTriplestoreSpecificGravsearchToPrequeryTransformer`:
+
+- `dependentResourceVariablesGroupConcat`: `Set(QueryVariable(book__Concat))`
+- `valueObjectVariablesGroupConcat`: `Set(QueryVariable(seqnum__Concat), QueryVariable(book__LinkValue__Concat))`
+
+From the given Iris, statements are
 generated that ask for complete information on *exactly* these resources and
 values. For any given resource Iri, only the values present in
 `valueObjectIris` are to be queried. This is achieved by using SPARQL's
