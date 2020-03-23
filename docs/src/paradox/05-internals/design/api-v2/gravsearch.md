@@ -247,3 +247,30 @@ All the resources and values not present in the input query's CONSTRUCT clause a
 The main resources that have been filtered out due to insufficient permissions are represented by the placeholder `ForbiddenResource`.
 This placeholder stands for a main resource that cannot be returned, nevertheless it informs the client that such a resource exists.
 This is necessary for a consistent behaviour when doing paging.
+
+## Inference
+
+Gravsearch queries support a subset of RDFS reasoning
+(see @ref:[Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
+on Gravsearch). This is implemented as follows:
+
+When the non-triplestore-specific version of a SPARQL query is generated, statements that do not need
+inference are marked with the virtual named graph `<http://www.knora.org/explicit>`.
+
+When the triplestore-specific version of the query is generated:
+
+- If the triplestore is GraphDB, `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` changes statements
+  with the virtual graph `<http://www.knora.org/explicit>` so that they are marked with the GraphDB-specific graph
+  `<http://www.ontotext.com/explicit>`, and leaves other statements unchanged.
+
+- If Knora is not using the triplestore's inference (e.g. with Fuseki),
+  `SparqlTransformer.expandStatementForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
+  statements using `rdfs:subClassOf*` and `rdfs:subPropertyOf*`.
+
+Gravsearch also provides some virtual properties, which take advantage of forward-chaining inference
+as an optimisation if the triplestore provides it. For example, the virtual property
+`knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`, but
+with GraphDB it is implemented using a custom inference rule (in `KnoraRules.pie`) and is therefore more
+efficient. If Knora is not using the triplestore's inference,
+`SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor`
+with `knora-base:standoffTagHasStartParent*`.

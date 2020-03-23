@@ -192,12 +192,12 @@ a matching dependent resource, only its IRI is returned.
 
 ## Inference
 
-Gravsearch queries are understood to imply
+Gravsearch queries are understood to imply a subset of
 [RDFS reasoning](https://www.w3.org/TR/rdf11-mt/). Depending on the
 triplestore being used, this may be implemented using the triplestore's
 own reasoner or by query expansion in Knora.
 
-This means that if a statement pattern specifies a property, the pattern will
+Specifically, if a statement pattern specifies a property, the pattern will
 also match subproperties of that property, and if a statement specifies that
 a subject has a particular `rdf:type`, the statement will also match subjects
 belonging to subclasses of that type.
