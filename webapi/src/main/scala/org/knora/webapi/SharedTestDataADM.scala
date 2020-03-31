@@ -1915,4 +1915,17 @@ object SharedTestDataADM {
 
     val testResponseValueIri: IRI = "http://rdfh.ch/0001/_GlNQXdYRTyQPhpdh76U1w/values/OGbYaSgNSUCKQtmn9suXlw"
     val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
+
+    /**
+     * An XSL translation that copies the XML as-is and outputs HTML.
+     */
+    var identityHtmlXslt: String =
+        """<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+          |  <xsl:output method="html" encoding="utf-8" indent="no"/>
+          |  <xsl:template match="@*|node()">
+          |    <xsl:copy>
+          |      <xsl:apply-templates select="@*|node()"/>
+          |    </xsl:copy>
+          |  </xsl:template>
+          |</xsl:stylesheet>""".stripMargin
 }
