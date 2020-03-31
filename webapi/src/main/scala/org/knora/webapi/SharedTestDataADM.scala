@@ -1917,15 +1917,17 @@ object SharedTestDataADM {
     val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
 
     /**
-     * An XSL translation that copies the XML as-is and outputs HTML.
+     * An XSL translation that copies the XML as-is and outputs HTML, replacing the root `<text>` element
+     * with a `<div>`.
      */
     var identityHtmlXslt: String =
-        """<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-          |  <xsl:output method="html" encoding="utf-8" indent="no"/>
-          |  <xsl:template match="@*|node()">
-          |    <xsl:copy>
-          |      <xsl:apply-templates select="@*|node()"/>
-          |    </xsl:copy>
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+          |  <xsl:output method="html" encoding="UTF-8" indent="no"/>
+          |  <xsl:template match="text">
+          |    <div>
+          |      <xsl:copy-of select="node()" />
+          |    </div>
           |  </xsl:template>
           |</xsl:stylesheet>""".stripMargin
 }
