@@ -29,7 +29,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{ReadTextValueV2, ReadValueV2}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
  * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -1917,10 +1919,10 @@ object SharedTestDataADM {
     val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
 
     /**
-     * An XSL translation that copies the XML as-is and outputs HTML, replacing the root `<text>` element
+     * An XSL transformation that copies the XML as-is and outputs HTML, replacing the root `<text>` element
      * with a `<div>`.
      */
-    var identityHtmlXslt: String =
+    private val identityHtmlXslt: String =
         """<?xml version="1.0" encoding="UTF-8"?>
           |<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
           |  <xsl:output method="html" encoding="UTF-8" indent="no"/>
@@ -1930,4 +1932,36 @@ object SharedTestDataADM {
           |    </div>
           |  </xsl:template>
           |</xsl:stylesheet>""".stripMargin
+
+    /**
+     * Adds an XSL transformation to every text value in a sequence of resources.
+     *
+     * @param resourcesSequenceV2 the resources.
+     * @return the modified resources.
+     */
+    def addXslt(resourcesSequenceV2: ReadResourcesSequenceV2): ReadResourcesSequenceV2 = {
+        resourcesSequenceV2.copy(
+            resources = resourcesSequenceV2.resources.map {
+                resource: ReadResourceV2 =>
+                    resource.copy(
+                        values = resource.values.map {
+                            case (propertyIri: SmartIri, propertyValues: Seq[ReadValueV2]) =>
+                                propertyIri -> propertyValues.map {
+                                    propertyValue: ReadValueV2 =>
+                                        propertyValue match {
+                                            case readTextValueV2: ReadTextValueV2 =>
+                                                readTextValueV2.copy(
+                                                    valueContent = readTextValueV2.valueContent.copy(
+                                                        xslt = Some(identityHtmlXslt)
+                                                    )
+                                                )
+
+                                            case other => other
+                                        }
+                                }
+                        }
+                    )
+            }
+        )
+    }
 }
