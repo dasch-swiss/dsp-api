@@ -31,7 +31,39 @@
   maybeStartDate: Option[Instant] = None,
   maybeEndDate: Option[Instant] = None)
 
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-@* TODO *@
+SELECT DISTINCT ?versionDate ?author WHERE {
+    <@resourceIri> knora-base:isDeleted false ;
+        ?property ?currentValue .
+
+    ?property rdfs:subPropertyOf* knora-base:hasValue .
+
+    ?currentValue knora-base:previousValue* ?valueObject .
+
+    {
+        ?valueObject knora-base:valueCreationDate ?versionDate .
+        ?valueObject knora-base:attachedToUser ?author .
+    } UNION {
+        ?valueObject knora-base:deleteDate ?versionDate .
+        ?valueObject knora-base:deletedBy ?author .
+    }
+
+    @maybeStartDate match {
+        case Some(startDate) => {
+            FILTER(?versionDate >= "@startDate"^^xsd:dateTime)
+        }
+
+        case None => {}
+    }
+
+    @maybeEndDate match {
+        case Some(endDate) => {
+            FILTER(?versionDate <  "@endDate"^^xsd:dateTime)
+        }
+
+        case None => {}
+    }
+} ORDER BY DESC(?versionDate)

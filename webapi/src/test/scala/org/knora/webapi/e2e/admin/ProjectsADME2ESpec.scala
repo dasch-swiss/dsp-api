@@ -32,7 +32,7 @@ import org.eclipse.rdf4j.model.Model
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -65,6 +65,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
     private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
+
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    )
 
     "The Projects Route ('admin/projects')" when {
 
@@ -420,6 +424,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(contextIris == Set(
                     "http://www.knora.org/ontology/0001/something",
                     "http://www.knora.org/ontology/0001/anything",
+                    "http://www.knora.org/data/0001/anything",
                     "http://www.knora.org/data/permissions",
                     "http://www.knora.org/data/admin"
                 ))

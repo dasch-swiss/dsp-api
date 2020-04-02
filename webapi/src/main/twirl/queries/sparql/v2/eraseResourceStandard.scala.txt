@@ -24,20 +24,31 @@
  * Erases a resource from the triplestore using standard SPARQL.
  *
  * @param triplestore the name of the triplestore being used.
+ * @param dataNamedGraph the named graph to update.
  * @param resourceIri the IRI of the resource to be marked as deleted.
  *@
 @(triplestore: String,
+  dataNamedGraph: IRI,
   resourceIri: IRI)
 
-DELETE {
-    <@resourceIri> ?resourcePred ?resourceObj .
-    ?value ?valuePred ?valueObj .
-    ?standoff ?standoffPred ?standoffObj .
-    ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
-    ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
-} WHERE {
-    @* Make sure the resource is really a resource. *@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
+DELETE {
+    GRAPH ?dataNamedGraph {
+        <@resourceIri> ?resourcePred ?resourceObj .
+        ?value ?valuePred ?valueObj .
+        ?standoff ?standoffPred ?standoffObj .
+        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
+        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+    }
+} WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+
+    @* Make sure the resource is really a resource. *@
     <@resourceIri> a ?resourceClass .
     ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
@@ -58,7 +69,7 @@ DELETE {
 
         <@resourceIri> ?valueProp ?currentTextValue .
         ?currentTextValue a knora-base:TextValue ;
-            ?currentTextValue knora-base:previousValue* ?textValue .
+            knora-base:previousValue* ?textValue .
         ?textValue knora-base:valueHasStandoff ?standoff .
         ?standoff ?standoffPred ?standoffObj .
     } UNION {
