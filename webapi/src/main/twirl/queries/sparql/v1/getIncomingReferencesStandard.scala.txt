@@ -74,6 +74,8 @@ WHERE {
         FILTER NOT EXISTS {
             ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
         }
+
+        BIND(false as ?isLinkValue)
     }
     UNION
     {
@@ -82,11 +84,16 @@ WHERE {
         ?prop rdfs:subPropertyOf* knora-base:hasLinkToValue .
         ?referringResource ?prop ?obj .
 
-        ?obj rdf:predicate ?linkProp ;
-            rdf:object ?resource ;
-            knora-base:isDeleted false ;
+        ?obj knora-base:isDeleted false ;
             ?objPred ?objObj .
 
         BIND(true as ?isLinkValue)
     }
+
+    OPTIONAL {
+        ?obj rdf:predicate ?linkValuePredicate ;
+            rdf:object ?linkValueObject .
+    }
+
+    FILTER(!?isLinkValue || (?linkValuePredicate = ?linkProp && ?linkValueObject = ?resource))
 }
