@@ -92,4 +92,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(typeInspectionRes
         // count queries do not consider offsets since there is only one result row
         0
     }
+
+    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+
+    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
 }

@@ -188,15 +188,16 @@ The resulting SELECT clause of the prequery looks as follows:
 ```sparql
 SELECT DISTINCT
     ?page
-    (GROUP_CONCAT(DISTINCT(?book); SEPARATOR='') AS ?book__Concat)
-    (GROUP_CONCAT(DISTINCT(?seqnum); SEPARATOR='') AS ?seqnum__Concat)
-    (GROUP_CONCAT(DISTINCT(?book__LinkValue); SEPARATOR='') AS ?book__LinkValue__Concat)
+    (GROUP_CONCAT(DISTINCT(IF(BOUND(?book), STR(?book), "")); SEPARATOR='') AS ?book__Concat)
+    (GROUP_CONCAT(DISTINCT(IF(BOUND(?seqnum), STR(?seqnum), "")); SEPARATOR='') AS ?seqnum__Concat)
+    (GROUP_CONCAT(DISTINCT(IF(BOUND(?book__LinkValue), STR(?book__LinkValue), "")); SEPARATOR='') AS ?book__LinkValue__Concat)
     WHERE {...}
     GROUP BY ?page
     ORDER BY ASC(?page)
     LIMIT 25
 ```
-`?page` represents the main resource. When accessing the prequery's result rows, `?page` contains the Iri of the main resource.
+
+`?page` represents the main resource. When accessing the prequery's result rows, `?page` contains the IRI of the main resource.
 The prequery's results are grouped by the main resource so that there is exactly one result row per matching main resource.
 `?page` is also used as a sort criterion although none has been defined in the input query.
 This is necessary to make paging work: results always have to be returned in the same order (the prequery is always deterministic).
@@ -205,17 +206,23 @@ Like this, results can be fetched page by page using LIMIT and OFFSET.
 Grouping by main resource requires other results to be aggregated using the function `GROUP_CONCAT`.
 `?book` is used as an argument of the aggregation function.
 The aggregation's result is accessible in the prequery's result rows as `?book__Concat`.
-The variable `?book` is bound to an Iri.
-Since more than one Iri could be bound to a variable representing a dependent resource, the results have to be aggregated.
-`GROUP_CONCAT` takes two arguments: a collection of strings (Iris in our use case) and a separator.
-When accessing `?book__Concat` in the prequery's results containing the Iris of dependent resources, the string has to be split with the separator used in the aggregation function.
-The result is a collection of Iris representing dependent resources.
+The variable `?book` is bound to an IRI.
+Since more than one IRI could be bound to a variable representing a dependent resource, the results have to be aggregated.
+`GROUP_CONCAT` takes two arguments: a collection of strings (IRIs in our use case) and a separator
+(we use the non-printing Unicode character `INFORMATION SEPARATOR ONE`).
+When accessing `?book__Concat` in the prequery's results containing the IRIs of dependent resources, the string has to be split with the separator used in the aggregation function.
+The result is a collection of IRIs representing dependent resources.
 The same logic applies to value objects.
+
+Each `GROUP_CONCAT` checks whether the concatenated variable is bound in each result in the group; if a variable
+is unbound, we concatenate an empty string. This is necessary because, in Apache Jena (and perhaps other
+triplestores), "If `GROUP_CONCAT` has an unbound value in the list of values to concat, the overall result is 'error'"
+(see [this Jena issue](https://issues.apache.org/jira/browse/JENA-1856)).
 
 ### Main Query
 
 The purpose of the main query is to get all requested information about the main resource, dependent resources, and value objects.
-The Iris of those resources and value objects were returned by the prequery.
+The IRIs of those resources and value objects were returned by the prequery.
 Since the prequery only returns resources and value objects matching the input query's criteria,
 the main query can specifically ask for more detailed information on these resources and values without having to reconsider these criteria.
 
@@ -225,8 +232,8 @@ The classes involved in generating prequeries can be found in `org.knora.webapi.
 
 The main query is a SPARQL CONSTRUCT query. Its generation is handled by the method `GravsearchMainQueryGenerator.createMainQuery`.
 It takes three arguments: `mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]`.
-From the given Iris, statements are generated that ask for complete information on *exactly* these resources and values.
-For any given resource Iri, only the values present in `valueObjectIris` are to be queried.
+From the given IRIs, statements are generated that ask for complete information on *exactly* these resources and values.
+For any given resource IRI, only the values present in `valueObjectIris` are to be queried.
 This is achieved by using SPARQL's `VALUES` expression for the main resource and dependent resources as well as for values.
 
 #### Processing the Main Query's results
@@ -237,7 +244,7 @@ The method `getMainQueryResultsWithFullGraphPattern` takes the main query's resu
 A main resource and its dependent resources and values are only returned if the user has view permissions on all the resources and value objects present in the main query.
 Otherwise the method suppresses the main resource.
 To do the permission checking, the results of the main query are passed to `ConstructResponseUtilV2` which transforms a `SparqlConstructResponse` (a set of RDF triples)
-into a structure organized by main resource Iris. In this structure, dependent resources and values are nested can be accessed via their main resource.
+into a structure organized by main resource IRIs. In this structure, dependent resources and values are nested can be accessed via their main resource.
 `SparqlConstructResponse` suppresses all resources and values the user has insufficient permissions on.
 For each main resource, a check is performed for the presence of all resources and values after permission checking.
 
@@ -247,3 +254,30 @@ All the resources and values not present in the input query's CONSTRUCT clause a
 The main resources that have been filtered out due to insufficient permissions are represented by the placeholder `ForbiddenResource`.
 This placeholder stands for a main resource that cannot be returned, nevertheless it informs the client that such a resource exists.
 This is necessary for a consistent behaviour when doing paging.
+
+## Inference
+
+Gravsearch queries support a subset of RDFS reasoning
+(see @ref:[Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
+on Gravsearch). This is implemented as follows:
+
+When the non-triplestore-specific version of a SPARQL query is generated, statements that do not need
+inference are marked with the virtual named graph `<http://www.knora.org/explicit>`.
+
+When the triplestore-specific version of the query is generated:
+
+- If the triplestore is GraphDB, `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` changes statements
+  with the virtual graph `<http://www.knora.org/explicit>` so that they are marked with the GraphDB-specific graph
+  `<http://www.ontotext.com/explicit>`, and leaves other statements unchanged.
+
+- If Knora is not using the triplestore's inference (e.g. with Fuseki),
+  `SparqlTransformer.expandStatementForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
+  statements using `rdfs:subClassOf*` and `rdfs:subPropertyOf*`.
+
+Gravsearch also provides some virtual properties, which take advantage of forward-chaining inference
+as an optimisation if the triplestore provides it. For example, the virtual property
+`knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`, but
+with GraphDB it is implemented using a custom inference rule (in `KnoraRules.pie`) and is therefore more
+efficient. If Knora is not using the triplestore's inference,
+`SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor`
+with `knora-base:standoffTagHasStartParent*`.

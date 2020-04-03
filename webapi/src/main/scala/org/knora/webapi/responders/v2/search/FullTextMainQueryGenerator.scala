@@ -19,9 +19,9 @@
 
 package org.knora.webapi.responders.v2.search
 
+import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi._
 
 object FullTextMainQueryGenerator {
 

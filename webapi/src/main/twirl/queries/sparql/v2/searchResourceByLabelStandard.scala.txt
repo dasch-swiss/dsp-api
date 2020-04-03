@@ -40,8 +40,90 @@
   offset: Int,
   countQuery: Boolean)
 
-  @*
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-    TODO: To be implemented
+@if(!countQuery) {
+    CONSTRUCT {
+        ?resource rdfs:label ?label ;
+            a knora-base:Resource ;
+            knora-base:isMainResource true ;
+            knora-base:isDeleted false ;
+            a ?resourceType ;
+            knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions ;
+            knora-base:attachedToProject ?resourceProject  ;
+            knora-base:creationDate ?creationDate ;
+            knora-base:lastModificationDate ?lastModificationDate .
 
-  *@
+        # include this inferred information in the results, needed to identify value properties
+        ?resource knora-base:hasValue ?valueObject ;
+            ?resourceValueProperty ?valueObject .
+        ?valueObject ?valueObjectProperty ?valueObjectValue .
+
+    } WHERE {
+        {
+            {
+                @{
+                    queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectStandard(
+                        searchTerm = searchTerm,
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        limit = limit,
+                        offset = offset,
+                        countQuery = countQuery)
+                }
+            }
+
+            ?resource a ?resourceType ;
+                knora-base:attachedToUser ?resourceCreator ;
+                knora-base:hasPermissions ?resourcePermissions ;
+                knora-base:attachedToProject ?resourceProject ;
+                knora-base:creationDate ?creationDate ;
+                rdfs:label ?label .
+
+            OPTIONAL {
+                ?resource knora-base:lastModificationDate ?lastModificationDate .
+            }
+        }
+        # there might be resources that have neither values nor links
+        UNION {
+            {
+                @{
+                    queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectStandard(
+                        searchTerm = searchTerm,
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        limit = limit,
+                        offset = offset,
+                        countQuery = countQuery)
+                }
+            }
+
+            ?resource ?resourceValueProperty ?valueObject .
+            ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+
+            ?valueObject a ?valueObjectType ;
+                knora-base:isDeleted false ;
+                ?valueObjectProperty ?valueObjectValue .
+
+            ?valueObjectType rdfs:subClassOf* knora-base:Value .
+
+            FILTER(?valueObjectType != knora-base:LinkValue)
+
+            FILTER NOT EXISTS {
+                ?valueObjectValue a knora-base:StandoffTag .
+            }
+        }
+    }
+} else {
+    @{
+        queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectStandard(
+            searchTerm = searchTerm,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery)
+    }
+}

@@ -25,7 +25,6 @@ import java.util.UUID
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.SalsahGuiAttributeDefinition
-import org.knora.webapi.util.clientapi.{ArrayType, ClassRef, MapType, UriDatatype}
 
 /**
   * Tests [[StringFormatter]].
@@ -884,30 +883,6 @@ class StringFormatterSpec extends CoreSpec() {
             }
 
             assert(isResource)
-        }
-
-        "parse a type annotation representing a collection type for use in generated client code" in {
-            val ontologyIri: SmartIri = OntologyConstants.KnoraAdminV2.KnoraAdminOntologyIri.toSmartIri
-            val permissionClassIri: SmartIri = ontologyIri.makeEntityIri("Permission")
-            val permissionClassRef = ClassRef(className = "Permission", classIri = permissionClassIri)
-            val collectionTypeIri = ontologyIri.makeEntityIri("collection: Array[Map[URI, Array[Map[URI, Permission]]]]")
-
-            assert(collectionTypeIri.isClientCollectionTypeIri)
-            val collectionType = collectionTypeIri.getClientCollectionType
-
-            assert(collectionType == ArrayType(
-                elementType = MapType(
-                    keyType = UriDatatype,
-                    valueType = ArrayType(
-                        elementType = MapType(
-                            keyType = UriDatatype,
-                            valueType = permissionClassRef
-                        )
-                    )
-                )
-            ))
-
-            assert(collectionType.getClassIri.contains(permissionClassIri))
         }
 
         "convert 100,000 IRIs" ignore {

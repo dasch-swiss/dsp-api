@@ -1150,7 +1150,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                             val maybeValues: Option[String] = row.rowMap.get("values")
                             maybeValues match {
-                                case Some(valuesReturned) => {
+                                case Some(valuesReturned) =>
                                     val valueStrings = valuesReturned.split(StringFormatter.INFORMATION_SEPARATOR_ONE)
                                     val properties = row.rowMap("properties").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
                                     val valueOrders = row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
@@ -1170,7 +1170,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                     val propValues = values.foldLeft(Vector(firstProp)) {
                                         case (acc, prop: String) =>
                                             if (prop == firstProp || prop == acc.last) {
-                                                // in the SPAQRL results, all values are returned four times because of inclusion of permissions. If already existent, ignore prop.
+                                                // in the SPARQL results, all values are returned four times because of inclusion of permissions. If already existent, ignore prop.
                                                 acc
                                             } else {
                                                 acc :+ prop // append prop to List
@@ -1183,15 +1183,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                         rights = permissionCode
 
                                     )
-                                }
-                                case None => {
+                                    
+                                case None =>
                                     log.debug("more values were asked (numberOfProps > 1), but there were none to be found")
                                     ResourceSearchResultRowV1(
                                         id = row.rowMap("resourceIri"),
                                         value = Vector(firstProp),
                                         rights = permissionCode
                                     )
-                                }
                             }
                         }
                         else {
