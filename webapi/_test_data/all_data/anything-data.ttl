@@ -375,7 +375,7 @@
   knora-base:valueHasUUID "bXMwnrHvQH2DMjOFrGmNzg"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
-  knora-base:valueHasDecimal 1.5;
+  knora-base:valueHasDecimal "1.5"^^xsd:decimal;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "1.5";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -598,16 +598,6 @@
   knora-base:valueCreationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTime;
   knora-base:valueHasString "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw";
   knora-base:valueHasRefCount "1"^^xsd:int .
-
-<http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q> a knora-base:BooleanValue;
-  knora-base:valueHasUUID "azE8tXC6RFKv296GXYEg5Q"^^xsd:string;
-  knora-base:isDeleted false;
-  knora-base:valueCreationDate "2017-07-25T10:45:16.322+02:00"^^xsd:dateTime;
-  knora-base:valueHasBoolean true;
-  knora-base:valueHasOrder 0;
-  knora-base:valueHasString "true";
-  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
-  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
 <http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow> a anything:Thing;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -1578,19 +1568,29 @@
   rdfs:label "Testding for extended search";
   knora-base:isDeleted false;
   anything:hasDecimal <http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ>;
-  anything:hasBoolean <http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q> .
+  anything:hasBoolean <http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/azE8tXC6RFKv296GXYEg5Q> .
 
 <http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ> a knora-base:DecimalValue;
   knora-base:valueHasUUID "85et-o-STOmn2JcVqrGTCQ"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2017-07-25T09:13:16.732+02:00"^^xsd:dateTime;
-  knora-base:valueHasDecimal 2.1;
+  knora-base:valueHasDecimal "2.1"^^xsd:decimal;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "2.1";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
-<http://rdfh.ch/0001/gjs0RTRkTZeYDT_37nbcCg/values/85et-o-STOmn2JcVqrGTCQ> a anything:ThingPicture ;
+<http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/azE8tXC6RFKv296GXYEg5Q> a knora-base:BooleanValue;
+  knora-base:valueHasUUID "azE8tXC6RFKv296GXYEg5Q"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2017-07-25T10:45:16.322+02:00"^^xsd:dateTime;
+  knora-base:valueHasBoolean true;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "true";
+  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
+
+<http://rdfh.ch/0001/gjs0RTRkTZeYDT_37nbcCg> a anything:ThingPicture ;
   rdfs:label "A_100-1-A4_1_406 p. 405" ;
   knora-base:isDeleted "true"^^xsd:boolean ;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
