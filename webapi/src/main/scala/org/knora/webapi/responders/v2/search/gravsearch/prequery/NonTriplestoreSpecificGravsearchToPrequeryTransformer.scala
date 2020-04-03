@@ -338,4 +338,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
         inputQueryOffset * limit
 
     }
+
+    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
+
+    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 }

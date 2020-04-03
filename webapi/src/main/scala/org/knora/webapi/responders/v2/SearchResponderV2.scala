@@ -23,7 +23,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SubjectV2, _}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -41,6 +41,14 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
+
+/**
+ * Constants used in [[SearchResponderV2]].
+ */
+object SearchResponderV2Constants {
+
+    val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
+}
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -146,7 +154,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // _ = println(searchSparql)
 
             prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
-
             // _ = println(prequeryResponseNotMerged)
 
             mainResourceVar = QueryVariable("resource")
@@ -684,7 +691,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
     private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
-
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {

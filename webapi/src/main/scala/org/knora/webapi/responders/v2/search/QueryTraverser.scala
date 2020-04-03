@@ -52,6 +52,14 @@ trait WhereVisitor[Acc] {
  */
 trait WhereTransformer {
     /**
+     * Optimises the order of query patterns. Does not recurse.
+     *
+     * @param patterns the query patterns to be optimised.
+     * @return the optimised query patterns.
+     */
+    def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+
+    /**
      * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
      *
      * @param statementPattern the statement to be transformed.
@@ -61,12 +69,20 @@ trait WhereTransformer {
     def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern]
 
     /**
-     * Transforms a [[FilterPattern]] in a WHERE clause into zero or more statement patterns.
+     * Transforms a [[FilterPattern]] in a WHERE clause into zero or more query patterns.
      *
      * @param filterPattern the filter to be transformed.
      * @return the result of the transformation.
      */
     def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern]
+
+    /**
+     * Transforms a [[LuceneQueryPattern]] into one or more query patterns.
+     *
+     * @param luceneQueryPattern the query pattern to be transformed.
+     * @return the transformed pattern.
+     */
+    def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern]
 }
 
 /**
@@ -170,7 +186,7 @@ object QueryTraverser {
     def transformWherePatterns(patterns: Seq[QueryPattern],
                                inputOrderBy: Seq[OrderCriterion],
                                whereTransformer: WhereTransformer): Seq[QueryPattern] = {
-        patterns.flatMap {
+        val transformedPatterns: Seq[QueryPattern] = patterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
                     statementPattern = statementPattern,
@@ -220,10 +236,15 @@ object QueryTraverser {
 
                 Seq(UnionPattern(blocks = transformedBlocks))
 
+            case luceneQueryPattern: LuceneQueryPattern =>
+                whereTransformer.transformLuceneQueryPattern(luceneQueryPattern)
+
             case valuesPattern: ValuesPattern => Seq(valuesPattern)
 
             case bindPattern: BindPattern => Seq(bindPattern)
         }
+
+        whereTransformer.optimiseQueryPatternOrder(transformedPatterns)
     }
 
     /**

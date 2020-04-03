@@ -326,7 +326,10 @@ object OntologyConstants {
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
-        val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
+
+        // A deprecated virtual property, used by the deprecated Gravsearch functions knora-api:match and
+        // knora-api:matchInStandoff. Replaced during processing by a triplestore-specific property.
+        val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex"
 
         /* Resource creator */
         val AttachedToUser: IRI = KnoraBasePrefixExpansion + "attachedToUser"
@@ -916,7 +919,9 @@ object OntologyConstants {
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
         val ToSimpleDateFunction: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
         val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
+        val MatchTextFunction: IRI = KnoraApiV2PrefixExpansion + "matchText"
         val MatchInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
+        val MatchTextInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchTextInStandoff"
         val StandoffLinkFunction: IRI = KnoraApiV2PrefixExpansion + "standoffLink"
     }
 
@@ -955,6 +960,7 @@ object OntologyConstants {
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
         val MatchesTextIndex: IRI = KnoraApiV2PrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
         val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
+        val MatchTextFunction: IRI = KnoraApiV2PrefixExpansion + "matchText"
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 

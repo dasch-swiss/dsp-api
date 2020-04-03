@@ -21,6 +21,7 @@
 @import org.knora.webapi.SparqlGenerationException
 @import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
+
 @*
  * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
  * triplestore-specific), and without inference.
@@ -50,8 +51,91 @@
   offset: Int,
   countQuery: Boolean)
 
-@*
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-    TODO: To be implemented
+@if(!countQuery) {
+SELECT DISTINCT ?resource (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); separator="@separator.getOrElse(throw SparqlGenerationException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
+} else {
+    SELECT (count(distinct ?resource) as ?count)
+}
+WHERE {
 
-*@
+    {
+        SELECT DISTINCT ?matchingSubject WHERE {
+
+            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.getQueryString' .
+
+            @* standoff search *@
+            @if(limitToStandoffClass.nonEmpty) {
+
+                # ?matchingSubject is expected to be a TextValue
+                ?matchingSubject a knora-base:TextValue ;
+                    knora-base:valueHasString ?literal ;
+                    knora-base:valueHasStandoff ?standoffNode .
+
+                ?standoffNode a <@limitToStandoffClass.get> ;
+                    knora-base:standoffTagHasStart ?start ;
+                    knora-base:standoffTagHasEnd ?end .
+
+                # https://www.w3.org/TR/xpath-functions/#func-substring
+                # The first character of a string is located at position 1, not position 0. -> standoff uses a 0 based index
+                BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
+
+                @* Loop over search terms and make sure they are all contained in the specified standoff markup *@
+                @for(term <- searchTerms.getSingleTerms) {
+                    @* TODO: Ignore Lucene operators *@
+                    FILTER REGEX(?markedup, '@term', "i")
+                }
+
+             }
+        }
+    }
+
+    OPTIONAL {
+        ?matchingSubject a ?valueObjectType ;
+            knora-base:isDeleted false .
+
+        ?valueObjectType rdfs:subClassOf *knora-base:Value .
+
+        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
+
+        ?containingResource ?property ?matchingSubject .
+
+        ?property rdfs:subPropertyOf* knora-base:hasValue .
+
+        # this variable will only be bound if the search matched a value object
+        BIND(?matchingSubject AS ?valueObject)
+    }
+
+    # If the previous OPTIONAL clause was executed, ?matchingSubject is a value object, and ?containingResource will be set.
+    # Otherwise, ?matchingSubject is a resource (its rdfs:label matched the search pattern).
+    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
+
+    ?resource a ?resourceClass ;
+        knora-base:isDeleted false .
+
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+
+    @limitToResourceClass match {
+        case Some(definedLimitToResourceClass) => {
+            ?resourceClass rdfs:subClassOf* <@definedLimitToResourceClass> .
+        }
+
+        case None => {}
+    }
+
+    @limitToProject match {
+        case Some(definedLimitToProject) => {
+            ?resource knora-base:attachedToProject <@definedLimitToProject> .
+        }
+
+        case None => {}
+    }
+}
+@if(!countQuery) {
+GROUP BY ?resource
+ORDER BY ?resource
+OFFSET @offset
+}
+LIMIT @limit
