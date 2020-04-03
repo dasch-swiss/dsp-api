@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2.search
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryGenerator
+import org.knora.webapi.responders.v2.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryGenerator}
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.util.ConstructResponseUtilV2.{RdfPropertyValues, RdfResources, ResourceWithValueRdfData, ValueRdfData}
 import org.knora.webapi.util.IriConversions._
@@ -132,8 +132,9 @@ object MainQueryResultProcessor {
                         dependentResIriOption match {
                             case Some(depResIri: IRI) =>
 
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                depResIri.split(transformer.groupConcatSeparator).toSeq
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them. Ignore empty
+                                // strings, which could result from unbound variables in the query.
+                                depResIri.split(AbstractPrequeryGenerator.groupConcatSeparator).toSeq.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
                         }
@@ -183,8 +184,9 @@ object MainQueryResultProcessor {
 
                             case Some(valObjIris) =>
 
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                valObjIris.split(transformer.groupConcatSeparator).toSet
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them. Ignore empty
+                                // strings, which could result from unbound variables in the query.
+                                valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 

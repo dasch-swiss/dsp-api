@@ -204,12 +204,12 @@ one at a time, until the response does not contain `knora-api:mayHaveMoreResults
 
 ## Inference
 
-Gravsearch queries are understood to imply
+Gravsearch queries are understood to imply a subset of
 [RDFS reasoning](https://www.w3.org/TR/rdf11-mt/). Depending on the
 triplestore being used, this may be implemented using the triplestore's
 own reasoner or by query expansion in Knora.
 
-This means that if a statement pattern specifies a property, the pattern will
+Specifically, if a statement pattern specifies a property, the pattern will
 also match subproperties of that property, and if a statement specifies that
 a subject has a particular `rdf:type`, the statement will also match subjects
 belonging to subclasses of that type.
@@ -363,31 +363,28 @@ text markup (see @ref:[Matching Standoff Dates](#matching-standoff-dates)).
 
 #### Searching for Matching Words
 
-The function `knora-api:match` searches for matching words anywhere in a
+The function `knora-api:matchText` searches for matching words anywhere in a
 text value, and is implemented using a full-text search index if available.
-The first argument must be a variable of type `xsd:string`, and the second
-argument is a string containing the words to be matched, separated by spaces.
-The words to be matched are separated by spaces in a string literal.
+The first argument must represent a text value (a `knore-api:TextValue` in
+the complex schema, or an `xsd:string` in the simple schema). The second
+argument is a string literal containing the words to be matched, separated by spaces.
 The function supports the
 @ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
+This function can only be used as the top-level expression in a `FILTER`.
+
 For example, to search for titles that contain the words 'Zeitglöcklein' and
-'Lebens' in the simple schema:
+'Lebens':
 
 ```
-FILTER knora-api:match(?title, "Zeitglöcklein Lebens")
+?book incunabule:title ?title .
+FILTER knora-api:matchText(?title, "Zeitglöcklein Lebens")
 ```
 
-In the complex schema:
-
-```
-?title knora-api:valueAsString ?titleStr .
-FILTER knora-api:match(?titleStr, "Zeitglöcklein Lebens")
-```
-
-If `knora-api:match` is used in a `FILTER`, it must be the only expression in
-the `FILTER`.
+Note: the `knora-api:match` function has been deprecated, and will no longer work in
+a future release of Knora. Please change your Gravsearch queries to use `knora-api:matchText`
+instead. Attention: the first argument is different.
 
 #### Filtering Text by Language
 
@@ -437,11 +434,11 @@ tags in the text. You can match the tags you're interested in using
 
 #### Matching Text in a Standoff Tag
 
-The function `knora-api:matchInStandoff` searches for standoff tags containing certain terms.
+The function `knora-api:matchTextInStandoff` searches for standoff tags containing certain terms.
 The implementation is optimised using the full-text search index if available. The
 function takes three arguments:
 
-1. A variable representing the string literal value of a text value.
+1. A variable representing a text value.
 2. A variable representing a standoff tag.
 3. A string literal containing space-separated search terms.
 
@@ -459,15 +456,18 @@ CONSTRUCT {
 } WHERE {
     ?letter a beol:letter .
     ?letter beol:hasText ?text .
-    ?text knora-api:valueAsString ?textStr .
     ?text knora-api:textValueHasStandoff ?standoffParagraphTag .
     ?standoffParagraphTag a standoff:StandoffParagraphTag .
-    FILTER knora-api:matchInStandoff(?textStr, ?standoffParagraphTag, "Grund Richtigkeit")
+    FILTER knora-api:matchTextInStandoff(?text, ?standoffParagraphTag, "Grund Richtigkeit")
 }
 ```
 
 Here we are looking for letters containing the words "Grund" and "Richtigkeit"
 within a single paragraph.
+
+Note: the `knora-api:matchInStandoff` function has been deprecated, and will no longer
+work in a future release of Knora. Please change your Gravsearch queries to use
+`knora-api:matchTextInStandoff` instead. Attention: the first argument is different.
 
 #### Matching Standoff Links
 

@@ -28,8 +28,9 @@
 @(triplestore: String,
   maybeIri: Option[IRI])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 CONSTRUCT { ?s ?p ?o }
 @* Ensure that inference is not used in this query. *@

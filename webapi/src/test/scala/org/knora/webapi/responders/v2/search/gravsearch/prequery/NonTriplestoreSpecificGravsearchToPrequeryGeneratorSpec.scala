@@ -45,12 +45,12 @@ private object QueryHandler {
             settings = settings
         )
 
-        val nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
+        val nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
             inputQuery = constructQuery.copy(whereClause = whereClauseWithoutAnnotations),
             transformer = nonTriplestoreSpecificConstructToSelectTransformer
         )
 
-        nonTriplestoreSpecficPrequery
+        nonTriplestoreSpecificPrequery
     }
 
 }

@@ -23,7 +23,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SubjectV2, _}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -145,7 +145,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(searchSparql)
 
-            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+
+            mainResourceVar = QueryVariable("resource")
+
+            prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged, mainResourceVar)
 
             // _ = println(prequeryResponse)
 
@@ -168,7 +172,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                             case Some(valObjIris) =>
 
-                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet)
+                                // Filter out empty IRIs (which we could get if a variable used in GROUP_CONCAT is unbound)
+                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet.filterNot(_.isEmpty))
 
                             case None => acc
                         }
@@ -221,7 +226,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
@@ -385,10 +390,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(triplestoreSpecificPrequery.toSparql)
 
-            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
             // variable representing the main resources
             mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable
+
+            prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged = prequeryResponseNotMerged, mainResourceVar = mainResourceVar)
 
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
@@ -490,7 +497,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
@@ -661,7 +668,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
     private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
-
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
@@ -771,4 +777,54 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         } yield apiResponse
     }
 
+    /**
+     * Given a prequery result, merges rows with the same main resource IRI. This could happen if there are unbound
+     * variables in GROUP_CONCAT expressions.
+     *
+     * @param prequeryResponseNotMerged the prequery response before merging.
+     * @param mainResourceVar           the name of the column representing the main resource.
+     * @return the merged results.
+     */
+    private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResponse, mainResourceVar: QueryVariable): SparqlSelectResponse = {
+        // a sequence of resource IRIs that match the search criteria
+        // attention: no permission checking has been done so far
+        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
+            resultRow: VariableResultsRow =>
+                resultRow.rowMap(mainResourceVar.variableName)
+        }.distinct
+
+        val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
+            row => row.rowMap(mainResourceVar.variableName)
+        }.map {
+            case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
+                val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
+
+                val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
+                    columnName =>
+                        val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
+
+                        // Is this is the column containing the main resource IRI?
+                        val mergedColumnValue: String = if (columnName == mainResourceVar.variableName) {
+                            // Yes. Use that IRI as the merged value.
+                            resourceIri
+                        } else {
+                            // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
+                            // separator to concatenate the column values.
+                            columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
+                        }
+
+                        columnName -> mergedColumnValue
+                }.toMap
+
+                resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
+        }
+
+        val prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
+            resourceIri => prequeryRowsMergedMap(resourceIri)
+        }
+
+        prequeryResponseNotMerged.copy(
+            results = SparqlSelectResponseBody(prequeryRowsMerged)
+        )
+    }
 }

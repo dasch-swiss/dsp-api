@@ -39,10 +39,11 @@
   limit: Int)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT DISTINCT ?resource
+FROM <http://www.ontotext.com/explicit>
 WHERE {
     ?resource knora-base:attachedToProject <@projectIri> ;
         rdf:type <@resourceClassIri> ;
@@ -53,6 +54,12 @@ WHERE {
             OPTIONAL {
                 ?resource <@orderByProperty> ?orderByValue .
                 ?orderByValue <@{maybeOrderByValuePredicate.get}> ?orderByValueLiteral .
+
+                FILTER NOT EXISTS {
+                    ?resource <@orderByProperty> ?otherOrderByValue .
+                    ?otherOrderByValue <@{maybeOrderByValuePredicate.get}> ?otherOrderByValueLiteral .
+                    FILTER(?otherOrderByValueLiteral < ?orderByValueLiteral)
+                }
             }
         }
 

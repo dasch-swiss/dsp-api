@@ -982,7 +982,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     // the function.
 
                     functionCallExpression.functionIri.iri.toString match {
-                        case OntologyConstants.KnoraApiV2Simple.MatchFunction | OntologyConstants.KnoraApiV2Complex.MatchFunction =>
+                        case OntologyConstants.KnoraApiV2Simple.MatchFunction |
+                             OntologyConstants.KnoraApiV2Simple.MatchTextFunction |
+                             OntologyConstants.KnoraApiV2Complex.MatchFunction =>
                             // The first argument is a variable representing a string.
                             val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
                             val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
@@ -990,6 +992,16 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             acc.copy(
                                 typedEntitiesInFilters = acc.typedEntitiesInFilters +
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
+                            )
+
+                        case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
+                            // The first argument is a variable representing a text value.
+                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
+
+                            acc.copy(
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
+                                    (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                             )
 
                         case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction =>
@@ -1004,6 +1016,21 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             acc.copy(
                                 typedEntitiesInFilters = acc.typedEntitiesInFilters +
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri)) +
+                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
+                            )
+
+                        case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
+                            // The first argument is a variable representing a text value.
+                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
+
+                            // The second argument is a variable representing a standoff tag.
+                            val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
+
+                            acc.copy(
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
+                                    (textVar -> (currentTextVarTypesFromFilters +OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)) +
                                     (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
                             )
 

@@ -509,9 +509,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     ignoreRdfSubjectAndObject = true
                 )
 
+                // Get the IRI of the named graph from which the resource will be erased.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+
                 // Generate SPARQL for erasing the resource.
                 sparqlUpdate = queries.sparql.v2.txt.eraseResource(
                     triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
                     resourceIri = eraseResourceV2.resourceIri
                 ).toString()
 

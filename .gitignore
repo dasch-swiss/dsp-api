@@ -58,4 +58,5 @@ knora-graphdb-free
 knora-graphdb-se
 knora-sipi
 knora-upgrade
+triplestores/fuseki-tomcat/system
 dump.rdb
