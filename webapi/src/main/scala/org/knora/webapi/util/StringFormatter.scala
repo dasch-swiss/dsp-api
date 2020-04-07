@@ -40,7 +40,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.JavaUtil.Optional
@@ -3019,6 +3018,35 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     def makeRandomPermissionIri(shortcode: String): IRI = {
         val knoraPermissionUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
+    }
+
+    /**
+     * Creates an IRI for a `knora-base:Map`.
+     *
+     * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+     *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+     * @return the IRI of the map.
+     */
+    def makeMapIri(mapPath: String): IRI = {
+        s"http://$IriDomain/maps/$mapPath"
+    }
+
+    /**
+     * Extracts the path of a persistent map from the IRI of a `knora-base:Map`.
+     *
+     * @param mapIri the IRI of the `knora-base:Map`.
+     * @return the map's path.
+     */
+    def mapIriToMapPath(mapIri: IRI): String = {
+        mapIri.stripPrefix(s"http://$IriDomain/maps/")
+    }
+
+    /**
+     * Creates a random IRI for a `knora-base:MapEntry`.
+     */
+    def makeRandomMapEntryIri: IRI = {
+        val mapEntryUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/map-entries/$mapEntryUuid"
     }
 
     /**

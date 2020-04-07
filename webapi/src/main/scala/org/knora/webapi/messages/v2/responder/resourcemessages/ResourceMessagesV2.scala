@@ -810,7 +810,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 /**
  * Represents a sequence of resources read back from Knora.
  *
- * @param resources          a sequence of resources.
+ * @param resources          a sequence of resources that the user has permission to see.
  * @param hiddenResourceIris the IRIs of resources that were requested but that the user did not have permission to see.
  * @param mayHaveMoreResults `true` if more resources matching the request may be available.
  */
