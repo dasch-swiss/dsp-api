@@ -12,7 +12,7 @@ import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
-    val expectedReadResourceV2ForZeitgloecklein = ReadResourceV2(
+    val expectedReadResourceV2ForZeitgloecklein: ReadResourceV2 = ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://rdfh.ch/0803/c5058f3a",
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -219,7 +219,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         deletionInfo = None
     )
 
-    val expectedReadResourceV2ForZeitgloeckleinPreview = ReadResourceV2(
+    val expectedReadResourceV2ForZeitgloeckleinPreview: ReadResourceV2 = ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://rdfh.ch/0803/c5058f3a",
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -234,7 +234,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         deletionInfo = None
     )
 
-    val expectedReadResourceV2ForReiseInsHeiligeland = ReadResourceV2(
+    val expectedReadResourceV2ForReiseInsHeiligeland: ReadResourceV2 = ReadResourceV2(
         label = "Reise ins Heilige Land",
         resourceIri = "http://rdfh.ch/0803/2a6221216701",
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -683,7 +683,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         deletionInfo = None
     )
 
-    val expectedReadResourceV2ForReiseInsHeiligelandPreview = ReadResourceV2(
+    val expectedReadResourceV2ForReiseInsHeiligelandPreview: ReadResourceV2 = ReadResourceV2(
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         label = "Reise ins Heilige Land",
         creationDate = Instant.parse("2016-03-02T15:05:21Z"),
@@ -698,22 +698,19 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         deletionInfo = None
     )
 
-    val expectedFullResourceResponseForZeitgloecklein = ReadResourcesSequenceV2(
+    val expectedFullResourceResponseForZeitgloecklein: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloecklein),
-        numberOfResources = 1
     )
 
-    val expectedPreviewResourceResponseForZeitgloecklein = ReadResourcesSequenceV2(
+    val expectedPreviewResourceResponseForZeitgloecklein: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview),
-        numberOfResources = 1
     )
 
-    val expectedFullResourceResponseForReise = ReadResourcesSequenceV2(
+    val expectedFullResourceResponseForReise: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForReiseInsHeiligeland),
-        numberOfResources = 1
     )
 
-    val expectedFullResourceResponseForThingWithHistory = ReadResourcesSequenceV2(
+    val expectedFullResourceResponseForThingWithHistory: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(
             ReadResourceV2(
                 versionDate = Some(Instant.parse("2019-02-12T08:05:10Z")),
@@ -779,11 +776,10 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
                 deletionInfo = None
             )
-        ),
-        numberOfResources = 1
+        )
     )
 
-    val expectedCompleteVersionHistoryResponse = ResourceVersionHistoryResponseV2(history = Vector(
+    val expectedCompleteVersionHistoryResponse: ResourceVersionHistoryResponseV2 = ResourceVersionHistoryResponseV2(history = Vector(
         ResourceHistoryEntry(
             versionDate = Instant.parse("2019-02-13T09:05:10Z"),
             author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
@@ -822,7 +818,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         )
     ))
 
-    val expectedPartialVersionHistoryResponse = ResourceVersionHistoryResponseV2(history = Vector(
+    val expectedPartialVersionHistoryResponse: ResourceVersionHistoryResponseV2 = ResourceVersionHistoryResponseV2(history = Vector(
         ResourceHistoryEntry(
             versionDate = Instant.parse("2019-02-13T09:00:10Z"),
             author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -853,23 +849,19 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         )
     ))
 
-    val expectedFullResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
-        resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland),
-        numberOfResources = 2
+    val expectedFullResourceResponseForZeitgloeckleinAndReise: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland)
     )
 
-    val expectedPreviewResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
-        resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview, expectedReadResourceV2ForReiseInsHeiligelandPreview),
-        numberOfResources = 2
+    val expectedPreviewResourceResponseForZeitgloeckleinAndReise: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview, expectedReadResourceV2ForReiseInsHeiligelandPreview)
     )
 
-    val expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder = ReadResourcesSequenceV2(
-        resources = Vector(expectedReadResourceV2ForReiseInsHeiligeland, expectedReadResourceV2ForZeitgloecklein),
-        numberOfResources = 2
+    val expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForReiseInsHeiligeland, expectedReadResourceV2ForZeitgloecklein)
     )
 
-    val expectedFullResponseResponseForThingWithValueByUuid = ReadResourcesSequenceV2(
-        numberOfResources = 1,
+    val expectedFullResponseResponseForThingWithValueByUuid: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(ReadResourceV2(
             versionDate = None,
             label = "A thing with version history",
@@ -902,8 +894,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         ))
     )
 
-    val expectedFullResponseResponseForThingWithValueByUuidAndVersionDate = ReadResourcesSequenceV2(
-        numberOfResources = 1,
+    val expectedFullResponseResponseForThingWithValueByUuidAndVersionDate: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
         resources = Vector(ReadResourceV2(
             versionDate = None,
             label = "A thing with version history",

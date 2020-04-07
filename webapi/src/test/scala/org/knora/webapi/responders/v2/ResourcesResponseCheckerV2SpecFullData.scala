@@ -13,7 +13,7 @@ import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
     // one title is missing
-    val expectedReadResourceV2ForReiseInsHeiligelandWrong = ReadResourceV2(
+    val expectedReadResourceV2ForReiseInsHeiligelandWrong: ReadResourceV2 = ReadResourceV2(
         label = "Reise ins Heilige Land",
         resourceIri = "http://rdfh.ch/2a6221216701",
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -445,9 +445,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
         deletionInfo = None
     )
 
-    val expectedFullResourceResponseForReiseWrong = ReadResourcesSequenceV2(
-        resources = Vector(expectedReadResourceV2ForReiseInsHeiligelandWrong),
-        numberOfResources = 1
+    val expectedFullResourceResponseForReiseWrong: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForReiseInsHeiligelandWrong)
     )
 
 }

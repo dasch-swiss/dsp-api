@@ -211,50 +211,6 @@
       "@id" : "xsd:anyURI"
     }
   }, {
-    "@id" : "knora-api:ForbiddenResource",
-    "@type" : "owl:Class",
-    "rdfs:comment" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
-    "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
-    "rdfs:subClassOf" : [ {
-      "@id" : "knora-api:Resource"
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:arkUrl"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasComment"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasStandoffLinkTo"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:versionArkUrl"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdfs:label"
-      }
-    } ]
-  }, {
     "@id" : "knora-api:Geom",
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a geometry specification in JSON.",
@@ -936,6 +892,14 @@
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasLinkTo"
     }
+  }, {
+    "@id" : "knora-api:mayHaveMoreResults",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "rdfs:comment" : "Indicates whether more results may be available for a search query",
+    "rdfs:label" : "May have more results"
   }, {
     "@id" : "knora-api:objectType",
     "@type" : "rdf:Property",

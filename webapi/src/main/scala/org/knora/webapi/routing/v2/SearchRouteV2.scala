@@ -346,7 +346,8 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // Search results to return in test data.
     private val testSearches: Map[String, IRI] = Map(
         "things" -> SharedTestDataADM.gravsearchComplexThingSmallerThanDecimal,
-        "thing-links" -> SharedTestDataADM.gravsearchThingLinks
+        "thing-links" -> SharedTestDataADM.gravsearchThingLinks,
+        "things-with-paging" -> SharedTestDataADM.gravsearchThingsWithPaging
     )
 
     private def getSearchTestResponses: Future[Set[TestDataFileContent]] = {

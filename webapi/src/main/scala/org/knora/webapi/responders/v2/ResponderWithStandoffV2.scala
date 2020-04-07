@@ -31,17 +31,17 @@ import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformatio
 import scala.concurrent.Future
 
 /**
-  * An abstract class with standoff utility methods for v2 responders.
-  */
+ * An abstract class with standoff utility methods for v2 responders.
+ */
 abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData) {
 
     /**
-      * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
-      *
-      * @param queryResultsSeparated query results referring to mappings.
-      * @param requestingUser        the user making the request.
-      * @return the referred mappings.
-      */
+     * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
+     *
+     * @param queryResultsSeparated query results referring to mappings.
+     * @param requestingUser        the user making the request.
+     * @return the referred mappings.
+     */
     protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData], requestingUser: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
         // collect the Iris of the mappings referred to in the resources' text values

@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.testkit.{ImplicitSender, TestKit}
@@ -35,7 +36,7 @@ import org.knora.webapi.util.{StartupUtils, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
 object CoreSpec {
@@ -79,7 +80,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     // needs to be initialized early on
     StringFormatter.initForTest()
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
