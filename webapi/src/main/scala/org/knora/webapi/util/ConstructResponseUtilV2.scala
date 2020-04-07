@@ -621,6 +621,10 @@ object ConstructResponseUtilV2 {
                 )
 
                 propIri -> transformedValues
+        }.filter {
+            case (_: SmartIri, values: Seq[ValueRdfData]) =>
+                // If we filtered out all the values for the property, filter out the property, too.
+                values.nonEmpty
         }
 
         // incomingLinksForResource contains incoming link values for each resource
