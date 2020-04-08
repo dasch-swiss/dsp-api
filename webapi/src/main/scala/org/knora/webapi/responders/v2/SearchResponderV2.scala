@@ -42,14 +42,6 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
 
-/**
- * Constants used in [[SearchResponderV2]].
- */
-object SearchResponderV2Constants {
-
-    val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
-}
-
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
     // A Gravsearch type inspection runner.
@@ -234,7 +226,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
@@ -518,7 +510,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {

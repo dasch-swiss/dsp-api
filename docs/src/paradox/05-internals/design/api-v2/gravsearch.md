@@ -255,7 +255,7 @@ To do the permission checking, the results of the main query are passed to
 `ConstructResponseUtilV2.splitMainResourcesAndValueRdfData`,
 which transforms a `SparqlConstructResponse` (a set of RDF triples)
 into a structure organized by main resource Iris. In this structure, dependent
-resources and values are nested can be accessed via their main resource,
+resources and values are nested and can be accessed via their main resource,
 and resources and values that the user does not have permission to see are
 filtered out. As a result, a page of results may contain fewer than the maximum
 allowed number of results per page, even if more pages of results are available.
@@ -294,5 +294,6 @@ as an optimisation if the triplestore provides it. For example, the virtual prop
 `knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`, but
 with GraphDB it is implemented using a custom inference rule (in `KnoraRules.pie`) and is therefore more
 efficient. If Knora is not using the triplestore's inference,
+
 `SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor`
 with `knora-base:standoffTagHasStartParent*`.
