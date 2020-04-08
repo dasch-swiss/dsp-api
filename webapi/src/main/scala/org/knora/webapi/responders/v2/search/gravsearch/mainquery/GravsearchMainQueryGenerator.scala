@@ -189,8 +189,9 @@ object GravsearchMainQueryGenerator {
 
                             case Some(valObjIris) =>
 
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
+                                // Ignore empty strings, which could result from unbound variables in a UNION.
+                                valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet.filter(_.nonEmpty)
 
                             case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 
