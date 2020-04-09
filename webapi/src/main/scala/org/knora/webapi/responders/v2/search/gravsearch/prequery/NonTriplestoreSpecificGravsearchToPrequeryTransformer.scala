@@ -25,12 +25,12 @@ import org.knora.webapi.responders.v2.search.gravsearch.types._
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
- * the search criteria. This query will be used to get resource IRIs for a single page of results. These IRIs will be included in a CONSTRUCT
- * query to get the actual results for the page.
+ * the search criteria and are requested by client in the input query's WHERE clause. This query will be used to get resource IRIs for a single
+ * page of results. These IRIs will be included in a CONSTRUCT query to get the actual results for the page.
  *
  * @param constructClause      the CONSTRUCT clause from the input query.
- * @param typeInspectionResult the result of type inspection of the original query.
- * @param querySchema          ontology schema used in the input query.
+ * @param typeInspectionResult the result of type inspection of the input query.
+ * @param querySchema          the ontology schema used in the input query.
  * @param settings             application settings.
  */
 class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: ConstructClause,
