@@ -81,6 +81,26 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     }
 
     /**
+     * Determines whether an entity has a property type that meets the specified condition.
+     *
+     * @param entity    the entity.
+     * @param condition the condition.
+     * @return `true` if the variable has a property type and the condition is met.
+     */
+    private def entityHasPropertyType(entity: Entity, condition: PropertyTypeInfo => Boolean): Boolean = {
+        GravsearchTypeInspectionUtil.maybeTypeableEntity(entity) match {
+            case Some(typeableEntity) =>
+                typeInspectionResult.entities.get(typeableEntity) match {
+                    case Some(propertyTypeInfo: PropertyTypeInfo) => condition(propertyTypeInfo)
+                    case Some(_: NonPropertyTypeInfo) => false
+                    case None => false
+                }
+
+            case None => false
+        }
+    }
+
+    /**
      * Determines whether an entity has a non-property type that meets the specified condition.
      *
      * @param entity    the entity.
@@ -130,14 +150,19 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     private val valueVariablesPerResourceInConstruct: Map[Entity, Set[QueryVariable]] =
         constructClause.statements.filter {
             statementPattern: StatementPattern =>
+                // Find statements in which the subject is a resource, the predicate is a value property,
+                // and the object is a value.
                 entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
+                    entityHasPropertyType(entity = statementPattern.pred, condition = _.objectIsValueType) &&
                     entityHasNonPropertyType(entity = statementPattern.obj, condition = _.isValueType)
         }.map {
             statementPattern => statementPattern.subj -> entityToQueryVariable(statementPattern.obj)
         }.groupBy {
             case (resourceEntity, _) => resourceEntity
         }.map {
-            case (resourceEntity, resourceValueTuples) => resourceEntity -> resourceValueTuples.map(_._2).toSet
+            case (resourceEntity, resourceValueTuples) =>
+                // Simplify the result of groupBy by replacing each tuple with its second element.
+                resourceEntity -> resourceValueTuples.map(_._2).toSet
         }
 
     /**
@@ -177,17 +202,23 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
         // Generate variables representing link values and group them by containing resource entity.
         val linkValueVariablesPerResourceGeneratedForConstruct: Map[Entity, Set[QueryVariable]] = constructClause.statements.filter {
             statementPattern: StatementPattern =>
+                // Find statements in which the subject is a resource, the predicate is a link property,
+                // and the object is a resource.
                 entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
+                    entityHasPropertyType(entity = statementPattern.pred, condition = _.objectIsResourceType) &&
                     entityHasNonPropertyType(entity = statementPattern.obj, condition = _.isResourceType)
         }.map {
             statementPattern =>
+                // For each of those statements, make a variable representing a link value.
                 statementPattern.subj -> SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
                     baseStatement = statementPattern
                 )
         }.groupBy {
             case (resourceEntity, _) => resourceEntity
         }.map {
-            case (resourceEntity, resourceValueTuples) => resourceEntity -> resourceValueTuples.map(_._2).toSet
+            case (resourceEntity, resourceValueTuples) =>
+                // Simplify the result of groupBy by replacing each tuple with its second element.
+                resourceEntity -> resourceValueTuples.map(_._2).toSet
         }
 
         // Make a GroupConcat for each value variable.
@@ -232,9 +263,11 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
      */
     private val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariablesInConstruct.map {
         dependentResVar: QueryVariable =>
-            GroupConcat(inputVariable = dependentResVar,
+            GroupConcat(
+                inputVariable = dependentResVar,
                 separator = groupConcatSeparator,
-                outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix)
+                outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix
+            )
     }
 
     /**

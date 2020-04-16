@@ -162,7 +162,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
      * @return a sequence of [[QueryPattern]] representing the additional statements.
      */
     private def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
-        if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropertyTypeInfo.typeIri)) {
+        if (nonPropertyTypeInfo.isResourceType) {
 
             // inputEntity is either source or target of a linking property
             // create additional statements in order to query permissions and other information for a resource
@@ -282,12 +282,11 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
 
         val subjectIsResource: Boolean = maybeSubjectTypeIri.exists(iri => OntologyConstants.KnoraApi.isKnoraApiV2Resource(iri))
-        val objectIsResource: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)
 
         // Is the subject of the statement a resource?
         if (subjectIsResource) {
             // Yes. Is the object of the statement also a resource?
-            if (objectIsResource) {
+            if (propertyTypeInfo.objectIsResourceType) {
                 // Yes. This is a link property. Make sure that the object is either an IRI or a variable (cannot be a literal).
                 statementPattern.obj match {
                     case _: IriRef => ()
@@ -377,7 +376,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             if (querySchema == ApiV2Complex) {
                 // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
                 // has to use the knora-api:standoffLink function instead.
-                if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && objectIsResource) {
+                if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && propertyTypeInfo.objectIsResourceType) {
                     throw GravsearchException(s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
                 } else {
                     // Is the object of the statement a list node?
@@ -1581,7 +1580,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
 
         typeInspectionResult.getTypeOfEntity(linkSourceEntity) match {
-            case Some(NonPropertyTypeInfo(typeIri)) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri) => ()
+            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.isResourceType => ()
             case _ => throw GravsearchException(s"The first argument of ${functionIri.toSparql} must represent a knora-api:Resource")
         }
 
@@ -1600,7 +1599,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
 
         val statementsForTargetResource: Seq[QueryPattern] = typeInspectionResult.getTypeOfEntity(linkTargetEntity) match {
-            case Some(nonPropertyTpeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropertyTpeInfo.typeIri) =>
+            case Some(nonPropertyTpeInfo: NonPropertyTypeInfo) if nonPropertyTpeInfo.isResourceType =>
 
                 // process the entity representing the target of the link
                 createAdditionalStatementsForNonPropertyType(nonPropertyTpeInfo, linkTargetEntity)

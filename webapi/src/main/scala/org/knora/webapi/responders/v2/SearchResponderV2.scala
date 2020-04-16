@@ -795,28 +795,27 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     /**
      * Given a prequery result, merges rows with the same main resource IRI. This could happen if there are unbound
-     * variables in GROUP_CONCAT expressions.
+     * variables in `GROUP_CONCAT` expressions.
      *
      * @param prequeryResponseNotMerged the prequery response before merging.
      * @param mainResourceVar           the name of the column representing the main resource.
      * @return the merged results.
      */
     private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResponse, mainResourceVar: QueryVariable): SparqlSelectResponse = {
-        // a sequence of resource IRIs that match the search criteria
-        // attention: no permission checking has been done so far
-        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
-            resultRow: VariableResultsRow =>
-                resultRow.rowMap(mainResourceVar.variableName)
-        }.distinct
-
+        // Make a Map of merged results per main resource IRI.
         val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
-            row => row.rowMap(mainResourceVar.variableName)
+            row =>
+                // Get the rows for each main resource IRI.
+                row.rowMap(mainResourceVar.variableName)
         }.map {
             case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
+                // Make a Set of all the column names in the rows to be merged.
                 val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
 
+                // Make a Map of column names to merged values.
                 val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
                     columnName =>
+                        // For each column name, get the values to be merged.
                         val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
 
                         // Is this is the column containing the main resource IRI?
@@ -835,6 +834,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
         }
 
+        // Construct a sequence of the distinct main resource IRIs in the query results, preserving the
+        // order of the result rows.
+        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
+            resultRow: VariableResultsRow =>
+                resultRow.rowMap(mainResourceVar.variableName)
+        }.distinct
+
+        // Arrange the merged rows in the same order.
         val prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
             resourceIri => prequeryRowsMergedMap(resourceIri)
         }

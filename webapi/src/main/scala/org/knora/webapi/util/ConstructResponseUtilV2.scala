@@ -1325,6 +1325,7 @@ object ConstructResponseUtilV2 {
      * @param pageSizeBeforeFiltering      the number of resources returned before filtering for permissions and duplicates.
      * @param mappings                     the mappings to convert standoff to XML, if any.
      * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
+     * @param calculateMayHaveMoreResults  if `true`, calculate whether there may be more results for the query.
      * @param versionDate                  if defined, represents the requested time in the the resources' version history.
      * @param responderManager             the Knora responder manager.
      * @param targetSchema                 the schema of response.
