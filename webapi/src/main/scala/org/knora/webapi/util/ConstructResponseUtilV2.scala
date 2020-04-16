@@ -1321,9 +1321,11 @@ object ConstructResponseUtilV2 {
      * @param mainResourcesAndValueRdfData the query results.
      * @param orderByResourceIri           the order in which the resources should be returned. This sequence
      *                                     contains the resource IRIs received from the triplestore before filtering
-     *                                     for permissions.
+     *                                     for permissions, but after filtering for duplicates.
+     * @param pageSizeBeforeFiltering      the number of resources returned before filtering for permissions and duplicates.
      * @param mappings                     the mappings to convert standoff to XML, if any.
      * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
+     * @param calculateMayHaveMoreResults  if `true`, calculate whether there may be more results for the query.
      * @param versionDate                  if defined, represents the requested time in the the resources' version history.
      * @param responderManager             the Knora responder manager.
      * @param targetSchema                 the schema of response.
@@ -1333,6 +1335,7 @@ object ConstructResponseUtilV2 {
      */
     def createApiResponse(mainResourcesAndValueRdfData: MainResourcesAndValueRdfData,
                           orderByResourceIri: Seq[IRI],
+                          pageSizeBeforeFiltering: Int,
                           mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
                           queryStandoff: Boolean,
                           calculateMayHaveMoreResults: Boolean,
@@ -1366,7 +1369,7 @@ object ConstructResponseUtilV2 {
 
             // If we got a full page of results from the triplestore (before filtering for permissions), there
             // might be at least one more page of results that the user could request.
-            mayHaveMoreResults = calculateMayHaveMoreResults && orderByResourceIri.size == settings.v2ResultsPerPage
+            mayHaveMoreResults = calculateMayHaveMoreResults && pageSizeBeforeFiltering == settings.v2ResultsPerPage
         } yield ReadResourcesSequenceV2(
             resources = resources,
             hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,

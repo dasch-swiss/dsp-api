@@ -881,7 +881,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            expectMsgType[ReadResourcesSequenceV2]
+            expectMsgType[ReadResourcesSequenceV2](timeout)
 
             // Get the resource from the triplestore and check it.
 
@@ -1038,7 +1038,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            expectMsgType[ReadResourcesSequenceV2]
+            expectMsgType[ReadResourcesSequenceV2](timeout)
 
             // Get the resource from the triplestore and check it.
 
@@ -1090,7 +1090,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            expectMsgType[ReadResourcesSequenceV2]
+            expectMsgType[ReadResourcesSequenceV2](timeout)
 
             // Get the resource from the triplestore and check it.
 
@@ -1620,7 +1620,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! updateRequest
 
-            expectMsgType[SuccessResponseV2]
+            expectMsgType[SuccessResponseV2](timeout)
 
             // Get the resource from the triplestore and check it.
 
@@ -1678,7 +1678,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! updateRequest
 
-            expectMsgType[SuccessResponseV2]
+            expectMsgType[SuccessResponseV2](timeout)
 
             // Get the resource from the triplestore and check it.
 
@@ -1720,7 +1720,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! updateRequest
 
-            expectMsgType[SuccessResponseV2]
+            expectMsgType[SuccessResponseV2](timeout)
 
             // Get the resource from the triplestore and check it.
 
@@ -1742,7 +1742,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! deleteRequest
 
-            expectMsgType[SuccessResponseV2]
+            expectMsgType[SuccessResponseV2](timeout)
 
             // We should now be unable to request the resource.
 
