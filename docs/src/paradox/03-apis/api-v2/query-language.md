@@ -186,9 +186,21 @@ that refer to events that took place within a certain date range.
 
 Each matching resource is returned with the values that the user has
 permission to see. If the user does not have permission to see a matching
-main resource, it is replaced by a proxy resource called
-`knora-api:ForbiddenResource`. If a user does not have permission to see
-a matching dependent resource, only its IRI is returned.
+main resource, it is hidden in the results. If a user does not have
+permission to see a matching dependent resource, the link value is hidden.
+
+## Paging
+
+Gravsearch results are returned in pages. The maximum number of main
+resources per page is determined by Knora (and can be configured
+in `application.conf` via the setting `app/v2/resources-sequence/results-per-page`).
+If some resources have been filtered out because the user does not have
+permission to see them, a page could contain fewer results, or no results.
+If it is possible that more results are available in subsequent pages,
+the Gravsearch response will contain the predicate `knora-api:mayHaveMoreResults`
+with the boolean value `true`, otherwise it will not contain this predicate.
+Therefore, to retrieve all available results, the client must request each page
+one at a time, until the response does not contain `knora-api:mayHaveMoreResults`.
 
 ## Inference
 
@@ -227,8 +239,7 @@ clauses use the following patterns, with the specified restrictions:
 - `OFFSET`: the `OFFSET` is needed for paging. It does not actually
   refer to the number of triples to be returned, but to the
   requested page of results. The default value is 0, which refers
-  to the first page of results. The number of results per page is
-  defined in `app/v2` in `application.conf`.
+  to the first page of results.
 - `ORDER BY`: In SPARQL, the result of a `CONSTRUCT` query is an
   unordered set of triples. However, a Gravsearch query returns an
   ordered list of resources, which can be ordered by the values of

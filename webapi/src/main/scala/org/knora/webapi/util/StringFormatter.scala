@@ -40,6 +40,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.JavaUtil.Optional
@@ -3014,7 +3015,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
      * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
      * @return the IRI of the corresponding link property.
      */
-    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
+    def linkValuePropertyIriToLinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
         implicit val stringFormatter: StringFormatter = this
 
         linkValuePropertyIri.toSmartIri.fromLinkValuePropToLinkProp.toString

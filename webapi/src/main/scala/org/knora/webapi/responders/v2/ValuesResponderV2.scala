@@ -1717,7 +1717,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             propertyIri: SmartIri,
                             unverifiedValue: UnverifiedValueV2,
                             requestingUser: UserADM): Future[VerifiedValueV2] = {
-        for {
+        val verifiedValueFuture: Future[VerifiedValueV2] = for {
             resourcesRequest <- Future {
                 ResourcesGetRequestV2(
                     resourceIris = Seq(resourceIri),
@@ -1730,12 +1730,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             resourcesResponse <- (responderManager ? resourcesRequest).mapTo[ReadResourcesSequenceV2]
-
-            resource = try {
-                resourcesResponse.toResource(resourceIri)
-            } catch {
-                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
-            }
+            resource = resourcesResponse.toResource(resourceIri)
 
             propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
@@ -1760,6 +1755,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             value = unverifiedValue.valueContent,
             permissions = unverifiedValue.permissions
         )
+
+        verifiedValueFuture.recover {
+            case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
+        }
     }
 
     /**

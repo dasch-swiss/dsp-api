@@ -114,7 +114,7 @@ object SparqlTransformer {
     def escapeEntityForVariable(entity: Entity): String = {
         val entityStr = entity match {
             case QueryVariable(varName) => varName
-            case IriRef(iriLiteral, _) => iriLiteral.toString
+            case IriRef(iriLiteral, _) => iriLiteral.toOntologySchema(InternalSchema).toString
             case XsdLiteral(stringLiteral, _) => stringLiteral
             case _ => throw GravsearchException(s"A unique variable name could not be made for ${entity.toSparql}")
         }

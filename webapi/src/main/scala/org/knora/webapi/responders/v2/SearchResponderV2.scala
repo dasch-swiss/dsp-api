@@ -23,7 +23,8 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SubjectV2, _}
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
@@ -34,20 +35,12 @@ import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.ApacheLuceneSupport._
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources}
+import org.knora.webapi.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
-
-/**
- * Constants used in [[SearchResponderV2]].
- */
-object SearchResponderV2Constants {
-
-    val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
-}
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -57,7 +50,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     /**
      * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
      */
-    def receive(msg: SearchResponderRequestV2) = msg match {
+    def receive(msg: SearchResponderRequestV2): Future[KnoraResponseV2] = msg match {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
         case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser)
         case GravsearchCountRequestV2(query, requestingUser) => gravsearchCountV2(inputQuery = query, requestingUser = requestingUser)
@@ -66,24 +59,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
         case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
-    }
-
-    /**
-     * Gets the forbidden resource.
-     *
-     * @param requestingUser the user making the request.
-     * @return the forbidden resource.
-     */
-    private def getForbiddenResource(requestingUser: UserADM): Future[Some[ReadResourceV2]] = {
-        import SearchResponderV2Constants.forbiddenResourceIri
-
-        for {
-            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
-                resourceIris = Seq(forbiddenResourceIri),
-                targetSchema = ApiV2Complex, // This has no effect, because ForbiddenResource has no values.
-                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-            forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
-        } yield Some(forbiddenRes)
     }
 
     /**
@@ -171,12 +146,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // _ = println(searchSparql)
 
             prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            // _ = println(prequeryResponseNotMerged)
 
             mainResourceVar = QueryVariable("resource")
 
+            // Merge rows with the same resource IRI.
             prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged, mainResourceVar)
-
-            // _ = println(prequeryResponse)
 
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
@@ -184,8 +159,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 resultRow: VariableResultsRow => resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
             }
 
-            // make sure that the prequery returned some results
-            queryResultsSeparatedWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (resourceIris.nonEmpty) {
+            // If the prequery returned some results, prepare a main query.
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- if (resourceIris.nonEmpty) {
 
                 // for each resource, create a Set of value object IRIs
                 val valueObjectIrisPerResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
@@ -209,7 +184,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 // collect all value object IRIs
                 val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
 
-                // create CONSTRUCT queries to query resources and their values
+                // create a CONSTRUCT query to query resources and their values
                 val mainQuery = FullTextMainQueryGenerator.createMainQuery(
                     resourceIris = resourceIris.toSet,
                     valueObjectIris = allValueObjectIris,
@@ -239,90 +214,44 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and value objects
-                    queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
-
-                    // for each main resource check if all dependent resources and value objects are still present after permission checking
-                    // this ensures that the user has sufficient permissions on the whole graph pattern
-                    queryResWithFullGraphPattern = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
-                        case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
-
-                            valueObjectIrisPerResource.get(mainResIri) match {
-
-                                case Some(valObjIris) =>
-
-                                    // check for presence of value objects: valueObjectIrisPerResource
-                                    val expectedValueObjects: Set[IRI] = valueObjectIrisPerResource(mainResIri)
-
-                                    // value property assertions for the current resource
-                                    val valuePropAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
-
-                                    // all value objects contained in `valuePropAssertions`
-                                    val resAndValueObjIris: MainQueryResultProcessor.ResourceIrisAndValueObjectIris = MainQueryResultProcessor.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
-
-                                    // check if the client has sufficient permissions on all value objects IRIs present in the graph pattern
-                                    val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
-
-                                    if (allValueObjects) {
-                                        // sufficient permissions, include the main resource and its values
-                                        acc + (mainResIri -> values)
-                                    } else {
-                                        // insufficient permissions, skip the resource
-                                        acc
-                                    }
-
-                                case None =>
-                                    // no properties -> rfs:label matched
-                                    acc + (mainResIri -> values)
-                            }
-                    }
-
-                } yield queryResWithFullGraphPattern
+                    queryResultsSep: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
+                } yield queryResultsSep
             } else {
 
                 // the prequery returned no results, no further query is necessary
-                Future(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
-            }
-
-            // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullGraphPattern.size) {
-                // some of the main resources have been suppressed, represent them using the forbidden resource
-
-                getForbiddenResource(requestingUser)
-            } else {
-                // all resources visible, no need for the forbidden resource
-                Future(None)
+                Future(
+                    ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty)
+                )
             }
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+                getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, requestingUser)
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
             // _ = println(mappingsAsMap)
 
-            resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparatedWithFullGraphPattern,
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = resourceIris,
+                pageSizeBeforeFiltering = resourceIris.size,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
-                forbiddenResource = forbiddenResourceOption,
+                calculateMayHaveMoreResults = true,
+                versionDate = None,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
                 requestingUser = requestingUser
             )
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = resourceIris.size,
-            resources = resources
-        )
-
+        } yield apiResponse
     }
 
 
@@ -353,7 +282,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Create a Select prequery
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryGenerator = new NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer = new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+                constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
             )
@@ -411,7 +341,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-        import org.knora.webapi.responders.v2.search.MainQueryResultProcessor
         import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
         for {
@@ -428,7 +357,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Create a Select prequery
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator = new NonTriplestoreSpecificGravsearchToPrequeryGenerator(
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer = new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
+                constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
                 settings = settings
@@ -438,10 +368,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
             // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-            nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
+            nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
                 inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
                 transformer = nonTriplestoreSpecificConstructToSelectTransformer
             )
+
+            // variable representing the main resources
+            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
@@ -456,17 +389,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
-                inputQuery = nonTriplestoreSpecficPrequery,
+                inputQuery = nonTriplestoreSpecificPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
             // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
-            // variable representing the main resources
-            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable
-
+            // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
             prequeryResponse = mergePrequeryResults(prequeryResponseNotMerged = prequeryResponseNotMerged, mainResourceVar = mainResourceVar)
 
             // a sequence of resource IRIs that match the search criteria
@@ -476,15 +408,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            queryResultsSeparatedWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (mainResourceIris.nonEmpty) {
+            mainQueryResults: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
                 // get all the IRIs for variables representing dependent resources per main resource
-                val dependentResourceIrisPerMainResource: MainQueryResultProcessor.DependentResourcesPerMainResource = MainQueryResultProcessor.getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource =
+                    GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(
+                        prequeryResponse = prequeryResponse,
+                        transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+                        mainResourceVar = mainResourceVar
+                    )
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
-                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) => QueryVariable(queryVar.variableName)
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) =>
+                        QueryVariable(queryVar.variableName)
                 }.toSet
 
                 // the user may have defined IRIs of dependent resources in the input query (type annotations)
@@ -498,7 +436,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
                 // for each main resource, create a Map of value object variables and their Iris
-                val valueObjectVarsAndIrisPerMainResource: MainQueryResultProcessor.ValueObjectVariablesAndValueObjectIris = MainQueryResultProcessor.getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val valueObjectVarsAndIrisPerMainResource: GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris = GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
+                    prequeryResponse = prequeryResponse,
+                    transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+                    mainResourceVar = mainResourceVar
+                )
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
                 val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris.values.foldLeft(Set.empty[IRI]) {
@@ -542,14 +484,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // Filter out values that the user doesn't have permission to see.
-                    queryResultsFilteredForPermissions: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                    queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
                         constructQueryResults = mainQueryResponse,
                         requestingUser = requestingUser
                     )
 
                     // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
                     queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern(
-                        queryResultsFilteredForPermissions,
+                        queryResultsFilteredForPermissions.resources,
                         valueObjectVarsAndIrisPerMainResource,
                         allResourceVariablesFromTypeInspection,
                         dependentResourceIrisFromTypeInspection,
@@ -557,51 +499,41 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         typeInspectionResult,
                         inputQuery
                     )
-
-                } yield queryResWithFullGraphPatternOnlyRequestedValues
+                } yield queryResultsFilteredForPermissions.copy(
+                    resources = queryResWithFullGraphPatternOnlyRequestedValues
+                )
 
             } else {
                 // the prequery returned no results, no further query is necessary
-                Future(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
-            }
-
-            // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullGraphPattern.size) {
-                // some of the main resources have been suppressed, represent them using the forbidden resource
-
-                getForbiddenResource(requestingUser)
-            } else {
-                // all resources visible, no need for the forbidden resource
-                Future(None)
+                Future(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
             }
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+                getMappingsFromQueryResultsSeparated(mainQueryResults.resources, requestingUser)
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            resources <- ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparatedWithFullGraphPattern,
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainQueryResults,
                 orderByResourceIri = mainResourceIris,
+                pageSizeBeforeFiltering = pageSizeBeforeFiltering,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
-                forbiddenResource = forbiddenResourceOption,
+                versionDate = None,
+                calculateMayHaveMoreResults = true,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
                 requestingUser = requestingUser
             )
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = mainResourceIris.size,
-            resources = resources
-        )
+        } yield apiResponse
     }
 
 
@@ -690,7 +622,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             )
 
             // Are there any matching resources?
-            resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
+            apiResponse: ReadResourcesSequenceV2 <- if (mainResourceIris.nonEmpty) {
                 for {
                     // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
                     // at most one page of standoff per text value.
@@ -711,45 +643,34 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and values
-                    queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
-
-                    // check if there are resources the user does not have sufficient permissions to see
-                    forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
-                        // some of the main resources have been suppressed, represent them using the forbidden resource
-                        getForbiddenResource(resourcesInProjectGetRequestV2.requestingUser)
-                    } else {
-                        // all resources visible, no need for the forbidden resource
-                        Future(None)
-                    }
+                    mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
 
                     // If we're querying standoff, get XML-to standoff mappings.
                     mappings: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                        getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
+                        getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, resourcesInProjectGetRequestV2.requestingUser)
                     } else {
                         FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
                     }
 
                     // Construct a ReadResourceV2 for each resource that the user has permission to see.
-                    searchResponse <- ConstructResponseUtilV2.createSearchResponse(
-                        searchResults = queryResultsSeparated,
+                    readResourcesSequence: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                         orderByResourceIri = mainResourceIris,
+                        pageSizeBeforeFiltering = mainResourceIris.size,
                         mappings = mappings,
                         queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
-                        forbiddenResource = forbiddenResourceOption,
+                        versionDate = None,
+                        calculateMayHaveMoreResults = true,
                         responderManager = responderManager,
                         targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
                     )
-                } yield searchResponse
+                } yield readResourcesSequence
             } else {
-                FastFuture.successful(Vector.empty[ReadResourceV2])
+                FastFuture.successful(ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]))
             }
-
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = resources.size,
-            resources = resources
-        )
+        } yield apiResponse
     }
 
     /**
@@ -761,8 +682,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param requestingUser       the the client making the request.
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM) = {
-
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
@@ -787,9 +707,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             count = countResponse.results.bindings.head.rowMap("count")
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = count.toInt,
-            resources = Seq.empty[ReadResourceV2] // no results for a count query
+        } yield ResourceCountV2(
+            numberOfResources = count.toInt
         )
 
     }
@@ -854,61 +773,49 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // _ = println(mainResourceIris.size)
 
             // separate resources and value objects
-            queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, requestingUser = requestingUser)
-
-            // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
-                // some of the main resources have been suppressed, represent them using the forbidden resource
-                getForbiddenResource(requestingUser)
-            } else {
-                // all resources visible, no need for the forbidden resource
-                Future(None)
-            }
+            mainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, requestingUser = requestingUser)
 
             //_ = println(queryResultsSeparated)
 
-            resources <- ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparated,
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
+                pageSizeBeforeFiltering = mainResourceIris.size,
                 queryStandoff = false,
-                forbiddenResource = forbiddenResourceOption,
+                versionDate = None,
+                calculateMayHaveMoreResults = true,
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
                 requestingUser = requestingUser
             )
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = queryResultsSeparated.size,
-            resources = resources
-        )
-
+        } yield apiResponse
     }
 
     /**
      * Given a prequery result, merges rows with the same main resource IRI. This could happen if there are unbound
-     * variables in GROUP_CONCAT expressions.
+     * variables in `GROUP_CONCAT` expressions.
      *
      * @param prequeryResponseNotMerged the prequery response before merging.
      * @param mainResourceVar           the name of the column representing the main resource.
      * @return the merged results.
      */
     private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResponse, mainResourceVar: QueryVariable): SparqlSelectResponse = {
-        // a sequence of resource IRIs that match the search criteria
-        // attention: no permission checking has been done so far
-        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
-            resultRow: VariableResultsRow =>
-                resultRow.rowMap(mainResourceVar.variableName)
-        }.distinct
-
+        // Make a Map of merged results per main resource IRI.
         val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
-            row => row.rowMap(mainResourceVar.variableName)
+            row =>
+                // Get the rows for each main resource IRI.
+                row.rowMap(mainResourceVar.variableName)
         }.map {
             case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
+                // Make a Set of all the column names in the rows to be merged.
                 val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
 
+                // Make a Map of column names to merged values.
                 val mergedRowMap: Map[String, String] = columnNamesToMerge.map {
                     columnName =>
+                        // For each column name, get the values to be merged.
                         val columnValues: Seq[String] = rows.flatMap(_.rowMap.get(columnName))
 
                         // Is this is the column containing the main resource IRI?
@@ -927,6 +834,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 resourceIri -> VariableResultsRow(new ErrorHandlingMap(mergedRowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
         }
 
+        // Construct a sequence of the distinct main resource IRIs in the query results, preserving the
+        // order of the result rows.
+        val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map {
+            resultRow: VariableResultsRow =>
+                resultRow.rowMap(mainResourceVar.variableName)
+        }.distinct
+
+        // Arrange the merged rows in the same order.
         val prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map {
             resourceIri => prequeryRowsMergedMap(resourceIri)
         }

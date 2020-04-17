@@ -30,8 +30,8 @@
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/3f89a693a501",
-        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+        "@type" : "incunabula:page",
+        "incunabula:partOfValue" : {
           "@id" : "http://rdfh.ch/0803/3f89a693a501/values/133ea4ce-b9a5-4c66-a3ab-38be07ccd201",
           "@type" : "knora-api:LinkValue",
           "knora-api:arkUrl" : {
@@ -44,8 +44,8 @@
           "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
-            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+            "@type" : "incunabula:book",
+            "incunabula:title" : {
               "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               "@type" : "knora-api:TextValue",
               "knora-api:arkUrl" : {
@@ -171,8 +171,8 @@
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/6240ce899801",
-        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+        "@type" : "incunabula:page",
+        "incunabula:partOfValue" : {
           "@id" : "http://rdfh.ch/0803/6240ce899801/values/e29da7bf-bfa5-4842-a4fc-e455c72dbb0a",
           "@type" : "knora-api:LinkValue",
           "knora-api:arkUrl" : {
@@ -185,8 +185,8 @@
           "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
-            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+            "@type" : "incunabula:book",
+            "incunabula:title" : {
               "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               "@type" : "knora-api:TextValue",
               "knora-api:arkUrl" : {
@@ -312,8 +312,8 @@
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/c568b7239a01",
-        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+        "@type" : "incunabula:page",
+        "incunabula:partOfValue" : {
           "@id" : "http://rdfh.ch/0803/c568b7239a01/values/46951e64-8f06-47fb-a07a-c8b19c146447",
           "@type" : "knora-api:LinkValue",
           "knora-api:arkUrl" : {
@@ -326,8 +326,8 @@
           "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
-            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+            "@type" : "incunabula:book",
+            "incunabula:title" : {
               "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               "@type" : "knora-api:TextValue",
               "knora-api:arkUrl" : {
@@ -453,8 +453,8 @@
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/6240ce899801",
-        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+        "@type" : "incunabula:page",
+        "incunabula:partOfValue" : {
           "@id" : "http://rdfh.ch/0803/6240ce899801/values/e29da7bf-bfa5-4842-a4fc-e455c72dbb0a",
           "@type" : "knora-api:LinkValue",
           "knora-api:arkUrl" : {
@@ -467,8 +467,8 @@
           "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
-            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+            "@type" : "incunabula:book",
+            "incunabula:title" : {
               "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               "@type" : "knora-api:TextValue",
               "knora-api:arkUrl" : {
@@ -566,8 +566,9 @@
   } ],
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

@@ -81,7 +81,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val timeTagResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-    private val writeTestDataFiles = false
+    private val writeTestDataFiles = true
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -126,7 +126,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // the response involves forbidden resource
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithforbiddenResource.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithHiddenResource.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3169,8 +3169,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -5460,8 +5459,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -8052,6 +8050,55 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
                 val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ThingWithHiddenThing.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "not return duplicate results when there are unbound variables in one or more UNION branches" in {
+            val gravsearchQuery =
+                s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasInteger ?int .
+                   |    ?thing anything:hasRichtext ?richtext .
+                   |    ?thing anything:hasText ?text .
+                   |} WHERE {
+                   |    ?thing a knora-api:Resource .
+                   |    ?thing a anything:Thing .
+                   |    {
+                   |        ?thing anything:hasRichtext ?richtext .
+                   |        ?richtext knora-api:valueAsString ?richtextLiteral
+                   |        FILTER knora-api:match(?richtextLiteral, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |    UNION
+                   |    {
+                   |        ?thing anything:hasText ?text .
+                   |        ?text knora-api:valueAsString ?textLiteral
+                   |        FILTER knora-api:match(?textLiteral, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |}
+                   |order by (?int)""".stripMargin
+
+            val expectedCount = 1
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkCountResponse(searchResponseStr, expectedCount)
+            }
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkSearchResponseNumberOfResults(searchResponseStr, expectedCount)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ThingFromQueryWithUnion.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
