@@ -77,6 +77,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
+      - name: Disk Free
+        run: |
+          df -i
+          df -h
       - name: Run API unit tests
         run: make test-unit-ci
 
@@ -108,6 +112,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
+      - name: Disk Free
+        run: |
+          df -i
+          df -h
       - name: run API E2E tests
         run: make test-e2e-ci
 
@@ -139,6 +147,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
+      - name: Disk Free
+        run: |
+          df -i
+          df -h
       - name: run API integration tests
         run: make test-it-ci
 
@@ -175,6 +187,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
+      - name: Disk Free
+        run: |
+          df -i
+          df -h
       - name: setup required node version
         uses: actions/setup-node@v1
         with:
@@ -199,6 +215,10 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -i
+          df -h
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -231,6 +251,10 @@ jobs:
             ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
+      - name: Disk Free
+        run: |
+          df -i
+          df -h
       - name: build all docker images
         run: |
           make build-all-scala
