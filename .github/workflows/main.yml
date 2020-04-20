@@ -82,6 +82,8 @@ jobs:
           df -i
           df -h
           du -sh /var/lib/docker
+          docker system prune --all --force --volumes
+          df -h
       - name: Run API unit tests
         run: make test-unit-ci
 
