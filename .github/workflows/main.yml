@@ -117,9 +117,11 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          df -i
-          df -h
-          du -sh /var/lib/docker
+          sudo df -i
+          sudo df -h
+          sudo du -sh /var/lib/docker
+          sudo docker system prune --all --force --volumes
+          sudo df -h
       - name: run API E2E tests
         run: make test-e2e-ci
 
@@ -153,9 +155,11 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          df -i
-          df -h
-          du -sh /var/lib/docker
+          sudo df -i
+          sudo df -h
+          sudo du -sh /var/lib/docker
+          sudo docker system prune --all --force --volumes
+          sudo df -h
       - name: run API integration tests
         run: make test-it-ci
 
@@ -194,9 +198,11 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          df -i
-          df -h
-          du -sh /var/lib/docker
+          sudo df -i
+          sudo df -h
+          sudo du -sh /var/lib/docker
+          sudo docker system prune --all --force --volumes
+          sudo df -h
       - name: setup required node version
         uses: actions/setup-node@v1
         with:
@@ -223,9 +229,11 @@ jobs:
             ${{ runner.OS }}-
       - name: Disk Free
         run: |
-          df -i
-          df -h
-          du -sh /var/lib/docker
+          sudo df -i
+          sudo df -h
+          sudo du -sh /var/lib/docker
+          sudo docker system prune --all --force --volumes
+          sudo df -h
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -260,9 +268,11 @@ jobs:
         run: sudo apt-get install expect
       - name: Disk Free
         run: |
-          df -i
-          df -h
-          du -sh /var/lib/docker
+          sudo df -i
+          sudo df -h
+          sudo du -sh /var/lib/docker
+          sudo docker system prune --all --force --volumes
+          sudo df -h
       - name: build all docker images
         run: |
           make build-all-scala
