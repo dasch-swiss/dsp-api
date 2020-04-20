@@ -9,13 +9,9 @@ This directory holds Knora specific scripts and configurations for [Sipi](https:
 To start Sipi using Docker (with config for integration tests), run from inside this folder:
 
 ```
-$ export DOCKERHOST=LOCAL_IP_ADDRESS
-$ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker-compose up sipi
-$ docker-compose down // for cleanup
+$ make up
+$ make down // for cleanup
 ```
-
-where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora-Service`.
 
 ### Using a Locally-Compiled Sipi
 
@@ -37,3 +33,5 @@ $ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and ne
 $ docker-compose up sipi-no-auth
 $ docker-compose down // for cleanup
 ```
+
+where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora-Service`.

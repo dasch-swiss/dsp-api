@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import org.knora.webapi.OntologyConstants
 import org.knora.webapi.responders.v2.search.{Entity, IriRef, QueryVariable}
 import org.knora.webapi.util.SmartIri
 
@@ -34,6 +35,16 @@ sealed trait GravsearchEntityTypeInfo
   */
 case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTypeInfo {
     override def toString: String = s"knora-api:objectType ${IriRef(objectTypeIri).toSparql}"
+
+    /**
+     * `true` if the property's object type is a resource type.
+     */
+    val objectIsResourceType: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(objectTypeIri)
+
+    /**
+     * `true` if the property's object type is a value type.
+     */
+    val objectIsValueType: Boolean = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeIri.toString)
 }
 
 /**
@@ -44,6 +55,16 @@ case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTyp
   */
 case class NonPropertyTypeInfo(typeIri: SmartIri) extends GravsearchEntityTypeInfo {
     override def toString: String = s"rdf:type ${IriRef(typeIri).toSparql}"
+
+    /**
+     * `true` if this is a resource type.
+     */
+    val isResourceType: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri)
+
+    /**
+     * `true` if this is a value type.
+     */
+    val isValueType: Boolean = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeIri.toString)
 }
 
 /**

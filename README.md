@@ -78,7 +78,7 @@ Then we need to restart knora-api after loading the data:
 $ make stack-restart-api
 ```
 
-Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
+Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
 
 To shut down the Knora-Stack:
 

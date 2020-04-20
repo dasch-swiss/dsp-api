@@ -56,11 +56,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     // println(system.settings.config.getConfig("app.triplestore").root().render())
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    val countTriplesQuery = if (tsType.startsWith("graphdb"))
+    val countTriplesQuery: String = if (tsType.startsWith("graphdb"))
         """
         SELECT (COUNT(*) AS ?no)
         FROM <http://www.ontotext.com/explicit>
@@ -78,13 +77,13 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             }
         """
 
-    val namedGraphQuery =
+    val namedGraphQuery: String =
         """
         SELECT ?namedGraph ?s ?p ?o ?lang
         WHERE {
                 {
               GRAPH ?namedGraph {
-                BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") as ?s)
+                BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") as ?s)
                 ?s ?p ?obj
                 BIND(str(?obj) as ?o)
                 BIND(lang(?obj) as ?lang)
@@ -93,7 +92,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """.stripMargin
 
-    val insertQuery =
+    val insertQuery: String =
         """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix sub: <http://subotic.org/#>
@@ -109,7 +108,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val checkInsertQuery =
+    val checkInsertQuery: String =
         """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix sub: <http://subotic.org/#>
@@ -124,7 +123,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val revertInsertQuery =
+    val revertInsertQuery: String =
         """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix sub: <http://subotic.org/#>
@@ -138,60 +137,60 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val searchURI = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
+    val searchURI: String = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
         "<http://jena.apache.org/text#query>"
     } else {
         //GraphDB
         "<http://www.ontotext.com/owlim/lucene#fullTextSearchIndex>"
     }
 
-    val textSearchQueryGraphDBValueHasString =
+    val textSearchQueryGraphDBValueHasString: String =
         s"""
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
         SELECT DISTINCT *
         WHERE {
             ?iri knora-base:valueHasString ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'narrenschiff' .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'test' .
         }
     """
 
-    val textSearchQueryGraphDBRDFLabel =
+    val textSearchQueryGraphDBRDFLabel: String =
         s"""
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT DISTINCT *
         WHERE {
             ?iri rdfs:label ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'Reise' .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'Papa' .
         }
     """
 
-    val textSearchQueryFusekiValueHasString =
+    val textSearchQueryFusekiValueHasString: String =
         s"""
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
         SELECT DISTINCT *
         WHERE {
-            ?iri <http://jena.apache.org/text#query> 'narrenschiff' .
+            ?iri <http://jena.apache.org/text#query> 'test' .
             ?iri knora-base:valueHasString ?literal .
         }
     """
 
-    val textSearchQueryFusekiDRFLabel =
+    val textSearchQueryFusekiDRFLabel: String =
         s"""
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT DISTINCT *
         WHERE {
-            ?iri <http://jena.apache.org/text#query> 'Reise' .
+            ?iri <http://jena.apache.org/text#query> 'Papa' .
             ?iri rdfs:label ?literal .
         }
     """
 
-    var afterLoadCount = -1
-    var afterChangeCount = -1
-    var afterChangeRevertCount = -1
+    var afterLoadCount: Int = -1
+    var afterChangeCount: Int = -1
+    var afterChangeRevertCount: Int = -1
 
     /*
     * Send message to actor under test and check the result.
@@ -205,7 +204,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 storeManager ! CheckRepositoryRequest()
                 val response = expectMsgType[CheckRepositoryResponse](1.second)
 
-                response.repositoryStatus should be (RepositoryStatus.ServiceAvailable)
+                response.repositoryStatus should be(RepositoryStatus.ServiceAvailable)
             }
         }
 
@@ -226,11 +225,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println(msg)
                         afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
                         (afterLoadCount > 0) should ===(true)
-                    }
                 }
             }
         }
@@ -240,10 +238,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 storeManager ! SparqlSelectRequest(namedGraphQuery)
                 //println(result)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println(msg)
                         msg.results.bindings.nonEmpty should ===(true)
-                    }
                 }
                 //println("==>> Named Graph test case end")
             }
@@ -255,10 +252,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println("vor insert: " + msg)
                         msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
-                    }
                 }
 
 
@@ -267,20 +263,18 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println(msg)
                         msg.results.bindings.size should ===(3)
-                    }
                 }
 
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println("nach instert" + msg)
                         afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
                         (afterChangeCount - afterLoadCount) should ===(3)
-                    }
                 }
 
 
@@ -293,10 +287,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println("vor revert: " + msg)
                         msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
-                    }
                 }
 
                 storeManager ! SparqlUpdateRequest(revertInsertQuery)
@@ -304,19 +297,17 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println("nach revert: " + msg)
                         msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
-                    }
                 }
 
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
+                    case msg: SparqlSelectResponse =>
                         //println("check: " + msg)
                         msg.results.bindings.size should ===(0)
-                    }
                 }
 
                 //println("==>> Update 2 test case end")
@@ -330,10 +321,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
                     }
                     expectMsgPF(timeout) {
-                        case msg: SparqlSelectResponse => {
+                        case msg: SparqlSelectResponse =>
                             //println(msg)
-                            msg.results.bindings.size should ===(35)
-                        }
+                            msg.results.bindings.size should ===(3)
                     }
                 }
             }
@@ -345,10 +335,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
                     }
                     expectMsgPF(timeout) {
-                        case msg: SparqlSelectResponse => {
+                        case msg: SparqlSelectResponse =>
                             //println(msg)
                             msg.results.bindings.size should ===(1)
-                        }
                     }
                 }
             }

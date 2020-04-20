@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.admin
 
-import java.io.{BufferedReader, BufferedWriter, File, FileReader, FileWriter}
+import java.io._
 import java.nio.file.Files
 import java.util.UUID
 

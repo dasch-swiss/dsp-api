@@ -31,9 +31,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -49,12 +48,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     import OntologiesRouteV2._
 
-    // Definitions for ClientEndpoint
-    override val name: String = "OntologiesEndpoint"
+    // Directory name for generated test data
     override val directoryName: String = "ontologies"
-    override val urlPath: String = "ontologies"
-    override val description: String = "An endpoint for working with Knora ontologies."
-    override val functions: Seq[ClientFunction] = Seq.empty
 
     private val ALL_LANGUAGES = "allLanguages"
     private val LAST_MODIFICATION_DATE = "lastModificationDate"
@@ -140,11 +135,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getOntologyMetadataTestResponse: Future[SourceCodeFileContent] = {
+    private def getOntologyMetadataTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/metadata"))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("all-ontology-metadata"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("all-ontology-metadata"),
             text = responseStr
         )
     }
@@ -251,15 +246,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     /**
      * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
      */
-    private def getOntologyTestResponses: Future[Set[SourceCodeFileContent]] = {
-        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testOntologies.map {
+    private def getOntologyTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testOntologies.map {
             case (filename, ontologyIri) =>
                 val encodedOntologyIri = URLEncoder.encode(ontologyIri, "UTF-8")
 
                 for {
                     responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/allentities/$encodedOntologyIri"))
-                } yield SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
                     text = responseStr
                 )
         }
@@ -740,10 +735,10 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+                             materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
         for {
-            ontologyResponses: Set[SourceCodeFileContent] <- getOntologyTestResponses
-            ontologyMetadataResponses: SourceCodeFileContent <- getOntologyMetadataTestResponse
+            ontologyResponses: Set[TestDataFileContent] <- getOntologyTestResponses
+            ontologyMetadataResponses: TestDataFileContent <- getOntologyMetadataTestResponse
         } yield ontologyResponses + ontologyMetadataResponses
     }
 }
