@@ -79,11 +79,11 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          df -i
-          df -h
-          du -sh /var/lib/docker
-          docker system prune --all --force --volumes
-          df -h
+          sudo df -i
+          sudo df -h
+          sudo du -sh /var/lib/docker
+          sudo docker system prune --all --force --volumes
+          sudo df -h
       - name: Run API unit tests
         run: make test-unit-ci
 
