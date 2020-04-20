@@ -81,6 +81,7 @@ jobs:
         run: |
           df -i
           df -h
+          du -sh /var/lib/docker
       - name: Run API unit tests
         run: make test-unit-ci
 
@@ -116,6 +117,7 @@ jobs:
         run: |
           df -i
           df -h
+          du -sh /var/lib/docker
       - name: run API E2E tests
         run: make test-e2e-ci
 
@@ -151,6 +153,7 @@ jobs:
         run: |
           df -i
           df -h
+          du -sh /var/lib/docker
       - name: run API integration tests
         run: make test-it-ci
 
@@ -191,6 +194,7 @@ jobs:
         run: |
           df -i
           df -h
+          du -sh /var/lib/docker
       - name: setup required node version
         uses: actions/setup-node@v1
         with:
@@ -219,6 +223,7 @@ jobs:
         run: |
           df -i
           df -h
+          du -sh /var/lib/docker
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -255,6 +260,7 @@ jobs:
         run: |
           df -i
           df -h
+          du -sh /var/lib/docker
       - name: build all docker images
         run: |
           make build-all-scala
