@@ -54,6 +54,10 @@ jobs:
           df -h
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-unit-tests:
     name: API Unit Tests
