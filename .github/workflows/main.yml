@@ -91,6 +91,10 @@ jobs:
           df -h
       - name: Run API unit tests
         run: make test-unit-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-e2e-tests:
     name: API E2E Tests
@@ -128,6 +132,10 @@ jobs:
           df -h
       - name: run API E2E tests
         run: make test-e2e-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-integration-tests:
     name: API Integration Tests
@@ -165,6 +173,10 @@ jobs:
           df -h
       - name: run API integration tests
         run: make test-it-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   js-lib-tests:
     name: JS Lib Tests
@@ -211,6 +223,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: run JS lib tests
         run: make test-js-lib-integration
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   upgrade-unit-tests:
     name: Upgrade Unit Tests
@@ -237,6 +253,10 @@ jobs:
           df -h
       - name: run upgrade tests
         run: sbt "upgrade/test"
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   upgrade-integration-tests:
     name: Upgrade Integration Tests
@@ -299,6 +319,10 @@ jobs:
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
       - name: load upgraded data
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgraded/out/dump-upgraded.trig
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   docs-build-test:
     name: Docs Build Test
@@ -328,6 +352,10 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/docs/target
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   # publish only for develop and tags
   publish:
@@ -358,3 +386,7 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make publish-all-images
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
