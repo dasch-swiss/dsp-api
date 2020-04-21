@@ -46,8 +46,18 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-unit-tests:
     name: API Unit Tests
@@ -79,13 +89,16 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          sudo df -i
-          sudo df -h
-          sudo du -sh /var/lib/docker
-          sudo docker system prune --all --force --volumes
-          sudo df -h
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: Run API unit tests
         run: make test-unit-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-e2e-tests:
     name: API E2E Tests
@@ -117,13 +130,16 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          sudo df -i
-          sudo df -h
-          sudo du -sh /var/lib/docker
-          sudo docker system prune --all --force --volumes
-          sudo df -h
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: run API E2E tests
         run: make test-e2e-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-integration-tests:
     name: API Integration Tests
@@ -155,13 +171,16 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          sudo df -i
-          sudo df -h
-          sudo du -sh /var/lib/docker
-          sudo docker system prune --all --force --volumes
-          sudo df -h
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: run API integration tests
         run: make test-it-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   js-lib-tests:
     name: JS Lib Tests
@@ -198,17 +217,20 @@ jobs:
           make print-env-file
       - name: Disk Free
         run: |
-          sudo df -i
-          sudo df -h
-          sudo du -sh /var/lib/docker
-          sudo docker system prune --all --force --volumes
-          sudo df -h
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: setup required node version
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
       - name: run JS lib tests
         run: make test-js-lib-integration
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   upgrade-unit-tests:
     name: Upgrade Unit Tests
@@ -229,13 +251,16 @@ jobs:
             ${{ runner.OS }}-
       - name: Disk Free
         run: |
-          sudo df -i
-          sudo df -h
-          sudo du -sh /var/lib/docker
-          sudo docker system prune --all --force --volumes
-          sudo df -h
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: run upgrade tests
         run: sbt "upgrade/test"
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   upgrade-integration-tests:
     name: Upgrade Integration Tests
@@ -268,11 +293,10 @@ jobs:
         run: sudo apt-get install expect
       - name: Disk Free
         run: |
-          sudo df -i
-          sudo df -h
-          sudo du -sh /var/lib/docker
-          sudo docker system prune --all --force --volumes
-          sudo df -h
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: build all docker images
         run: |
           make build-all-scala
@@ -299,6 +323,10 @@ jobs:
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
       - name: load upgraded data
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgraded/out/dump-upgraded.trig
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   docs-build-test:
     name: Docs Build Test
@@ -317,11 +345,21 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   # publish only for develop and tags
   publish:
@@ -342,7 +380,17 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make publish-all-images
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
