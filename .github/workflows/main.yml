@@ -390,8 +390,7 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          mkdir -p $KNORA_GDB_LICENSE
-          touch $KNORA_GDB_LICENSE
+          mkdir -p $( dirname "$KNORA_GDB_LICENSE") && touch "$KNORA_GDB_LICENSE"
           make publish-all-images
       - name: Disk Free After
         run: |
