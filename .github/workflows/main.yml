@@ -22,6 +22,7 @@ jobs:
         run: |
           make -C ${{ github.workspace }}/ci/netdata install
           sudo systemctl restart netdata
+          sudo systemctl status netdata
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
