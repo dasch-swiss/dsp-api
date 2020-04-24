@@ -20,7 +20,7 @@ jobs:
           path: ci
       - name: configure netdata
         run: |
-          make -c ${{ github.workspace }}/ci/netdata install
+          make -C ${{ github.workspace }}/ci/netdata install
           sudo systemctl restart netdata
       - uses: actions/checkout@v1
         with:
