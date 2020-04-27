@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory
   */
 object CacheUtil {
 
-    val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.cache"))
+    val log: Logger = Logger(LoggerFactory.getLogger("org.knora.webapi.util.cache"))
 
     /**
       * Represents the configuration of a Knora application cache.
@@ -57,7 +57,7 @@ object CacheUtil {
       *                     `overflowToDisk`, `eternal`, `timeToLiveSeconds`,  and `timeToIdleSeconds`,
       *                     representing configuration options for Ehcache caches.
       */
-    def createCaches(cacheConfigs: Seq[KnoraCacheConfig]) = {
+    def createCaches(cacheConfigs: Seq[KnoraCacheConfig]): Unit = {
         val cacheManager = CacheManager.getInstance()
         cacheConfigs.foreach {
             cacheConfig =>
@@ -76,7 +76,7 @@ object CacheUtil {
     /**
       * Removes all caches.
       */
-    def removeAllCaches() = {
+    def removeAllCaches(): Unit = {
         val cacheManager = CacheManager.getInstance()
         cacheManager.removeAllCaches()
         // println("CacheUtil: Removed all application caches")
