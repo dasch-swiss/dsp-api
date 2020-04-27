@@ -260,13 +260,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             )
 
             // check if we want to change the email
-            emailTaken: Boolean <- userByEmailExists(changeUserRequest.email.getOrElse(""))
+            emailTaken: Boolean <- userByEmailExists(changeUserRequest.email.getOrElse(""), currentUserInformation.get.email)
             _ = if (emailTaken) {
                 throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
             }
 
             // check if we want to change the username
-            usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username.getOrElse(""))
+            usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username.getOrElse(""), currentUserInformation.get.username)
             _ = if (usernameTaken) {
                 throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
             }
@@ -1392,11 +1392,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * Helper method for checking if an username is already registered.
       *
       * @param username the username of the user.
+      * @param current the current username of the user.
       * @return a [[Boolean]].
       */
-    private def userByUsernameExists(username: String): Future[Boolean] = {
+    private def userByUsernameExists(username: String, current: String = ""): Future[Boolean] = {
         username match {
             case "" => FastFuture.successful(false)
+            case `current` => FastFuture.successful(true)
             case _ => {
                 for {
                     askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
@@ -1414,11 +1416,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * Helper method for checking if an email is already registered.
       *
       * @param email the email of the user.
+      * @param current the current email of the user.
       * @return a [[Boolean]].
       */
-    private def userByEmailExists(email: String): Future[Boolean] = {
+    private def userByEmailExists(email: String, current: String = ""): Future[Boolean] = {
         email match {
             case "" => FastFuture.successful(false)
+            case `current` => FastFuture.successful(true)
             case _ => {
                 for {
                     askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
