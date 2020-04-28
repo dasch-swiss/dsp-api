@@ -73,7 +73,7 @@ object AkkaHttpUtils extends LazyLogging {
       */
     def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): Map[String, Any] = {
 
-        implicit val materializer: Materializer = Materializer()
+        implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
         val jsonStringFuture: Future[String] = Unmarshal(response.entity).to[String]
 
