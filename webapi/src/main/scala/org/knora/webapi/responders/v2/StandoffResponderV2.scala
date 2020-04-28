@@ -23,7 +23,7 @@ import java.io._
 import java.util.UUID
 
 import akka.pattern._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -56,7 +56,7 @@ import scala.xml.{Elem, Node, NodeSeq, XML}
 class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
     /* actor materializer needed for http requests */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
     /**
      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.

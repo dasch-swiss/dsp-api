@@ -24,7 +24,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import io.gatling.core.scenario.Simulation
@@ -65,7 +65,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
     implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer()
     implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
     // can be overridden in individual spec

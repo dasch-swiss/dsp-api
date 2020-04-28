@@ -28,7 +28,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -676,7 +676,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
         for {
             getResponses: Set[TestDataFileContent] <- getValueTestResponses
             createRequests: Set[TestDataFileContent] <- createValueTestRequests

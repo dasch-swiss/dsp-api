@@ -535,7 +535,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                     val tmpFile = FileUtil.createTempFile(settings)
                                     val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                     written.map { written =>
-                                        log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        log.debug(s"written result: ${written.status}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                         receivedFile.success(tmpFile)
                                         (b.name, FileInfo(b.name, filename, b.entity.contentType))
                                     }
