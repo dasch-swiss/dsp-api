@@ -52,7 +52,7 @@ object AkkaHttpUtils extends LazyLogging {
         import DefaultJsonProtocol._
         import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-        implicit val materializer: Materializer = Materializer()
+        implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
         val jsonFuture: Future[JsObject] = response match {
             case HttpResponse(StatusCodes.OK, _, entity, _) =>
