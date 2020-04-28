@@ -98,14 +98,11 @@
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a color.",
     "rdfs:label" : "Color literal",
-    "rdfs:subClassOf" : {
-      "@type" : "rdfs:Datatype",
-      "owl:onDatatype" : {
-        "@id" : "xsd:string"
-      },
-      "owl:withRestrictions" : {
-        "xsd:pattern" : "#([0-9a-fA-F]{3}){1,2}"
-      }
+    "owl:onDatatype" : {
+      "@id" : "xsd:string"
+    },
+    "owl:withRestrictions" : {
+      "xsd:pattern" : "#([0-9a-fA-F]{3}){1,2}"
     }
   }, {
     "@id" : "knora-api:DDDRepresentation",
@@ -156,14 +153,11 @@
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a date as a period with different possible precisions.",
     "rdfs:label" : "Date literal",
-    "rdfs:subClassOf" : {
-      "@type" : "rdfs:Datatype",
-      "owl:onDatatype" : {
-        "@id" : "xsd:string"
-      },
-      "owl:withRestrictions" : {
-        "xsd:pattern" : "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
-      }
+    "owl:onDatatype" : {
+      "@id" : "xsd:string"
+    },
+    "owl:withRestrictions" : {
+      "xsd:pattern" : "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
     }
   }, {
     "@id" : "knora-api:DocumentRepresentation",
@@ -213,59 +207,15 @@
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a file URI.",
     "rdfs:label" : "File URI",
-    "rdfs:subClassOf" : {
+    "owl:onDatatype" : {
       "@id" : "xsd:anyURI"
     }
-  }, {
-    "@id" : "knora-api:ForbiddenResource",
-    "@type" : "owl:Class",
-    "rdfs:comment" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
-    "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
-    "rdfs:subClassOf" : [ {
-      "@id" : "knora-api:Resource"
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:arkUrl"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasComment"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasStandoffLinkTo"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:versionArkUrl"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdfs:label"
-      }
-    } ]
   }, {
     "@id" : "knora-api:Geom",
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a geometry specification in JSON.",
     "rdfs:label" : "Geometry specification",
-    "rdfs:subClassOf" : {
+    "owl:onDatatype" : {
       "@id" : "xsd:string"
     }
   }, {
@@ -273,28 +223,22 @@
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a Geoname code.",
     "rdfs:label" : "Geoname code",
-    "rdfs:subClassOf" : {
-      "@type" : "rdfs:Datatype",
-      "owl:onDatatype" : {
-        "@id" : "xsd:string"
-      },
-      "owl:withRestrictions" : {
-        "xsd:pattern" : "\\d{1,8}"
-      }
+    "owl:onDatatype" : {
+      "@id" : "xsd:string"
+    },
+    "owl:withRestrictions" : {
+      "xsd:pattern" : "\\d{1,8}"
     }
   }, {
     "@id" : "knora-api:Interval",
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents an interval.",
     "rdfs:label" : "Interval literal",
-    "rdfs:subClassOf" : {
-      "@type" : "rdfs:Datatype",
-      "owl:onDatatype" : {
-        "@id" : "xsd:string"
-      },
-      "owl:withRestrictions" : {
-        "xsd:pattern" : "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"
-      }
+    "owl:onDatatype" : {
+      "@id" : "xsd:string"
+    },
+    "owl:withRestrictions" : {
+      "xsd:pattern" : "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"
     }
   }, {
     "@id" : "knora-api:LinkObj",
@@ -352,14 +296,8 @@
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents a list node.",
     "rdfs:label" : "List Node",
-    "rdfs:subClassOf" : {
-      "@type" : "rdfs:Datatype",
-      "owl:onDatatype" : {
-        "@id" : "xsd:string"
-      },
-      "owl:withRestrictions" : {
-        "xsd:pattern" : ".+"
-      }
+    "owl:onDatatype" : {
+      "@id" : "xsd:string"
     }
   }, {
     "@id" : "knora-api:MovingImageRepresentation",
@@ -955,6 +893,14 @@
       "@id" : "knora-api:hasLinkTo"
     }
   }, {
+    "@id" : "knora-api:mayHaveMoreResults",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "rdfs:comment" : "Indicates whether more results may be available for a search query",
+    "rdfs:label" : "May have more results"
+  }, {
     "@id" : "knora-api:objectType",
     "@type" : "rdf:Property",
     "rdfs:comment" : "Specifies the required type of the objects of a property",
@@ -1011,6 +957,9 @@
     },
     "rdfs:comment" : "Provides the ARK URL of a particular version of a resource.",
     "rdfs:label" : "version ARK URL"
+  }, {
+    "@id" : "rdfs:label",
+    "@type" : "owl:DatatypeProperty"
   } ],
   "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
   "@type" : "owl:Ontology",

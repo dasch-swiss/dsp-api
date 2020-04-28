@@ -259,6 +259,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 KnoraSystemInstances.Users.SystemUser
             )
 
+            // check if user exists
+            _ = if (currentUserInformation.isEmpty) {
+                throw BadRequestException(s"User ${userIri} does not exist")
+            }
+
             // check if we want to change the email
             emailTaken: Boolean <- userByEmailExists(changeUserRequest.email.getOrElse(""), currentUserInformation.get.email)
             _ = if (emailTaken) {
@@ -1152,9 +1157,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           * The actual task run with an IRI lock.
           */
         def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
-            // check if required information is supplied
+            // check username
             _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
+            _ = stringFormatter.validateUsername(createRequest.username, throw BadRequestException(s"The username: '${createRequest.username}' contains invalid characters"))
+
+            // check email
             _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
+            _ = stringFormatter.validateEmailAndThrow(createRequest.email, throw BadRequestException(s"The email: '${createRequest.email}' is invalid"))
+
+            // check other
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
             _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
@@ -1180,7 +1191,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraAdmin.User,
-                username = createRequest.username,
+                username = stringFormatter.validateAndEscapeUsername(createRequest.username, throw BadRequestException(s"The username: '${createRequest.username}' contains invalid characters")),
                 email = createRequest.email,
                 password = hashedPassword,
                 givenName = createRequest.givenName,
@@ -1400,6 +1411,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             case "" => FastFuture.successful(false)
             case `current` => FastFuture.successful(true)
             case _ => {
+                stringFormatter.validateUsername(username, throw BadRequestException(s"The username: '${username}' contains invalid characters"))
                 for {
                     askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
                     // _ = log.debug("userExists - query: {}", askString)
@@ -1424,6 +1436,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             case "" => FastFuture.successful(false)
             case `current` => FastFuture.successful(true)
             case _ => {
+                stringFormatter.validateEmailAndThrow(email, throw BadRequestException(s"The email: '${email}' is invalid"))
                 for {
                     askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
                     // _ = log.debug("userExists - query: {}", askString)

@@ -90,6 +90,8 @@ knora-api:versionArkUrl a owl:DatatypeProperty;
   rdfs:comment "Provides the ARK URL of a particular version of a resource.";
   rdfs:label "version ARK URL" .
 
+rdfs:label a owl:DatatypeProperty .
+
 knora-api:AudioRepresentation a owl:Class;
   rdfs:comment "Represents a file containing audio data";
   rdfs:label "Representation (Audio)";
@@ -146,11 +148,9 @@ knora-api:hasAudioFile a owl:DatatypeProperty;
 knora-api:Color a rdfs:Datatype;
   rdfs:comment "Represents a color.";
   rdfs:label "Color literal";
-  rdfs:subClassOf [ a rdfs:Datatype;
-      owl:onDatatype xsd:string;
-      owl:withRestrictions [
-          xsd:pattern "#([0-9a-fA-F]{3}){1,2}"
-        ]
+  owl:onDatatype xsd:string;
+  owl:withRestrictions [
+      xsd:pattern "#([0-9a-fA-F]{3}){1,2}"
     ] .
 
 knora-api:DDDRepresentation a owl:Class;
@@ -186,11 +186,9 @@ knora-api:hasDDDFile a owl:DatatypeProperty;
 knora-api:Date a rdfs:Datatype;
   rdfs:comment "Represents a date as a period with different possible precisions.";
   rdfs:label "Date literal";
-  rdfs:subClassOf [ a rdfs:Datatype;
-      owl:onDatatype xsd:string;
-      owl:withRestrictions [
-          xsd:pattern "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
-        ]
+  owl:onDatatype xsd:string;
+  owl:withRestrictions [
+      xsd:pattern "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
     ] .
 
 knora-api:DocumentRepresentation a owl:Class;
@@ -225,54 +223,27 @@ knora-api:hasDocumentFile a owl:DatatypeProperty;
 knora-api:File a rdfs:Datatype;
   rdfs:comment "Represents a file URI.";
   rdfs:label "File URI";
-  rdfs:subClassOf xsd:anyURI .
-
-knora-api:ForbiddenResource a owl:Class;
-  rdfs:comment "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
-  rdfs:label "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasComment
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+  owl:onDatatype xsd:anyURI .
 
 knora-api:Geom a rdfs:Datatype;
   rdfs:comment "Represents a geometry specification in JSON.";
   rdfs:label "Geometry specification";
-  rdfs:subClassOf xsd:string .
+  owl:onDatatype xsd:string .
 
 knora-api:Geoname a rdfs:Datatype;
   rdfs:comment "Represents a Geoname code.";
   rdfs:label "Geoname code";
-  rdfs:subClassOf [ a rdfs:Datatype;
-      owl:onDatatype xsd:string;
-      owl:withRestrictions [
-          xsd:pattern "\\d{1,8}"
-        ]
+  owl:onDatatype xsd:string;
+  owl:withRestrictions [
+      xsd:pattern "\\d{1,8}"
     ] .
 
 knora-api:Interval a rdfs:Datatype;
   rdfs:comment "Represents an interval.";
   rdfs:label "Interval literal";
-  rdfs:subClassOf [ a rdfs:Datatype;
-      owl:onDatatype xsd:string;
-      owl:withRestrictions [
-          xsd:pattern "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"
-        ]
+  owl:onDatatype xsd:string;
+  owl:withRestrictions [
+      xsd:pattern "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"
     ] .
 
 knora-api:LinkObj a owl:Class;
@@ -312,12 +283,7 @@ knora-api:hasLinkTo a owl:ObjectProperty;
 knora-api:ListNode a rdfs:Datatype;
   rdfs:comment "Represents a list node.";
   rdfs:label "List Node";
-  rdfs:subClassOf [ a rdfs:Datatype;
-      owl:onDatatype xsd:string;
-      owl:withRestrictions [
-          xsd:pattern ".+"
-        ]
-    ] .
+  owl:onDatatype xsd:string .
 
 knora-api:MovingImageRepresentation a owl:Class;
   rdfs:comment "A resource containing moving image data";
@@ -528,6 +494,11 @@ knora-api:isPartOf a owl:ObjectProperty;
   rdfs:comment "Indicates that this resource is part of another resource";
   rdfs:label "is part of";
   rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:mayHaveMoreResults a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  rdfs:comment "Indicates whether more results may be available for a search query";
+  rdfs:label "May have more results" .
 
 knora-api:objectType a rdf:Property;
   rdfs:comment "Specifies the required type of the objects of a property";

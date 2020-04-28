@@ -61,15 +61,16 @@ import scala.concurrent.Future
   */
 class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
-    /**
-      * The name of the ontology cache.
-      */
+    // The name of the ontology cache.
     private val OntologyCacheName = "ontologyCache"
 
-    /**
-      * The cache key under which cached ontology data is stored.
-      */
+    // The cache key under which cached ontology data is stored.
     private val OntologyCacheKey = "ontologyCacheData"
+
+    // The global ontology cache lock. This is needed because every ontology update replaces the whole ontology cache
+    // (because definitions in one ontology can refer to definitions in another ontology). Without a global lock,
+    // concurrent updates (even to different ontologies) could overwrite each other.
+    private val ONTOLOGY_CACHE_LOCK_IRI = "http://rdfh.ch/ontologies"
 
     /**
      * The in-memory cache of ontologies.
@@ -97,7 +98,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser)
         case StandoffClassesWithDataTypeGetRequestV2(requestingUser) => getStandoffStandoffClassesWithDataTypeV2(requestingUser)
         case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => getAllStandoffPropertyEntitiesV2(requestingUser)
-        case CheckSubClassRequestV2(subClassIri, superClassIri, requestingUser) => checkSubClassV2(subClassIri, superClassIri, requestingUser)
+        case CheckSubClassRequestV2(subClassIri, superClassIri, requestingUser) => checkSubClassV2(subClassIri, superClassIri)
         case SubClassesGetRequestV2(resourceClassIri, requestingUser) => getSubClassesV2(resourceClassIri, requestingUser)
         case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, requestingUser) => getKnoraEntityIrisInNamedGraphV2(namedGraphIri, requestingUser)
         case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) => getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser)
@@ -1135,8 +1136,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 case (acc, classIri) =>
                     // Is this class IRI hard-coded in the requested schema?
                     if (KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.contains(classIri) ||
-                        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri) ||
-                        KnoraAdminToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
+                        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1163,8 +1163,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 case (acc, propertyIri) =>
                     // Is this property IRI hard-coded in the requested schema?
                     if (KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.contains(propertyIri) ||
-                        KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri) ||
-                        KnoraAdminToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
+                        KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1204,12 +1203,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             // See if any of the requested entities are hard-coded for knora-api.
 
             hardCodedExternalClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
-                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
-                KnoraAdminToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
+                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
 
             hardCodedExternalPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraAdminToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
+                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
 
             // Convert the remaining external entity IRIs to internal ones.
 
@@ -1369,7 +1366,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
       * @return a [[CheckSubClassResponseV2]].
       */
-    private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: UserADM): Future[CheckSubClassResponseV2] = {
+    private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Future[CheckSubClassResponseV2] = {
         for {
             cacheData <- getCacheData
             response = CheckSubClassResponseV2(
@@ -1775,10 +1772,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             // Make the internal ontology IRI.
             internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(validOntologyName, createOntologyRequest.isShared, projectInfo.project.shortcode)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = createOntologyRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(internalOntologyIri)
             )
         } yield taskResult
@@ -1852,10 +1849,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             _ <- checkExternalOntologyIriForUpdate(changeOntologyMetadataRequest.ontologyIri)
             internalOntologyIri = changeOntologyMetadataRequest.ontologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = changeOntologyMetadataRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(internalOntologyIri = internalOntologyIri)
             )
         } yield taskResult
@@ -2031,10 +2028,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = createClassRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri
@@ -2391,10 +2388,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = addCardinalitiesRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri
@@ -2556,10 +2553,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = changeCardinalitiesRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri
@@ -2657,10 +2654,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = deleteClassRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri
@@ -2775,10 +2772,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = deletePropertyRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalPropertyIri = internalPropertyIri,
                     internalOntologyIri = internalOntologyIri
@@ -2876,10 +2873,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             _ <- checkExternalOntologyIriForUpdate(deleteOntologyRequest.ontologyIri)
             internalOntologyIri = deleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = deleteOntologyRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalOntologyIri = internalOntologyIri
                 )
@@ -3151,10 +3148,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = createPropertyRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalPropertyIri = internalPropertyIri,
                     internalOntologyIri = internalOntologyIri
@@ -3312,10 +3309,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = changePropertyLabelsOrCommentsRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalPropertyIri = internalPropertyIri,
                     internalOntologyIri = internalOntologyIri
@@ -3434,10 +3431,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = changeClassLabelsOrCommentsRequest.apiRequestID,
-                iri = internalOntologyIri.toString,
+                iri = ONTOLOGY_CACHE_LOCK_IRI,
                 task = () => makeTaskFuture(
                     internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri

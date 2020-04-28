@@ -236,7 +236,7 @@ same timestamp.
 To get a specific value of a resource, use this route:
 
 ```
-HTTP GET to http://host//v2/values/resourceIRI/valueUUID
+HTTP GET to http://host/v2/values/resourceIRI/valueUUID
 ```
 
 The resource IRI must be URL-encoded. The path element `valueUUID` is the
@@ -546,6 +546,9 @@ HTTP GET to http://host/v2/resources?resourceClass=RESOURCE_CLASS_IRI&page=PAGE[
 This is useful only if the project does not contain a large amount of data;
 otherwise, you should use @ref:[Gravsearch](query-language.md) to search
 using more specific criteria.
+
+The specified class and property are used without inference; they will not
+match subclasses or subproperties.
 
 The HTTP header `X-Knora-Accept-Project` must be submitted; its value is
 a Knora project IRI. In the request URL, the values of `resourceClass` and `orderByProperty`

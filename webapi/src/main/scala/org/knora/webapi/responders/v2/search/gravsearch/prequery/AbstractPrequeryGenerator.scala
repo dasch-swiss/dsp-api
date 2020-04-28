@@ -30,49 +30,28 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.mutable
 
+object AbstractPrequeryGenerator {
+    // separator used by GroupConcat
+    val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
+}
+
 /**
  * An abstract base class for [[WhereTransformer]] instances that generate SPARQL prequeries from Gravsearch input.
  *
  * @param typeInspectionResult the result of running type inspection on the Gravsearch input.
  * @param querySchema          the ontology schema used in the input Gravsearch query.
  */
-abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends WhereTransformer {
-
+abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
+                                         typeInspectionResult: GravsearchTypeInspectionResult,
+                                         querySchema: ApiV2Schema) extends WhereTransformer {
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    // Contains the variable representing the input query's main resource: knora-base:isMainResource
-    protected var mainResourceVariable: Option[QueryVariable] = None
-
-    // getter method for public access
-    def getMainResourceVariable: QueryVariable = mainResourceVariable.getOrElse(throw GravsearchException("Could not get main resource variable from transformer"))
 
     // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
     // in order to prevent duplicates
-    protected val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
-
-    // variables representing dependent resources
-    protected var dependentResourceVariables: mutable.Set[QueryVariable] = mutable.Set.empty
-
-    // separator used by GroupConcat
-    val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
-
-    // variables representing aggregated dependent resources
-    protected var dependentResourceVariablesGroupConcat: Set[QueryVariable] = Set.empty
-
-    // getter method for public access
-    def getDependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceVariablesGroupConcat
-
-    // variables representing value objects (including those for link values)
-    protected var valueObjectVariables: mutable.Set[QueryVariable] = mutable.Set.empty
-
-    // variables representing aggregated value objects
-    protected var valueObjectVarsGroupConcat: Set[QueryVariable] = Set.empty
-
-    // getter method for public access
-    def getValueObjectVarsGroupConcat: Set[QueryVariable] = valueObjectVarsGroupConcat
+    private val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
     // suffix appended to variables that are returned by a SPARQL aggregation function.
-    val groupConcatVariableSuffix = "__Concat"
+    protected val groupConcatVariableSuffix = "__Concat"
 
     // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
     private val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2Complex.DateValue, OntologyConstants.KnoraApiV2Complex.StandoffTag)
@@ -97,7 +76,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
      * @param useInOrderBy if `true`, the generated variable can be used in ORDER BY.
      * @return `true` if the generated variable was saved, `false` if it had already been saved.
      */
-    protected def addGeneratedVariableForValueLiteral(valueVar: QueryVariable, generatedVar: QueryVariable, useInOrderBy: Boolean = true): Boolean = {
+    private def addGeneratedVariableForValueLiteral(valueVar: QueryVariable, generatedVar: QueryVariable, useInOrderBy: Boolean = true): Boolean = {
         val currentGeneratedVars = valueVariablesAutomaticallyGenerated.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
 
         if (!currentGeneratedVars.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
@@ -130,39 +109,49 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     }
 
     // Generated statements for date literals, so we don't generate the same statements twice.
-    protected val generatedDateStatements = mutable.Set.empty[StatementPattern]
+    private val generatedDateStatements = mutable.Set.empty[StatementPattern]
 
     // Variables generated to represent marked-up text in standoff, so we don't generate the same variables twice.
-    protected val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
+    private val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
 
     /**
-     * Checks if a statement represents the knora-base:isMainResource statement and returns the query variable representing the main resource if so.
-     *
-     * @param statementPattern the statement pattern to be checked.
-     * @return query variable representing the main resource or None.
+     * The variable in the CONSTRUCT clause that represents the main resource.
      */
-    protected def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
-        statementPattern.pred match {
-            case IriRef(iri, _) =>
+    val mainResourceVariable: QueryVariable = {
+        val mainResourceQueryVariables = constructClause.statements.foldLeft(Set.empty[QueryVariable]) {
+            case (acc: Set[QueryVariable], statementPattern) =>
+                statementPattern.pred match {
+                    case IriRef(iri, _) =>
 
-                val iriStr = iri.toString
+                        val iriStr = iri.toString
 
-                if (iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource) {
-                    statementPattern.obj match {
-                        case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
-                            statementPattern.subj match {
-                                case queryVariable: QueryVariable => Some(queryVariable)
-                                case _ => throw GravsearchException(s"The subject of ${iri.toSparql} must be a variable")
+                        if (iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource) {
+                            statementPattern.obj match {
+                                case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
+                                    statementPattern.subj match {
+                                        case queryVariable: QueryVariable => acc + queryVariable
+                                        case _ => throw GravsearchException(s"The subject of knora-api:isMainResource must be a variable")
+                                    }
+
+                                case _ => acc
                             }
+                        } else {
+                            acc
+                        }
 
-                        case _ => None
-                    }
-                } else {
-                    None
+                    case _ => acc
                 }
-
-            case _ => None
         }
+
+        if (mainResourceQueryVariables.isEmpty) {
+            throw GravsearchException("CONSTRUCT clause contains no knora-api:isMainResource")
+        }
+
+        if (mainResourceQueryVariables.size > 1) {
+            throw GravsearchException("CONSTRUCT clause contains more than one knora-api:isMainResource")
+        }
+
+        mainResourceQueryVariables.head
     }
 
     /**
@@ -172,30 +161,11 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
      * @param inputEntity         the [[Entity]] to make the statements about.
      * @return a sequence of [[QueryPattern]] representing the additional statements.
      */
-    protected def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
-        if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropertyTypeInfo.typeIri)) {
+    private def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
+        if (nonPropertyTypeInfo.isResourceType) {
 
             // inputEntity is either source or target of a linking property
             // create additional statements in order to query permissions and other information for a resource
-
-            // add the inputEntity (a variable representing a resource) to the SELECT
-            inputEntity match {
-                case queryVar: QueryVariable =>
-                    // make sure that this is not the mainVar
-                    mainResourceVariable match {
-                        case Some(mainVar: QueryVariable) =>
-
-                            if (mainVar != queryVar) {
-                                // it is a variable representing a dependent resource
-                                dependentResourceVariables += queryVar
-                            }
-
-                        case None => () // TODO: What happens if the main resource variable has not been processed yet (Option would be None)? Shall rather an error be thrown here?
-
-                    }
-
-                case _ => ()
-            }
 
             Seq(
                 StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
@@ -227,9 +197,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             )
         )
 
-        // add variable to collection representing value objects
-        valueObjectVariables += linkValueObjVar
-
         // create an Entity that connects the subject of the linking property with the link value object
         val linkValueProp: Entity = linkPred match {
             case linkingPropQueryVar: QueryVariable =>
@@ -259,7 +226,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         )
     }
 
-    protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
+    private def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
         /**
          * Ensures that if the object of a statement is a variable, and is used in the ORDER BY clause of the input query, the subject of the statement
          * is the main resource. Throws an exception otherwise.
@@ -269,7 +236,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         def checkSubjectInOrderBy(objectVar: QueryVariable): Unit = {
             statementPattern.subj match {
                 case subjectVar: QueryVariable =>
-                    if (!mainResourceVariable.contains(subjectVar) && inputOrderBy.exists(criterion => criterion.queryVariable == objectVar)) {
+                    if (mainResourceVariable != subjectVar && inputOrderBy.exists(criterion => criterion.queryVariable == objectVar)) {
                         throw GravsearchException(s"Variable ${objectVar.toSparql} is used in ORDER BY, but does not represent a value of the main resource")
                     }
 
@@ -300,7 +267,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             // transforms the statement given in the input query so the list node and any of its subnodes are matched
             Seq(
                 statementPatternToInternalSchema(statementPattern, typeInspectionResult).copy(obj = listNodeVar),
-                StatementPattern(
+                StatementPattern.makeExplicit(
                     subj = listNode,
                     pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
                     obj = listNodeVar
@@ -315,12 +282,11 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         }
 
         val subjectIsResource: Boolean = maybeSubjectTypeIri.exists(iri => OntologyConstants.KnoraApi.isKnoraApiV2Resource(iri))
-        val objectIsResource: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)
 
         // Is the subject of the statement a resource?
         if (subjectIsResource) {
             // Yes. Is the object of the statement also a resource?
-            if (objectIsResource) {
+            if (propertyTypeInfo.objectIsResourceType) {
                 // Yes. This is a link property. Make sure that the object is either an IRI or a variable (cannot be a literal).
                 statementPattern.obj match {
                     case _: IriRef => ()
@@ -355,8 +321,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2Complex.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
 
                 if (objectVarIsValueObject) {
-                    // The variable refers to a value object. Add it to the collection representing value objects.
-                    valueObjectVariables += objectVar
+                    // The variable refers to a value object.
 
                     // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
                     val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
@@ -411,14 +376,14 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             if (querySchema == ApiV2Complex) {
                 // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
                 // has to use the knora-api:standoffLink function instead.
-                if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && objectIsResource) {
+                if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && propertyTypeInfo.objectIsResourceType) {
                     throw GravsearchException(s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
                 } else {
                     // Is the object of the statement a list node?
                     propertyTypeInfo.objectTypeIri match {
                         case SmartIri(OntologyConstants.KnoraApiV2Complex.ListNode) =>
                             // Yes, transform statement so it also matches any of the subnodes of the given node
-                            handleListNode
+                            handleListNode()
                         case _ =>
                             // No, just convert the statement pattern to the internal schema.
                             Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
@@ -474,7 +439,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
      * @param conversionFuncForNonPropertyType the function to use to create additional statements.
      * @return a sequence of [[QueryPattern]] representing the additional statements.
      */
-    protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspectionResult: GravsearchTypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
+    private def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspectionResult: GravsearchTypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
         val typesNotYetProcessed = typeInspectionResult.copy(entities = typeInspectionResult.entities -- processedTypeInfo)
 
         typesNotYetProcessed.getTypeOfEntity(entity) match {
@@ -497,7 +462,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
      * @param conversionFuncForPropertyType the function to use for the conversion.
      * @return a sequence of [[QueryPattern]] representing the converted statement.
      */
-    protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern, GravsearchTypeInspectionResult) => Seq[QueryPattern]): Seq[QueryPattern] = {
+    private def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern, GravsearchTypeInspectionResult) => Seq[QueryPattern]): Seq[QueryPattern] = {
         typeInspectionResult.getTypeOfEntity(statementPattern.pred) match {
             case Some(propInfo: PropertyTypeInfo) =>
                 // process type information for the predicate into additional statements
@@ -514,7 +479,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     // A Map of knora-api value types (both complex and simple) to the corresponding knora-base value predicates
     // that point to literals. This is used only for generating additional statements for ORDER BY clauses, so it only needs to include
     // types that have a meaningful order.
-    protected val valueTypesToValuePredsForOrderBy: Map[IRI, IRI] = Map(
+    private val valueTypesToValuePredsForOrderBy: Map[IRI, IRI] = Map(
         OntologyConstants.Xsd.Integer -> OntologyConstants.KnoraBase.ValueHasInteger,
         OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
         OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
@@ -539,7 +504,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
      * @param typeInspectionResult the type inspection result.
      * @return the converted statement pattern.
      */
-    protected def statementPatternToInternalSchema(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): StatementPattern = {
+    private def statementPatternToInternalSchema(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): StatementPattern = {
         GravsearchQueryChecker.checkStatement(
             statementPattern = statementPattern,
             querySchema = querySchema,
@@ -555,7 +520,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
      * @param linkingPropertyQueryVariable variable representing a linking property.
      * @return variable representing the corresponding link value property.
      */
-    protected def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
+    private def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
         SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
             base = linkingPropertyQueryVariable,
             propertyIri = OntologyConstants.KnoraBase.HasLinkToValue
@@ -1117,7 +1082,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     }
 
     /**
-     * Handles the function `knora-api:match` in the simple schema.
+     * Handles the deprecated function `knora-api:match` in the simple schema.
      *
      * @param functionCallExpression the function call to be handled.
      * @param typeInspectionResult   the type inspection results.
@@ -1171,16 +1136,87 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
+        // Replace the filter with a statement using the deprecated knora-base:matchesTextIndex property.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
             valueHasStringStatement ++ Seq(
-                StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri))
+                StatementPattern.makeExplicit(
+                    subj = textValHasString,
+                    pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri),
+                    obj = XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)
+                )
             )
         )
     }
 
     /**
-     * Handles the function `knora-api:match` in the complex schema.
+     * Handles the function `knora-api:matchText` in the simple schema.
+     *
+     * @param functionCallExpression the function call to be handled.
+     * @param typeInspectionResult   the type inspection results.
+     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+     * @return a [[TransformedFilterPattern]].
+     */
+    private def handleMatchTextFunctionInSimpleSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+        if (querySchema == ApiV2Complex) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchFunction.toSmartIri.toSparql} instead")
+        }
+
+        // The match function must be the top-level expression, otherwise boolean logic won't work properly.
+        if (!isTopLevel) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
+        }
+
+        // two arguments are expected: the first must be a variable representing a string value,
+        // the second must be a string literal
+
+        if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
+
+        // a QueryVariable expected to represent a text value
+        val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+        typeInspectionResult.getTypeOfEntity(textValueVar) match {
+            case Some(nonPropInfo: NonPropertyTypeInfo) =>
+
+                nonPropInfo.typeIri.toString match {
+
+                    case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
+
+                    case _ => throw GravsearchException(s"${textValueVar.toSparql} must be an xsd:string")
+                }
+
+            case _ => throw GravsearchException(s"${textValueVar.toSparql} must be an xsd:string")
+        }
+
+        val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+
+        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // if that statement hasn't been added already.
+        val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
+            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+        } else {
+            Seq.empty[StatementPattern]
+        }
+
+        val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
+
+        // Replace the filter with a LuceneQueryPattern.
+        TransformedFilterPattern(
+            None, // FILTER has been replaced by statements
+            valueHasStringStatement :+ LuceneQueryPattern(
+                subj = textValueVar,
+                obj = textValHasString,
+                queryString = searchTerms
+            )
+        )
+    }
+
+    /**
+     * Handles the deprecated function `knora-api:match` in the complex schema.
      *
      * @param functionCallExpression the function call to be handled.
      * @param typeInspectionResult   the type inspection results.
@@ -1212,16 +1248,87 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
+        // Replace the filter with a statement using the deprecated knora-base:matchesTextIndex property.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
             Seq(
-                StatementPattern.makeExplicit(subj = stringVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri))
+                StatementPattern.makeExplicit(
+                    subj = stringVar,
+                    pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri),
+                    XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)
+                )
             )
         )
     }
 
     /**
-     * Handles the function `knora-api:matchInStandoff`.
+     * Handles the function `knora-api:matchText` in the complex schema.
+     *
+     * @param functionCallExpression the function call to be handled.
+     * @param typeInspectionResult   the type inspection results.
+     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+     * @return a [[TransformedFilterPattern]].
+     */
+    private def handleMatchTextFunctionInComplexSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+        if (querySchema == ApiV2Simple) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunction.toSmartIri.toSparql} instead")
+        }
+
+        // The match function must be the top-level expression, otherwise boolean logic won't work properly.
+        if (!isTopLevel) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
+        }
+
+        // two arguments are expected: the first must be a variable representing a text value,
+        // the second must be a string literal
+
+        if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
+
+        // a QueryVariable expected to represent a text value
+        val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+        typeInspectionResult.getTypeOfEntity(textValueVar) match {
+            case Some(nonPropInfo: NonPropertyTypeInfo) =>
+
+                nonPropInfo.typeIri.toString match {
+
+                    case OntologyConstants.KnoraApiV2Complex.TextValue => ()
+
+                    case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
+                }
+
+            case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
+        }
+
+        val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+
+        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // if that statement hasn't been added already.
+        val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
+            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+        } else {
+            Seq.empty[StatementPattern]
+        }
+
+        val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
+
+        // Replace the filter with a LuceneQueryPattern.
+        TransformedFilterPattern(
+            None, // FILTER has been replaced by statements
+            valueHasStringStatement :+ LuceneQueryPattern(
+                subj = textValueVar,
+                obj = textValHasString,
+                queryString = searchTerms
+            )
+        )
+    }
+
+    /**
+     * Handles the deprecated function `knora-api:matchInStandoff`.
      *
      * @param functionCallExpression the function call to be handled.
      * @param typeInspectionResult   the type inspection results.
@@ -1257,9 +1364,15 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
-        // Generate a statement to search the full-text search index, to assert that text value contains
-        // the search terms.
-        val fullTextSearchStatement: Seq[StatementPattern] = Seq(StatementPattern.makeInferred(subj = textValueStringLiteralVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)))
+        // Generate a statement to search the full-text search index, using the deprecated virtual predicate
+        // knora-base:matchesTextIndex, to assert that text value contains the search terms.
+        val fullTextSearchStatement: Seq[StatementPattern] = Seq(
+            StatementPattern.makeInferred(
+                subj = textValueStringLiteralVar,
+                pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri),
+                XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)
+            )
+        )
 
         // Generate query patterns to assign the text in the standoff tag to a variable, if we
         // haven't done so already.
@@ -1314,6 +1427,126 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     }
 
     /**
+     * Handles the function `knora-api:matchTextInStandoff`.
+     *
+     * @param functionCallExpression the function call to be handled.
+     * @param typeInspectionResult   the type inspection results.
+     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+     * @return a [[TransformedFilterPattern]].
+     */
+    private def handleMatchTextInStandoffFunction(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+        if (querySchema == ApiV2Simple) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema")
+        }
+
+        if (!isTopLevel) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
+        }
+
+        // Three arguments are expected:
+        // 1. a variable representing the text value
+        // 2. a variable representing the standoff tag
+        // 3. a string literal containing space-separated search terms
+
+        if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionIri.toSparql}")
+
+        // a QueryVariable expected to represent a text value
+        val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+        typeInspectionResult.getTypeOfEntity(textValueVar) match {
+            case Some(nonPropInfo: NonPropertyTypeInfo) =>
+
+                nonPropInfo.typeIri.toString match {
+
+                    case OntologyConstants.KnoraApiV2Complex.TextValue => ()
+
+                    case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
+                }
+
+            case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
+        }
+
+        val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+
+        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // if that statement hasn't been added already.
+        val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
+            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+        } else {
+            Seq.empty[StatementPattern]
+        }
+
+        // A string literal representing the search terms.
+        val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(pos = 2, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
+
+        // Generate a LuceneQueryPattern to search the full-text search index, to assert that text value contains
+        // the search terms.
+        val luceneQueryPattern: LuceneQueryPattern = LuceneQueryPattern(
+            subj = textValueVar,
+            obj = textValHasString,
+            queryString = searchTerms
+        )
+
+        // Generate query patterns to assign the text in the standoff tag to a variable, if we
+        // haven't done so already.
+
+        // A variable representing the standoff tag.
+        val standoffTagVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 1)
+
+        val startVariable = QueryVariable(standoffTagVar.variableName + "__start")
+        val endVariable = QueryVariable(standoffTagVar.variableName + "__end")
+
+        val markedUpPatternsToAdd: Seq[QueryPattern] = if (!standoffMarkedUpVariables.contains(startVariable)) {
+            standoffMarkedUpVariables += startVariable
+
+            Seq(
+                // ?standoffTag knora-base:standoffTagHasStart ?standoffTag__start .
+                StatementPattern.makeExplicit(standoffTagVar, IriRef(OntologyConstants.KnoraBase.StandoffTagHasStart.toSmartIri), startVariable),
+                // ?standoffTag knora-base:standoffTagHasEnd ?standoffTag__end .
+                StatementPattern.makeExplicit(standoffTagVar, IriRef(OntologyConstants.KnoraBase.StandoffTagHasEnd.toSmartIri), endVariable)
+            )
+        } else {
+            Seq.empty[QueryPattern]
+        }
+
+        // Generate a FILTER pattern for each search term, using the regex function to assert that the text in the
+        // standoff tag contains the term:
+        // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
+        // TODO: handle the differences between regex syntax and Lucene syntax.
+        val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map {
+            term: String =>
+                FilterPattern(
+                    expression = RegexFunction(
+                        textExpr = SubStrFunction(
+                            textLiteralVar = textValHasString,
+                            startExpression = ArithmeticExpression(
+                                leftArg = startVariable,
+                                operator = PlusOperator,
+                                rightArg = IntegerLiteral(1)
+                            ),
+                            lengthExpression = ArithmeticExpression(
+                                leftArg = endVariable,
+                                operator = MinusOperator,
+                                rightArg = startVariable
+                            )
+                        ),
+                        pattern = term, // TODO: Ignore Lucene operators
+                        modifier = Some("i")
+                    )
+                )
+        }
+
+        TransformedFilterPattern(
+            expression = None, // The expression has been replaced by additional patterns.
+            additionalPatterns = (valueHasStringStatement :+ luceneQueryPattern) ++ markedUpPatternsToAdd ++ regexFilters
+        )
+    }
+
+    /**
      * Handles the function `knora-api:StandoffLink`.
      *
      * @param functionCallExpression the function call to be handled.
@@ -1347,7 +1580,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         }
 
         typeInspectionResult.getTypeOfEntity(linkSourceEntity) match {
-            case Some(NonPropertyTypeInfo(typeIri)) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri) => ()
+            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.isResourceType => ()
             case _ => throw GravsearchException(s"The first argument of ${functionIri.toSparql} must represent a knora-api:Resource")
         }
 
@@ -1366,7 +1599,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         }
 
         val statementsForTargetResource: Seq[QueryPattern] = typeInspectionResult.getTypeOfEntity(linkTargetEntity) match {
-            case Some(nonPropertyTpeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropertyTpeInfo.typeIri) =>
+            case Some(nonPropertyTpeInfo: NonPropertyTypeInfo) if nonPropertyTpeInfo.isResourceType =>
 
                 // process the entity representing the target of the link
                 createAdditionalStatementsForNonPropertyType(nonPropertyTpeInfo, linkTargetEntity)
@@ -1410,6 +1643,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         functionIri.toString match {
 
             case OntologyConstants.KnoraApiV2Simple.MatchFunction =>
+                // deprecated
                 handleMatchFunctionInSimpleSchema(
                     functionCallExpression = functionCallExpression,
                     typeInspectionResult = typeInspectionResult,
@@ -1417,6 +1651,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 )
 
             case OntologyConstants.KnoraApiV2Complex.MatchFunction =>
+                // deprecated
                 handleMatchFunctionInComplexSchema(
                     functionCallExpression = functionCallExpression,
                     typeInspectionResult = typeInspectionResult,
@@ -1424,7 +1659,29 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 )
 
             case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction =>
+                // deprecated
                 handleMatchInStandoffFunction(
+                    functionCallExpression = functionCallExpression,
+                    typeInspectionResult = typeInspectionResult,
+                    isTopLevel = isTopLevel
+                )
+
+            case OntologyConstants.KnoraApiV2Simple.MatchTextFunction =>
+                handleMatchTextFunctionInSimpleSchema(
+                    functionCallExpression = functionCallExpression,
+                    typeInspectionResult = typeInspectionResult,
+                    isTopLevel = isTopLevel
+                )
+
+            case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
+                handleMatchTextFunctionInComplexSchema(
+                    functionCallExpression = functionCallExpression,
+                    typeInspectionResult = typeInspectionResult,
+                    isTopLevel = isTopLevel
+                )
+
+            case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
+                handleMatchTextInStandoffFunction(
                     functionCallExpression = functionCallExpression,
                     typeInspectionResult = typeInspectionResult,
                     isTopLevel = isTopLevel

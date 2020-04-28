@@ -29,7 +29,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,12 +38,8 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
-    // Definitions for ClientEndpoint
-    override val name: String = "ListsEndpoint"
+    // Directory name for generated test data
     override val directoryName: String = "lists"
-    override val urlPath: String = "lists"
-    override val description: String = "An endpoint for working with Knora lists."
-    override val functions: Seq[ClientFunction] = Seq.empty
 
     /**
      * Returns the route.
@@ -77,15 +73,15 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         "othertreelist" -> SharedTestDataADM.otherTreeList
     )
 
-    private def getListTestResponses: Future[Set[SourceCodeFileContent]] = {
-        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testLists.map {
+    private def getListTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testLists.map {
             case (filename, listIri) =>
                 val encodedListIri = URLEncoder.encode(listIri, "UTF-8")
 
                 for {
                     responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/lists/$encodedListIri"))
-                } yield SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
                     text = responseStr
                 )
         }
@@ -114,11 +110,11 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         }
     }
 
-    private def getNodeTestResponse: Future[SourceCodeFileContent] = {
+    private def getNodeTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/node/${URLEncoder.encode(SharedTestDataADM.treeListNode, "UTF-8")}"))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("listnode"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("listnode"),
             text = responseStr
         )
     }
@@ -126,7 +122,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+                             materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
         for {
             testLists <- getListTestResponses
             testNode <- getNodeTestResponse

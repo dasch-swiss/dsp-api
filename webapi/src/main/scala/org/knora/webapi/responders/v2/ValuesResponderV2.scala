@@ -20,6 +20,7 @@
 package org.knora.webapi.responders.v2
 
 import java.time.Instant
+import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
@@ -50,10 +51,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
      *
-     * @param newValueIri the IRI that was assigned to the new value.
-     * @param value       the content of the new value.
+     * @param newValueIri  the IRI that was assigned to the new value.
+     * @param value        the content of the new value.
+     * @param permissions  the permissions attached to the new value.
      */
-    case class VerifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
+    private case class VerifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
     /**
      * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
@@ -262,6 +264,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             } yield CreateValueResponseV2(
                 valueIri = verifiedValue.newValueIri,
                 valueType = verifiedValue.value.valueType,
+                valueUUID = unverifiedValue.newValueUUID,
                 projectADM = resourceInfo.projectADM
             )
         }
@@ -367,8 +370,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  valuePermissions: String,
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
-            // Generate an IRI for the new value.
+            // Generate an IRI and a UUID for the new value.
             newValueIri <- FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+            newValueUUID = UUID.randomUUID
+
             currentTime: Instant = Instant.now
 
             // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
@@ -397,6 +402,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 resourceIri = resourceInfo.resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
+                newValueUUID = newValueUUID,
                 value = value,
                 linkUpdates = standoffLinkUpdates,
                 valueCreator = valueCreator,
@@ -415,6 +421,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
+            newValueUUID = newValueUUID,
             valueContent = value.unescape,
             permissions = valuePermissions,
             creationDate = currentTime
@@ -440,6 +447,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
+        val newValueUUID = UUID.randomUUID
+
         for {
             sparqlTemplateLinkUpdate <- Future(incrementLinkValue(
                 sourceResourceInfo = resourceInfo,
@@ -458,6 +467,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
+                newValueUUID = newValueUUID,
                 creationDate = currentTime,
                 maybeComment = linkValueContent.comment,
                 stringFormatter = stringFormatter
@@ -473,6 +483,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
+            newValueUUID = newValueUUID,
             valueContent = linkValueContent.unescape,
             permissions = valuePermissions,
             creationDate = currentTime
@@ -545,8 +556,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                         valueHasOrder: Int,
                                                         creationDate: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
-        // Make an IRI for the new value.
+        // Make an IRI and a UUID for the new value.
         val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
+        val newValueUUID = UUID.randomUUID
 
         // Generate the SPARQL.
         val insertSparql: String = valueToCreate.valueContent match {
@@ -575,6 +587,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceIri = resourceIri,
                     linkUpdate = sparqlTemplateLinkUpdate,
                     creationDate = creationDate,
+                    newValueUUID = newValueUUID,
                     maybeComment = valueToCreate.valueContent.comment,
                     maybeValueHasOrder = Some(valueHasOrder),
                     stringFormatter = stringFormatter
@@ -587,6 +600,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     propertyIri = propertyIri,
                     value = otherValueContentV2,
                     newValueIri = newValueIri,
+                    newValueUUID = newValueUUID,
                     linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                     valueCreator = requestingUser.id,
                     valuePermissions = valueToCreate.permissions,
@@ -600,6 +614,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             insertSparql = insertSparql,
             unverifiedValue = UnverifiedValueV2(
                 newValueIri = newValueIri,
+                newValueUUID = newValueUUID,
                 valueContent = valueToCreate.valueContent.unescape,
                 permissions = valueToCreate.permissions,
                 creationDate = creationDate
@@ -841,6 +856,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 unverifiedValue = UnverifiedValueV2(
                     newValueIri = newValueIri,
+                    newValueUUID = currentValue.valueHasUUID,
                     valueContent = currentValue.valueContent,
                     permissions = newValuePermissionLiteral,
                     creationDate = currentTime
@@ -855,6 +871,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             } yield UpdateValueResponseV2(
                 valueIri = verifiedValue.newValueIri,
                 valueType = unverifiedValue.valueContent.valueType,
+                valueUUID = currentValue.valueHasUUID,
                 projectADM = resourceInfo.projectADM
             )
         }
@@ -966,20 +983,36 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case _ => FastFuture.successful(())
                 }
 
+
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
                 // Create the new value version.
 
-                unverifiedValue: UnverifiedValueV2 <- updateValueV2AfterChecks(
-                    dataNamedGraph = dataNamedGraph,
-                    resourceInfo = resourceInfo,
-                    propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
-                    currentValue = currentValue,
-                    newValueVersion = submittedInternalValueContent,
-                    valueCreator = updateValueRequest.requestingUser.id,
-                    valuePermissions = newValueVersionPermissionLiteral,
-                    requestingUser = updateValueRequest.requestingUser
-                )
+                unverifiedValue: UnverifiedValueV2 <- (currentValue, submittedInternalValueContent) match {
+                    case (currentLinkValue: ReadLinkValueV2, newLinkValue: LinkValueContentV2) =>
+                        updateLinkValueV2AfterChecks(
+                            dataNamedGraph = dataNamedGraph,
+                            resourceInfo = resourceInfo,
+                            linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+                            currentLinkValue = currentLinkValue,
+                            newLinkValue = newLinkValue,
+                            valueCreator = updateValueRequest.requestingUser.id,
+                            valuePermissions = newValueVersionPermissionLiteral,
+                            requestingUser = updateValueRequest.requestingUser
+                        )
+
+                    case _ =>
+                        updateOrdinaryValueV2AfterChecks(
+                            dataNamedGraph = dataNamedGraph,
+                            resourceInfo = resourceInfo,
+                            propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+                            currentValue = currentValue,
+                            newValueVersion = submittedInternalValueContent,
+                            valueCreator = updateValueRequest.requestingUser.id,
+                            valuePermissions = newValueVersionPermissionLiteral,
+                            requestingUser = updateValueRequest.requestingUser
+                        )
+                }
 
                 // Check that the value was written correctly to the triplestore.
 
@@ -992,6 +1025,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             } yield UpdateValueResponseV2(
                 valueIri = verifiedValue.newValueIri,
                 valueType = unverifiedValue.valueContent.valueType,
+                valueUUID = unverifiedValue.newValueUUID,
                 projectADM = resourceInfo.projectADM
             )
         }
@@ -1029,66 +1063,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-     * Updates an existing value (either an ordinary value or a link), using an existing transaction, assuming that
-     * pre-update checks have already been done.
-     *
-     * @param dataNamedGraph   the named graph in which the value is to be created.
-     * @param resourceInfo     information about the the resource in which to create the value.
-     * @param propertyIri      the IRI of the property that will point from the resource to the value, or, if the
-     *                         value is a link value, the IRI of the link property.
-     * @param currentValue     the value to be updated.
-     * @param newValueVersion  the new version of the value.
-     * @param valueCreator     the IRI of the new value's owner.
-     * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser   the user making the request.
-     * @return an [[UnverifiedValueV2]].
-     */
-    private def updateValueV2AfterChecks(dataNamedGraph: IRI,
-                                         resourceInfo: ReadResourceV2,
-                                         propertyIri: SmartIri,
-                                         currentValue: ReadValueV2,
-                                         newValueVersion: ValueContentV2,
-                                         valueCreator: IRI,
-                                         valuePermissions: String,
-                                         requestingUser: UserADM): Future[UnverifiedValueV2] = {
-        (currentValue.valueContent, newValueVersion) match {
-            case (currentLinkValue: LinkValueContentV2, newLinkValue: LinkValueContentV2) =>
-                updateLinkValueV2AfterChecks(
-                    dataNamedGraph = dataNamedGraph,
-                    resourceInfo = resourceInfo,
-                    linkPropertyIri = propertyIri,
-                    currentLinkValue = currentLinkValue,
-                    newLinkValue = newLinkValue,
-                    valueCreator = valueCreator,
-                    valuePermissions = valuePermissions,
-                    requestingUser = requestingUser
-                )
-
-            case _ =>
-                val newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
-
-                updateOrdinaryValueV2AfterChecks(
-                    dataNamedGraph = dataNamedGraph,
-                    resourceInfo = resourceInfo,
-                    propertyIri = propertyIri,
-                    currentValue = currentValue,
-                    newValueIri = newValueIri,
-                    newValueVersion = newValueVersion,
-                    valueCreator = valueCreator,
-                    valuePermissions = valuePermissions,
-                    requestingUser = requestingUser
-                )
-        }
-    }
-
-    /**
      * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
      *
      * @param dataNamedGraph   the IRI of the named graph to be updated.
      * @param resourceInfo     information about the resource containing the value.
      * @param propertyIri      the IRI of the property that points to the value.
      * @param currentValue     a [[ReadValueV2]] representing the existing value version.
-     * @param newValueIri      the IRI of the new value.
      * @param newValueVersion  a [[ValueContentV2]] representing the new value version, in the internal schema.
      * @param valueCreator     the IRI of the new value's owner.
      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
@@ -1099,11 +1079,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  resourceInfo: ReadResourceV2,
                                                  propertyIri: SmartIri,
                                                  currentValue: ReadValueV2,
-                                                 newValueIri: IRI,
                                                  newValueVersion: ValueContentV2,
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
+        val newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
 
         // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
         val standoffLinkUpdates = (currentValue.valueContent, newValueVersion) match {
@@ -1178,6 +1158,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
+            newValueUUID = currentValue.valueHasUUID,
             valueContent = newValueVersion.unescape,
             permissions = valuePermissions,
             creationDate = currentTime
@@ -1187,32 +1168,32 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Changes a link, assuming that pre-update checks have already been done.
      *
-     * @param dataNamedGraph   the IRI of the named graph to be updated.
-     * @param resourceInfo     information about the resource containing the link.
-     * @param linkPropertyIri  the IRI of the link property.
-     * @param currentLinkValue a [[LinkValueContentV2]] representing the `knora-base:LinkValue` for the existing link.
-     * @param newLinkValue     a [[LinkValueContentV2]] indicating the new target resource.
-     * @param valueCreator     the IRI of the new link value's owner.
-     * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser   the user making the request.
+     * @param dataNamedGraph       the IRI of the named graph to be updated.
+     * @param resourceInfo         information about the resource containing the link.
+     * @param linkPropertyIri      the IRI of the link property.
+     * @param currentLinkValue     a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
+     * @param newLinkValue         a [[LinkValueContentV2]] indicating the new target resource.
+     * @param valueCreator         the IRI of the new link value's owner.
+     * @param valuePermissions     the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param requestingUser       the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def updateLinkValueV2AfterChecks(dataNamedGraph: IRI,
                                              resourceInfo: ReadResourceV2,
                                              linkPropertyIri: SmartIri,
-                                             currentLinkValue: LinkValueContentV2,
+                                             currentLinkValue: ReadLinkValueV2,
                                              newLinkValue: LinkValueContentV2,
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
 
         // Are we changing the link target?
-        if (currentLinkValue.referredResourceIri != newLinkValue.referredResourceIri) {
-            // Delete the existing link and decrement its LinkValue's reference count.
+        if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
+            // Yes. Delete the existing link and decrement its LinkValue's reference count.
             val sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate = decrementLinkValue(
                 sourceResourceInfo = resourceInfo,
                 linkPropertyIri = linkPropertyIri,
-                targetResourceIri = currentLinkValue.referredResourceIri,
+                targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 requestingUser = requestingUser
@@ -1231,6 +1212,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             // Make a timestamp to indicate when the link value was updated.
             val currentTime: Instant = Instant.now
 
+            // Make a new UUID for the new link value.
+            val newLinkValueUUID = UUID.randomUUID
+
             for {
                 // Generate a SPARQL update string.
                 sparqlUpdate <- Future(queries.sparql.v2.txt.changeLinkTarget(
@@ -1239,6 +1223,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     linkSourceIri = resourceInfo.resourceIri,
                     linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                     linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
+                    newLinkValueUUID = newLinkValueUUID,
                     maybeComment = newLinkValue.comment,
                     currentTime = currentTime,
                     requestingUser = requestingUser.id,
@@ -1254,6 +1239,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
             } yield UnverifiedValueV2(
                 newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
+                newValueUUID = newLinkValueUUID,
                 valueContent = newLinkValue.unescape,
                 permissions = valuePermissions,
                 creationDate = currentTime
@@ -1264,7 +1250,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             val sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate = changeLinkValueMetadata(
                 sourceResourceInfo = resourceInfo,
                 linkPropertyIri = linkPropertyIri,
-                targetResourceIri = currentLinkValue.referredResourceIri,
+                targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 requestingUser = requestingUser
@@ -1287,6 +1273,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
             } yield UnverifiedValueV2(
                 newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
+                newValueUUID = currentLinkValue.valueHasUUID,
                 valueContent = newLinkValue.unescape,
                 permissions = valuePermissions,
                 creationDate = currentTime
@@ -1730,7 +1717,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             propertyIri: SmartIri,
                             unverifiedValue: UnverifiedValueV2,
                             requestingUser: UserADM): Future[VerifiedValueV2] = {
-        for {
+        val verifiedValueFuture: Future[VerifiedValueV2] = for {
             resourcesRequest <- Future {
                 ResourcesGetRequestV2(
                     resourceIris = Seq(resourceIri),
@@ -1743,12 +1730,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             resourcesResponse <- (responderManager ? resourcesRequest).mapTo[ReadResourcesSequenceV2]
-
-            resource = try {
-                resourcesResponse.toResource(resourceIri)
-            } catch {
-                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
-            }
+            resource = resourcesResponse.toResource(resourceIri)
 
             propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
@@ -1773,6 +1755,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             value = unverifiedValue.valueContent,
             permissions = unverifiedValue.permissions
         )
+
+        verifiedValueFuture.recover {
+            case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
+        }
     }
 
     /**

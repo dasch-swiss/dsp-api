@@ -81,7 +81,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val timeTagResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-    private val writeTestDataFiles = false
+    private val writeTestDataFiles = true
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -126,7 +126,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // the response involves forbidden resource
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithforbiddenResource.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithHiddenResource.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -138,7 +138,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -150,7 +150,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -194,7 +194,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
 
-        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date t1" in {
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
 
             val gravsearchQuery =
                 """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1913,7 +1913,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -1954,7 +1954,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -3169,8 +3169,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -4572,7 +4571,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -4611,7 +4610,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -5460,8 +5459,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -6645,9 +6643,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?title, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -6686,9 +6682,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?title, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -7651,10 +7645,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |} WHERE {
                   |    ?thing a anything:Thing .
                   |    ?thing anything:hasRichtext ?text .
-                  |    ?text knora-api:valueAsString ?textStr .
                   |    ?text knora-api:textValueHasStandoff ?standoffTag .
                   |    ?standoffTag a standoff:StandoffItalicTag .
-                  |    FILTER knora-api:matchInStandoff(?textStr, ?standoffTag, "interesting text")
+                  |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
                   |}
                 """.stripMargin
 
@@ -7669,7 +7662,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema) t1" in {
+        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
             // First, create a standoff-to-XML mapping that can handle standoff date tags.
 
             val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
@@ -8057,6 +8050,55 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
                 val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ThingWithHiddenThing.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "not return duplicate results when there are unbound variables in one or more UNION branches" in {
+            val gravsearchQuery =
+                s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasInteger ?int .
+                   |    ?thing anything:hasRichtext ?richtext .
+                   |    ?thing anything:hasText ?text .
+                   |} WHERE {
+                   |    ?thing a knora-api:Resource .
+                   |    ?thing a anything:Thing .
+                   |    {
+                   |        ?thing anything:hasRichtext ?richtext .
+                   |        ?richtext knora-api:valueAsString ?richtextLiteral
+                   |        FILTER knora-api:match(?richtextLiteral, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |    UNION
+                   |    {
+                   |        ?thing anything:hasText ?text .
+                   |        ?text knora-api:valueAsString ?textLiteral
+                   |        FILTER knora-api:match(?textLiteral, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |}
+                   |order by (?int)""".stripMargin
+
+            val expectedCount = 1
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkCountResponse(searchResponseStr, expectedCount)
+            }
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkSearchResponseNumberOfResults(searchResponseStr, expectedCount)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ThingFromQueryWithUnion.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }

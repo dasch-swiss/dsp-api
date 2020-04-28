@@ -41,7 +41,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -102,23 +101,23 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             // _ = println(s"Got a page of standoff in ${standoffPageEndTime - standoffPageStartTime} ms")
 
             // separate resources and values
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)
 
-            _ = if (queryResultsSeparated.keySet != Set(getStandoffRequestV2.resourceIri)) {
-                throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> was not found (maybe you do not have permission to see it, or it is marked as deleted)")
-            }
-
-            readResourceV2: ReadResourceV2 <- ConstructResponseUtilV2.createFullResourceResponse(
-                resourceIri = getStandoffRequestV2.resourceIri,
-                resourceRdfData = queryResultsSeparated(getStandoffRequestV2.resourceIri),
+            readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
+                pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
                 mappings = Map.empty,
                 queryStandoff = false,
+                calculateMayHaveMoreResults = false,
                 versionDate = None,
                 responderManager = responderManager,
                 targetSchema = getStandoffRequestV2.targetSchema,
                 settings = settings,
                 requestingUser = getStandoffRequestV2.requestingUser
             )
+
+            readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
             valueObj: ReadValueV2 = readResourceV2.values.values.flatten.find(_.valueIri == getStandoffRequestV2.valueIri).getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"))
 

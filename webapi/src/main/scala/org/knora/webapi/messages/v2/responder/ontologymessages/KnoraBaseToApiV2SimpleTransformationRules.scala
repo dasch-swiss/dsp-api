@@ -33,10 +33,15 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-    override val ontologyMetadata = OntologyMetadataV2(
+    override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
         projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the simple schema")
+    )
+
+    private val Label: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.Rdfs.Label,
+        propertyType = OntologyConstants.Owl.DatatypeProperty
     )
 
     private val Result: ReadPropertyInfoV2 = makeProperty(
@@ -60,6 +65,26 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
             )
         ),
         objectType = Some(OntologyConstants.Xsd.String)
+    )
+
+    private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.MayHaveMoreResults,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "May have more results"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether more results may be available for a search query"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
     private val Error: ReadPropertyInfoV2 = makeProperty(
@@ -207,7 +232,10 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val Date: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Date,
-        xsdStringRestrictionPattern = Some("(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.String.toSmartIri,
+            pattern = Some("(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?")
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -226,7 +254,10 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val Color: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Color,
-        xsdStringRestrictionPattern = Some("#([0-9a-fA-F]{3}){1,2}"),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.String.toSmartIri,
+            pattern = Some("#([0-9a-fA-F]{3}){1,2}")
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -245,7 +276,10 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val Interval: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Interval,
-        xsdStringRestrictionPattern = Some("\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.String.toSmartIri,
+            pattern = Some("\\d+(\\.\\d+)?,\\d+(\\.\\d+)?")
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -264,7 +298,10 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val Geoname: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Geoname,
-        xsdStringRestrictionPattern = Some("\\d{1,8}"),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.String.toSmartIri,
+            pattern = Some("\\d{1,8}")
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -283,7 +320,9 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val Geom: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Geom,
-        subClassOf = Some(OntologyConstants.Xsd.String),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.String.toSmartIri
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -302,7 +341,9 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val File: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.File,
-        subClassOf = Some(OntologyConstants.Xsd.Uri),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.Uri.toSmartIri
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -321,7 +362,9 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     private val ListNode: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.ListNode,
-        xsdStringRestrictionPattern = Some(".+"),
+        datatypeInfo = DatatypeInfoV2(
+            onDatatype = OntologyConstants.Xsd.String.toSmartIri
+        ),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -534,7 +577,9 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+        Label,
         Result,
+        MayHaveMoreResults,
         Error,
         ArkUrl,
         VersionArkUrl,
@@ -625,16 +670,12 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       * Makes a [[ReadClassInfoV2]] representing an rdfs:Datatype.
       *
       * @param datatypeIri                 the IRI of the datatype.
-      * @param subClassOf                  the superclass of the datatype.
-      * @param xsdStringRestrictionPattern an optional xsd:pattern specifying
-      *                                    the regular expression that restricts its values. This has the effect of making the
-      *                                    class a subclass of a blank node with owl:onDatatype xsd:string.
+      * @param datatypeInfo a [[DatatypeInfoV2]] describing the datatype.
       * @param predicates                  the predicates of the datatype.
       * @return a [[ReadClassInfoV2]].
       */
     private def makeDatatype(datatypeIri: IRI,
-                             subClassOf: Option[IRI] = None,
-                             xsdStringRestrictionPattern: Option[String] = None,
+                             datatypeInfo: DatatypeInfoV2,
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2]): ReadClassInfoV2 = {
 
         val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -645,16 +686,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
                 classIri = datatypeIri.toSmartIri,
-                xsdStringRestrictionPattern = xsdStringRestrictionPattern,
+                datatypeInfo = Some(datatypeInfo),
                 predicates = predicates.map {
                     pred => pred.predicateIri -> pred
                 }.toMap + rdfType,
-                subClassOf = subClassOf.toSet.map {
-                    iri: IRI => iri.toSmartIri
-                },
                 ontologySchema = ApiV2Simple
             ),
-            allBaseClasses = subClassOf.map(_.toSmartIri).toSet + datatypeIri.toSmartIri
+            allBaseClasses = Set(datatypeIri.toSmartIri)
         )
     }
 }

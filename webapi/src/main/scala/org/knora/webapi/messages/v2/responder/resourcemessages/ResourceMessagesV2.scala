@@ -35,7 +35,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.v2.SearchResponderV2Constants
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
@@ -194,7 +193,7 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
         if (headerXSLT.nonEmpty) {
 
-            val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+            val headerJSONLD = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
             val stringReader = new StringReader(headerJSONLD.toCompactString)
@@ -811,15 +810,29 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 /**
  * Represents a sequence of resources read back from Knora.
  *
- * @param numberOfResources the amount of resources returned.
- * @param resources         a sequence of resources.
+ * @param resources          a sequence of resources that the user has permission to see.
+ * @param hiddenResourceIris the IRIs of resources that were requested but that the user did not have permission to see.
+ * @param mayHaveMoreResults `true` if more resources matching the request may be available.
  */
-case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
+case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
+                                   hiddenResourceIris: Set[IRI] = Set.empty,
+                                   mayHaveMoreResults: Boolean = false) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
         copy(
             resources = resources.map(_.toOntologySchema(targetSchema))
         )
+    }
+
+    private def getOntologiesFromResource(resource: ReadResourceV2): Set[SmartIri] = {
+        val propertyIriOntologies: Set[SmartIri] = resource.values.keySet.map(_.getOntologyFromEntity)
+
+        val valueOntologies: Set[SmartIri] = resource.values.values.flatten.collect {
+            case readLinkValueV2: ReadLinkValueV2 =>
+                readLinkValueV2.valueContent.nestedResource.map(nested => getOntologiesFromResource(nested))
+        }.flatten.flatten.toSet
+
+        propertyIriOntologies ++ valueOntologies + resource.resourceClassIri.getOntologyFromEntity
     }
 
     // #generateJsonLD
@@ -841,26 +854,19 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
         val projectSpecificOntologiesUsed: Set[SmartIri] = resources.flatMap {
-            resource =>
-                val resourceOntology = resource.resourceClassIri.getOntologyFromEntity
-
-                val propertyOntologies = resource.values.keySet.map {
-                    property => property.getOntologyFromEntity
-                }
-
-                propertyOntologies + resourceOntology
+            resource => getOntologiesFromResource(resource)
         }.toSet.filter(!_.isKnoraBuiltInDefinitionIri)
 
         // Make the knora-api prefix for the target schema.
 
-        val knoraApiPrefixExpansion = targetSchema match {
+        val knoraApiPrefixExpansion: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
             case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         }
 
         // Make the JSON-LD document.
 
-        val context = JsonLDUtil.makeContext(
+        val context: JsonLDObject = JsonLDUtil.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -870,9 +876,22 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
         )
 
-        val body = JsonLDObject(Map(
-            JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
-        ))
+        val mayHaveMoreResultsStatement: Option[(IRI, JsonLDBoolean)] = if (mayHaveMoreResults) {
+            val mayHaveMoreResultsProp: IRI = targetSchema match {
+                case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.MayHaveMoreResults
+                case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.MayHaveMoreResults
+            }
+
+            Some(mayHaveMoreResultsProp -> JsonLDBoolean(mayHaveMoreResults))
+        } else {
+            None
+        }
+
+        val body = JsonLDObject(
+            Map(
+                JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
+            ) ++ mayHaveMoreResultsStatement
+        )
 
         JsonLDDocument(body = body, context = context)
 
@@ -890,28 +909,55 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     // #toJsonLDDocument
 
     /**
-     * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
-     * is not present, or if it's `ForbiddenResource`, throws an exception.
+     * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource.
      *
      * @param requestedResourceIri the IRI of the expected resource.
      * @return the resource.
+     * @throws NotFoundException   if the resource is not found.
+     * @throws ForbiddenException  if the user does not have permission to see the requested resource.
+     * @throws BadRequestException if more than one resource was returned.
      */
-    def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
-        if (numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
+    def toResource(requestedResourceIri: IRI)(implicit stringFormatter: StringFormatter): ReadResourceV2 = {
+        if (hiddenResourceIris.contains(requestedResourceIri)) {
+            throw ForbiddenException(s"You do not have permission to see resource <$requestedResourceIri>")
         }
 
-        if (numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
+        if (resources.isEmpty) {
+            throw NotFoundException(s"Expected <$requestedResourceIri>, but no resources were returned")
         }
 
-        val resourceInfo = resources.head
-
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) { // TODO: #953
-            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
+        if (resources.size > 1) {
+            throw BadRequestException(s"Expected one resource, <$requestedResourceIri>, but more than one was returned")
         }
 
-        resourceInfo
+        if (resources.head.resourceIri != requestedResourceIri) {
+            throw NotFoundException(s"Expected resource <$requestedResourceIri>, but <${resources.head.resourceIri}> was returned")
+        }
+
+        resources.head
+    }
+
+
+    /**
+     * Checks that requested resources were found and that the user has permission to see them. If not, throws an exception.
+     *
+     * @param targetResourceIris the IRIs to be checked.
+     * @param resourcesSequence  the result of requesting those IRIs.
+     * @throws NotFoundException  if the requested resources are not found.
+     * @throws ForbiddenException if the user does not have permission to see the requested resources.
+     */
+    def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Unit = {
+        val hiddenTargetResourceIris: Set[IRI] = targetResourceIris.intersect(resourcesSequence.hiddenResourceIris)
+
+        if (hiddenTargetResourceIris.nonEmpty) {
+            throw ForbiddenException(s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}")
+        }
+
+        val missingResourceIris: Set[IRI] = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
+
+        if (missingResourceIris.nonEmpty) {
+            throw NotFoundException(s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}")
+        }
     }
 
     /**

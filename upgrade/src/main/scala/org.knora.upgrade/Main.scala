@@ -51,7 +51,8 @@ object Main extends App {
         PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372, prBasedVersionString = Some("PR 1372")),
         PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
         PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin), // PR 1206
-        PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin) // PR 1403
+        PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin), // PR 1403
+        PluginForKnoraBaseVersion(versionNumber = 8, plugin = new NoopPlugin) // PR 1615
     )
 
     /**
