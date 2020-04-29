@@ -188,7 +188,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [11.x]
+        node-version: [12.x]
     steps:
       - name: Checkout source
         uses: actions/checkout@v1
@@ -389,6 +389,7 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          mkdir -p $( dirname "$KNORA_GDB_LICENSE") && touch "$KNORA_GDB_LICENSE"
           make publish-all-images
       - name: Disk Free After
         run: |
