@@ -265,13 +265,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // check if we want to change the email
-            emailTaken: Boolean <- userByEmailExists(changeUserRequest.email.getOrElse(""), currentUserInformation.get.email)
+            emailTaken: Boolean <- userByEmailExists(changeUserRequest.email, Some(currentUserInformation.get.email))
             _ = if (emailTaken) {
                 throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
             }
 
             // check if we want to change the username
-            usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username.getOrElse(""), currentUserInformation.get.username)
+            usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username, Some(currentUserInformation.get.username))
             _ = if (usernameTaken) {
                 throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
             }
@@ -1170,12 +1170,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
             _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
 
-            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
+            usernameTaken: Boolean <- userByUsernameExists(Some(createRequest.username))
             _ = if (usernameTaken) {
                 throw DuplicateValueException(s"User with the username: '${createRequest.username}' already exists")
             }
 
-            emailTaken: Boolean <- userByEmailExists(createRequest.email)
+            emailTaken: Boolean <- userByEmailExists(Some(createRequest.email))
             _ = if (emailTaken) {
                 throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
             }
@@ -1406,21 +1406,21 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @param current the current username of the user.
       * @return a [[Boolean]].
       */
-    private def userByUsernameExists(username: String, current: String = ""): Future[Boolean] = {
-        username match {
-            case "" => FastFuture.successful(false)
-            case `current` => FastFuture.successful(true)
-            case _ => {
-                stringFormatter.validateUsername(username, throw BadRequestException(s"The username: '${username}' contains invalid characters"))
-                for {
-                    askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
-                    // _ = log.debug("userExists - query: {}", askString)
+    private def userByUsernameExists(username: Option[String], current: Option[String] = None): Future[Boolean] = {
+        if (!username.isDefined) {
+            FastFuture.successful(false)
+        } else if (current.isDefined && username.get.equals(current.get)) {
+            FastFuture.successful(true)
+        } else {
+            stringFormatter.validateUsername(username.get, throw BadRequestException(s"The username: '${username.get}' contains invalid characters"))
+            for {
+                askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username.get).toString)
+                // _ = log.debug("userExists - query: {}", askString)
 
-                    checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-                    result = checkUserExistsResponse.result
+                checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                result = checkUserExistsResponse.result
 
-                } yield result
-            }
+            } yield result
         }
     }
 
@@ -1431,21 +1431,21 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @param current the current email of the user.
       * @return a [[Boolean]].
       */
-    private def userByEmailExists(email: String, current: String = ""): Future[Boolean] = {
-        email match {
-            case "" => FastFuture.successful(false)
-            case `current` => FastFuture.successful(true)
-            case _ => {
-                stringFormatter.validateEmailAndThrow(email, throw BadRequestException(s"The email: '${email}' is invalid"))
-                for {
-                    askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
-                    // _ = log.debug("userExists - query: {}", askString)
+    private def userByEmailExists(email: Option[String], current: Option[String] = None): Future[Boolean] = {
+        if (!email.isDefined) {
+            FastFuture.successful(false)
+        } else if (current.isDefined && email.get.equals(current.get)) {
+            FastFuture.successful(true)
+        } else {
+            stringFormatter.validateEmailAndThrow(email.get, throw BadRequestException(s"The email: '${email.get}' is invalid"))
+            for {
+                askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email.get).toString)
+                // _ = log.debug("userExists - query: {}", askString)
 
-                    checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-                    result = checkUserExistsResponse.result
+                checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                result = checkUserExistsResponse.result
 
-                } yield result
-            }
+            } yield result
         }
     }
 
