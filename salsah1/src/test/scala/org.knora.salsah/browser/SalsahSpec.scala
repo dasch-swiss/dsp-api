@@ -23,7 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.salsah.SettingsImpl
@@ -44,7 +44,7 @@ abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuildin
     implicit private val timeout = Timeout(180.seconds)
     implicit private val dispatcher = system.dispatcher
     implicit protected val ec: ExecutionContextExecutor = dispatcher
-    implicit protected val materializer = ActorMaterializer()
+    implicit protected val materializer = Materializer.matFromSystem(system)
 
     /**
       * Loads test data and populates the ontology cache.

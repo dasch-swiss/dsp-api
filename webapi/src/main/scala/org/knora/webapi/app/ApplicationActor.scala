@@ -5,7 +5,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
@@ -89,7 +89,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     /**
       * Provides the actor materializer (akka-http)
       */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
     /**
       * Provides the default global execution context
