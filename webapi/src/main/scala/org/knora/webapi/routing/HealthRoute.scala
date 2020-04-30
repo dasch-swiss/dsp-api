@@ -52,8 +52,8 @@ trait HealthCheck {
         result = state match {
             case AppState.Stopped => unhealthy("Stopped. Please retry later.")
             case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
-            case AppState.WaitingForRepository => unhealthy("Waiting for Repository. Please retry later.")
-            case AppState.RepositoryReady => unhealthy("Repository ready. Please retry later.")
+            case AppState.WaitingForTriplestore => unhealthy("Waiting for Repository. Please retry later.")
+            case AppState.TriplestoreReady => unhealthy("Repository ready. Please retry later.")
             case AppState.CreatingCaches => unhealthy("Creating caches. Please retry later.")
             case AppState.CachesReady => unhealthy("Caches ready. Please retry later.")
             case AppState.LoadingOntologies => unhealthy("Loading ontologies. Please retry later.")

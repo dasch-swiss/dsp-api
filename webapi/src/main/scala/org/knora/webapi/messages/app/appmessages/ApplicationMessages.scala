@@ -107,9 +107,14 @@ case class InitStartUp(withOntologies: Boolean, requiresIIIFService: Boolean) ex
 case class InitStartUpAck() extends ApplicationRequest
 
 /**
-  * Message for initiating repository checking. Used only inside the actor itself.
+  * Message for checking whether the triplestore is available. Used only inside the actor itself.
   */
-case class CheckRepository() extends ApplicationRequest
+case class CheckTriplestore() extends ApplicationRequest
+
+/**
+ * Message for updating the repository to work the current version of Knora. Used only inside the actor itself.
+ */
+case class UpdateRepository() extends ApplicationRequest
 
 /**
   * Message for initiating cache creation. Used only inside the actor itself.
@@ -142,7 +147,8 @@ case object CheckCacheService extends ApplicationRequest
 object AppState extends Enumeration {
     type AppState = Value
     val Stopped, StartingUp,
-    WaitingForRepository, RepositoryReady,
+    WaitingForTriplestore, TriplestoreReady,
+    UpdatingRepository, RepositoryUpToDate,
     CreatingCaches, CachesReady,
     UpdatingSearchIndex, SearchIndexReady,
     LoadingOntologies, OntologiesReady,
@@ -150,4 +156,3 @@ object AppState extends Enumeration {
     WaitingForCacheService, CacheServiceReady,
     MaintenanceMode, Running = Value
 }
-

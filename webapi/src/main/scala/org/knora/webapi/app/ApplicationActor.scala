@@ -1,7 +1,7 @@
 package org.knora.webapi.app
 
 import akka.actor.SupervisorStrategy._
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
+import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -17,6 +17,7 @@ import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
+import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -28,7 +29,6 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store.{StoreManager, StoreManagerActorName}
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import redis.clients.jedis.exceptions.JedisConnectionException
 
 import scala.concurrent.duration._
@@ -45,33 +45,33 @@ trait LiveManagers extends Managers {
 
     // #store-responder
     /**
-      * The actor that forwards messages to actors that deal with persistent storage.
-      */
+     * The actor that forwards messages to actors that deal with persistent storage.
+     */
     lazy val storeManager: ActorRef = context.actorOf(
         Props(new StoreManager with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = StoreManagerActorName
     )
 
     /**
-      * The actor that forwards messages to responder actors to handle API requests.
-      */
+     * The actor that forwards messages to responder actors to handle API requests.
+     */
     lazy val responderManager: ActorRef = context.actorOf(
         Props(new ResponderManager(self, storeManager) with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
     // #store-responder
 }
 
 /**
-  * This is the first actor in the application. All other actors are children
-  * of this actor and thus it takes also the role of the supervisor actor.
-  * It accepts messages for starting and stopping the Knora-API, holds the
-  * current state of the application, and is responsible for coordination of
-  * the startup and shutdown sequence. Further, it forwards any messages meant
-  * for responders or the store to the respective actor.
-  */
+ * This is the first actor in the application. All other actors are children
+ * of this actor and thus it takes also the role of the supervisor actor.
+ * It accepts messages for starting and stopping the Knora-API, holds the
+ * current state of the application, and is responsible for coordination of
+ * the startup and shutdown sequence. Further, it forwards any messages meant
+ * for responders or the store to the respective actor.
+ */
 class ApplicationActor extends Actor with LazyLogging with AroundDirectives with Timers {
     this: Managers =>
 
@@ -82,44 +82,44 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     implicit val system: ActorSystem = context.system
 
     /**
-      * The application's configuration.
-      */
+     * The application's configuration.
+     */
     implicit val settings: SettingsImpl = Settings(system)
 
     /**
-      * Provides the actor materializer (akka-http)
-      */
+     * Provides the actor materializer (akka-http)
+     */
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
     /**
-      * Provides the default global execution context
-      */
+     * Provides the default global execution context
+     */
     implicit val executionContext: ExecutionContext = context.dispatcher
 
     /**
-      * Timeout definition
-      */
+     * Timeout definition
+     */
     implicit protected val timeout: Timeout = settings.defaultTimeout
 
     /**
-      * A user representing the Knora API server, used for initialisation on startup.
-      */
+     * A user representing the Knora API server, used for initialisation on startup.
+     */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
-      * Route data.
-      */
+     * Route data.
+     */
     private val routeData = KnoraRouteData(system, self)
 
 
     /**
-      * This actor acts as the supervisor for its child actors.
-      * Here we can override the default supervisor strategy.
-      */
+     * This actor acts as the supervisor for its child actors.
+     * Here we can override the default supervisor strategy.
+     */
     override val supervisorStrategy: OneForOneStrategy =
         OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) {
-            case _: ArithmeticException      => Resume
-            case _: NullPointerException     => Restart
+            case _: ArithmeticException => Resume
+            case _: NullPointerException => Restart
             case _: IllegalArgumentException => Stop
             case e: InconsistentTriplestoreDataException =>
                 logger.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: {}", e.message)
@@ -130,7 +130,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             case _: JedisConnectionException =>
                 logger.warn(s"Received a 'JedisConnectionException', will continue. Probably the Redis-Server is not running.")
                 Resume
-            case _: Exception                => Escalate
+            case _: Exception => Escalate
         }
 
     private var appState: AppState = AppState.Stopped
@@ -145,11 +145,10 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         /* Called from main. Initiates application startup. */
         case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
 
-        /* Usually only called from tests */
         case AppStop() => appStop()
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
-        case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) => {
+        case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) =>
             logger.info("Startup initiated, please wait ...")
 
             if (appState == AppState.Stopped) {
@@ -158,10 +157,9 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
                 self ! SetAppState(AppState.StartingUp)
             }
-        }
 
-        /* EACH app state change goes through here */
-        case SetAppState(value: AppState) => {
+        /* Each app state change goes through here */
+        case SetAppState(value: AppState) =>
 
             appState = value
 
@@ -169,15 +167,21 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
             value match {
                 case AppState.Stopped =>
-                    // do nothing
+                // do nothing
                 case AppState.StartingUp =>
-                    self ! SetAppState(AppState.WaitingForRepository)
-                    
-                case AppState.WaitingForRepository =>
-                    // check DB
-                    self ! CheckRepository()
+                    self ! SetAppState(AppState.WaitingForTriplestore)
 
-                case AppState.RepositoryReady =>
+                case AppState.WaitingForTriplestore =>
+                    // check DB
+                    self ! CheckTriplestore()
+
+                case AppState.TriplestoreReady =>
+                    self ! SetAppState(AppState.UpdatingRepository)
+
+                case AppState.UpdatingRepository =>
+                    self ! UpdateRepository()
+
+                case AppState.RepositoryUpToDate =>
                     self ! SetAppState(AppState.CreatingCaches)
 
                 case AppState.CreatingCaches =>
@@ -228,60 +232,62 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
                 case AppState.MaintenanceMode =>
                     // do nothing
+                    ()
 
                 case other =>
                     throw UnsupportedValueException(
                         s"The value: $other is not supported."
                     )
             }
-        }
-        case GetAppState() => {
+
+        case GetAppState() =>
             logger.debug("ApplicationStateActor - GetAppState - value: {}", appState)
             sender ! appState
-        }
 
-        case ActorReady() => {
+        case ActorReady() =>
             sender ! ActorReadyAck()
-        }
 
-        case SetAllowReloadOverHTTPState(value) => {
+        case SetAllowReloadOverHTTPState(value) =>
             logger.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
             allowReloadOverHTTPState = value
-        }
-        case GetAllowReloadOverHTTPState() => {
+
+        case GetAllowReloadOverHTTPState() =>
             logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
             sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
-        }
 
-        case SetPrintConfigExtendedState(value) => {
+        case SetPrintConfigExtendedState(value) =>
             logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
             printConfigState = value
-        }
-        case GetPrintConfigExtendedState() => {
+
+        case GetPrintConfigExtendedState() =>
             logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
             sender ! (printConfigState | settings.printExtendedConfig)
-        }
 
         /* check repository request */
-        case CheckRepository() => {
-            storeManager ! CheckRepositoryRequest()
-        }
+        case CheckTriplestore() =>
+            storeManager ! CheckTriplestoreRequest()
 
         /* check repository response */
-        case CheckRepositoryResponse(status, message) => {
+        case CheckTriplestoreResponse(status, message) =>
             status match {
-                case RepositoryStatus.ServiceAvailable =>
-                    self ! SetAppState(AppState.RepositoryReady)
-                case RepositoryStatus.NotInitialized =>
+                case TriplestoreStatus.ServiceAvailable =>
+                    self ! SetAppState(AppState.TriplestoreReady)
+                case TriplestoreStatus.NotInitialized =>
                     logger.warn(s"checkRepository - status: {}, message: {}", status, message)
                     logger.warn("Please initialize repository.")
-                    timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
-                case RepositoryStatus.ServiceUnavailable =>
+                    timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
+                case TriplestoreStatus.ServiceUnavailable =>
                     logger.warn(s"checkRepository - status: {}, message: {}", status, message)
                     logger.warn("Please start repository.")
-                    timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
+                    timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
             }
-        }
+
+        case UpdateRepository() =>
+            storeManager ! UpdateRepositoryRequest()
+
+        case RepositoryUpdatedResponse(message) =>
+            logger.info(message)
+            self ! SetAppState(AppState.RepositoryUpToDate)
 
         /* create caches request */
         case CreateCaches() =>
@@ -322,9 +328,6 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             logger.warn("Redis-Server not running. Please start the Redis-Server.")
             timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
-
-
-
         case responderMessage: KnoraRequestV1 => responderManager forward responderMessage
         case responderMessage: KnoraRequestV2 => responderManager forward responderMessage
         case responderMessage: KnoraRequestADM => responderManager forward responderMessage
@@ -335,43 +338,43 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
 
     /**
-      * All routes composed together and CORS activated.
-      * ALL requests go through each of the routes in ORDER.
-      * The FIRST matching route is used for handling a request.
-      */
+     * All routes composed together and CORS activated.
+     * ALL requests go through each of the routes in ORDER.
+     * The FIRST matching route is used for handling a request.
+     */
     private val apiRoutes: Route = logDuration {
         addServerHeader {
             CORS(
                 new HealthRoute(routeData).knoraApiPath ~
-                  new VersionRoute(routeData).knoraApiPath ~
-                  new RejectingRoute(routeData).knoraApiPath ~
-                  new ClientApiRoute(routeData).knoraApiPath ~
-                  new ResourcesRouteV1(routeData).knoraApiPath ~
-                  new ValuesRouteV1(routeData).knoraApiPath ~
-                  new StandoffRouteV1(routeData).knoraApiPath ~
-                  new ListsRouteV1(routeData).knoraApiPath ~
-                  new ResourceTypesRouteV1(routeData).knoraApiPath ~
-                  new SearchRouteV1(routeData).knoraApiPath ~
-                  new AuthenticationRouteV1(routeData).knoraApiPath ~
-                  new AssetsRouteV1(routeData).knoraApiPath ~
-                  new CkanRouteV1(routeData).knoraApiPath ~
-                  new UsersRouteV1(routeData).knoraApiPath ~
-                  new ProjectsRouteV1(routeData).knoraApiPath ~
-                  new OntologiesRouteV2(routeData).knoraApiPath ~
-                  new SearchRouteV2(routeData).knoraApiPath ~
-                  new ResourcesRouteV2(routeData).knoraApiPath ~
-                  new ValuesRouteV2(routeData).knoraApiPath ~
-                  new StandoffRouteV2(routeData).knoraApiPath ~
-                  new ListsRouteV2(routeData).knoraApiPath ~
-                  new AuthenticationRouteV2(routeData).knoraApiPath ~
-                  new GroupsRouteADM(routeData).knoraApiPath ~
-                  new ListsRouteADM(routeData).knoraApiPath ~
-                  new PermissionsRouteADM(routeData).knoraApiPath ~
-                  new ProjectsRouteADM(routeData).knoraApiPath ~
-                  new StoreRouteADM(routeData).knoraApiPath ~
-                  new UsersRouteADM(routeData).knoraApiPath ~
-                  new SipiRouteADM(routeData).knoraApiPath ~
-                  new SwaggerApiDocsRoute(routeData).knoraApiPath,
+                    new VersionRoute(routeData).knoraApiPath ~
+                    new RejectingRoute(routeData).knoraApiPath ~
+                    new ClientApiRoute(routeData).knoraApiPath ~
+                    new ResourcesRouteV1(routeData).knoraApiPath ~
+                    new ValuesRouteV1(routeData).knoraApiPath ~
+                    new StandoffRouteV1(routeData).knoraApiPath ~
+                    new ListsRouteV1(routeData).knoraApiPath ~
+                    new ResourceTypesRouteV1(routeData).knoraApiPath ~
+                    new SearchRouteV1(routeData).knoraApiPath ~
+                    new AuthenticationRouteV1(routeData).knoraApiPath ~
+                    new AssetsRouteV1(routeData).knoraApiPath ~
+                    new CkanRouteV1(routeData).knoraApiPath ~
+                    new UsersRouteV1(routeData).knoraApiPath ~
+                    new ProjectsRouteV1(routeData).knoraApiPath ~
+                    new OntologiesRouteV2(routeData).knoraApiPath ~
+                    new SearchRouteV2(routeData).knoraApiPath ~
+                    new ResourcesRouteV2(routeData).knoraApiPath ~
+                    new ValuesRouteV2(routeData).knoraApiPath ~
+                    new StandoffRouteV2(routeData).knoraApiPath ~
+                    new ListsRouteV2(routeData).knoraApiPath ~
+                    new AuthenticationRouteV2(routeData).knoraApiPath ~
+                    new GroupsRouteADM(routeData).knoraApiPath ~
+                    new ListsRouteADM(routeData).knoraApiPath ~
+                    new PermissionsRouteADM(routeData).knoraApiPath ~
+                    new ProjectsRouteADM(routeData).knoraApiPath ~
+                    new StoreRouteADM(routeData).knoraApiPath ~
+                    new UsersRouteADM(routeData).knoraApiPath ~
+                    new SipiRouteADM(routeData).knoraApiPath ~
+                    new SwaggerApiDocsRoute(routeData).knoraApiPath,
                 settings
             )
         }
@@ -379,20 +382,19 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
     // #start-api-server
     /**
-      * Starts the Knora-API server.
-      */
+     * Starts the Knora-API server.
+     */
     def appStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http()
-          .bindAndHandle(
-            Route.handlerFlow(apiRoutes),
-            settings.internalKnoraApiHost,
-            settings.internalKnoraApiPort
-        )
+            .bindAndHandle(
+                Route.handlerFlow(apiRoutes),
+                settings.internalKnoraApiHost,
+                settings.internalKnoraApiPort
+            )
 
         bindingFuture onComplete {
-            case Success(_) => {
-
+            case Success(_) =>
                 if (settings.prometheusEndpoint) {
                     // Load Kamon monitoring
                     Kamon.loadModules()
@@ -400,23 +402,24 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
                 // Kick of startup procedure.
                 self ! InitStartUp(skipLoadingOfOntologies, requiresSipi)
-            }
-            case Failure(ex) => {
+
+            case Failure(ex) =>
                 logger.error(
                     "Failed to bind to {}:{}! - {}",
                     settings.internalKnoraApiHost,
                     settings.internalKnoraApiPort,
                     ex.getMessage
                 )
+
                 appStop()
-            }
         }
     }
+
     // #start-api-server
 
     /**
-      * Stops Knora-API.
-      */
+     * Stops Knora-API.
+     */
     def appStop(): Unit = {
         logger.info("ApplicationActor - initiating shutdown ...")
         context.stop(self)
@@ -437,8 +440,8 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     }
 
     /**
-      * Prints the welcome message
-      */
+     * Prints the welcome message
+     */
     private def printBanner(): Unit = {
 
         var msg =

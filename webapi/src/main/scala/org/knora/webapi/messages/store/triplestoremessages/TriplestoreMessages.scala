@@ -31,7 +31,7 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle.TurtleParser
 import org.knora.webapi._
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.triplestoremessages.RepositoryStatus.RepositoryStatus
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{ErrorHandlingMap, SmartIri, StringFormatter}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
@@ -46,41 +46,41 @@ import scala.util.{Failure, Success, Try}
 sealed trait TriplestoreRequest extends StoreRequest
 
 /**
-  * Simple message for initial actor functionality.
-  */
+ * Simple message for initial actor functionality.
+ */
 case class HelloTriplestore(txt: String) extends TriplestoreRequest
 
 /**
-  * Simple message for checking the connection to the triplestore.
-  */
+ * Simple message for checking the connection to the triplestore.
+ */
 case class CheckConnection() extends TriplestoreRequest
 
 /**
-  * Simple message for acknowledging connection check
-  */
+ * Simple message for acknowledging connection check
+ */
 case class CheckConnectionACK()
 
 /**
-  * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
-  *
-  * @param sparql the SPARQL string.
-  */
+ * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
+ *
+ * @param sparql the SPARQL string.
+ */
 case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
-  * returned by the triplestore
-  *
-  * @param head    the header of the response, containing the variable names.
-  * @param results the body of the response, containing rows of query results.
-  */
+ * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
+ * returned by the triplestore
+ *
+ * @param head    the header of the response, containing the variable names.
+ * @param results the body of the response, containing rows of query results.
+ */
 case class SparqlSelectResponse(head: SparqlSelectResponseHeader, results: SparqlSelectResponseBody) {
 
     /**
-      * Returns the contents of the first row of results.
-      *
-      * @return a [[Map]] representing the contents of the first row of results.
-      */
+     * Returns the contents of the first row of results.
+     *
+     * @return a [[Map]] representing the contents of the first row of results.
+     */
     @throws[InconsistentTriplestoreDataException]("if the query returned no results.")
     def getFirstRow: VariableResultsRow = {
         if (results.bindings.isEmpty) {
@@ -92,29 +92,29 @@ case class SparqlSelectResponse(head: SparqlSelectResponseHeader, results: Sparq
 }
 
 /**
-  * Represents the header of a JSON response to a SPARQL SELECT query.
-  *
-  * @param vars the names of the variables that were used in the SPARQL SELECT statement.
-  */
+ * Represents the header of a JSON response to a SPARQL SELECT query.
+ *
+ * @param vars the names of the variables that were used in the SPARQL SELECT statement.
+ */
 case class SparqlSelectResponseHeader(vars: Seq[String])
 
 /**
-  * Represents the body of a JSON response to a SPARQL SELECT query.
-  *
-  * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
-  *                 Empty rows are not allowed.
-  */
+ * Represents the body of a JSON response to a SPARQL SELECT query.
+ *
+ * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
+ *                 Empty rows are not allowed.
+ */
 case class SparqlSelectResponseBody(bindings: Seq[VariableResultsRow]) {
     require(bindings.forall(_.rowMap.nonEmpty), "Empty rows are not allowed in a SparqlSelectResponseBody")
 }
 
 
 /**
-  * Represents a row of results in a JSON response to a SPARQL SELECT query.
-  *
-  * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
-  *               name or value.
-  */
+ * Represents a row of results in a JSON response to a SPARQL SELECT query.
+ *
+ * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
+ *               name or value.
+ */
 case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
     require(rowMap.forall {
         case (key, value) => key.nonEmpty && value.nonEmpty
@@ -122,73 +122,73 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
 }
 
 /**
-  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
-  * [[SparqlConstructResponse]].
-  *
-  * @param sparql the SPARQL string.
-  */
+ * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
+ * [[SparqlConstructResponse]].
+ *
+ * @param sparql the SPARQL string.
+ */
 case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
-  * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
-  *
-  * @param sparql     the SPARQL string.
-  * @param graphIri   the named graph IRI to be used in the TriG file.
-  * @param outputFile the file to be written.
-  */
+ * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
+ * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
+ *
+ * @param sparql     the SPARQL string.
+ * @param graphIri   the named graph IRI to be used in the TriG file.
+ * @param outputFile the file to be written.
+ */
 case class SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
-  * Indicates that a file was written successfully.
-  */
+ * Indicates that a file was written successfully.
+ */
 case class FileWrittenResponse()
 
 /**
-  * A response to a [[SparqlConstructRequest]].
-  *
-  * @param statements a map of subject IRIs to statements about each subject.
-  */
+ * A response to a [[SparqlConstructRequest]].
+ *
+ * @param statements a map of subject IRIs to statements about each subject.
+ */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
 
 /**
-  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
-  * [[SparqlExtendedConstructResponse]].
-  *
-  * @param sparql the SPARQL string.
-  */
+ * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
+ * [[SparqlExtendedConstructResponse]].
+ *
+ * @param sparql the SPARQL string.
+ */
 case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
-  */
+ * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
+ */
 object SparqlExtendedConstructResponse {
     /**
-      * A map of predicate IRIs to literal objects.
-      */
+     * A map of predicate IRIs to literal objects.
+     */
     type ConstructPredicateObjects = Map[SmartIri, Seq[LiteralV2]]
 
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
     /**
-      * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
-      */
+     * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
+     */
     class ConstructResponseTurtleHandler extends RDFHandler {
 
         implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         /**
-          * A collection of all the statements in the input file, grouped and sorted by subject IRI.
-          */
+         * A collection of all the statements in the input file, grouped and sorted by subject IRI.
+         */
         private val statements: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
 
         override def handleComment(comment: IRI): Unit = {}
 
         /**
-          * Adds a statement to the collection `statements`.
-          *
-          * @param st the statement to be added.
-          */
+         * Adds a statement to the collection `statements`.
+         *
+         * @param st the statement to be added.
+         */
         override def handleStatement(st: Statement): Unit = {
             val subject: SubjectV2 = st.getSubject match {
                 case iri: rdf4j.model.IRI => IriSubjectV2(iri.stringValue)
@@ -235,12 +235,12 @@ object SparqlExtendedConstructResponse {
     }
 
     /**
-      * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
-      *
-      * @param turtleStr the Turtle document.
-      * @param log       a [[LoggingAdapter]].
-      * @return a [[SparqlExtendedConstructResponse]] representing the document.
-      */
+     * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
+     *
+     * @param turtleStr the Turtle document.
+     * @param log       a [[LoggingAdapter]].
+     * @return a [[SparqlExtendedConstructResponse]] representing the document.
+     */
     def parseTurtleResponse(turtleStr: String, log: LoggingAdapter): Try[SparqlExtendedConstructResponse] = {
         val parseTry = Try {
             val turtleParser = new TurtleParser()
@@ -260,116 +260,128 @@ object SparqlExtendedConstructResponse {
 }
 
 /**
-  * A response to a [[SparqlExtendedConstructRequest]].
-  *
-  * @param statements a map of subjects to statements about each subject.
-  */
+ * A response to a [[SparqlExtendedConstructRequest]].
+ *
+ * @param statements a map of subjects to statements about each subject.
+ */
 case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects])
 
 /**
-  * Requests a named graph, which will be written to the specified file in Trig format. A successful response
-  * will be a [[FileWrittenResponse]].
-  *
-  * @param graphIri   the IRI of the named graph.
-  * @param outputFile the destination file.
-  */
+ * Requests a named graph, which will be written to the specified file in Trig format. A successful response
+ * will be a [[FileWrittenResponse]].
+ *
+ * @param graphIri   the IRI of the named graph.
+ * @param outputFile the destination file.
+ */
 case class GraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
-  * Represents a SPARQL Update operation to be performed.
-  *
-  * @param sparql the SPARQL string.
-  */
+ * Represents a SPARQL Update operation to be performed.
+ *
+ * @param sparql the SPARQL string.
+ */
 case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Indicates that the requested SPARQL Update was executed and returned no errors.
-  */
+ * Indicates that the requested SPARQL Update was executed and returned no errors.
+ */
 case class SparqlUpdateResponse()
 
 
 /**
-  * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
-  * [[SparqlAskResponse]].
-  *
-  * @param sparql the SPARQL string.
-  */
+ * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
+ * [[SparqlAskResponse]].
+ *
+ * @param sparql the SPARQL string.
+ */
 case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Represents a response to a SPARQL ASK query, containing the result.
-  *
-  * @param result of the query.
-  */
+ * Represents a response to a SPARQL ASK query, containing the result.
+ *
+ * @param result of the query.
+ */
 case class SparqlAskResponse(result: Boolean)
 
 /**
-  * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be
-  * stored in an accessible path and supplied via the [[RdfDataObject]].
-  *
-  * @param rdfDataObjects  contains a list of [[RdfDataObject]].
-  * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
-  */
+ * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be
+ * stored in an accessible path and supplied via the [[RdfDataObject]].
+ *
+ * @param rdfDataObjects  contains a list of [[RdfDataObject]].
+ * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
+ */
 case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true) extends TriplestoreRequest
 
 /**
-  * Sent as a response to [[ResetTriplestoreContent]] if the request was processed successfully.
-  */
+ * Sent as a response to [[ResetTriplestoreContent]] if the request was processed successfully.
+ */
 case class ResetTriplestoreContentACK()
 
 /**
-  * Message for removing all content from the triple store.
-  */
+ * Message for removing all content from the triple store.
+ */
 case class DropAllTriplestoreContent() extends TriplestoreRequest
 
 /**
-  * Sent as a response to [[DropAllTriplestoreContent]] if the request was processed successfully.
-  */
+ * Sent as a response to [[DropAllTriplestoreContent]] if the request was processed successfully.
+ */
 case class DropAllTriplestoreContentACK()
 
 /**
-  * Inserts data into the triplestore.
-  *
-  * @param rdfDataObjects contains a list of [[RdfDataObject]].
-  */
+ * Inserts data into the triplestore.
+ *
+ * @param rdfDataObjects contains a list of [[RdfDataObject]].
+ */
 case class InsertTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
 
 /**
-  * Sent as a response to [[InsertTriplestoreContent]] if the request was processed successfully.
-  */
+ * Sent as a response to [[InsertTriplestoreContent]] if the request was processed successfully.
+ */
 case class InsertTriplestoreContentACK()
 
 /**
-  * Initialize the triplestore. This will initiate the (re)creation of the repository and adding data to it.
-  *
-  * @param rdfDataObject contains a list of [[RdfDataObject]].
-  */
+ * Initialize the triplestore. This will initiate the (re)creation of the repository and adding data to it.
+ *
+ * @param rdfDataObject contains a list of [[RdfDataObject]].
+ */
 case class InitTriplestore(rdfDataObject: RdfDataObject) extends TriplestoreRequest
 
 /**
-  * Initialization ((re)creation of repository and loading of data) is finished successfully.
-  */
+ * Initialization ((re)creation of repository and loading of data) is finished successfully.
+ */
 case class InitTriplestoreACK()
 
 /**
-  * Ask triplestore if it the repository is ready
-  */
-case class CheckRepositoryRequest() extends TriplestoreRequest
+ * Ask triplestore if it is ready
+ */
+case class CheckTriplestoreRequest() extends TriplestoreRequest
 
 /**
-  * Response indicating whether the triplestore has finished initialization and is ready for processing messages
-  *
-  * @param repositoryStatus the state of the repository.
-  * @param msg              further description.
-  */
-case class CheckRepositoryResponse(repositoryStatus: RepositoryStatus, msg: String)
+ * Response indicating whether the triplestore has finished initialization and is ready for processing messages
+ *
+ * @param triplestoreStatus the state of the triplestore.
+ * @param msg               further description.
+ */
+case class CheckTriplestoreResponse(triplestoreStatus: TriplestoreStatus, msg: String)
 
 /**
-  * Updates the triplestore's full-text search index.
-  *
-  * @param subjectIri if a subject has changed, update the index for that subject. Otherwise, updates
-  *                   the index to add any subjects not yet indexed.
-  */
+ * Requests that the repository is updated to be compatible with the running version of Knora.
+ */
+case class UpdateRepositoryRequest() extends TriplestoreRequest
+
+/**
+ * Indicates whether the repository is up to date.
+ *
+ * @param message a message providing details of what was done.
+ */
+case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
+
+/**
+ * Updates the triplestore's full-text search index.
+ *
+ * @param subjectIri if a subject has changed, update the index for that subject. Otherwise, updates
+ *                   the index to add any subjects not yet indexed.
+ */
 case class SearchIndexUpdateRequest(subjectIri: Option[String] = None) extends TriplestoreRequest
 
 
@@ -377,55 +389,55 @@ case class SearchIndexUpdateRequest(subjectIri: Option[String] = None) extends T
 // Components of messages
 
 /**
-  * Repository status
-  * - ServiceUnavailable: GraphDB is not responding to HTTP requests.
-  * - NotInitialized: GraphDB is responding to HTTP requests but the repository defined in 'application.conf' is missing.
-  * - ServiceAvailable: Everything is OK.
-  */
-object RepositoryStatus extends Enumeration {
-    type RepositoryStatus = Value
+ * Triplestore status
+ * - ServiceUnavailable: Triplestore is not responding to HTTP requests.
+ * - NotInitialized: Triplestore is responding to HTTP requests but the repository defined in 'application.conf' is missing.
+ * - ServiceAvailable: Everything is OK.
+ */
+object TriplestoreStatus extends Enumeration {
+    type TriplestoreStatus = Value
     val ServiceUnavailable, NotInitialized, ServiceAvailable = Value
 }
 
 /**
-  * Contains the path to the 'ttl' file and the name of the named graph it should be loaded in.
-  *
-  * @param path to the 'ttl' file
-  * @param name of the named graph the data will be load into.
-  */
+ * Contains the path to the 'ttl' file and the name of the named graph it should be loaded in.
+ *
+ * @param path to the 'ttl' file
+ * @param name of the named graph the data will be load into.
+ */
 case class RdfDataObject(path: String, name: String)
 
 /**
-  * Represents the subject of a statement read from the triplestore.
-  */
+ * Represents the subject of a statement read from the triplestore.
+ */
 sealed trait SubjectV2
 
 /**
-  * Represents an IRI used as the subject of a statement.
-  */
+ * Represents an IRI used as the subject of a statement.
+ */
 case class IriSubjectV2(value: IRI) extends SubjectV2 {
     override def toString: IRI = value
 }
 
 /**
-  * Represents a blank node identifier used as the subject of a statement.
-  */
+ * Represents a blank node identifier used as the subject of a statement.
+ */
 case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
     override def toString: String = value
 }
 
 /**
-  * Represents a literal read from the triplestore. There are different subclasses
-  * representing literals with the extended type information stored in the triplestore.
-  */
+ * Represents a literal read from the triplestore. There are different subclasses
+ * representing literals with the extended type information stored in the triplestore.
+ */
 sealed trait LiteralV2 {
     /**
-      * Returns this [[LiteralV2]] as an [[IriLiteralV2]].
-      *
-      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-      *                 an [[IriLiteralV2]].
-      * @return an [[IriLiteralV2]].
-      */
+     * Returns this [[LiteralV2]] as an [[IriLiteralV2]].
+     *
+     * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+     *                 an [[IriLiteralV2]].
+     * @return an [[IriLiteralV2]].
+     */
     def asIriLiteral(errorFun: => Nothing): IriLiteralV2 = {
         this match {
             case iriLiteral: IriLiteralV2 => iriLiteral
@@ -434,12 +446,12 @@ sealed trait LiteralV2 {
     }
 
     /**
-      * Returns this [[LiteralV2]] as a [[StringLiteralV2]].
-      *
-      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-      *                 a [[StringLiteralV2]].
-      * @return a [[StringLiteralV2]].
-      */
+     * Returns this [[LiteralV2]] as a [[StringLiteralV2]].
+     *
+     * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+     *                 a [[StringLiteralV2]].
+     * @return a [[StringLiteralV2]].
+     */
     def asStringLiteral(errorFun: => Nothing): StringLiteralV2 = {
         this match {
             case stringLiteral: StringLiteralV2 => stringLiteral
@@ -448,12 +460,12 @@ sealed trait LiteralV2 {
     }
 
     /**
-      * Returns this [[LiteralV2]] as a [[BooleanLiteralV2]].
-      *
-      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-      *                 a [[BooleanLiteralV2]].
-      * @return a [[BooleanLiteralV2]].
-      */
+     * Returns this [[LiteralV2]] as a [[BooleanLiteralV2]].
+     *
+     * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+     *                 a [[BooleanLiteralV2]].
+     * @return a [[BooleanLiteralV2]].
+     */
     def asBooleanLiteral(errorFun: => Nothing): BooleanLiteralV2 = {
         this match {
             case booleanLiteral: BooleanLiteralV2 => booleanLiteral
@@ -462,12 +474,12 @@ sealed trait LiteralV2 {
     }
 
     /**
-      * Returns this [[LiteralV2]] as an [[IntLiteralV2]].
-      *
-      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-      *                 an [[IntLiteralV2]].
-      * @return an [[IntLiteralV2]].
-      */
+     * Returns this [[LiteralV2]] as an [[IntLiteralV2]].
+     *
+     * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+     *                 an [[IntLiteralV2]].
+     * @return an [[IntLiteralV2]].
+     */
     def asIntLiteral(errorFun: => Nothing): IntLiteralV2 = {
         this match {
             case intLiteral: IntLiteralV2 => intLiteral
@@ -476,12 +488,12 @@ sealed trait LiteralV2 {
     }
 
     /**
-      * Returns this [[LiteralV2]] as a [[DecimalLiteralV2]].
-      *
-      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-      *                 a [[DecimalLiteralV2]].
-      * @return a [[DecimalLiteralV2]].
-      */
+     * Returns this [[LiteralV2]] as a [[DecimalLiteralV2]].
+     *
+     * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+     *                 a [[DecimalLiteralV2]].
+     * @return a [[DecimalLiteralV2]].
+     */
     def asDecimalLiteral(errorFun: => Nothing): DecimalLiteralV2 = {
         this match {
             case decimalLiteral: DecimalLiteralV2 => decimalLiteral
@@ -491,12 +503,12 @@ sealed trait LiteralV2 {
 
 
     /**
-      * Returns this [[LiteralV2]] as a [[DateTimeLiteralV2]].
-      *
-      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-      *                 a [[DateTimeLiteralV2]].
-      * @return a [[DateTimeLiteralV2]].
-      */
+     * Returns this [[LiteralV2]] as a [[DateTimeLiteralV2]].
+     *
+     * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+     *                 a [[DateTimeLiteralV2]].
+     * @return a [[DateTimeLiteralV2]].
+     */
     def asDateTimeLiteral(errorFun: => Nothing): DateTimeLiteralV2 = {
         this match {
             case dateTimeLiteral: DateTimeLiteralV2 => dateTimeLiteral
@@ -506,45 +518,45 @@ sealed trait LiteralV2 {
 }
 
 /**
-  * Represents a literal read from an ontology in the triplestore.
-  */
+ * Represents a literal read from an ontology in the triplestore.
+ */
 sealed trait OntologyLiteralV2
 
 /**
-  * Represents an IRI literal.
-  *
-  * @param value the IRI.
-  */
+ * Represents an IRI literal.
+ *
+ * @param value the IRI.
+ */
 case class IriLiteralV2(value: IRI) extends LiteralV2 {
     override def toString: IRI = value
 }
 
 /**
-  * Represents an IRI literal as a [[SmartIri]].
-  *
-  * @param value the IRI.
-  */
+ * Represents an IRI literal as a [[SmartIri]].
+ *
+ * @param value the IRI.
+ */
 case class SmartIriLiteralV2(value: SmartIri) extends OntologyLiteralV2 {
     override def toString: IRI = value.toString
 
-    def toOntologySchema(targetSchema: OntologySchema) = SmartIriLiteralV2(value.toOntologySchema(targetSchema))
+    def toOntologySchema(targetSchema: OntologySchema): SmartIriLiteralV2 = SmartIriLiteralV2(value.toOntologySchema(targetSchema))
 }
 
 /**
-  * Represents a blank node identifier.
-  *
-  * @param value the identifier of the blank node.
-  */
+ * Represents a blank node identifier.
+ *
+ * @param value the identifier of the blank node.
+ */
 case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
     override def toString: String = value
 }
 
 /**
-  * Represents a string with an optional language tag. Allows sorting inside collections by value.
-  *
-  * @param value    the string value.
-  * @param language the optional language tag.
-  */
+ * Represents a string with an optional language tag. Allows sorting inside collections by value.
+ *
+ * @param value    the string value.
+ * @param language the optional language tag.
+ */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
 
@@ -552,28 +564,28 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
 }
 
 /**
-  * Represents a sequence of [[StringLiteralV2]].
-  *
-  * @param stringLiterals a sequence of [[StringLiteralV2]].
-  */
+ * Represents a sequence of [[StringLiteralV2]].
+ *
+ * @param stringLiterals a sequence of [[StringLiteralV2]].
+ */
 case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
 
     /**
-      * Sort sequence of [[StringLiteralV2]] by their text value.
-      *
-      * @return a [[StringLiteralSequenceV2]] sorted by string value.
-      */
+     * Sort sequence of [[StringLiteralV2]] by their text value.
+     *
+     * @return a [[StringLiteralSequenceV2]] sorted by string value.
+     */
     def sortByStringValue: StringLiteralSequenceV2 = {
         StringLiteralSequenceV2(stringLiterals.sortBy(_.value))
     }
 
     /**
-      * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.
-      * If not available, returns the string value of the fallback language or any available language.
-      *
-      * @param preferredLang the preferred language.
-      * @param fallbackLang  language to use if preferred language is not available.
-      */
+     * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.
+     * If not available, returns the string value of the fallback language or any available language.
+     *
+     * @param preferredLang the preferred language.
+     * @param fallbackLang  language to use if preferred language is not available.
+     */
     def getPreferredLanguage(preferredLang: String, fallbackLang: String): Option[String] = {
 
         val stringLiteralMap: Map[Option[String], String] = stringLiterals.map {
@@ -617,37 +629,37 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
 }
 
 /**
-  * Represents a boolean value.
-  *
-  * @param value the boolean value.
-  */
+ * Represents a boolean value.
+ *
+ * @param value the boolean value.
+ */
 case class BooleanLiteralV2(value: Boolean) extends LiteralV2 with OntologyLiteralV2 {
     override def toString: String = value.toString
 }
 
 /**
-  * Represents an integer value.
-  *
-  * @param value the integer value.
-  */
+ * Represents an integer value.
+ *
+ * @param value the integer value.
+ */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
     override def toString: String = value.toString
 }
 
 /**
-  * Represents a decimal value.
-  *
-  * @param value the decimal value.
-  */
+ * Represents a decimal value.
+ *
+ * @param value the decimal value.
+ */
 case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
     override def toString: String = value.toString
 }
 
 /**
-  * Represents a timestamp.
-  *
-  * @param value the timestamp value.
-  */
+ * Represents a timestamp.
+ *
+ * @param value the timestamp value.
+ */
 case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
     override def toString: String = value.toString
 }
@@ -656,17 +668,17 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
 // JSON formatting
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
-  */
+ * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
+ */
 trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
     implicit object LiteralV2Format extends JsonFormat[StringLiteralV2] {
         /**
-          * Converts a [[StringLiteralV2]] to a [[JsValue]].
-          *
-          * @param string a [[StringLiteralV2]].
-          * @return a [[JsValue]].
-          */
+         * Converts a [[StringLiteralV2]] to a [[JsValue]].
+         *
+         * @param string a [[StringLiteralV2]].
+         * @return a [[JsValue]].
+         */
         def write(string: StringLiteralV2): JsValue = {
 
             if (string.language.isDefined) {
@@ -688,11 +700,11 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
 
         /**
-          * Converts a [[JsValue]] to a [[StringLiteralV2]].
-          *
-          * @param json a [[JsValue]].
-          * @return a [[StringLiteralV2]].
-          */
+         * Converts a [[JsValue]] to a [[StringLiteralV2]].
+         *
+         * @param json a [[JsValue]].
+         * @return a [[StringLiteralV2]].
+         */
         def read(json: JsValue): StringLiteralV2 = json match {
             case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
                 case Seq(JsString(value), JsString(language)) => StringLiteralV2(
