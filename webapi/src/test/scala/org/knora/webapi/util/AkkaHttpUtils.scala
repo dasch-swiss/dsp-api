@@ -26,7 +26,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
@@ -52,7 +52,7 @@ object AkkaHttpUtils extends LazyLogging {
         import DefaultJsonProtocol._
         import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
         val jsonFuture: Future[JsObject] = response match {
             case HttpResponse(StatusCodes.OK, _, entity, _) =>
@@ -73,7 +73,7 @@ object AkkaHttpUtils extends LazyLogging {
       */
     def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): Map[String, Any] = {
 
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
         val jsonStringFuture: Future[String] = Unmarshal(response.entity).to[String]
 

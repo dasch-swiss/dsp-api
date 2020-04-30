@@ -22,7 +22,7 @@ package org.knora.webapi.util
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi.ClientApiGenerationException
 
 import scala.concurrent.duration._
@@ -50,7 +50,7 @@ trait ClientApi {
      */
     def getTestData(testDataDirectoryPath: Seq[String])(implicit executionContext: ExecutionContext,
                                                         actorSystem: ActorSystem,
-                                                        materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
+                                                        materializer: Materializer): Future[Set[TestDataFileContent]] = {
         for {
             endpointTestData <- Future.sequence {
                 endpoints.map {
@@ -88,7 +88,7 @@ trait ClientEndpoint {
      */
     protected def doTestDataRequest(request: HttpRequest)(implicit executionContext: ExecutionContext,
                                                           actorSystem: ActorSystem,
-                                                          materializer: ActorMaterializer): Future[String] = {
+                                                          materializer: Materializer): Future[String] = {
         for {
             response <- Http().singleRequest(request)
             responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
@@ -106,7 +106,7 @@ trait ClientEndpoint {
      */
     def getTestData(implicit executionContext: ExecutionContext,
                     actorSystem: ActorSystem,
-                    materializer: ActorMaterializer): Future[Set[TestDataFileContent]]
+                    materializer: Materializer): Future[Set[TestDataFileContent]]
 }
 
 /**
