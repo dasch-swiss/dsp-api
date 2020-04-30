@@ -33,7 +33,7 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.scaladsl.{FileIO, Source}
-import akka.stream.{ActorMaterializer, IOResult}
+import akka.stream.{Materializer, IOResult}
 import akka.util.ByteString
 import io.swagger.annotations._
 import javax.ws.rs.Path
@@ -618,7 +618,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
         Future.sequence {
             Set(
                 getProjectsTestResponse,
