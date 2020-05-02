@@ -792,6 +792,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
                 // Workaround for NotEnoughMemoryForDistinctGroupBy intermittent GraphDB error
                 if (statusCode == 500 && responseEntityStr.contains("NotEnoughMemoryForDistinctGroupBy") && retryCnt < 5) {
+                    log.info(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr, retrying: $retryCnt")
                     getSparqlHttpResponse(sparql, isUpdate, acceptMimeType, retryCnt+1)
                 }
 
