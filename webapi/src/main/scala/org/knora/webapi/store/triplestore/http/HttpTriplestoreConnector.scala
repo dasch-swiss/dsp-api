@@ -790,9 +790,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
-                // Workaround for NotEnoughMemoryForDistinctGroupBy intermittent GraphDB error
+                // Workaround for NotEnoughMemoryForDistinctGroupBy intermittent GraphDB 500 error
                 if (statusCode == 500 && responseEntityStr.contains("NotEnoughMemoryForDistinctGroupBy") && retryCnt < 5) {
-                    log.info(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr, retrying: $retryCnt")
+                    log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr, retrying: $retryCnt")
                     getSparqlHttpResponse(sparql, isUpdate, acceptMimeType, retryCnt+1)
                 }
 
