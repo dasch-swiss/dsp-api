@@ -17,34 +17,35 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.upgrade.plugins
+package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.repository.sail.SailRepository
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
 
-class UpgradePluginPR1322Spec extends UpgradePluginSpec {
-    "Upgrade plugin PR1322" should {
-        "add UUIDs to values" in {
+class UpgradePluginPR1372Spec extends UpgradePluginSpec {
+    "Upgrade plugin PR1372" should {
+        "remove permissions from past versions of values" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("src/test/resources/test-data/pr1322.trig")
+            val model: Model = trigFileToModel("src/test/resources/test-data/pr1372.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpgradePluginPR1322
+            val plugin = new UpgradePluginPR1372
             plugin.transform(model)
 
             // Make an in-memory repository containing the transformed model.
             val repository: SailRepository = makeRepository(model)
             val connection = repository.getConnection
 
-            // Check that UUIDs were added.
+            // Check that permissions were removed.
 
             val query: String =
                 """
                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                   |
                   |SELECT ?value WHERE {
-                  |    ?value knora-base:valueHasUUID ?valueHasUUID .
+                  |    ?value knora-base:valueCreationDate ?creationDate ;
+                  |    knora-base:hasPermissions ?permissions .
                   |} ORDER BY ?value
                   |""".stripMargin
 
@@ -57,6 +58,9 @@ class UpgradePluginPR1322Spec extends UpgradePluginSpec {
                     ),
                     Map(
                         "value" -> "http://rdfh.ch/0001/thing-with-history/values/2c"
+                    ),
+                    Map(
+                        "value" -> "http://rdfh.ch/0001/thing-with-history/values/3b"
                     )
                 )
             )

@@ -70,7 +70,7 @@ class StoreManager extends Actor with ActorLogging {
       */
     protected lazy val redisManager: ActorRef = makeActor(Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RedisManagerActorName)
 
-    def receive = LoggingReceive {
+    def receive: Receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
         case iiifMessages: IIIFRequest => iiifManager forward iiifMessages
         case redisMessages: CacheServiceRequest => redisManager forward redisMessages

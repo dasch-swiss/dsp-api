@@ -277,7 +277,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val projectsResponderADMM: ProjectsResponderADM = makeDefaultProjectsResponderADM
+    protected val projectsResponderADM: ProjectsResponderADM = makeDefaultProjectsResponderADM
 
     /**
       * Constructs the default [[StoresResponderADM]].
@@ -340,7 +340,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case groupsResponderRequestADM: GroupsResponderRequestADM => future2Message(sender(), groupsResponderADM receive groupsResponderRequestADM, log)
         case listsResponderRequest: ListsResponderRequestADM => future2Message(sender(), listsResponderADM receive listsResponderRequest, log)
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => future2Message(sender(), permissionsResponderADM receive permissionsResponderRequestADM, log)
-        case projectsResponderRequestADM: ProjectsResponderRequestADM => future2Message(sender(), projectsResponderADMM receive projectsResponderRequestADM, log)
+        case projectsResponderRequestADM: ProjectsResponderRequestADM => future2Message(sender(), projectsResponderADM receive projectsResponderRequestADM, log)
         case storeResponderRequestADM: StoreResponderRequestADM => future2Message(sender(), storeResponderADM receive storeResponderRequestADM, log)
         case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersResponderADM receive usersResponderRequestADM, log)
         case sipiResponderRequestADM: SipiResponderRequestADM => future2Message(sender(), sipiRouterADM receive sipiResponderRequestADM, log)

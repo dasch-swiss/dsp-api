@@ -67,6 +67,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
     private val mimeTypeTextTurtle = "text/turtle"
     private val mimeTypeApplicationSparqlUpdate = "application/sparql-update"
+    private val mimeTypeApplicationTrig = "application/trig"
 
     private implicit val system: ActorSystem = context.system
     private val settings = Settings(system)
@@ -157,6 +158,18 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
+    private val repositoryDumpPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+        s"/repositories/${settings.triplestoreDatabaseName}/statements"
+    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+        if (settings.fusekiTomcat) {
+            s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}"
+        } else {
+            s"/${settings.triplestoreDatabaseName}"
+        }
+    } else {
+        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+    }
+
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
     /**
@@ -176,9 +189,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case DropAllTriplestoreContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) => try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg: String) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
-        case CheckTriplestoreRequest() => try2Message(sender(), checkRepository(), log)
+        case CheckTriplestoreRequest() => try2Message(sender(), checkTriplestore(), log)
         case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), updateLuceneIndex(subjectIri), log)
-        case UpdateRepositoryRequest() => try2Message(sender(), updateRepository(), log)
+        case DumpRepositoryRequest(outputFile: File) => try2Message(sender(), dumpRepository(outputFile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -527,11 +540,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Checks connection to the triplestore.
      */
-    private def checkRepository(): Try[CheckTriplestoreResponse] = {
+    private def checkTriplestore(): Try[CheckTriplestoreResponse] = {
         if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-            checkGraphDBRepository()
+            checkGraphDBTriplestore()
         } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-            checkFusekiRepository()
+            checkFusekiTriplestore()
         } else {
             throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
         }
@@ -540,7 +553,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Checks the connection to a Fuseki triplestore.
      */
-    private def checkFusekiRepository(): Try[CheckTriplestoreResponse] = {
+    private def checkFusekiTriplestore(): Try[CheckTriplestoreResponse] = {
         import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
 
         try {
@@ -594,7 +607,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Checks the connection to a GraphDB triplestore.
      */
-    private def checkGraphDBRepository(): Try[CheckTriplestoreResponse] = {
+    private def checkGraphDBTriplestore(): Try[CheckTriplestoreResponse] = {
         // needs to be a local import or other things don't work (spray json black magic)
         import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
 
@@ -652,15 +665,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 // println("checkRepository - exception", e)
                 Success(CheckTriplestoreResponse(triplestoreStatus = TriplestoreStatus.ServiceUnavailable, msg = s"Triplestore not available: ${e.getMessage}"))
         }
-    }
-
-    private def updateRepository(): Try[RepositoryUpdatedResponse] = {
-        // TODO
-        Success(
-            RepositoryUpdatedResponse(
-                message = s"Pretended to update the repository to ${org.knora.webapi.KnoraBaseVersion}"
-            )
-        )
     }
 
     /**
@@ -819,6 +823,74 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             case e: Exception =>
                 log.error(e, s"Failed to connect to triplestore, SPARQL query was:\n$sparql")
+                throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
+        }
+    }
+
+    /**
+     * Dumps the whole repository in TriG format, saving the response in a file.
+     *
+     * @return a string containing the contents of the graph in TriG format.
+     */
+    private def dumpRepository(outputFile: File): Try[FileWrittenResponse] = {
+        val authCache: AuthCache = new BasicAuthCache
+        val basicAuth: BasicScheme = new BasicScheme
+        authCache.put(targetHost, basicAuth)
+
+        val httpContext: HttpClientContext = HttpClientContext.create
+        httpContext.setCredentialsProvider(credsProvider)
+        httpContext.setAuthCache(authCache)
+
+        val uriBuilder: URIBuilder = new URIBuilder(repositoryDumpPath)
+
+        if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+            uriBuilder.setParameter("infer", "false")
+        } else {
+            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        }
+
+        val httpGet = new HttpGet(uriBuilder.build())
+        httpGet.addHeader("Accept", mimeTypeApplicationTrig)
+
+        val responseTry = Try {
+            val start = System.currentTimeMillis()
+
+            var maybeResponse: Option[CloseableHttpResponse] = None
+
+            try {
+                maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, httpContext))
+
+                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
+
+                if (statusCategory != 2) {
+                    log.error(s"Triplestore responded with HTTP code $statusCode to request to dump repository")
+                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+                }
+
+                val took = System.currentTimeMillis() - start
+                log.info(s"[$statusCode] GraphDB Query took: ${took}ms")
+
+                Option(maybeResponse.get.getEntity) match {
+                    case Some(responseEntity: HttpEntity) =>
+                        // Stream the HTTP entity to the output file.
+                        Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
+                        FileWrittenResponse()
+
+                    case None =>
+                        log.error(s"Triplestore returned no content for repository dump")
+                        throw TriplestoreResponseException(s"Triplestore returned no content")
+                }
+            } finally {
+                maybeResponse.foreach(_.close)
+            }
+        }
+
+        responseTry.recover {
+            case tre: TriplestoreResponseException => throw tre
+
+            case e: Exception =>
+                log.error(e, s"Failed to connect to triplestore to dump repository")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
     }

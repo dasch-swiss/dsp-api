@@ -26,7 +26,8 @@ import org.eclipse.rdf4j.model.util.Models
 import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
-import org.knora.upgrade.plugins._
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import org.knora.webapi.store.triplestore.upgrade.plugins.{NoopPlugin, UpgradePluginPR1307, UpgradePluginPR1322, UpgradePluginPR1367, UpgradePluginPR1372}
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants}

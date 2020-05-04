@@ -17,18 +17,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.upgrade
+package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.Model
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
-  * A trait for plugins that update a repository.
+  * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
   */
-trait UpgradePlugin {
-    /**
-      * Transforms a repository.
-      *
-      * @param model a [[Model]] containing the repository data.
-      */
-    def transform(model: Model): Unit
+class NoopPlugin extends UpgradePlugin {
+    override def transform(model: Model): Unit = {}
 }

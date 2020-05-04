@@ -370,6 +370,11 @@ case class CheckTriplestoreResponse(triplestoreStatus: TriplestoreStatus, msg: S
 case class UpdateRepositoryRequest() extends TriplestoreRequest
 
 /**
+ * Requests that the repository is dumped to a TriG file.
+ */
+case class DumpRepositoryRequest(outputFile: File) extends TriplestoreRequest
+
+/**
  * Indicates whether the repository is up to date.
  *
  * @param message a message providing details of what was done.

@@ -17,11 +17,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.upgrade.plugins
+package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{IRI, Literal, Model, Statement}
-import org.knora.upgrade.UpgradePlugin
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 import scala.collection.JavaConverters._
 
