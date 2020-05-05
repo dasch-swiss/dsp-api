@@ -193,7 +193,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case HelloTriplestore(msg: String) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
         case CheckTriplestoreRequest() => try2Message(sender(), checkTriplestore(), log)
         case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), updateLuceneIndex(subjectIri), log)
-        case DownloadRepositoryRequest(outputFile: File) => try2Message(sender(), dumpRepository(outputFile), log)
+        case DownloadRepositoryRequest(outputFile: File) => try2Message(sender(), downloadRepository(outputFile), log)
         case UploadRepositoryRequest(inputFile: File) => try2Message(sender(), uploadRepository(inputFile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
@@ -835,7 +835,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      *
      * @return a string containing the contents of the graph in TriG format.
      */
-    private def dumpRepository(outputFile: File): Try[FileWrittenResponse] = {
+    private def downloadRepository(outputFile: File): Try[FileWrittenResponse] = {
         val authCache: AuthCache = new BasicAuthCache
         val basicAuth: BasicScheme = new BasicScheme
         authCache.put(targetHost, basicAuth)
