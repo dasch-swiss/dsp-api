@@ -13,7 +13,7 @@ import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.store.triplestore.upgrade.plugins._
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.knora.webapi.{InconsistentTriplestoreDataException, KnoraDispatchers, SettingsImpl}
 
@@ -23,9 +23,9 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Updates a Knora repository to work with the current version of Knora.
  *
- * @param system the Akka [[ActorSystem]].
+ * @param system        the Akka [[ActorSystem]].
  * @param storeActorRef a reference to the store actor.
- * @param settings the Knora application settings.
+ * @param settings      the Knora application settings.
  */
 class RepositoryUpdater(system: ActorSystem,
                         storeActorRef: ActorRef, // TODO: is this the best way to get this?
@@ -59,72 +59,6 @@ class RepositoryUpdater(system: ActorSystem,
     private val log: Logger = logger
 
     /**
-     * A list of all plugins in chronological order.
-     */
-    private val pluginsForVersions: Seq[PluginForKnoraBaseVersion] = Seq(
-        PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpgradePluginPR1307, prBasedVersionString = Some("PR 1307")),
-        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322, prBasedVersionString = Some("PR 1322")),
-        PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367, prBasedVersionString = Some("PR 1367")),
-        PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372, prBasedVersionString = Some("PR 1372")),
-        PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
-        PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin), // PR 1206
-        PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin), // PR 1403
-        PluginForKnoraBaseVersion(versionNumber = 8, plugin = new NoopPlugin) // PR 1615
-    )
-
-    /**
-     * The built-in named graphs that are always updated when there is a new version of knora-base.
-     */
-    private val builtInNamedGraphs: Set[BuiltInNamedGraph] = Set(
-        BuiltInNamedGraph(
-            filename = "knora-ontologies/knora-admin.ttl",
-            iri = "http://www.knora.org/ontology/knora-admin"
-        ),
-        BuiltInNamedGraph(
-            filename = "knora-ontologies/knora-base.ttl",
-            iri = "http://www.knora.org/ontology/knora-base"
-        ),
-        BuiltInNamedGraph(
-            filename = "knora-ontologies/salsah-gui.ttl",
-            iri = "http://www.knora.org/ontology/salsah-gui"
-        ),
-        BuiltInNamedGraph(
-            filename = "knora-ontologies/standoff-onto.ttl",
-            iri = "http://www.knora.org/ontology/standoff"
-        ),
-        BuiltInNamedGraph(
-            filename = "knora-ontologies/standoff-data.ttl",
-            iri = "http://www.knora.org/data/standoff"
-        )
-    )
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Represents an update plugin with its knora-base version number and version string.
-     *
-     * @param versionNumber        the knora-base version number that the plugin's transformation produces.
-     * @param plugin               the plugin.
-     * @param prBasedVersionString the plugin's PR-based version string (not used for new plugins).
-     */
-    private case class PluginForKnoraBaseVersion(versionNumber: Int, plugin: UpgradePlugin, prBasedVersionString: Option[String] = None) {
-        lazy val versionString: String = {
-            prBasedVersionString match {
-                case Some(str) => str
-                case None => s"knora-base v$versionNumber"
-            }
-        }
-    }
-
-    /**
-     * Represents a Knora built-in named graph.
-     *
-     * @param filename the filename containing the named graph.
-     * @param iri      the IRI of the named graph.
-     */
-    private case class BuiltInNamedGraph(filename: String, iri: String)
-
-    /**
      * Constructs RDF4J values.
      */
     private val valueFactory: SimpleValueFactory = SimpleValueFactory.getInstance
@@ -132,7 +66,7 @@ class RepositoryUpdater(system: ActorSystem,
     /**
      * A map of version strings to plugins.
      */
-    private val pluginsForVersionsMap: Map[String, PluginForKnoraBaseVersion] = pluginsForVersions.map {
+    private val pluginsForVersionsMap: Map[String, PluginForKnoraBaseVersion] = RepositoryUpdatePlan.pluginsForVersions.map {
         knoraBaseVersion => knoraBaseVersion.versionString -> knoraBaseVersion
     }.toMap
 
@@ -194,11 +128,11 @@ class RepositoryUpdater(system: ActorSystem,
                     throw InconsistentTriplestoreDataException(s"No such repository version $repositoryVersion")
                 )
 
-                pluginsForVersions.filter(_.versionNumber > pluginForRepositoryVersion.versionNumber)
+                RepositoryUpdatePlan.pluginsForVersions.filter(_.versionNumber > pluginForRepositoryVersion.versionNumber)
 
             case None =>
                 // The repository has no version string. Include all updates.
-                pluginsForVersions
+                RepositoryUpdatePlan.pluginsForVersions
         }
     }
 
@@ -258,9 +192,9 @@ class RepositoryUpdater(system: ActorSystem,
     /**
      * Transforms a file containing a downloaded repository.
      *
-     * @param downloadedRepositoryFile the downloaded repository.
+     * @param downloadedRepositoryFile  the downloaded repository.
      * @param transformedRepositoryFile the transformed file.
-     * @param pluginsForNeededUpdates the plugins needed to update the repository.
+     * @param pluginsForNeededUpdates   the plugins needed to update the repository.
      */
     private def doTransformations(downloadedRepositoryFile: File,
                                   transformedRepositoryFile: File,
@@ -295,7 +229,7 @@ class RepositoryUpdater(system: ActorSystem,
      * @param model the [[Model]].
      */
     private def addBuiltInNamedGraphsToModel(model: Model): Unit = {
-        for (builtInNamedGraph <- builtInNamedGraphs) {
+        for (builtInNamedGraph <- RepositoryUpdatePlan.builtInNamedGraphs) {
             val context = valueFactory.createIRI(builtInNamedGraph.iri)
             model.remove(null, null, null, context)
 
