@@ -219,8 +219,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         "receiving a 'ResetTriplestoreContent' request " should {
             "reset the data " in {
                 //println("==>> Reset test case start")
-                storeManager ! ResetTriplestoreContent(rdfDataObjects)
-                expectMsg(5 minutes, ResetTriplestoreContentACK())
+                storeManager ! ResetRepositoryContent(rdfDataObjects)
+                expectMsg(5 minutes, ResetRepositoryContentACK())
                 //println("==>> Reset test case end")
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)

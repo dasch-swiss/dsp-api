@@ -140,11 +140,6 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 case class SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
- * Indicates that a file was written successfully.
- */
-case class FileWrittenResponse()
-
-/**
  * A response to a [[SparqlConstructRequest]].
  *
  * @param statements a map of subject IRIs to statements about each subject.
@@ -304,52 +299,52 @@ case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
 case class SparqlAskResponse(result: Boolean)
 
 /**
- * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be
+ * Message for resetting the contents of the repository and loading a fresh set of data. The data needs to be
  * stored in an accessible path and supplied via the [[RdfDataObject]].
  *
  * @param rdfDataObjects  contains a list of [[RdfDataObject]].
  * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
  */
-case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true) extends TriplestoreRequest
+case class ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true) extends TriplestoreRequest
 
 /**
- * Sent as a response to [[ResetTriplestoreContent]] if the request was processed successfully.
+ * Sent as a response to [[ResetRepositoryContent]] if the request was processed successfully.
  */
-case class ResetTriplestoreContentACK()
+case class ResetRepositoryContentACK()
 
 /**
- * Message for removing all content from the triple store.
+ * Message for removing all content from the repository.
  */
-case class DropAllTriplestoreContent() extends TriplestoreRequest
+case class DropAllTRepositoryContent() extends TriplestoreRequest
 
 /**
- * Sent as a response to [[DropAllTriplestoreContent]] if the request was processed successfully.
+ * Sent as a response to [[DropAllTRepositoryContent]] if the request was processed successfully.
  */
-case class DropAllTriplestoreContentACK()
+case class DropAllRepositoryContentACK()
 
 /**
- * Inserts data into the triplestore.
+ * Inserts data into the repository.
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].
  */
-case class InsertTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
+case class InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
 
 /**
- * Sent as a response to [[InsertTriplestoreContent]] if the request was processed successfully.
+ * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.
  */
 case class InsertTriplestoreContentACK()
 
 /**
- * Initialize the triplestore. This will initiate the (re)creation of the repository and adding data to it.
+ * Initialize the repository. This will initiate the (re)creation of the repository and adding data to it.
  *
  * @param rdfDataObject contains a list of [[RdfDataObject]].
  */
-case class InitTriplestore(rdfDataObject: RdfDataObject) extends TriplestoreRequest
+case class InitRepository(rdfDataObject: RdfDataObject) extends TriplestoreRequest
 
 /**
  * Initialization ((re)creation of repository and loading of data) is finished successfully.
  */
-case class InitTriplestoreACK()
+case class InitRepositoryACK()
 
 /**
  * Ask triplestore if it is ready
@@ -370,9 +365,27 @@ case class CheckTriplestoreResponse(triplestoreStatus: TriplestoreStatus, msg: S
 case class UpdateRepositoryRequest() extends TriplestoreRequest
 
 /**
- * Requests that the repository is dumped to a TriG file.
+ * Requests that the repository is downloaded to a TriG file. A successful response will be a [[FileWrittenResponse]].
  */
-case class DumpRepositoryRequest(outputFile: File) extends TriplestoreRequest
+case class DownloadRepositoryRequest(outputFile: File) extends TriplestoreRequest
+
+/**
+ * Indicates that a file was written successfully.
+ */
+case class FileWrittenResponse()
+
+/**
+ * Requests that repository content is uploaded from a TriG file. A successful response will be a
+ * [[RepositoryUploadedResponse]].
+ *
+ * @param inputFile a TriG file containing the content to be uploaded to the repository.
+ */
+case class UploadRepositoryRequest(inputFile: File) extends TriplestoreRequest
+
+/**
+ * Indicates that repository content was successfully uploaded.
+ */
+case class RepositoryUploadedResponse()
 
 /**
  * Indicates whether the repository is up to date.
@@ -728,6 +741,6 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     }
 
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
-    implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat2(ResetTriplestoreContent)
+    implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetRepositoryContent] = jsonFormat2(ResetRepositoryContent)
 
 }

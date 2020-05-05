@@ -29,7 +29,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.util.{StartupUtils, StringFormatter}
@@ -111,7 +111,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         logger.info("Loading test data started ...")
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 479999.milliseconds)
+        Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
         Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
         logger.info("Loading test data done.")

@@ -226,37 +226,48 @@ class RepositoryUpdater(system: ActorSystem,
         }
 
         // The file to save the repository in.
-        val dumpFile = new File(downloadDir, "dump.trig")
-        val transformedFile = new File(downloadDir, "transformed.trig")
+        val downloadedRepositoryFile = new File(downloadDir, "downloaded-repository.trig")
+        val transformedRepositoryFile = new File(downloadDir, "transformed-repository.trig")
         log.info("Downloading repository file...")
 
         for {
-            // Ask the store actor to dump the repository to the file.
-            _: FileWrittenResponse <- (storeActorRef ? DumpRepositoryRequest(dumpFile)).mapTo[FileWrittenResponse]
+            // Ask the store actor to download the repository to the file.
+            _: FileWrittenResponse <- (storeActorRef ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
 
+            // Run the transformations to produce an output file.
             _ = doTransformations(
-                inputFile = dumpFile,
-                outputFile = transformedFile,
+                downloadedRepositoryFile = downloadedRepositoryFile,
+                transformedRepositoryFile = transformedRepositoryFile,
                 pluginsForNeededUpdates = pluginsForNeededUpdates
             )
 
-            // TODO: empty the repository and upload the transformed file.
+            _ = log.info("Emptying the repository...")
+
+            // Empty the repository.
+            _: DropAllRepositoryContentACK <- (storeActorRef ? DropAllTRepositoryContent()).mapTo[DropAllRepositoryContentACK]
+
+            _ = log.info("Uploading transformed repository data...")
+
+            // Upload the transformed repository.
+            _: RepositoryUploadedResponse <- (storeActorRef ? UploadRepositoryRequest(transformedRepositoryFile)).mapTo[RepositoryUploadedResponse]
         } yield RepositoryUpdatedResponse(
             message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
         )
     }
 
     /**
-     * Transforms a file containing a repository dump.
+     * Transforms a file containing a downloaded repository.
      *
-     * @param inputFile the repository dump.
-     * @param outputFile the transformed file.
+     * @param downloadedRepositoryFile the downloaded repository.
+     * @param transformedRepositoryFile the transformed file.
      * @param pluginsForNeededUpdates the plugins needed to update the repository.
      */
-    private def doTransformations(inputFile: File, outputFile: File, pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Unit = {
+    private def doTransformations(downloadedRepositoryFile: File,
+                                  transformedRepositoryFile: File,
+                                  pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Unit = {
         // Parse the input file.
         log.info("Reading repository file...")
-        val model = readFileIntoModel(inputFile, RDFFormat.TRIG)
+        val model = readFileIntoModel(downloadedRepositoryFile, RDFFormat.TRIG)
         log.info(s"Read ${model.size} statements.")
 
         // Run the update plugins.
@@ -266,9 +277,24 @@ class RepositoryUpdater(system: ActorSystem,
         }
 
         // Update the built-in named graphs.
-
         log.info("Updating built-in named graphs...")
+        addBuiltInNamedGraphsToModel(model)
 
+        // Write the output file.
+        log.info(s"Writing output file (${model.size} statements)...")
+        val fileWriter = new FileWriter(transformedRepositoryFile)
+        val bufferedWriter = new BufferedWriter(fileWriter)
+        Rio.write(model, fileWriter, RDFFormat.TRIG)
+        bufferedWriter.close()
+        fileWriter.close()
+    }
+
+    /**
+     * Adds Knora's built-in named graphs to a [[Model]].
+     *
+     * @param model the [[Model]].
+     */
+    private def addBuiltInNamedGraphsToModel(model: Model): Unit = {
         for (builtInNamedGraph <- builtInNamedGraphs) {
             val context = valueFactory.createIRI(builtInNamedGraph.iri)
             model.remove(null, null, null, context)
@@ -294,14 +320,6 @@ class RepositoryUpdater(system: ActorSystem,
 
             model.addAll(namedGraphModel)
         }
-
-        // Write the output file.
-        log.info(s"Writing output file (${model.size} statements)...")
-        val fileWriter = new FileWriter(outputFile)
-        val bufferedWriter = new BufferedWriter(fileWriter)
-        Rio.write(model, fileWriter, RDFFormat.TRIG)
-        bufferedWriter.close()
-        fileWriter.close()
     }
 
     /**

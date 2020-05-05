@@ -34,7 +34,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.entity.{ContentType, StringEntity}
+import org.apache.http.entity.{ContentType, FileEntity, StringEntity}
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
@@ -122,7 +122,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
-    private val updatePath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+    private val sparqlUpdatePath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
         s"/repositories/${settings.triplestoreDatabaseName}/statements"
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki && settings.fusekiTomcat) {
         if (settings.fusekiTomcat) {
@@ -158,7 +158,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
-    private val repositoryDumpPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+    private val repositoryDownloadPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
         s"/repositories/${settings.triplestoreDatabaseName}/statements"
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         if (settings.fusekiTomcat) {
@@ -169,6 +169,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else {
         throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
+
+    private val repositoryUploadPath = repositoryDownloadPath
 
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
@@ -185,13 +187,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case GraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
         case SparqlUpdateRequest(sparql: String) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql: String) => try2Message(sender(), sparqlHttpAsk(sparql), log)
-        case ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
-        case DropAllTriplestoreContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
-        case InsertTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) => try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
+        case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
+        case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
+        case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) => try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg: String) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
         case CheckTriplestoreRequest() => try2Message(sender(), checkTriplestore(), log)
         case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), updateLuceneIndex(subjectIri), log)
-        case DumpRepositoryRequest(outputFile: File) => try2Message(sender(), dumpRepository(outputFile), log)
+        case DownloadRepositoryRequest(outputFile: File) => try2Message(sender(), dumpRepository(outputFile), log)
+        case UploadRepositoryRequest(inputFile: File) => try2Message(sender(), uploadRepository(inputFile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -454,7 +457,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         } yield SparqlAskResponse(result)
     }
 
-    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[ResetTriplestoreContentACK] = {
+    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[ResetRepositoryContentACK] = {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
@@ -465,13 +468,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
 
             // any errors throwing exceptions until now are already covered so we can ACK the request
-            result = ResetTriplestoreContentACK()
+            result = ResetRepositoryContentACK()
         } yield result
 
         resetTriplestoreResult
     }
 
-    private def dropAllTriplestoreContent(): Try[DropAllTriplestoreContentACK] = {
+    private def dropAllTriplestoreContent(): Try[DropAllRepositoryContentACK] = {
 
         log.debug("==>> Drop All Data Start")
 
@@ -480,10 +483,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 DROP ALL
             """
 
-        val response: Try[DropAllTriplestoreContentACK] = for {
+        val response: Try[DropAllRepositoryContentACK] = for {
             result: String <- getSparqlHttpResponse(dropAllSparqlString, isUpdate = true)
             _ = log.debug(s"==>> Drop All Data End, Result: $result")
-        } yield DropAllTriplestoreContentACK()
+        } yield DropAllRepositoryContentACK()
 
         response.recover {
             case t: Exception => throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
@@ -766,7 +769,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
             val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
-            val updateHttpPost = new HttpPost(updatePath)
+            val updateHttpPost = new HttpPost(sparqlUpdatePath)
             updateHttpPost.setEntity(requestEntity)
             (updateHttpClient, updateHttpPost)
         } else {
@@ -841,7 +844,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         httpContext.setCredentialsProvider(credsProvider)
         httpContext.setAuthCache(authCache)
 
-        val uriBuilder: URIBuilder = new URIBuilder(repositoryDumpPath)
+        val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
 
         if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
             uriBuilder.setParameter("infer", "false")
@@ -891,6 +894,61 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             case e: Exception =>
                 log.error(e, s"Failed to connect to triplestore to dump repository")
+                throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
+        }
+    }
+
+    /**
+     * Uploads repository content from a TriG file.
+     *
+     * @param inputFile a TriG file containing the content to be uploaded to the repository.
+     */
+    private def uploadRepository(inputFile: File): Try[RepositoryUploadedResponse] = {
+        val authCache: AuthCache = new BasicAuthCache
+        val basicAuth: BasicScheme = new BasicScheme
+        authCache.put(targetHost, basicAuth)
+
+        val httpContext: HttpClientContext = HttpClientContext.create
+        httpContext.setCredentialsProvider(credsProvider)
+        httpContext.setAuthCache(authCache)
+
+        val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
+        val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeApplicationTrig, "UTF-8"))
+        httpPost.setEntity(fileEntity)
+
+        val triplestoreResponseTry = Try {
+            val start = System.currentTimeMillis()
+            var maybeResponse: Option[CloseableHttpResponse] = None
+
+            try {
+                maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
+
+                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                    case None => ""
+                }
+
+                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
+
+                if (statusCategory != 2) {
+                    log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+                }
+
+                val took = System.currentTimeMillis() - start
+                metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
+                RepositoryUploadedResponse()
+            } finally {
+                maybeResponse.foreach(_.close)
+            }
+        }
+
+        triplestoreResponseTry.recover {
+            case tre: TriplestoreResponseException => throw tre
+
+            case e: Exception =>
+                log.error(e, s"Failed to connect to triplestore")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
     }

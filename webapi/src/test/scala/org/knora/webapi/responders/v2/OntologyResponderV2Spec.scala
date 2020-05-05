@@ -69,8 +69,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     override lazy val rdfDataObjects: Seq[RdfDataObject] = List(exampleSharedOntology, anythingData)
 
     private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
-        storeManager ! ResetTriplestoreContent(rdfDataObjs)
-        expectMsg(5 minutes, ResetTriplestoreContentACK())
+        storeManager ! ResetRepositoryContent(rdfDataObjs)
+        expectMsg(5 minutes, ResetRepositoryContentACK())
 
         responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
 
