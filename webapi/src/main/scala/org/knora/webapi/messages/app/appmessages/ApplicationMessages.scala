@@ -7,7 +7,13 @@ sealed trait ApplicationRequest
 /**
   * Start Application
   */
-case class AppStart(skipLoadingOfOntologies: Boolean, requiresIIIFService: Boolean) extends ApplicationRequest
+case class AppStart(skipLoadingOfOntologies: Boolean, requiresIIIFService: Boolean, retryCnt: Int = 0) extends ApplicationRequest
+
+/**
+ * After a successful bind, the ApplicationActor will receive this message and
+ * change his behaviour to ready.
+ */
+case class AppReady() extends ApplicationRequest
 
 /**
   * Stop Application

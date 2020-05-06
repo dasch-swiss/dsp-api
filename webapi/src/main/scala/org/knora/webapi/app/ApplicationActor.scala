@@ -1,7 +1,7 @@
 package org.knora.webapi.app
 
 import akka.actor.SupervisorStrategy._
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
+import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Stash, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -72,7 +72,7 @@ trait LiveManagers extends Managers {
   * the startup and shutdown sequence. Further, it forwards any messages meant
   * for responders or the store to the respective actor.
   */
-class ApplicationActor extends Actor with LazyLogging with AroundDirectives with Timers {
+class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
     this: Managers =>
 
     private val log = akka.event.Logging(context.system, this.getClass)
@@ -140,11 +140,29 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     private var withIIIFService = true
     private val withCacheService = settings.cacheServiceEnabled
 
-    def receive: PartialFunction[Any, Unit] = {
 
+    /**
+     * Startup of the ApplicationActor is a two step process:
+     * 1. Step: Start the http server and bind to ip and port. This is done with
+     * the "initializing" behaviour
+     * - Success: After a successful bind, go to step 2.
+     * - Failure: If bind fails, then retry up to 5 times before exiting.
+     *
+     * 2. Step:
+     *
+     */
+    def receive: Receive = initializing()
+
+    def initializing(): Receive = {
         /* Called from main. Initiates application startup. */
-        case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
+        case AppStart(skipLoadingOfOntologies, requiresIIIFService, retryCnt) => appStart(skipLoadingOfOntologies, requiresIIIFService, retryCnt)
+        /* Only called from appStart if bind has failed */
+        case AppStop() => appStop()
+        case AppReady() => context.become(ready(), discardOld = true)
+        case _ => log.error("ApplicationActor not ready, unable to process requests")
+    }
 
+    def ready(): Receive = {
         /* Usually only called from tests */
         case AppStop() => appStop()
 
@@ -381,7 +399,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     /**
       * Starts the Knora-API server.
       */
-    def appStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean): Unit = {
+    def appStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean, retryCnt: Int): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http()
           .bindAndHandle(
@@ -393,6 +411,9 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         bindingFuture onComplete {
             case Success(_) => {
 
+                // Transition to ready state
+                self ! AppReady()
+
                 if (settings.prometheusEndpoint) {
                     // Load Kamon monitoring
                     Kamon.loadModules()
@@ -402,13 +423,25 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                 self ! InitStartUp(skipLoadingOfOntologies, requiresSipi)
             }
             case Failure(ex) => {
-                logger.error(
-                    "Failed to bind to {}:{}! - {}",
-                    settings.internalKnoraApiHost,
-                    settings.internalKnoraApiPort,
-                    ex.getMessage
-                )
-                appStop()
+                if (retryCnt < 5) {
+                    logger.error(
+                        "Failed to bind to {}:{}! - {} - retryCnt: {}",
+                        settings.internalKnoraApiHost,
+                        settings.internalKnoraApiPort,
+                        ex.getMessage,
+                        retryCnt
+                    )
+                    self ! AppStart(skipLoadingOfOntologies, requiresSipi, retryCnt+1)
+                } else {
+                    logger.error(
+                        "Failed to bind to {}:{}! - {}",
+                        settings.internalKnoraApiHost,
+                        settings.internalKnoraApiPort,
+                        ex.getMessage
+                    )
+                    self ! AppStop()
+                }
+
             }
         }
     }
