@@ -333,9 +333,10 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         case responderMessage: KnoraRequestADM => responderManager forward responderMessage
         case storeMessage: StoreRequest => storeManager forward storeMessage
 
+        case akka.actor.Status.Failure(ex: Exception) => throw ex
+
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
-
 
     /**
      * All routes composed together and CORS activated.

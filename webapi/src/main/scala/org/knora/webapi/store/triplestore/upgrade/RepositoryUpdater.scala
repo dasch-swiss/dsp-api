@@ -283,6 +283,7 @@ class RepositoryUpdater(system: ActorSystem,
      * @return a [[Model]] representing the contents of the file.
      */
     def readResourceIntoModel(filename: String, format: RDFFormat): Model = {
+        log.info(s"Trying to read file $filename")
         val fileContent: String = FileUtil.readTextResource(filename)
         val stringReader = new StringReader(fileContent)
         val model = new LinkedHashModel()
