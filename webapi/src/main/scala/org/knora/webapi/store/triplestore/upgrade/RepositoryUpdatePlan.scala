@@ -1,6 +1,6 @@
 package org.knora.webapi.store.triplestore.upgrade
 
-import org.knora.webapi.store.triplestore.upgrade.plugins.{NoopPlugin, UpgradePluginPR1307, UpgradePluginPR1322, UpgradePluginPR1367, UpgradePluginPR1372}
+import org.knora.webapi.store.triplestore.upgrade.plugins.{NoopPlugin, UpgradePluginPR1307, UpgradePluginPR1322, UpgradePluginPR1367, UpgradePluginPR1372, UpgradePluginPR1615}
 
 /**
  * The plan for updating a repository to work with the current version of Knora.
@@ -17,7 +17,7 @@ object RepositoryUpdatePlan {
         PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
         PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin), // PR 1206
         PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin), // PR 1403
-        PluginForKnoraBaseVersion(versionNumber = 8, plugin = new NoopPlugin) // PR 1615
+        PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615)
     )
 
     /**

@@ -26,8 +26,8 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import scala.collection.JavaConverters._
 
 /**
-  * Transforms a repository for Knora PR 1367.
-  */
+ * Transforms a repository for Knora PR 1367.
+ */
 class UpgradePluginPR1367 extends UpgradePlugin {
     private val valueFactory = SimpleValueFactory.getInstance
 

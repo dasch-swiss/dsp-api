@@ -27,13 +27,13 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import scala.collection.JavaConverters._
 
 /**
-  * Transforms a repository for Knora PR 1372.
-  */
+ * Transforms a repository for Knora PR 1372.
+ */
 class UpgradePluginPR1372 extends UpgradePlugin {
     private val valueFactory = SimpleValueFactory.getInstance
 
     // RDF4J IRI objects representing the IRIs used in this transformation.
-    private val ValueCreationDateIri : IRI= valueFactory.createIRI(OntologyConstants.KnoraBase.ValueCreationDate)
+    private val ValueCreationDateIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueCreationDate)
     private val PreviousValueIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.PreviousValue)
     private val HasPermissionsIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions)
 
@@ -49,8 +49,8 @@ class UpgradePluginPR1372 extends UpgradePlugin {
     }
 
     /**
-      * Collects the IRIs of all values that are past value versions.
-      */
+     * Collects the IRIs of all values that are past value versions.
+     */
     private def collectPastValueIris(model: Model): Set[IRI] = {
         model.filter(null, ValueCreationDateIri, null).subjects.asScala.toSet.filter {
             resource: Resource => model.filter(null, PreviousValueIri, resource).asScala.toSet.nonEmpty

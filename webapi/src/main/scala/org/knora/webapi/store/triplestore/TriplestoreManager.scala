@@ -62,7 +62,11 @@ class TriplestoreManager extends Actor with ActorLogging {
     log.debug(settings.triplestoreType)
 
     // A RepositoryUpdater for processing requests to update the repository.
-    private var repositoryUpdater: RepositoryUpdater = _
+    private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
+        system = context.system,
+        storeManager = context.parent,
+        settings = settings
+    )
 
     override def preStart() {
         log.debug("TriplestoreManagerActor: start with preStart")
@@ -72,12 +76,6 @@ class TriplestoreManager extends Actor with ActorLogging {
             case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }
-
-        repositoryUpdater = new RepositoryUpdater(
-            system = context.system,
-            storeActorRef = storeActorRef,
-            settings = settings
-        )
 
         log.debug("TriplestoreManagerActor: finished with preStart")
     }

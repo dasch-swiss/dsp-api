@@ -93,7 +93,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
         appActor ! SetAllowReloadOverHTTPState(true)
 
         // start the knora service without loading of the ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         // waits until knora is up and running
         applicationStateRunning()

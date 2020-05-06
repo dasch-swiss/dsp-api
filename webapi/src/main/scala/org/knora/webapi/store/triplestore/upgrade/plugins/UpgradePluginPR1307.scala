@@ -30,37 +30,37 @@ import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants
 import scala.collection.JavaConverters._
 
 /**
-  * Transforms a repository for Knora PR 1307.
-  */
+ * Transforms a repository for Knora PR 1307.
+ */
 class UpgradePluginPR1307 extends UpgradePlugin {
     private val valueFactory = SimpleValueFactory.getInstance
 
     // RDF4J IRI objects representing the IRIs used in this transformation.
     private val TextValueIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.TextValue)
     private val ValueHasStandoffIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasStandoff)
-    private val StandoffTagHasStartIndexIri : IRI= valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
+    private val StandoffTagHasStartIndexIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
     private val StandoffTagHasStartParentIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
     private val StandoffTagHasEndParentIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
     private val ValueHasMaxStandoffStartIndexIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
 
     /**
-      * Represents a standoff tag to be transformed.
-      *
-      * @param oldIri the tag's old IRI.
-      * @param statements the statements about the tag.
-      */
+     * Represents a standoff tag to be transformed.
+     *
+     * @param oldIri     the tag's old IRI.
+     * @param statements the statements about the tag.
+     */
     case class StandoffRdf(oldIri: IRI, statements: Model) {
         /**
-          * The value of knora-base:standoffTagHasStartIndex.
-          */
+         * The value of knora-base:standoffTagHasStartIndex.
+         */
         val startIndex: Int = Models.getPropertyLiteral(statements, oldIri, StandoffTagHasStartIndexIri).toOption match {
             case Some(index) => index.intValue
             case None => throw InconsistentTriplestoreDataException(s"$oldIri has no knora-base:standoffTagHasStartIndex")
         }
 
         /**
-          * The tag's new IRI.
-          */
+         * The tag's new IRI.
+         */
         lazy val newIri: IRI = {
             val oldSubjStr: String = oldIri.stringValue
             val slashPos: Int = oldSubjStr.lastIndexOf('/')
@@ -98,15 +98,15 @@ class UpgradePluginPR1307 extends UpgradePlugin {
     }
 
     /**
-      * Represents a `knora-base:TextValue` to be transformed.
-      *
-      * @param iri the text value's IRI.
-      * @param context the text value's context.
-      * @param valueHasStandoffStatements the statements whose subject is the text value and whose predicate is
-      *                                   `knora-base:valueHasStandoff`.
-      * @param standoff the standoff tags attached to this text value, as a map of old standoff tag IRIs to
-      *                 [[StandoffRdf]] objects.
-      */
+     * Represents a `knora-base:TextValue` to be transformed.
+     *
+     * @param iri                        the text value's IRI.
+     * @param context                    the text value's context.
+     * @param valueHasStandoffStatements the statements whose subject is the text value and whose predicate is
+     *                                   `knora-base:valueHasStandoff`.
+     * @param standoff                   the standoff tags attached to this text value, as a map of old standoff tag IRIs to
+     *                                   [[StandoffRdf]] objects.
+     */
     case class TextValueRdf(iri: IRI, context: IRI, valueHasStandoffStatements: Model, standoff: Map[IRI, StandoffRdf]) {
         def transform(model: Model): Unit = {
             // Transform the text value's standoff tags.
@@ -155,8 +155,8 @@ class UpgradePluginPR1307 extends UpgradePlugin {
     }
 
     /**
-      * Collects the text values and standoff tags in the repository.
-      */
+     * Collects the text values and standoff tags in the repository.
+     */
     private def collectTextValues(model: Model): Vector[TextValueRdf] = {
         // Pairs of text value IRI and text value context.
         val textValueSubjectsAndContexts: Vector[(IRI, IRI)] = model.filter(null, RDF.TYPE, TextValueIri).asScala.map {

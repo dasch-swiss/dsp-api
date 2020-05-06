@@ -79,7 +79,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         appActor ! SetAllowReloadOverHTTPState(true)
 
         // start knora without loading ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = true)
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
 
         // waits until knora is up and running
         applicationStateRunning()

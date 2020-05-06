@@ -23,12 +23,12 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Updates a Knora repository to work with the current version of Knora.
  *
- * @param system        the Akka [[ActorSystem]].
- * @param storeActorRef a reference to the store actor.
- * @param settings      the Knora application settings.
+ * @param system       the Akka [[ActorSystem]].
+ * @param storeManager a reference to the store manager.
+ * @param settings     the Knora application settings.
  */
 class RepositoryUpdater(system: ActorSystem,
-                        storeActorRef: ActorRef, // TODO: is this the best way to get this?
+                        storeManager: ActorRef,
                         settings: SettingsImpl) extends LazyLogging {
 
     private val knoraBaseVersionQuery =
@@ -101,7 +101,7 @@ class RepositoryUpdater(system: ActorSystem,
      */
     private def getRepositoryVersion: Future[Option[String]] = {
         for {
-            repositoryVersionResponse: SparqlSelectResponse <- (storeActorRef ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResponse]
+            repositoryVersionResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResponse]
 
             bindings = repositoryVersionResponse.results.bindings
 
@@ -166,7 +166,7 @@ class RepositoryUpdater(system: ActorSystem,
 
         for {
             // Ask the store actor to download the repository to the file.
-            _: FileWrittenResponse <- (storeActorRef ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
+            _: FileWrittenResponse <- (storeManager ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
 
             // Run the transformations to produce an output file.
             _ = doTransformations(
@@ -178,12 +178,12 @@ class RepositoryUpdater(system: ActorSystem,
             _ = log.info("Emptying the repository...")
 
             // Empty the repository.
-            _: DropAllRepositoryContentACK <- (storeActorRef ? DropAllTRepositoryContent()).mapTo[DropAllRepositoryContentACK]
+            _: DropAllRepositoryContentACK <- (storeManager ? DropAllTRepositoryContent()).mapTo[DropAllRepositoryContentACK]
 
             _ = log.info("Uploading transformed repository data...")
 
             // Upload the transformed repository.
-            _: RepositoryUploadedResponse <- (storeActorRef ? UploadRepositoryRequest(transformedRepositoryFile)).mapTo[RepositoryUploadedResponse]
+            _: RepositoryUploadedResponse <- (storeManager ? UploadRepositoryRequest(transformedRepositoryFile)).mapTo[RepositoryUploadedResponse]
         } yield RepositoryUpdatedResponse(
             message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
         )
@@ -283,7 +283,6 @@ class RepositoryUpdater(system: ActorSystem,
      * @return a [[Model]] representing the contents of the file.
      */
     def readResourceIntoModel(filename: String, format: RDFFormat): Model = {
-        log.info(s"Trying to read file $filename")
         val fileContent: String = FileUtil.readTextResource(filename)
         val stringReader = new StringReader(fileContent)
         val model = new LinkedHashModel()

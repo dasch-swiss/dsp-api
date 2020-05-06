@@ -23,8 +23,8 @@ import org.eclipse.rdf4j.model.Model
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
-  * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
-  */
+ * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
+ */
 class NoopPlugin extends UpgradePlugin {
     override def transform(model: Model): Unit = {}
 }

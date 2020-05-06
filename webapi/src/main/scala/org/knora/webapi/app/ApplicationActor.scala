@@ -136,24 +136,24 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     private var appState: AppState = AppState.Stopped
     private var allowReloadOverHTTPState = false
     private var printConfigState = false
-    private var skipOntologies = true
+    private var ignoreRepository = true
     private var withIIIFService = true
     private val withCacheService = settings.cacheServiceEnabled
 
     def receive: PartialFunction[Any, Unit] = {
 
         /* Called from main. Initiates application startup. */
-        case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
+        case appStartMsg: AppStart => appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService)
 
         case AppStop() => appStop()
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
-        case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) =>
+        case initStartUp: InitStartUp =>
             logger.info("Startup initiated, please wait ...")
 
             if (appState == AppState.Stopped) {
-                skipOntologies = skipLoadingOfOntologies
-                withIIIFService = requiresIIIFService
+                ignoreRepository = initStartUp.ignoreRepository
+                withIIIFService = initStartUp.requiresIIIFService
 
                 self ! SetAppState(AppState.StartingUp)
             }
@@ -179,7 +179,11 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                     self ! SetAppState(AppState.UpdatingRepository)
 
                 case AppState.UpdatingRepository =>
-                    self ! UpdateRepository()
+                    if (ignoreRepository) {
+                        self ! SetAppState(AppState.RepositoryUpToDate)
+                    } else {
+                        self ! UpdateRepository()
+                    }
 
                 case AppState.RepositoryUpToDate =>
                     self ! SetAppState(AppState.CreatingCaches)
@@ -191,38 +195,43 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                     self ! SetAppState(AppState.UpdatingSearchIndex)
 
                 case AppState.UpdatingSearchIndex =>
-                    self ! UpdateSearchIndex()
+                    if (ignoreRepository) {
+                        self ! SetAppState(AppState.SearchIndexReady)
+                    } else {
+                        self ! UpdateSearchIndex()
+                    }
 
                 case AppState.SearchIndexReady =>
                     self ! SetAppState(AppState.LoadingOntologies)
 
-                case AppState.LoadingOntologies if skipOntologies =>
-                    // skip loading of ontologies
-                    self ! SetAppState(AppState.OntologiesReady)
-
-                case AppState.LoadingOntologies if !skipOntologies =>
-                    // load ontologies
-                    self ! LoadOntologies()
+                case AppState.LoadingOntologies =>
+                    if (ignoreRepository) {
+                        self ! SetAppState(AppState.OntologiesReady)
+                    } else {
+                        self ! LoadOntologies()
+                    }
 
                 case AppState.OntologiesReady =>
                     self ! SetAppState(AppState.WaitingForIIIFService)
 
-                case AppState.WaitingForIIIFService if withIIIFService =>
-                    // check if sipi is running
-                    self ! CheckIIIFService
-
-                case AppState.WaitingForIIIFService if !withIIIFService =>
-                    // skip sipi check
-                    self ! SetAppState(AppState.IIIFServiceReady)
+                case AppState.WaitingForIIIFService =>
+                    if (withIIIFService) {
+                        // check if sipi is running
+                        self ! CheckIIIFService
+                    } else {
+                        // skip sipi check
+                        self ! SetAppState(AppState.IIIFServiceReady)
+                    }
 
                 case AppState.IIIFServiceReady =>
                     self ! SetAppState(AppState.WaitingForCacheService)
 
-                case AppState.WaitingForCacheService if withCacheService =>
-                    self ! CheckCacheService
-
-                case AppState.WaitingForCacheService if !withCacheService =>
-                    self ! SetAppState(AppState.CacheServiceReady)
+                case AppState.WaitingForCacheService =>
+                    if (withCacheService) {
+                        self ! CheckCacheService
+                    } else {
+                        self ! SetAppState(AppState.CacheServiceReady)
+                    }
 
                 case AppState.CacheServiceReady =>
                     self ! SetAppState(AppState.Running)
@@ -385,7 +394,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     /**
      * Starts the Knora-API server.
      */
-    def appStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean): Unit = {
+    def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http()
             .bindAndHandle(
@@ -402,7 +411,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                 }
 
                 // Kick of startup procedure.
-                self ! InitStartUp(skipLoadingOfOntologies, requiresSipi)
+                self ! InitStartUp(ignoreRepository, requiresIIIFService)
 
             case Failure(ex) =>
                 logger.error(
