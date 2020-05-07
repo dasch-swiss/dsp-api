@@ -109,6 +109,11 @@ sipi = {
     ---
     thumb_size = '!128,128',
 
+    ---
+    --- Size of the restricted view
+    ---
+    restrictedview_size = 'pct:1',
+
     --
     -- Path to the temporary directory
     --
