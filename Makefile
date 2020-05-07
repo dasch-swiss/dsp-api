@@ -94,10 +94,10 @@ publish-knora-assets-image: build-knora-assets-image ## publish knora-assets ima
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
 
 .PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-upgrade-image publish-knora-assets-image ## publish all Docker images
+publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
 
 #################################
 ## Docker-Compose targets
@@ -404,7 +404,6 @@ info: ## print out all variables
 	@echo "KNORA_GRAPHDB_FREE_IMAGE: \t $(KNORA_GRAPHDB_FREE_IMAGE)"
 	@echo "KNORA_SIPI_IMAGE: \t\t $(KNORA_SIPI_IMAGE)"
 	@echo "KNORA_ASSETS_IMAGE: \t\t $(KNORA_ASSETS_IMAGE)"
-	@echo "KNORA_UPGRADE_IMAGE: \t\t $(KNORA_UPGRADE_IMAGE)"
 	@echo "KNORA_SALSAH1_IMAGE: \t\t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"
 	@echo "KNORA_GDB_IMPORT: \t\t $(KNORA_GDB_IMPORT)"
