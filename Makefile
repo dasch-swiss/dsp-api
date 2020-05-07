@@ -24,7 +24,7 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	@sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
+	@sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
 
 ## knora-api
 .PHONY: build-knora-api-image
@@ -82,15 +82,6 @@ build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 do
 .PHONY: publish-knora-salsah1-image
 publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
 	docker push $(KNORA_SALSAH1_IMAGE)
-
-## knora-upgrade
-.PHONY: build-knora-upgrade-image
-build-knora-upgrade-image: build-all-scala ## build and publish knora-upgrade docker image locally
-	docker build -t $(KNORA_UPGRADE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_UPGRADE_REPO):latest -f docker/knora-upgrade.dockerfile  upgrade/target/universal
-
-.PHONY: publish-knora-upgrade-image
-publish-knora-upgrade-image: build-knora-upgrade-image ## publish knora-upgrade image to Dockerhub
-	docker push $(KNORA_UPGRADE_IMAGE)
 
 ## knora-assets
 .PHONY: build-knora-assets-image
