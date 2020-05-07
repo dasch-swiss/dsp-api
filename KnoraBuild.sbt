@@ -5,6 +5,7 @@ import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
 import sbt.Keys.version
 
+import scala.language.postfixOps
 import scala.sys.process.Process
 
 //////////////////////////////////////
@@ -226,6 +227,7 @@ lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
       )
   )
 
+
 //////////////////////////////////////
 // Knora's custom GraphDB-Free
 //////////////////////////////////////
@@ -264,6 +266,7 @@ lazy val knoraGraphdbFree: Project = knoraModule("knora-graphdb-free")
           Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
+
 
 //////////////////////////////////////
 // Knora's custom Sipi
@@ -343,94 +346,6 @@ lazy val knoraAssets: Project = knoraModule("knora-assets")
       )
   )
 
-//////////////////////////////////////
-// Knora upgrade scripts
-//////////////////////////////////////
-
-lazy val upgradeCommonSettings = Seq(
-    name := "upgrade"
-)
-
-lazy val upgrade: Project = knoraModule("upgrade")
-  .dependsOn(webapi)
-  .enablePlugins(JavaAppPackaging, DockerPlugin)
-  .settings(
-      upgradeCommonSettings,
-      Dependencies.upgradeLibraryDependencies,
-      // use jars (and not class directory) for run, test, console
-      exportJars := true,
-      unmanagedResourceDirectories in Compile += (rootBaseDir.value / "knora-ontologies"),
-
-      // add content of knora-ontologies to jar
-      mappings in (Compile, packageBin) ++= Seq (
-          (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
-      ),
-      // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
-      // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
-
-  )
-  .settings(
-      scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
-      logLevel := Level.Info,
-      run / fork := true,
-      run / javaOptions ++= upgradeJavaRunOptions,
-      Compile / run / mainClass := Some("org.knora.upgrade.Main"),
-      Test / fork := true,
-      Test / javaOptions ++= upgradeJavaTestOptions,
-      Test / parallelExecution := false,
-      /* show full stack traces and test case durations */
-      Test / testOptions += Tests.Argument("-oDF"),
-  )
-  .settings(
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-
-      Universal / mappings ++= {
-          // copy the different folders
-          directory("upgrade/graphdb-se")
-      },
-
-      // add dockerCommands used to create the image
-      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-      dockerRepository := Some("dhlabbasel"),
-      dockerUpdateLatest := true,
-      maintainer := "400790+subotic@users.noreply.github.com",
-      Docker / dockerCommands := Seq(
-          Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
-          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("RUN apk update && apk upgrade && apk add bash"),
-
-          Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
-          Cmd("COPY", "opt/docker", "/upgrade"),
-          Cmd("WORKDIR", "/upgrade"),
-          ExecCmd("ENTRYPOINT", "/upgrade/bin/upgrade"),
-      ),
-  )
-
-lazy val upgradeJavaRunOptions = Seq(
-    // "-showversion",
-    "-Xms1G",
-    "-Xmx1G"
-    // "-verbose:gc",
-    //"-XX:+UseG1GC",
-    //"-XX:MaxGCPauseMillis=500",
-    //"-XX:MaxMetaspaceSize=4096m"
-)
-
-lazy val upgradeJavaTestOptions = Seq(
-    // "-showversion",
-    "-Xms1G",
-    "-Xmx1G"
-    // "-verbose:gc",
-    //"-XX:+UseG1GC",
-    //"-XX:MaxGCPauseMillis=500",
-    //"-XX:MaxMetaspaceSize=4096m"
-)
 
 //////////////////////////////////////
 // SALSAH1 (./salsah1)
@@ -533,11 +448,10 @@ lazy val javaTestOptions = Seq(
 )
 
 
-lazy val HeadlessTest = config("headless") extend (Test)
+lazy val HeadlessTest = config("headless") extend Test
 lazy val javaHeadlessTestOptions = Seq(
     "-Dconfig.resource=headless-testing.conf"
 ) ++ javaTestOptions
-
 
 
 //////////////////////////////////////

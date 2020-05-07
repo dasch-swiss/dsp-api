@@ -57,7 +57,7 @@ trait LiveManagers extends Managers {
      * The actor that forwards messages to responder actors to handle API requests.
      */
     lazy val responderManager: ActorRef = context.actorOf(
-        Props(new ResponderManager(self, storeManager) with LiveActorMaker)
+        Props(new ResponderManager(appActor = self, storeManager = storeManager) with LiveActorMaker)
             .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
@@ -109,8 +109,12 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     /**
      * Route data.
      */
-    private val routeData = KnoraRouteData(system, self)
-
+    private val routeData = KnoraRouteData(
+        system = system,
+        appActor = self,
+        responderManager = responderManager,
+        storeManager = storeManager
+    )
 
     /**
      * This actor acts as the supervisor for its child actors.
@@ -337,6 +341,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             logger.warn("Redis-Server not running. Please start the Redis-Server.")
             timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
+        // To facilitate testing, forward messages to the responder manager and the store manager.
         case responderMessage: KnoraRequestV1 => responderManager forward responderMessage
         case responderMessage: KnoraRequestV2 => responderManager forward responderMessage
         case responderMessage: KnoraRequestADM => responderManager forward responderMessage

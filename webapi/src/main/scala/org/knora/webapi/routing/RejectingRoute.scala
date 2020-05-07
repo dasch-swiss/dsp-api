@@ -38,7 +38,7 @@ trait AppStateAccess {
 
     protected def getAppState(): Future[AppState] = for {
 
-        state <- (applicationStateActor ? GetAppState()).mapTo[AppState]
+        state <- (applicationActor ? GetAppState()).mapTo[AppState]
 
     } yield state
 

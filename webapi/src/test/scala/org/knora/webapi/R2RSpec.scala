@@ -48,7 +48,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     def actorRefFactory: ActorSystem = system
 
-    val settings = Settings(system)
+    val settings: SettingsImpl = Settings(system)
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings)
@@ -57,10 +57,16 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
+    // To facilitate testing, the main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
 
-    val routeData: KnoraRouteData = KnoraRouteData(system, appActor)
+    val routeData: KnoraRouteData = KnoraRouteData(
+        system = system,
+        appActor = appActor,
+        responderManager = responderManager,
+        storeManager = storeManager
+    )
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
