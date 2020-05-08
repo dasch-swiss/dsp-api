@@ -232,71 +232,69 @@ jobs:
           df -h
           docker system df
 
-#  upgrade-integration-tests:
-#    name: Upgrade Integration Tests
-#    needs: compile
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout source
-#        uses: actions/checkout@v1
-#        with:
-#          fetch-depth: 1
-#      - name: Checkout private ci-assets
-#        uses: actions/checkout@v2
-#        with:
-#          repository: dasch-swiss/dsp-ci-assets
-#          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
-#          path: ci
-#      - uses: actions/setup-java@v1
-#        with:
-#          java-version: '11.x.x'
-#      - name: cache maven artifacts
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.ivy2
-#          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-#          restore-keys: |
-#            ${{ runner.OS }}-build-${{ env.cache-name }}-
-#            ${{ runner.OS }}-build-
-#            ${{ runner.OS }}-
-#      - name: install requirements
-#        run: sudo apt-get install expect
-#      - name: Disk Free
-#        run: |
-#          df -h
-#          docker system df
-#          docker system prune --all --force --volumes
-#          df -h
-#      - name: build all docker images
-#        run: |
-#          make build-all-scala
-#          make build-all-images
-#      - name: start and initialize graphdb-se
-#        run: |
-#          docker network create knora-net
-#          docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
-#          sleep 5
-#          make init-db-test-minimal
-#      - name: unzip test data
-#        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
-#      - name: empty repository
-#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-#      - name: load v7.0.0 data
-#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
-#      - name: dump repository data
-#        run: |
-#          mkdir -p $GITHUB_WORKSPACE/upgrade/out
-#          $GITHUB_WORKSPACE/upgrade/graphdb-se/dump-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgrade/out/dump.trig
-#      - name: run upgrade from inside docker
-#        run: docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/out:/upgrade/out daschswiss/knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
-#      - name: empty repository
-#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-#      - name: load upgraded data
-#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgraded/out/dump-upgraded.trig
-#      - name: Disk Free After
-#        run: |
-#          df -h
-#          docker system df
+  upgrade-integration-tests:
+    name: Upgrade Integration Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Checkout private ci-assets
+        uses: actions/checkout@v2
+        with:
+          repository: dasch-swiss/dsp-ci-assets
+          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
+          path: ci
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11.x.x'
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: install requirements
+        run: sudo apt-get install expect
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: build all docker images
+        run: |
+          make build-all-scala
+          make build-all-images
+      - name: start and initialize graphdb-se
+        run: |
+          docker network create knora-net
+          docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
+          sleep 5
+          make init-db-test-minimal
+      - name: unzip test data
+        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
+      - name: empty repository
+        run: $GITHUB_WORKSPACE/webapi/scripts/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+      - name: load v7.0.0 data
+        run: $GITHUB_WORKSPACE/webapi/scripts/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+      - name: let Knora update repository
+        run: make stack-up
+      - name: check that repository update succeeded
+        run: |
+          make stack-up
+          sleep 200
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3333/health)
+          if [ $STATUS -ne 200 ]; then echo "Repository update failed"; exit 1; fi
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   docs-build-test:
     name: Docs Build Test
@@ -338,7 +336,7 @@ jobs:
       api-unit-tests,
       api-e2e-tests,
       api-integration-tests,
-      # upgrade-integration-tests,
+      upgrade-integration-tests,
       docs-build-test
     ]
     runs-on: ubuntu-latest
