@@ -138,7 +138,7 @@ function pre_flight(prefix, identifier, cookie)
 
         local restrictedViewSize = response_json.restrictedViewSettings.size
         if restrictedViewSize == nil then
-            restrictedViewSize = config.restrictedview_size
+            restrictedViewSize = config.thumb_size
         end
 
         return {
