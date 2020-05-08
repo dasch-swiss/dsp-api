@@ -158,8 +158,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         case AppStart(skipLoadingOfOntologies, requiresIIIFService, retryCnt) => appStart(skipLoadingOfOntologies, requiresIIIFService, retryCnt)
         /* Only called from appStart if bind has failed */
         case AppStop() => appStop()
-        case AppReady() => context.become(ready(), discardOld = true)
-        case _ => log.error("ApplicationActor not ready, unable to process requests")
+        case AppReady() =>
+            unstashAll() // unstash any messages, so that they can be processed
+            context.become(ready(), discardOld = true)
+        case _ =>
+            stash() // stash any messages which we cannot handle in this state
     }
 
     def ready(): Receive = {
