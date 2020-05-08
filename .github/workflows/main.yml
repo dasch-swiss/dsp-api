@@ -280,9 +280,9 @@ jobs:
       - name: unzip test data
         run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
       - name: empty repository
-        run: $GITHUB_WORKSPACE/webapi/scripts/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+        run: $GITHUB_WORKSPACE/webapi/scripts/graphdb-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
       - name: load v7.0.0 data
-        run: $GITHUB_WORKSPACE/webapi/scripts/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+        run: $GITHUB_WORKSPACE/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
       - name: let Knora update repository
         run: make stack-up
       - name: check that repository update succeeded
