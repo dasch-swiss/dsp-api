@@ -273,6 +273,8 @@ jobs:
           make build-all-images
       - name: start the stack without knora-api
         run: make stack-without-api
+      - name: initialise the test database
+        run: make init-db-test-minimal
       - name: unzip test data
         run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
       - name: empty the repository
