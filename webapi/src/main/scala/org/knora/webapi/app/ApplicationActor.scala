@@ -13,7 +13,6 @@ import org.knora.webapi._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
@@ -137,7 +136,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             case _: Exception => Escalate
         }
 
-    private var appState: AppState = AppState.Stopped
+    private var appState: AppState = AppStates.Stopped
     private var allowReloadOverHTTPState = false
     private var printConfigState = false
     private var ignoreRepository = true
@@ -155,11 +154,11 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         case initStartUp: InitStartUp =>
             logger.info("Startup initiated, please wait ...")
 
-            if (appState == AppState.Stopped) {
+            if (appState == AppStates.Stopped) {
                 ignoreRepository = initStartUp.ignoreRepository
                 withIIIFService = initStartUp.requiresIIIFService
 
-                self ! SetAppState(AppState.StartingUp)
+                self ! SetAppState(AppStates.StartingUp)
             }
 
         /* Each app state change goes through here */
@@ -170,80 +169,80 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             logger.debug("appStateChanged - to state: {}", value)
 
             value match {
-                case AppState.Stopped =>
+                case AppStates.Stopped =>
                 // do nothing
-                case AppState.StartingUp =>
-                    self ! SetAppState(AppState.WaitingForTriplestore)
+                case AppStates.StartingUp =>
+                    self ! SetAppState(AppStates.WaitingForTriplestore)
 
-                case AppState.WaitingForTriplestore =>
+                case AppStates.WaitingForTriplestore =>
                     // check DB
                     self ! CheckTriplestore()
 
-                case AppState.TriplestoreReady =>
-                    self ! SetAppState(AppState.UpdatingRepository)
+                case AppStates.TriplestoreReady =>
+                    self ! SetAppState(AppStates.UpdatingRepository)
 
-                case AppState.UpdatingRepository =>
+                case AppStates.UpdatingRepository =>
                     if (ignoreRepository) {
-                        self ! SetAppState(AppState.RepositoryUpToDate)
+                        self ! SetAppState(AppStates.RepositoryUpToDate)
                     } else {
                         self ! UpdateRepository()
                     }
 
-                case AppState.RepositoryUpToDate =>
-                    self ! SetAppState(AppState.CreatingCaches)
+                case AppStates.RepositoryUpToDate =>
+                    self ! SetAppState(AppStates.CreatingCaches)
 
-                case AppState.CreatingCaches =>
+                case AppStates.CreatingCaches =>
                     self ! CreateCaches()
 
-                case AppState.CachesReady =>
-                    self ! SetAppState(AppState.UpdatingSearchIndex)
+                case AppStates.CachesReady =>
+                    self ! SetAppState(AppStates.UpdatingSearchIndex)
 
-                case AppState.UpdatingSearchIndex =>
+                case AppStates.UpdatingSearchIndex =>
                     if (ignoreRepository) {
-                        self ! SetAppState(AppState.SearchIndexReady)
+                        self ! SetAppState(AppStates.SearchIndexReady)
                     } else {
                         self ! UpdateSearchIndex()
                     }
 
-                case AppState.SearchIndexReady =>
-                    self ! SetAppState(AppState.LoadingOntologies)
+                case AppStates.SearchIndexReady =>
+                    self ! SetAppState(AppStates.LoadingOntologies)
 
-                case AppState.LoadingOntologies =>
+                case AppStates.LoadingOntologies =>
                     if (ignoreRepository) {
-                        self ! SetAppState(AppState.OntologiesReady)
+                        self ! SetAppState(AppStates.OntologiesReady)
                     } else {
                         self ! LoadOntologies()
                     }
 
-                case AppState.OntologiesReady =>
-                    self ! SetAppState(AppState.WaitingForIIIFService)
+                case AppStates.OntologiesReady =>
+                    self ! SetAppState(AppStates.WaitingForIIIFService)
 
-                case AppState.WaitingForIIIFService =>
+                case AppStates.WaitingForIIIFService =>
                     if (withIIIFService) {
                         // check if sipi is running
                         self ! CheckIIIFService
                     } else {
                         // skip sipi check
-                        self ! SetAppState(AppState.IIIFServiceReady)
+                        self ! SetAppState(AppStates.IIIFServiceReady)
                     }
 
-                case AppState.IIIFServiceReady =>
-                    self ! SetAppState(AppState.WaitingForCacheService)
+                case AppStates.IIIFServiceReady =>
+                    self ! SetAppState(AppStates.WaitingForCacheService)
 
-                case AppState.WaitingForCacheService =>
+                case AppStates.WaitingForCacheService =>
                     if (withCacheService) {
                         self ! CheckCacheService
                     } else {
-                        self ! SetAppState(AppState.CacheServiceReady)
+                        self ! SetAppState(AppStates.CacheServiceReady)
                     }
 
-                case AppState.CacheServiceReady =>
-                    self ! SetAppState(AppState.Running)
+                case AppStates.CacheServiceReady =>
+                    self ! SetAppState(AppStates.Running)
 
-                case AppState.Running =>
+                case AppStates.Running =>
                     printBanner()
 
-                case AppState.MaintenanceMode =>
+                case AppStates.MaintenanceMode =>
                     // do nothing
                     ()
 
@@ -284,7 +283,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         case CheckTriplestoreResponse(status, message) =>
             status match {
                 case TriplestoreStatus.ServiceAvailable =>
-                    self ! SetAppState(AppState.TriplestoreReady)
+                    self ! SetAppState(AppStates.TriplestoreReady)
                 case TriplestoreStatus.NotInitialized =>
                     logger.warn(s"checkRepository - status: {}, message: {}", status, message)
                     logger.warn("Please initialize repository.")
@@ -300,18 +299,18 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         case RepositoryUpdatedResponse(message) =>
             logger.info(message)
-            self ! SetAppState(AppState.RepositoryUpToDate)
+            self ! SetAppState(AppStates.RepositoryUpToDate)
 
         /* create caches request */
         case CreateCaches() =>
             CacheUtil.createCaches(settings.caches)
-            self ! SetAppState(AppState.CachesReady)
+            self ! SetAppState(AppStates.CachesReady)
 
         case UpdateSearchIndex() =>
             storeManager ! SearchIndexUpdateRequest()
 
         case SparqlUpdateResponse() =>
-            self ! SetAppState(AppState.SearchIndexReady)
+            self ! SetAppState(AppStates.SearchIndexReady)
 
         /* load ontologies request */
         case LoadOntologies() =>
@@ -319,13 +318,13 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         /* load ontologies response */
         case SuccessResponseV2(_) =>
-            self ! SetAppState(AppState.OntologiesReady)
+            self ! SetAppState(AppStates.OntologiesReady)
 
         case CheckIIIFService =>
             self ! IIIFServiceGetStatus
 
         case IIIFServiceStatusOK =>
-            self ! SetAppState(AppState.IIIFServiceReady)
+            self ! SetAppState(AppStates.IIIFServiceReady)
 
         case IIIFServiceStatusNOK if withIIIFService =>
             logger.warn("Sipi not running. Please start Sipi.")
@@ -335,7 +334,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             self ! CacheServiceGetStatus
 
         case CacheServiceStatusOK =>
-            self ! SetAppState(AppState.CacheServiceReady)
+            self ! SetAppState(AppStates.CacheServiceReady)
 
         case CacheServiceStatusNOK =>
             logger.warn("Redis-Server not running. Please start the Redis-Server.")
