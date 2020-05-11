@@ -267,24 +267,8 @@ jobs:
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: build all docker images
-        run: |
-          make build-all-scala
-          make build-all-images
-      - name: start the stack without knora-api
-        run: make stack-without-api
-      - name: initialise the test database
-        run: make init-db-test-minimal
-      - name: unzip test data
-        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
-      - name: empty the repository
-        run: $GITHUB_WORKSPACE/webapi/scripts/graphdb-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-      - name: load v7.0.0 data
-        run: $GITHUB_WORKSPACE/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
-      - name: start knora-api
-        run: make stack-restart-api
-      - name: wait for knora-api to update the repository
-        run: $GITHUB_WORKSPACE/webapi/scripts/wait-for-knora.sh
+      - name: test repository update
+        run: cd $GITHUB_WORKSPACE && make test-repository-update
       - name: Disk Free After
         run: |
           df -h

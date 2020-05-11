@@ -340,6 +340,16 @@ test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-l
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
 
+.PHONY: test-repository-update
+test-repository-update: stack-without-api
+	sleep 15
+	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
+	unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(CURRENT_DIR)/test-data/v7.0.0/
+	$(CURRENT_DIR)/webapi/scripts/graphdb-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+	$(CURRENT_DIR)/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig
+	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
 	@echo $@
