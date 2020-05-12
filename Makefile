@@ -155,6 +155,7 @@ stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api,
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
 	docker-compose -f docker/knora.docker-compose.yml restart api
+	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running knora-stack.
@@ -334,7 +335,6 @@ test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-l
 	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@sleep 15
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	sleep 15
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 	@git clone --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
@@ -342,13 +342,15 @@ test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-l
 
 .PHONY: test-repository-update
 test-repository-update: stack-without-api
-	sleep 15
+	@sleep 15
 	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
-	unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(CURRENT_DIR)/test-data/v7.0.0/
+	@rm -rf /tmp/knora-test-data/v7.0.0/
+	@mkdir -p /tmp/knora-test-data/v7.0.0/
+	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
 	$(CURRENT_DIR)/webapi/scripts/graphdb-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-	$(CURRENT_DIR)/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig
+	$(CURRENT_DIR)/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
