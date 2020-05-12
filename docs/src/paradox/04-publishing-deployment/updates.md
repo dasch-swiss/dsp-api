@@ -22,69 +22,44 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 @@toc
 
 When a new version of Knora introduces changes that are not backwards-compatible
-with existing data, you will need to update your repository. First, back up
-your repository. Then follow the instructions below for the Knora version that
-you are upgrading from.
+with existing data, your repository will need to be updated.
 
-## Upgrading from Knora 7.0.0 or Later
+## Upgrading from Knora Version 7.0.0 or Later
 
-### Automatic Upgrade
+In most cases, Knora will update your repository automatically when it starts. If
+manual changes are needed, these will be described in the release notes, and must be
+done first.
 
-The automatic upgrade procedure dumps your repository to a file, determines which transformations
-are needed, transforms the file, then loads the transformed file back into the repository.
-To perform an automatic upgrade, open a shell in the directory `upgrade/graphdb-se` and run the script
-`./auto-upgrade.sh`. You must be in that directory when you run the script. For information on its
-command line options, run it without arguments, or see the `README.md` in that directory for details.
+Before starting a new version of Knora, back up your repository, so you can restore it
+in case the automatic repository update fails. You can use one of these scripts
+in `webapi/scripts`:
 
-### Manual Upgrade
+- `graphdb-dump-repository.sh` for GraphDB
+- `fuseki-dump-repository.sh` for Fuseki
 
-If you need more control over the process (e.g. you want to use
-GraphDB's [LoadRDF](http://graphdb.ontotext.com/documentation/free/loading-data-using-the-loadrdf-tool.html)
-tool to upload the transformed file), follow the steps below.
-
-#### 1. Dump the Repository to a TriG File
-
-You can use the `dump-repository.sh` script in `upgrade/graphdb-se`. See
-the `README.md` there for instructions.
-
-#### 2. Transform the TriG File
-
-In the `knora-api` directory of the version of Knora you are upgrading to, run:
-
-```
-sbt "upgrade/run INPUT_FILE OUTPUT_FILE"
-```
-
-For `INPUT_FILE`, use the absolute path of the TriG file you downloaded in
-step 1.
-
-For `OUTPUT_FILE`, use the absolute path of the transformed TriG file to
-be created.
-
-The program automatically determines which transformations are needed.
-If the repository is already up to date, the program will say so, and no
-output file will be written. In this case, there is nothing more to do.
-Otherwise, proceed to step 3.
-
-#### 3. Empty the Repository
-
-The transformed TriG file must be loaded into an empty repository.
-To empty the repository, you can use the `empty-repository.sh` script in
-`upgrade/graphdb-se`. See the `README.md` there for instructions.
-Make sure you have backed up the repository first.
-
-#### 4. Load the Transformed TriG File into the Repository
-
-You can use the `upload-repository.sh` script in `upgrade/graphdb-se`. See
-the `README.md` there for instructions.
-
-If the file is very large, it may be more efficient to load it offline,
-using GraphDB's [LoadRDF](http://graphdb.ontotext.com/documentation/free/loading-data-using-the-loadrdf-tool.html)
-tool.
+For information on command-line options, run the script with no arguments.
 
 ## Upgrading from a Knora Version Before 7.0.0
 
-First, read the general instructions in `upgrade/graphdb-se/old/README.md`.
+You must first upgrade to Knora 7.0.0, then upgrade again to the current
+version.
+
+The overall procedure is:
+
+1. Back up your repository as described above.
+
+2. Install Knora release 7.0.0, and read the general instructions in
+   `upgrade/graphdb-se/old/README.md` in that release.
+   
+3. Follow the instructions in one of the subsections below for the version you are
+   upgrading from.
+   
+4. Back up your repository again.
+
+5. Install the current release of Knore, and follow any manual update instructions
+   in its release notes.
+   
+6. Start Knora to continue the automatic upgrade.
 
 ### Upgrading from Knora 6.0.0 or 6.0.1
 
