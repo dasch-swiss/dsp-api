@@ -57,15 +57,13 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-    // To facilitate testing, the main application actor forwards messages to the responder manager and the store manager.
+    // The main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
 
     val routeData: KnoraRouteData = KnoraRouteData(
         system = system,
-        appActor = appActor,
-        responderManager = responderManager,
-        storeManager = storeManager
+        appActor = appActor
     )
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]

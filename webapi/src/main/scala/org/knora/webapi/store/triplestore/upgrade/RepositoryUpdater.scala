@@ -23,12 +23,12 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Updates a Knora repository to work with the current version of Knora.
  *
- * @param system       the Akka [[ActorSystem]].
- * @param storeManager a reference to the store manager.
- * @param settings     the Knora application settings.
+ * @param system   the Akka [[ActorSystem]].
+ * @param appActor a reference to the main application actor.
+ * @param settings the Knora application settings.
  */
 class RepositoryUpdater(system: ActorSystem,
-                        storeManager: ActorRef,
+                        appActor: ActorRef,
                         settings: SettingsImpl) extends LazyLogging {
 
     private val knoraBaseVersionQuery =
@@ -54,7 +54,7 @@ class RepositoryUpdater(system: ActorSystem,
     private implicit val timeout: Timeout = settings.defaultTimeout
 
     /**
-     * Provides logging. TODO: get this to print this class's name in the log messages.
+     * Provides logging.
      */
     private val log: Logger = logger
 
@@ -101,7 +101,7 @@ class RepositoryUpdater(system: ActorSystem,
      */
     private def getRepositoryVersion: Future[Option[String]] = {
         for {
-            repositoryVersionResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResponse]
+            repositoryVersionResponse: SparqlSelectResponse <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResponse]
 
             bindings = repositoryVersionResponse.results.bindings
 
@@ -166,7 +166,7 @@ class RepositoryUpdater(system: ActorSystem,
 
         for {
             // Ask the store actor to download the repository to the file.
-            _: FileWrittenResponse <- (storeManager ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
+            _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
 
             // Run the transformations to produce an output file.
             _ = doTransformations(
@@ -178,12 +178,12 @@ class RepositoryUpdater(system: ActorSystem,
             _ = log.info("Emptying the repository...")
 
             // Empty the repository.
-            _: DropAllRepositoryContentACK <- (storeManager ? DropAllTRepositoryContent()).mapTo[DropAllRepositoryContentACK]
+            _: DropAllRepositoryContentACK <- (appActor ? DropAllTRepositoryContent()).mapTo[DropAllRepositoryContentACK]
 
             _ = log.info("Uploading transformed repository data...")
 
             // Upload the transformed repository.
-            _: RepositoryUploadedResponse <- (storeManager ? UploadRepositoryRequest(transformedRepositoryFile)).mapTo[RepositoryUploadedResponse]
+            _: RepositoryUploadedResponse <- (appActor ? UploadRepositoryRequest(transformedRepositoryFile)).mapTo[RepositoryUploadedResponse]
         } yield RepositoryUpdatedResponse(
             message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
         )

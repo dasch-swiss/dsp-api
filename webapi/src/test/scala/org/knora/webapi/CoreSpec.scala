@@ -84,15 +84,13 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-    // To facilitate testing, the main application actor forwards messages to the responder manager and the store manager.
+    // The main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
 
     val responderData: ResponderData = ResponderData(
         system = system,
-        appActor = appActor,
-        responderManager = responderManager,
-        storeManager = storeManager
+        appActor = appActor
     )
 
     final override def beforeAll() {

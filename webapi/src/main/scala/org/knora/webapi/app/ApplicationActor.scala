@@ -47,7 +47,7 @@ trait LiveManagers extends Managers {
      * The actor that forwards messages to actors that deal with persistent storage.
      */
     lazy val storeManager: ActorRef = context.actorOf(
-        Props(new StoreManager with LiveActorMaker)
+        Props(new StoreManager(self) with LiveActorMaker)
             .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = StoreManagerActorName
     )
@@ -56,7 +56,7 @@ trait LiveManagers extends Managers {
      * The actor that forwards messages to responder actors to handle API requests.
      */
     lazy val responderManager: ActorRef = context.actorOf(
-        Props(new ResponderManager(appActor = self, storeManager = storeManager) with LiveActorMaker)
+        Props(new ResponderManager(self) with LiveActorMaker)
             .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
@@ -110,9 +110,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
      */
     private val routeData = KnoraRouteData(
         system = system,
-        appActor = self,
-        responderManager = responderManager,
-        storeManager = storeManager
+        appActor = self
     )
 
     /**
@@ -327,7 +325,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             self ! SetAppState(AppStates.IIIFServiceReady)
 
         case IIIFServiceStatusNOK if withIIIFService =>
-            logger.warn("Sipi not running. Please start Sipi.")
+            logger.warn("Sipi not running. Please start it.")
             timers.startSingleTimer("CheckIIIFService", CheckIIIFService, 5.seconds)
 
         case CheckCacheService =>
@@ -337,10 +335,10 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             self ! SetAppState(AppStates.CacheServiceReady)
 
         case CacheServiceStatusNOK =>
-            logger.warn("Redis-Server not running. Please start the Redis-Server.")
+            logger.warn("Redis server not running. Please start it.")
             timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
-        // To facilitate testing, forward messages to the responder manager and the store manager.
+        // Forward messages to the responder manager and the store manager.
         case responderMessage: KnoraRequestV1 => responderManager forward responderMessage
         case responderMessage: KnoraRequestV2 => responderManager forward responderMessage
         case responderMessage: KnoraRequestADM => responderManager forward responderMessage

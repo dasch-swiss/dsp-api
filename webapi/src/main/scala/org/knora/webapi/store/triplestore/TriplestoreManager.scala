@@ -28,15 +28,18 @@ import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.FakeTriplestore
 
 import scala.concurrent.ExecutionContext
 
 /**
-  * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured triple stores (embedded or remote).
-  */
-class TriplestoreManager extends Actor with ActorLogging {
+ * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
+ * triple stores.
+ *
+ * @param appActor a reference to the main application actor.
+ */
+class TriplestoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     this: ActorMaker =>
 
     private val settings = Settings(context.system)
@@ -64,7 +67,7 @@ class TriplestoreManager extends Actor with ActorLogging {
     // A RepositoryUpdater for processing requests to update the repository.
     private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
         system = context.system,
-        storeManager = context.parent,
+        appActor = appActor,
         settings = settings
     )
 

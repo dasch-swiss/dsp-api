@@ -54,13 +54,9 @@ object Responder {
  *
  * @param system           the actor system.
  * @param appActor         the main application actor.
- * @param responderManager the responder manager.
- * @param storeManager     the store manager.
  */
 case class ResponderData(system: ActorSystem,
-                         appActor: ActorRef,
-                         responderManager: ActorRef,
-                         storeManager: ActorRef)
+                         appActor: ActorRef)
 
 /**
  * An abstract class providing values that are commonly used in Knora responders.
@@ -88,14 +84,14 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     protected val appActor: ActorRef = responderData.appActor
 
     /**
-     * The responder manager.
+     * The main application actor forwards messages to the responder manager.
      */
-    protected val responderManager: ActorRef = responderData.responderManager
+    protected val responderManager: ActorRef = responderData.appActor
 
     /**
-     * The store manager.
+     * The main application actor forwards messages to the store manager.
      */
-    protected val storeManager: ActorRef = responderData.storeManager
+    protected val storeManager: ActorRef = responderData.appActor
 
     /**
      * A string formatter.

@@ -56,9 +56,8 @@ import scala.concurrent.ExecutionContext
  * that it supervises.
  *
  * @param appActor the main application actor.
- * @param storeManager the store manager.
  */
-class ResponderManager(appActor: ActorRef, storeManager: ActorRef) extends Actor with ActorLogging {
+class ResponderManager(appActor: ActorRef) extends Actor with ActorLogging {
     this: ActorMaker =>
 
     /**
@@ -77,9 +76,7 @@ class ResponderManager(appActor: ActorRef, storeManager: ActorRef) extends Actor
      */
     private val responderData = ResponderData(
         system = system,
-        appActor = appActor,
-        responderManager = self,
-        storeManager = storeManager
+        appActor = appActor
     )
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
