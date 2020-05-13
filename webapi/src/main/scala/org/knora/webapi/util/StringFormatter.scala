@@ -2346,25 +2346,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-     * Checks that a string represents a valid path for a `knora-base:Map`. A valid path must be a sequence of names
-     * separated by slashes (`/`). Each name must be a valid XML
-     * [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-     *
-     * @param mapPath  the path to be checked.
-     * @param errorFun a function that throws an exception. It will be called if the path is invalid.
-     * @return the same path.
-     */
-    def validateMapPath(mapPath: String, errorFun: => Nothing): String = {
-        val splitPath: Array[String] = mapPath.split('/')
-
-        for (name <- splitPath) {
-            validateNCName(name, errorFun)
-        }
-
-        mapPath
-    }
-
-    /**
      * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
      *
      * @param urlPath the URL path.
@@ -3030,35 +3011,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     def makeRandomPermissionIri(shortcode: String): IRI = {
         val knoraPermissionUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
-    }
-
-    /**
-     * Creates an IRI for a `knora-base:Map`.
-     *
-     * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
-     *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-     * @return the IRI of the map.
-     */
-    def makeMapIri(mapPath: String): IRI = {
-        s"http://$IriDomain/maps/$mapPath"
-    }
-
-    /**
-     * Extracts the path of a persistent map from the IRI of a `knora-base:Map`.
-     *
-     * @param mapIri the IRI of the `knora-base:Map`.
-     * @return the map's path.
-     */
-    def mapIriToMapPath(mapIri: IRI): String = {
-        mapIri.stripPrefix(s"http://$IriDomain/maps/")
-    }
-
-    /**
-     * Creates a random IRI for a `knora-base:MapEntry`.
-     */
-    def makeRandomMapEntryIri: IRI = {
-        val mapEntryUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/map-entries/$mapEntryUuid"
     }
 
     /**

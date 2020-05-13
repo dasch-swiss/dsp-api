@@ -26,7 +26,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding.Get
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -735,7 +735,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
+                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
         for {
             ontologyResponses: Set[TestDataFileContent] <- getOntologyTestResponses
             ontologyMetadataResponses: TestDataFileContent <- getOntologyMetadataTestResponse

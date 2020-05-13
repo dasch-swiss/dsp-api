@@ -27,7 +27,7 @@ import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.slf4j.LoggerFactory
@@ -53,7 +53,7 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -64,7 +64,7 @@ object GraphProtocolAccessor {
       * @param filepath  path to the file containing turtle.
       * @return String
       */
-    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -75,11 +75,11 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }
 
-    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)

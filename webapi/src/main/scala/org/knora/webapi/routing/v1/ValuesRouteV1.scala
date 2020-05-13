@@ -39,7 +39,7 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import scala.concurrent.Future
 
 /**
- * Provides a spray-routing function for API routes that deal with values.
+ * Provides an Akka routing function for API routes that deal with values.
  */
 class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
@@ -473,7 +473,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
                             resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
                             projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
-
                             request <- makeChangeFileValueRequest(
                                 resIriStr = resIriStr,
                                 projectShortcode = projectShortcode,
