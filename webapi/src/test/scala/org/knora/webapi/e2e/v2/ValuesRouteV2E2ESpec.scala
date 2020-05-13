@@ -154,7 +154,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             userEmail = userEmail
         )
 
-        val receivedResourceIri: IRI = resource.getIDAsKnoraDataIri.toString
+        val receivedResourceIri: IRI = resource.requireIDAsKnoraDataIri.toString
 
         if (receivedResourceIri != resourceIri) {
             throw AssertionException(s"Expected resource $resourceIri, received $receivedResourceIri")

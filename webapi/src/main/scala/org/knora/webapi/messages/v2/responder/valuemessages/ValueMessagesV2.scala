@@ -90,17 +90,17 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
+            resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
             _ = if (!resourceIri.isKnoraResourceIri) {
                 throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
             }
 
             // Get the resource class.
-            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+            resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
             // Get the resource property and the value to be created.
-            createValue: CreateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
+            createValue: CreateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     if (jsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
                         throw BadRequestException("The @id of a value cannot be given in a request to create the value")
@@ -210,19 +210,19 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
+            resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
             _ = if (!resourceIri.isKnoraResourceIri) {
                 throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
             }
 
             // Get the resource class.
-            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+            resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
             // Get the resource property and the new value version.
-            updateValue: UpdateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
+            updateValue: UpdateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    val valueIri: IRI = jsonLDObject.getIDAsKnoraDataIri.toString
+                    val valueIri: IRI = jsonLDObject.requireIDAsKnoraDataIri.toString
 
                     // Does the value object just contain knora-api:hasPermissions?
 
@@ -371,25 +371,25 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Get the IRI of the resource that the value is to be created in.
-        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+        val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
 
         if (!resourceIri.isKnoraResourceIri) {
             throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
         }
 
         // Get the resource class.
-        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+        val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
         // Get the resource property and the IRI and class of the value to be deleted.
-        jsonLDDocument.getResourcePropertyValue match {
+        jsonLDDocument.requireResourcePropertyValue match {
             case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                val valueIri = jsonLDObject.getIDAsKnoraDataIri
+                val valueIri = jsonLDObject.requireIDAsKnoraDataIri
 
                 if (!valueIri.isKnoraValueIri) {
                     throw BadRequestException(s"Invalid value IRI: <$valueIri>")
                 }
 
-                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraApiV2ComplexTypeIri
+                val valueTypeIri: SmartIri = jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri
 
                 val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
