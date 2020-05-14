@@ -150,6 +150,8 @@ endif
 ## knora stack
 .PHONY: stack-up
 stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
+	docker-compose -f docker/knora.docker-compose.yml up -d db
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	docker-compose -f docker/knora.docker-compose.yml up -d
 
 .PHONY: stack-up-ci
@@ -233,7 +235,7 @@ test-unit: stack-without-api init-db-test-unit ## runs the unit tests (equivalen
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
+				daschswiss/scala-sbt sbt 'webapi/testOnly *.CORSSupportV1E2ESpec'
 
 .PHONY: test-unit-ci
 test-unit-ci: stack-without-api ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.

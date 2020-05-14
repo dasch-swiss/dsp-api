@@ -21,22 +21,28 @@ package org.knora.webapi.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.knora.webapi.R2RSpec
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.{E2ESpec, R2RSpec}
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 
+object CORSSupportV1E2ESpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /**
   * End-to-end test specification for testing [[CORSSupport]].
   */
-class CORSSupportV1R2RSpec extends R2RSpec {
-
-    /* get the path of the route we want to test */
-    private val sealedResourcesRoute = Route.seal(new ResourcesRouteV1(routeData).knoraApiPath)
+class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
@@ -46,31 +52,26 @@ class CORSSupportV1R2RSpec extends R2RSpec {
     "A Route with enabled CORS support" should {
 
         "accept valid pre-flight requests" in {
-
-            Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
-                addServerHeader(CORS(sealedResourcesRoute, settings))
-            } ~> check {
-                responseAs[String] shouldBe empty
-                status shouldBe StatusCodes.OK
-                response.headers should contain allElementsOf Seq(
-                    `Access-Control-Allow-Origin`(exampleOrigin),
-                    `Access-Control-Allow-Methods`(CORSSupport.allowedMethods),
-                    // `Access-Control-Allow-Headers`(CORSSupport.exposedHeaders),
-                    `Access-Control-Max-Age`(1800),
-                    `Access-Control-Allow-Credentials`(true)
-                )
-            }
+            val request = Options(baseApiUrl + s"/admin/projects")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            // logger.debug(s"response: ${response.toString}")
+            response.status shouldBe StatusCodes.OK
+            response.entity.toString shouldBe empty
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin),
+                `Access-Control-Allow-Methods`(CORSSupport.allowedMethods),
+                // `Access-Control-Allow-Headers`(CORSSupport.exposedHeaders),
+                `Access-Control-Max-Age`(1800),
+                `Access-Control-Allow-Credentials`(true)
+            )
         }
 
         "reject pre-flight requests with invalid method" in {
-
-            val invalidMethod = PATCH
-            Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod) ~> {
-                CORS(sealedResourcesRoute, settings)
-            } ~> check {
-                status shouldBe StatusCodes.BadRequest
-                entityAs[String] should equal("CORS: invalid method 'PATCH'")
-            }
+            val request = Patch(baseApiUrl + s"/admin/projects")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            // logger.debug(s"response: ${response.toString}")
+            responseToString(response) shouldEqual "HTTP method not allowed, supported methods: GET, POST"
+            response.status shouldBe StatusCodes.BadRequest
         }
 
     }

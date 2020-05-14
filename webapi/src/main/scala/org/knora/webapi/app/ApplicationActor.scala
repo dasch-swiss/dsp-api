@@ -167,27 +167,23 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     def ready(): Receive = {
         /* Usually only called from tests */
-        case AppStop() => appStop()
+        case AppStop() =>
+            appStop()
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
-        case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) => {
+        case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) =>
             logger.info("Startup initiated, please wait ...")
-
             if (appState == AppState.Stopped) {
                 skipOntologies = skipLoadingOfOntologies
                 withIIIFService = requiresIIIFService
 
                 self ! SetAppState(AppState.StartingUp)
             }
-        }
 
         /* EACH app state change goes through here */
-        case SetAppState(value: AppState) => {
-
+        case SetAppState(value: AppState) =>
             appState = value
-
             logger.debug("appStateChanged - to state: {}", value)
-
             value match {
                 case AppState.Stopped =>
                     // do nothing
@@ -255,41 +251,36 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                         s"The value: $other is not supported."
                     )
             }
-        }
-        case GetAppState() => {
+
+        case GetAppState() =>
             logger.debug("ApplicationStateActor - GetAppState - value: {}", appState)
             sender ! appState
-        }
 
-        case ActorReady() => {
+        case ActorReady() =>
             sender ! ActorReadyAck()
-        }
 
-        case SetAllowReloadOverHTTPState(value) => {
+        case SetAllowReloadOverHTTPState(value) =>
             logger.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
             allowReloadOverHTTPState = value
-        }
-        case GetAllowReloadOverHTTPState() => {
+
+        case GetAllowReloadOverHTTPState() =>
             logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
             sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
-        }
 
-        case SetPrintConfigExtendedState(value) => {
+        case SetPrintConfigExtendedState(value) =>
             logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
             printConfigState = value
-        }
-        case GetPrintConfigExtendedState() => {
+
+        case GetPrintConfigExtendedState() =>
             logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
             sender ! (printConfigState | settings.printExtendedConfig)
-        }
 
         /* check repository request */
-        case CheckRepository() => {
+        case CheckRepository() =>
             storeManager ! CheckRepositoryRequest()
-        }
 
         /* check repository response */
-        case CheckRepositoryResponse(status, message) => {
+        case CheckRepositoryResponse(status, message) =>
             status match {
                 case RepositoryStatus.ServiceAvailable =>
                     self ! SetAppState(AppState.RepositoryReady)
@@ -302,7 +293,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                     logger.warn("Please start repository.")
                     timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
             }
-        }
 
         /* create caches request */
         case CreateCaches() =>
@@ -343,13 +333,17 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
             logger.warn("Redis-Server not running. Please start the Redis-Server.")
             timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
+        case responderMessage: KnoraRequestV1 =>
+            responderManager forward responderMessage
 
+        case responderMessage: KnoraRequestV2 =>
+            responderManager forward responderMessage
 
+        case responderMessage: KnoraRequestADM =>
+            responderManager forward responderMessage
 
-        case responderMessage: KnoraRequestV1 => responderManager forward responderMessage
-        case responderMessage: KnoraRequestV2 => responderManager forward responderMessage
-        case responderMessage: KnoraRequestADM => responderManager forward responderMessage
-        case storeMessage: StoreRequest => storeManager forward storeMessage
+        case storeMessage: StoreRequest =>
+            storeManager forward storeMessage
 
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
