@@ -21,7 +21,7 @@ package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpMethod, StatusCodes}
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -52,7 +52,6 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     private val exampleOrigin = HttpOrigin("http://example.com")
-    private val corsSettings = CORSSupport.corsSettings
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -62,16 +61,14 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
     "A Route with enabled CORS support " should {
 
         "accept valid pre-flight requests" in {
-
             val request = Options(baseApiUrl + "/v1/authenticate") ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET)
             val response = singleAwaitingRequest(request)
 
             response.status should equal(StatusCodes.OK)
 
-            val headersMinusDate = response.headers.filter(Date => false)
             response.headers should contain allElementsOf Seq(
                 `Access-Control-Allow-Origin`(exampleOrigin),
-                `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
+                `Access-Control-Allow-Methods`(List(GET, PUT, POST, DELETE, HEAD, OPTIONS)),
                 //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
                 `Access-Control-Max-Age`(1800),
                 `Access-Control-Allow-Credentials`(true)

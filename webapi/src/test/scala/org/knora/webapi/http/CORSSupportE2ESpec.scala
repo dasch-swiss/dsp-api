@@ -31,7 +31,7 @@ import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 
-object CORSSupportV1E2ESpec {
+object CORSSupportE2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -42,12 +42,11 @@ object CORSSupportV1E2ESpec {
 /**
   * End-to-end test specification for testing [[CORSSupport]].
   */
-class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
+class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
-
+    
     val exampleOrigin = HttpOrigin("http://example.com")
-    val corsSettings = CORSSupport.corsSettings
 
     "A Route with enabled CORS support" should {
 
@@ -59,7 +58,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
             response.entity.toString shouldBe empty
             response.headers should contain allElementsOf Seq(
                 `Access-Control-Allow-Origin`(exampleOrigin),
-                `Access-Control-Allow-Methods`(CORSSupport.allowedMethods),
+                `Access-Control-Allow-Methods`(List(GET, PUT, POST, DELETE, HEAD, OPTIONS)),
                 // `Access-Control-Allow-Headers`(CORSSupport.exposedHeaders),
                 `Access-Control-Max-Age`(1800),
                 `Access-Control-Allow-Credentials`(true)
@@ -70,7 +69,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
             val request = Patch(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
             // logger.debug(s"response: ${response.toString}")
-            responseToString(response) shouldEqual "HTTP method not allowed, supported methods: GET, POST"
+            responseToString(response) shouldEqual "HTTP method not allowed, supported methods: GET, PUT, POST, DELETE, HEAD, OPTIONS"
             response.status shouldBe StatusCodes.BadRequest
         }
 

@@ -19,44 +19,27 @@
 
 package org.knora.webapi.http
 
-import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.headers.HttpOriginRange
 import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 
-import scala.collection.immutable.Seq
-
 object CORSSupport extends Directives with LazyLogging {
 
-    val allowedMethods = Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)
-    val exposedHeaders = Seq("Server")
-    val age: Long = 30 * 60
-
-    val corsSettings = CorsSettings.defaultSettings.
-            withAllowGenericHttpRequests(true).
-            withAllowCredentials(true).
-            withAllowedOrigins(HttpOriginRange.*).
-            withAllowedHeaders(HttpHeaderRange.*).
-            withAllowedMethods(allowedMethods).
-            withExposedHeaders(exposedHeaders).
-            withMaxAge(Some(age))
-
     /**
-      * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by
-      * the [[KnoraExceptionHandler]]. Finally, all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
-      * so that all responses (correct and failures) have the correct CORS headers attached.
-      *
-      * @param route the route for which CORS support is enabled
-      * @return the enabled route.
-      */
+     * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by
+     * the [[KnoraExceptionHandler]]. Finally, all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
+     * so that all responses (correct and failures) have the correct CORS headers attached.
+     *
+     * The settings for CORS are set in application.conf under "akka-http-cors".
+     *
+     * @param route the route for which CORS support is enabled
+     * @return the enabled route.
+     */
     def CORS(route: Route, settings: SettingsImpl): Route = {
         handleRejections(CorsDirectives.corsRejectionHandler) {
-            cors(corsSettings) {
+            cors() {
                 handleRejections(RejectionHandler.default) {
                     handleExceptions(KnoraExceptionHandler(settings)) {
                         route

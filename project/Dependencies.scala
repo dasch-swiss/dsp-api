@@ -76,7 +76,7 @@ object Dependencies {
         // testing
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "0.3.4"
+        val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "0.4.3"
 
         // jena
         val jenaLibs               = Def.setting {"org.apache.jena"             % "apache-jena-libs"         % jenaVersion.value exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")}
