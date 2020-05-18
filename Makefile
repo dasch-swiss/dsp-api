@@ -224,6 +224,7 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 
 .PHONY: test-only
 test-only: stack-without-api init-db-test-unit ## runs only the supplied tests, e.g., make test-only TARGET="*.CORSSupportE2ESpec".
+	@echo $@  # print target name
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -239,6 +240,7 @@ test-only: stack-without-api init-db-test-unit ## runs only the supplied tests, 
 
 .PHONY: test-unit
 test-unit: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
+	@echo $@  # print target name
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -253,10 +255,8 @@ test-unit: stack-without-api init-db-test-unit ## runs the unit tests (equivalen
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: test-unit-ci
-test-unit-ci: stack-without-api ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+test-unit-ci: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -272,6 +272,7 @@ test-unit-ci: stack-without-api ## runs the unit tests (equivalent to 'sbt webap
 
 .PHONY: test-e2e
 test-e2e: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
+	@echo $@  # print target name
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -286,10 +287,8 @@ test-e2e: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent 
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: test-e2e-ci
-test-e2e-ci: stack-without-api ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+test-e2e-ci: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -305,6 +304,7 @@ test-e2e-ci: stack-without-api ## runs the e2e tests (equivalent to 'sbt webapi/
 
 .PHONY: test-it
 test-it: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
+	@echo $@
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -319,10 +319,8 @@ test-it: stack-without-api init-db-test-unit ## runs the integration tests (equi
 				daschswiss/scala-sbt sbt 'webapi/it:test'
 
 .PHONY: test-it-ci
-test-it-ci: stack-without-api ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
+test-it-ci: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
 	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(CURRENT_DIR):/src \
@@ -337,7 +335,8 @@ test-it-ci: stack-without-api ## runs the integration tests (equivalent to 'sbt 
 				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
 
 .PHONY: test-all
-test-all: stack-without-api ## runs the all tests (equivalent to 'sbt webapi/test').
+test-all: stack-without-api init-db-test-unit ## runs the all tests (equivalent to 'sbt webapi/test').
+	@echo $@
 	# docker build -t webapi-test -f docker/knora-api-test.dockerfile  webapi/build/test/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \

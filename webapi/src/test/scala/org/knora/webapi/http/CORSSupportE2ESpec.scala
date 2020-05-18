@@ -26,6 +26,7 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object CORSSupportE2ESpec {
     val config = ConfigFactory.parseString(
@@ -41,6 +42,10 @@ object CORSSupportE2ESpec {
 class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+
+    override lazy val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    )
     
     val exampleOrigin = HttpOrigin("http://example.com")
 

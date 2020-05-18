@@ -19,7 +19,9 @@
 
 package org.knora.webapi.http
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.typesafe.scalalogging.LazyLogging
@@ -28,18 +30,20 @@ import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 object CORSSupport extends Directives with LazyLogging {
 
     /**
-     * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by
-     * the [[KnoraExceptionHandler]]. Finally, all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
-     * so that all responses (correct and failures) have the correct CORS headers attached.
-     *
-     * The settings for CORS are set in application.conf under "akka-http-cors".
+     * Adds CORS support to a route with the following:
+     *  - any exceptions thrown inside the route are handled by the
+     *    [[KnoraExceptionHandler]],
+     *  - all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
+     *    so that all responses (correct and failures) have the correct CORS
+     *    headers attached, and
+     *  - the settings for CORS are set in application.conf under "akka-http-cors".
      *
      * @param route the route for which CORS support is enabled
      * @return the enabled route.
      */
-    def CORS(route: Route, settings: SettingsImpl): Route = {
+    def CORS(route: Route, settings: SettingsImpl, system: ActorSystem): Route = {
         handleRejections(CorsDirectives.corsRejectionHandler) {
-            cors() {
+            cors(CorsSettings(system)) {
                 handleRejections(RejectionHandler.default) {
                     handleExceptions(KnoraExceptionHandler(settings)) {
                         route

@@ -51,7 +51,7 @@ poll-db() {
     STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/repositories/${NAME}/health?)
 
     if [ "${STATUS}" -eq 200 ]; then
-        echo "DB started"
+        echo "==> DB started"
         return 0
     else
         return 1

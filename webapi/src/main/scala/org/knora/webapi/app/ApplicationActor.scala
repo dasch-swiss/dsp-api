@@ -387,7 +387,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                   new UsersRouteADM(routeData).knoraApiPath ~
                   new SipiRouteADM(routeData).knoraApiPath ~
                   new SwaggerApiDocsRoute(routeData).knoraApiPath,
-                settings
+                settings,
+                system
             )
         }
     }
