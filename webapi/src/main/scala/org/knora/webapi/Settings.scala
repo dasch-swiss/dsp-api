@@ -222,6 +222,12 @@ class SettingsImpl(config: Config) extends Extension {
 
     val prometheusEndpoint: Boolean = config.getBoolean("app.monitoring.prometheus-endpoint")
 
+    val upgradeDownloadDir: Option[String] = if (config.hasPath("app.upgrade.download-dir")) {
+        Some(config.getString("app.upgrade.download-dir"))
+    } else {
+        None
+    }
+
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {

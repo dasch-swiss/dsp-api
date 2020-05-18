@@ -24,7 +24,7 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	@sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
+	@sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
 
 ## knora-api
 .PHONY: build-knora-api-image
@@ -83,15 +83,6 @@ build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 do
 publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
 	docker push $(KNORA_SALSAH1_IMAGE)
 
-## knora-upgrade
-.PHONY: build-knora-upgrade-image
-build-knora-upgrade-image: build-all-scala ## build and publish knora-upgrade docker image locally
-	docker build -t $(KNORA_UPGRADE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_UPGRADE_REPO):latest -f docker/knora-upgrade.dockerfile  upgrade/target/universal
-
-.PHONY: publish-knora-upgrade-image
-publish-knora-upgrade-image: build-knora-upgrade-image ## publish knora-upgrade image to Dockerhub
-	docker push $(KNORA_UPGRADE_IMAGE)
-
 ## knora-assets
 .PHONY: build-knora-assets-image
 build-knora-assets-image: build-all-scala ## build and publish knora-assets docker image locally
@@ -103,10 +94,10 @@ publish-knora-assets-image: build-knora-assets-image ## publish knora-assets ima
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
 
 .PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-upgrade-image publish-knora-assets-image ## publish all Docker images
+publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
 
 #################################
 ## Docker-Compose targets
@@ -164,6 +155,7 @@ stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api,
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
 	docker-compose -f docker/knora.docker-compose.yml restart api
+	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running knora-stack.
@@ -343,11 +335,22 @@ test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-l
 	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@sleep 15
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	sleep 15
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 	@git clone --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
+
+.PHONY: test-repository-update
+test-repository-update: stack-without-api
+	@sleep 15
+	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
+	@rm -rf /tmp/knora-test-data/v7.0.0/
+	@mkdir -p /tmp/knora-test-data/v7.0.0/
+	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
+	$(CURRENT_DIR)/webapi/scripts/graphdb-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+	$(CURRENT_DIR)/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
@@ -413,7 +416,6 @@ info: ## print out all variables
 	@echo "KNORA_GRAPHDB_FREE_IMAGE: \t $(KNORA_GRAPHDB_FREE_IMAGE)"
 	@echo "KNORA_SIPI_IMAGE: \t\t $(KNORA_SIPI_IMAGE)"
 	@echo "KNORA_ASSETS_IMAGE: \t\t $(KNORA_ASSETS_IMAGE)"
-	@echo "KNORA_UPGRADE_IMAGE: \t\t $(KNORA_UPGRADE_IMAGE)"
 	@echo "KNORA_SALSAH1_IMAGE: \t\t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"
 	@echo "KNORA_GDB_IMPORT: \t\t $(KNORA_GDB_IMPORT)"
