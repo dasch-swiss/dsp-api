@@ -41,6 +41,9 @@ For information on command-line options, run the script with no arguments.
 
 ## Upgrading from a Knora Version Before 7.0.0
 
+**WARNING**: If you do not follow this procedure, your data may be
+corrupted, and Knora may not work.
+
 You must first upgrade to Knora 7.0.0, then upgrade again to the current
 version.
 

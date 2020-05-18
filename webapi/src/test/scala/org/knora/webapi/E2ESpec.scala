@@ -89,7 +89,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service without loading of the ontologies
+        // start the knora service, loading data from the repository
         appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         // waits until knora is up and running

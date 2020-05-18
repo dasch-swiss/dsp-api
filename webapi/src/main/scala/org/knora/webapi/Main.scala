@@ -61,8 +61,7 @@ object Main extends App with LiveCore {
               |     --help                      Shows this message.
             """.stripMargin)
     } else {
-        /* Start the HTTP layer, allowing access */
-        /* Don't skip loading of ontologies */
+        /* Start the HTTP layer, loading data from the repository */
         appActor ! AppStart(ignoreRepository = false, requiresIIIFService = true)
 
         /**
