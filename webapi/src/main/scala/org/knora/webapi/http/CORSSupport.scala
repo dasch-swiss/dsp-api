@@ -44,10 +44,9 @@ object CORSSupport extends Directives with LazyLogging {
     def CORS(route: Route, settings: SettingsImpl, system: ActorSystem): Route = {
         handleRejections(CorsDirectives.corsRejectionHandler) {
             cors(CorsSettings(system)) {
-                handleRejections(RejectionHandler.default) {
-                    handleExceptions(KnoraExceptionHandler(settings)) {
-                        route
-                    }
+                println(CorsSettings(system))
+                handleExceptions(KnoraExceptionHandler(settings)) {
+                    route
                 }
             }
         }
