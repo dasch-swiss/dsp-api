@@ -222,6 +222,21 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 	docker-compose -f docker/knora.docker-compose.yml stop api
 	docker-compose -f docker/knora.docker-compose.yml stop sipi
 
+.PHONY: test-only
+test-only: stack-without-api init-db-test-unit ## runs only the supplied tests, e.g., make test-only TARGET="*.CORSSupportE2ESpec".
+	docker run 	--rm \
+				-v /tmp:/tmp \
+				-v $(CURRENT_DIR):/src \
+				-v $(HOME)/.ivy2:/root/.ivy2 \
+				--name=api \
+				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
+				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
+				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
+				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
+				--network=docker_knora-net \
+				daschswiss/scala-sbt sbt "webapi/testOnly $(TARGET)"
+
 .PHONY: test-unit
 test-unit: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
 	docker run 	--rm \
@@ -235,7 +250,7 @@ test-unit: stack-without-api init-db-test-unit ## runs the unit tests (equivalen
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt 'webapi/testOnly *.CORSSupportV1E2ESpec'
+				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: test-unit-ci
 test-unit-ci: stack-without-api ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.

@@ -21,15 +21,11 @@ package org.knora.webapi.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.{E2ESpec, R2RSpec}
-import org.knora.webapi.http.CORSSupport.CORS
-import org.knora.webapi.http.ServerVersion.addServerHeader
-import org.knora.webapi.routing.v1.ResourcesRouteV1
+import org.knora.webapi.E2ESpec
 
 object CORSSupportE2ESpec {
     val config = ConfigFactory.parseString(
@@ -71,6 +67,36 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
             // logger.debug(s"response: ${response.toString}")
             responseToString(response) shouldEqual "HTTP method not allowed, supported methods: GET, PUT, POST, DELETE, HEAD, OPTIONS"
             response.status shouldBe StatusCodes.BadRequest
+        }
+
+        "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg", "utf-8")) ~> Origin(exampleOrigin)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.OK)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin)
+            )
+        }
+
+        "send `Access-Control-Allow-Origin` header when the Knora resource is NOT found " in {
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/nonexistent", "utf-8")) ~> Origin(exampleOrigin)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.NotFound)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin)
+            )
+        }
+
+        "send `Access-Control-Allow-Origin` header when the api endpoint route is NOT found " in {
+            val request = Get(baseApiUrl + "/NotFound") ~> Origin(exampleOrigin)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.NotFound)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin)
+            )
         }
 
     }
