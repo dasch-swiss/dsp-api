@@ -482,10 +482,10 @@ object SharedTestDataADM {
         shortcode = "0001",
         longname = Some("Anything Project"),
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
-        keywords = Seq("things", "arbitrary test data"),
+        keywords = Seq("things", "arbitrary test data").sorted,
         logo = None,
-        ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/minimal",
-                        "http://www.knora.org/ontology/0001/something", "http://www.knora.org/ontology/0001/empty-thing"),
+        ontologies = Seq("http://www.knora.org/ontology/0001/anything",
+                        "http://www.knora.org/ontology/0001/something"),
         status = true,
         selfjoin = false
     )
