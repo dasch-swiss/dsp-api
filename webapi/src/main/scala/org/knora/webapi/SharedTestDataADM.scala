@@ -484,7 +484,8 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
         keywords = Seq("things", "arbitrary test data"),
         logo = None,
-        ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
+        ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/minimal",
+                        "http://www.knora.org/ontology/0001/something", "http://www.knora.org/ontology/0001/empty-thing"),
         status = true,
         selfjoin = false
     )
@@ -504,7 +505,8 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
         keywords = Seq.empty[String],
         logo = None,
-        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
+        ontologies = Seq("http://www.knora.org/ontology/0801/beol", "http://www.knora.org/ontology/0801/biblio",
+                        "http://www.knora.org/ontology/0801/leibniz", "http://www.knora.org/ontology/0801/newton"),
         status = true,
         selfjoin = false
     )
