@@ -23,8 +23,7 @@ import akka.dispatch.MessageDispatcher
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
-import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
+import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
 import org.knora.webapi.{Core, KnoraDispatchers}
 
 import scala.concurrent.duration._
@@ -45,7 +44,7 @@ trait StartupUtils extends LazyLogging {
         implicit val timeout: Timeout = Timeout(5.second)
         val state: AppState = Await.result(appActor ? GetAppState(), timeout.duration).asInstanceOf[AppState]
 
-        if (state != AppState.Running) {
+        if (state != AppStates.Running) {
             // not in running state
             // we should wait a bit before we call ourselves again
             Await.result(blockingFuture(), 3.5.second)

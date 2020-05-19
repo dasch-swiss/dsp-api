@@ -24,7 +24,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM, StoreResponderRequestADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceFlushDB, CacheServiceFlushDBACK}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
@@ -52,7 +52,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * This method send a [[ResetTriplestoreContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManager]].
+      * This method send a [[ResetRepositoryContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManager]].
       *
       * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
       * @return a future containing a [[ResetTriplestoreContentResponseADM]].
@@ -67,7 +67,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
 
-            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects, prependDefaults)).mapTo[ResetTriplestoreContentACK]
+            resetResponse <- (storeManager ? ResetRepositoryContent(rdfDataObjects, prependDefaults)).mapTo[ResetRepositoryContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]

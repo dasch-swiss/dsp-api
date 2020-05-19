@@ -15,7 +15,7 @@
 	rdfs:label "The Yes, No, Maybe List"@en ;
 	rdfs:label "Die Ja, Nein, Vielleicht Liste"@de ;
 	rdfs:comment "This list can be used by all projects."@en ;
-  rdfs:comment "Diese Liste kann von allen Projekten verwendet werden."@de ;
+    rdfs:comment "Diese Liste kann von allen Projekten verwendet werden."@de ;
 	knora-base:attachedToProject knora-admin:SystemProject ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/FFFF/ynm01-01> , <http://rdfh.ch/lists/FFFF/ynm01-02> , <http://rdfh.ch/lists/FFFF/ynm01-03> .
 
@@ -31,11 +31,11 @@
 	knora-base:hasRootNode <http://rdfh.ch/lists/FFFF/ynm01> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "No"@en ;
-  rdfs:label "Nein"@de .
+    rdfs:label "Nein"@de .
 
 <http://rdfh.ch/lists/FFFF/ynm01-03> a knora-base:ListNode ;
 	knora-base:listNodeName "maybe" ;
 	knora-base:hasRootNode <http://rdfh.ch/lists/FFFF/ynm01> ;
 	knora-base:listNodePosition 2 ;
 	rdfs:label "Maybe"@en ;
-  rdfs:label "Vielleicht"@de .
+    rdfs:label "Vielleicht"@de .
