@@ -1887,6 +1887,23 @@ object SharedTestDataADM {
            |}
                 """.stripMargin
     }
+    def changeOntologyMetadata(ontologyIri: IRI, newLabel: String, modificationDate: Instant): String = {
+        s"""
+           |{
+           |  "@id": "$ontologyIri",
+           |  "rdfs:label": "$newLabel",
+           |  "knora-api:lastModificationDate": {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$modificationDate"
+           |  },
+           |  "@context": {
+           |    "xsd" :  "http://www.w3.org/2001/XMLSchema#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+           |  }
+           |}
+                """.stripMargin
+    }
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")

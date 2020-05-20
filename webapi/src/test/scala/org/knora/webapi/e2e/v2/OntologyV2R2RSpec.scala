@@ -252,22 +252,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         "change the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 
-            val params =
-                s"""
-                   |{
-                   |  "@id": "${fooIri.get}",
-                   |  "rdfs:label": "$newLabel",
-                   |  "knora-api:lastModificationDate": {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$fooLastModDate"
-                   |  },
-                   |  "@context": {
-                   |    "xsd" : "${OntologyConstants.Xsd.XsdPrefixExpansion}",
-                   |    "rdfs" : "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |    "knora-api" : "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changeOntologyMetadata(fooIri.get, newLabel, fooLastModDate)
+
 
             Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)

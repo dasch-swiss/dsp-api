@@ -20,6 +20,7 @@
 package org.knora.webapi.routing.v2
 
 import java.net.URLEncoder
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -179,6 +180,19 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def updateOntologyMetadataTestRequest: Future[TestDataFileContent] = {
+      val ontologyIri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost
+      val newLabel = "The modified foo ontology"
+      val newModificationDate = Instant.now
+      FastFuture.successful(
+          TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("update-ontology-metadata-request"),
+            text = SharedTestDataADM.changeOntologyMetadata(
+              ontologyIri, newLabel, newModificationDate
+            )
+        )
+      )
+    }
     private def getOntologyMetadataForProjects: Route = path(OntologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
         get {
             requestContext => {
@@ -830,7 +844,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
             createOntologyRequest <- createOntologyTestRequest
+            updateOntologyMetadataRequest <- updateOntologyMetadataTestRequest
         } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses +
-                ontologyMetadataResponses + createOntologyRequest
+                ontologyMetadataResponses + createOntologyRequest + updateOntologyMetadataRequest
     }
 }
