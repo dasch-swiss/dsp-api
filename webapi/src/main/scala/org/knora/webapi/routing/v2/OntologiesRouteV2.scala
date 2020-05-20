@@ -199,7 +199,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
-    // projects to return in test data.
+    // project ontologies to return in test data.
     private val testProjectOntologies: Map[String, IRI] = Map(
         "get-ontologies-project-anything" -> SharedTestDataADM.ANYTHING_PROJECT_IRI,
         "get-ontologies-project-incunabula" -> SharedTestDataADM.INCUNABULA_PROJECT_IRI,
@@ -207,7 +207,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     )
 
     /**
-      * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
+      * Provides JSON-LD responses to requests for ontologies of projects, for use in tests of generated client code.
       */
     private def getOntologyMetadataForProjectsTestResponses: Future[Set[TestDataFileContent]] = {
         val responseFutures: Iterable[Future[TestDataFileContent]] = testProjectOntologies.map {
@@ -269,7 +269,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     )
 
     /**
-     * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
+     * Provides JSON-LD responses to requests for ontologies, for use in tests of generated client code.
      */
     private def getOntologyTestResponses: Future[Set[TestDataFileContent]] = {
         val responseFutures: Iterable[Future[TestDataFileContent]] = testOntologies.map {
@@ -482,7 +482,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    // Ontologies to return in test data.
+    // Classes to return in test data.
     private val testClasses: Map[String, IRI] = Map(
         "get-class-anything-thing" ->  SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
         "get-class-image-bild" -> SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost,
@@ -495,8 +495,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       */
     private def getClassesTestResponses: Future[Set[TestDataFileContent]] = {
         val responseFutures: Iterable[Future[TestDataFileContent]] = testClasses.map {
-            case (filename, ontologyIri) =>
-                val encodedClassIri = URLEncoder.encode(ontologyIri, "UTF-8")
+            case (filename, classIri) =>
+                val encodedClassIri = URLEncoder.encode(classIri, "UTF-8")
 
                 for {
                     responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/classes/$encodedClassIri"))
@@ -675,6 +675,33 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+    // Classes to return in test data.
+    private val testProperties: Map[String, IRI] = Map(
+        "get-property-listValue" ->  SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost,
+        "get-property-DateValue" ->  SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost,
+        "get-property-textValue" -> SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost,
+        "get-property-linkvalue" -> SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost
+    )
+
+
+    /**
+      * Provides JSON-LD responses to requests for classes, for use in tests of generated client code.
+      */
+    private def getPropertiesTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testProperties.map {
+            case (filename, propertyIri) =>
+                val encodedPropertyIri = URLEncoder.encode(propertyIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/properties/$encodedPropertyIri"))
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
+    }
 
     private def deleteProperty: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
         delete {
@@ -793,6 +820,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             ontologyMetadataResponses: TestDataFileContent <- getOntologyMetadataTestResponse
             projectOntologiesResponses: Set[TestDataFileContent] <- getOntologyMetadataForProjectsTestResponses
             ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
-        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses + ontologyMetadataResponses
+            ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
+        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses + ontologyMetadataResponses
     }
 }

@@ -27,6 +27,8 @@ object SharedOntologyTestDataADM {
     val ANYTHING_ONTOLOGY_IRI_LocalHost: IRI =  LocalHost_Ontology + "/0001/anything/v2"
     val ANYTHING_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0001/anything"
     val ANYTHING_THING_RESOURCE_CLASS_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "Thing"
+    val ANYTHING_HasListItem_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasListItem"
+    val ANYTHING_HasDate_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasDate"
 
     // minimal
     val MINIMAL_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/minimal"
@@ -61,6 +63,7 @@ object SharedOntologyTestDataADM {
     val INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "book"
     val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
     val INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "page"
+    val INCUNABULA_PartOf_Property_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "partOfValue"
 
     // dokubib
     val DOKUBIB_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0804/dokubib"
