@@ -199,6 +199,31 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+    // projects to return in test data.
+    private val testProjectOntologies: Map[String, IRI] = Map(
+        "get-ontologies-project-anything" -> SharedTestDataADM.ANYTHING_PROJECT_IRI,
+        "get-ontologies-project-incunabula" -> SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        "get-ontologies-project-beol" -> SharedTestDataADM.BEOL_PROJECT_IRI
+    )
+
+    /**
+      * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
+      */
+    private def getOntologyMetadataForProjectsTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testProjectOntologies.map {
+            case (filename, projectIri) =>
+                val encodedProjectIri = URLEncoder.encode(projectIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/metadata/$encodedProjectIri"))
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
+    }
 
     private def getOntology: Route = path(OntologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
         get {
@@ -238,9 +263,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     // Ontologies to return in test data.
     private val testOntologies: Map[String, IRI] = Map(
         "knora-api-ontology" -> OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri,
-        "anything-ontology" -> "http://0.0.0.0:3333/ontology/0001/anything/v2",
-        "minimal-ontology" -> "http://0.0.0.0:3333/ontology/0001/minimal/v2",
-        "incunabula-ontology" -> "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
+        "anything-ontology" -> SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
+        "minimal-ontology" -> SharedOntologyTestDataADM.MINIMAL_ONTOLOGY_IRI_LocalHost,
+        "incunabula-ontology" -> SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost
     )
 
     /**
@@ -455,6 +480,33 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 )
             }
         }
+    }
+
+    // Ontologies to return in test data.
+    private val testClasses: Map[String, IRI] = Map(
+        "get-class-anything-thing" ->  SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
+        "get-class-image-bild" -> SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost,
+        "get-class-incunabula-book" -> SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost,
+        "get-class-incunabula-page" -> SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost
+    )
+
+    /**
+      * Provides JSON-LD responses to requests for classes, for use in tests of generated client code.
+      */
+    private def getClassesTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testClasses.map {
+            case (filename, ontologyIri) =>
+                val encodedClassIri = URLEncoder.encode(ontologyIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/classes/$encodedClassIri"))
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
     }
 
     private def deleteClass: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
@@ -739,6 +791,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         for {
             ontologyResponses: Set[TestDataFileContent] <- getOntologyTestResponses
             ontologyMetadataResponses: TestDataFileContent <- getOntologyMetadataTestResponse
-        } yield ontologyResponses + ontologyMetadataResponses
+            projectOntologiesResponses: Set[TestDataFileContent] <- getOntologyMetadataForProjectsTestResponses
+            ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
+        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses + ontologyMetadataResponses
     }
 }
