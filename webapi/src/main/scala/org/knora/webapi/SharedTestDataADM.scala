@@ -1872,7 +1872,21 @@ object SharedTestDataADM {
             |  }
             |}""".stripMargin
     }
-
+    def createOntology(projectIri: IRI, label: String): String = {
+        s"""
+           |{
+           |    "knora-api:ontologyName": "foo",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "$projectIri"
+           |    },
+           |    "rdfs:label": "$label",
+           |    "@context": {
+           |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+           |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+           |    }
+           |}
+                """.stripMargin
+    }
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")

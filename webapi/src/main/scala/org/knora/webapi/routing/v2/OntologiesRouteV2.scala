@@ -27,6 +27,7 @@ import akka.http.scaladsl.client.RequestBuilding.Get
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.Materializer
+import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -776,7 +777,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
-
+    private def createOntologyTestRequest: Future[TestDataFileContent] = {
+        FastFuture.successful(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology"),
+                    text = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
+            )
+        )
+    }
     private def deleteOntology: Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
         delete {
             requestContext => {
@@ -821,6 +829,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             projectOntologiesResponses: Set[TestDataFileContent] <- getOntologyMetadataForProjectsTestResponses
             ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
-        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses + ontologyMetadataResponses
+            createOntologyRequest <- createOntologyTestRequest
+        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses +
+                ontologyMetadataResponses + createOntologyRequest
     }
 }

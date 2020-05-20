@@ -227,20 +227,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         "create an empty ontology called 'foo' with a project code" in {
             val label = "The foo ontology"
 
-            val params =
-                s"""
-                   |{
-                   |    "knora-api:ontologyName": "foo",
-                   |    "knora-api:attachedToProject": {
-                   |      "@id": "$imagesProjectIri"
-                   |    },
-                   |    "rdfs:label": "$label",
-                   |    "@context": {
-                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-                   |    }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.createOntology(imagesProjectIri, label)
+
 
             Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
