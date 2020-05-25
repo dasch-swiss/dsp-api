@@ -25,7 +25,6 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding.Get
-import akka.http.scaladsl.client.RequestBuilding.Delete
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.Materializer
@@ -704,6 +703,22 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+    private def updatePropertyTestRequest: Future[Set[TestDataFileContent]] = {
+        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("change-property-comment"),
+                    text = SharedTestDataADM.changePropertyComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("change-property-label"),
+                    text = SharedTestDataADM.changePropertyLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                )
+            )
+        )
+    }
 
     private def getProperties: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
         get {
@@ -907,24 +922,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def deleteOntologyTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
-        val ontologyIri = SharedOntologyTestDataADM.FOO_ONTOLOGY_IRI_LocalHost
-        val encodedOntologyIri = URLEncoder.encode(ontologyIri, "UTF-8")
-        val lastModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
-        val responseFut = doTestDataRequest(Delete(s"$baseApiUrl$OntologiesBasePathString/$encodedOntologyIri/?lastModificationDate=$lastModificationDate"))
-        responseFut.map(
-            responseString =>
-                Set(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath.makeJsonPath("delete-ontology-request"),
-                        responseString
-                    ),
-                    TestDataFileContent(
-                        filePath = TestDataFilePath.makeJsonPath("delete-ontology-response"),
-                        text = SharedTestDataADM.successResponse(s"${ontologyIri} has been deleted"))
-                )
-        )
-    }
+
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
@@ -937,15 +935,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
             createOntologyRequest: TestDataFileContent <- createOntologyTestRequest
             updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
-//            deleteOntologyTestRequestAndResponse: Set[TestDataFileContent] <- deleteOntologyTestRequestAndResponse
             createClassTestRequest: Set[TestDataFileContent] <- createClassTestRequest
             addCardinalitiesTestRequest: TestDataFileContent <- addCardinalitiesTestRequest
             createPropertyTestRequest: TestDataFileContent <- createPropertyTestRequest
             updateClassTestRequest: Set[TestDataFileContent] <- updateClassTestRequest
             replaceCardinalitiesTestRequest: Set[TestDataFileContent] <- replaceCardinalitiesTestRequest
-
-        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses ++ createClassTestRequest + ontologyMetadataResponses +
-                createOntologyRequest + updateOntologyMetadataRequest + addCardinalitiesTestRequest + createPropertyTestRequest ++ updateClassTestRequest ++ replaceCardinalitiesTestRequest
-//        ++deleteOntologyTestRequestAndResponse
+            updatePropertyTestRequest: Set[TestDataFileContent] <- updatePropertyTestRequest
+        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses ++
+          createClassTestRequest + ontologyMetadataResponses + createOntologyRequest + updateOntologyMetadataRequest +
+          addCardinalitiesTestRequest + createPropertyTestRequest ++ updateClassTestRequest ++
+          replaceCardinalitiesTestRequest ++ updatePropertyTestRequest
     }
 }

@@ -306,39 +306,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the labels of a property" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:hasName",
-                   |    "@type" : "owl:ObjectProperty",
-                   |    "rdfs:label" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "has name"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "a nom"
-                   |    }, {
-                   |      "@language" : "de",
-                   |      "@value" : "hat Namen"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changePropertyLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -359,39 +327,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the comments of a property" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:hasName",
-                   |    "@type" : "owl:ObjectProperty",
-                   |    "rdfs:comment" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "The name of a Thing"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "Le nom d'une chose"
-                   |    }, {
-                   |      "@language" : "de",
-                   |      "@value" : "Der Name eines Dinges"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changePropertyComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape

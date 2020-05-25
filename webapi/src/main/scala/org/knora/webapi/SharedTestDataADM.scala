@@ -2210,6 +2210,74 @@ object SharedTestDataADM {
           |}
             """.stripMargin
     }
+    def changePropertyComment(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""
+           |{
+           |  "@id" : "$anythingOntologyIri",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:hasName",
+           |    "@type" : "owl:ObjectProperty",
+           |    "rdfs:comment" : [ {
+           |      "@language" : "en",
+           |      "@value" : "The name of a Thing"
+           |    }, {
+           |      "@language" : "fr",
+           |      "@value" : "Le nom d'une chose"
+           |    }, {
+           |      "@language" : "de",
+           |      "@value" : "Der Name eines Dinges"
+           |    } ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "$anythingOntologyIri#"
+           |  }
+           |}
+          """.stripMargin
+    }
+    def changePropertyLabel(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""
+           |{
+           |  "@id" : "$anythingOntologyIri",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:hasName",
+           |    "@type" : "owl:ObjectProperty",
+           |    "rdfs:label" : [ {
+           |      "@language" : "en",
+           |      "@value" : "has name"
+           |    }, {
+           |      "@language" : "fr",
+           |      "@value" : "a nom"
+           |    }, {
+           |      "@language" : "de",
+           |      "@value" : "hat Namen"
+           |    } ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "$anythingOntologyIri#"
+           |  }
+           |}
+          """.stripMargin
+    }
 
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
