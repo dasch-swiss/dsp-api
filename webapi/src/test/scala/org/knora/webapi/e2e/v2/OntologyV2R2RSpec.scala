@@ -603,29 +603,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "remove the cardinality for the property anything:hasOtherNothing from the class anything:Nothing" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class"
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.removeCardinalityOfProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+
 
             Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -883,29 +862,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "remove all cardinalities from the class anything:Nothing" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class"
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.removeAllClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)

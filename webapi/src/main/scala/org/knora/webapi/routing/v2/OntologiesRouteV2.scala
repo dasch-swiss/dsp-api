@@ -483,14 +483,24 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def replaceCardinalitiesTestRequest: Future[TestDataFileContent] = {
+    private def replaceCardinalitiesTestRequest: Future[Set[TestDataFileContent]] = {
         var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
         FastFuture.successful(
+          Set(
             TestDataFileContent(
                 filePath = TestDataFilePath.makeJsonPath("replace-class-cardinalities"),
                 text = SharedTestDataADM.replaceClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+            ),
+            TestDataFileContent(
+              filePath = TestDataFilePath.makeJsonPath("remove-property-cardinality"),
+              text = SharedTestDataADM.removeCardinalityOfProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+            ),
+            TestDataFileContent(
+                  filePath = TestDataFilePath.makeJsonPath("remove-class-cardinalities"),
+                  text = SharedTestDataADM.removeAllClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
             )
+          )
         )
     }
     private def getClasses: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
@@ -694,7 +704,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
-
 
     private def getProperties: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
         get {
@@ -933,9 +942,10 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             addCardinalitiesTestRequest: TestDataFileContent <- addCardinalitiesTestRequest
             createPropertyTestRequest: TestDataFileContent <- createPropertyTestRequest
             updateClassTestRequest: Set[TestDataFileContent] <- updateClassTestRequest
-            replaceCardinalitiesTestRequest: TestDataFileContent <- replaceCardinalitiesTestRequest
+            replaceCardinalitiesTestRequest: Set[TestDataFileContent] <- replaceCardinalitiesTestRequest
+
         } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses ++ createClassTestRequest + ontologyMetadataResponses +
-                createOntologyRequest + updateOntologyMetadataRequest + addCardinalitiesTestRequest + createPropertyTestRequest ++ updateClassTestRequest + replaceCardinalitiesTestRequest
+                createOntologyRequest + updateOntologyMetadataRequest + addCardinalitiesTestRequest + createPropertyTestRequest ++ updateClassTestRequest ++ replaceCardinalitiesTestRequest
 //        ++deleteOntologyTestRequestAndResponse
     }
 }
