@@ -463,36 +463,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the labels of a class" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:label" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "nothing"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "rien"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changeClassLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -513,36 +484,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the comments of a class" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:comment" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "Represents nothing"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "ne représente rien"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changeClassComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -897,36 +839,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the cardinalities of the class anything:Nothing, replacing anything:hasNothingness with anything:hasEmptiness" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$anythingLastModDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:subClassOf" : {
-                   |      "@type": "owl:Restriction",
-                   |      "owl:maxCardinality": 1,
-                   |      "owl:onProperty": {
-                   |        "@id" : "anything:hasEmptiness"
-                   |      }
-                   |    }
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.replaceClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape

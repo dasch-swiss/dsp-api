@@ -1979,7 +1979,7 @@ object SharedTestDataADM {
            |    "owl" : "http://www.w3.org/2002/07/owl#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |    "anything" : "$anythinOntologyIri#"
            |  }
            |}
             """.stripMargin
@@ -2010,15 +2010,15 @@ object SharedTestDataADM {
            |    "owl" : "http://www.w3.org/2002/07/owl#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |    "anything" : "$anythinOntologyIri#"
            |  }
            |}
             """.stripMargin
     }
-    def createProperty(ontologyIri:IRI): String = {
+    def createProperty(anythinOntologyIri:IRI): String = {
         s"""
           |{
-          |  "@id" : "$ontologyIri",
+          |  "@id" : "$anythinOntologyIri",
           |  "@type" : "owl:Ontology",
           |  "knora-api:lastModificationDate" : {
           |    "@type" : "xsd:dateTimeStamp",
@@ -2064,11 +2064,104 @@ object SharedTestDataADM {
           |    "owl" : "http://www.w3.org/2002/07/owl#",
           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |    "anything" : "$anythinOntologyIri#"
           |  }
           |}
         """.stripMargin
     }
+    def changeClassLabel(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""
+         |{
+         |  "@id" : "$anythingOntologyIri",
+         |  "@type" : "owl:Ontology",
+         |  "knora-api:lastModificationDate" : {
+         |    "@type" : "xsd:dateTimeStamp",
+         |    "@value" : "$anythingLastModDate"
+         |  },
+         |  "@graph" : [ {
+         |    "@id" : "anything:Nothing",
+         |    "@type" : "owl:Class",
+         |    "rdfs:label" : [ {
+         |      "@language" : "en",
+         |      "@value" : "nothing"
+         |    }, {
+         |      "@language" : "fr",
+         |      "@value" : "rien"
+         |    } ]
+         |  } ],
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "owl" : "http://www.w3.org/2002/07/owl#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "$anythingOntologyIri#"
+         |  }
+         |}
+        """.stripMargin
+    }
+    def changeClassComment(anythingOntologyIri: IRI, anythingLastModDate: Instant):String = {
+        s"""
+           |{
+           |  "@id" : "$anythingOntologyIri",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:Nothing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:comment" : [ {
+           |      "@language" : "en",
+           |      "@value" : "Represents nothing"
+           |    }, {
+           |      "@language" : "fr",
+           |      "@value" : "ne représente rien"
+           |    } ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "$anythingOntologyIri#"
+           |  }
+           |}
+                """.stripMargin
+    }
+  def replaceClassCardinalities(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
+    s"""
+       |{
+       |  "@id" : "$anythingOntologyIri",
+       |  "@type" : "owl:Ontology",
+       |  "knora-api:lastModificationDate" : {
+       |    "@type" : "xsd:dateTimeStamp",
+       |    "@value" : "$anythingLastModDate"
+       |  },
+       |  "@graph" : [ {
+       |    "@id" : "anything:Nothing",
+       |    "@type" : "owl:Class",
+       |    "rdfs:subClassOf" : {
+       |      "@type": "owl:Restriction",
+       |      "owl:maxCardinality": 1,
+       |      "owl:onProperty": {
+       |        "@id" : "anything:hasEmptiness"
+       |      }
+       |    }
+       |  } ],
+       |  "@context" : {
+       |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "owl" : "http://www.w3.org/2002/07/owl#",
+       |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "anything" : "$anythingOntologyIri#"
+       |  }
+       |}
+            """.stripMargin
+  }
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
