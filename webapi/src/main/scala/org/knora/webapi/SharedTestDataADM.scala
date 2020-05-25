@@ -1884,8 +1884,7 @@ object SharedTestDataADM {
            |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
            |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
            |    }
-           |}
-                """.stripMargin
+           |}""".stripMargin
     }
     def changeOntologyMetadata(ontologyIri: IRI, newLabel: String, modificationDate: Instant): String = {
         s"""
@@ -1901,8 +1900,174 @@ object SharedTestDataADM {
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
            |  }
+           |}""".stripMargin
+    }
+
+    def createClassWithCardinalities(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
+      s"""
+         |{
+         |  "@id" : "$anythinOntologyIri",
+         |  "@type" : "owl:Ontology",
+         |  "knora-api:lastModificationDate" : {
+         |    "@type" : "xsd:dateTimeStamp",
+         |    "@value" : "$anythingLastModDate"
+         |  },
+         |  "@graph" : [ {
+         |    "@id" : "anything:WildThing",
+         |    "@type" : "owl:Class",
+         |    "rdfs:label" : {
+         |      "@language" : "en",
+         |      "@value" : "wild thing"
+         |    },
+         |    "rdfs:comment" : {
+         |      "@language" : "en",
+         |      "@value" : "A thing that is wild"
+         |    },
+         |    "rdfs:subClassOf" : [
+         |      {
+         |        "@id": "anything:Thing"
+         |      },
+         |      {
+         |        "@type": "http://www.w3.org/2002/07/owl#Restriction",
+         |        "owl:maxCardinality": 1,
+         |        "owl:onProperty": {
+         |          "@id": "anything:hasName"
+         |        },
+         |        "salsah-gui:guiOrder": 1
+         |      }
+         |    ]
+         |  } ],
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+         |    "owl" : "http://www.w3.org/2002/07/owl#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}
+            """.stripMargin
+    }
+    def createClassWithoutCardinalities(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""
+           |{
+           |  "@id" : "$anythinOntologyIri",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:Nothing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:label" : {
+           |      "@language" : "en",
+           |      "@value" : "nothing"
+           |    },
+           |    "rdfs:comment" : {
+           |      "@language" : "en",
+           |      "@value" : "Represents nothing"
+           |    },
+           |    "rdfs:subClassOf" : {
+           |      "@id" : "knora-api:Resource"
+           |    }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
            |}
-                """.stripMargin
+            """.stripMargin
+    }
+    def addCardinality(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""
+           |{
+           |  "@id" : "$anythinOntologyIri",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:Nothing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:subClassOf" : {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality" : 1,
+           |      "owl:onProperty" : {
+           |        "@id" : "anything:hasOtherNothing"
+           |      }
+           |    }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}
+            """.stripMargin
+    }
+    def createProperty(ontologyIri:IRI): String = {
+        s"""
+          |{
+          |  "@id" : "$ontologyIri",
+          |  "@type" : "owl:Ontology",
+          |  "knora-api:lastModificationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "2017-12-19T15:23:42.166Z"
+          |  },
+          |  "@graph" : [ {
+          |      "@id" : "anything:hasName",
+          |      "@type" : "owl:ObjectProperty",
+          |      "knora-api:subjectType" : {
+          |        "@id" : "anything:Thing"
+          |      },
+          |      "knora-api:objectType" : {
+          |        "@id" : "knora-api:TextValue"
+          |      },
+          |      "rdfs:comment" : [ {
+          |        "@language" : "en",
+          |        "@value" : "The name of a Thing"
+          |      }, {
+          |        "@language" : "de",
+          |        "@value" : "Der Name eines Dinges"
+          |      } ],
+          |      "rdfs:label" : [ {
+          |        "@language" : "en",
+          |        "@value" : "has name"
+          |      }, {
+          |        "@language" : "de",
+          |        "@value" : "hat Namen"
+          |      } ],
+          |      "rdfs:subPropertyOf" : [ {
+          |        "@id" : "knora-api:hasValue"
+          |      }, {
+          |        "@id" : "http://schema.org/name"
+          |      } ],
+          |      "salsah-gui:guiElement" : {
+          |        "@id" : "salsah-gui:SimpleText"
+          |      },
+          |      "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100" ]
+          |  } ],
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |  }
+          |}
+        """.stripMargin
     }
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"

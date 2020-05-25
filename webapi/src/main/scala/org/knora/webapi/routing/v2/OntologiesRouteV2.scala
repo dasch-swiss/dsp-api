@@ -338,6 +338,23 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def createClassTestRequest: Future[Set[TestDataFileContent]] = {
+        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-class-with-cardinalities"),
+                    text = SharedTestDataADM.createClassWithCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-class-without-cardinalities"),
+                    text = SharedTestDataADM.createClassWithoutCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                )
+            )
+        )
+    }
+
     private def updateClass: Route = path(OntologiesBasePath / "classes") {
         put {
             // Change the labels or comments of a class.
@@ -405,7 +422,16 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+    private def addCardinalitiesTestRequest: Future[TestDataFileContent] = {
+        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
+        FastFuture.successful(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing"),
+                    text = SharedTestDataADM.addCardinality(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                )
+        )
+    }
     private def replaceCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
         put {
             // Change a class's cardinalities.
@@ -600,6 +626,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def createPropertyTestRequest: Future[TestDataFileContent] = {
+        FastFuture.successful(
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("create-property-hasName"),
+                text = SharedTestDataADM.createProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)
+            )
+        )
+    }
     private def updateProperty: Route = path(OntologiesBasePath / "properties") {
         put {
             // Change the labels or comments of a property.
@@ -864,10 +898,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             projectOntologiesResponses: Set[TestDataFileContent] <- getOntologyMetadataForProjectsTestResponses
             ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
-            createOntologyRequest <- createOntologyTestRequest
-            updateOntologyMetadataRequest <- updateOntologyMetadataTestRequest
-            deleteOntologyTestRequestAndResponse: Set[TestDataFileContent] <- deleteOntologyTestRequestAndResponse
-        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses ++
-                deleteOntologyTestRequestAndResponse + ontologyMetadataResponses + createOntologyRequest  + updateOntologyMetadataRequest
+            createOntologyRequest: TestDataFileContent <- createOntologyTestRequest
+            updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
+//            deleteOntologyTestRequestAndResponse: Set[TestDataFileContent] <- deleteOntologyTestRequestAndResponse
+            createClassTestRequest: Set[TestDataFileContent] <- createClassTestRequest
+            addCardinalitiesTestRequest: TestDataFileContent <- addCardinalitiesTestRequest
+            createPropertyTestRequest: TestDataFileContent <- createPropertyTestRequest
+        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses ++ createClassTestRequest + ontologyMetadataResponses +
+                createOntologyRequest + updateOntologyMetadataRequest + addCardinalitiesTestRequest + createPropertyTestRequest
+//        ++deleteOntologyTestRequestAndResponse
     }
 }
