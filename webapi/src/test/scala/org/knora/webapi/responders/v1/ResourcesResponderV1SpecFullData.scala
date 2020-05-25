@@ -20,7 +20,7 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.ActorSystem
-import org.knora.webapi.{Settings, SettingsImpl}
+import org.knora.webapi.{KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}
@@ -30,7 +30,7 @@ object ResourcesResponderV1SpecFullData {
 
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
-    val settings: SettingsImpl = Settings(system)
+    val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(

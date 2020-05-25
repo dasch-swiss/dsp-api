@@ -83,7 +83,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     /**
      * The application's configuration.
      */
-    implicit val settings: SettingsImpl = Settings(system)
+    implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
      * Provides the actor materializer (akka-http)
@@ -98,7 +98,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     /**
      * Timeout definition
      */
-    implicit protected val timeout: Timeout = settings.defaultTimeout
+    implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
 
     /**
      * A user representing the Knora API server, used for initialisation on startup.
@@ -139,7 +139,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     private var printConfigState = false
     private var ignoreRepository = true
     private var withIIIFService = true
-    private val withCacheService = settings.cacheServiceEnabled
+    private val withCacheService = knoraSettings.cacheServiceEnabled
 
 
     /**
@@ -288,7 +288,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         case GetAllowReloadOverHTTPState() =>
             logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-            sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
+            sender ! (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP)
 
         case SetPrintConfigExtendedState(value) =>
             logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
@@ -296,7 +296,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         case GetPrintConfigExtendedState() =>
             logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
-            sender ! (printConfigState | settings.printExtendedConfig)
+            sender ! (printConfigState | knoraSettings.printExtendedConfig)
 
         /* check repository request */
         case CheckTriplestore() =>
@@ -326,7 +326,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         /* create caches request */
         case CreateCaches() =>
-            CacheUtil.createCaches(settings.caches)
+            CacheUtil.createCaches(knoraSettings.caches)
             self ! SetAppState(AppStates.CachesReady)
 
         case UpdateSearchIndex() =>
@@ -412,7 +412,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                     new UsersRouteADM(routeData).knoraApiPath ~
                     new SipiRouteADM(routeData).knoraApiPath ~
                     new SwaggerApiDocsRoute(routeData).knoraApiPath,
-                settings,
+                knoraSettings,
                 system
             )
         }
@@ -431,8 +431,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         val bindingFuture: Future[Http.ServerBinding] = Http()
             .bindAndHandle(
                 Route.handlerFlow(apiRoutes),
-                settings.internalKnoraApiHost,
-                settings.internalKnoraApiPort
+                knoraSettings.internalKnoraApiHost,
+                knoraSettings.internalKnoraApiPort
             )
 
         bindingFuture onComplete {
@@ -441,7 +441,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                 // Transition to ready state
                 self ! AppReady()
 
-                if (settings.prometheusEndpoint) {
+                if (knoraSettings.prometheusEndpoint) {
                     // Load Kamon monitoring
                     Kamon.loadModules()
                 }
@@ -453,8 +453,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                 if (retryCnt < 5) {
                     logger.error(
                         "Failed to bind to {}:{}! - {} - retryCnt: {}",
-                        settings.internalKnoraApiHost,
-                        settings.internalKnoraApiPort,
+                        knoraSettings.internalKnoraApiHost,
+                        knoraSettings.internalKnoraApiPort,
                         ex.getMessage,
                         retryCnt
                     )
@@ -462,8 +462,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                 } else {
                     logger.error(
                         "Failed to bind to {}:{}! - {}",
-                        settings.internalKnoraApiHost,
-                        settings.internalKnoraApiPort,
+                        knoraSettings.internalKnoraApiHost,
+                        knoraSettings.internalKnoraApiPort,
                         ex.getMessage
                     )
                     self ! AppStop()
@@ -485,7 +485,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         super.postStop()
         logger.info("ApplicationActor - shutdown in progress, initiating post stop cleanup. Bye!")
 
-        if (settings.prometheusEndpoint) {
+        if (knoraSettings.prometheusEndpoint) {
             // Stop Kamon monitoring
             Kamon.stopModules()
         }
@@ -512,30 +512,30 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
 
         msg += "\n"
-        msg += s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}\n"
+        msg += s"Knora API Server started at http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
         msg += "----------------------------------------------------------------\n"
 
-        if (allowReloadOverHTTPState | settings.allowReloadOverHTTP) {
+        if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
             msg += "----------------------------------------------------------------\n"
         }
 
         // which repository are we using
-        msg += s"DB-Name: ${settings.triplestoreDatabaseName}\n"
-        msg += s"DB-Type: ${settings.triplestoreType}\n"
-        msg += s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}\n"
+        msg += s"DB-Name: ${knoraSettings.triplestoreDatabaseName}\n"
+        msg += s"DB-Type: ${knoraSettings.triplestoreType}\n"
+        msg += s"DB Server: ${knoraSettings.triplestoreHost}, DB Port: ${knoraSettings.triplestorePort}\n"
 
 
         if (printConfigState) {
 
-            msg += s"DB User: ${settings.triplestoreUsername}\n"
-            msg += s"DB Password: ${settings.triplestorePassword}\n"
+            msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
+            msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"
 
-            msg += s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
-            msg += s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}\n"
-            msg += s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}\n"
-            msg += s"Sipi internal URL: ${settings.internalSipiBaseUrl}\n"
-            msg += s"Sipi external URL: ${settings.externalSipiBaseUrl}\n"
+            msg += s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
+            msg += s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}\n"
+            msg += s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}\n"
+            msg += s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}\n"
+            msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
         }
 
         msg += "================================================================\n"

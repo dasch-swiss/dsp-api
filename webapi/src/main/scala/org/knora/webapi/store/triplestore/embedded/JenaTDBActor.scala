@@ -48,7 +48,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     private val system = context.system
     private implicit val executionContext = system.dispatcher
-    private val settings = Settings(system)
+    private val settings = KnoraSettings(system)
 
 
     private val persist = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")

@@ -27,7 +27,7 @@ import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, Settings, SipiException}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, KnoraSettings, SipiException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -69,7 +69,7 @@ class MockSipiConnector extends Actor with ActorLogging {
     implicit val system: ActorSystem = context.system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    val settings = Settings(system)
+    val settings = KnoraSettings(system)
 
 
     def receive = {

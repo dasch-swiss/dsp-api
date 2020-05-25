@@ -70,7 +70,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
     /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 

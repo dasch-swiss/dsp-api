@@ -48,7 +48,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     def actorRefFactory: ActorSystem = system
 
-    val settings: SettingsImpl = Settings(system)
+    val settings: KnoraSettingsImpl = KnoraSettings(system)
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings)

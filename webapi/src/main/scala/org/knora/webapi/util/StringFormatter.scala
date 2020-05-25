@@ -302,7 +302,7 @@ object StringFormatter {
      *
      * @param settings the application settings.
      */
-    def init(settings: SettingsImpl): Unit = {
+    def init(settings: KnoraSettingsImpl): Unit = {
         this.synchronized {
             generalInstance match {
                 case Some(_) => ()
@@ -661,7 +661,7 @@ object IriConversions {
 /**
  * Handles string parsing, formatting, conversion, and validation.
  */
-class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, maybeKnoraHostAndPort: Option[String] = None, initForTest: Boolean = false) {
+class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = None, maybeKnoraHostAndPort: Option[String] = None, initForTest: Boolean = false) {
 
     import StringFormatter._
 

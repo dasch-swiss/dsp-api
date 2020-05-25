@@ -56,7 +56,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     /* needed by the core trait (represents the KnoraTestCore trait)*/
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 

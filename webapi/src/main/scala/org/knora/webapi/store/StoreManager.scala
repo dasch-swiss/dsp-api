@@ -55,7 +55,7 @@ class StoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     /**
      * The Knora settings.
      */
-    protected val settings: SettingsImpl = Settings(system)
+    protected val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
      * Starts the Triplestore Manager Actor

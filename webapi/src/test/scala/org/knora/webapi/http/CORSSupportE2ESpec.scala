@@ -52,7 +52,7 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
     "A Route with enabled CORS support" should {
 
         "accept valid pre-flight requests" in {
-            val request = Options(baseApiUrl + s"/admin/projects")
+            val request = Get(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
             // logger.debug(s"response: ${response.toString}")
             response.status shouldBe StatusCodes.OK

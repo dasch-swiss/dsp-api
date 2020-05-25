@@ -76,7 +76,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     /**
      * The application settings.
      */
-    protected val settings: SettingsImpl = Settings(system)
+    protected val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
      * The main application actor.
