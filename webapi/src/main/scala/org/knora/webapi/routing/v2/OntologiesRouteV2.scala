@@ -25,6 +25,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding.Get
+import akka.http.scaladsl.client.RequestBuilding.Delete
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.Materializer
@@ -181,7 +182,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def updateOntologyMetadataTestRequest: Future[TestDataFileContent] = {
-      val ontologyIri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost
+      val ontologyIri = SharedOntologyTestDataADM.FOO_ONTOLOGY_IRI_LocalHost
+
       val newLabel = "The modified foo ontology"
       val newModificationDate = Instant.now
       FastFuture.successful(
@@ -834,6 +836,25 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def deleteOntologyTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
+        val ontologyIri = SharedOntologyTestDataADM.FOO_ONTOLOGY_IRI_LocalHost
+        val encodedOntologyIri = URLEncoder.encode(ontologyIri, "UTF-8")
+        val lastModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
+        val responseFut = doTestDataRequest(Delete(s"$baseApiUrl$OntologiesBasePathString/$encodedOntologyIri/?lastModificationDate=$lastModificationDate"))
+        responseFut.map(
+            responseString =>
+                Set(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath.makeJsonPath("delete-ontology-request"),
+                        responseString
+                    ),
+                    TestDataFileContent(
+                        filePath = TestDataFilePath.makeJsonPath("delete-ontology-response"),
+                        text = SharedTestDataADM.successResponse(s"${ontologyIri} has been deleted"))
+                )
+        )
+    }
+
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
                              materializer: Materializer): Future[Set[TestDataFileContent]] = {
@@ -845,7 +866,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
             createOntologyRequest <- createOntologyTestRequest
             updateOntologyMetadataRequest <- updateOntologyMetadataTestRequest
-        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses +
-                ontologyMetadataResponses + createOntologyRequest + updateOntologyMetadataRequest
+            deleteOntologyTestRequestAndResponse: Set[TestDataFileContent] <- deleteOntologyTestRequestAndResponse
+        } yield ontologyResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++ ontologyPropertyResponses ++
+                deleteOntologyTestRequestAndResponse + ontologyMetadataResponses + createOntologyRequest  + updateOntologyMetadataRequest
     }
 }

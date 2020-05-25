@@ -74,4 +74,7 @@ object SharedOntologyTestDataADM {
     val WEBERN_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/08AE/webern"
     val WEBERN_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/08AE/webern/v2"
     val WEBERN_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/08AE/webern"
+
+    //foo ontology
+    val FOO_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/00FF/foo/v2"
 }
