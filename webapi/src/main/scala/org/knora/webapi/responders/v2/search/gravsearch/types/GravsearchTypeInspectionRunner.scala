@@ -22,16 +22,17 @@ package org.knora.webapi.responders.v2.search.gravsearch.types
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{GravsearchException, KnoraDispatchers, OntologyConstants}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Runs Gravsearch type inspection using one or more type inspector implementations.
-  *
-  * @param system     the Akka actor system.
-  * @param inferTypes if true, use type inference.
-  */
+ * Runs Gravsearch type inspection using one or more type inspector implementations.
+ *
+ * @param responderData the Knora [[ResponderData]].
+ * @param inferTypes    if true, use type inference.
+ */
 class GravsearchTypeInspectionRunner(responderData: ResponderData,
                                      inferTypes: Boolean = true) {
     private implicit val executionContext: ExecutionContext = responderData.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -55,15 +56,17 @@ class GravsearchTypeInspectionRunner(responderData: ResponderData,
     )
 
     /**
-      * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
-      * in the query.
-      *
-      * @param whereClause    the Gravsearch WHERE clause.
-      * @param requestingUser the requesting user.
-      * @return the result of the type inspection.
-      */
+     * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
+     * in the query.
+     *
+     * @param whereClause    the Gravsearch WHERE clause.
+     * @param requestingUser the requesting user.
+     * @return the result of the type inspection.
+     */
     def inspectTypes(whereClause: WhereClause,
                      requestingUser: UserADM): Future[GravsearchTypeInspectionResult] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         for {
             // Get the set of typeable entities in the Gravsearch query.
             typeableEntities: Set[TypeableEntity] <- Future {
@@ -75,7 +78,7 @@ class GravsearchTypeInspectionRunner(responderData: ResponderData,
             }
 
             // In the initial intermediate result, none of the entities have types yet.
-            initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
+            initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult.newInstance(typeableEntities)
 
             // Run the pipeline and get its result.
             lastResult: IntermediateTypeInspectionResult <- typeInspectionPipeline.inspectTypes(
@@ -110,16 +113,16 @@ class GravsearchTypeInspectionRunner(responderData: ResponderData,
 
 
     /**
-      * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.
-      */
+     * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.
+     */
     private class TypeableEntityCollectingWhereVisitor extends WhereVisitor[Set[TypeableEntity]] {
         /**
-          * Collects typeable entities from a statement.
-          *
-          * @param statementPattern the pattern to be visited.
-          * @param acc              the accumulator.
-          * @return the accumulator.
-          */
+         * Collects typeable entities from a statement.
+         *
+         * @param statementPattern the pattern to be visited.
+         * @param acc              the accumulator.
+         * @return the accumulator.
+         */
         override def visitStatementInWhere(statementPattern: StatementPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
             statementPattern.pred match {
                 case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type =>
@@ -133,23 +136,23 @@ class GravsearchTypeInspectionRunner(responderData: ResponderData,
         }
 
         /**
-          * Collects typeable entities from a `FILTER`.
-          *
-          * @param filterPattern the pattern to be visited.
-          * @param acc           the accumulator.
-          * @return the accumulator.
-          */
+         * Collects typeable entities from a `FILTER`.
+         *
+         * @param filterPattern the pattern to be visited.
+         * @param acc           the accumulator.
+         * @return the accumulator.
+         */
         override def visitFilter(filterPattern: FilterPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
             visitFilterExpression(filterPattern.expression, acc)
         }
 
         /**
-          * Collects typeable entities from a filter expression.
-          *
-          * @param filterExpression the filter expression to be visited.
-          * @param acc              the accumulator.
-          * @return the accumulator.
-          */
+         * Collects typeable entities from a filter expression.
+         *
+         * @param filterExpression the filter expression to be visited.
+         * @param acc              the accumulator.
+         * @return the accumulator.
+         */
         private def visitFilterExpression(filterExpression: Expression, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
             filterExpression match {
                 case compareExpr: CompareExpression =>

@@ -19,7 +19,9 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
-import org.knora.webapi.AssertionException
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
 
 /**
   * Represents an intermediate result during type inspection. This is different from [[GravsearchTypeInspectionResult]]
@@ -78,13 +80,35 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
 }
 
 object IntermediateTypeInspectionResult {
+    // The object types of built-in properties.
+    private val builtInPropertyObjectTypes: Map[IRI, IRI] = Map(
+        OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String
+    )
+
     /**
-      * Constructs an [[IntermediateTypeInspectionResult]] for the given set of typeable entities, with no
-      * types specified.
+      * Constructs an [[IntermediateTypeInspectionResult]] for the given set of typeable entities, with built-in
+      * types specified (e.g. for `rdfs:label`).
       *
       * @param entities the set of typeable entities found in the WHERE clause of a Gravsearch query.
       */
-    def apply(entities: Set[TypeableEntity]): IntermediateTypeInspectionResult = {
-        new IntermediateTypeInspectionResult(entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap)
+    def newInstance(entities: Set[TypeableEntity])(implicit stringFormatter: StringFormatter): IntermediateTypeInspectionResult = {
+        // Make an IntermediateTypeInspectionResult in which each typeable entity has no types.
+        val emptyResult = new IntermediateTypeInspectionResult(entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap)
+
+        // Collect the typeable IRIs used.
+        val irisUsed: Set[IRI] = entities.collect {
+            case typeableIri: TypeableIri => typeableIri.iri.toString
+        }
+
+        // Find the IRIs that represent built-in properties, and get their object types.
+        val builtInPropertyTypesUsed: Map[TypeableIri, PropertyTypeInfo] = builtInPropertyObjectTypes.filterKeys(irisUsed).map {
+            case (propertyIri, objectTypeIri) => TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(objectTypeIri = objectTypeIri.toSmartIri)
+        }
+
+        // Add those types to the IntermediateTypeInspectionResult.
+        builtInPropertyTypesUsed.foldLeft(emptyResult) {
+            case (acc: IntermediateTypeInspectionResult, (entity: TypeableIri, entityType: PropertyTypeInfo)) =>
+                acc.addTypes(entity, Set(entityType))
+        }
     }
 }
