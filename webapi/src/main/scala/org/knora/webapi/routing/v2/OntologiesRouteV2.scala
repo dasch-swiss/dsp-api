@@ -215,6 +215,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+
     // project ontologies to return in test data.
     private val testProjectOntologies: Map[String, IRI] = Map(
         "get-ontologies-project-anything-response" -> SharedTestDataADM.ANYTHING_PROJECT_IRI,
@@ -338,7 +339,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def createClassTestRequest: Future[Set[TestDataFileContent]] = {
-        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
         FastFuture.successful(
             Set(
@@ -387,8 +388,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+
     private def updateClassTestRequest: Future[Set[TestDataFileContent]] = {
-        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
         FastFuture.successful(
             Set(
@@ -405,6 +407,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             )
         )
     }
+
     private def addCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
         post {
             // Add cardinalities to a class.
@@ -438,8 +441,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+
     private def addCardinalitiesTestRequest: Future[TestDataFileContent] = {
-        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
         FastFuture.successful(
                 TestDataFileContent(
@@ -448,6 +452,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 )
         )
     }
+
     private def replaceCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
         put {
             // Change a class's cardinalities.
@@ -483,7 +488,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def replaceCardinalitiesTestRequest: Future[Set[TestDataFileContent]] = {
-        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
         FastFuture.successful(
           Set(
@@ -502,6 +507,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           )
         )
     }
+
     private def getClasses: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
         get {
             requestContext => {
@@ -670,6 +676,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             )
         )
     }
+
     private def updateProperty: Route = path(OntologiesBasePath / "properties") {
         put {
             // Change the labels or comments of a property.
@@ -703,8 +710,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+
     private def updatePropertyTestRequest: Future[Set[TestDataFileContent]] = {
-        var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
         FastFuture.successful(
             Set(
@@ -778,6 +786,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+
     // Classes to return in test data.
     private val testProperties: Map[String, IRI] = Map(
         "get-property-listValue-response" ->  SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost,
@@ -879,6 +888,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
+
     private def createOntologyTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
                 TestDataFileContent(
@@ -887,6 +897,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             )
         )
     }
+
     private def deleteOntology: Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
         delete {
             requestContext => {
@@ -921,7 +932,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             }
         }
     }
-
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
