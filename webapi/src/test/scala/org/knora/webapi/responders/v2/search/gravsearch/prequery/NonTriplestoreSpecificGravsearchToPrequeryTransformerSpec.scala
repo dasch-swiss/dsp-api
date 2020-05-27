@@ -585,83 +585,46 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         """.stripMargin
 
     val transformedQueryWithDateOptionalSortCriterionAndFilter: SelectQuery =
-    SelectQuery(
-        variables = Vector(
-            QueryVariable(variableName = "thing"),
-            GroupConcat(
-                inputVariable = QueryVariable(variableName = "date"),
-                separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
-                outputVariableName = "date__Concat",
-            )
-        ),
-        offset = 0,
-        groupBy = Vector(
-            QueryVariable(variableName = "thing"),
-            QueryVariable(variableName = "date__valueHasStartJDN")
-        ),
-        orderBy = Vector(
-            OrderCriterion(
-                queryVariable = QueryVariable(variableName = "date__valueHasStartJDN"),
-                isAscending = false
+        SelectQuery(
+            variables = Vector(
+                QueryVariable(variableName = "thing"),
+                GroupConcat(
+                    inputVariable = QueryVariable(variableName = "date"),
+                    separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
+                    outputVariableName = "date__Concat",
+                )
             ),
-            OrderCriterion(
-                queryVariable = QueryVariable(variableName = "thing"),
-                isAscending = true
-            )
-        ),
-        whereClause = WhereClause(
-            patterns = Vector(
-                StatementPattern(
-                    subj = QueryVariable(variableName = "thing"),
-                    pred = IriRef(
-                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = IriRef(
-                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    namedGraph = None
+            offset = 0,
+            groupBy = Vector(
+                QueryVariable(variableName = "thing"),
+                QueryVariable(variableName = "date__valueHasStartJDN")
+            ),
+            orderBy = Vector(
+                OrderCriterion(
+                    queryVariable = QueryVariable(variableName = "date__valueHasStartJDN"),
+                    isAscending = false
                 ),
-                StatementPattern(
-                    subj = QueryVariable(variableName = "thing"),
-                    pred = IriRef(
-                        iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = XsdLiteral(
-                        value = "false",
-                        datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                    ),
-                    namedGraph = Some(IriRef(
-                        iri = "http://www.knora.org/explicit".toSmartIri,
-                        propertyPathOperator = None
-                    ))
-                ),
-                StatementPattern(
-                    subj = QueryVariable(variableName = "thing"),
-                    pred = IriRef(
-                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = IriRef(
-                        iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    namedGraph = None
-                ),
-                OptionalPattern(patterns = Vector(
+                OrderCriterion(
+                    queryVariable = QueryVariable(variableName = "thing"),
+                    isAscending = true
+                )
+            ),
+            whereClause = WhereClause(
+                patterns = Vector(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
-                            iri = "http://www.knora.org/ontology/0001/anything#hasDate".toSmartIri,
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
                             propertyPathOperator = None
                         ),
-                        obj = QueryVariable(variableName = "date"),
+                        obj = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                            propertyPathOperator = None
+                        ),
                         namedGraph = None
                     ),
                     StatementPattern(
-                        subj = QueryVariable(variableName = "date"),
+                        subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
                             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
                             propertyPathOperator = None
@@ -676,33 +639,70 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                         ))
                     ),
                     StatementPattern(
-                        subj = QueryVariable(variableName = "date"),
+                        subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#valueHasStartJDN".toSmartIri,
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
                             propertyPathOperator = None
                         ),
-                        obj = QueryVariable(variableName = "date__valueHasStartJDN"),
-                        namedGraph = Some(IriRef(
-                            iri = "http://www.knora.org/explicit".toSmartIri,
+                        obj = IriRef(
+                            iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
                             propertyPathOperator = None
-                        ))
+                        ),
+                        namedGraph = None
                     ),
-                    FilterPattern(expression = CompareExpression(
-                        leftArg = QueryVariable(variableName = "date__valueHasStartJDN"),
-                        operator = CompareExpressionOperator.GREATER_THAN,
-                        rightArg = XsdLiteral(
-                            value = "2455928",
-                            datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
-                        )
+                    OptionalPattern(patterns = Vector(
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "thing"),
+                            pred = IriRef(
+                                iri = "http://www.knora.org/ontology/0001/anything#hasDate".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            obj = QueryVariable(variableName = "date"),
+                            namedGraph = None
+                        ),
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "date"),
+                            pred = IriRef(
+                                iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            obj = XsdLiteral(
+                                value = "false",
+                                datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                            ),
+                            namedGraph = Some(IriRef(
+                                iri = "http://www.knora.org/explicit".toSmartIri,
+                                propertyPathOperator = None
+                            ))
+                        ),
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "date"),
+                            pred = IriRef(
+                                iri = "http://www.knora.org/ontology/knora-base#valueHasStartJDN".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            obj = QueryVariable(variableName = "date__valueHasStartJDN"),
+                            namedGraph = Some(IriRef(
+                                iri = "http://www.knora.org/explicit".toSmartIri,
+                                propertyPathOperator = None
+                            ))
+                        ),
+                        FilterPattern(expression = CompareExpression(
+                            leftArg = QueryVariable(variableName = "date__valueHasStartJDN"),
+                            operator = CompareExpressionOperator.GREATER_THAN,
+                            rightArg = XsdLiteral(
+                                value = "2455928",
+                                datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                            )
+                        ))
                     ))
-                ))
+                ),
+                positiveEntities = Set(),
+                querySchema = None
             ),
-            positiveEntities = Set(),
-            querySchema = None
-        ),
-        limit = Some(25),
-        useDistinct = true
-    )
+            limit = Some(25),
+            useDistinct = true
+        )
 
     val inputQueryWithDecimalOptionalSortCriterion: String =
         """
@@ -1028,47 +1028,84 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             useDistinct = true
         )
 
-        val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
-            SelectQuery(
-                variables = Vector(
-                    QueryVariable(variableName = "thing"),
-                    GroupConcat(
-                        inputVariable = QueryVariable(variableName = "decimal"),
-                        separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
-                        outputVariableName = "decimal__Concat",
-                    )
+    val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
+        SelectQuery(
+            variables = Vector(
+                QueryVariable(variableName = "thing"),
+                GroupConcat(
+                    inputVariable = QueryVariable(variableName = "decimal"),
+                    separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
+                    outputVariableName = "decimal__Concat",
+                )
+            ),
+            offset = 0,
+            groupBy = Vector(
+                QueryVariable(variableName = "thing"),
+                QueryVariable(variableName = "decimal__valueHasDecimal")
+            ),
+            orderBy = Vector(
+                OrderCriterion(
+                    queryVariable = QueryVariable(variableName = "decimal__valueHasDecimal"),
+                    isAscending = true
                 ),
-                offset = 0,
-                groupBy = Vector(
-                    QueryVariable(variableName = "thing"),
-                    QueryVariable(variableName = "decimal__valueHasDecimal")
-                ),
-                orderBy = Vector(
-                    OrderCriterion(
-                        queryVariable = QueryVariable(variableName = "decimal__valueHasDecimal"),
-                        isAscending = true
+                OrderCriterion(
+                    queryVariable = QueryVariable(variableName = "thing"),
+                    isAscending = true
+                )
+            ),
+            whereClause = WhereClause(
+                patterns = Vector(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "thing"),
+                        pred = IriRef(
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        namedGraph = None
                     ),
-                    OrderCriterion(
-                        queryVariable = QueryVariable(variableName = "thing"),
-                        isAscending = true
-                    )
-                ),
-                whereClause = WhereClause(
-                    patterns = Vector(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "thing"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = XsdLiteral(
+                            value = "false",
+                            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                        ),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "thing"),
+                        pred = IriRef(
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = IriRef(
+                            iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        namedGraph = None
+                    ),
+                    OptionalPattern(patterns = Vector(
                         StatementPattern(
                             subj = QueryVariable(variableName = "thing"),
                             pred = IriRef(
-                                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                                iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
                                 propertyPathOperator = None
                             ),
-                            obj = IriRef(
-                                iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                                propertyPathOperator = None
-                            ),
+                            obj = QueryVariable(variableName = "decimal"),
                             namedGraph = None
                         ),
                         StatementPattern(
-                            subj = QueryVariable(variableName = "thing"),
+                            subj = QueryVariable(variableName = "decimal"),
                             pred = IriRef(
                                 iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
                                 propertyPathOperator = None
@@ -1083,79 +1120,243 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                             ))
                         ),
                         StatementPattern(
-                            subj = QueryVariable(variableName = "thing"),
+                            subj = QueryVariable(variableName = "decimal"),
                             pred = IriRef(
-                                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                                iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
                                 propertyPathOperator = None
                             ),
-                            obj = IriRef(
-                                iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                            obj = QueryVariable(variableName = "decimal__valueHasDecimal"),
+                            namedGraph = Some(IriRef(
+                                iri = "http://www.knora.org/explicit".toSmartIri,
+                                propertyPathOperator = None
+                            ))
+                        ),
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "decimal"),
+                            pred = IriRef(
+                                iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
                                 propertyPathOperator = None
                             ),
+                            obj = QueryVariable(variableName = "decimalVal"),
                             namedGraph = None
                         ),
-                        OptionalPattern(patterns = Vector(
-                            StatementPattern(
-                                subj = QueryVariable(variableName = "thing"),
-                                pred = IriRef(
-                                    iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
-                                    propertyPathOperator = None
-                                ),
-                                obj = QueryVariable(variableName = "decimal"),
-                                namedGraph = None
-                            ),
-                            StatementPattern(
-                                subj = QueryVariable(variableName = "decimal"),
-                                pred = IriRef(
-                                    iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                                    propertyPathOperator = None
-                                ),
-                                obj = XsdLiteral(
-                                    value = "false",
-                                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                                ),
-                                namedGraph = Some(IriRef(
-                                    iri = "http://www.knora.org/explicit".toSmartIri,
-                                    propertyPathOperator = None
-                                ))
-                            ),
-                            StatementPattern(
-                                subj = QueryVariable(variableName = "decimal"),
-                                pred = IriRef(
-                                    iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                                    propertyPathOperator = None
-                                ),
-                                obj = QueryVariable(variableName = "decimal__valueHasDecimal"),
-                                namedGraph = Some(IriRef(
-                                    iri = "http://www.knora.org/explicit".toSmartIri,
-                                    propertyPathOperator = None
-                                ))
-                            ),
-                            StatementPattern(
-                                subj = QueryVariable(variableName = "decimal"),
-                                pred = IriRef(
-                                    iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                                    propertyPathOperator = None
-                                ),
-                                obj = QueryVariable(variableName = "decimalVal"),
-                                namedGraph = None
-                            ),
-                            FilterPattern(expression = CompareExpression(
-                                leftArg = QueryVariable(variableName = "decimalVal"),
-                                operator = CompareExpressionOperator.GREATER_THAN,
-                                rightArg = XsdLiteral(
-                                    value = "2",
-                                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
-                                )
-                            ))
+                        FilterPattern(expression = CompareExpression(
+                            leftArg = QueryVariable(variableName = "decimalVal"),
+                            operator = CompareExpressionOperator.GREATER_THAN,
+                            rightArg = XsdLiteral(
+                                value = "2",
+                                datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
+                            )
                         ))
-                    ),
-                    positiveEntities = Set(),
-                    querySchema = None
+                    ))
                 ),
-                limit = Some(25),
-                useDistinct = true
-            )
+                positiveEntities = Set(),
+                querySchema = None
+            ),
+            limit = Some(25),
+            useDistinct = true
+        )
+
+    val InputQueryWithRdfsLabelAndLiteralInSimpleSchema: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+          |}
+        """.stripMargin
+
+    val InputQueryWithRdfsLabelAndLiteralInComplexSchema: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+          |}
+        """.stripMargin
+
+    val TransformedQueryWithRdfsLabelAndLiteral: SelectQuery = SelectQuery(
+        variables = Vector(QueryVariable(variableName = "book")),
+        offset = 0,
+        groupBy = Vector(QueryVariable(variableName = "book")),
+        orderBy = Vector(OrderCriterion(
+            queryVariable = QueryVariable(variableName = "book"),
+            isAscending = true
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = XsdLiteral(
+                        value = "false",
+                        datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                    ),
+                    namedGraph = Some(IriRef(
+                        iri = "http://www.knora.org/explicit".toSmartIri,
+                        propertyPathOperator = None
+                    ))
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = XsdLiteral(
+                        value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+                        datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                    ),
+                    namedGraph = None
+                )
+            ),
+            positiveEntities = Set(),
+            querySchema = None
+        ),
+        limit = Some(25),
+        useDistinct = true
+    )
+
+    val InputQueryWithRdfsLabelAndVariableInSimpleSchema: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+        """.stripMargin
+
+    val InputQueryWithRdfsLabelAndVariableInComplexSchema: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+        """.stripMargin
+
+    val TransformedQueryWithRdfsLabelAndVariable: SelectQuery = SelectQuery(
+        variables = Vector(QueryVariable(variableName = "book")),
+        offset = 0,
+        groupBy = Vector(QueryVariable(variableName = "book")),
+        orderBy = Vector(OrderCriterion(
+            queryVariable = QueryVariable(variableName = "book"),
+            isAscending = true
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = XsdLiteral(
+                        value = "false",
+                        datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                    ),
+                    namedGraph = Some(IriRef(
+                        iri = "http://www.knora.org/explicit".toSmartIri,
+                        propertyPathOperator = None
+                    ))
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = QueryVariable(variableName = "label"),
+                    namedGraph = None
+                ),
+                FilterPattern(expression = CompareExpression(
+                    leftArg = QueryVariable(variableName = "label"),
+                    operator = CompareExpressionOperator.EQUALS,
+                    rightArg = XsdLiteral(
+                        value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+                        datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                    )
+                ))
+            ),
+            positiveEntities = Set(),
+            querySchema = None
+        ),
+        limit = Some(25),
+        useDistinct = true
+    )
 
     "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
@@ -1253,5 +1454,28 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
         }
 
+        "transform an input query using rdfs:label and a literal in the simple schema" in {
+            val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema, responderData, settings)
+
+            assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
+        }
+
+        "transform an input query using rdfs:label and a literal in the complex schema" in {
+            val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndLiteralInComplexSchema, responderData, settings)
+
+            assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
+        }
+
+        "transform an input query using rdfs:label and a variable in the simple schema" in {
+            val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndVariableInSimpleSchema, responderData, settings)
+
+            assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
+        }
+
+        "transform an input query using rdfs:label and a variable in the complex schema" in {
+            val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndVariableInComplexSchema, responderData, settings)
+
+            assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
+        }
     }
 }

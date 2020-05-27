@@ -80,11 +80,6 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
 }
 
 object IntermediateTypeInspectionResult {
-    // The object types of built-in properties.
-    private val builtInPropertyObjectTypes: Map[IRI, IRI] = Map(
-        OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String
-    )
-
     /**
       * Constructs an [[IntermediateTypeInspectionResult]] for the given set of typeable entities, with built-in
       * types specified (e.g. for `rdfs:label`).
@@ -100,13 +95,13 @@ object IntermediateTypeInspectionResult {
             case typeableIri: TypeableIri => typeableIri.iri.toString
         }
 
-        // Find the IRIs that represent built-in properties, and get their object types.
-        val builtInPropertyTypesUsed: Map[TypeableIri, PropertyTypeInfo] = builtInPropertyObjectTypes.filterKeys(irisUsed).map {
+        // Find the IRIs that represent resource metadata properties, and get their object types.
+        val resourceMetadataPropertyTypesUsed: Map[TypeableIri, PropertyTypeInfo] = OntologyConstants.ResourceMetadataPropertyAxioms.filterKeys(irisUsed).map {
             case (propertyIri, objectTypeIri) => TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(objectTypeIri = objectTypeIri.toSmartIri)
         }
 
         // Add those types to the IntermediateTypeInspectionResult.
-        builtInPropertyTypesUsed.foldLeft(emptyResult) {
+        resourceMetadataPropertyTypesUsed.foldLeft(emptyResult) {
             case (acc: IntermediateTypeInspectionResult, (entity: TypeableIri, entityType: PropertyTypeInfo)) =>
                 acc.addTypes(entity, Set(entityType))
         }

@@ -537,7 +537,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri)
     ))
 
-    val QueryWithRdfsLabel: String =
+    val QueryWithRdfsLabelAndLiteral: String =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -551,9 +551,30 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
         """.stripMargin
 
-    val RdfsLabelResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
+    val QueryWithRdfsLabelAndVariable: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+        """.stripMargin
+
+    val RdfsLabelWithLiteralResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
+    ))
+
+    val RdfsLabelWithVariableResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "label") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
     "The type inspection utility" should {
@@ -657,10 +678,18 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
         "know the object type of rdfs:label" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabel)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndLiteral)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == RdfsLabelResult)
+            assert(result == RdfsLabelWithLiteralResult)
+        }
+
+        "infer the type of a variable used as the object of rdfs:label" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndVariable)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == RdfsLabelWithVariableResult)
         }
 
         "reject a query with a non-Knora property whose type cannot be inferred" in {

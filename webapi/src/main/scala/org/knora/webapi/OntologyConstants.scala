@@ -134,6 +134,13 @@ object OntologyConstants {
     }
 
     /**
+     * The object types of resource metadata properties.
+     */
+    val ResourceMetadataPropertyAxioms: Map[IRI, IRI] = Map(
+        OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String
+    )
+
+    /**
      * Ontology labels that are reserved for built-in ontologies.
      */
     val BuiltInOntologyLabels: Set[String] = Set(
@@ -1135,5 +1142,4 @@ object OntologyConstants {
         val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
         val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
     }
-
 }
