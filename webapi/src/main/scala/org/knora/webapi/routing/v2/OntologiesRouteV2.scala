@@ -141,7 +141,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/metadata"))
         } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("all-ontology-metadata"),
+            filePath = TestDataFilePath.makeJsonPath("all-ontology-metadata-response"),
             text = responseStr
         )
     }
@@ -217,9 +217,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
     // project ontologies to return in test data.
     private val testProjectOntologies: Map[String, IRI] = Map(
-        "get-ontologies-project-anything" -> SharedTestDataADM.ANYTHING_PROJECT_IRI,
-        "get-ontologies-project-incunabula" -> SharedTestDataADM.INCUNABULA_PROJECT_IRI,
-        "get-ontologies-project-beol" -> SharedTestDataADM.BEOL_PROJECT_IRI
+        "get-ontologies-project-anything-response" -> SharedTestDataADM.ANYTHING_PROJECT_IRI,
+        "get-ontologies-project-incunabula-response" -> SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        "get-ontologies-project-beol-response" -> SharedTestDataADM.BEOL_PROJECT_IRI
     )
 
     /**
@@ -343,11 +343,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         FastFuture.successful(
             Set(
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-class-with-cardinalities"),
+                    filePath = TestDataFilePath.makeJsonPath("create-class-with-cardinalities-request"),
                     text = SharedTestDataADM.createClassWithCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
                 ),
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-class-without-cardinalities"),
+                    filePath = TestDataFilePath.makeJsonPath("create-class-without-cardinalities-request"),
                     text = SharedTestDataADM.createClassWithoutCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
                 )
             )
@@ -443,7 +443,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         FastFuture.successful(
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing"),
+                    filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing-request"),
                     text = SharedTestDataADM.addCardinality(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
                 )
         )
@@ -488,15 +488,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         FastFuture.successful(
           Set(
             TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("replace-class-cardinalities"),
+                filePath = TestDataFilePath.makeJsonPath("replace-class-cardinalities-request"),
                 text = SharedTestDataADM.replaceClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
             ),
             TestDataFileContent(
-              filePath = TestDataFilePath.makeJsonPath("remove-property-cardinality"),
+              filePath = TestDataFilePath.makeJsonPath("remove-property-cardinality-request"),
               text = SharedTestDataADM.removeCardinalityOfProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
             ),
             TestDataFileContent(
-                  filePath = TestDataFilePath.makeJsonPath("remove-class-cardinalities"),
+                  filePath = TestDataFilePath.makeJsonPath("remove-class-cardinalities-request"),
                   text = SharedTestDataADM.removeAllClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
             )
           )
@@ -563,10 +563,10 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     // Classes to return in test data.
     private val testClasses: Map[String, IRI] = Map(
-        "get-class-anything-thing" ->  SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
-        "get-class-image-bild" -> SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost,
-        "get-class-incunabula-book" -> SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost,
-        "get-class-incunabula-page" -> SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost
+        "get-class-anything-thing-response" ->  SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
+        "get-class-image-bild-response" -> SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost,
+        "get-class-incunabula-book-response" -> SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost,
+        "get-class-incunabula-page-response" -> SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost
     )
 
     /**
@@ -665,7 +665,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     private def createPropertyTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
             TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-property-hasName"),
+                filePath = TestDataFilePath.makeJsonPath("create-property-hasName-request"),
                 text = SharedTestDataADM.createProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)
             )
         )
@@ -709,11 +709,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         FastFuture.successful(
             Set(
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("change-property-comment"),
+                    filePath = TestDataFilePath.makeJsonPath("change-property-comment-request"),
                     text = SharedTestDataADM.changePropertyComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
                 ),
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("change-property-label"),
+                    filePath = TestDataFilePath.makeJsonPath("change-property-label-request"),
                     text = SharedTestDataADM.changePropertyLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
                 )
             )
@@ -780,10 +780,10 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
     // Classes to return in test data.
     private val testProperties: Map[String, IRI] = Map(
-        "get-property-listValue" ->  SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost,
-        "get-property-DateValue" ->  SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost,
-        "get-property-textValue" -> SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost,
-        "get-property-linkvalue" -> SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost
+        "get-property-listValue-response" ->  SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost,
+        "get-property-DateValue-response" ->  SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost,
+        "get-property-textValue-response" -> SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost,
+        "get-property-linkvalue-response" -> SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost
     )
 
 
@@ -882,7 +882,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     private def createOntologyTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology"),
+                    filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-request"),
                     text = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
             )
         )
