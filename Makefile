@@ -327,19 +327,6 @@ test-all: stack-without-api ## runs the all tests (equivalent to 'sbt webapi/tes
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt webapi/test
 
-.PHONY: test-js-lib-integration
-test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-lib tests against the knora-stack
-	$(MAKE) -f $(THIS_FILE) print-env-file
-	$(MAKE) -f $(THIS_FILE) stack-config
-	@sleep 15
-	@$(MAKE) -f $(THIS_FILE) init-db-test
-	@sleep 15
-	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
-	@git clone --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
-	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
-	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
-
 .PHONY: test-repository-update
 test-repository-update: stack-without-api
 	@sleep 15

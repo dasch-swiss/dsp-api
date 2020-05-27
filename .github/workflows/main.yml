@@ -182,56 +182,6 @@ jobs:
           df -h
           docker system df
 
-  js-lib-tests:
-    name: JS Lib Tests
-    needs: compile
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [12.x]
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: Checkout private ci-assets
-        uses: actions/checkout@v2
-        with:
-          repository: dasch-swiss/dsp-ci-assets
-          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
-          path: ci
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: install requirements
-        run: sudo apt-get install expect
-      - name: print env file
-        run: |
-          make env-file
-          make print-env-file
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
-      - name: setup required node version
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: run JS lib tests
-        run: make test-js-lib-integration
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
-
   upgrade-integration-tests:
     name: Upgrade Integration Tests
     needs: compile

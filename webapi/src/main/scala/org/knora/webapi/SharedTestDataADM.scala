@@ -46,7 +46,7 @@ object SharedTestDataADM {
     val testPass: String = java.net.URLEncoder.encode("test", "utf-8")
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
-    def rootUser = UserADM(
+    def rootUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/root",
         username = "root",
         email = "root@example.com",
@@ -66,7 +66,7 @@ object SharedTestDataADM {
         ))
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def superUser = UserADM(
+    def superUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/superuser",
         username = "superuser",
         email = "super.user@example.com",
@@ -86,7 +86,7 @@ object SharedTestDataADM {
         ))
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def normalUser = UserADM(
+    def normalUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/normaluser",
         username = "normaluser",
         email = "normal.user@example.com",
@@ -102,7 +102,7 @@ object SharedTestDataADM {
         permissions = PermissionsDataADM())
 
     /* represents the user profile of 'inactive user' as found in admin-data.ttl */
-    def inactiveUser = UserADM(
+    def inactiveUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/inactiveuser",
         username = "inactiveuser",
         email = "inactive.user@example.com",
@@ -122,7 +122,7 @@ object SharedTestDataADM {
 
 
     /* represents the 'multiuser' as found in admin-data.ttl */
-    def multiuserUser = UserADM(
+    def multiuserUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/multiuser",
         username = "multiuser",
         email = "multi.user@example.com",
@@ -154,7 +154,7 @@ object SharedTestDataADM {
         ))
 
     /* represents the full project info of the Knora System project */
-    def systemProject = ProjectADM(
+    def systemProject: ProjectADM = ProjectADM(
         id = OntologyConstants.KnoraAdmin.SystemProject,
         shortname = "SystemProject",
         shortcode = "FFFF",
@@ -170,7 +170,7 @@ object SharedTestDataADM {
     val DefaultSharedOntologiesProjectIri: IRI = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject // built-in project
 
     /* represents the full project info of the default shared ontologies project */
-    def defaultSharedOntologiesProject = ProjectADM(
+    def defaultSharedOntologiesProject: ProjectADM = ProjectADM(
         id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         shortname = "DefaultSharedOntologiesProject",
         shortcode = "0000",
@@ -191,7 +191,7 @@ object SharedTestDataADM {
     val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
     /* represents 'user01' as found in admin-data.ttl  */
-    def imagesUser01 = UserADM(
+    def imagesUser01: UserADM = UserADM(
         id = "http://rdfh.ch/users/c266a56709",
         username = "user01.user1", email = "user01.user1@example.com",
         password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
@@ -216,7 +216,7 @@ object SharedTestDataADM {
         ))
 
     /* represents 'user02' as found in admin-data.ttl  */
-    def imagesUser02 = UserADM(
+    def imagesUser02: UserADM = UserADM(
         id = "http://rdfh.ch/users/97cec4000f",
         username = "user02.user",
         email = "user02.user@example.com",
@@ -241,7 +241,7 @@ object SharedTestDataADM {
         ))
 
     /* represents 'images-reviewer-user' as found in admin-data.ttl  */
-    def imagesReviewerUser = UserADM(
+    def imagesReviewerUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/images-reviewer-user",
         username = "images-reviewer-user",
         email = "images-reviewer-user@example.com",
@@ -281,7 +281,7 @@ object SharedTestDataADM {
     )
 
     /* represents the full GroupInfoV1 of the images ProjectAdmin group */
-    def imagesProjectAdminGroup = GroupADM(
+    def imagesProjectAdminGroup: GroupADM = GroupADM(
         id = "-",
         name = "ProjectAdmin",
         description = "Default Project Admin Group",
@@ -291,7 +291,7 @@ object SharedTestDataADM {
     )
 
     /* represents the full GroupInfoV1 of the images ProjectMember group */
-    def imagesProjectMemberGroup = GroupADM(
+    def imagesProjectMemberGroup: GroupADM = GroupADM(
         id = "-",
         name = "ProjectMember",
         description = "Default Project Member Group",
@@ -301,7 +301,7 @@ object SharedTestDataADM {
     )
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
-    def imagesReviewerGroup = GroupADM(
+    def imagesReviewerGroup: GroupADM = GroupADM(
         id = "http://rdfh.ch/groups/00FF/images-reviewer",
         name = "Image reviewer",
         description = "A group for image reviewers.",
@@ -318,7 +318,7 @@ object SharedTestDataADM {
     val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
-    def incunabulaProjectAdminUser = UserADM(
+    def incunabulaProjectAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/b83acc5f05",
         username = "user.test",
         email = "user.test@example.com",
@@ -369,7 +369,7 @@ object SharedTestDataADM {
         ))
 
     /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
-    def incunabulaMemberUser = UserADM(
+    def incunabulaMemberUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/incunabulaMemberUser",
         username = "incunabulaMemberUser"
         , email = "test.user2@test.ch", password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), token = None, givenName = "User", familyName = "Test2", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(incunabulaProject), sessionId = None, permissions = PermissionsDataADM(
@@ -403,7 +403,7 @@ object SharedTestDataADM {
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
-    def anythingAdminUser = UserADM(
+    def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
         username = "AnythingAdminUser",
         email = "anything.admin@example.org",
@@ -497,7 +497,7 @@ object SharedTestDataADM {
 
     val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
-    def beolProject = ProjectADM(
+    def beolProject: ProjectADM = ProjectADM(
         id = BEOL_PROJECT_IRI,
         shortname = "beol",
         shortcode = "0801",
@@ -512,7 +512,7 @@ object SharedTestDataADM {
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def beolUser = UserADM(
+    def beolUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
         username = "beol",
         email = "beol@example.com",
@@ -535,7 +535,7 @@ object SharedTestDataADM {
 
     val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/0804"
 
-    def dokubibProject = ProjectADM(
+    def dokubibProject: ProjectADM = ProjectADM(
         id = DOKUBIB_PROJECT_IRI,
         shortname = "dokubib",
         shortcode = "0804",
@@ -1872,6 +1872,7 @@ object SharedTestDataADM {
             |  }
             |}""".stripMargin
     }
+
     def createOntology(projectIri: IRI, label: String): String = {
         s"""
            |{
@@ -1886,6 +1887,7 @@ object SharedTestDataADM {
            |    }
            |}""".stripMargin
     }
+
     def changeOntologyMetadata(ontologyIri: IRI, newLabel: String, modificationDate: Instant): String = {
         s"""
            |{
@@ -1949,6 +1951,7 @@ object SharedTestDataADM {
          |}
             """.stripMargin
     }
+
     def createClassWithoutCardinalities(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
@@ -1984,6 +1987,7 @@ object SharedTestDataADM {
            |}
             """.stripMargin
     }
+
     def addCardinality(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
@@ -2015,6 +2019,7 @@ object SharedTestDataADM {
            |}
             """.stripMargin
     }
+
     def createProperty(anythinOntologyIri:IRI): String = {
         s"""
           |{
@@ -2069,6 +2074,7 @@ object SharedTestDataADM {
           |}
         """.stripMargin
     }
+
     def changeClassLabel(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
          |{
@@ -2100,6 +2106,7 @@ object SharedTestDataADM {
          |}
         """.stripMargin
     }
+
     def changeClassComment(anythingOntologyIri: IRI, anythingLastModDate: Instant):String = {
         s"""
            |{
@@ -2131,6 +2138,7 @@ object SharedTestDataADM {
            |}
                 """.stripMargin
     }
+
     def replaceClassCardinalities(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
     s"""
        |{
@@ -2162,6 +2170,7 @@ object SharedTestDataADM {
        |}
             """.stripMargin
     }
+
     def removeCardinalityOfProperty(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
        s"""
           |{
@@ -2186,6 +2195,7 @@ object SharedTestDataADM {
           |}
             """.stripMargin
     }
+
     def removeAllClassCardinalities(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
        s"""
           |{
@@ -2210,6 +2220,7 @@ object SharedTestDataADM {
           |}
             """.stripMargin
     }
+
     def changePropertyComment(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
@@ -2244,6 +2255,7 @@ object SharedTestDataADM {
            |}
           """.stripMargin
     }
+
     def changePropertyLabel(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
