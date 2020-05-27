@@ -1,7 +1,7 @@
 package org.knora.webapi.app
 
 import akka.actor.SupervisorStrategy._
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
+import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -13,10 +13,10 @@ import org.knora.webapi._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
+import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -28,7 +28,6 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store.{StoreManager, StoreManagerActorName}
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import redis.clients.jedis.exceptions.JedisConnectionException
 
 import scala.concurrent.duration._
@@ -45,33 +44,33 @@ trait LiveManagers extends Managers {
 
     // #store-responder
     /**
-      * The actor that forwards messages to actors that deal with persistent storage.
-      */
+     * The actor that forwards messages to actors that deal with persistent storage.
+     */
     lazy val storeManager: ActorRef = context.actorOf(
-        Props(new StoreManager with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+        Props(new StoreManager(self) with LiveActorMaker)
+            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = StoreManagerActorName
     )
 
     /**
-      * The actor that forwards messages to responder actors to handle API requests.
-      */
+     * The actor that forwards messages to responder actors to handle API requests.
+     */
     lazy val responderManager: ActorRef = context.actorOf(
-        Props(new ResponderManager(self, storeManager) with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+        Props(new ResponderManager(self) with LiveActorMaker)
+            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
     // #store-responder
 }
 
 /**
-  * This is the first actor in the application. All other actors are children
-  * of this actor and thus it takes also the role of the supervisor actor.
-  * It accepts messages for starting and stopping the Knora-API, holds the
-  * current state of the application, and is responsible for coordination of
-  * the startup and shutdown sequence. Further, it forwards any messages meant
-  * for responders or the store to the respective actor.
-  */
+ * This is the first actor in the application. All other actors are children
+ * of this actor and thus it takes also the role of the supervisor actor.
+ * It accepts messages for starting and stopping the Knora-API, holds the
+ * current state of the application, and is responsible for coordination of
+ * the startup and shutdown sequence. Further, it forwards any messages meant
+ * for responders or the store to the respective actor.
+ */
 class ApplicationActor extends Actor with LazyLogging with AroundDirectives with Timers {
     this: Managers =>
 
@@ -82,44 +81,46 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     implicit val system: ActorSystem = context.system
 
     /**
-      * The application's configuration.
-      */
+     * The application's configuration.
+     */
     implicit val settings: SettingsImpl = Settings(system)
 
     /**
-      * Provides the actor materializer (akka-http)
-      */
+     * Provides the actor materializer (akka-http)
+     */
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
     /**
-      * Provides the default global execution context
-      */
+     * Provides the default global execution context
+     */
     implicit val executionContext: ExecutionContext = context.dispatcher
 
     /**
-      * Timeout definition
-      */
+     * Timeout definition
+     */
     implicit protected val timeout: Timeout = settings.defaultTimeout
 
     /**
-      * A user representing the Knora API server, used for initialisation on startup.
-      */
+     * A user representing the Knora API server, used for initialisation on startup.
+     */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
-      * Route data.
-      */
-    private val routeData = KnoraRouteData(system, self)
-
+     * Route data.
+     */
+    private val routeData = KnoraRouteData(
+        system = system,
+        appActor = self
+    )
 
     /**
-      * This actor acts as the supervisor for its child actors.
-      * Here we can override the default supervisor strategy.
-      */
+     * This actor acts as the supervisor for its child actors.
+     * Here we can override the default supervisor strategy.
+     */
     override val supervisorStrategy: OneForOneStrategy =
         OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) {
-            case _: ArithmeticException      => Resume
-            case _: NullPointerException     => Restart
+            case _: ArithmeticException => Resume
+            case _: NullPointerException => Restart
             case _: IllegalArgumentException => Stop
             case e: InconsistentTriplestoreDataException =>
                 logger.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: {}", e.message)
@@ -130,169 +131,184 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             case _: JedisConnectionException =>
                 logger.warn(s"Received a 'JedisConnectionException', will continue. Probably the Redis-Server is not running.")
                 Resume
-            case _: Exception                => Escalate
+            case _: Exception => Escalate
         }
 
-    private var appState: AppState = AppState.Stopped
+    private var appState: AppState = AppStates.Stopped
     private var allowReloadOverHTTPState = false
     private var printConfigState = false
-    private var skipOntologies = true
+    private var ignoreRepository = true
     private var withIIIFService = true
     private val withCacheService = settings.cacheServiceEnabled
 
     def receive: PartialFunction[Any, Unit] = {
 
         /* Called from main. Initiates application startup. */
-        case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
+        case appStartMsg: AppStart => appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService)
 
-        /* Usually only called from tests */
         case AppStop() => appStop()
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
-        case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) => {
+        case initStartUp: InitStartUp =>
             logger.info("Startup initiated, please wait ...")
 
-            if (appState == AppState.Stopped) {
-                skipOntologies = skipLoadingOfOntologies
-                withIIIFService = requiresIIIFService
+            if (appState == AppStates.Stopped) {
+                ignoreRepository = initStartUp.ignoreRepository
+                withIIIFService = initStartUp.requiresIIIFService
 
-                self ! SetAppState(AppState.StartingUp)
+                self ! SetAppState(AppStates.StartingUp)
             }
-        }
 
-        /* EACH app state change goes through here */
-        case SetAppState(value: AppState) => {
+        /* Each app state change goes through here */
+        case SetAppState(value: AppState) =>
 
             appState = value
 
             logger.debug("appStateChanged - to state: {}", value)
 
             value match {
-                case AppState.Stopped =>
-                    // do nothing
-                case AppState.StartingUp =>
-                    self ! SetAppState(AppState.WaitingForRepository)
-                    
-                case AppState.WaitingForRepository =>
+                case AppStates.Stopped =>
+                // do nothing
+                case AppStates.StartingUp =>
+                    self ! SetAppState(AppStates.WaitingForTriplestore)
+
+                case AppStates.WaitingForTriplestore =>
                     // check DB
-                    self ! CheckRepository()
+                    self ! CheckTriplestore()
 
-                case AppState.RepositoryReady =>
-                    self ! SetAppState(AppState.CreatingCaches)
+                case AppStates.TriplestoreReady =>
+                    self ! SetAppState(AppStates.UpdatingRepository)
 
-                case AppState.CreatingCaches =>
+                case AppStates.UpdatingRepository =>
+                    if (ignoreRepository) {
+                        self ! SetAppState(AppStates.RepositoryUpToDate)
+                    } else {
+                        self ! UpdateRepository()
+                    }
+
+                case AppStates.RepositoryUpToDate =>
+                    self ! SetAppState(AppStates.CreatingCaches)
+
+                case AppStates.CreatingCaches =>
                     self ! CreateCaches()
 
-                case AppState.CachesReady =>
-                    self ! SetAppState(AppState.UpdatingSearchIndex)
+                case AppStates.CachesReady =>
+                    self ! SetAppState(AppStates.UpdatingSearchIndex)
 
-                case AppState.UpdatingSearchIndex =>
-                    self ! UpdateSearchIndex()
+                case AppStates.UpdatingSearchIndex =>
+                    if (ignoreRepository) {
+                        self ! SetAppState(AppStates.SearchIndexReady)
+                    } else {
+                        self ! UpdateSearchIndex()
+                    }
 
-                case AppState.SearchIndexReady =>
-                    self ! SetAppState(AppState.LoadingOntologies)
+                case AppStates.SearchIndexReady =>
+                    self ! SetAppState(AppStates.LoadingOntologies)
 
-                case AppState.LoadingOntologies if skipOntologies =>
-                    // skip loading of ontologies
-                    self ! SetAppState(AppState.OntologiesReady)
+                case AppStates.LoadingOntologies =>
+                    if (ignoreRepository) {
+                        self ! SetAppState(AppStates.OntologiesReady)
+                    } else {
+                        self ! LoadOntologies()
+                    }
 
-                case AppState.LoadingOntologies if !skipOntologies =>
-                    // load ontologies
-                    self ! LoadOntologies()
+                case AppStates.OntologiesReady =>
+                    self ! SetAppState(AppStates.WaitingForIIIFService)
 
-                case AppState.OntologiesReady =>
-                    self ! SetAppState(AppState.WaitingForIIIFService)
+                case AppStates.WaitingForIIIFService =>
+                    if (withIIIFService) {
+                        // check if sipi is running
+                        self ! CheckIIIFService
+                    } else {
+                        // skip sipi check
+                        self ! SetAppState(AppStates.IIIFServiceReady)
+                    }
 
-                case AppState.WaitingForIIIFService if withIIIFService =>
-                    // check if sipi is running
-                    self ! CheckIIIFService
+                case AppStates.IIIFServiceReady =>
+                    self ! SetAppState(AppStates.WaitingForCacheService)
 
-                case AppState.WaitingForIIIFService if !withIIIFService =>
-                    // skip sipi check
-                    self ! SetAppState(AppState.IIIFServiceReady)
+                case AppStates.WaitingForCacheService =>
+                    if (withCacheService) {
+                        self ! CheckCacheService
+                    } else {
+                        self ! SetAppState(AppStates.CacheServiceReady)
+                    }
 
-                case AppState.IIIFServiceReady =>
-                    self ! SetAppState(AppState.WaitingForCacheService)
+                case AppStates.CacheServiceReady =>
+                    self ! SetAppState(AppStates.Running)
 
-                case AppState.WaitingForCacheService if withCacheService =>
-                    self ! CheckCacheService
-
-                case AppState.WaitingForCacheService if !withCacheService =>
-                    self ! SetAppState(AppState.CacheServiceReady)
-
-                case AppState.CacheServiceReady =>
-                    self ! SetAppState(AppState.Running)
-
-                case AppState.Running =>
+                case AppStates.Running =>
                     printBanner()
 
-                case AppState.MaintenanceMode =>
+                case AppStates.MaintenanceMode =>
                     // do nothing
+                    ()
 
                 case other =>
                     throw UnsupportedValueException(
                         s"The value: $other is not supported."
                     )
             }
-        }
-        case GetAppState() => {
+
+        case GetAppState() =>
             logger.debug("ApplicationStateActor - GetAppState - value: {}", appState)
             sender ! appState
-        }
 
-        case ActorReady() => {
+        case ActorReady() =>
             sender ! ActorReadyAck()
-        }
 
-        case SetAllowReloadOverHTTPState(value) => {
+        case SetAllowReloadOverHTTPState(value) =>
             logger.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
             allowReloadOverHTTPState = value
-        }
-        case GetAllowReloadOverHTTPState() => {
+
+        case GetAllowReloadOverHTTPState() =>
             logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
             sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
-        }
 
-        case SetPrintConfigExtendedState(value) => {
+        case SetPrintConfigExtendedState(value) =>
             logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
             printConfigState = value
-        }
-        case GetPrintConfigExtendedState() => {
+
+        case GetPrintConfigExtendedState() =>
             logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
             sender ! (printConfigState | settings.printExtendedConfig)
-        }
 
         /* check repository request */
-        case CheckRepository() => {
-            storeManager ! CheckRepositoryRequest()
-        }
+        case CheckTriplestore() =>
+            storeManager ! CheckTriplestoreRequest()
 
         /* check repository response */
-        case CheckRepositoryResponse(status, message) => {
+        case CheckTriplestoreResponse(status, message) =>
             status match {
-                case RepositoryStatus.ServiceAvailable =>
-                    self ! SetAppState(AppState.RepositoryReady)
-                case RepositoryStatus.NotInitialized =>
+                case TriplestoreStatus.ServiceAvailable =>
+                    self ! SetAppState(AppStates.TriplestoreReady)
+                case TriplestoreStatus.NotInitialized =>
                     logger.warn(s"checkRepository - status: {}, message: {}", status, message)
                     logger.warn("Please initialize repository.")
-                    timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
-                case RepositoryStatus.ServiceUnavailable =>
+                    timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
+                case TriplestoreStatus.ServiceUnavailable =>
                     logger.warn(s"checkRepository - status: {}, message: {}", status, message)
                     logger.warn("Please start repository.")
-                    timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
+                    timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
             }
-        }
+
+        case UpdateRepository() =>
+            storeManager ! UpdateRepositoryRequest()
+
+        case RepositoryUpdatedResponse(message) =>
+            logger.info(message)
+            self ! SetAppState(AppStates.RepositoryUpToDate)
 
         /* create caches request */
         case CreateCaches() =>
             CacheUtil.createCaches(settings.caches)
-            self ! SetAppState(AppState.CachesReady)
+            self ! SetAppState(AppStates.CachesReady)
 
         case UpdateSearchIndex() =>
             storeManager ! SearchIndexUpdateRequest()
 
         case SparqlUpdateResponse() =>
-            self ! SetAppState(AppState.SearchIndexReady)
+            self ! SetAppState(AppStates.SearchIndexReady)
 
         /* load ontologies request */
         case LoadOntologies() =>
@@ -300,78 +316,77 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         /* load ontologies response */
         case SuccessResponseV2(_) =>
-            self ! SetAppState(AppState.OntologiesReady)
+            self ! SetAppState(AppStates.OntologiesReady)
 
         case CheckIIIFService =>
             self ! IIIFServiceGetStatus
 
         case IIIFServiceStatusOK =>
-            self ! SetAppState(AppState.IIIFServiceReady)
+            self ! SetAppState(AppStates.IIIFServiceReady)
 
         case IIIFServiceStatusNOK if withIIIFService =>
-            logger.warn("Sipi not running. Please start Sipi.")
+            logger.warn("Sipi not running. Please start it.")
             timers.startSingleTimer("CheckIIIFService", CheckIIIFService, 5.seconds)
 
         case CheckCacheService =>
             self ! CacheServiceGetStatus
 
         case CacheServiceStatusOK =>
-            self ! SetAppState(AppState.CacheServiceReady)
+            self ! SetAppState(AppStates.CacheServiceReady)
 
         case CacheServiceStatusNOK =>
-            logger.warn("Redis-Server not running. Please start the Redis-Server.")
+            logger.warn("Redis server not running. Please start it.")
             timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
-
-
-
+        // Forward messages to the responder manager and the store manager.
         case responderMessage: KnoraRequestV1 => responderManager forward responderMessage
         case responderMessage: KnoraRequestV2 => responderManager forward responderMessage
         case responderMessage: KnoraRequestADM => responderManager forward responderMessage
         case storeMessage: StoreRequest => storeManager forward storeMessage
 
+        case akka.actor.Status.Failure(ex: Exception) => throw ex
+
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
 
-
     /**
-      * All routes composed together and CORS activated.
-      * ALL requests go through each of the routes in ORDER.
-      * The FIRST matching route is used for handling a request.
-      */
+     * All routes composed together and CORS activated.
+     * ALL requests go through each of the routes in ORDER.
+     * The FIRST matching route is used for handling a request.
+     */
     private val apiRoutes: Route = logDuration {
         addServerHeader {
             CORS(
                 new HealthRoute(routeData).knoraApiPath ~
-                  new VersionRoute(routeData).knoraApiPath ~
-                  new RejectingRoute(routeData).knoraApiPath ~
-                  new ClientApiRoute(routeData).knoraApiPath ~
-                  new ResourcesRouteV1(routeData).knoraApiPath ~
-                  new ValuesRouteV1(routeData).knoraApiPath ~
-                  new StandoffRouteV1(routeData).knoraApiPath ~
-                  new ListsRouteV1(routeData).knoraApiPath ~
-                  new ResourceTypesRouteV1(routeData).knoraApiPath ~
-                  new SearchRouteV1(routeData).knoraApiPath ~
-                  new AuthenticationRouteV1(routeData).knoraApiPath ~
-                  new AssetsRouteV1(routeData).knoraApiPath ~
-                  new CkanRouteV1(routeData).knoraApiPath ~
-                  new UsersRouteV1(routeData).knoraApiPath ~
-                  new ProjectsRouteV1(routeData).knoraApiPath ~
-                  new OntologiesRouteV2(routeData).knoraApiPath ~
-                  new SearchRouteV2(routeData).knoraApiPath ~
-                  new ResourcesRouteV2(routeData).knoraApiPath ~
-                  new ValuesRouteV2(routeData).knoraApiPath ~
-                  new StandoffRouteV2(routeData).knoraApiPath ~
-                  new ListsRouteV2(routeData).knoraApiPath ~
-                  new AuthenticationRouteV2(routeData).knoraApiPath ~
-                  new GroupsRouteADM(routeData).knoraApiPath ~
-                  new ListsRouteADM(routeData).knoraApiPath ~
-                  new PermissionsRouteADM(routeData).knoraApiPath ~
-                  new ProjectsRouteADM(routeData).knoraApiPath ~
-                  new StoreRouteADM(routeData).knoraApiPath ~
-                  new UsersRouteADM(routeData).knoraApiPath ~
-                  new SipiRouteADM(routeData).knoraApiPath ~
-                  new SwaggerApiDocsRoute(routeData).knoraApiPath,
+                    new VersionRoute(routeData).knoraApiPath ~
+                    new RejectingRoute(routeData).knoraApiPath ~
+                    new ClientApiRoute(routeData).knoraApiPath ~
+                    new ResourcesRouteV1(routeData).knoraApiPath ~
+                    new ValuesRouteV1(routeData).knoraApiPath ~
+                    new StandoffRouteV1(routeData).knoraApiPath ~
+                    new ListsRouteV1(routeData).knoraApiPath ~
+                    new ResourceTypesRouteV1(routeData).knoraApiPath ~
+                    new SearchRouteV1(routeData).knoraApiPath ~
+                    new AuthenticationRouteV1(routeData).knoraApiPath ~
+                    new AssetsRouteV1(routeData).knoraApiPath ~
+                    new CkanRouteV1(routeData).knoraApiPath ~
+                    new UsersRouteV1(routeData).knoraApiPath ~
+                    new ProjectsRouteV1(routeData).knoraApiPath ~
+                    new OntologiesRouteV2(routeData).knoraApiPath ~
+                    new SearchRouteV2(routeData).knoraApiPath ~
+                    new ResourcesRouteV2(routeData).knoraApiPath ~
+                    new ValuesRouteV2(routeData).knoraApiPath ~
+                    new StandoffRouteV2(routeData).knoraApiPath ~
+                    new ListsRouteV2(routeData).knoraApiPath ~
+                    new AuthenticationRouteV2(routeData).knoraApiPath ~
+                    new GroupsRouteADM(routeData).knoraApiPath ~
+                    new ListsRouteADM(routeData).knoraApiPath ~
+                    new PermissionsRouteADM(routeData).knoraApiPath ~
+                    new ProjectsRouteADM(routeData).knoraApiPath ~
+                    new StoreRouteADM(routeData).knoraApiPath ~
+                    new UsersRouteADM(routeData).knoraApiPath ~
+                    new SipiRouteADM(routeData).knoraApiPath ~
+                    new SwaggerApiDocsRoute(routeData).knoraApiPath,
                 settings
             )
         }
@@ -379,44 +394,44 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
     // #start-api-server
     /**
-      * Starts the Knora-API server.
-      */
-    def appStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean): Unit = {
+     * Starts the Knora-API server.
+     */
+    def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http()
-          .bindAndHandle(
-            Route.handlerFlow(apiRoutes),
-            settings.internalKnoraApiHost,
-            settings.internalKnoraApiPort
-        )
+            .bindAndHandle(
+                Route.handlerFlow(apiRoutes),
+                settings.internalKnoraApiHost,
+                settings.internalKnoraApiPort
+            )
 
         bindingFuture onComplete {
-            case Success(_) => {
-
+            case Success(_) =>
                 if (settings.prometheusEndpoint) {
                     // Load Kamon monitoring
                     Kamon.loadModules()
                 }
 
                 // Kick of startup procedure.
-                self ! InitStartUp(skipLoadingOfOntologies, requiresSipi)
-            }
-            case Failure(ex) => {
+                self ! InitStartUp(ignoreRepository, requiresIIIFService)
+
+            case Failure(ex) =>
                 logger.error(
                     "Failed to bind to {}:{}! - {}",
                     settings.internalKnoraApiHost,
                     settings.internalKnoraApiPort,
                     ex.getMessage
                 )
+
                 appStop()
-            }
         }
     }
+
     // #start-api-server
 
     /**
-      * Stops Knora-API.
-      */
+     * Stops Knora-API.
+     */
     def appStop(): Unit = {
         logger.info("ApplicationActor - initiating shutdown ...")
         context.stop(self)
@@ -437,8 +452,8 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     }
 
     /**
-      * Prints the welcome message
-      */
+     * Prints the welcome message
+     */
     private def printBanner(): Unit = {
 
         var msg =

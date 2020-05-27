@@ -31,7 +31,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -48,7 +48,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     def actorRefFactory: ActorSystem = system
 
-    val settings = Settings(system)
+    val settings: SettingsImpl = Settings(system)
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings)
@@ -57,10 +57,14 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
+    // The main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
 
-    val routeData: KnoraRouteData = KnoraRouteData(system, appActor)
+    val routeData: KnoraRouteData = KnoraRouteData(
+        system = system,
+        appActor = appActor
+    )
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
@@ -89,7 +93,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
     }
 
