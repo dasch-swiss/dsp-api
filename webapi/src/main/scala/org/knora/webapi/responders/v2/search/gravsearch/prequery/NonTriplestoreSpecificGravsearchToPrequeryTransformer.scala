@@ -273,11 +273,13 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     /**
      * The variable names used in the GROUP_CONCAT expressions for dependent resources.
      */
+        //TODO only used by GravsearchMainQueryGenerator and not clear why
     val dependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceGroupConcat.map(_.outputVariable)
 
     /**
      * The variable names used in the GROUP_CONCAT expressions for values.
      */
+        //TODO same as above
     val valueObjectVariablesGroupConcat: Set[QueryVariable] = valueGroupConcatVariablesPerResource.values.flatten.toSet
 
     /**

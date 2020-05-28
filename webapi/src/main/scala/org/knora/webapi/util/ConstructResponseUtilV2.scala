@@ -310,6 +310,7 @@ object ConstructResponseUtilV2 {
      * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
      * @return an instance of [[MainResourcesAndValueRdfData]].
      */
+        //TODO method is too long spliit up into several smaller, clearer methods
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse,
                                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
 
