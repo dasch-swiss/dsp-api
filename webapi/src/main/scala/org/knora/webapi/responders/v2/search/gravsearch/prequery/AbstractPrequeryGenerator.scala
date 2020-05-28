@@ -1192,7 +1192,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
         if (querySchema == ApiV2Complex) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchFunction.toSmartIri.toSparql} instead")
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchTextFunction.toSmartIri.toSparql} instead")
         }
 
         // The match function must be the top-level expression, otherwise boolean logic won't work properly.
@@ -1257,7 +1257,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     private def handleMatchFunctionInComplexSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
-
         if (querySchema == ApiV2Simple) {
             throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunction.toSmartIri.toSparql} instead")
         }
@@ -1304,7 +1303,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
         if (querySchema == ApiV2Simple) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunction.toSmartIri.toSparql} instead")
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchTextFunction.toSmartIri.toSparql} instead")
         }
 
         // The match function must be the top-level expression, otherwise boolean logic won't work properly.
@@ -1574,6 +1573,104 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         TransformedFilterPattern(
             expression = None, // The expression has been replaced by additional patterns.
             additionalPatterns = (valueHasStringStatement :+ luceneQueryPattern) ++ markedUpPatternsToAdd ++ regexFilters
+        )
+    }
+
+
+    /**
+     * Checks that the query is in the simple schema, then calls `handleMatchLabelFunction`.
+     *
+     * @param functionCallExpression the function call to be handled.
+     * @param typeInspectionResult   the type inspection results.
+     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+     * @return a [[TransformedFilterPattern]].
+     */
+    private def handleMatchLabelFunctionInSimpleSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+        if (querySchema == ApiV2Complex) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchLabelFunction.toSmartIri.toSparql} instead")
+        }
+
+        handleMatchLabelFunction(
+            functionCallExpression = functionCallExpression,
+            typeInspectionResult = typeInspectionResult,
+            isTopLevel = isTopLevel
+        )
+    }
+
+    /**
+     * Checks that the query is in the complex schema, then calls `handleMatchLabelFunction`.
+     *
+     * @param functionCallExpression the function call to be handled.
+     * @param typeInspectionResult   the type inspection results.
+     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+     * @return a [[TransformedFilterPattern]].
+     */
+    private def handleMatchLabelFunctionInComplexSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+        if (querySchema == ApiV2Simple) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchLabelFunction.toSmartIri.toSparql} instead")
+        }
+
+        handleMatchLabelFunction(
+            functionCallExpression = functionCallExpression,
+            typeInspectionResult = typeInspectionResult,
+            isTopLevel = isTopLevel
+        )
+    }
+
+    /**
+     * Handles the function `knora-api:matchLabel` in either schema.
+     *
+     * @param functionCallExpression the function call to be handled.
+     * @param typeInspectionResult   the type inspection results.
+     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+     * @return a [[TransformedFilterPattern]].
+     */
+    private def handleMatchLabelFunction(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+        // The match function must be the top-level expression, otherwise boolean logic won't work properly.
+        if (!isTopLevel) {
+            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
+        }
+
+        // two arguments are expected: the first must be a variable representing a resource,
+        // the second must be a string literal
+
+        if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
+
+        // a QueryVariable expected to represent a resource
+        val resourceVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+        typeInspectionResult.getTypeOfEntity(resourceVar) match {
+            case Some(nonPropInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropInfo.typeIri) => ()
+            case _ => throw GravsearchException(s"${resourceVar.toSparql} must be a knora-api:Resource")
+        }
+
+        val rdfsLabelVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = resourceVar, propertyIri = OntologyConstants.Rdfs.Label)
+
+        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // if that statement hasn't been added already.
+        val rdfsLabelStatement = if (addGeneratedVariableForValueLiteral(resourceVar, rdfsLabelVar)) {
+            Seq(StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar))
+        } else {
+            Seq.empty[StatementPattern]
+        }
+
+        val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
+
+        // Replace the filter with a LuceneQueryPattern.
+        TransformedFilterPattern(
+            None, // FILTER has been replaced by statements
+            rdfsLabelStatement :+ LuceneQueryPattern(
+                subj = resourceVar,
+                obj = rdfsLabelVar,
+                queryString = searchTerms
+            )
         )
     }
 

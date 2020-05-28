@@ -929,6 +929,7 @@ object OntologyConstants {
         val MatchTextFunction: IRI = KnoraApiV2PrefixExpansion + "matchText"
         val MatchInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
         val MatchTextInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchTextInStandoff"
+        val MatchLabelFunction: IRI = KnoraApiV2PrefixExpansion + "matchLabel"
         val StandoffLinkFunction: IRI = KnoraApiV2PrefixExpansion + "standoffLink"
     }
 
@@ -968,6 +969,7 @@ object OntologyConstants {
         val MatchesTextIndex: IRI = KnoraApiV2PrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
         val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
         val MatchTextFunction: IRI = KnoraApiV2PrefixExpansion + "matchText"
+        val MatchLabelFunction: IRI = KnoraApiV2PrefixExpansion + "matchLabel"
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 
