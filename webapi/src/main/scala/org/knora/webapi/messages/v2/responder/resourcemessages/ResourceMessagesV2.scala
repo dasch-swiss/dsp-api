@@ -66,8 +66,57 @@ case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) exten
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         // TODO: generate JSON-LD manifest
 
-        JsonLDDocument(body = JsonLDObject(Map.empty), context = JsonLDObject(Map.empty))
+        /*
+        if (targetSchema != ApiV2Complex) {
+            throw AssertionException("Version history can be returned only in the complex schema")
+        }
+
+        // Manifest must have exactly one id, one specified type and one label
+
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        /*
+        val entryAsJasonLD: Seq[JsonLDObject] = iiifUrls.map {
+            manifestEntry: String =>
+                JsonLDObject(
+                    Map(
+                        OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> JsonLDUtil.iriToJsonLDObject(resourceIri),
+                        OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.iriToJsonLDObject(manifestEntry)
+                    )
+                )
+        }
+ */
+
+
+        val body = JsonLDObject(
+            Map(
+                //TODO what is the context?
+                //JsonLDConstants.CONTEXT -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).getOntologyName),
+                JsonLDConstants.ID -> JsonLDString(resourceIri),
+                JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+                OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(resourceIri.toString),
+                OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> JsonLDUtil.iriToJsonLDObject(resourceIri),
+                OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.iriToJsonLDObject(resourceIri)
+                )
+            )
+
+
+
+
+        // Make the JSON-LD context.
+
+        val context = JsonLDUtil.makeContext(
+            fixedPrefixes = Map(
+                "hasIncomingLinkValue" -> OntologyConstants.KnoraBase.HasIncomingLinkValue,
+                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+            )
+        )
+
+        //val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(entryAsJasonLD)))
+
+        JsonLDDocument(body = body, context = context)
+        //JsonLDDocument(body = JsonLDObject(Map.empty), context = JsonLDObject(Map.empty))
     }
+         */
 }
 
 /**
