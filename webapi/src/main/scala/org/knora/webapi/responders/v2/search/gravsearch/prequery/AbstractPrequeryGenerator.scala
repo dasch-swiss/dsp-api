@@ -1768,66 +1768,29 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
-        functionIri.toString match {
-
-            case OntologyConstants.KnoraApiV2Simple.MatchFunction =>
-                // deprecated
-                handleMatchFunctionInSimpleSchema(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
-            case OntologyConstants.KnoraApiV2Complex.MatchFunction =>
-                // deprecated
-                handleMatchFunctionInComplexSchema(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
-            case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction =>
-                // deprecated
-                handleMatchInStandoffFunction(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
-            case OntologyConstants.KnoraApiV2Simple.MatchTextFunction =>
-                handleMatchTextFunctionInSimpleSchema(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
-            case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
-                handleMatchTextFunctionInComplexSchema(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
-            case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
-                handleMatchTextInStandoffFunction(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
-            case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction =>
-                handleStandoffLinkFunction(
-                    functionCallExpression = functionCallExpression,
-                    typeInspectionResult = typeInspectionResult,
-                    isTopLevel = isTopLevel
-                )
-
+        // Get a Scala function that implements the Gravsearch function.
+        val functionFunction: (FunctionCallExpression, GravsearchTypeInspectionResult, Boolean) => TransformedFilterPattern = functionIri.toString match {
+            case OntologyConstants.KnoraApiV2Simple.MatchFunction => handleMatchFunctionInSimpleSchema // deprecated
+            case OntologyConstants.KnoraApiV2Complex.MatchFunction => handleMatchFunctionInComplexSchema // deprecated
+            case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction => handleMatchInStandoffFunction // deprecated
+            case OntologyConstants.KnoraApiV2Simple.MatchTextFunction => handleMatchTextFunctionInSimpleSchema
+            case OntologyConstants.KnoraApiV2Complex.MatchTextFunction => handleMatchTextFunctionInComplexSchema
+            case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction => handleMatchLabelFunctionInSimpleSchema
+            case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction => handleMatchLabelFunctionInComplexSchema
+            case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction => handleMatchTextInStandoffFunction
+            case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction => handleStandoffLinkFunction
             case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
                 throw GravsearchException(s"Function ${functionIri.toSparql} must be used in a comparison expression")
 
             case _ => throw NotImplementedException(s"Function ${functionCallExpression.functionIri} not found")
         }
 
+        // Call the Scala function.
+        functionFunction(
+            functionCallExpression,
+            typeInspectionResult,
+            isTopLevel
+        )
     }
 
     /**
