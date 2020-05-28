@@ -102,9 +102,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             // Get the resource property and the value to be created.
             createValue: CreateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    if (jsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
-                        throw BadRequestException("The @id of a value cannot be given in a request to create the value")
-                    }
 
                     for {
                         valueContent: ValueContentV2 <-
@@ -117,6 +114,9 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 log = log
                             )
 
+                        // Get the custom value IRI if provided.
+                        maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
+                        _= println(maybeCustomValueIri)
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,

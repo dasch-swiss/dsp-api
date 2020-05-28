@@ -450,6 +450,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                 if (!iri.isKnoraDataIri) {
                     throw BadRequestException(s"Invalid Knora data IRI: $maybeIri")
                 }
+                println(iri)
         }
 
         maybeIri

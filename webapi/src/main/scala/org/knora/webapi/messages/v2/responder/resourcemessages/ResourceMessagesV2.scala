@@ -599,11 +599,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                     settings = settings,
                                     log = log
                                 )
-
-                                _ = if (valueJsonLDObject.value.contains(JsonLDConstants.ID)) {
-                                    throw BadRequestException("The @id of a value cannot be given in a request to create the value")
-                                }
-
+                                maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
                                 maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueInNewResourceV2(
                                 valueContent = valueContent,
