@@ -1067,7 +1067,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                 case _ => throw GravsearchException(s"First argument of regex function must be a variable")
             }
 
-            // make sure that the query variable (first argument of regex function) represents a text value
+            // make sure that the query variable (first argument of regex function) represents string literal
             typeInspectionResult.getTypeOfEntity(regexQueryVar) match {
                 case Some(typeInfo) =>
                     typeInfo match {
@@ -1088,28 +1088,35 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                     throw GravsearchException(s"No type information found about ${regexQueryVar.toSparql}")
             }
 
-            // Generate a variable name representing the string literal
-            val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = regexQueryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
-
-            // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
-            // if that statement hasn't been added already.
-            val statementToAddForValueHasString: Seq[StatementPattern] = if (addGeneratedVariableForValueLiteral(regexQueryVar, textValHasString)) {
-                Seq(
-                    // connects the value object with the value literal
-                    StatementPattern.makeExplicit(subj = regexQueryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+            // Does the variable refer to resource metadata?
+            if (resourceMetadataVariables.contains(regexQueryVar)) {
+                // Yes. Leave the expression as is.
+                TransformedFilterPattern(
+                    Some(RegexFunction(regexQueryVar, regexFunctionCall.pattern, regexFunctionCall.modifier)),
+                    Seq.empty
                 )
             } else {
-                Seq.empty[StatementPattern]
+                // No, it refers to a TextValue. Generate a variable name representing the string literal.
+                val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = regexQueryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+
+                // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+                // if that statement hasn't been added already.
+                val statementToAddForValueHasString: Seq[StatementPattern] = if (addGeneratedVariableForValueLiteral(regexQueryVar, textValHasString)) {
+                    Seq(
+                        // connects the value object with the value literal
+                        StatementPattern.makeExplicit(subj = regexQueryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+                    )
+                } else {
+                    Seq.empty[StatementPattern]
+                }
+
+                TransformedFilterPattern(
+                    Some(RegexFunction(textValHasString, regexFunctionCall.pattern, regexFunctionCall.modifier)),
+                    statementToAddForValueHasString
+                )
+
             }
-
-
-            TransformedFilterPattern(
-                Some(RegexFunction(textValHasString, regexFunctionCall.pattern, regexFunctionCall.modifier)),
-                statementToAddForValueHasString
-            )
-
         }
-
     }
 
     /**

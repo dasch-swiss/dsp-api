@@ -1284,6 +1284,35 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           |}
         """.stripMargin
 
+
+    val InputQueryWithRdfsLabelAndRegexInSimpleSchema: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    FILTER regex(?bookLabel, "Zeit", "i")
+          |}""".stripMargin
+
+    val InputQueryWithRdfsLabelAndRegexInComplexSchema: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    FILTER regex(?bookLabel, "Zeit", "i")
+          |}""".stripMargin
+
     val TransformedQueryWithRdfsLabelAndVariable: SelectQuery = SelectQuery(
         variables = Vector(QueryVariable(variableName = "book")),
         offset = 0,
@@ -1349,6 +1378,77 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                         value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                         datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
                     )
+                ))
+            ),
+            positiveEntities = Set(),
+            querySchema = None
+        ),
+        limit = Some(25),
+        useDistinct = true
+    )
+
+    val TransformedQueryWithRdfsLabelAndRegex: SelectQuery = SelectQuery(
+        variables = Vector(QueryVariable(variableName = "book")),
+        offset = 0,
+        groupBy = Vector(QueryVariable(variableName = "book")),
+        orderBy = Vector(OrderCriterion(
+            queryVariable = QueryVariable(variableName = "book"),
+            isAscending = true
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = XsdLiteral(
+                        value = "false",
+                        datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                    ),
+                    namedGraph = Some(IriRef(
+                        iri = "http://www.knora.org/explicit".toSmartIri,
+                        propertyPathOperator = None
+                    ))
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = QueryVariable(variableName = "bookLabel"),
+                    namedGraph = None
+                ),
+                FilterPattern(expression = RegexFunction(
+                    textExpr = QueryVariable(variableName = "bookLabel"),
+                    pattern = "Zeit",
+                    modifier = Some("i")
                 ))
             ),
             positiveEntities = Set(),
@@ -1476,6 +1576,19 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndVariableInComplexSchema, responderData, settings)
 
             assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
+        }
+
+
+        "transform an input query using rdfs:label and a regex in the simple schema" in {
+            val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndRegexInSimpleSchema, responderData, settings)
+
+            assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
+        }
+
+        "transform an input query using rdfs:label and a regex in the complex schema" in {
+            val transformedQuery = QueryHandler.transformQuery(InputQueryWithRdfsLabelAndRegexInComplexSchema, responderData, settings)
+
+            assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
         }
     }
 }
