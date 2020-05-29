@@ -222,9 +222,9 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 test-only: stack-without-api init-db-test-unit ## runs only the supplied tests, e.g., make test-only TARGET="*.CORSSupportE2ESpec".
 	@echo $@  # print target name
 	docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(CURRENT_DIR):/src \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
+				-v /tmp:/tmp:delegated \
+				-v $(CURRENT_DIR):/src:delegated \
+				-v $(HOME)/.ivy2:/root/.ivy2:delegated \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \

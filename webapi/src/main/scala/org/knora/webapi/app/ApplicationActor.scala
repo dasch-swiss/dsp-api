@@ -4,13 +4,15 @@ import akka.actor.SupervisorStrategy._
 import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Stash, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler, Route}
 import akka.stream.Materializer
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi._
-import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.http.CORSSupport.{CORS, handleExceptions, handleRejections}
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
@@ -374,6 +376,15 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
 
+    // Our rejection handler. Here we are using the default one from the CORS lib
+    val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler
+
+    // Our exception handler
+    val exceptionHandler: ExceptionHandler = KnoraExceptionHandler(KnoraSettings(system))
+
+    // Combining the two handlers for convenience
+    val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+
     /**
      * All routes composed together and CORS activated.
      * ALL requests go through each of the routes in ORDER.
@@ -381,40 +392,42 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
      */
     private val apiRoutes: Route = logDuration {
         addServerHeader {
-            CORS(
-                new HealthRoute(routeData).knoraApiPath ~
-                    new VersionRoute(routeData).knoraApiPath ~
-                    new RejectingRoute(routeData).knoraApiPath ~
-                    new ClientApiRoute(routeData).knoraApiPath ~
-                    new ResourcesRouteV1(routeData).knoraApiPath ~
-                    new ValuesRouteV1(routeData).knoraApiPath ~
-                    new StandoffRouteV1(routeData).knoraApiPath ~
-                    new ListsRouteV1(routeData).knoraApiPath ~
-                    new ResourceTypesRouteV1(routeData).knoraApiPath ~
-                    new SearchRouteV1(routeData).knoraApiPath ~
-                    new AuthenticationRouteV1(routeData).knoraApiPath ~
-                    new AssetsRouteV1(routeData).knoraApiPath ~
-                    new CkanRouteV1(routeData).knoraApiPath ~
-                    new UsersRouteV1(routeData).knoraApiPath ~
-                    new ProjectsRouteV1(routeData).knoraApiPath ~
-                    new OntologiesRouteV2(routeData).knoraApiPath ~
-                    new SearchRouteV2(routeData).knoraApiPath ~
-                    new ResourcesRouteV2(routeData).knoraApiPath ~
-                    new ValuesRouteV2(routeData).knoraApiPath ~
-                    new StandoffRouteV2(routeData).knoraApiPath ~
-                    new ListsRouteV2(routeData).knoraApiPath ~
-                    new AuthenticationRouteV2(routeData).knoraApiPath ~
-                    new GroupsRouteADM(routeData).knoraApiPath ~
-                    new ListsRouteADM(routeData).knoraApiPath ~
-                    new PermissionsRouteADM(routeData).knoraApiPath ~
-                    new ProjectsRouteADM(routeData).knoraApiPath ~
-                    new StoreRouteADM(routeData).knoraApiPath ~
-                    new UsersRouteADM(routeData).knoraApiPath ~
-                    new SipiRouteADM(routeData).knoraApiPath ~
-                    new SwaggerApiDocsRoute(routeData).knoraApiPath,
-                knoraSettings,
-                system
-            )
+            handleErrors {
+                CorsDirectives.cors(CorsSettings(system)) {
+                    handleErrors {
+                        new HealthRoute(routeData).knoraApiPath ~
+                          new VersionRoute(routeData).knoraApiPath ~
+                          new RejectingRoute(routeData).knoraApiPath ~
+                          new ClientApiRoute(routeData).knoraApiPath ~
+                          new ResourcesRouteV1(routeData).knoraApiPath ~
+                          new ValuesRouteV1(routeData).knoraApiPath ~
+                          new StandoffRouteV1(routeData).knoraApiPath ~
+                          new ListsRouteV1(routeData).knoraApiPath ~
+                          new ResourceTypesRouteV1(routeData).knoraApiPath ~
+                          new SearchRouteV1(routeData).knoraApiPath ~
+                          new AuthenticationRouteV1(routeData).knoraApiPath ~
+                          new AssetsRouteV1(routeData).knoraApiPath ~
+                          new CkanRouteV1(routeData).knoraApiPath ~
+                          new UsersRouteV1(routeData).knoraApiPath ~
+                          new ProjectsRouteV1(routeData).knoraApiPath ~
+                          new OntologiesRouteV2(routeData).knoraApiPath ~
+                          new SearchRouteV2(routeData).knoraApiPath ~
+                          new ResourcesRouteV2(routeData).knoraApiPath ~
+                          new ValuesRouteV2(routeData).knoraApiPath ~
+                          new StandoffRouteV2(routeData).knoraApiPath ~
+                          new ListsRouteV2(routeData).knoraApiPath ~
+                          new AuthenticationRouteV2(routeData).knoraApiPath ~
+                          new GroupsRouteADM(routeData).knoraApiPath ~
+                          new ListsRouteADM(routeData).knoraApiPath ~
+                          new PermissionsRouteADM(routeData).knoraApiPath ~
+                          new ProjectsRouteADM(routeData).knoraApiPath ~
+                          new StoreRouteADM(routeData).knoraApiPath ~
+                          new UsersRouteADM(routeData).knoraApiPath ~
+                          new SipiRouteADM(routeData).knoraApiPath ~
+                          new SwaggerApiDocsRoute(routeData).knoraApiPath
+                    }
+                }
+            }
         }
     }
 

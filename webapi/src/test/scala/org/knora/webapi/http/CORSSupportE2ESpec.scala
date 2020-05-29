@@ -22,8 +22,11 @@ package org.knora.webapi.http
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -31,8 +34,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 object CORSSupportE2ESpec {
     val config = ConfigFactory.parseString(
         """
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
+            akka.loglevel = "DEBUG"
+            akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
@@ -52,9 +55,10 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
     "A Route with enabled CORS support" should {
 
         "accept valid pre-flight requests" in {
-            val request = Get(baseApiUrl + s"/admin/projects")
+            val request = Options(baseApiUrl + s"/admin/projects") ~> Origin(exampleOrigin)
             val response: HttpResponse = singleAwaitingRequest(request)
-            // logger.debug(s"response: ${response.toString}")
+            println(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             response.status shouldBe StatusCodes.OK
             response.entity.toString shouldBe empty
             response.headers should contain allElementsOf Seq(
@@ -69,7 +73,8 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
         "reject pre-flight requests with invalid method" in {
             val request = Patch(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
-            // logger.debug(s"response: ${response.toString}")
+            println(s"response: ${response.toString}")
+            log.debug(s"response: ${response.toString}")
             responseToString(response) shouldEqual "HTTP method not allowed, supported methods: GET, PUT, POST, DELETE, HEAD, OPTIONS"
             response.status shouldBe StatusCodes.BadRequest
         }
@@ -77,7 +82,8 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
         "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
             val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg", "utf-8")) ~> Origin(exampleOrigin)
             val response = singleAwaitingRequest(request)
-
+            println(s"response: ${response.toString}")
+            log.debug(s"response: ${response.toString}")
             response.status should equal(StatusCodes.OK)
             response.headers should contain allElementsOf Seq(
                 `Access-Control-Allow-Origin`(exampleOrigin)
@@ -87,7 +93,8 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
         "send `Access-Control-Allow-Origin` header when the Knora resource is NOT found " in {
             val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/nonexistent", "utf-8")) ~> Origin(exampleOrigin)
             val response = singleAwaitingRequest(request)
-
+            println(s"response: ${response.toString}")
+            log.debug(s"response: ${response.toString}")
             response.status should equal(StatusCodes.NotFound)
             response.headers should contain allElementsOf Seq(
                 `Access-Control-Allow-Origin`(exampleOrigin)
@@ -97,7 +104,8 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
         "send `Access-Control-Allow-Origin` header when the api endpoint route is NOT found " in {
             val request = Get(baseApiUrl + "/NotFound") ~> Origin(exampleOrigin)
             val response = singleAwaitingRequest(request)
-
+            println(s"response: ${response.toString}")
+            log.debug(s"response: ${response.toString}")
             response.status should equal(StatusCodes.NotFound)
             response.headers should contain allElementsOf Seq(
                 `Access-Control-Allow-Origin`(exampleOrigin)

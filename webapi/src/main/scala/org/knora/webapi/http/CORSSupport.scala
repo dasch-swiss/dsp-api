@@ -20,15 +20,13 @@
 package org.knora.webapi.http
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.server.{Directives, Route}
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import akka.http.scaladsl.server.{Directives, ExceptionHandler, RejectionHandler, Route}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
-import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.{KnoraExceptionHandler, KnoraSettingsImpl}
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import com.typesafe.scalalogging.StrictLogging
+import org.knora.webapi.{KnoraExceptionHandler, KnoraSettings}
 
-object CORSSupport extends Directives with LazyLogging {
-
-
+object CORSSupport extends Directives with StrictLogging {
 
     /**
      * Adds CORS support to a route with the following:
@@ -42,18 +40,24 @@ object CORSSupport extends Directives with LazyLogging {
      * @param route the route for which CORS support is enabled
      * @return the enabled route.
      */
-    def CORS(route: Route, knoraSettings: KnoraSettingsImpl, system: ActorSystem): Route = {
+    def CORS(route: Route, system: ActorSystem): Route = {
 
         // Our rejection handler. Here we are using the default one.
-        val rejectionHandler = CorsDirectives.corsRejectionHandler
+        val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler
 
         // Our exception handler
-        
+        val exceptionHandler: ExceptionHandler = KnoraExceptionHandler(KnoraSettings(system))
 
-            handleRejections(CorsDirectives.corsRejectionHandler) {
-            CorsDirectives.cors(CorsSettings(system)) {
-                println(CorsSettings(system))
-                handleExceptions(KnoraExceptionHandler(knoraSettings)) {
+        // Combining the two handlers only for convenience
+        val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+
+        // cors settings
+        val corsSettings = CorsSettings(system)
+
+        handleErrors {
+            println(s"CORS settings: $corsSettings")
+            CorsDirectives.cors(corsSettings) {
+                handleErrors {
                     route
                 }
             }

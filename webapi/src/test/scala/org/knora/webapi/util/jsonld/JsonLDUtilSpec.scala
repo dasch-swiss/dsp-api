@@ -20,13 +20,14 @@
 package org.knora.webapi.util.jsonld
 
 import org.knora.webapi.util.StringFormatter
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.{JsValue, JsonParser}
 
 /**
   * Tests [[JsonLDUtil]].
   */
-class JsonLDUtilSpec extends WordSpecLike with Matchers {
+class JsonLDUtilSpec extends AnyWordSpecLike with Matchers {
 
     StringFormatter.initForTest()
 

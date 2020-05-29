@@ -52,6 +52,9 @@
     <!-- App -->
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
 
+    <!-- http -->
+    <logger name="org.knora.webapi.http.CORSSupport" level="DEBUG"/>
+
     <!-- V1 -->
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
@@ -106,6 +109,9 @@
 
     <!-- E2E -->
     <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="INFO"/>
+
+    <!-- http -->
+    <logger name="org.knora.webapi.http.CORSSupportE2ESpec" level="DEBUG"/>
 
     <!-- V1 -->
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>
