@@ -248,6 +248,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     propertyIri = adjustedInternalPropertyIri,
                     value = submittedInternalValueContent,
+                    customValueIri = createValueRequest.createValue.customValueIri,
                     valueCreator = createValueRequest.requestingUser.id,
                     valuePermissions = newValuePermissionLiteral,
                     requestingUser = createValueRequest.requestingUser
@@ -323,6 +324,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                          resourceInfo: ReadResourceV2,
                                          propertyIri: SmartIri,
                                          value: ValueContentV2,
+                                         customValueIri: Option[SmartIri],
                                          valueCreator: IRI,
                                          valuePermissions: String,
                                          requestingUser: UserADM): Future[UnverifiedValueV2] = {
@@ -344,6 +346,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     propertyIri = propertyIri,
                     value = ordinaryValueContent,
+                    maybeCustomValueIri = customValueIri,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -366,12 +369,16 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  resourceInfo: ReadResourceV2,
                                                  propertyIri: SmartIri,
                                                  value: ValueContentV2,
+                                                 maybeCustomValueIri: Option[SmartIri],
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
-            // Generate an IRI and a UUID for the new value.
-            newValueIri <- FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+            // Make an IRI and a UUID for the new value.
+            newValueIri: IRI <- maybeCustomValueIri match {
+                case Some(customValueIri) => FastFuture.successful(customValueIri.toString)
+                case None => FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+            }
             newValueUUID = UUID.randomUUID
 
             currentTime: Instant = Instant.now

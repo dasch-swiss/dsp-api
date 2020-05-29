@@ -123,6 +123,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                         resourceClassIri = resourceClassIri,
                         propertyIri = propertyIri,
                         valueContent = valueContent,
+                        customValueIri = maybeCustomValueIri,
                         permissions = maybePermissions
                     )
             }
@@ -767,12 +768,14 @@ case class ReadOtherValueV2(valueIri: IRI,
  * @param resourceClassIri the resource class that the client believes the resource belongs to.
  * @param propertyIri      the property of the new value. If the client wants to create a link, this must be a link value property.
  * @param valueContent     the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri   the optional custom IRI supplied for the value.
  * @param permissions      the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
                          resourceClassIri: SmartIri,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
+                         customValueIri: Option[SmartIri] = None,
                          permissions: Option[String] = None) extends IOValueV2
 
 

@@ -252,34 +252,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 10
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-
+            val customValueIri: IRI = resourceIri + "/values/" + "int-value-with-IRI"
             val jsonLdEntity = SharedTestDataADM.createIntValueRequestWithCustomIRI(
                 resourceIri = resourceIri,
                 intValue = intValue,
-                valueIri = resourceIri + "/values/" + "int-value-with-IRI"
+                valueIri = customValueIri
             )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
 
             assert(response.status == StatusCodes.OK, response.toString)
-//            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-//            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-//            intValueIri.set(valueIri)
-//            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-//            valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
-//
-//            val savedValue: JsonLDObject = getValue(
-//                resourceIri = resourceIri,
-//                maybePreviousLastModDate = maybeResourceLastModDate,
-//                propertyIriForGravsearch = propertyIri,
-//                propertyIriInResult = propertyIri,
-//                expectedValueIri = intValueIri.get,
-//                userEmail = anythingUserEmail
-//            )
-//
-//            val savedIntValue: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
-//            savedIntValue should ===(intValue)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIri)
         }
 
         "not create an integer value if the simple schema is submitted" in {
