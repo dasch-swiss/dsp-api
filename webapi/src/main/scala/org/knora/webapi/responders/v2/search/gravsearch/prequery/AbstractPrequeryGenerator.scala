@@ -1632,17 +1632,18 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     private def handleMatchLabelFunction(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
-        // The match function must be the top-level expression, otherwise boolean logic won't work properly.
+        // The matchLabel function must be the top-level expression, otherwise boolean logic won't work properly.
         if (!isTopLevel) {
             throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
         }
 
-        // two arguments are expected: the first must be a variable representing a resource,
-        // the second must be a string literal
+        // Two arguments are expected:
+        // 1. a variable representing a resource
+        // 2. a string literal
 
         if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
 
-        // a QueryVariable expected to represent a resource
+        // A QueryVariable expected to represent a resource.
         val resourceVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
 
         typeInspectionResult.getTypeOfEntity(resourceVar) match {
@@ -1650,10 +1651,11 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case _ => throw GravsearchException(s"${resourceVar.toSparql} must be a knora-api:Resource")
         }
 
-        val rdfsLabelVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = resourceVar, propertyIri = OntologyConstants.Rdfs.Label)
-
         // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
         // if that statement hasn't been added already.
+
+        val rdfsLabelVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = resourceVar, propertyIri = OntologyConstants.Rdfs.Label)
+
         val rdfsLabelStatement = if (addGeneratedVariableForValueLiteral(resourceVar, rdfsLabelVar)) {
             Seq(StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar))
         } else {
@@ -1661,15 +1663,15 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
 
         val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-        val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
+        val luceneQueryString: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
         // Replace the filter with a LuceneQueryPattern.
         TransformedFilterPattern(
-            None, // FILTER has been replaced by statements
+            None, // The FILTER has been replaced by statements.
             rdfsLabelStatement :+ LuceneQueryPattern(
                 subj = resourceVar,
                 obj = rdfsLabelVar,
-                queryString = searchTerms
+                queryString = luceneQueryString
             )
         )
     }
