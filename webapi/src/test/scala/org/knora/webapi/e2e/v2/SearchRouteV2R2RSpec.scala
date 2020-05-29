@@ -8324,7 +8324,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |    ?book knora-api:isMainResource true .
-                  |
                   |} WHERE {
                   |    ?book rdf:type incunabula:book .
                   |    ?book rdfs:label ?bookLabel .
@@ -8334,7 +8333,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8347,7 +8346,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |    ?book knora-api:isMainResource true .
-                  |
                   |} WHERE {
                   |    ?book rdf:type incunabula:book .
                   |    ?book rdfs:label ?bookLabel .
@@ -8357,7 +8355,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
