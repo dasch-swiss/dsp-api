@@ -12,7 +12,6 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi._
-import org.knora.webapi.http.CORSSupport.{CORS, handleExceptions, handleRejections}
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
@@ -377,13 +376,16 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     }
 
     // Our rejection handler. Here we are using the default one from the CORS lib
-    val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler
+    val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler.withFallback(RejectionHandler.default)
 
     // Our exception handler
     val exceptionHandler: ExceptionHandler = KnoraExceptionHandler(KnoraSettings(system))
 
     // Combining the two handlers for convenience
-    val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+    val handleErrors =  handleExceptions(exceptionHandler)
+
+    // cors settings
+    val corsSettings = CorsSettings(system)
 
     /**
      * All routes composed together and CORS activated.
@@ -392,8 +394,9 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
      */
     private val apiRoutes: Route = logDuration {
         addServerHeader {
-            handleErrors {
-                CorsDirectives.cors(CorsSettings(system)) {
+            //handleErrors {
+                println(s"CORS settings: $corsSettings")
+                CorsDirectives.cors(corsSettings) {
                     handleErrors {
                         new HealthRoute(routeData).knoraApiPath ~
                           new VersionRoute(routeData).knoraApiPath ~
@@ -427,7 +430,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                           new SwaggerApiDocsRoute(routeData).knoraApiPath
                     }
                 }
-            }
+            //}
         }
     }
 

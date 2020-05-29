@@ -17,16 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.http
+package org.knora.webapi.e2e
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.{Directives, Route}
-import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
