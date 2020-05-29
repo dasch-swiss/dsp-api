@@ -113,6 +113,18 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     text = SharedTestDataADM.createResourceWithValues
                 ),
                 TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-IRI-request"),
+                    text = SharedTestDataADM.createResourceWithCustomIRI(SharedTestDataADM.customResourceIRI)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-resource-And-value-IRI-request"),
+                    text = SharedTestDataADM.createResourceWithCustomResourceAndValueIRI(SharedTestDataADM.customResourceWithValueIRI, SharedTestDataADM.customResourceWithValue_valueIRI)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-random-IRI-and-custom-value-IRI-request"),
+                    text = SharedTestDataADM.createResourceWithCustomValueIRI(SharedTestDataADM.customValueIRI)
+                ),
+                TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-creation-date"),
                     text = SharedTestDataADM.createResourceWithCustomCreationDate(Instant.parse("2019-01-09T15:45:54.502951Z"))
                 ),

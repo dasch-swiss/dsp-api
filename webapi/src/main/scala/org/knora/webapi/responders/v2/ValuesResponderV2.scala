@@ -508,6 +508,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     private def generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
         for {
             // Generate SPARQL to create links and LinkValues for standoff links in text values.
+
             sparqlForStandoffLinks: String <- Future(generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest))
 
             // Generate SPARQL for each value.
@@ -557,7 +558,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                         creationDate: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
         // Make an IRI and a UUID for the new value.
-        val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
+        val newValueIri: IRI = valueToCreate.customValueIri match {
+            case Some(customValueIri) => customValueIri.toString
+            case None => stringFormatter.makeRandomValueIri(resourceIri)
+        }
+
         val newValueUUID = UUID.randomUUID
 
         // Generate the SPARQL.

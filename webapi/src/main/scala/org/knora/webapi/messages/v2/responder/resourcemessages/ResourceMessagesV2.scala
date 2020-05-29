@@ -442,9 +442,11 @@ case class ReadResourceV2(resourceIri: IRI,
  * The value of a Knora property sent to Knora to be created in a new resource.
  *
  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri the optional custom value IRI.
  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
+                                      customValueIri: Option[SmartIri] = None,
                                       permissions: Option[String] = None) extends IOValueV2
 
 /**
@@ -603,6 +605,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                 maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueInNewResourceV2(
                                 valueContent = valueContent,
+                                customValueIri = maybeCustomValueIri,
                                 permissions = maybePermissions
                             )
                     }
