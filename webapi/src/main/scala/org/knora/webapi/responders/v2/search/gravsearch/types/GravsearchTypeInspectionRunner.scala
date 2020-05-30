@@ -78,7 +78,7 @@ class GravsearchTypeInspectionRunner(responderData: ResponderData,
             }
 
             // In the initial intermediate result, none of the entities have types yet.
-            initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult.newInstance(typeableEntities)
+            initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
 
             // Run the pipeline and get its result.
             lastResult: IntermediateTypeInspectionResult <- typeInspectionPipeline.inspectTypes(

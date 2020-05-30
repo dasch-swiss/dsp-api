@@ -86,7 +86,7 @@ object IntermediateTypeInspectionResult {
       *
       * @param entities the set of typeable entities found in the WHERE clause of a Gravsearch query.
       */
-    def newInstance(entities: Set[TypeableEntity])(implicit stringFormatter: StringFormatter): IntermediateTypeInspectionResult = {
+    def apply(entities: Set[TypeableEntity])(implicit stringFormatter: StringFormatter): IntermediateTypeInspectionResult = {
         // Make an IntermediateTypeInspectionResult in which each typeable entity has no types.
         val emptyResult = new IntermediateTypeInspectionResult(entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap)
 
