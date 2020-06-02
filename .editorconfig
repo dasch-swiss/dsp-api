@@ -23,21 +23,6 @@ ij_bibtex_keep_first_column_comment = true
 ij_bibtex_keep_indents_on_empty_lines = false
 ij_bibtex_wrap_long_lines = false
 
-[*.conf]
-indent_size = 2
-tab_width = 2
-ij_continuation_indent_size = 2
-ij_hocon_keep_blank_lines_before_right_brace = 2
-ij_hocon_keep_indents_on_empty_lines = false
-ij_hocon_keep_line_breaks = true
-ij_hocon_space_after_colon = true
-ij_hocon_space_after_comma = true
-ij_hocon_space_before_colon = true
-ij_hocon_space_before_comma = false
-ij_hocon_spaces_within_braces = false
-ij_hocon_spaces_within_brackets = false
-ij_hocon_spaces_within_method_call_parentheses = false
-
 [*.css]
 ij_css_align_closing_brace_with_properties = false
 ij_css_blank_lines_around_nested_selector = 1
@@ -471,7 +456,7 @@ ij_scala_type_annotation_structural_type = true
 ij_scala_type_annotation_underscore_parameter = false
 ij_scala_type_annotation_unit_type = true
 ij_scala_use_alternate_continuation_indent_for_params = false
-ij_scala_use_scaladoc2_formatting = true
+ij_scala_use_scaladoc2_formatting = false
 ij_scala_variable_annotation_wrap = off
 ij_scala_while_brace_force = never
 ij_scala_while_on_new_line = false
@@ -689,7 +674,7 @@ ij_typescript_while_brace_force = never
 ij_typescript_while_on_new_line = false
 ij_typescript_wrap_comments = false
 
-[{*.bash,*.sh,*.zsh,get_workspace_status}]
+[{*.bash,*.sh,*.zsh}]
 indent_size = 2
 tab_width = 2
 ij_shell_binary_ops_start_line = false
@@ -1070,7 +1055,12 @@ ij_php_version_weight = 28
 ij_php_while_brace_force = never
 ij_php_while_on_new_line = false
 
-[{*.har,*.jsb2,*.jsb3,*.json,*.jsonld,.babelrc,.eslintrc,.stylelintrc,bowerrc,composer.lock,jest.config}]
+[{*.dockerapp,*.yaml,*.yml}]
+indent_size = 2
+ij_yaml_keep_indents_on_empty_lines = false
+ij_yaml_keep_line_breaks = true
+
+[{*.har,*.jsb2,*.jsb3,*.json,.babelrc,.eslintrc,.stylelintrc,bowerrc,composer.lock,jest.config}]
 indent_size = 2
 ij_json_keep_blank_lines_in_code = 0
 ij_json_keep_indents_on_empty_lines = false
@@ -1109,8 +1099,3 @@ ij_html_space_after_tag_name = false
 ij_html_space_around_equality_in_attribute = false
 ij_html_space_inside_empty_tag = false
 ij_html_text_wrap = normal
-
-[{*.template,*.yaml,*.yml}]
-indent_size = 2
-ij_yaml_keep_indents_on_empty_lines = false
-ij_yaml_keep_line_breaks = true
