@@ -219,6 +219,170 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         deletionInfo = None
     )
 
+    val expectedReadResourceSequenceV2ForMainQuery1 = ReadResourcesSequenceV2(
+        resources = Vector(
+            ReadResourceV2(
+                versionDate = None,
+                label = "a5v",
+                resourceIri = "http://rdfh.ch/0803/76570a749901",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                creationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                userPermission = ChangeRightsPermission,
+                values = Map(
+                    "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(ReadLinkValueV2(
+                        valueContent = LinkValueContentV2(
+                            isIncomingLink = false,
+                            referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                            ontologySchema = InternalSchema,
+                            comment = None,
+                            referredResourceExists = true,
+                            nestedResource = Some(ReadResourceV2(
+                                versionDate = None,
+                                label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+                                resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                                attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                                creationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                                userPermission = ChangeRightsPermission,
+                                values = Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
+                                    valueContent = TextValueContentV2(
+                                        valueHasLanguage = None,
+                                        ontologySchema = InternalSchema,
+                                        maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                                        comment = None
+                                    ),
+                                    valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+                                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+                                    valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                                    valueHasMaxStandoffStartIndex = None,
+                                    attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                                    previousValueIri = None,
+                                    valueHasUUID = stringFormatter.decodeUuid("d9a522845006"),
+                                    userPermission = ChangeRightsPermission,
+                                    deletionInfo = None
+                                ))),
+                                projectADM = SharedTestDataADM.incunabulaProject,
+                                lastModificationDate = None,
+                                deletionInfo = None
+                            ))
+                        ),
+                        valueHasRefCount = 1,
+                        valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+                        permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                        valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                        previousValueIri = None,
+                        valueHasUUID = stringFormatter.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
+                        userPermission = ChangeRightsPermission,
+                        deletionInfo = None
+                    )),
+                    "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(ReadOtherValueV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = InternalSchema,
+                            valueHasInteger = 10,
+                            comment = None
+                        ),
+                        valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
+                        permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                        valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                        previousValueIri = None,
+                        valueHasUUID = stringFormatter.decodeUuid("fae17f4f6106"),
+                        userPermission = ChangeRightsPermission,
+                        deletionInfo = None
+                    ))
+                ),
+                projectADM = SharedTestDataADM.incunabulaProject,
+                lastModificationDate = None,
+                deletionInfo = None
+            ),
+            ReadResourceV2(
+                versionDate = None,
+                label = "a5v",
+                resourceIri = "http://rdfh.ch/0803/773f258402",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                userPermission = ChangeRightsPermission,
+                values = Map(
+                    "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(ReadLinkValueV2(
+                        valueContent = LinkValueContentV2(
+                            isIncomingLink = false,
+                            referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                            ontologySchema = InternalSchema,
+                            comment = None,
+                            referredResourceExists = true,
+                            nestedResource = Some(ReadResourceV2(
+                                versionDate = None,
+                                label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+                                resourceIri = "http://rdfh.ch/0803/c5058f3a",
+                                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                                attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                                creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                                userPermission = ChangeRightsPermission,
+                                values = Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
+                                    valueContent = TextValueContentV2(
+                                        valueHasLanguage = None,
+                                        ontologySchema = InternalSchema,
+                                        maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                                        comment = None
+                                    ),
+                                    valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+                                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+                                    valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                                    valueHasMaxStandoffStartIndex = None,
+                                    attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                                    previousValueIri = None,
+                                    valueHasUUID = stringFormatter.decodeUuid("c3295339"),
+                                    userPermission = ChangeRightsPermission,
+                                    deletionInfo = None
+                                ))),
+                                projectADM = SharedTestDataADM.incunabulaProject,
+                                lastModificationDate = None,
+                                deletionInfo = None
+                            ))
+                        ),
+                        valueHasRefCount = 1,
+                        valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+                        permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                        valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                        previousValueIri = None,
+                        valueHasUUID = stringFormatter.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
+                        userPermission = ChangeRightsPermission,
+                        deletionInfo = None
+                    )),
+                    "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(ReadOtherValueV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = InternalSchema,
+                            valueHasInteger = 10,
+                            comment = None
+                        ),
+                        valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
+                        permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                        valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                        previousValueIri = None,
+                        valueHasUUID = stringFormatter.decodeUuid("53feeaf80a"),
+                        userPermission = ChangeRightsPermission,
+                        deletionInfo = None
+                    ))
+                ),
+                projectADM = SharedTestDataADM.incunabulaProject,
+                lastModificationDate = None,
+                deletionInfo = None
+            )
+        ),
+        hiddenResourceIris = Set(),
+        mayHaveMoreResults = false
+    )
+
+
     val expectedReadResourceV2ForZeitgloeckleinPreview: ReadResourceV2 = ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://rdfh.ch/0803/c5058f3a",
