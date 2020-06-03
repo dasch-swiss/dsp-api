@@ -118,7 +118,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
-        Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
+        Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 50 seconds)
         logger.info("Loading test data done.")
     }
 
