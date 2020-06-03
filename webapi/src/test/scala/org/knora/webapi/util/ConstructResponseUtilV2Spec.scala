@@ -138,7 +138,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
 
         "convert a Gravsearch Turtle response with virtual incoming links into a resource sequence" in {
 
-            // the query as above, but with a different main resource
+            // the same query as above, but with a different main resource.
             /*
 
             PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
