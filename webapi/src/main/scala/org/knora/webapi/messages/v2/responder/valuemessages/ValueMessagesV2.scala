@@ -116,6 +116,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                         // Get the custom value IRI if provided.
                         maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
+                        // Get the custom value UUID if provided.
+                        maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
@@ -123,6 +125,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                         propertyIri = propertyIri,
                         valueContent = valueContent,
                         customValueIri = maybeCustomValueIri,
+                        customValueUUID = maybeCustomUUID,
                         permissions = maybePermissions
                     )
             }
@@ -769,6 +772,7 @@ case class ReadOtherValueV2(valueIri: IRI,
  * @param propertyIri      the property of the new value. If the client wants to create a link, this must be a link value property.
  * @param valueContent     the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
  * @param customValueIri   the optional custom IRI supplied for the value.
+ * @param customValueUUID  the optional custom UUID supplied for the value.
  * @param permissions      the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
@@ -776,6 +780,7 @@ case class CreateValueV2(resourceIri: IRI,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
                          customValueIri: Option[SmartIri] = None,
+                         customValueUUID: Option[UUID] = None,
                          permissions: Option[String] = None) extends IOValueV2
 
 

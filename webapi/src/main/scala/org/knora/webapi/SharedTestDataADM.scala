@@ -681,14 +681,15 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
-    def createIntValueWithCustomIRIRequest(resourceIri: IRI, intValue: Int, valueIri: IRI): String = {
+    def createIntValueWithCustomIRIRequest(resourceIri: IRI, intValue: Int, valueIri: IRI, valueUUID: String): String = {
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
            |  "anything:hasInteger" : {
            |    "@id" : "$valueIri",
            |    "@type" : "knora-api:IntValue",
-           |    "knora-api:intValueAsInt" : $intValue
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueHasUUID" : "$valueUUID"
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -1069,13 +1070,14 @@ object SharedTestDataADM {
         }
     }
     def createLinkValueWithCustomIriRequest(resourceIri: IRI, linkProperty: String,
-                               targetResourceIri: IRI, customValueIri: IRI): String = {
+                               targetResourceIri: IRI, customValueIri: IRI, customValueUUID: String): String = {
         s"""{
            | "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
            |  "anything:$linkProperty" : {
            |    "@id" : "$customValueIri",
            |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:valueHasUUID": "IN4R19yYR0ygi3K2VEHpUQ",
            |    "knora-api:linkValueHasTargetIri" : {
            |      "@id" : "$targetResourceIri"
            |    }

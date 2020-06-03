@@ -77,7 +77,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     private def createValueV2(createValueRequest: CreateValueRequestV2): Future[CreateValueResponseV2] = {
         def makeTaskFuture: Future[CreateValueResponseV2] = {
             for {
-
                 // Convert the submitted value to the internal schema.
                 submittedInternalPropertyIri: SmartIri <- Future(createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema))
                 submittedInternalValueContent: ValueContentV2 = createValueRequest.createValue.valueContent.toOntologySchema(InternalSchema)
@@ -250,6 +249,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     propertyIri = adjustedInternalPropertyIri,
                     value = submittedInternalValueContent,
                     customValueIri = createValueRequest.createValue.customValueIri,
+                    customValueUUID = createValueRequest.createValue.customValueUUID,
                     valueCreator = createValueRequest.requestingUser.id,
                     valuePermissions = newValuePermissionLiteral,
                     requestingUser = createValueRequest.requestingUser
@@ -316,6 +316,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      *                         value is a link value, the IRI of the link property.
      * @param value            the value to create.
      * @param customValueIri   the optional custom IRI supplied for the value.
+     * @param customValueUUID  the optional custom UUID supplied for the value.
      * @param valueCreator     the IRI of the new value's owner.
      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
      * @param requestingUser   the user making the request.
@@ -327,6 +328,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                          propertyIri: SmartIri,
                                          value: ValueContentV2,
                                          customValueIri: Option[SmartIri],
+                                         customValueUUID: Option[UUID],
                                          valueCreator: IRI,
                                          valuePermissions: String,
                                          requestingUser: UserADM): Future[UnverifiedValueV2] = {
@@ -339,6 +341,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     linkPropertyIri = propertyIri,
                     linkValueContent = linkValueContent,
                     maybeCustomValueIri = customValueIri,
+                    maybeCustomValueUUID = customValueUUID,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -351,6 +354,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     propertyIri = propertyIri,
                     value = ordinaryValueContent,
                     maybeCustomValueIri = customValueIri,
+                    maybeCustomValueUUID = customValueUUID,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -361,13 +365,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
      *
-     * @param resourceInfo     information about the the resource in which to create the value.
-     * @param propertyIri      the property that should point to the value.
-     * @param value            an [[ValueContentV2]] describing the value.
-     * @param maybeCustomValueIri the optional custom IRI supplied for the value.
-     * @param valueCreator     the IRI of the new value's owner.
-     * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser   the user making the request.
+     * @param resourceInfo         information about the the resource in which to create the value.
+     * @param propertyIri          the property that should point to the value.
+     * @param value                an [[ValueContentV2]] describing the value.
+     * @param maybeCustomValueIri  the optional custom IRI supplied for the value.
+     * @param maybeCustomValueUUID the optional custom UUID supplied for the value.
+     * @param valueCreator         the IRI of the new value's owner.
+     * @param valuePermissions     the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+     * @param requestingUser       the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def createOrdinaryValueV2AfterChecks(dataNamedGraph: IRI,
@@ -375,6 +380,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  propertyIri: SmartIri,
                                                  value: ValueContentV2,
                                                  maybeCustomValueIri: Option[SmartIri],
+                                                 maybeCustomValueUUID: Option[UUID],
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
@@ -384,8 +390,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 case Some(customValueIri) => FastFuture.successful(customValueIri.toString)
                 case None => FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
             }
-            newValueUUID = UUID.randomUUID
-
+            newValueUUID = maybeCustomValueUUID match {
+                case Some(customValueUUID) => customValueUUID
+                case None => UUID.randomUUID
+            }
             currentTime: Instant = Instant.now
 
             // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
@@ -443,14 +451,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
      *
-     * @param dataNamedGraph   the named graph in which the link is to be created.
-     * @param resourceInfo     information about the the resource in which to create the value.
-     * @param linkPropertyIri  the link property.
-     * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
-     * @param maybeCustomValueIri the optional custom IRI supplied for the value.
-     * @param valueCreator     the IRI of the new link value's owner.
-     * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser   the user making the request.
+     * @param dataNamedGraph        the named graph in which the link is to be created.
+     * @param resourceInfo          information about the the resource in which to create the value.
+     * @param linkPropertyIri       the link property.
+     * @param linkValueContent      a [[LinkValueContentV2]] specifying the target resource.
+     * @param maybeCustomValueIri   the optional custom IRI supplied for the value.
+     * @param maybeCustomValueUUID  the optional custom UUID supplied for the value.
+     * @param valueCreator          the IRI of the new link value's owner.
+     * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param requestingUser        the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def createLinkValueV2AfterChecks(dataNamedGraph: IRI,
@@ -458,11 +467,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              linkPropertyIri: SmartIri,
                                              linkValueContent: LinkValueContentV2,
                                              maybeCustomValueIri: Option[SmartIri],
+                                             maybeCustomValueUUID: Option[UUID],
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
 
-        val newValueUUID = UUID.randomUUID
+        val newValueUUID: UUID = maybeCustomValueUUID match {
+            case Some(customValueUUID) => customValueUUID
+            case None => UUID.randomUUID
+        }
 
         for {
             sparqlTemplateLinkUpdate <- Future(incrementLinkValue(
