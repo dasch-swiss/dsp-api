@@ -77,6 +77,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     private def createValueV2(createValueRequest: CreateValueRequestV2): Future[CreateValueResponseV2] = {
         def makeTaskFuture: Future[CreateValueResponseV2] = {
             for {
+
                 // Convert the submitted value to the internal schema.
                 submittedInternalPropertyIri: SmartIri <- Future(createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema))
                 submittedInternalValueContent: ValueContentV2 = createValueRequest.createValue.valueContent.toOntologySchema(InternalSchema)
@@ -314,6 +315,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param propertyIri      the IRI of the property that will point from the resource to the value, or, if the
      *                         value is a link value, the IRI of the link property.
      * @param value            the value to create.
+     * @param customValueIri   the optional custom IRI supplied for the value.
      * @param valueCreator     the IRI of the new value's owner.
      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
      * @param requestingUser   the user making the request.
@@ -328,6 +330,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                          valueCreator: IRI,
                                          valuePermissions: String,
                                          requestingUser: UserADM): Future[UnverifiedValueV2] = {
+
         value match {
             case linkValueContent: LinkValueContentV2 =>
                 createLinkValueV2AfterChecks(
@@ -335,6 +338,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     linkPropertyIri = propertyIri,
                     linkValueContent = linkValueContent,
+                    maybeCustomValueIri = customValueIri,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -360,6 +364,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param resourceInfo     information about the the resource in which to create the value.
      * @param propertyIri      the property that should point to the value.
      * @param value            an [[ValueContentV2]] describing the value.
+     * @param maybeCustomValueIri the optional custom IRI supplied for the value.
      * @param valueCreator     the IRI of the new value's owner.
      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
      * @param requestingUser   the user making the request.
@@ -442,6 +447,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param resourceInfo     information about the the resource in which to create the value.
      * @param linkPropertyIri  the link property.
      * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
+     * @param maybeCustomValueIri the optional custom IRI supplied for the value.
      * @param valueCreator     the IRI of the new link value's owner.
      * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
      * @param requestingUser   the user making the request.
@@ -451,9 +457,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              resourceInfo: ReadResourceV2,
                                              linkPropertyIri: SmartIri,
                                              linkValueContent: LinkValueContentV2,
+                                             maybeCustomValueIri: Option[SmartIri],
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
+
         val newValueUUID = UUID.randomUUID
 
         for {
@@ -461,6 +469,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 sourceResourceInfo = resourceInfo,
                 linkPropertyIri = linkPropertyIri,
                 targetResourceIri = linkValueContent.referredResourceIri,
+                customNewLinkValueIri = maybeCustomValueIri,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 requestingUser = requestingUser
@@ -1929,6 +1938,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param sourceResourceInfo information about the source resource.
      * @param linkPropertyIri    the IRI of the property that links the source resource to the target resource.
      * @param targetResourceIri  the IRI of the target resource.
+     * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
      * @param valueCreator       the IRI of the new link value's owner.
      * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
      * @param requestingUser     the user making the request.
@@ -1937,6 +1947,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     private def incrementLinkValue(sourceResourceInfo: ReadResourceV2,
                                    linkPropertyIri: SmartIri,
                                    targetResourceIri: IRI,
+                                   customNewLinkValueIri: Option[SmartIri]=None,
                                    valueCreator: IRI,
                                    valuePermissions: String,
                                    requestingUser: UserADM): SparqlTemplateLinkUpdate = {
@@ -1947,9 +1958,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             targetResourceIri = targetResourceIri
         )
 
-        // Generate an IRI for the new LinkValue.
-        val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-
+        // Make an IRI for the new LinkValue.
+        val newLinkValueIri: IRI = customNewLinkValueIri match {
+            case Some(customValueIri) =>  customValueIri.toString
+            case None => stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
+        }
         maybeLinkValueInfo match {
             case Some(linkValueInfo) =>
                 // There's already a LinkValue for links between these two resources. Increment

@@ -253,7 +253,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val intValue: Int = 10
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
             val customValueIri: IRI = resourceIri + "/values/" + "int-value-with-IRI"
-            val jsonLdEntity = SharedTestDataADM.createIntValueRequestWithCustomIRI(
+            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomIRIRequest(
                 resourceIri = resourceIri,
                 intValue = intValue,
                 valueIri = customValueIri
@@ -1885,7 +1885,28 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
             savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
         }
+        "create a link between two resources with a custom link value Iri" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkProperty: String = "hasOtherThingValue"
+            val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+            val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
+            val jsonLdEntity = SharedTestDataADM.createLinkValueWithCustomIriRequest(
+                resourceIri = resourceIri,
+                linkProperty = linkProperty,
+                targetResourceIri = targetResourceIri,
+                customValueIri = customValueIri
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIri)
+        }
         "update an integer value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri

@@ -679,7 +679,7 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
-    def createIntValueRequestWithCustomIRI(resourceIri: IRI, intValue: Int, valueIri: IRI): String = {
+    def createIntValueWithCustomIRIRequest(resourceIri: IRI, intValue: Int, valueIri: IRI): String = {
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -1066,7 +1066,26 @@ object SharedTestDataADM {
                    |}""".stripMargin
         }
     }
+    def createLinkValueWithCustomIriRequest(resourceIri: IRI, linkProperty: String,
+                               targetResourceIri: IRI, customValueIri: IRI): String = {
+        s"""{
+           | "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:$linkProperty" : {
+           |    "@id" : "$customValueIri",
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "$targetResourceIri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
+    }
     def updateIntValueRequest(resourceIri: IRI,
                               valueIri: IRI,
                               intValue: Int): String = {

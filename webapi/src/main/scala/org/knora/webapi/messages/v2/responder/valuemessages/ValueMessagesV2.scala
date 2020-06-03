@@ -116,7 +116,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                         // Get the custom value IRI if provided.
                         maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
-                        _= println(maybeCustomValueIri)
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
