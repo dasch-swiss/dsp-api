@@ -135,7 +135,6 @@ object GravsearchQueryChecker {
 
     // A set of predicates that aren't allowed in Gravsearch.
     val forbiddenPredicates: Set[IRI] = Set(
-        OntologyConstants.Rdfs.Label,
         OntologyConstants.KnoraApiV2Complex.AttachedToUser,
         OntologyConstants.KnoraApiV2Complex.HasPermissions,
         OntologyConstants.KnoraApiV2Complex.CreationDate,
