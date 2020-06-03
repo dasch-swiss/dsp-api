@@ -25,9 +25,8 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
-import org.knora.webapi.util.ConstructResponseUtilV2.RdfResources
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -133,6 +132,70 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
 
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
                 expected = resourcesResponderV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery1,
+                received = resourceSequence
+            )
+        }
+
+        "convert a Gravsearch Turtle response with virtual incoming links into a resource sequence" in {
+
+            // the query as above, but with a different main resource
+            /*
+
+            PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+            CONSTRUCT {
+                ?book knora-api:isMainResource true .
+
+                ?page knora-api:isPartOf ?book .
+
+                ?page incunabula:seqnum ?seqnum .
+
+                ?book incunabula:title ?title .
+            } WHERE {
+
+                ?page a incunabula:page .
+
+                ?page knora-api:isPartOf ?book .
+
+                ?page incunabula:seqnum ?seqnum .
+
+                FILTER(?seqnum = 10)
+
+                ?book incunabula:title ?title .
+
+                FILTER(?title = 'Zeitglöcklein des Lebens und Leidens Christi')
+
+            }
+
+             */
+
+            val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/ff17e5ef9601")
+            val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/mainQuery2.ttl"))
+            val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
+            val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+            )
+
+            val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = resourceIris,
+                pageSizeBeforeFiltering = 1,
+                mappings = Map.empty,
+                queryStandoff = false,
+                versionDate = None,
+                calculateMayHaveMoreResults = false,
+                responderManager = responderManager,
+                targetSchema = ApiV2Complex,
+                settings = settings,
+                requestingUser = incunabulaUser
+            )
+
+            val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
+
+            ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
+                expected = resourcesResponderV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery2,
                 received = resourceSequence
             )
         }
