@@ -19,6 +19,8 @@
 
 package org.knora.webapi.util.jsonld
 
+import java.util.UUID
+
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
@@ -453,6 +455,19 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         }
 
         maybeIri
+    }
+
+    /**
+      * Validates the optional `uuid` of a JSON-LD object as a value uuid.
+      *
+      * @return an optional validated decoded UUID.
+      */
+    def maybeUUID: Option[UUID] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val maybeUUID: Option[UUID] = maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID, stringFormatter.validateBase64EncodedUuid)
+
+        maybeUUID
     }
 
     /**

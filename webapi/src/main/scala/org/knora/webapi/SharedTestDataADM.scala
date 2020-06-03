@@ -403,9 +403,11 @@ object SharedTestDataADM {
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
     val customResourceIRI: IRI = "http://rdfh.ch/0001/a-thing-with-IRI"
-    val customResourceWithValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-resource-and-value-IRI"
-    val customResourceWithValue_valueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-resource-and-value-IRI/values/a-value-with-IRI"
+    val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI"
+    val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI-and-UUID"
+    val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
     val customValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI"
+
     def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
         username = "AnythingAdminUser",
@@ -1809,29 +1811,30 @@ object SharedTestDataADM {
            |  }
            |}""".stripMargin
     }
-    def createResourceWithCustomResourceAndValueIRI(customResourceIRI: IRI, customValueIRI: IRI): String = {
+    def createResourceWithCustomResourceIriAndValueIRIAndValueUUID(customResourceIRI: IRI, customValueIRI: IRI, customValueUUID: String): String = {
         s"""{
-           |  "@id" : "$customResourceIRI",
+           |   "@id" : "$customResourceIRI",
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
            |    "@id" : "http://rdfh.ch/projects/0001"
            |  },
            |  "anything:hasBoolean" : {
-           |    "@id" : "$customValueIRI",
+           |    "@id": "$customValueIRI",
            |    "@type" : "knora-api:BooleanValue",
-           |    "knora-api:booleanValueAsBoolean" : true
+           |    "knora-api:booleanValueAsBoolean" : true,
+           |    "knora-api:valueHasUUID" : "$customValueUUID"
            |  },
-           |  "rdfs:label" : "test thing with custom resource and value IRI",
+           |  "rdfs:label" : "test thing",
            |  "@context" : {
            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
+           | }
            |}""".stripMargin
     }
-    def createResourceWithCustomValueIRI(customValueIRI: IRI): String = {
+    def createResourceWithRandomIriAndCustomValueIRI(customValueIRI: IRI): String = {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {

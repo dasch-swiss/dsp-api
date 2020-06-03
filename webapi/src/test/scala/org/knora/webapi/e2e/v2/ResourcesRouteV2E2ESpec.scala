@@ -22,6 +22,7 @@ package org.knora.webapi.e2e.v2
 import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
+import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
@@ -614,16 +615,19 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         }
         "create a resource with custom resource and value Iris" in {
-            val customResourceIRI: IRI = SharedTestDataADM.customResourceWithValueIRI
-            val customValueIRI: IRI = SharedTestDataADM.customResourceWithValue_valueIRI
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceAndValueIRI(customResourceIRI, customValueIRI)
+            val customResourceIRI: IRI = SharedTestDataADM.customResourceIRI_resourceWithValues
+            val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
+            val customValueUUID = SharedTestDataADM.customValueUUID
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceIriAndValueIRIAndValueUUID(
+                customResourceIRI = customResourceIRI, customValueIRI = customValueIRI, customValueUUID = customValueUUID)
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            assert(resourceIri == customResourceIRI)
+            assert(resourceIri ==  customResourceIRI)
             // Request the newly created resource.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
@@ -634,11 +638,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
               requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIRI)
+            val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+            assert(valueUUID == customValueUUID)
 
         }
         "create a resource with random Iri and a custom value Iri" in {
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueIRI(customValueIRI)
+            val jsonLDEntity = SharedTestDataADM.createResourceWithRandomIriAndCustomValueIRI(customValueIRI)
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)

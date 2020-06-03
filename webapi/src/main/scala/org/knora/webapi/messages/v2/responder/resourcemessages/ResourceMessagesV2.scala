@@ -447,6 +447,7 @@ case class ReadResourceV2(resourceIri: IRI,
  */
 case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
                                       customValueIri: Option[SmartIri] = None,
+                                      customValueUUID: Option[UUID] = None,
                                       permissions: Option[String] = None) extends IOValueV2
 
 /**
@@ -602,10 +603,12 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                     log = log
                                 )
                                 maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
+                                maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID
                                 maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueInNewResourceV2(
                                 valueContent = valueContent,
                                 customValueIri = maybeCustomValueIri,
+                                customValueUUID = maybeCustomValueUUID,
                                 permissions = maybePermissions
                             )
                     }

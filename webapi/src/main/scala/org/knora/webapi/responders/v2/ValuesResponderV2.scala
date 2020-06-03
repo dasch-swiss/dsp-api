@@ -578,8 +578,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             case Some(customValueIri) => customValueIri.toString
             case None => stringFormatter.makeRandomValueIri(resourceIri)
         }
-
-        val newValueUUID = UUID.randomUUID
+        val newValueUUID: UUID = valueToCreate.customValueUUID match {
+            case Some(customValueUUID) => customValueUUID
+            case None => UUID.randomUUID
+        }
 
         // Generate the SPARQL.
         val insertSparql: String = valueToCreate.valueContent match {

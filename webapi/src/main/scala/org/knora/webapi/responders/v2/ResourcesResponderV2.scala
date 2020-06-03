@@ -926,6 +926,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                 } yield GenerateSparqlForValueInNewResourceV2(
                                     valueContent = valueToCreate.valueContent,
                                     customValueIri = valueToCreate.customValueIri,
+                                    customValueUUID = valueToCreate.customValueUUID,
                                     permissions = validatedCustomPermissions
                                 )
 
@@ -935,6 +936,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                     GenerateSparqlForValueInNewResourceV2(
                                         valueContent = valueToCreate.valueContent,
                                         customValueIri = valueToCreate.customValueIri,
+                                        customValueUUID = valueToCreate.customValueUUID,
                                         permissions = defaultPropertyPermissions(propertyIri)
                                     )
                                 }
