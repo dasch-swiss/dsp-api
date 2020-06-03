@@ -756,7 +756,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
      * @return the triplestore's response.
      */
-    private def getSparqlHttpResponse(sparql: String, isUpdate: Boolean, acceptMimeType: String = mimeTypeApplicationSparqlResultsJson, retryCnt: Int = 0): Try[String] = {
+    private def getSparqlHttpResponse(sparql: String, isUpdate: Boolean, acceptMimeType: String = mimeTypeApplicationSparqlResultsJson): Try[String] = {
 
         val authCache: AuthCache = new BasicAuthCache
         val basicAuth: BasicScheme = new BasicScheme
@@ -807,12 +807,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
-                // Workaround for NotEnoughMemoryForDistinctGroupBy intermittent GraphDB 500 error
-                if (statusCode == 500 && responseEntityStr.contains("NotEnoughMemoryForDistinctGroupBy") && retryCnt < 5) {
-                    log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr, retrying: $retryCnt")
-                    getSparqlHttpResponse(sparql, isUpdate, acceptMimeType, retryCnt+1)
-                }
-
                 if (statusCategory != 2) {
                     log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr,SPARQL query was:\n$sparql")
                     throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
@@ -829,7 +823,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
-
             case e: Exception =>
                 log.error(e, s"Failed to connect to triplestore, SPARQL query was:\n$sparql")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
