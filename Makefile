@@ -142,8 +142,8 @@ endif
 .PHONY: stack-up
 stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker/knora.docker-compose.yml up -d db
-	@sleep 15
-	# $(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	-$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh -h $(DOCKERHOST):7200
+	@$(MAKE) -f $(THIS_FILE) stack-logs-db-no-follow
 	docker-compose -f docker/knora.docker-compose.yml up -d
 
 .PHONY: stack-up-ci
@@ -167,6 +167,10 @@ stack-logs: ## prints out and follows the logs of the running knora-stack.
 .PHONY: stack-logs-db
 stack-logs-db: ## prints out and follows the logs of the 'db' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f db
+
+.PHONY: stack-logs-db-no-follow
+stack-logs-db-no-follow: ## prints out the logs of the 'db' container running in knora-stack.
+	docker-compose -f docker/knora.docker-compose.yml logs db
 
 .PHONY: stack-logs-sipi
 stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in knora-stack.
