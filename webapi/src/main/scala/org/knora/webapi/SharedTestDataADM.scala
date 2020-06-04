@@ -698,6 +698,26 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createIntValueWithCustomCreationDateRequest(resourceIri: IRI, intValue: Int, creationDate: Instant): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:creationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$creationDate"
+           |      }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
+    }
+
     def createIntValueWithCustomPermissionsRequest(resourceIri: IRI, intValue: Int, customPermissions: String): String = {
         s"""{
            |  "@id" : "$resourceIri",
@@ -1069,8 +1089,13 @@ object SharedTestDataADM {
                    |}""".stripMargin
         }
     }
-    def createLinkValueWithCustomIriRequest(resourceIri: IRI, linkProperty: String,
-                               targetResourceIri: IRI, customValueIri: IRI, customValueUUID: String): String = {
+
+    def createLinkValueWithCustomIriRequest(resourceIri: IRI,
+                                            linkProperty: String,
+                                            targetResourceIri: IRI,
+                                            customValueIri: IRI,
+                                            customValueUUID: String,
+                                            customValueCreationDate: Instant): String = {
         s"""{
            | "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -1080,7 +1105,11 @@ object SharedTestDataADM {
            |    "knora-api:valueHasUUID": "IN4R19yYR0ygi3K2VEHpUQ",
            |    "knora-api:linkValueHasTargetIri" : {
            |      "@id" : "$targetResourceIri"
-           |    }
+           |    },
+           |    "knora-api:creationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$customValueCreationDate"
+           |      }
            |  },
            |  "@context" : {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
@@ -1090,6 +1119,7 @@ object SharedTestDataADM {
            |}""".stripMargin
 
     }
+
     def updateIntValueRequest(resourceIri: IRI,
                               valueIri: IRI,
                               intValue: Int): String = {
@@ -1792,6 +1822,7 @@ object SharedTestDataADM {
            |  }
            |}""".stripMargin
     }
+
     def createResourceWithCustomIRI(customIRI: IRI): String = {
         s"""{
            |  "@id" : "$customIRI",
@@ -1813,7 +1844,10 @@ object SharedTestDataADM {
            |  }
            |}""".stripMargin
     }
-    def createResourceWithCustomResourceIriAndValueIRIAndValueUUID(customResourceIRI: IRI, customValueIRI: IRI, customValueUUID: String): String = {
+
+    def createResourceWithCustomResourceIriAndValueIRIAndValueUUID(customResourceIRI: IRI,
+                                                                   customValueIRI: IRI,
+                                                                   customValueUUID: String): String = {
         s"""{
            |   "@id" : "$customResourceIRI",
            |  "@type" : "anything:Thing",
@@ -1836,6 +1870,7 @@ object SharedTestDataADM {
            | }
            |}""".stripMargin
     }
+
     def createResourceWithRandomIriAndCustomValueIRI(customValueIRI: IRI): String = {
         s"""{
            |  "@type" : "anything:Thing",
@@ -1857,6 +1892,7 @@ object SharedTestDataADM {
            |  }
            |}""".stripMargin
     }
+
     def createResourceAsUser(userADM: UserADM): String = {
         s"""{
            |  "@type" : "anything:Thing",
@@ -2401,6 +2437,10 @@ object SharedTestDataADM {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
     }
+    object ACustomizedThing {
+      val iri: IRI = "http://rdfh.ch/0001/a-customized-thing"
+      val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
+    }
 
     object AThingPicture {
         val iri: IRI = "http://rdfh.ch/0001/a-thing-picture"
@@ -2451,4 +2491,5 @@ object SharedTestDataADM {
 
     val testResponseValueIri: IRI = "http://rdfh.ch/0001/_GlNQXdYRTyQPhpdh76U1w/values/OGbYaSgNSUCKQtmn9suXlw"
     val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
+    val testResponseValueCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
 }

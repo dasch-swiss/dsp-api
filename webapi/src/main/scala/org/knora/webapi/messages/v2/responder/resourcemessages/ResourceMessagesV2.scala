@@ -443,6 +443,7 @@ case class ReadResourceV2(resourceIri: IRI,
  *
  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
  * @param customValueIri the optional custom value IRI.
+ * @param customValueUUID the optional custom value UUID.
  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueInNewResourceV2(valueContent: ValueContentV2,

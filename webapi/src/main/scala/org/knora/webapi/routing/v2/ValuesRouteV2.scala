@@ -358,6 +358,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             valueIri = SharedTestDataADM.testResponseValueIri,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
             valueUUID = SharedTestDataADM.testResponseValueUUID,
+            valueCreationDate = SharedTestDataADM.testResponseValueCreationDate,
             projectADM = SharedTestDataADM.anythingProject
         )
 

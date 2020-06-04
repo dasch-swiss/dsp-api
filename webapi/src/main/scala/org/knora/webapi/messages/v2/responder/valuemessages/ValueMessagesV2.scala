@@ -118,6 +118,12 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                         maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
                         // Get the custom value UUID if provided.
                         maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID
+                        // Get the value's creation date.
+                        maybeCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
+                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                            validationFun = stringFormatter.xsdDateTimeStampToInstant
+                        )
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
@@ -126,6 +132,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                         valueContent = valueContent,
                         customValueIri = maybeCustomValueIri,
                         customValueUUID = maybeCustomUUID,
+                        customValueCreationDate = maybeCreationDate,
                         permissions = maybePermissions
                     )
             }
@@ -140,14 +147,16 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 /**
  * Represents a successful response to a [[CreateValueRequestV2]].
  *
- * @param valueIri   the IRI of the value that was created.
- * @param valueType  the type of the value that was created.
- * @param valueUUID  the value's UUID.
- * @param projectADM the project in which the value was created.
+ * @param valueIri          the IRI of the value that was created.
+ * @param valueType         the type of the value that was created.
+ * @param valueUUID         the value's UUID.
+ * @param valueCreationDate the value's creationDate
+ * @param projectADM        the project in which the value was created.
  */
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
+                                 valueCreationDate: Instant,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -161,7 +170,11 @@ case class CreateValueResponseV2(valueIri: IRI,
                 Map(
                     JsonLDConstants.ID -> JsonLDString(valueIri),
                     JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-                    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
+                    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
+                    OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = valueCreationDate.toString,
+                        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                    )
                 )
             ),
             context = JsonLDUtil.makeContext(
@@ -767,13 +780,14 @@ case class ReadOtherValueV2(valueIri: IRI,
 /**
  * Represents a Knora value to be created in an existing resource.
  *
- * @param resourceIri      the resource the new value should be attached to.
- * @param resourceClassIri the resource class that the client believes the resource belongs to.
- * @param propertyIri      the property of the new value. If the client wants to create a link, this must be a link value property.
- * @param valueContent     the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
- * @param customValueIri   the optional custom IRI supplied for the value.
- * @param customValueUUID  the optional custom UUID supplied for the value.
- * @param permissions      the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ * @param resourceIri              the resource the new value should be attached to.
+ * @param resourceClassIri         the resource class that the client believes the resource belongs to.
+ * @param propertyIri              the property of the new value. If the client wants to create a link, this must be a link value property.
+ * @param valueContent             the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri           the optional custom IRI supplied for the value.
+ * @param customValueUUID          the optional custom UUID supplied for the value.
+ * @param customValueCreationDate  the optional custom creation date supplied for the value.
+ * @param permissions              the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
                          resourceClassIri: SmartIri,
@@ -781,6 +795,7 @@ case class CreateValueV2(resourceIri: IRI,
                          valueContent: ValueContentV2,
                          customValueIri: Option[SmartIri] = None,
                          customValueUUID: Option[UUID] = None,
+                         customValueCreationDate: Option[Instant] = None,
                          permissions: Option[String] = None) extends IOValueV2
 
 
