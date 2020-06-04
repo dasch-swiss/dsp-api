@@ -616,6 +616,39 @@ CONSTRUCT {
 }
 ```
 
+### Filtering on `rdfs:label`
+
+The `rdfs:label` of a resource is not a Knora value, but you can still search for it.
+This can be done in the same ways in the simple or complex schema:
+
+Using a string literal object:
+
+```
+?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+```
+
+Using a variable and a FILTER:
+
+```
+?book rdfs:label ?label .
+FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+```
+
+Using the `regex` function:
+
+```
+?book rdfs:label ?bookLabel .
+FILTER regex(?bookLabel, "Zeit", "i")
+```
+
+To match words in an `rdfs:label` using the full-text search index, use the
+`knora-api:matchLabel` function, which works like `knora-api:matchText`,
+except that the first argument is a variable representing a resource:
+
+```
+FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+```
+
 ### CONSTRUCT Clause
 
 In the `CONSTRUCT` clause of a Gravsearch query, the variable representing the

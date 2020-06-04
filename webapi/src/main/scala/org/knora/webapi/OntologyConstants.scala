@@ -134,6 +134,13 @@ object OntologyConstants {
     }
 
     /**
+     * The object types of resource metadata properties.
+     */
+    val ResourceMetadataPropertyAxioms: Map[IRI, IRI] = Map(
+        OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String
+    )
+
+    /**
      * Ontology labels that are reserved for built-in ontologies.
      */
     val BuiltInOntologyLabels: Set[String] = Set(
@@ -922,6 +929,7 @@ object OntologyConstants {
         val MatchTextFunction: IRI = KnoraApiV2PrefixExpansion + "matchText"
         val MatchInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
         val MatchTextInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchTextInStandoff"
+        val MatchLabelFunction: IRI = KnoraApiV2PrefixExpansion + "matchLabel"
         val StandoffLinkFunction: IRI = KnoraApiV2PrefixExpansion + "standoffLink"
     }
 
@@ -961,6 +969,7 @@ object OntologyConstants {
         val MatchesTextIndex: IRI = KnoraApiV2PrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
         val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
         val MatchTextFunction: IRI = KnoraApiV2PrefixExpansion + "matchText"
+        val MatchLabelFunction: IRI = KnoraApiV2PrefixExpansion + "matchLabel"
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 
@@ -1135,5 +1144,4 @@ object OntologyConstants {
         val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
         val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
     }
-
 }
