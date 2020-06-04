@@ -201,10 +201,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     s"The Triplestore ($tsType) Actor " when {
         "started " should {
             "only start answering after initialization has finished " in {
-                storeManager ! CheckRepositoryRequest()
-                val response = expectMsgType[CheckRepositoryResponse](1.second)
+                storeManager ! CheckTriplestoreRequest()
+                val response = expectMsgType[CheckTriplestoreResponse](1.second)
 
-                response.repositoryStatus should be(RepositoryStatus.ServiceAvailable)
+                response.triplestoreStatus should be(TriplestoreStatus.ServiceAvailable)
             }
         }
 
@@ -219,8 +219,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         "receiving a 'ResetTriplestoreContent' request " should {
             "reset the data " in {
                 //println("==>> Reset test case start")
-                storeManager ! ResetTriplestoreContent(rdfDataObjects)
-                expectMsg(5 minutes, ResetTriplestoreContentACK())
+                storeManager ! ResetRepositoryContent(rdfDataObjects)
+                expectMsg(5 minutes, ResetRepositoryContentACK())
                 //println("==>> Reset test case end")
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
