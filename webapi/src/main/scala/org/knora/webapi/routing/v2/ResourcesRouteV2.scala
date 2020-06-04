@@ -113,24 +113,29 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     text = SharedTestDataADM.createResourceWithValues
                 ),
                 TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-creation-date"),
+                    text = SharedTestDataADM.createResourceWithCustomCreationDate(SharedTestDataADM.customResourceCreationDate)
+                ),
+                TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-IRI-request"),
                     text = SharedTestDataADM.createResourceWithCustomIRI(SharedTestDataADM.customResourceIRI)
                 ),
                 TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-IRI-ValueIri-ValueUUID-request"),
-                    text = SharedTestDataADM.createResourceWithCustomResourceIriAndValueIRIAndValueUUID(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-value-IRI-request"),
+                    text = SharedTestDataADM.createResourceWithCustomValueIRI(SharedTestDataADM.customValueIRI)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-value-UUID-request"),
+                    text = SharedTestDataADM.createResourceWithCustomValueUUID(SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request"),
+                    text = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
                         SharedTestDataADM.customResourceIRI_resourceWithValues,
+                        SharedTestDataADM.customResourceCreationDate,
                         SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID,
                         SharedTestDataADM.customValueUUID
                     )
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-random-IRI-and-custom-value-IRI-request"),
-                    text = SharedTestDataADM.createResourceWithRandomIriAndCustomValueIRI(SharedTestDataADM.customValueIRI)
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-creation-date"),
-                    text = SharedTestDataADM.createResourceWithCustomCreationDate(Instant.parse("2019-01-09T15:45:54.502951Z"))
                 ),
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-resource-as-user"),

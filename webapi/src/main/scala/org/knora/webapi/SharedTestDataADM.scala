@@ -407,6 +407,7 @@ object SharedTestDataADM {
     val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI-and-UUID"
     val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
     val customValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI"
+    val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
 
     def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
@@ -681,7 +682,11 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
-    def createIntValueWithCustomIRIRequest(resourceIri: IRI, intValue: Int, valueIri: IRI, valueUUID: String): String = {
+    def createIntValueWithCustomIRIRequest(resourceIri: IRI,
+                                           intValue: Int,
+                                           valueIri: IRI,
+                                           valueUUID: String,
+                                           valueCreationDate: Instant): String = {
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -689,11 +694,52 @@ object SharedTestDataADM {
            |    "@id" : "$valueIri",
            |    "@type" : "knora-api:IntValue",
            |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueHasUUID" : "$valueUUID",
+           |    "knora-api:creationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$valueCreationDate"
+           |      }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createIntValueWithCustomUUIDRequest(resourceIri: IRI,
+                                           intValue: Int,
+                                           valueUUID: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
            |    "knora-api:valueHasUUID" : "$valueUUID"
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createIntValueWithCustomValueIriRequest(resourceIri: IRI, intValue: Int, valueIri: IRI): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
     }
@@ -1091,7 +1137,6 @@ object SharedTestDataADM {
     }
 
     def createLinkValueWithCustomIriRequest(resourceIri: IRI,
-                                            linkProperty: String,
                                             targetResourceIri: IRI,
                                             customValueIri: IRI,
                                             customValueUUID: String,
@@ -1099,7 +1144,7 @@ object SharedTestDataADM {
         s"""{
            | "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
-           |  "anything:$linkProperty" : {
+           |  "anything:hasOtherThingValue" : {
            |    "@id" : "$customValueIri",
            |    "@type" : "knora-api:LinkValue",
            |    "knora-api:valueHasUUID": "IN4R19yYR0ygi3K2VEHpUQ",
@@ -1845,9 +1890,54 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
-    def createResourceWithCustomResourceIriAndValueIRIAndValueUUID(customResourceIRI: IRI,
-                                                                   customValueIRI: IRI,
-                                                                   customValueUUID: String): String = {
+    def createResourceWithCustomValueIRI(customValueIRI: IRI): String = {
+      s"""{
+         |  "@type" : "anything:Thing",
+         |  "knora-api:attachedToProject" : {
+         |    "@id" : "http://rdfh.ch/projects/0001"
+         |  },
+         |  "anything:hasBoolean" : {
+         |    "@id" : "$customValueIRI",
+         |    "@type" : "knora-api:BooleanValue",
+         |    "knora-api:booleanValueAsBoolean" : true
+         |  },
+         |  "rdfs:label" : "test thing with value IRI",
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}""".stripMargin
+    }
+
+    def createResourceWithCustomValueUUID(customValueUUID: String): String = {
+      s"""{
+         |  "@type" : "anything:Thing",
+         |  "knora-api:attachedToProject" : {
+         |    "@id" : "http://rdfh.ch/projects/0001"
+         |  },
+         |  "anything:hasBoolean" : {
+         |    "@type" : "knora-api:BooleanValue",
+         |    "knora-api:booleanValueAsBoolean" : true,
+         |    "knora-api:valueHasUUID" : "$customValueUUID"
+         |  },
+         |  "rdfs:label" : "test thing",
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         | }
+         |}""".stripMargin
+    }
+
+  def createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(customResourceIRI: IRI,
+                                                                                     customCreationDate: Instant,
+                                                                                     customValueIRI: IRI,
+                                                                                     customValueUUID: String): String = {
         s"""{
            |   "@id" : "$customResourceIRI",
            |  "@type" : "anything:Thing",
@@ -1861,6 +1951,10 @@ object SharedTestDataADM {
            |    "knora-api:valueHasUUID" : "$customValueUUID"
            |  },
            |  "rdfs:label" : "test thing",
+           |  "knora-api:creationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$customCreationDate"
+           |  },
            |  "@context" : {
            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -1868,28 +1962,6 @@ object SharedTestDataADM {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            | }
-           |}""".stripMargin
-    }
-
-    def createResourceWithRandomIriAndCustomValueIRI(customValueIRI: IRI): String = {
-        s"""{
-           |  "@type" : "anything:Thing",
-           |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
-           |  },
-           |  "anything:hasBoolean" : {
-           |    "@id" : "$customValueIRI",
-           |    "@type" : "knora-api:BooleanValue",
-           |    "knora-api:booleanValueAsBoolean" : true
-           |  },
-           |  "rdfs:label" : "test thing with value IRI",
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
            |}""".stripMargin
     }
 

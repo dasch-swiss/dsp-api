@@ -248,19 +248,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedIntValue should ===(intValue)
         }
 
-        "create an integer value with custom Iri and UUID" in {
+        "create an integer value with a custom valueIri" in {
             val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
-            val intValue: Int = 10
+            val intValue: Int = 30
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-            val customValueIri: IRI = "http://rdfh.ch/0001/a-customized-thing/values/int-with-IRI"
-            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomIRIRequest(
-                            resourceIri = resourceIri,
-                            intValue = intValue,
-                            valueIri = customValueIri,
-                            valueUUID = customValueUUID
-                        )
+            val customValueIri: IRI = "http://rdfh.ch/0001/a-customized-thing/values/int-with-valueIRI"
+            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomValueIriRequest(
+                resourceIri = resourceIri,
+                intValue = intValue,
+                valueIri = customValueIri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -269,6 +267,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIri)
+        }
+
+        "create an integer value with a custom UUID" in {
+            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue: Int = 45
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+            val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
+            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomUUIDRequest(
+                resourceIri = resourceIri,
+                intValue = intValue,
+                valueUUID = customValueUUID
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueUUID = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
             assert(valueUUID == customValueUUID)
         }
@@ -286,6 +303,39 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+            assert(savedCreationDate == customCreationDate)
+        }
+
+        "create an integer value with custom Iri, UUID, and creation Date" in {
+            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue: Int = 10
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+            val customValueIri: IRI = "http://rdfh.ch/0001/a-customized-thing/values/int-with-IRI"
+            val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
+            val customCreationDate: Instant = Instant.parse("2020-06-04T12:58:54.502951Z")
+            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomIRIRequest(
+                            resourceIri = resourceIri,
+                            intValue = intValue,
+                            valueIri = customValueIri,
+                            valueUUID = customValueUUID,
+                            valueCreationDate = customCreationDate
+                        )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIri)
+            val valueUUID = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+            assert(valueUUID == customValueUUID)
             val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
                 key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -1913,7 +1963,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
         "create a link between two resources with a custom link value Iri, UUID, creationDate" in {
             val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
-            val linkProperty: String = "hasOtherThingValue"
             val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
             val customValueIri: IRI = "http://rdfh.ch/0001/a-customized-thing/values/link-Value-With-IRI"
             val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
@@ -1922,7 +1971,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val jsonLdEntity = SharedTestDataADM.createLinkValueWithCustomIriRequest(
                 resourceIri = resourceIri,
-                linkProperty = linkProperty,
                 targetResourceIri = targetResourceIri,
                 customValueIri = customValueIri,
                 customValueUUID = customValueUUID,
