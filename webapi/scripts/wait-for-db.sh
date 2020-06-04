@@ -40,7 +40,7 @@ if [[ -z "${HOST}" ]]; then
 fi
 
 if [[ -z "${TIMEOUT}" ]]; then
-    TIMEOUT=720
+    TIMEOUT=360
 fi
 
 if [[ -z "${NAME}" ]]; then

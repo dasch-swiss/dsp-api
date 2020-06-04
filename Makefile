@@ -142,8 +142,7 @@ endif
 .PHONY: stack-up
 stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker/knora.docker-compose.yml up -d db
-	@sleep 15
-	# $(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh -h $(DOCKERHOST):7200
 	docker-compose -f docker/knora.docker-compose.yml up -d
 
 .PHONY: stack-up-ci
