@@ -48,7 +48,8 @@ if [[ -z "${NAME}" ]]; then
 fi
 
 poll-db() {
-    STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/repositories/${NAME}/health?)
+    # STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/repositories/${NAME}/health?)
+    STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/rest/repositories)
 
     if [ "${STATUS}" -eq 200 ]; then
         echo "==> DB started"
