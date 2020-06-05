@@ -219,6 +219,56 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         deletionInfo = None
     )
 
+    val expectedReadResourceForAnythingVisibleThingWithHiddenIntValues = ReadResourcesSequenceV2(
+        resources = Vector(ReadResourceV2(
+            versionDate = None,
+            label = "visible thing with hidden int values",
+            resourceIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg",
+            permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+            resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+            creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+            userPermission = ChangeRightsPermission,
+            values = Map("http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
+                ReadOtherValueV2(
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = InternalSchema,
+                        valueHasInteger = 543212345,
+                        comment = Some("second hidden int value in visible resource")
+                    ),
+                    valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
+                    permissions = "M knora-admin:ProjectMember",
+                    valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+                    attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                    previousValueIri = None,
+                    valueHasUUID = stringFormatter.decodeUuid("F2xCr0S2QfWRQxJDWY9L0g"),
+                    userPermission = ChangeRightsPermission,
+                    deletionInfo = None
+                ),
+                ReadOtherValueV2(
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = InternalSchema,
+                        valueHasInteger = 123454321,
+                        comment = Some("first hidden int value in visible resource")
+                    ),
+                    valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
+                    permissions = "M knora-admin:ProjectMember",
+                    valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+                    attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                    previousValueIri = None,
+                    valueHasUUID = stringFormatter.decodeUuid("yVTqO37cRkCSvXbFc3vTyw"),
+                    userPermission = ChangeRightsPermission,
+                    deletionInfo = None
+                )
+            )),
+            projectADM = SharedTestDataADM.anythingProject,
+            lastModificationDate = None,
+            deletionInfo = None
+        )),
+        hiddenResourceIris = Set(),
+        mayHaveMoreResults = false
+    )
+
     val expectedReadResourceSequenceV2ForMainQuery1 = ReadResourcesSequenceV2(
         resources = Vector(
             ReadResourceV2(

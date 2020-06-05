@@ -38,6 +38,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private implicit val timeout: Timeout = 10.seconds
     private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
+    private val anythingAdminUser = SharedTestDataADM.anythingAdminUser;
+    private val anythingUser1 = SharedTestDataADM.anythingUser1;
+    private val anythingUser2 = SharedTestDataADM.anythingUser2;
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
 
     "ConstructResponseUtilV2" should {
@@ -69,6 +72,37 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
 
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
                 expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+                received = resourceSequence
+            )
+        }
+
+        "convert a resource Turtle response with hidden values into a resource" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
+            val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
+            val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
+            val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = anythingAdminUser
+            )
+
+            val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = Seq(resourceIri),
+                pageSizeBeforeFiltering = 1,
+                mappings = Map.empty,
+                queryStandoff = false,
+                versionDate = None,
+                calculateMayHaveMoreResults = false,
+                responderManager = responderManager,
+                targetSchema = ApiV2Complex,
+                settings = settings,
+                requestingUser = anythingAdminUser
+            )
+
+            val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
+
+            ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
+                expected = resourcesResponderV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValues,
                 received = resourceSequence
             )
         }
