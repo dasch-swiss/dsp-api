@@ -705,5 +705,4 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
     hiddenResourceIris = Set(),
     mayHaveMoreResults = false
   )
-
 }
