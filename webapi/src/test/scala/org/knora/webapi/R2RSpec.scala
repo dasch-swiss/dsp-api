@@ -31,6 +31,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.messages.app.appmessages.AppReady
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.routing.KnoraRouteData
@@ -71,6 +72,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with AnyWordSpecLike with Ma
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll {
+        // changes the state and behaviour of the ApplicationActor to Ready
+        appActor ! AppReady()
         CacheUtil.createCaches(settings.caches)
         loadTestData(rdfDataObjects)
     }
