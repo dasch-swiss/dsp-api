@@ -79,6 +79,73 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
     mayHaveMoreResults = false
   )
 
+  val expectedReadResourceForAnythingThingWithOneHiddenThingAnythingAdmin = ReadResourcesSequenceV2(
+    resources = Vector(ReadResourceV2(
+      versionDate = None,
+      label = "thing with one hidden thing",
+      resourceIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw",
+      permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+      attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+      resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+      creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+      userPermission = ChangeRightsPermission,
+      values = Map(
+        "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(ReadLinkValueV2(
+          valueContent = LinkValueContentV2(
+            isIncomingLink = false,
+            referredResourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+            ontologySchema = InternalSchema,
+            comment = Some("link value pointing to hidden resource"),
+            referredResourceExists = true,
+            nestedResource = Some(ReadResourceV2(
+              versionDate = None,
+              label = "hidden thing",
+              resourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+              permissions = "V knora-admin:Creator",
+              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+              resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+              creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+              userPermission = ChangeRightsPermission,
+              values = Map(),
+              projectADM = SharedTestDataADM.anythingProject,
+              lastModificationDate = None,
+              deletionInfo = None
+            ))
+          ),
+          valueHasRefCount = 1,
+          valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
+          permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+          valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+          attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+          previousValueIri = None,
+          valueHasUUID = stringFormatter.decodeUuid("UgSp5mXTTSKdI02ZU1KIAA"),
+          userPermission = ChangeRightsPermission,
+          deletionInfo = None
+        )),
+        "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
+          valueContent = IntegerValueContentV2(
+            ontologySchema = InternalSchema,
+            valueHasInteger = 123454321,
+            comment = Some("visible int value in main resource")
+          ),
+          valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+          permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+          valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+          attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+          previousValueIri = None,
+          valueHasUUID = stringFormatter.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
+          userPermission = ChangeRightsPermission,
+          deletionInfo = None
+        ))
+      ),
+      projectADM = SharedTestDataADM.anythingProject,
+      lastModificationDate = None,
+      deletionInfo = None
+    )),
+    hiddenResourceIris = Set(),
+    mayHaveMoreResults = false
+  )
+
   val expectedReadResourceSequenceV2ForMainQuery1 = ReadResourcesSequenceV2(
     resources = Vector(
       ReadResourceV2(
