@@ -352,15 +352,15 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 TestDataFileContent(
                   filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-Iri-request"),
                   text = SharedTestDataADM.createIntValueWithCustomValueIriRequest(
-                    resourceIri = SharedTestDataADM.ACustomizedThing.iri,
+                    resourceIri = SharedTestDataADM.AThing.iri,
                     intValue = 30,
-                    valueIri = "http://rdfh.ch/0001/a-customized-thing/values/int-with-valueIRI"
+                    valueIri = "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI"
                   )
                 ),
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-UUID-request"),
                     text = SharedTestDataADM.createIntValueWithCustomUUIDRequest(
-                        resourceIri = SharedTestDataADM.ACustomizedThing.iri,
+                        resourceIri = SharedTestDataADM.AThing.iri,
                         intValue = 45,
                         valueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
                     )
@@ -368,7 +368,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-creationDate-request"),
                     text = SharedTestDataADM.createIntValueWithCustomCreationDateRequest(
-                        resourceIri = SharedTestDataADM.ACustomizedThing.iri,
+                        resourceIri = SharedTestDataADM.AThing.iri,
                         intValue = 25,
                         creationDate = Instant.parse("2020-06-04T11:36:54.502951Z")
                     )
@@ -376,9 +376,9 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 TestDataFileContent(
                   filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-Iri-UUID-CreationDate-request"),
                   text = SharedTestDataADM.createIntValueWithCustomIRIRequest(
-                    resourceIri = SharedTestDataADM.ACustomizedThing.iri,
+                    resourceIri = SharedTestDataADM.AThing.iri,
                     intValue = 10,
-                    valueIri = "http://rdfh.ch/0001/a-customized-thing/values/int-with-IRI",
+                    valueIri = "http://rdfh.ch/0001/a-thing/values/int-with-IRI",
                     valueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
                     valueCreationDate = Instant.parse("2020-06-04T12:58:54.502951Z")
                   )
@@ -386,9 +386,9 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 TestDataFileContent(
                   filePath = TestDataFilePath.makeJsonPath("create-link-value-with-custom-Iri-UUID-CreationDate-request"),
                   text = SharedTestDataADM.createLinkValueWithCustomIriRequest(
-                    resourceIri = SharedTestDataADM.ACustomizedThing.iri,
+                    resourceIri = SharedTestDataADM.AThing.iri,
                     targetResourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
-                    customValueIri = "http://rdfh.ch/0001/a-customized-thing/values/link-Value-With-IRI",
+                    customValueIri = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI",
                     customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
                     customValueCreationDate = Instant.parse("2020-06-04T11:36:54.502951Z")
                   )

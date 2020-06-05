@@ -249,7 +249,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with a custom valueIri" in {
-            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 30
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -270,7 +270,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with a custom UUID" in {
-            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 45
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -292,7 +292,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
         "create an integer value with a custom creation date" in {
             val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
-            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 25
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -312,11 +312,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with custom Iri, UUID, and creation Date" in {
-            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 10
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-            val customValueIri: IRI = "http://rdfh.ch/0001/a-customized-thing/values/int-with-IRI"
+            val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-IRI"
             val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
             val customCreationDate: Instant = Instant.parse("2020-06-04T12:58:54.502951Z")
             val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomIRIRequest(
@@ -1962,9 +1962,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
         }
         "create a link between two resources with a custom link value Iri, UUID, creationDate" in {
-            val resourceIri: IRI = SharedTestDataADM.ACustomizedThing.iri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
-            val customValueIri: IRI = "http://rdfh.ch/0001/a-customized-thing/values/link-Value-With-IRI"
+            val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI"
             val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
             val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)

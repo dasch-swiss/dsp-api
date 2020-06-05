@@ -2509,10 +2509,6 @@ object SharedTestDataADM {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
     }
-    object ACustomizedThing {
-      val iri: IRI = "http://rdfh.ch/0001/a-customized-thing"
-      val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
-    }
 
     object AThingPicture {
         val iri: IRI = "http://rdfh.ch/0001/a-thing-picture"
