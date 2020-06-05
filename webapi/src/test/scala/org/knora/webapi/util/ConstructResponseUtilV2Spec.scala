@@ -77,7 +77,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             )
         }
 
-        "convert a resource Turtle response with hidden values into a resource" in {
+        "convert a resource Turtle response with hidden values into a resource with the anything admin user" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
             val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
             val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
@@ -103,7 +103,40 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
-                expected = constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValues,
+                expected = constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesAnythingAdmin,
+                received = resourceSequence
+            )
+        }
+
+        "convert a resource Turtle response with hidden values into a resource with the incunabula user" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
+            val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
+            val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
+            val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+            )
+
+            val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = Seq(resourceIri),
+                pageSizeBeforeFiltering = 1,
+                mappings = Map.empty,
+                queryStandoff = false,
+                versionDate = None,
+                calculateMayHaveMoreResults = false,
+                responderManager = responderManager,
+                targetSchema = ApiV2Complex,
+                settings = settings,
+                requestingUser = incunabulaUser
+            )
+
+            val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
+
+            println(MessageUtil.toSource(resourceSequence))
+
+            ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
+                expected = constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesIncunabulaUser,
                 received = resourceSequence
             )
         }

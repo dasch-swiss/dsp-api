@@ -5,12 +5,12 @@ import java.time.Instant
 import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{IntegerValueContentV2, LinkValueContentV2, ReadLinkValueV2, ReadOtherValueV2, ReadTextValueV2, TextValueContentV2}
-import org.knora.webapi.util.PermissionUtilADM.ChangeRightsPermission
+import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, ViewPermission}
 import org.knora.webapi.util.IriConversions._
 
 class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
-  val expectedReadResourceForAnythingVisibleThingWithHiddenIntValues = ReadResourcesSequenceV2(
+  val expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesAnythingAdmin = ReadResourcesSequenceV2(
     resources = Vector(ReadResourceV2(
       versionDate = None,
       label = "visible thing with hidden int values",
@@ -52,6 +52,25 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
           deletionInfo = None
         )
       )),
+      projectADM = SharedTestDataADM.anythingProject,
+      lastModificationDate = None,
+      deletionInfo = None
+    )),
+    hiddenResourceIris = Set(),
+    mayHaveMoreResults = false
+  )
+
+  val expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesIncunabulaUser = ReadResourcesSequenceV2(
+    resources = Vector(ReadResourceV2(
+      versionDate = None,
+      label = "visible thing with hidden int values",
+      resourceIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg",
+      permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+      attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+      resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+      creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+      userPermission = ViewPermission,
+      values = Map(),
       projectADM = SharedTestDataADM.anythingProject,
       lastModificationDate = None,
       deletionInfo = None
