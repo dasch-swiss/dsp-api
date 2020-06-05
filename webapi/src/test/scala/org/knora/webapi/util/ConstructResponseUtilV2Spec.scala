@@ -42,6 +42,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     private val anythingUser1 = SharedTestDataADM.anythingUser1;
     private val anythingUser2 = SharedTestDataADM.anythingUser2;
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
+    private val constructResponseUtilV2SpecFullData = new ConstructResponseUtilV2SpecFullData
 
     "ConstructResponseUtilV2" should {
 
@@ -102,7 +103,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
-                expected = resourcesResponderV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValues,
+                expected = constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValues,
                 received = resourceSequence
             )
         }
@@ -165,7 +166,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
-                expected = resourcesResponderV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery1,
+                expected = constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery1,
                 received = resourceSequence
             )
         }
@@ -229,7 +230,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
             val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
-                expected = resourcesResponderV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery2,
+                expected = constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery2,
                 received = resourceSequence
             )
         }
