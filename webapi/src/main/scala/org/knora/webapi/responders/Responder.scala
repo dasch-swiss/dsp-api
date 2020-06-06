@@ -24,9 +24,9 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl, UnexpectedMessageException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -52,10 +52,11 @@ object Responder {
 /**
  * Data needed to be passed to each responder.
  *
- * @param system   the actor system.
- * @param appActor the main application actor ActorRef.
+ * @param system           the actor system.
+ * @param appActor         the main application actor.
  */
-case class ResponderData(system: ActorSystem, appActor: ActorRef)
+case class ResponderData(system: ActorSystem,
+                         appActor: ActorRef)
 
 /**
  * An abstract class providing values that are commonly used in Knora responders.
@@ -78,21 +79,19 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     protected val settings: SettingsImpl = Settings(system)
 
     /**
-     * The reference to the main application actor which will forward messages
-     * for the responder manager to the responder manager.
+     * The main application actor.
+     */
+    protected val appActor: ActorRef = responderData.appActor
+
+    /**
+     * The main application actor forwards messages to the responder manager.
      */
     protected val responderManager: ActorRef = responderData.appActor
 
     /**
-     * The reference to the main application actor which will forward messages
-     * for the store manager to the store manager.
+     * The main application actor forwards messages to the store manager.
      */
     protected val storeManager: ActorRef = responderData.appActor
-
-    /**
-     * The reference to the main application actor
-     */
-    protected val appActor: ActorRef = responderData.appActor
 
     /**
      * A string formatter.
@@ -107,7 +106,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     /**
      * Provides logging
      */
-    val log: Logger = logger
+    protected val log: Logger = logger
 
     /**
      * Checks whether an entity is used in the triplestore.

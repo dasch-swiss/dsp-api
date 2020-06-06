@@ -24,7 +24,7 @@ import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.model.Multipart
-import akka.http.scaladsl.model.Multipart.BodyPart
+import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -528,14 +528,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         /* get the file data and save file to temporary location */
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
-                            case b: BodyPart =>
+                            b: FormData.BodyPart =>
                                 if (b.name == FILE_PART) {
                                     log.debug(s"inside allPartsFuture - processing $FILE_PART")
                                     val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                                     val tmpFile = FileUtil.createTempFile(settings)
                                     val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                     written.map { written =>
-                                        log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        log.debug(s"written result: ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                         receivedFile.success(tmpFile)
                                         (b.name, FileInfo(b.name, filename, b.entity.contentType))
                                     }

@@ -20,7 +20,7 @@
 package org.knora.webapi
 
 import akka.actor._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi.app._
 import org.knora.webapi.util.StringFormatter
 
@@ -37,7 +37,7 @@ trait Core {
 
     implicit val settings: SettingsImpl
 
-    implicit val materializer: ActorMaterializer
+    implicit val materializer: Materializer
 
     implicit val executionContext: ExecutionContext
 
@@ -62,7 +62,7 @@ trait LiveCore extends Core {
     /**
       * Provides the actor materializer (akka-http)
       */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
     /**
       * Provides the default global execution context

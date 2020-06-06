@@ -25,7 +25,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding.Get
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -122,7 +122,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
+                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
         for {
             testLists <- getListTestResponses
             testNode <- getNodeTestResponse

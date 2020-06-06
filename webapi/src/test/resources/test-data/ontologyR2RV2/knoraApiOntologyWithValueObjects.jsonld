@@ -1604,140 +1604,6 @@
       }
     } ]
   }, {
-    "@id" : "knora-api:ForbiddenResource",
-    "@type" : "owl:Class",
-    "knora-api:isResourceClass" : true,
-    "rdfs:comment" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
-    "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
-    "rdfs:subClassOf" : [ {
-      "@id" : "knora-api:Resource"
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:arkUrl"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:attachedToProject"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:attachedToUser"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:creationDate"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:deleteComment"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:deleteDate"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:deletedBy"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasComment"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLinkValue"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasPermissions"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasStandoffLinkTo"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:minCardinality" : 0,
-      "owl:onProperty" : {
-        "@id" : "knora-api:hasStandoffLinkToValue"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:isDeleted"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:lastModificationDate"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:userHasPermission"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:versionArkUrl"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:versionDate"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdfs:label"
-      }
-    } ]
-  }, {
     "@id" : "knora-api:GeomValue",
     "@type" : "owl:Class",
     "knora-api:isValueClass" : true,
@@ -6471,6 +6337,14 @@
     },
     "rdfs:comment" : "Represents the name of a mapping",
     "rdfs:label" : "Name of a mapping (will be part of the mapping's Iri)"
+  }, {
+    "@id" : "knora-api:mayHaveMoreResults",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "rdfs:comment" : "Indicates whether more results may be available for a search query",
+    "rdfs:label" : "May have more results"
   }, {
     "@id" : "knora-api:movingImageFileValueHasDimX",
     "@type" : "owl:DatatypeProperty",

@@ -24,7 +24,7 @@ import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
@@ -346,7 +346,8 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // Search results to return in test data.
     private val testSearches: Map[String, IRI] = Map(
         "things" -> SharedTestDataADM.gravsearchComplexThingSmallerThanDecimal,
-        "thing-links" -> SharedTestDataADM.gravsearchThingLinks
+        "thing-links" -> SharedTestDataADM.gravsearchThingLinks,
+        "things-with-paging" -> SharedTestDataADM.gravsearchThingsWithPaging
     )
 
     private def getSearchTestResponses: Future[Set[TestDataFileContent]] = {
@@ -446,7 +447,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[TestDataFileContent]] = {
+                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
         getSearchTestResponses
     }
 }

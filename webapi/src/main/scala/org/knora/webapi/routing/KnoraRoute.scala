@@ -22,7 +22,7 @@ package org.knora.webapi.routing
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl}
@@ -33,10 +33,11 @@ import scala.concurrent.ExecutionContext
 /**
  * Data needed to be passed to each route.
  *
- * @param system   the actor system.
- * @param appActor the main application actor ActorRef.
+ * @param system           the actor system.
+ * @param appActor         the main application actor.
  */
-case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
+case class KnoraRouteData(system: ActorSystem,
+                          appActor: ActorRef)
 
 
 /**
@@ -45,14 +46,14 @@ case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
 abstract class KnoraRoute(routeData: KnoraRouteData) {
 
     implicit protected val system: ActorSystem = routeData.system
-    implicit protected val responderManager: ActorRef = routeData.appActor
     implicit protected val settings: SettingsImpl = Settings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
     implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-    implicit protected val materializer: ActorMaterializer = ActorMaterializer()
+    implicit protected val materializer: Materializer = Materializer.matFromSystem(system)
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    protected val applicationStateActor: ActorRef = routeData.appActor
+    protected val applicationActor: ActorRef = routeData.appActor
+    implicit protected val responderManager: ActorRef = routeData.appActor
     protected val storeManager: ActorRef = routeData.appActor
     protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl

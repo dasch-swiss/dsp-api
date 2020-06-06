@@ -27,7 +27,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
@@ -69,7 +69,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
 
     implicit lazy val system: ActorSystem = _system
     implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // can be overridden in individual spec
@@ -89,8 +89,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service without loading of the ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        // start the knora service, loading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         // waits until knora is up and running
         applicationStateRunning()

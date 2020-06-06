@@ -45,8 +45,8 @@ object Dependencies {
 
     val Versions = Seq(
         scalaVersion := "2.12.8",
-        akkaVersion := "2.5.21",
-        akkaHttpVersion := "10.1.7",
+        akkaVersion := "2.6.4",
+        akkaHttpVersion := "10.1.11",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
         sipiImage := "dhlabbasel/sipi:v2.0.1",
@@ -61,7 +61,7 @@ object Dependencies {
     object Compile {
         // akka
         val akkaActor              = Def.setting {"com.typesafe.akka"          %% "akka-actor"               % akkaVersion.value}
-        val akkaAgent              = Def.setting {"com.typesafe.akka"          %% "akka-agent"               % akkaVersion.value}
+        //val akkaAgent              = Def.setting {"com.typesafe.akka"          %% "akka-agent"               % akkaVersion.value}
         val akkaStream             = Def.setting {"com.typesafe.akka"          %% "akka-stream"              % akkaVersion.value}
         val akkaSlf4j              = Def.setting {"com.typesafe.akka"          %% "akka-slf4j"               % akkaVersion.value}
 
@@ -182,7 +182,7 @@ object Dependencies {
 
     val salsahLibraryDependencies = l ++= Seq[sbt.ModuleID](
         akkaActor.value,
-        akkaAgent.value,
+        //akkaAgent.value,
         akkaStream.value,
         akkaSlf4j.value,
         akkaHttp.value,
@@ -197,7 +197,7 @@ object Dependencies {
 
     val webapiLibraryDependencies = l ++= Seq[sbt.ModuleID](
         akkaActor.value,
-        akkaAgent.value,
+        //akkaAgent.value,
         akkaHttp.value,
         akkaHttpCirce,
         akkaHttpCors,

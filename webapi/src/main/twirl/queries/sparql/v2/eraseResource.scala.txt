@@ -24,18 +24,22 @@
  * Erases a resource from the triplestore.
  *
  * @param triplestore the name of the triplestore being used.
+ * @param dataNamedGraph the named graph to update.
  * @param resourceIri the IRI of the resource to be marked as deleted.
  *@
 @(triplestore: String,
+  dataNamedGraph: IRI,
   resourceIri: IRI)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v2.txt.eraseResourceGraphDB(resourceIri = resourceIri)
+        queries.sparql.v2.txt.eraseResourceGraphDB(dataNamedGraph = dataNamedGraph,
+                                                   resourceIri = resourceIri)
      }
 } else {
     @{
         queries.sparql.v2.txt.eraseResourceStandard(triplestore: String,
+                                                    dataNamedGraph = dataNamedGraph,
                                                     resourceIri = resourceIri)
      }
 }
