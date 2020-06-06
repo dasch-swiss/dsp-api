@@ -8181,5 +8181,183 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 xmlDiff.hasDifferences should be(false)
             }
         }
+
+        "search for an rdfs:label using a literal in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using a literal in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using a variable in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?label .
+                  |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using a variable in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?label .
+                  |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using knora-api:matchLabel in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using knora-api:matchLabel in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using the regex function in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?bookLabel .
+                  |    FILTER regex(?bookLabel, "Zeit", "i")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using the regex function in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?bookLabel .
+                  |    FILTER regex(?bookLabel, "Zeit", "i")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
     }
 }
