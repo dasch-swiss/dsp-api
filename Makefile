@@ -35,34 +35,6 @@ build-knora-api-image: build-all-scala ## build and publish knora-api docker ima
 publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
 	docker push $(KNORA_API_IMAGE)
 
-## knora-graphdb-se
-.PHONY: build-knora-graphdb-se-image
-build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
-	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
-ifeq ($(KNORA_GDB_LICENSE), unknown)
-	touch $(CURRENT_DIR)/knora-graphdb-se/target/universal/stage/scripts/graphdb.license
-else
-	cp $(KNORA_GDB_LICENSE) $(CURRENT_DIR)/knora-graphdb-se/target/universal/stage/scripts/graphdb.license
-endif
-	docker build -t $(KNORA_GRAPHDB_SE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_GRAPHDB_SE_REPO):latest -f .docker/knora-graphdb-se.dockerfile  knora-graphdb-se/target/universal
-
-.PHONY: publish-knora-graphdb-se-image
-publish-knora-graphdb-se-image: build-knora-graphdb-se-image ## publish knora-graphdb-se image to Dockerhub
-	docker push $(KNORA_GRAPHDB_SE_IMAGE)
-
-## knora-graphdb-free
-.PHONY: build-knora-graphdb-free-image
-build-knora-graphdb-free-image: build-all-scala ## build and publish knora-graphdb-free docker image locally
-	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-free.dockerfile
-	touch $(CURRENT_DIR)/knora-graphdb-free/target/universal/stage/scripts/graphdb.license
-	docker build -t $(KNORA_GRAPHDB_FREE_IMAGE) -f .docker/knora-graphdb-free.dockerfile  knora-graphdb-free/target/universal
-
-.PHONY: publish-knora-graphdb-free-image
-publish-knora-graphdb-free-image: build-knora-graphdb-free-image ## publish knora-graphdb-se image to Dockerhub
-	docker push $(KNORA_GRAPHDB_FREE_IMAGE)
-
 ## knora-sipi
 .PHONY: build-knora-sipi-image
 build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
@@ -94,10 +66,10 @@ publish-knora-assets-image: build-knora-assets-image ## publish knora-assets ima
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-api-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
 
 .PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
+publish-all-images: publish-knora-api-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
 
 #################################
 ## Docker-Compose targets
@@ -109,33 +81,26 @@ print-env-file: ## prints the env file used by knora-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
-ifeq ($(KNORA_GDB_LICENSE), unknown)
-	$(warning No GraphDB-SE license set. Using GraphDB-Free.)
-	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_FREE_IMAGE) > .env
-	@echo KNORA_GDB_TYPE=graphdb-free >> .env
+ifeq ($(KNORA_DB_HOME), unknown)
+	$(info The path to the DB home directory is not set. Using docker volume: db-home.)
+	@echo KNORA_DB_HOME_DIR=db-home > .env
 else
-	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_SE_IMAGE) > .env
-	@echo KNORA_GDB_TYPE=graphdb-se >> .env
+	@echo KNORA_DB_HOME_DIR=$(KNORA_DB_HOME) > .env
 endif
-ifeq ($(KNORA_GDB_IMPORT), unknown)
-	$(warning The path to the GraphDB import directory is not set. Using docker volume: db-import.)
-	@echo KNORA_GDB_IMPORT_DIR=db-import >> .env
+ifeq ($(KNORA_DB_IMPORT), unknown)
+	$(info The path to the DB import directory is not set. Using docker volume: db-import.)
+	@echo KNORA_DB_IMPORT_DIR=db-import >> .env
 else
-	@echo KNORA_GDB_IMPORT_DIR=$(KNORA_GDB_IMPORT) >> .env
+	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
 endif
-ifeq ($(KNORA_GDB_HOME), unknown)
-	$(warning The path to the GraphDB home directory is not set. Using docker volume: db-home.)
-	@echo KNORA_GDB_HOME_DIR=db-home >> .env
-else
-	@echo KNORA_GDB_HOME_DIR=$(KNORA_GDB_HOME) >> .env
-endif
-	@echo KNORA_GDB_HEAP_SIZE=$(KNORA_GDB_HEAP_SIZE) >> .env
+	@echo FUSEKI_IMAGE=$(FUSEKI_IMAGE) >> .env
+	@echo FUSEKI_HEAP_SIZE=$(FUSEKI_HEAP_SIZE) >> .env
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
-	@echo KNORA_GRAPHDB_REPOSITORY_NAME=$(KNORA_GRAPHDB_REPOSITORY_NAME) >> .env
+	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
 ## knora stack
@@ -144,7 +109,7 @@ stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, re
 	docker-compose -f docker/knora.docker-compose.yml up -d
 
 .PHONY: stack-up-ci
-stack-up-ci: KNORA_GRAPHDB_REPOSITORY_NAME := knora-test-unit
+stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
 stack-up-ci: build-all-images env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker/knora.docker-compose.yml up -d
 

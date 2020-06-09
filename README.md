@@ -69,7 +69,7 @@ $ make stack-up
 Then to create a test repository and load some test data into the triplestore:
 
 ```
-$ make init-db-test-free
+$ make init-db-test
 ```
 
 Then we need to restart knora-api after loading the data:
@@ -91,28 +91,34 @@ $ make stack-down
 Run :
 
 ```
-$ make init-db-test-unit-free
+$ make init-db-test-unit
 $ make normal-tests
 ```
 
 ### Running with a GraphDB License and Custom Folders
 
-The `$ make stack-up` target can be additonally configured thorugh the following environment variables:
+The `$ make stack-up` target can be additionally configured thorough the
+following environment variables:
 
-```
-KNORA_GDB_LICENSE - sets the path to the GraphDB-SE license
-KNORA_GDB_IMPORT - sets the path to the import directory accessible from inside the GraphDB Workbench
-KNORA_GDB_HOME - sets the path to the folder where GraphDB will store the database files
-```
+- `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
+the database files
+- `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
+inside the docker image
 
-Some or all environment variables can be set, as required. If the license file is not set, then GraphDB-Free will be
-started. If the import and/or data directories are not set, then Docker volumes will be used instead.
+If the import and/or data directory are not set, then Docker volumes will be
+used instead. Be aware on macOS, that setting the `KNORA_DB_HOME` has a
+significant negative impact on performance, because of how synchronization with
+the VM, in which docker is running, is implemented.
 
 ## How to Contribute
 
-You can help by testing Knora with your data, making bug reports, improving the documentation, and adding features that you need.
+You can help by testing Knora with your data, making bug reports, improving the
+documentation, and adding features that you need.
 
-First, open an [issue](https://github.com/dhlab-basel/Knora/issues) to describe your problem or idea. We may ask you to submit a [pull request](https://help.github.com/articles/about-pull-requests/) implementing the desired functionality.
+First, open an [issue](https://github.com/dhlab-basel/Knora/issues) to describe
+your problem or idea. We may ask you to submit a
+[pull request](https://help.github.com/articles/about-pull-requests/)
+implementing the desired functionality.
 
 ### Coding conventions
 
