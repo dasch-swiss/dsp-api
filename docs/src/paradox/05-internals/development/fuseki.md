@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Starting Fuseki 3
+# Starting Jena-Fuseki 2
 
 ## Locally
 
