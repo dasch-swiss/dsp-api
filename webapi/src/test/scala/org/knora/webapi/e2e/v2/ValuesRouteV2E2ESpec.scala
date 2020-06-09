@@ -1961,6 +1961,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
             savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
         }
+
         "create a link between two resources with a custom link value Iri, UUID, creationDate" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
@@ -1993,6 +1994,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             )
             assert(savedCreationDate == customCreationDate)
         }
+
         "update an integer value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri

@@ -441,14 +441,16 @@ case class ReadResourceV2(resourceIri: IRI,
 /**
  * The value of a Knora property sent to Knora to be created in a new resource.
  *
- * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
- * @param customValueIri the optional custom value IRI.
- * @param customValueUUID the optional custom value UUID.
- * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ * @param valueContent            the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri          the optional custom value IRI.
+ * @param customValueUUID         the optional custom value UUID.
+ * @param customValueCreationDate the optional custom value creation date.
+ * @param permissions             the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
                                       customValueIri: Option[SmartIri] = None,
                                       customValueUUID: Option[UUID] = None,
+                                      customValueCreationDate: Option[Instant] = None,
                                       permissions: Option[String] = None) extends IOValueV2
 
 /**
@@ -605,11 +607,19 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                 )
                                 maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
                                 maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID
+
+                                // Get the values's creation date.
+                                maybeCustomValueCreationDate: Option[Instant] = valueJsonLDObject.maybeDatatypeValueInObject(
+                                    key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                                )
                                 maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueInNewResourceV2(
                                 valueContent = valueContent,
                                 customValueIri = maybeCustomValueIri,
                                 customValueUUID = maybeCustomValueUUID,
+                                customValueCreationDate = maybeCustomValueCreationDate,
                                 permissions = maybePermissions
                             )
                     }

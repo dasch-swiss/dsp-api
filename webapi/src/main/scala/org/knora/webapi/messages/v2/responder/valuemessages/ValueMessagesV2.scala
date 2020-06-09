@@ -458,6 +458,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
 case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
                                                  customValueIri: Option[SmartIri],
                                                  customValueUUID: Option[UUID],
+                                                 customValueCreationDate: Option[Instant],
                                                  permissions: String) extends IOValueV2
 
 /**

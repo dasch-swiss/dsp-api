@@ -408,6 +408,7 @@ object SharedTestDataADM {
     val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
     val customValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI"
     val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
+    val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
 
     def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
@@ -1933,6 +1934,32 @@ object SharedTestDataADM {
          | }
          |}""".stripMargin
     }
+
+    def createResourceWithCustomValueCreationDate(creationDate: Instant): String = {
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "anything:hasBoolean" : {
+           |    "@type" : "knora-api:BooleanValue",
+           |    "knora-api:booleanValueAsBoolean" : false,
+           |    "knora-api:creationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$creationDate"
+           |    }
+           |  },
+           |  "rdfs:label" : "test thing with value has creation date",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           | }
+           |}""".stripMargin
+    }
+
 
   def createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(customResourceIRI: IRI,
                                                                                      customCreationDate: Instant,

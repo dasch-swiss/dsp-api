@@ -927,6 +927,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                     valueContent = valueToCreate.valueContent,
                                     customValueIri = valueToCreate.customValueIri,
                                     customValueUUID = valueToCreate.customValueUUID,
+                                    customValueCreationDate = valueToCreate.customValueCreationDate,
                                     permissions = validatedCustomPermissions
                                 )
 
@@ -937,6 +938,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                         valueContent = valueToCreate.valueContent,
                                         customValueIri = valueToCreate.customValueIri,
                                         customValueUUID = valueToCreate.customValueUUID,
+                                        customValueCreationDate = valueToCreate.customValueCreationDate,
                                         permissions = defaultPropertyPermissions(propertyIri)
                                     )
                                 }

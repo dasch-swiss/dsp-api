@@ -572,7 +572,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                 propertyIri = propertyIri,
                                 valueToCreate = valueToCreate,
                                 valueHasOrder = valueHasOrder,
-                                creationDate = createMultipleValuesRequest.creationDate,
+                                resourceCreationDate = createMultipleValuesRequest.creationDate,
                                 requestingUser = createMultipleValuesRequest.requestingUser
                             )
                     }
@@ -594,21 +594,21 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Generates SPARQL to create one of multiple values in a new resource.
      *
-     * @param resourceIri    the IRI of the resource.
-     * @param propertyIri    the IRI of the property that will point to the value.
-     * @param valueToCreate  the value to be created.
-     * @param valueHasOrder  the value's `knora-base:valueHasOrder`.
-     * @param creationDate   the timestamp to be used as the value creation time.
-     * @param requestingUser the user making the request.
+     * @param resourceIri           the IRI of the resource.
+     * @param propertyIri           the IRI of the property that will point to the value.
+     * @param valueToCreate         the value to be created.
+     * @param valueHasOrder         the value's `knora-base:valueHasOrder`.
+     * @param resourceCreationDate  the timestamp to be used as the value creation time.
+     * @param requestingUser        the user making the request.
      * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
      */
     private def generateInsertSparqlWithUnverifiedValue(resourceIri: IRI,
                                                         propertyIri: SmartIri,
                                                         valueToCreate: GenerateSparqlForValueInNewResourceV2,
                                                         valueHasOrder: Int,
-                                                        creationDate: Instant,
+                                                        resourceCreationDate: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
-        
+
         // Make an IRI for the new value.
         val newValueIri: IRI = valueToCreate.customValueIri match {
             case Some(customValueIri) => customValueIri.toString
@@ -619,6 +619,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         val newValueUUID: UUID = valueToCreate.customValueUUID match {
             case Some(customValueUUID) => customValueUUID
             case None => UUID.randomUUID
+        }
+
+        // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
+        // use resource creation date for the value.
+        val valueCreationDate: Instant = valueToCreate.customValueCreationDate match {
+            case Some(customValueCreationDate) => customValueCreationDate
+            case None => resourceCreationDate
         }
 
         // Generate the SPARQL.
@@ -647,7 +654,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
                     resourceIri = resourceIri,
                     linkUpdate = sparqlTemplateLinkUpdate,
-                    creationDate = creationDate,
+                    creationDate = valueCreationDate,
                     newValueUUID = newValueUUID,
                     maybeComment = valueToCreate.valueContent.comment,
                     maybeValueHasOrder = Some(valueHasOrder),
@@ -665,7 +672,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                     valueCreator = requestingUser.id,
                     valuePermissions = valueToCreate.permissions,
-                    creationDate = creationDate,
+                    creationDate = valueCreationDate,
                     maybeValueHasOrder = Some(valueHasOrder),
                     stringFormatter = stringFormatter
                 ).toString()
@@ -678,7 +685,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 newValueUUID = newValueUUID,
                 valueContent = valueToCreate.valueContent.unescape,
                 permissions = valueToCreate.permissions,
-                creationDate = creationDate
+                creationDate = valueCreationDate
             )
         )
     }
