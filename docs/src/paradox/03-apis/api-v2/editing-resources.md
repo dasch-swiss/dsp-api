@@ -189,7 +189,7 @@ In addition to the creation date, in the body of the request, it is possible to 
 the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
 will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
-For example:
+Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding. For example:
 ```jsonld
 {
    "@id" : "http://rdfh.ch/0001/a-custom-thing",

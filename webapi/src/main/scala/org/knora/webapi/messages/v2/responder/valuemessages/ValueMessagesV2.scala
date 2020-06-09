@@ -116,8 +116,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                         // Get the custom value IRI if provided.
                         maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
+
                         // Get the custom value UUID if provided.
                         maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID
+
                         // Get the value's creation date.
                         maybeCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
                             key = OntologyConstants.KnoraApiV2Complex.CreationDate,

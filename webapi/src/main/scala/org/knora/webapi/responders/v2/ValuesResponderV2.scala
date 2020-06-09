@@ -274,6 +274,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         }
 
         val triplestoreUpdateFuture: Future[CreateValueResponseV2] = for {
+
             // Don't allow anonymous users to create values.
             _ <- Future {
                 if (createValueRequest.requestingUser.isAnonymousUser) {
@@ -394,15 +395,20 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  valuePermissions: String,
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
-            // Make an IRI and a UUID for the new value.
+
+            // Make an IRI for the new value.
             newValueIri: IRI <- maybeValueIri match {
                 case Some(customValueIri) => FastFuture.successful(customValueIri.toString)
                 case None => FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
             }
+
+            // Make a UUID for the new value
             newValueUUID: UUID = maybeValueUUID match {
                 case Some(customValueUUID) => customValueUUID
                 case None => UUID.randomUUID
             }
+
+            // Make a creation date for the new value
             creationDate: Instant = maybeValueCreationDate match {
                 case Some(customCreationDate) => customCreationDate
                 case None => Instant.now
@@ -602,11 +608,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                         valueHasOrder: Int,
                                                         creationDate: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
-        // Make an IRI and a UUID for the new value.
+        
+        // Make an IRI for the new value.
         val newValueIri: IRI = valueToCreate.customValueIri match {
             case Some(customValueIri) => customValueIri.toString
             case None => stringFormatter.makeRandomValueIri(resourceIri)
         }
+
+        // Make a UUID for the new value.
         val newValueUUID: UUID = valueToCreate.customValueUUID match {
             case Some(customValueUUID) => customValueUUID
             case None => UUID.randomUUID
