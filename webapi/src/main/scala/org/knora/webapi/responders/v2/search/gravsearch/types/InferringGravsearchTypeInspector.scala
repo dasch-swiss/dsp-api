@@ -265,7 +265,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                                     None
                                             }
 
-                                        case other =>
+                                        case _ =>
                                             // We don't have the predicate's type.
                                             Set.empty[GravsearchEntityTypeInfo]
                                     }
@@ -1002,6 +1002,26 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             acc.copy(
                                 typedEntitiesInFilters = acc.typedEntitiesInFilters +
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+                            )
+
+                        case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction =>
+                            // The first argument is a variable representing a resource.
+                            val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                            val currentResourceVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty[SmartIri])
+
+                            acc.copy(
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
+                                    (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
+                            )
+
+                        case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction =>
+                            // The first argument is a variable representing a resource.
+                            val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                            val currentResourceVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty[SmartIri])
+
+                            acc.copy(
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
+                                    (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri))
                             )
 
                         case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction =>
