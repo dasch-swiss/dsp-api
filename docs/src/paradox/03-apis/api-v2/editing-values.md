@@ -85,7 +85,31 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
   }
 }
 ```
+Each value can have an optional custom IRI specified by the `@id` attribute, a custom creation date specified by adding 
+`knora-api:creationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
+given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding.
+For example: 
 
+
+```jsonld
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@id" : "http://rdfh.ch/0001/a-customized-thing/values/int-value-IRI",
+    "@type" : "knora-api:IntValue",
+    "knora-api:intValueAsInt" : 21,
+    "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
+    "knora-api:creationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2020-06-04T12:58:54.502951Z"
+      }
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+```
 The format of the object of `knora-api:hasPermissions` is described in
 @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
 

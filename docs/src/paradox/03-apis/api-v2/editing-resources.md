@@ -32,8 +32,8 @@ HTTP POST to http://host/v2/resources
 The body of the request is a JSON-LD document in the
 @ref:[complex API schema](introduction.md#api-schema), specifying the resource's IRI, type,
 and `rdfs:label`, along with its Knora resource properties and their values. The representation of the
-resource is the same as when it is returned in a `GET` request, except that its IRI and
-`knora-api:attachedToUser`, and those of its values, are not given. The format of the values submitted
+resource is the same as when it is returned in a `GET` request, except that its `knora-api:attachedToUser` is not given,
+and the resource IRI and those of its values can be optionally specified. The format of the values submitted
 is described in @ref:[Editing Values](editing-values.md). If there are multiple values for a property,
 these must be given in an array.
 
@@ -160,7 +160,7 @@ resource's creator can be specfied by adding `knora-api:attachedToUser`. For exa
   "knora-api:creationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2019-01-09T15:45:54.502951Z"
-  }
+  },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -185,6 +185,39 @@ than the requesting user only if the requesting user is an administrator of the
 project or a system administrator. The specified creator must also
 have permission to create resources of that class in that project.
 
+In addition to the creation date, in the body of the request, it is possible to specify a custom IRI for a resource through
+the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
+Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
+will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
+Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding. For example:
+```jsonld
+{
+   "@id" : "http://rdfh.ch/0001/a-custom-thing",
+   "@type" : "anything:Thing",
+   "knora-api:attachedToProject" : {
+     "@id" : "http://rdfh.ch/projects/0001"
+   },
+   "anything:hasInteger" : {
+       "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI",
+       "@type" : "knora-api:IntValue",
+       "knora-api:intValueAsInt" : 10,
+       "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ"
+   },
+   "rdfs:label" : "test thing with custom IRI",
+   "knora-api:creationDate" : {
+     "@type" : "xsd:dateTimeStamp",
+     "@value" : "2019-01-09T15:45:54.502951Z"
+   },
+   "@context" : {
+     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+     "xsd" : "http://www.w3.org/2001/XMLSchema#",
+     "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+ 
 The response is a JSON-LD document containing a
 @ref:[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
 of the resource.
