@@ -653,7 +653,7 @@ object SharedTestDataADM {
         s"""{
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "listIri": "${SharedTestDataADM.customListIRI}",
-           |    "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
+           |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
            |    "comments": []
            |}""".stripMargin
 

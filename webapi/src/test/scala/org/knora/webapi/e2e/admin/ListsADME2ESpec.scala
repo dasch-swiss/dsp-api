@@ -185,7 +185,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 newListIri.set(listInfo.id)
             }
 
-            "create a list with custom Iri" in {
+            "create a list with a custom Iri" in {
 
                 val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -198,7 +198,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.head should be (StringLiteralV2(value = "Neue Liste mit IRI", language = Some("de")))
+                labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
             }
 
             "return a ForbiddenException if the user creating the list is not project or system admin" in {
@@ -217,14 +217,14 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 response.status should be(StatusCodes.Forbidden)
             }
 
-            "return a BadRequestException during list creation when invali list IRI is given" in {
+            "return a BadRequestException during list creation when an invalid list IRI is given" in {
 
                 // invalid list IRI
                 val params =
                     s"""
                        |{
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "listIri": "not-valid-list-IRI"
+                       |    "listIri": "invalid-list-IRI"
                        |    "labels": [{ "value": "New List", "language": "en"}],
                        |    "comments": []
                        |}
