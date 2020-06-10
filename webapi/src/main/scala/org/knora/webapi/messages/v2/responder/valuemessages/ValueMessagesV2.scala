@@ -90,21 +90,18 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
+            resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
             _ = if (!resourceIri.isKnoraResourceIri) {
                 throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
             }
 
             // Get the resource class.
-            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+            resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
             // Get the resource property and the value to be created.
-            createValue: CreateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
+            createValue: CreateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    if (jsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
-                        throw BadRequestException("The @id of a value cannot be given in a request to create the value")
-                    }
 
                     for {
                         valueContent: ValueContentV2 <-
@@ -117,12 +114,27 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 log = log
                             )
 
+                        // Get the custom value IRI if provided.
+                        maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
+
+                        // Get the custom value UUID if provided.
+                        maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID
+
+                        // Get the value's creation date.
+                        maybeCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
+                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                            validationFun = stringFormatter.xsdDateTimeStampToInstant
+                        )
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
                         resourceClassIri = resourceClassIri,
                         propertyIri = propertyIri,
                         valueContent = valueContent,
+                        customValueIri = maybeCustomValueIri,
+                        customValueUUID = maybeCustomUUID,
+                        customValueCreationDate = maybeCreationDate,
                         permissions = maybePermissions
                     )
             }
@@ -137,14 +149,16 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 /**
  * Represents a successful response to a [[CreateValueRequestV2]].
  *
- * @param valueIri   the IRI of the value that was created.
- * @param valueType  the type of the value that was created.
- * @param valueUUID  the value's UUID.
- * @param projectADM the project in which the value was created.
+ * @param valueIri          the IRI of the value that was created.
+ * @param valueType         the type of the value that was created.
+ * @param valueUUID         the value's UUID.
+ * @param valueCreationDate the value's creationDate
+ * @param projectADM        the project in which the value was created.
  */
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
+                                 valueCreationDate: Instant,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -158,7 +172,11 @@ case class CreateValueResponseV2(valueIri: IRI,
                 Map(
                     JsonLDConstants.ID -> JsonLDString(valueIri),
                     JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-                    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
+                    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
+                    OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = valueCreationDate.toString,
+                        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                    )
                 )
             ),
             context = JsonLDUtil.makeContext(
@@ -210,19 +228,19 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
+            resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
             _ = if (!resourceIri.isKnoraResourceIri) {
                 throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
             }
 
             // Get the resource class.
-            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+            resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
             // Get the resource property and the new value version.
-            updateValue: UpdateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
+            updateValue: UpdateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    val valueIri: IRI = jsonLDObject.getIDAsKnoraDataIri.toString
+                    val valueIri: IRI = jsonLDObject.requireIDAsKnoraDataIri.toString
 
                     // Does the value object just contain knora-api:hasPermissions?
 
@@ -371,25 +389,25 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Get the IRI of the resource that the value is to be created in.
-        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+        val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
 
         if (!resourceIri.isKnoraResourceIri) {
             throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
         }
 
         // Get the resource class.
-        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+        val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
         // Get the resource property and the IRI and class of the value to be deleted.
-        jsonLDDocument.getResourcePropertyValue match {
+        jsonLDDocument.requireResourcePropertyValue match {
             case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                val valueIri = jsonLDObject.getIDAsKnoraDataIri
+                val valueIri = jsonLDObject.requireIDAsKnoraDataIri
 
                 if (!valueIri.isKnoraValueIri) {
                     throw BadRequestException(s"Invalid value IRI: <$valueIri>")
                 }
 
-                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraApiV2ComplexTypeIri
+                val valueTypeIri: SmartIri = jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri
 
                 val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
@@ -438,6 +456,9 @@ case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
 }
 
 case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
+                                                 customValueIri: Option[SmartIri],
+                                                 customValueUUID: Option[UUID],
+                                                 customValueCreationDate: Option[Instant],
                                                  permissions: String) extends IOValueV2
 
 /**
@@ -762,16 +783,22 @@ case class ReadOtherValueV2(valueIri: IRI,
 /**
  * Represents a Knora value to be created in an existing resource.
  *
- * @param resourceIri      the resource the new value should be attached to.
- * @param resourceClassIri the resource class that the client believes the resource belongs to.
- * @param propertyIri      the property of the new value. If the client wants to create a link, this must be a link value property.
- * @param valueContent     the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
- * @param permissions      the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ * @param resourceIri              the resource the new value should be attached to.
+ * @param resourceClassIri         the resource class that the client believes the resource belongs to.
+ * @param propertyIri              the property of the new value. If the client wants to create a link, this must be a link value property.
+ * @param valueContent             the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri           the optional custom IRI supplied for the value.
+ * @param customValueUUID          the optional custom UUID supplied for the value.
+ * @param customValueCreationDate  the optional custom creation date supplied for the value.
+ * @param permissions              the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
                          resourceClassIri: SmartIri,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
+                         customValueIri: Option[SmartIri] = None,
+                         customValueUUID: Option[UUID] = None,
+                         customValueCreationDate: Option[Instant] = None,
                          permissions: Option[String] = None) extends IOValueV2
 
 

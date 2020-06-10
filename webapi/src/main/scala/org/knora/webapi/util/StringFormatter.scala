@@ -40,7 +40,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.JavaUtil.Optional
@@ -2711,6 +2710,21 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+     * Checks whether an IRI already exists in the triplestore.
+     *
+     * @param iri          the IRI to be checked.
+     * @param storeManager a reference to the store manager.
+     * @return `true` if the IRI already exists, `false` otherwise.
+     */
+    def checkIriExists(iri: IRI,
+                       storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkIriExists(iri).toString)
+            response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+        } yield response.result
+    }
+
+    /**
      * Attempts to create a new IRI that isn't already used in the triplestore. Will try up to [[MAX_IRI_ATTEMPTS]]
      * times, then throw an exception if an unused IRI could not be created.
      *
@@ -2724,10 +2738,9 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
             val newIri = iriFun
 
             for {
-                askString <- Future(queries.sparql.admin.txt.checkIriExists(iri = newIri).toString)
-                response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                iriExists <- checkIriExists(newIri, storeManager)
 
-                result <- if (!response.result) {
+                result <- if (!iriExists) {
                     FastFuture.successful(newIri)
                 } else if (attempts > 1) {
                     log.warning("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
