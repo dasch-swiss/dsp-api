@@ -82,15 +82,15 @@ print-env-file: ## prints the env file used by knora-stack
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
 ifeq ($(KNORA_DB_HOME), unknown)
-	$(info The path to the DB home directory is not set. Using docker volume: db-home.)
 	@echo KNORA_DB_HOME_DIR=db-home > .env
 else
+	$(info Using $(KNORA_DB_HOME) for the DB home directory.)
 	@echo KNORA_DB_HOME_DIR=$(KNORA_DB_HOME) > .env
 endif
 ifeq ($(KNORA_DB_IMPORT), unknown)
-	$(info The path to the DB import directory is not set. Using docker volume: db-import.)
 	@echo KNORA_DB_IMPORT_DIR=db-import >> .env
 else
+	$(info Using $(KNORA_DB_IMPORT) for the DB import directory.)
 	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
 endif
 	@echo FUSEKI_IMAGE=$(FUSEKI_IMAGE) >> .env
@@ -331,37 +331,22 @@ test-repository-update: stack-without-api
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
 	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test
+	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
 
 .PHONY: init-db-test-minimal
 init-db-test-minimal: ## initializes the knora-test repository with minimal data
 	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-minimal
+	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
 .PHONY: init-db-test-unit
 init-db-test-unit: ## initializes the knora-test-unit repository
 	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit
+	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
 
 .PHONY: init-db-test-unit-minimal
 init-db-test-unit-minimal: ## initializes the knora-test-unit repository with minimal data
 	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit-minimal
-
-.PHONY: init-db-test-free
-init-db-test-free: ## initializes the knora-test repository (for GraphDB-Free)
-	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-free
-
-.PHONY: init-db-test-minimal-free
-init-db-test-minimal-free: ## initializes the knora-test repository with minimal data (for GraphDB-Free)
-	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-minimal
-
-.PHONY: init-db-test-unit-free
-init-db-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
-	@echo $@
-	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
+	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
 #################################
 # Other
