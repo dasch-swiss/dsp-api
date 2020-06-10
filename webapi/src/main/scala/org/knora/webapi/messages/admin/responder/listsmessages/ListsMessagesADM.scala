@@ -47,7 +47,7 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
   * @param comments   the list's comments.
   */
 case class CreateListApiRequestADM(projectIri: IRI,
-                                   listIri: Option[SmartIri] = None,
+                                   listIri: Option[IRI] = None,
                                    name: Option[String] = None,
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
