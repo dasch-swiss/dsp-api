@@ -30,7 +30,6 @@ import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenc
 import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.util.StringFormatter
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
