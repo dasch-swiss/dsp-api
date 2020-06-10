@@ -38,20 +38,37 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 FILE="$1"
 
-if [[ -z "${REPOSITORY}" || -z "${USERNAME}" || -z "${FILE}" ]]; then
+if [[ -z "${REPOSITORY}" || -z "${USERNAME}" || -z "${PASSWORD}" ]]; then
     echo "Usage: $(basename "$0") -r|--repository REPOSITORY -u|--username USERNAME [-p|--password PASSWORD] [-h|--host HOST] FILE"
     exit 1
 fi
 
-if [[ -z "${PASSWORD}" ]]; then
-    echo -n "Password: "
-    IFS="" read -rs PASSWORD
-    echo
+if [[ -z "${HOST}" ]]; then
+    HOST="localhost:3030"
 fi
 
-if [[ -z "${HOST}" ]]; then
-    HOST="localhost:8080"
-fi
+drop-all() {
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Content-type:application/x-www-form-urlencoded"?update='DROP ALL' http://${HOST}/${REPOSITORY}/update)
+
+    if [ "${STATUS}" -eq 200 ]; then
+        echo "drop all done"
+        return 0
+    else
+      echo "drop all failed"
+        return 1
+    fi
+}
+
+upload() {
+    STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST)
+
+    if [ "${STATUS}" -eq 200 ]; then
+        echo "Knora started"
+        return 0
+    else
+        return 1
+    fi
+}
 
 curl -X POST -H "Content-type:application/x-www-form-urlencoded"?update='DROP ALL' http://localhost:3030/knora-test/update > /dev/null
 curl -F filedata=@../../knora-ontologies/knora-admin.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/knora-admin > /dev/null
