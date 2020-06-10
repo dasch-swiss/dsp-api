@@ -23,12 +23,13 @@ import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
   * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
   */
-class PermissionsMessagesADMSpec extends WordSpecLike with Matchers {
+class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
 
     "querying the user's 'PermissionsDataADM' with 'hasPermissionFor'" should {
 

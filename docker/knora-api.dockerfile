@@ -18,6 +18,9 @@ COPY stage /webapi
 
 WORKDIR /webapi
 
+# check every minute
+HEALTHCHECK --interval=1m --timeout=1s CMD curl -f http://localhost:3333/health || exit 1
+
 EXPOSE 3333
 #EXPOSE 10001
 

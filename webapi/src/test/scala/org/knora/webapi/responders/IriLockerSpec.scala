@@ -3,7 +3,8 @@ package org.knora.webapi.responders
 import java.util.UUID
 
 import org.knora.webapi.{ApplicationLockException, IRI}
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -11,7 +12,7 @@ import scala.concurrent.{Await, Future}
 /**
   * Tests [[IriLocker]].
   */
-class IriLockerSpec extends WordSpec with Matchers {
+class IriLockerSpec extends AnyWordSpecLike with Matchers {
 
     import scala.concurrent.ExecutionContext.Implicits.global
 

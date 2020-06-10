@@ -15,7 +15,7 @@ import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.{FileUtil, StringFormatter}
-import org.knora.webapi.{InconsistentTriplestoreDataException, KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.{InconsistentTriplestoreDataException, KnoraDispatchers, KnoraSettingsImpl}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class RepositoryUpdater(system: ActorSystem,
                         appActor: ActorRef,
-                        settings: SettingsImpl) extends LazyLogging {
+                        settings: KnoraSettingsImpl) extends LazyLogging {
 
     private val knoraBaseVersionQuery =
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
