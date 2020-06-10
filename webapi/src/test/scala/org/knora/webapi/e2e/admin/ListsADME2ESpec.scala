@@ -189,13 +189,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
                 val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
                 val listInfo = receivedList.listinfo
-                listInfo.listIri should be (SharedTestDataADM.customListIRI)
+                listInfo.id should be (SharedTestDataADM.customListIRI)
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
@@ -216,6 +215,25 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
+            }
+
+            "return a BadRequestException during list creation when invali list IRI is given" in {
+
+                // invalid list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "listIri": "not-valid-list-IRI"
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+
             }
 
             "return a BadRequestException during list creation when payload is not correct" in {
