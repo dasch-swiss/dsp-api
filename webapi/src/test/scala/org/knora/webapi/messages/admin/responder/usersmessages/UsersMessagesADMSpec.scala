@@ -22,14 +22,15 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 /**
   * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
   */
-class UsersMessagesADMSpec extends WordSpecLike with Matchers {
+class UsersMessagesADMSpec extends AnyWordSpecLike with Matchers {
 
     private val id = SharedTestDataADM.rootUser.id
     private val username = SharedTestDataADM.rootUser.username

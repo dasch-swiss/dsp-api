@@ -219,7 +219,7 @@ object GravsearchMainQueryGenerator {
      * @param schemaOptions         the schema options submitted with the request.
      * @return the main [[ConstructQuery]] query to be executed.
      */
-    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: SettingsImpl): ConstructQuery = {
+    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: KnoraSettingsImpl): ConstructQuery = {
         import GravsearchConstants._
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

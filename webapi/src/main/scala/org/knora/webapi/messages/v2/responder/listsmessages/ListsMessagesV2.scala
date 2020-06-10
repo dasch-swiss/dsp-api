@@ -77,7 +77,7 @@ trait ListResponderResponseV2 {
   */
 case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -173,7 +173,7 @@ case class NodeGetRequestV2(nodeIri: IRI,
   */
 case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

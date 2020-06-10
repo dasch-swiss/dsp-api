@@ -70,7 +70,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private val mimeTypeApplicationTrig = "application/trig"
 
     private implicit val system: ActorSystem = context.system
-    private val settings = Settings(system)
+    private val settings = KnoraSettings(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     private implicit val materializer: Materializer = Materializer.matFromSystem(system)
     override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
@@ -823,7 +823,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
-
             case e: Exception =>
                 log.error(e, s"Failed to connect to triplestore, SPARQL query was:\n$sparql")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)

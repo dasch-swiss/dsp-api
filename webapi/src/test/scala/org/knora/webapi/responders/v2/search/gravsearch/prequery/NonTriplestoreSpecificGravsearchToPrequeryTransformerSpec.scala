@@ -7,7 +7,7 @@ import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeIns
 import org.knora.webapi.responders.v2.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{AssertionException, CoreSpec, SettingsImpl, SharedTestDataADM}
+import org.knora.webapi.{AssertionException, CoreSpec, KnoraSettingsImpl, SharedTestDataADM}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -19,7 +19,7 @@ private object QueryHandler {
 
     val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
 
-    def transformQuery(query: String, responderData: ResponderData, settings: SettingsImpl): SelectQuery = {
+    def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
 
         val constructQuery = GravsearchParser.parseQuery(query)
 

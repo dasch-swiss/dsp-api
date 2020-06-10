@@ -44,9 +44,9 @@ object Dependencies {
     lazy val knoraSalsah1Image = SettingKey[String]("the Knora Salsah1 Image")
 
     val Versions = Seq(
-        scalaVersion := "2.12.8",
-        akkaVersion := "2.6.4",
-        akkaHttpVersion := "10.1.11",
+        scalaVersion := "2.12.11",
+        akkaVersion := "2.6.5",
+        akkaHttpVersion := "10.1.12",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
         sipiImage := "dhlabbasel/sipi:v2.0.1",
@@ -61,7 +61,6 @@ object Dependencies {
     object Compile {
         // akka
         val akkaActor              = Def.setting {"com.typesafe.akka"          %% "akka-actor"               % akkaVersion.value}
-        //val akkaAgent              = Def.setting {"com.typesafe.akka"          %% "akka-agent"               % akkaVersion.value}
         val akkaStream             = Def.setting {"com.typesafe.akka"          %% "akka-stream"              % akkaVersion.value}
         val akkaSlf4j              = Def.setting {"com.typesafe.akka"          %% "akka-slf4j"               % akkaVersion.value}
 
@@ -76,7 +75,7 @@ object Dependencies {
         // testing
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "0.3.4"
+        val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "1.0.0"
 
         // jena
         val jenaLibs               = Def.setting {"org.apache.jena"             % "apache-jena-libs"         % jenaVersion.value exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")}
@@ -151,7 +150,7 @@ object Dependencies {
         val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value        % "test"}
         val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value        % "test"}
         val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value    % "test"}
-        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.0.4"                  % "test"
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.1.2"                  % "test"
 
         // browser tests
         val selenium               = "org.seleniumhq.selenium"                    % "selenium-java"            % "3.4.0"                  % "test"
@@ -161,7 +160,7 @@ object Dependencies {
         val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value        % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
         val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value        % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
         val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value    % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
-        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.0.4"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.1.2"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
 
@@ -171,7 +170,7 @@ object Dependencies {
         val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value}
         val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value}
         val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value}
-        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.0.4"
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.1.2"
         val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"
         val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"
     }
@@ -182,7 +181,6 @@ object Dependencies {
 
     val salsahLibraryDependencies = l ++= Seq[sbt.ModuleID](
         akkaActor.value,
-        //akkaAgent.value,
         akkaStream.value,
         akkaSlf4j.value,
         akkaHttp.value,
@@ -197,7 +195,6 @@ object Dependencies {
 
     val webapiLibraryDependencies = l ++= Seq[sbt.ModuleID](
         akkaActor.value,
-        //akkaAgent.value,
         akkaHttp.value,
         akkaHttpCirce,
         akkaHttpCors,

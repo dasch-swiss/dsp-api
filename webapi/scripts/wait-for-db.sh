@@ -21,6 +21,12 @@ case $key in
       shift # past value
       ;;
 
+    -n|--name)
+      NAME="$3"
+      shift # past argument
+      shift # past value
+      ;;
+
     *) # unknown option
       POSITIONAL+=("$1") # save it in an array for later
       shift # past argument
@@ -30,18 +36,23 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [[ -z "${HOST}" ]]; then
-    HOST="localhost:3333"
+    HOST="localhost:7200"
 fi
 
 if [[ -z "${TIMEOUT}" ]]; then
     TIMEOUT=360
 fi
 
-poll-knora() {
-    STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/health)
+if [[ -z "${NAME}" ]]; then
+    NAME="knora-test-unit"
+fi
+
+poll-db() {
+    # STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/repositories/${NAME}/health?)
+    STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/rest/repositories)
 
     if [ "${STATUS}" -eq 200 ]; then
-        echo "Knora started"
+        echo "==> DB started"
         return 0
     else
         return 1
@@ -50,9 +61,9 @@ poll-knora() {
 
 attempt_counter=0
 
-until poll-knora; do
+until poll-db; do
     if [ ${attempt_counter} -eq ${TIMEOUT} ]; then
-      echo "Timed out waiting for Knora to start"
+      echo "Timed out waiting for DB to start"
       exit 1
     fi
 

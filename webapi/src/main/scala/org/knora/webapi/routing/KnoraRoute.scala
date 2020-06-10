@@ -25,7 +25,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl}
+import org.knora.webapi.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
 import scala.concurrent.ExecutionContext
 
@@ -46,7 +46,7 @@ case class KnoraRouteData(system: ActorSystem,
 abstract class KnoraRoute(routeData: KnoraRouteData) {
 
     implicit protected val system: ActorSystem = routeData.system
-    implicit protected val settings: SettingsImpl = Settings(system)
+    implicit protected val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
     implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit protected val materializer: Materializer = Materializer.matFromSystem(system)
