@@ -1885,7 +1885,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            expectMsgClass(classOf[ReadResourcesSequenceV2])
+            expectMsgClass(timeout,(classOf[ReadResourcesSequenceV2]))
         }
 
         "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {

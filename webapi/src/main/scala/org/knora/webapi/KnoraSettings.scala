@@ -33,7 +33,7 @@ import scala.concurrent.duration._
 /**
   * Reads application settings that come from `application.conf`.
   */
-class SettingsImpl(config: Config) extends Extension {
+class KnoraSettingsImpl(config: Config) extends Extension {
 
     // print config
     val printShortConfig: Boolean = config.getBoolean("app.print-short-config")
@@ -230,15 +230,15 @@ class SettingsImpl(config: Config) extends Extension {
 
 }
 
-object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {
+object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProvider {
 
-    override def lookup(): Settings.type = Settings
+    override def lookup(): KnoraSettings.type = KnoraSettings
 
     override def createExtension(system: ExtendedActorSystem) =
-        new SettingsImpl(system.settings.config)
+        new KnoraSettingsImpl(system.settings.config)
 
     /**
       * Java API: retrieve the Settings extension for the given system.
       */
-    override def get(system: ActorSystem): SettingsImpl = super.get(system)
+    override def get(system: ActorSystem): KnoraSettingsImpl = super.get(system)
 }
