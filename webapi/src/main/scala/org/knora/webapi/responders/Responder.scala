@@ -20,6 +20,7 @@
 package org.knora.webapi.responders
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -107,7 +108,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
      * Provides logging
      */
     protected val log: Logger = logger
-
+    protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
     /**
      * Checks whether an entity is used in the triplestore.
      *

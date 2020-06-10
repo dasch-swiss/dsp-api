@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
+import akka.event.LoggingAdapter
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -74,7 +75,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case ResourcesGetRequestV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, targetSchema, requestingUser) => getResourcePreviewV2(resIris, targetSchema, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
-        case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
+        case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2, loggingAdapter)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteResourceRequestV2: DeleteOrEraseResourceRequestV2 => deleteOrEraseResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
@@ -88,9 +89,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param createResourceRequestV2 the request to create the resource.
      * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
      */
-    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
+    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2, log: LoggingAdapter): Future[ReadResourcesSequenceV2] = {
 
-        def makeTaskFuture: Future[ReadResourcesSequenceV2] = {
+        def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
             for {
                 // Convert the resource to the internal ontology schema.
                 internalCreateResource: CreateResourceV2 <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
@@ -102,6 +103,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Get the class IRIs of all the link targets in the request.
                 linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
+                    resourceIri: IRI,
                     internalCreateResources = Seq(internalCreateResource),
                     requestingUser = createResourceRequestV2.requestingUser
                 )
@@ -152,6 +154,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
                 // for creating the resource.
                 resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
+                    resourceIri = resourceIri,
                     internalCreateResource = internalCreateResource,
                     linkTargetClasses = linkTargetClasses,
                     entityInfo = allEntityInfo,
@@ -223,12 +226,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
                 throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
-
+            // If no custom IRI was provided, generate a random IRI for the resource.
+            resourceIri: IRI <- createResourceRequestV2.createResource.resourceIri match {
+                case Some(customResourceIri) => FastFuture.successful(customResourceIri.toString)
+                case None => stringFormatter.makeUnusedIri(stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode), storeManager, log)
+            }
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
             taskResult <- IriLocker.runWithIriLock(
                 createResourceRequestV2.apiRequestID,
-                createResourceRequestV2.createResource.resourceIri,
-                () => makeTaskFuture
+                resourceIri,
+                () => makeTaskFuture(resourceIri)
             )
         } yield taskResult
 
@@ -568,7 +575,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param requestingUser             the user making the request.
      * @return a [[ResourceReadyToCreate]].
      */
-    private def generateResourceReadyToCreate(internalCreateResource: CreateResourceV2,
+    private def generateResourceReadyToCreate(resourceIri: IRI,
+                                              internalCreateResource: CreateResourceV2,
                                               linkTargetClasses: Map[IRI, SmartIri],
                                               entityInfo: EntityInfoGetResponseV2,
                                               clientResourceIDs: Map[IRI, String],
@@ -576,7 +584,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                               defaultPropertyPermissions: Map[SmartIri, String],
                                               creationDate: Instant,
                                               requestingUser: UserADM): Future[ResourceReadyToCreate] = {
-        val resourceIDForErrorMsg: String = clientResourceIDs.get(internalCreateResource.resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
+        val resourceIDForErrorMsg: String = clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
         for {
             // Check that the resource class has a suitable cardinality for each submitted value.
@@ -670,14 +678,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // Ask the values responder for SPARQL for generating the values.
             sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
                 GenerateSparqlToCreateMultipleValuesRequestV2(
-                    resourceIri = internalCreateResource.resourceIri,
+                    resourceIri = resourceIri,
                     values = valuesWithValidatedPermissions,
                     creationDate = creationDate,
                     requestingUser = requestingUser
                 )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
         } yield ResourceReadyToCreate(
             sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
-                resourceIri = internalCreateResource.resourceIri,
+                resourceIri = resourceIri,
                 permissions = resourcePermissions,
                 sparqlForValues = sparqlForValuesResponse.insertSparql,
                 resourceClassIri = internalCreateResource.resourceClassIri.toString,
@@ -697,7 +705,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param requestingUser          the user making the request.
      * @return a map of resource IRIs to class IRIs.
      */
-    private def getLinkTargetClasses(internalCreateResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
+    private def getLinkTargetClasses(resourceIri: IRI, internalCreateResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
         // Get the IRIs of the new and existing resources that are targets of links.
         val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) = internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
             case ((accExisting: Set[IRI], accNew: Set[IRI]), valueToCreate: CreateValueInNewResourceV2) =>
@@ -715,7 +723,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Make a map of the IRIs of new target resources to their class IRIs.
         val classesOfNewTargets: Map[IRI, SmartIri] = internalCreateResources.map {
-            resourceToCreate => resourceToCreate.resourceIri -> resourceToCreate.resourceClassIri
+            resourceToCreate => resourceIri -> resourceToCreate.resourceClassIri
         }.toMap.filterKeys(newTargets)
 
         for {
