@@ -185,6 +185,23 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 newListIri.set(listInfo.id)
             }
 
+            "create a list with custom Iri" in {
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+                val listInfo = receivedList.listinfo
+                listInfo.listIri should be (SharedTestDataADM.customListIRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "Neue Liste mit IRI", language = Some("de")))
+            }
+
             "return a ForbiddenException if the user creating the list is not project or system admin" in {
                 val params =
                     s"""

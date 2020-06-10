@@ -632,7 +632,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            listIri = stringFormatter.makeRandomListIri(maybeShortcode)
+            listIri: IRI = createListRequest.listIri match {
+                case Some(customListIri) => customListIri.toString
+                case None => stringFormatter.makeRandomListIri(maybeShortcode)
+            }
 
             // Create the new list
             createNewListSparqlString = queries.sparql.admin.txt.createNewList(

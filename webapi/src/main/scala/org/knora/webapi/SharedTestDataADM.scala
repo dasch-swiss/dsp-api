@@ -402,6 +402,7 @@ object SharedTestDataADM {
     /** **********************************/
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
+    val customListIRI: IRI = "http://rdfh.ch/lists/0001/a-list-with-IRI"
 
     def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
@@ -636,6 +637,14 @@ object SharedTestDataADM {
         s"""{
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+           |    "comments": []
+           |}""".stripMargin
+
+    val createListWithCustomIriRequest: String =
+        s"""{
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "listIri": "${SharedTestDataADM.customListIRI}"
+           |    "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
            |    "comments": []
            |}""".stripMargin
 
