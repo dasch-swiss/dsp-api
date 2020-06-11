@@ -410,6 +410,8 @@ object SharedTestDataADM {
     val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
     val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
 
+    val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
+
     def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
         username = "AnythingAdminUser",
@@ -587,6 +589,19 @@ object SharedTestDataADM {
            |    "description": [{"value": "project description", "language": "en"}],
            |    "keywords": ["keywords"],
            |    "logo": "/fu/bar/baz.jpg",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
+    val createProjectWithCustomIRIRequest: String =
+        s"""{
+           |    "shortname": "newprojectWithIri",
+           |    "shortcode": "3333",
+           |    "longname": "new project with a custom IRI",
+           |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
+           |    "keywords": ["projectIRI"],
+           |    "logo": "/fu/bar/baz.jpg",
+           |    "projectIri": "$customProjectIri",
            |    "status": true,
            |    "selfjoin": false
            |}""".stripMargin
