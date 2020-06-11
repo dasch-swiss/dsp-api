@@ -80,7 +80,20 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "selfjoin": false
     }
     ```
-
+    Each project can have an optional custom IRI specified by the `projectIri` in the request body as below:
+    ```JSON
+    {
+        "projectIri": "http://rdfh.ch/projects/3333",
+        "shortname": "newprojectWithIri",
+        "shortcode": "3333",
+        "longname": "new project with a custom IRI",
+        "description": [{"value": "a project created with a custom IRI", "language": "en"}],
+        "keywords": ["projectWithIRI"],
+        "logo": "/fu/bar/baz.jpg",
+        "status": true,
+        "selfjoin": false
+    }   
+    ```
 ### Update project information:
 
   - Required permission: SystemAdmin / ProjectAdmin

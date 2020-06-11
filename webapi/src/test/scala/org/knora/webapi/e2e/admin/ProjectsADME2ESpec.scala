@@ -170,13 +170,13 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             "return 'BadRequest' if the supplied 'projectIri' is not a valid IRI" in {
                 val params =
                     s"""{
+                       |    "projectIri": "invalid-proect-IRI",
                        |    "shortname": "newprojectWithIri",
                        |    "shortcode": "3333",
                        |    "longname": "new project with a custom IRI",
                        |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
                        |    "keywords": ["projectIRI"],
                        |    "logo": "/fu/bar/baz.jpg",
-                       |    "projectIri": "invalid-proect-IRI",
                        |    "status": true,
                        |    "selfjoin": false
                        |}""".stripMargin
