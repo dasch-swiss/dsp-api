@@ -46,6 +46,7 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
   * @param description the description of the project to be created.
   * @param keywords    the keywords of the project to be created (optional).
   * @param logo        the logo of the project to be created.
+  * @param projectIri  the optional IRI of the project to be created.
   * @param status      the status of the project to be created (active = true, inactive = false).
   * @param selfjoin    the status of self-join of the project to be created.
   */
@@ -55,6 +56,7 @@ case class CreateProjectApiRequestADM(shortname: String,
                                       description: Seq[StringLiteralV2],
                                       keywords: Seq[String],
                                       logo: Option[String],
+                                      projectIri: Option[IRI] = None,
                                       status: Boolean,
                                       selfjoin: Boolean) extends ProjectsADMJsonProtocol {
     def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
@@ -589,7 +591,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))
-    implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
+    implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "shortname", "shortcode", "longname", "description", "keywords", "logo", "proectIri", "status", "selfjoin")))
     implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
     implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
