@@ -35,7 +35,7 @@ belong to the Knora system project.
 A user-created ontology IRI must always include its project shortcode.
 
 Project ID `0000` is reserved for shared ontologies
-(see @ref:[Shared Ontologies](#shared-ontologies)).
+(see @ref:[Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies)).
 
 The range of project IDs from `0001` to `00FF` inclusive is reserved for
 local testing. Thus, the first useful project will be `0100`.
