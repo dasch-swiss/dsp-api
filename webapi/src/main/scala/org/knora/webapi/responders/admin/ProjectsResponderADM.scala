@@ -779,10 +779,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             newProjectIRI: IRI = createProjectRequest.projectIri match {
-              case Some(customProjectIri) => stringFormatter.validateProjectIri(customProjectIri, throw BadRequestException(s"Invalid project IRI")).toString
+              case Some(customProjectIri) => customProjectIri
               case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
             }
-
+            projectIriExists <- {
+                projectByIriExists(newProjectIRI)
+            }
+            _ = if (projectIriExists) {
+                throw DuplicateValueException(s"Project with the IRI: '${newProjectIRI}' already exists")
+            }
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,

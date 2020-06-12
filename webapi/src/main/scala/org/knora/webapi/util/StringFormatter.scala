@@ -2405,6 +2405,19 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+      * Given the project IRI, checks if it is in a valid format.
+      *
+      * @param maybeIri the optional project's IRI to be checked.
+      * @return the same optional IRI.
+      */
+    def validateOptionalProjectIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
+        maybeIri match {
+            case Some(iri) => Some(validateProjectIri(iri, errorFun))
+            case None => None
+        }
+    }
+
+    /**
       * Given the list IRI, checks if it is in a valid format.
       *
       * @param iri the list's IRI.

@@ -189,7 +189,29 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val invalidIri: Boolean = errorMessage.contains("Invalid project IRI")
                 invalidIri should be(true)
             }
+            "return 'BadRequest' if the supplied 'projectIri' is not unique" in {
+                val params =
+                    s"""{
+                       |    "projectIri": "${SharedTestDataADM.customProjectIri}",
+                       |    "shortname": "newprojectWithDuplicateIri",
+                       |    "shortcode": "2222",
+                       |    "longname": "new project with a duplicate custom invalid IRI",
+                       |    "description": [{"value": "a project created with a duplicate custom IRI", "language": "en"}],
+                       |    "keywords": ["projectDuplicateIRI"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
 
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"Project with the IRI: '${SharedTestDataADM.customProjectIri}' already exists")
+                invalidIri should be(true)
+            }
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
                 val params =
                     s"""
