@@ -71,18 +71,21 @@ create-repository() {
 }
 
 upload-graph() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -T "$1" http://${HOST}/${REPOSITORY}\?graph\="$2")
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -H "Content-Type:text/turtle" -d @$1 -X PUT http://${HOST}/${REPOSITORY}\?graph\="$2")
 
-  if [ "${STATUS}" -eq 200 ]; then
-    echo "==> upload graph done: $1 -> $2"
+  if [ "${STATUS}" -eq 201 ]; then
+    echo "==> 201 Created: $1 -> $2"
+    return 0
+  elif [ "${STATUS}" -eq 201 ]; then
+    echo "==> 200 OK: $1 -> $2"
     return 0
   else
-    echo "==> upload graph failed: $1 -> $2"
+    echo "==> failed with status code ${STATUS}: $1 -> $2"
     return 1
   fi
 }
 
-delete-repository
+# delete-repository // delete dos not work correctly. need to delete database manually.
 create-repository
 upload-graph ../../knora-ontologies/knora-admin.ttl http://www.knora.org/ontology/knora-admin
 upload-graph ../../knora-ontologies/knora-base.ttl http://www.knora.org/ontology/knora-base
@@ -108,5 +111,3 @@ upload-graph ../_test_data/all_data/biblio-data.ttl http://www.knora.org/data/08
 upload-graph ../_test_data/all_data/beol-data.ttl http://www.knora.org/data/0801/beol
 upload-graph ../_test_data/ontologies/webern-onto.ttl http://www.knora.org/ontology/08AE/webern
 upload-graph ../_test_data/all_data/webern-data.ttl http://www.knora.org/data/08AE/webern
-upload-graph ../_test_data/ontologies/newton-onto.ttl http://www.knora.org/ontology/0801/newton
-upload-graph ../_test_data/ontologies/leibniz-onto.ttl http://www.knora.org/ontology/0801/leibniz

@@ -172,6 +172,10 @@ stack-status:
 stack-down: ## stops the knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml down
 
+.PHONY: stack-down-delete-volumes
+stack-down-delete-volumes: ## stops the knora-stack and delete any created volumes (deletes the database!).
+	docker-compose -f docker/knora.docker-compose.yml down --volumes
+
 .PHONY: stack-config
 stack-config:
 	docker-compose -f docker/knora.docker-compose.yml config
