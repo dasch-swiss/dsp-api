@@ -336,8 +336,8 @@ test-repository-update: stack-without-api
 	@rm -rf /tmp/knora-test-data/v7.0.0/
 	@mkdir -p /tmp/knora-test-data/v7.0.0/
 	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
-	$(CURRENT_DIR)/webapi/scripts/graphdb-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-	$(CURRENT_DIR)/webapi/scripts/graphdb-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030
+	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
