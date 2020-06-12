@@ -240,7 +240,27 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val invalidIri: Boolean = errorMessage.contains("Invalid list IRI")
                 invalidIri should be(true)
             }
+            "return a DuplicateValueException during list creation when the supplied listIri is not unique" in {
 
+                // duplicate list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "listIri": "${SharedTestDataADM.customListIRI}",
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"List with the IRI: '${SharedTestDataADM.customListIRI}' already exists")
+                invalidIri should be(true)
+            }
             "return a BadRequestException during list creation when payload is not correct" in {
 
                 // no project IRI

@@ -59,11 +59,13 @@ case class CreateProjectApiRequestADM(projectIri: Option[IRI] = None,
                                       logo: Option[String],
                                       status: Boolean,
                                       selfjoin: Boolean) extends ProjectsADMJsonProtocol {
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
 
     if (description.isEmpty) {
         throw BadRequestException("Project description needs to be supplied.")
     }
+    stringFormatter.validateOptionalProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
 }
 
 /**

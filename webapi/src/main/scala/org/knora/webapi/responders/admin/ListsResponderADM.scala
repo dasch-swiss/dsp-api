@@ -633,10 +633,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
             listIri: IRI = createListRequest.listIri match {
-                case Some(customListIri) => stringFormatter.validateListIri(customListIri, throw BadRequestException(s"Invalid list IRI")).toString
+                case Some(customListIri) => customListIri
                 case None => stringFormatter.makeRandomListIri(maybeShortcode)
             }
-          
+            listIriExists <- {
+                listNodeByIriExists(listIri)
+            }
+            _ = if (listIriExists) {
+                throw DuplicateValueException(s"List with the IRI: '${listIri}' already exists")
+            }
+
             // Create the new list
             createNewListSparqlString = queries.sparql.admin.txt.createNewList(
                 dataNamedGraph = dataNamedGraph,
