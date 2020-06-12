@@ -632,7 +632,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            listIri = stringFormatter.makeRandomListIri(maybeShortcode)
+            listIri: IRI = createListRequest.listIri match {
+                case Some(customListIri) => customListIri
+                case None => stringFormatter.makeRandomListIri(maybeShortcode)
+            }
+            listIriExists <- listNodeByIriExists(listIri)
+
+            _ = if (listIriExists) {
+                throw DuplicateValueException(s"List with the IRI: '${listIri}' already exists")
+            }
 
             // Create the new list
             createNewListSparqlString = queries.sparql.admin.txt.createNewList(

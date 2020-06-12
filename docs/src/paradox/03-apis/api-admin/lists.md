@@ -64,6 +64,15 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "comments": []
     } 
     ```
+  Each list can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `listIri` in the request body as below:
+  ```jsonld
+    {
+        "projectIri": "http://rdfh.ch/projects/0001",
+        "listIri": "http://rdfh.ch/lists/0001/a-list-with-IRI",
+        "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
+        "comments": []
+    }
+  ```
 
 ### Create new child node
 
