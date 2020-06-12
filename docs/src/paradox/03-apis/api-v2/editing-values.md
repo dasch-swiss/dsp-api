@@ -85,7 +85,7 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
   }
 }
 ```
-Each value can have an optional custom IRI specified by the `@id` attribute, a custom creation date specified by adding 
+Each value can have an optional custom IRI (of @ref:[Knora IRI](knora-iris.md#iris-for-data) form) specified by the `@id` attribute, a custom creation date specified by adding 
 `knora-api:creationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
 given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding.
 For example: 

@@ -185,7 +185,7 @@ than the requesting user only if the requesting user is an administrator of the
 project or a system administrator. The specified creator must also
 have permission to create resources of that class in that project.
 
-In addition to the creation date, in the body of the request, it is possible to specify a custom IRI for a resource through
+In addition to the creation date, in the body of the request, it is possible to specify a custom IRI (of @ref:[Knora IRI](knora-iris.md#iris-for-data) form) for a resource through
 the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
 will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.

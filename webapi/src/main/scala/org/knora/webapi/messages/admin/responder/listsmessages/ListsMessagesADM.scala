@@ -53,6 +53,8 @@ case class CreateListApiRequestADM(projectIri: IRI,
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
+    stringFormatter.validateOptionalListIri(listIri, throw BadRequestException(s"Invalid list IRI"))
+
     if (projectIri.isEmpty) {
         // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)

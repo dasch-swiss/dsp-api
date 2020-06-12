@@ -143,11 +143,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def createProjectTestRequest: Future[TestDataFileContent] = {
+    private def createProjectTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-project-request"),
-                text = SharedTestDataADM.createProjectRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-project-request"),
+                    text = SharedTestDataADM.createProjectRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-project-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createProjectWithCustomIRIRequest
+                )
             )
         )
     }
@@ -619,18 +625,19 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
      * @return a set of test data files to be used for testing this endpoint.
      */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        Future.sequence {
-            Set(
-                getProjectsTestResponse,
-                getProjectTestResponse,
-                createProjectTestRequest,
-                updateProjectTestRequest,
-                getKeywordsTestResponse,
-                getProjectKeywordsTestResponse,
-                getProjectMembersTestResponse,
-                getProjectAdminMembersTestResponse,
-                getProjectRestrictedViewSettingsTestResponse
-            )
-        }
+        for {
+            getProjectsResponse <- getProjectsTestResponse
+            getProjectResponse <- getProjectTestResponse
+            createProjectRequest <- createProjectTestRequest
+            updateProjectRequest <- updateProjectTestRequest
+            getKeywordsResponse <- getKeywordsTestResponse
+            getProjectKeywordsResponse <- getProjectKeywordsTestResponse
+            getProjectMembersResponse <- getProjectMembersTestResponse
+            getProjectAdminMembersResponse <- getProjectAdminMembersTestResponse
+            getProjectRestrictedViewSettingsResponse <- getProjectRestrictedViewSettingsTestResponse
+        } yield createProjectRequest + getProjectsResponse + getProjectResponse + updateProjectRequest +
+                getKeywordsResponse + getProjectKeywordsResponse + getProjectMembersResponse +
+                getProjectAdminMembersResponse + getProjectRestrictedViewSettingsResponse
+
     }
 }

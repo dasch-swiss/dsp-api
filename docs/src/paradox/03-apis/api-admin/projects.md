@@ -21,31 +21,37 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Endpoint Overview
 
-**Project Operations:**
+**Project Operations:**  
 
-- `GET: /admin/projects` : return all projects
-- `POST: /admin/projects` : create a new project
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>` : returns a single project identified either through iri, shortname, or shortcode
-- `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri
-- `DELETE: /admin/projects/iri/<identifier>` : update project status to false
-- `GET: /admin/projects/iri/<identifier>/AllData` : returns a TriG file containing the project's data
+- `GET: /admin/projects` : return all projects  
 
-**Project Member Operations:**
+- `POST: /admin/projects` : create a new project  
 
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>` : returns a single project identified either through iri, shortname, or shortcode  
 
-**Project Admin Member Operations:**
+- `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri  
 
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/admin-members` : returns all admin members part of a project identified through iri, shortname or shortcode
+- `DELETE: /admin/projects/iri/<identifier>` : update project status to false  
 
-**Project Keyword Operations:**
+- `GET: /admin/projects/iri/<identifier>/AllData` : returns a TriG file containing the project's data  
 
-- `GET: /admin/projects/Keywords` : returns all unique keywords for all projects as a list
-- `GET: /admin/projects/iri/<identifier>/Keywords` : returns all keywords for a single project
+**Project Member Operations:**  
 
-**Project Restricted View Settings Operations:**
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode  
 
-- `GET: /admin/projects/iri/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings
+**Project Admin Member Operations:**  
+
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/admin-members` : returns all admin members part of a project identified through iri, shortname or shortcode  
+
+**Project Keyword Operations:**  
+
+- `GET: /admin/projects/Keywords` : returns all unique keywords for all projects as a list  
+
+- `GET: /admin/projects/iri/<identifier>/Keywords` : returns all keywords for a single project  
+
+**Project Restricted View Settings Operations:**  
+
+- `GET: /admin/projects/iri/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings  
 
 ## Project Operations
 
@@ -74,7 +80,20 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "selfjoin": false
     }
     ```
-
+    Each project can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `projectIri` in the request body as below:
+    ```JSON
+    {
+        "projectIri": "http://rdfh.ch/projects/3333",
+        "shortname": "newprojectWithIri",
+        "shortcode": "3333",
+        "longname": "new project with a custom IRI",
+        "description": [{"value": "a project created with a custom IRI", "language": "en"}],
+        "keywords": ["projectWithIRI"],
+        "logo": "/fu/bar/baz.jpg",
+        "status": true,
+        "selfjoin": false
+    }   
+    ```
 ### Update project information:
 
   - Required permission: SystemAdmin / ProjectAdmin
