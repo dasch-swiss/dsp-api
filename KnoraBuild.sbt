@@ -549,17 +549,17 @@ lazy val webapi = knoraModule("webapi")
             javaAgents += Dependencies.Compile.aspectJWeaver,
 
             Test / parallelExecution := false,
-            Test / javaOptions ++= Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
+            Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
             // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
             // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
             Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
 
-            IntegrationTest / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
+            IntegrationTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
             IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
 
-            Gatling / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
+            Gatling / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
             Gatling / testOptions := Seq(),
-            GatlingIt / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
+            GatlingIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
             GatlingIt / testOptions := Seq(),
 
             GDBSE / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,

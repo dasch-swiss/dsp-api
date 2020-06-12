@@ -32,7 +32,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 FILE="$1"
 
-REPOSITORY="knora-test"
+REPOSITORY="knora-test-unit"
 
 if [[ -z "${HOST}" ]]; then
   HOST="localhost:3030"
@@ -59,7 +59,7 @@ delete-repository() {
 }
 
 create-repository() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -F data=@./fuseki-knora-test-repository-config.ttl http://${HOST}/\$/datasets)
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -F data=@./fuseki-knora-test-unit-repository-config.ttl http://${HOST}/\$/datasets)
 
   if [ "${STATUS}" -eq 200 ]; then
     echo "==> create repository done"

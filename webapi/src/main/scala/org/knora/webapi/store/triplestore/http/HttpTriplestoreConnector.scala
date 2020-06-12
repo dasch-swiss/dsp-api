@@ -129,7 +129,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private val checkRepositoryPath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
         "/rest/repositories"
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-        "$/server"
+        "/$/server"
     } else {
         throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }

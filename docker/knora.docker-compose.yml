@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   db:
-    image: ${FUSEKI_IMAGE}
+    image: ${KNORA_FUSEKI_IMAGE}
     ports:
       - "3030:3030"
     volumes:

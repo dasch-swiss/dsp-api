@@ -8,9 +8,9 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
 :service_tdb_all        a                                   fuseki:Service ;
-                        rdfs:label                          "TDB knora-test-unit" ;
+                        rdfs:label                          "TDB {NAME}" ;
                         fuseki:dataset                      :text_dataset ;
-                        fuseki:name                         "knora-test-unit" ;
+                        fuseki:name                         "{NAME}" ;
                         fuseki:serviceQuery                 "query" , "sparql" ;
                         fuseki:serviceReadGraphStore        "get" ;
                         fuseki:serviceReadWriteGraphStore   "data" ;
@@ -27,12 +27,12 @@
 # A TDB datset used for RDF storage
 :tdb_dataset_readwrite  a                                   tdb:DatasetTDB ;
                         tdb:unionDefaultGraph               true ;
-                        tdb:location                        "/fuseki/databases/knora-test-unit" .
+                        tdb:location                        "{FUSEKI_BASE}/databases/{NAME}" .
 
 # Text index description
 :indexLucene            a                                   text:TextIndexLucene ;
-                        text:directory                      "/fuseki/lucene/knora-test-unit" ;
-##text:directory                    "mem" ;
+                        text:directory                      "{FUSEKI_BASE}/lucene/{NAME}" ;
+                        ##text:directory                    "mem" ;
                         text:entityMap                      :entMap .
 
 # Mapping in the index
@@ -46,4 +46,5 @@
                                                                 [ text:field  "text" ;  text:predicate  rdfs:label ]
                                                                 [ text:field  "text" ;  text:predicate  knora-base:valueHasString ]
                                                                 [ text:field  "text" ;  text:predicate  knora-base:valueHasComment ]
+
                                                             ) .

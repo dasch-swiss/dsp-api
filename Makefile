@@ -35,6 +35,15 @@ build-knora-api-image: build-all-scala ## build and publish knora-api docker ima
 publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
 	docker push $(KNORA_API_IMAGE)
 
+## knora-fuseki
+.PHONY: build-knora-fuseki-image
+build-knora-fuseki-image: build-all-scala ## build and publish knora-fuseki docker image locally
+	docker build -t $(KNORA_FUSEKI_IMAGE) -f fuseki/Dockerfile fuseki
+
+.PHONY: publish-knora-fuseki-image
+publish-knora-fuseki-image: build-knora-fuseki-image ## publish knora-fuseki image to Dockerhub
+	docker push $(KNORA_FUSEKI_IMAGE)
+
 ## knora-sipi
 .PHONY: build-knora-sipi-image
 build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
@@ -66,10 +75,10 @@ publish-knora-assets-image: build-knora-assets-image ## publish knora-assets ima
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-api-image build-knora-fuseki-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
 
 .PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
+publish-all-images: publish-knora-api-image publish-knora-fuseki-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
 
 #################################
 ## Docker-Compose targets
@@ -93,9 +102,9 @@ else
 	$(info Using $(KNORA_DB_IMPORT) for the DB import directory.)
 	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
 endif
-	@echo FUSEKI_IMAGE=$(FUSEKI_IMAGE) >> .env
-	@echo FUSEKI_HEAP_SIZE=$(FUSEKI_HEAP_SIZE) >> .env
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
+	@echo KNORA_FUSEKI_IMAGE=$(KNORA_FUSEKI_IMAGE) >> .env
+	@echo FUSEKI_HEAP_SIZE=$(FUSEKI_HEAP_SIZE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
@@ -177,7 +186,7 @@ stack-down-delete-volumes: ## stops the knora-stack and delete any created volum
 	docker-compose -f docker/knora.docker-compose.yml down --volumes
 
 .PHONY: stack-config
-stack-config:
+stack-config: env-file
 	docker-compose -f docker/knora.docker-compose.yml config
 
 ## stack without api
@@ -353,6 +362,18 @@ init-db-test-unit-minimal: ## initializes the knora-test-unit repository with mi
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
 #################################
+# Fuseki
+#################################
+
+.PHONY: fuseki-up
+fuseki-up: build-knora-fuseki-image ## start fuseki
+	docker-compose -f docker/knora.docker-compose.yml up db
+
+.PHONY: fuseki-down
+fuseki-down: ## stop fuseki
+	docker-compose -f docker/knora.docker-compose.yml stop db
+
+#################################
 # Other
 #################################
 
@@ -372,19 +393,16 @@ clean-docker: ## cleans the docker installation
 
 .PHONY: info
 info: ## print out all variables
-	@echo "BUILD_TAG: \t\t\t $(BUILD_TAG)"
-	@echo "GIT_EMAIL: \t\t\t $(GIT_EMAIL)"
-	@echo "SIPI_VERSION: \t\t\t $(SIPI_VERSION)"
-	@echo "GRAPHDB_SE_VERSION: \t\t $(GRAPHDB_SE_VERSION)"
-	@echo "KNORA_API_IMAGE: \t\t $(KNORA_API_IMAGE)"
-	@echo "KNORA_GRAPHDB_SE_IMAGE: \t $(KNORA_GRAPHDB_SE_IMAGE)"
-	@echo "KNORA_GRAPHDB_FREE_IMAGE: \t $(KNORA_GRAPHDB_FREE_IMAGE)"
-	@echo "KNORA_SIPI_IMAGE: \t\t $(KNORA_SIPI_IMAGE)"
-	@echo "KNORA_ASSETS_IMAGE: \t\t $(KNORA_ASSETS_IMAGE)"
-	@echo "KNORA_SALSAH1_IMAGE: \t\t $(KNORA_SALSAH1_IMAGE)"
-	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"
-	@echo "KNORA_GDB_IMPORT: \t\t $(KNORA_GDB_IMPORT)"
-	@echo "KNORA_GDB_HOME: \t\t $(KNORA_GDB_HOME)"
+	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
+	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
+	@echo "SIPI_VERSION: \t\t $(SIPI_VERSION)"
+	@echo "KNORA_API_IMAGE: \t $(KNORA_API_IMAGE)"
+	@echo "KNORA_FUSEKI_IMAGE: \t $(KNORA_FUSEKI_IMAGE)"
+	@echo "KNORA_SIPI_IMAGE: \t $(KNORA_SIPI_IMAGE)"
+	@echo "KNORA_ASSETS_IMAGE: \t $(KNORA_ASSETS_IMAGE)"
+	@echo "KNORA_SALSAH1_IMAGE: \t $(KNORA_SALSAH1_IMAGE)"
+	@echo "KNORA_DB_IMPORT: \t $(KNORA_DB_IMPORT)"
+	@echo "KNORA_DB_HOME: \t\t $(KNORA_DB_HOME)"
 
 .PHONY: help
 help: ## this help
