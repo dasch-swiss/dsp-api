@@ -126,7 +126,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 requestContext =>
                     val requestMessage: Future[ProjectCreateRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                        apiRequest.projectIri = stringFormatter.validateOptionalProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
                     } yield ProjectCreateRequestADM(
                         createRequest = apiRequest,
                         requestingUser = requestingUser,
