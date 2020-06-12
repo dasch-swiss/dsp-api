@@ -633,7 +633,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
             listIri: IRI = createListRequest.listIri match {
-                case Some(customListIri) => customListIri.toString
+                case Some(customListIri) => stringFormatter.toSmartIriWithErr(customListIri, throw BadRequestException(s"Invalid list IRI")).toString
                 case None => stringFormatter.makeRandomListIri(maybeShortcode)
             }
 

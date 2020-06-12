@@ -783,7 +783,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
               case Some(customProjectIri) => stringFormatter.toSmartIriWithErr(customProjectIri, throw BadRequestException(s"Invalid project IRI")).toString
               case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
             }
-            
+
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
