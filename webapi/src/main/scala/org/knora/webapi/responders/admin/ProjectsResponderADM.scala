@@ -780,7 +780,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             newProjectIRI: IRI = createProjectRequest.projectIri match {
-              case Some(customProjectIri) => stringFormatter.toSmartIriWithErr(customProjectIri, throw BadRequestException(s"Invalid project IRI")).toString
+              case Some(customProjectIri) => stringFormatter.validateProjectIri(customProjectIri, throw BadRequestException(s"Invalid project IRI")).toString
               case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
             }
 

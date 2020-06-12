@@ -185,6 +185,9 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be (StatusCodes.BadRequest)
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains("Invalid project IRI")
+                invalidIri should be(true)
             }
 
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
