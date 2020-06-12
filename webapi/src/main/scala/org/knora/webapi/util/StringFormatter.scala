@@ -2405,7 +2405,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the project IRI, checks if it is in a valid format.
+      * Given the optional project IRI, checks if it is in a valid format.
       *
       * @param maybeIri the optional project's IRI to be checked.
       * @return the same optional IRI.
@@ -2414,20 +2414,6 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
         maybeIri match {
             case Some(iri) => Some(validateProjectIri(iri, errorFun))
             case None => None
-        }
-    }
-
-    /**
-      * Given the list IRI, checks if it is in a valid format.
-      *
-      * @param iri the list's IRI.
-      * @return the IRI of the list.
-      */
-    def validateListIri(iri: IRI, errorFun: => Nothing): IRI = {
-        if (isKnoraListIriStr(iri)) {
-            iri
-        } else {
-            errorFun
         }
     }
 
@@ -2544,6 +2530,33 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     def validateAndEscapeOptionalProjectShortcode(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
         maybeString match {
             case Some(s) => Some(validateAndEscapeProjectShortcode(s, errorFun))
+            case None => None
+        }
+    }
+
+    /**
+      * Given the list IRI, checks if it is in a valid format.
+      *
+      * @param iri the list's IRI.
+      * @return the IRI of the list.
+      */
+    def validateListIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraListIriStr(iri)) {
+            iri
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Given the optional list IRI, checks if it is in a valid format.
+      *
+      * @param maybeIri the optional list's IRI to be checked.
+      * @return the same optional IRI.
+      */
+    def validateOptionalListIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
+        maybeIri match {
+            case Some(iri) => Some(validateListIri(iri, errorFun))
             case None => None
         }
     }
