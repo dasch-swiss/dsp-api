@@ -2,9 +2,6 @@ name: CI
 
 on: [push]
 
-env:
-  KNORA_GDB_LICENSE: ${{ github.workspace }}/ci/graphdb/UNIBAS_DEV_GRAPHDB_SE_latest-31-12-2020_1cores.license
-
 jobs:
   compile:
     name: Build Everything
@@ -13,30 +10,6 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "$STRATEGY_CONTEXT"
-      - name: Dump matrix context
-        env:
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        run: echo "$MATRIX_CONTEXT"
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -68,12 +41,6 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Checkout private ci-assets
-        uses: actions/checkout@v2
-        with:
-          repository: dasch-swiss/dsp-ci-assets
-          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
-          path: ci
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -109,12 +76,6 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Checkout private ci-assets
-        uses: actions/checkout@v2
-        with:
-          repository: dasch-swiss/dsp-ci-assets
-          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
-          path: ci
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -150,12 +111,6 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Checkout private ci-assets
-        uses: actions/checkout@v2
-        with:
-          repository: dasch-swiss/dsp-ci-assets
-          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
-          path: ci
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -191,12 +146,6 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Checkout private ci-assets
-        uses: actions/checkout@v2
-        with:
-          repository: dasch-swiss/dsp-ci-assets
-          token: ${{ secrets.GitHub_PAT }} # `GitHub_PAT` is a secret that contains the PAT.
-          path: ci
       - uses: actions/setup-java@v1
         with:
           java-version: '11.x.x'
@@ -218,7 +167,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: test repository update
-        run: cd $GITHUB_WORKSPACE && make test-repository-update
+        run: make test-repository-update
       - name: Disk Free After
         run: |
           df -h
@@ -291,7 +240,6 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          mkdir -p $( dirname "$KNORA_GDB_LICENSE") && touch "$KNORA_GDB_LICENSE"
           make publish-all-images
       - name: Disk Free After
         run: |
