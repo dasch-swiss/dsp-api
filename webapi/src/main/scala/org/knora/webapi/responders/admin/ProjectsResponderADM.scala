@@ -39,7 +39,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
-
+import org.knora.webapi.util.jsonld._
 import scala.concurrent.Future
 
 /**
@@ -778,11 +778,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             _ = if (shortcodeExists) {
                 throw DuplicateValueException(s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
             }
-            newProjectIRI: IRI = createProjectRequest.projectIri match {
-                case Some(customProjectIri) => customProjectIri.toString
-                case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
-            }
 
+            newProjectIRI: IRI = createProjectRequest.projectIri match {
+              case Some(customProjectIri) => stringFormatter.toSmartIriWithErr(customProjectIri, throw BadRequestException(s"Invalid project IRI")).toString
+              case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
+            }
+            
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
