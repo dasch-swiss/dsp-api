@@ -633,10 +633,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
             listIri: IRI = createListRequest.listIri match {
-                case Some(customListIri) => stringFormatter.toSmartIriWithErr(customListIri, throw BadRequestException(s"Invalid list IRI")).toString
+                case Some(customListIri) => stringFormatter.validateListIri(customListIri, throw BadRequestException(s"Invalid list IRI")).toString
                 case None => stringFormatter.makeRandomListIri(maybeShortcode)
             }
-
+          
             // Create the new list
             createNewListSparqlString = queries.sparql.admin.txt.createNewList(
                 dataNamedGraph = dataNamedGraph,

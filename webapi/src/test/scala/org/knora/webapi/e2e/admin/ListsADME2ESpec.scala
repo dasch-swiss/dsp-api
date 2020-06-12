@@ -22,7 +22,10 @@ package org.knora.webapi.e2e.admin
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.testkit.RouteTestTimeout
+
+import scala.concurrent.Await
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
@@ -224,16 +227,18 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     s"""
                        |{
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "listIri": "invalid-list-IRI"
+                       |    "listIri": "invalid-list-IRI",
                        |    "labels": [{ "value": "New List", "language": "en"}],
                        |    "comments": []
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.BadRequest)
-
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains("Invalid list IRI")
+                invalidIri should be(true)
             }
 
             "return a BadRequestException during list creation when payload is not correct" in {

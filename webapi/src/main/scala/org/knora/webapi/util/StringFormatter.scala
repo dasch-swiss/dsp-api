@@ -2405,6 +2405,20 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+      * Given the list IRI, checks if it is in a valid format.
+      *
+      * @param iri the list's IRI.
+      * @return the IRI of the list.
+      */
+    def validateListIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraListIriStr(iri)) {
+            iri
+        } else {
+            errorFun
+        }
+    }
+
+    /**
      * Check that the supplied IRI represents a valid project IRI.
      *
      * @param iri      the string to be checked.
