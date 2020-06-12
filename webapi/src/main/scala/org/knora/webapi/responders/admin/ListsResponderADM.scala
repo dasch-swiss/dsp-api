@@ -636,9 +636,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 case Some(customListIri) => customListIri
                 case None => stringFormatter.makeRandomListIri(maybeShortcode)
             }
-            listIriExists <- {
-                listNodeByIriExists(listIri)
-            }
+            listIriExists <- listNodeByIriExists(listIri)
+
             _ = if (listIriExists) {
                 throw DuplicateValueException(s"List with the IRI: '${listIri}' already exists")
             }

@@ -771,9 +771,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             )
 
             // check if the optionally supplied shortcode is valid and unique
-            shortcodeExists <- {
-                projectByShortcodeExists(validatedShortcode)
-            }
+            shortcodeExists <- projectByShortcodeExists(validatedShortcode)
+
             _ = if (shortcodeExists) {
                 throw DuplicateValueException(s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
             }
@@ -782,9 +781,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
               case Some(customProjectIri) => customProjectIri
               case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
             }
-            projectIriExists <- {
-                projectByIriExists(newProjectIRI)
-            }
+            projectIriExists <- projectByIriExists(newProjectIRI)
+
             _ = if (projectIriExists) {
                 throw DuplicateValueException(s"Project with the IRI: '${newProjectIRI}' already exists")
             }
