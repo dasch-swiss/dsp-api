@@ -39,7 +39,6 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
-import org.knora.webapi.util.jsonld._
 import scala.concurrent.Future
 
 /**
