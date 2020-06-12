@@ -185,6 +185,22 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 newListIri.set(listInfo.id)
             }
 
+            "create a list with a custom Iri" in {
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+                val listInfo = receivedList.listinfo
+                listInfo.id should be (SharedTestDataADM.customListIRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
+            }
+
             "return a ForbiddenException if the user creating the list is not project or system admin" in {
                 val params =
                     s"""
@@ -199,6 +215,25 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
+            }
+
+            "return a BadRequestException during list creation when an invalid list IRI is given" in {
+
+                // invalid list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "listIri": "invalid-list-IRI"
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+
             }
 
             "return a BadRequestException during list creation when payload is not correct" in {
