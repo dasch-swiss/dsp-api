@@ -136,11 +136,17 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def createListTestRequest: Future[TestDataFileContent] = {
+    private def createListTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-list-request"),
-                text = SharedTestDataADM.createListRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-list-request"),
+                    text = SharedTestDataADM.createListRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-list-with-custom-IRI-request"),
+                    text = SharedTestDataADM.createListWithCustomIriRequest
+                )
             )
         )
     }
@@ -391,16 +397,16 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * @return a set of test data files to be used for testing this endpoint.
      */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        Future.sequence {
-            Set(
-                getListsTestResponse,
-                createListTestRequest,
-                getListTestResponse,
-                updateListInfoTestRequest,
-                createChildNodeTestRequest,
-                getListInfoTestResponse,
-                getListNodeInfoTestResponse
-            )
-        }
+
+        for {
+            getListsResponse <- getListsTestResponse
+            createListRequest <- createListTestRequest
+            getListResponse <- getListTestResponse
+            updateListInfoRequest <- updateListInfoTestRequest
+            createChildNodeRequest <- createChildNodeTestRequest
+            getListInfoTestResponse <- getListInfoTestResponse
+            getListNodeInfoTestResponse <- getListNodeInfoTestResponse
+        } yield  createListRequest + getListsResponse + getListResponse + updateListInfoRequest +
+                 createChildNodeRequest + getListInfoTestResponse + getListNodeInfoTestResponse
     }
 }

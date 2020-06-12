@@ -402,6 +402,7 @@ object SharedTestDataADM {
     /** **********************************/
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
+
     val customResourceIRI: IRI = "http://rdfh.ch/0001/a-thing-with-IRI"
     val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI"
     val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI-and-UUID"
@@ -409,6 +410,8 @@ object SharedTestDataADM {
     val customValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI"
     val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
     val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
+    
+    val customListIRI: IRI = "http://rdfh.ch/lists/0001/a-list-with-IRI"
 
     val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
 
@@ -658,6 +661,14 @@ object SharedTestDataADM {
         s"""{
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+           |    "comments": []
+           |}""".stripMargin
+
+    val createListWithCustomIriRequest: String =
+        s"""{
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "listIri": "${SharedTestDataADM.customListIRI}",
+           |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
            |    "comments": []
            |}""".stripMargin
 
