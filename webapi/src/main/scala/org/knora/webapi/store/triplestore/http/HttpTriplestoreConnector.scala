@@ -824,9 +824,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         httpContext.setAuthCache(authCache)
 
         val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
-
+        
         if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
             uriBuilder.setParameter("infer", "false")
+        } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+            // do nothing
         } else {
             throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
         }
