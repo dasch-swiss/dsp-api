@@ -72,8 +72,6 @@ object Dependencies {
 
         val typesafeConfig         = "com.typesafe"                             % "config"                   % "1.3.3"
 
-        // testing
-
         //CORS support
         val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "1.0.0"
 
@@ -163,7 +161,7 @@ object Dependencies {
         val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.1.2"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
-
+        val testcontainers         = "org.testcontainers"                         % "testcontainers"           % "1.14.3"                 % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
     }
 
     object TestBinaries {
@@ -244,6 +242,7 @@ object Dependencies {
         scallop,
         springSecurityCore,
         swaggerAkkaHttp,
+        WebapiTest.testcontainers,
         typesafeConfig,
         xmlunitCore
     )

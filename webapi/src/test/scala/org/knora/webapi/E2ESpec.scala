@@ -56,7 +56,7 @@ object E2ESpec {
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+class E2ESpec(_system: ActorSystem) extends ContainerizedSpec with Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
