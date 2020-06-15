@@ -24,7 +24,7 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	@sbt webapi/universal:stage knora-jena-fuseki/universal:stage knora-sipi/universal:stage salsah1/universal:stage knora-assets/universal:stage
+	@sbt webapi/universal:stage knora-jena-fuseki/universal:stage knora-sipi/universal:stage salsah1/universal:stage
 
 ## knora-api
 .PHONY: build-knora-api-image
@@ -64,21 +64,12 @@ build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 do
 publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
 	docker push $(KNORA_SALSAH1_IMAGE)
 
-## knora-assets
-.PHONY: build-knora-assets-image
-build-knora-assets-image: build-all-scala ## build and publish knora-assets docker image locally
-	docker build -t $(KNORA_ASSETS_IMAGE) -f docker/knora-assets.dockerfile  knora-assets/target/universal
-
-.PHONY: publish-knora-assets-image
-publish-knora-assets-image: build-knora-assets-image ## publish knora-assets image to Dockerhub
-	docker push $(KNORA_ASSETS_IMAGE)
-
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-jena-fuseki-image build-knora-sipi-image build-knora-salsah1-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-api-image build-knora-jena-fuseki-image build-knora-sipi-image build-knora-salsah1-image ## build all Docker images
 
 .PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-jena-fuseki-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-assets-image ## publish all Docker images
+publish-all-images: publish-knora-api-image publish-knora-jena-fuseki-image publish-knora-sipi-image publish-knora-salsah1-image ## publish all Docker images
 
 #################################
 ## Docker-Compose targets

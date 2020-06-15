@@ -12,7 +12,7 @@ import scala.sys.process.Process
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, knoraJenaFuseki, knoraSipi, knoraAssets)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, knoraJenaFuseki, knoraSipi)
 
 lazy val buildSettings = Dependencies.Versions ++ Seq(
     organization := "org.knora",
@@ -28,6 +28,8 @@ lazy val root: Project = Project(id = "knora", file("."))
   .settings(
       // values set for all sub-projects
       // These are normal sbt settings to configure for release, skip if already defined
+
+      Global / onChangedBuildSource := ReloadOnSourceChanges,
 
       ThisBuild / licenses := Seq("AGPL-3.0" -> url("https://opensource.org/licenses/AGPL-3.0")),
       ThisBuild / homepage := Some(url("https://github.com/dhlab-basel/Knora")),
@@ -64,66 +66,66 @@ lazy val root: Project = Project(id = "knora", file("."))
 lazy val ParadoxSite = config("paradox")
 
 lazy val docs = knoraModule("docs")
-        .enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
-        .configs(
-            ParadoxSite
-        )
-        .settings(
-            // Apply default settings to our two custom configuration instances
-            ParadoxSitePlugin.paradoxSettings(ParadoxSite),
-            ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
-            ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite),
+  .enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
+  .configs(
+      ParadoxSite
+  )
+  .settings(
+      // Apply default settings to our two custom configuration instances
+      ParadoxSitePlugin.paradoxSettings(ParadoxSite),
+      ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
+      ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite),
 
-            // Skip packageDoc and packageSrc task on stage
-            Compile / packageDoc / mappings := Seq(),
-            Compile / packageSrc / mappings := Seq(),
-        )
-        .settings(
+      // Skip packageDoc and packageSrc task on stage
+      Compile / packageDoc / mappings := Seq(),
+      Compile / packageSrc / mappings := Seq(),
+  )
+  .settings(
 
-            // Ghpages settings
-            ghpagesNoJekyll := true,
-            git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
-            ghpagesCleanSite / excludeFilter :=
-                    new FileFilter {
-                        def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
-                    } || "LICENSE.md" || "README.md",
+      // Ghpages settings
+      ghpagesNoJekyll := true,
+      git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
+      ghpagesCleanSite / excludeFilter :=
+        new FileFilter {
+            def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
+        } || "LICENSE.md" || "README.md",
 
-            // (sbt-site) Customize the source directory
-            // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
-            ParadoxSite / sourceDirectory := sourceDirectory.value / "paradox",
+      // (sbt-site) Customize the source directory
+      // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
+      ParadoxSite / sourceDirectory := sourceDirectory.value / "paradox",
 
-            // (sbt-site) Customize the output directory (subdirectory of site)
-            ParadoxSite / siteSubdirName := "paradox",
+      // (sbt-site) Customize the output directory (subdirectory of site)
+      ParadoxSite / siteSubdirName := "paradox",
 
-            // Set some paradox properties
-            ParadoxSite / paradoxProperties ++= Map(
-                "project.name" -> "Knora Documentation",
-                "github.base_url" -> "https://github.com/dhlab-basel/Knora",
-                "image.base_url" -> ".../assets/images",
-                "extref.rfc.base_url" -> "http://tools.ietf.org/html/rfc%s",
-                "snip.src.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "main" / "scala").getAbsolutePath,
-                "snip.test.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "test" / "scala").getAbsolutePath
-            ),
+      // Set some paradox properties
+      ParadoxSite / paradoxProperties ++= Map(
+          "project.name" -> "Knora Documentation",
+          "github.base_url" -> "https://github.com/dhlab-basel/Knora",
+          "image.base_url" -> ".../assets/images",
+          "extref.rfc.base_url" -> "http://tools.ietf.org/html/rfc%s",
+          "snip.src.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "main" / "scala").getAbsolutePath,
+          "snip.test.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "test" / "scala").getAbsolutePath
+      ),
 
-            // Paradox Material Theme Settings
-            ParadoxSite / paradoxMaterialTheme ~= {
-                _.withColor("blue", "yellow")
-                        .withRepository(uri("https://github.com/dhlab-basel/Knora/docs"))
-                        .withFavicon("cloud")
-                        .withLogoIcon("cloud")
-                        .withSocial(
-                            uri("https://github.com/dhlab-basel"),
-                            uri("https://twitter.com/dhlabbasel")
-                        )
-                        .withLanguage(java.util.Locale.ENGLISH)
-                        .withCopyright("Copyright 2015-2019 the contributors (see Contributors.md)")
-            },
-            makeSite / mappings ++= Seq(
-                file("docs/src/api-admin/index.html") -> "api-admin/index.html",
-                file("docs/src/api-admin/swagger.json") -> "api-admin/swagger.json"
-            ),
-            makeSite := makeSite.dependsOn(buildPrequisites).value
-        )
+      // Paradox Material Theme Settings
+      ParadoxSite / paradoxMaterialTheme ~= {
+          _.withColor("blue", "yellow")
+            .withRepository(uri("https://github.com/dhlab-basel/Knora/docs"))
+            .withFavicon("cloud")
+            .withLogoIcon("cloud")
+            .withSocial(
+                uri("https://github.com/dhlab-basel"),
+                uri("https://twitter.com/dhlabbasel")
+            )
+            .withLanguage(java.util.Locale.ENGLISH)
+            .withCopyright("Copyright 2015-2019 the contributors (see Contributors.md)")
+      },
+      makeSite / mappings ++= Seq(
+          file("docs/src/api-admin/index.html") -> "api-admin/index.html",
+          file("docs/src/api-admin/swagger.json") -> "api-admin/swagger.json"
+      ),
+      makeSite := makeSite.dependsOn(buildPrequisites).value
+  )
 
 lazy val buildPrequisites = taskKey[Unit]("Build typescript API documentation and Graphviz diagrams.")
 
@@ -234,46 +236,6 @@ lazy val knoraSipi: Project = knoraModule("knora-sipi")
 
 
 //////////////////////////////////////
-// Knora's assets
-//////////////////////////////////////
-
-lazy val knoraAssetsCommonSettings = Seq(
-    name := "knora-assets"
-)
-
-lazy val knoraAssets: Project = knoraModule("knora-assets")
-  .enablePlugins(DockerPlugin)
-  .settings(
-      knoraAssetsCommonSettings
-  )
-  .settings(
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-      Universal / mappings ++= {
-          // copy the different folders
-          directory("webapi/scripts") ++
-            directory("webapi/_test_data") ++
-            directory("webapi/_assets") ++
-            directory("knora-ontologies")
-      },
-
-      // add dockerCommands used to create the image
-      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-
-      dockerRepository := Some("dhlabbasel"),
-
-      maintainer := "400790+subotic@users.noreply.github.com",
-      Docker / dockerExposedPorts ++= Seq(9999), // not used. added just so that there is no warning
-      Docker / dockerCommands := Seq(
-          Cmd("FROM", "scratch"),
-          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("COPY", "opt/docker", "/assets")
-      )
-  )
-
-
-//////////////////////////////////////
 // SALSAH1 (./salsah1)
 //////////////////////////////////////
 
@@ -310,9 +272,9 @@ lazy val salsah1: Project = knoraModule("salsah1")
       Test / testOptions += Tests.Argument("-oDF")
   )
   .settings( // enable deployment staging with `sbt stage`
-        // Skip packageDoc and packageSrc task on stage
-        Compile / packageDoc / mappings := Seq(),
-        Compile / packageSrc / mappings := Seq(),
+      // Skip packageDoc and packageSrc task on stage
+      Compile / packageDoc / mappings := Seq(),
+      Compile / packageSrc / mappings := Seq(),
       Universal / mappings ++= {
           // copy the public folder
           directory("salsah1/src/public") ++
@@ -408,163 +370,173 @@ lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 // BuildInfoPlugin - allows generation of scala code with version information
 
 lazy val webapi = knoraModule("webapi")
-        .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
-        .configs(
-            IntegrationTest,
-            Gatling,
-            GatlingIt,
-            GDBSE,
-            GDBSEIt,
-            GDBFree,
-            GDBFreeIt,
-            FusekiTest,
-            FusekiIt,
-            EmbeddedJenaTDBTest
-        )
-        .settings(
-            webApiCommonSettings,
-            resolvers ++= Seq(
-                Resolver.bintrayRepo("hseeberger", "maven")
-            ),
-            Dependencies.webapiLibraryDependencies
-        )
-        .settings(
-            inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings),
-            inConfig(IntegrationTest)(Defaults.testSettings),
-            inConfig(Gatling)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(GatlingIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(GDBSE)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(GDBSEIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(GDBFree)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(GDBFreeIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(FusekiTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(FusekiIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-            inConfig(EmbeddedJenaTDBTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value))
-        )
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
+  .configs(
+      IntegrationTest,
+      Gatling,
+      GatlingIt,
+      GDBSE,
+      GDBSEIt,
+      GDBFree,
+      GDBFreeIt,
+      FusekiTest,
+      FusekiIt,
+      EmbeddedJenaTDBTest
+  )
+  .settings(
+      webApiCommonSettings,
+      resolvers ++= Seq(
+          Resolver.bintrayRepo("hseeberger", "maven")
+      ),
+      Dependencies.webapiLibraryDependencies
+  )
+  .settings(
+      inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings),
+      inConfig(IntegrationTest)(Defaults.testSettings),
+      inConfig(Gatling)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(GatlingIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(GDBSE)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(GDBSEIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(GDBFree)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(GDBFreeIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(FusekiTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(FusekiIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+      inConfig(EmbeddedJenaTDBTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value))
+  )
 
-        .settings(
-          exportJars := true,
-          unmanagedResourceDirectories in Compile += (rootBaseDir.value / "knora-ontologies"),
+  .settings(
+      exportJars := true,
+      unmanagedResourceDirectories in Compile += (rootBaseDir.value / "knora-ontologies"),
 
-          // add content of knora-ontologies to jar
-          mappings in (Compile, packageBin) ++= Seq (
-              (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
-              (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
-              (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
-              (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
-              (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
-          ),
-          // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
-          // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
-        )
+      // add content of knora-ontologies to jar
+      mappings in(Compile, packageBin) ++= Seq(
+          (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
+      ),
+      // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
+      // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
 
-        .settings(
-            scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
+      // put additional files into the jar when running tests which are needed by testcontainers
+      mappings in(Test, packageBin) ++= Seq(
+          (rootBaseDir.value / "sipi" / "config" / "sipi.init-knora.lua") -> "sipi/config/sipi.init-knora.lua",
+          (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
+      ),
+      mappings in(IntegrationTest, packageBin) ++= Seq(
+          (rootBaseDir.value / "sipi" / "config" / "sipi.init-knora.lua") -> "sipi/config/sipi.init-knora.lua",
+          (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
+      ),
+  )
 
-            logLevel := Level.Info,
+  .settings(
+      scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
 
-            fork := true, // always fork
+      logLevel := Level.Info,
 
-            run / javaOptions := webapiJavaRunOptions,
+      fork := true, // always fork
 
-            reStart / javaOptions ++= resolvedJavaAgents.value map { resolved =>
-                "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
-            }, // allows sbt-javaagent to work with sbt-revolver
-            reStart / javaOptions ++= webapiJavaRunOptions,
+      run / javaOptions := webapiJavaRunOptions,
 
-            javaAgents += Dependencies.Compile.aspectJWeaver,
+      reStart / javaOptions ++= resolvedJavaAgents.value map { resolved =>
+          "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
+      }, // allows sbt-javaagent to work with sbt-revolver
+      reStart / javaOptions ++= webapiJavaRunOptions,
 
-            Test / parallelExecution := false,
-            Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-            // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
-            // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-            Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+      javaAgents += Dependencies.Compile.aspectJWeaver,
 
-            IntegrationTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-            IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+      Test / parallelExecution := false,
+      Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+      // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
+      // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
+      Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
 
-            Gatling / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-            Gatling / testOptions := Seq(),
-            GatlingIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-            GatlingIt / testOptions := Seq(),
+      IntegrationTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+      IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
 
-            GDBSE / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
-            GDBSEIt / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
+      Gatling / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+      Gatling / testOptions := Seq(),
+      GatlingIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+      GatlingIt / testOptions := Seq(),
 
-            GDBFree / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ webapiJavaTestOptions,
-            GDBFreeIt / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ webapiJavaTestOptions,
+      GDBSE / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
+      GDBSEIt / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
 
-            FusekiTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-            FusekiIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+      GDBFree / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ webapiJavaTestOptions,
+      GDBFreeIt / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ webapiJavaTestOptions,
 
-            EmbeddedJenaTDBTest / javaOptions := Seq("-Dconfig.resource=jenatdb.conf") ++ webapiJavaTestOptions
+      FusekiTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+      FusekiIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
 
-            // enable publishing the jars for test and it
-            // Test / packageBin / publishArtifact := true,
-            // IntegrationTest / packageBin / publishArtifact := true,
-            // addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest)
-        )
-        .settings(
-            // prepare for publishing
+      EmbeddedJenaTDBTest / javaOptions := Seq("-Dconfig.resource=jenatdb.conf") ++ webapiJavaTestOptions
 
-            // Skip packageDoc and packageSrc task on stage
-            Compile / packageDoc / mappings := Seq(),
-            Compile / packageSrc / mappings := Seq(),
+      // enable publishing the jars for test and it
+      // Test / packageBin / publishArtifact := true,
+      // IntegrationTest / packageBin / publishArtifact := true,
+      // addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest)
+  )
+  .settings(
+      // prepare for publishing
 
-            Universal / mappings ++= {
-                // copy the scripts folder
-                directory("webapi/scripts") ++
-                  // add knora-ontologies
-                  directory("knora-ontologies") ++
-                  // add test-data directory
-                  directory("webapi/_test_data") ++
-                  // copy the configuration files to config directory
-                  contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
-                  // copy configuration files to config directory
-                  contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
-            },
+      // Skip packageDoc and packageSrc task on stage
+      Compile / packageDoc / mappings := Seq(),
+      Compile / packageSrc / mappings := Seq(),
 
-            // add 'config' directory to the classpath of the start script,
-            Universal / scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+      Universal / mappings ++= {
+          // copy the scripts folder
+          directory("webapi/scripts") ++
+            // add knora-ontologies
+            directory("knora-ontologies") ++
+            // add test-data directory
+            directory("webapi/_test_data") ++
+            // copy the configuration files to config directory
+            contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
+            // copy configuration files to config directory
+            contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
+      },
 
-            // need this here, so that the Manifest inside the jars has the correct main class set.
-            Compile / mainClass := Some("org.knora.webapi.Main"),
-            Compile / run / mainClass := Some("org.knora.webapi.Main"),
+      // add 'config' directory to the classpath of the start script,
+      Universal / scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
 
-            // add dockerCommands used to create the image
-            // docker:stage, docker:publishLocal, docker:publish, docker:clean
+      // need this here, so that the Manifest inside the jars has the correct main class set.
+      Compile / mainClass := Some("org.knora.webapi.Main"),
+      Compile / run / mainClass := Some("org.knora.webapi.Main"),
 
-            dockerRepository := Some("dhlabbasel"),
+      // add dockerCommands used to create the image
+      // docker:stage, docker:publishLocal, docker:publish, docker:clean
 
-            maintainer := "400790+subotic@users.noreply.github.com",
+      dockerRepository := Some("dhlabbasel"),
 
-            Docker / dockerExposedPorts ++= Seq(3333, 10001),
-            Docker / dockerCommands := Seq(
-                Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
-                Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+      maintainer := "400790+subotic@users.noreply.github.com",
 
-                Cmd("RUN apk update && apk upgrade && apk add bash"),
+      Docker / dockerExposedPorts ++= Seq(3333, 10001),
+      Docker / dockerCommands := Seq(
+          Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
+          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
 
-                Cmd("COPY", "opt/docker", "/webapi"),
-                Cmd("WORKDIR", "/webapi"),
+          Cmd("RUN apk update && apk upgrade && apk add bash"),
 
-                Cmd("EXPOSE", "3333"),
+          Cmd("COPY", "opt/docker", "/webapi"),
+          Cmd("WORKDIR", "/webapi"),
 
-                ExecCmd("ENTRYPOINT", "bin/webapi"),
-            )
+          Cmd("EXPOSE", "3333"),
 
-        )
-        .settings(
-            buildInfoKeys ++= Seq[BuildInfoKey](
-                name,
-                version,
-                "akkaHttp" -> Dependencies.akkaHttpVersion.value,
-                "sipi" -> Dependencies.sipiImage.value,
-                "gdbSE" -> Dependencies.gdbSEImage.value,
-                "gdbFree" -> Dependencies.gdbFreeImage.value
-            ),
-            buildInfoPackage := "org.knora.webapi"
-        )
+          ExecCmd("ENTRYPOINT", "bin/webapi"),
+      )
+
+  )
+  .settings(
+      buildInfoKeys ++= Seq[BuildInfoKey](
+          name,
+          version,
+          "akkaHttp" -> Dependencies.akkaHttpVersion.value,
+          "sipi" -> Dependencies.sipiImage.value,
+          "gdbSE" -> Dependencies.gdbSEImage.value,
+          "gdbFree" -> Dependencies.gdbFreeImage.value
+      ),
+      buildInfoPackage := "org.knora.webapi"
+  )
 
 lazy val webapiJavaRunOptions = Seq(
     // "-showversion",
