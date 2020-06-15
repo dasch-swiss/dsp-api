@@ -12,12 +12,7 @@ import scala.sys.process.Process
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-// custom docker-compose plugin settings
-lazy val GDB = config("gdb") extend Default
-
-lazy val GDBSIPI = config("gdbsipi") extend Default
-
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, knoraGraphDbSe, knoraGraphdbFree, knoraSipi, knoraAssets)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, knoraJenaFuseki, knoraSipi, knoraAssets)
 
 lazy val buildSettings = Dependencies.Versions ++ Seq(
     organization := "org.knora",
@@ -52,38 +47,10 @@ lazy val root: Project = Project(id = "knora", file("."))
       Dependencies.sysProps := sys.props.toString(),
       Dependencies.sysEnvs := sys.env.toString(),
 
-      // these can be set by the user as system environment variables
-      ThisBuild / Dependencies.gdbHomePath := sys.env.getOrElse("KNORA_GDB_HOME", sys.props("user.dir") + "/triplestores/graphdb/home"),
-      ThisBuild / Dependencies.gdbLicensePath := sys.env.getOrElse("KNORA_GDB_LICENSE", sys.props("user.dir") + "/triplestores/graphdb/graphdb.license"),
-
-      // these are calculated in their respective targets
-      Dependencies.knoraSipiImage := "dhlabbasel/knora-sipi:" + version.value,
-      Dependencies.knoraGdbImage := {
-          if (Dependencies.gdbTypeString.equals("graphdb-free")) {
-              "dhlabbasel/knora-graphdb-free:" + version.value
-          } else {
-              "dhlabbasel/knora-graphdb-se:" + version.value
-          }
-      },
-      Dependencies.knoraWebapiImage := "dhlabbasel/webapi:" + version.value,
-      Dependencies.knoraSalsah1Image := "dhlabbasel/salsah1:" + version.value,
-
-      // use these values for variable substitution in the docker-compose.yml
-      variablesForSubstitution := Map(
-          "KNORA_GDB_HOME" -> Dependencies.gdbHomePath.value,
-          "KNORA_GDB_LICENSE" -> Dependencies.gdbLicensePath.value,
-          "KNORA_GDB_TYPE" -> Dependencies.gdbTypeString,
-          "KNORA_GDB_IMAGE" -> Dependencies.knoraGdbImage.value,
-          "KNORA_SIPI_IMAGE" -> Dependencies.knoraSipiImage.value,
-          "KNORA_WEBAPI_IMAGE" -> Dependencies.knoraWebapiImage.value,
-          "KNORA_SALSAH1_IMAGE" -> Dependencies.knoraSalsah1Image.value
-      ),
-
       dockerImageCreationTask := Seq(
           (salsah1 / Docker / publishLocal).value,
           (webapi / Docker / publishLocal).value,
-          (knoraGraphDbSe / Docker / publishLocal).value,
-          (knoraGraphdbFree / Docker / publishLocal).value,
+          (knoraJenaFuseki / Docker / publishLocal).value,
           (knoraSipi / Docker / publishLocal).value
       )
   )
@@ -192,78 +159,37 @@ docs / buildPrequisites := {
 // Knora's custom GraphDB-SE
 //////////////////////////////////////
 
-lazy val graphdbseCommonSettings = Seq(
-    name := "knora-graphdb-se"
+lazy val jenaFusekiCommonSettings = Seq(
+    name := "knora-jena-fuseki"
 )
 
-lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
+lazy val knoraJenaFuseki: Project = knoraModule("knora-jena-fuseki")
   .enablePlugins(DockerPlugin)
   .settings(
-      graphdbseCommonSettings
+      jenaFusekiCommonSettings
   )
   .settings( // enable deployment staging with `sbt stage`
       // Skip packageDoc and packageSrc task on stage
       Compile / packageDoc / mappings := Seq(),
       Compile / packageSrc / mappings := Seq(),
       Universal / mappings ++= {
-          // copy the webapi/scripts folder
-          directory("webapi/scripts")
+          // copy the jena-fuseki folder
+          directory("jena-fuseki")
       },
 
       // add dockerCommands used to create the image
       // docker:stage, docker:publishLocal, docker:publish, docker:clean
 
-      dockerRepository := Some("dhlabbasel"),
+      dockerRepository := Some("daschswiss"),
 
       maintainer := "400790+subotic@users.noreply.github.com",
 
-      Docker / dockerExposedPorts ++= Seq(7200),
+      Docker / dockerExposedPorts ++= Seq(3030),
       Docker / dockerCommands := Seq(
           // FIXME: Someday find out how to reference here Dependencies.Versions.gdbSEImage
-          Cmd("FROM", "ontotext/graphdb:8.10.1-se"),
+          Cmd("FROM", "stain/jena-fuseki:3.14.0"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("COPY", "opt/docker/scripts", "/scripts"),
-          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
-      )
-  )
-
-
-//////////////////////////////////////
-// Knora's custom GraphDB-Free
-//////////////////////////////////////
-
-lazy val graphdbfreeCommonSettings = Seq(
-    name := "knora-graphdb-free"
-)
-
-lazy val knoraGraphdbFree: Project = knoraModule("knora-graphdb-free")
-  .enablePlugins(DockerPlugin)
-  .settings(
-      graphdbfreeCommonSettings
-  )
-  .settings(
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-      Universal / mappings ++= {
-          // copy the webapi/scripts folder
-          directory("webapi/scripts")
-      },
-
-      // add dockerCommands used to create the image
-      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-
-      dockerRepository := Some("dhlabbasel"),
-
-      maintainer := "400790+subotic@users.noreply.github.com",
-
-      Docker / dockerExposedPorts ++= Seq(7200),
-      Docker / dockerCommands := Seq(
-          // FIXME: Someday find out how to reference here Dependencies.Versions.gdbFreeImage
-          Cmd("FROM", "dhlabbasel/graphdb:8.10.0-free"),
-          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("COPY", "opt/docker/scripts", "/scripts"),
-          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+          Cmd("COPY", "config.ttl", "/fuseki/config.ttl"),
       )
   )
 
@@ -663,69 +589,6 @@ lazy val webapiJavaTestOptions = Seq(
     //"-XX:MaxGCPauseMillis=500",
     //"-XX:MaxMetaspaceSize=4096m"
 )
-
-// packaging for running normal tests (usage: webapi_test/stage)
-lazy val webapi_test = project
-  // we put the results  in a build folder
-  .in(file("webapi/build/test"))
-  .enablePlugins(JavaAppPackaging)
-  .settings(
-      Dependencies.webapiTestAndITLibraryDependencies,
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-      publishArtifact in (Test, packageBin) := true,
-      Compile / mainClass := Some("org.scalatest.tools.Runner"),
-      // adds the test jar to mappings
-      mappings in Universal ++= {
-          // generates the test package
-          val testjar = (packageBin in Test).value
-          // maps this file to your lib folder in your output package
-          testjar -> s"lib/${testjar.getName}"
-          // copy the scripts folder
-          directory("webapi/scripts") ++
-            // add knora-ontologies
-            directory("knora-ontologies") ++
-            // add test-data directory
-            directory("webapi/_test_data") ++
-            // copy the configuration files to config directory
-            contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
-            // copy configuration files to config directory
-            contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
-      },
-      scriptClasspath += (packageBin in Test).value.getName
-  )
-  .dependsOn(webapi)
-
-// packaging for running IT tests (usage: webapi_it/stage)
-lazy val webapi_it = project
-  // we put the results in a build folder
-  .in(file("webapi/build/it"))
-  .enablePlugins(JavaAppPackaging)
-  .configs(
-      IntegrationTest
-  )
-  .settings(
-      inConfig(IntegrationTest)(Defaults.testSettings),
-  )
-  .settings(
-      Dependencies.webapiTestAndITLibraryDependencies,
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-      IntegrationTest / packageBin / publishArtifact := true,
-      addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest),
-      Compile / mainClass := Some("org.scalatest.run"),
-      // adds the test jar to mappings
-      mappings in Universal += {
-          // generates the test package
-          val testjar = (packageBin in IntegrationTest).value
-          // maps this file to your lib folder in your output package
-          testjar -> s"lib/${testjar.getName}"
-      },
-      scriptClasspath += (packageBin in Test).value.getName
-  )
-  .dependsOn(webapi)
 
 def knoraModule(name: String): Project =
     Project(id = name, base = file(name))

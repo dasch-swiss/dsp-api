@@ -38,7 +38,7 @@ object Dependencies {
     lazy val jenaVersion = settingKey[String]("the Jena library version")
     lazy val metricsVersion = settingKey[String]("the metrics library version")
 
-    lazy val knoraGdbImage = SettingKey[String]("the Knora specific GraphDB Image")
+    lazy val knoraJenaFusekiImage = SettingKey[String]("the Knora specific Jena Fuseki Image")
     lazy val knoraSipiImage = SettingKey[String]("the Knora specific Sipi Image")
     lazy val knoraWebapiImage = SettingKey[String]("the Knora webapi Image")
     lazy val knoraSalsah1Image = SettingKey[String]("the Knora Salsah1 Image")

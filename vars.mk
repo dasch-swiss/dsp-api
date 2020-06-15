@@ -4,7 +4,7 @@ FUSEKI_HEAP_SIZE := 3G
 
 REPO_PREFIX := daschswiss
 KNORA_API_REPO := knora-api
-KNORA_FUSEKI_REPO := knora-fuseki
+KNORA_FUSEKI_REPO := knora-jena-fuseki
 KNORA_SIPI_REPO := knora-sipi
 KNORA_ASSETS_REPO := knora-assets
 KNORA_UPGRADE_REPO := knora-upgrade

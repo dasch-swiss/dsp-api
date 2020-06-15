@@ -45,9 +45,8 @@ sipi/test
 *.bak
 .sbtrc
 
+/knora-jena-fuseki
 /knora-sipi
-/knora-graphdb-se
-/knora-graphdb-free
 /knora-assets
 /knora-upgrade
 
