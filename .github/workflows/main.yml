@@ -26,7 +26,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run build everything
-        run: sbt clean test:compile it:compile stage
+        run: make build-all-scala
       - name: Disk Free After
         run: |
           df -h
