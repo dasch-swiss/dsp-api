@@ -121,7 +121,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
         Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
         Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     def memusage(): Unit = {

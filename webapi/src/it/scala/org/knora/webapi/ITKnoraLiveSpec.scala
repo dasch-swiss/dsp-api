@@ -111,7 +111,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     protected def getResponseString(request: HttpRequest): String = {

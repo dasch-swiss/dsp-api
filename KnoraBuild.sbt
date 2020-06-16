@@ -437,7 +437,7 @@ lazy val webapi = knoraModule("webapi")
 
       logLevel := Level.Info,
 
-      fork := true, // always fork
+
 
       run / javaOptions := webapiJavaRunOptions,
 
@@ -448,7 +448,10 @@ lazy val webapi = knoraModule("webapi")
 
       javaAgents += Dependencies.Compile.aspectJWeaver,
 
-      Test / parallelExecution := false,
+      fork := true, // run tests in a forked JVM
+      Test / testForkedParallel := false, // run forked tests in parallel
+      Test / parallelExecution := false, // run non-forked tests in parallel
+      Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
       Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
       // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
       // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
