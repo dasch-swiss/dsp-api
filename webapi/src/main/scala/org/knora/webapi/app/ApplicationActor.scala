@@ -516,28 +516,25 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         var msg =
             """
-              | _   __                              ___  ______ _____
-              || | / /                             / _ \ | ___ \_   _|
-              || |/ / _ __   ___  _ __ __ _ ______/ /_\ \| |_/ / | |
-              ||    \| '_ \ / _ \| '__/ _` |______|  _  ||  __/  | |
-              || |\  \ | | | (_) | | | (_| |      | | | || |    _| |_
-              |\_| \_/_| |_|\___/|_|  \__,_|      \_| |_/\_|    \___/
+              |    ____  ____  ____         _    ____ ___
+              |   |  _ \/ ___||  _ \       / \  |  _ \_ _|
+              |   | | | \___ \| |_) |____ / _ \ | |_) | |
+              |   | |_| |___) |  __/_____/ ___ \|  __/| |
+              |   |____/|____/|_|       /_/   \_\_|  |___|
             """.stripMargin
 
-
         msg += "\n"
-        msg += s"Knora API Server started at http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
-        msg += "----------------------------------------------------------------\n"
+        msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
+        msg += "------------------------------------------------\n\n"
 
         if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
-            msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
-            msg += "----------------------------------------------------------------\n"
+            msg += "WARNING: Resetting DB is turned ON.\n"
+            msg += "------------------------------------------------\n"
         }
 
         // which repository are we using
-        msg += s"DB-Name: ${knoraSettings.triplestoreDatabaseName}\n"
-        msg += s"DB-Type: ${knoraSettings.triplestoreType}\n"
-        msg += s"DB Server: ${knoraSettings.triplestoreHost}, DB Port: ${knoraSettings.triplestorePort}\n"
+        msg += s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}\n"
+        msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
 
 
         if (printConfigState) {
@@ -552,7 +549,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
             msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
         }
 
-        msg += "================================================================\n"
+        msg += "================================================\n"
 
         println(msg)
     }

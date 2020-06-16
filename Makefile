@@ -226,8 +226,10 @@ test-it-ci: build-all-images ## runs the integration tests (equivalent to 'sbt w
 	@echo $@  # print target name
 	sbt coverage webapi/it:test webapi/coverageReport
 
-.PHONY: test-all
-test-all: test-unit test-e2e test-it ## runs all tests.
+.PHONY: test
+test: build-all-images ## runs all tests.
+	@echo $@
+	sbt webapi/test webapi/it:test
 
 .PHONY: test-repository-update
 test-repository-update: stack-without-api
