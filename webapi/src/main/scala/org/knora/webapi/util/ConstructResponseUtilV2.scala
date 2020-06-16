@@ -316,7 +316,6 @@ object ConstructResponseUtilV2 {
      * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
      * @return an instance of [[MainResourcesAndValueRdfData]].
      */
-        //TODO method is too long split up into several smaller, clearer methods
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse,
                                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
 
@@ -443,6 +442,13 @@ object ConstructResponseUtilV2 {
         )
     }
 
+    /**
+     * This method creates a map of property IRIs to sequences of value IRIs.
+     *
+     * @param assertionsExplicit
+     * @param valueObjectIris           set of all value object IRIs
+     * @return                          the sequence of IRIs
+     */
     private def mapIriSequence(assertionsExplicit: ConstructPredicateObjects, valueObjectIris: Set[IRI] ) :  Map[SmartIri, Seq[IRI]] =  {
         val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = assertionsExplicit.map {
             case (pred: SmartIri, objs: Seq[LiteralV2]) =>
@@ -469,6 +475,15 @@ object ConstructResponseUtilV2 {
     }
 
 
+    /**
+     * This method creates a map of IRI sequences which is used to create a map of Rdf Data
+     *
+     * @param valuePropertyToObjectIris     the map of sequence IRIs
+     * @param resourceIri                   the IRI of the resource.
+     * @param requestingUser                the user making the request.
+     * @param nonResourceStatements         the statements which got split up containing value objects and standoffs
+     * @return                              the map of IRI sequences
+     */
     private def mapSequenceObjects(valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]], resourceIri:IRI, requestingUser: UserADM,
                                    assertionsExplicit: ConstructPredicateObjects, nonResourceStatements: Statements)(implicit stringFormatter: StringFormatter): RdfPropertyValues ={
 
@@ -571,6 +586,12 @@ object ConstructResponseUtilV2 {
     }
 
 
+    /**
+     * This method returns all the incoming link for each resource as a map of resource IRI to resources that link to it.
+     * @param visibleResources          the resources that the user has permission to see
+     * @param flatResourcesWithValues
+     * @return                          the incoming links as a map of resource IRIs
+     */
     private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit stringFormatter: StringFormatter): Map[IRI, RdfResources] ={
         // get incoming links for each resource: a map of resource IRIs to resources that link to it
         val incomingLinksForResource: Map[IRI, RdfResources] = visibleResources.map {
