@@ -56,16 +56,16 @@ object E2ESpec {
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-class E2ESpec(_system: ActorSystem) extends ContainerizedSpec with Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-    def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
     /* needed by the core trait */
 

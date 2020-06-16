@@ -155,6 +155,8 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
+    val triplestoreAutoInit: Boolean = config.getBoolean("app.triplestore.auto-init")
+
     val triplestorePort: Int = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getInt("app.triplestore.graphdb.port")
         case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")

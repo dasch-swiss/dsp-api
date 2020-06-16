@@ -66,10 +66,10 @@ object CoreSpec {
 abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with AnyWordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     /* constructors - individual tests can override the configuration by giving their own */
-    def this(name: String, config: Config) = this(ActorSystem(name, ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
-    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
-    def this(name: String) = this(ActorSystem(name, ConfigFactory.load()))
-    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())))
 
     /* needed by the core trait */
     implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)

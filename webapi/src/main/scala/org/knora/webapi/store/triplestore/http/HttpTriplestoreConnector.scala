@@ -49,7 +49,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, InstrumentationSupport}
+import org.knora.webapi.util.{FakeTriplestore, FileUtil, InstrumentationSupport}
 import spray.json._
 
 import scala.collection.JavaConverters._
@@ -536,7 +536,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Checks the connection to a Fuseki triplestore.
      */
-    private def checkFusekiTriplestore(): Try[CheckTriplestoreResponse] = {
+    private def checkFusekiTriplestore(afterAutoInit: Boolean = false): Try[CheckTriplestoreResponse] = {
         import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
 
         try {
@@ -578,13 +578,85 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 Success(CheckTriplestoreResponse(triplestoreStatus = TriplestoreStatus.ServiceAvailable, msg = "Triplestore is available."))
             } else {
                 // none of the available datasets meet our requirements
-                Success(CheckTriplestoreResponse(triplestoreStatus = TriplestoreStatus.NotInitialized, msg = s"None of the active datasets meet our requirement of name: $nameShouldBe"))
+                log.info(s"None of the active datasets meet our requirement of name: $nameShouldBe")
+                if (settings.triplestoreAutoInit) {
+                    // try to auto-init if we didn't tried it already
+                    if (afterAutoInit) {
+                        // we already tried to auto-init but it wasn't successful
+                        Success(CheckTriplestoreResponse(triplestoreStatus = TriplestoreStatus.NotInitialized, msg = s"Sorry, we tried to auto-initialize and still none of the active datasets meet our requirement of name: $nameShouldBe"))
+                    } else {
+                        // try to auto-init
+                        log.info("Triplestore auto-init is set. Trying to auto-initialize.")
+                        initJenaFusekiTriplestore()
+                    }
+                } else {
+                    Success(CheckTriplestoreResponse(triplestoreStatus = TriplestoreStatus.NotInitialized, msg = s"None of the active datasets meet our requirement of name: $nameShouldBe"))
+                }
             }
         } catch {
             case e: Exception =>
                 // println("checkRepository - exception", e)
                 Success(CheckTriplestoreResponse(triplestoreStatus = TriplestoreStatus.ServiceUnavailable, msg = s"Triplestore not available: ${e.getMessage}"))
         }
+    }
+
+    /**
+      * Initialize the Jena Fuseki triplestore. Currently only works for 'knora-test'
+      * and 'knora-test-unit' repository names.
+      */
+    private def initJenaFusekiTriplestore(): Try[CheckTriplestoreResponse] = {
+
+        val configFileName = s"webapi/scripts/fuseki-${settings.triplestoreDatabaseName}-repository-config.ttl"
+
+        try {
+            // take config from the classpath and write to triplestore
+            val triplestoreConfig: String = FileUtil.readTextResource(configFileName)
+
+            val authCache: AuthCache = new BasicAuthCache
+            val basicAuth: BasicScheme = new BasicScheme
+            authCache.put(targetHost, basicAuth)
+
+            val httpContext: HttpClientContext = HttpClientContext.create
+            httpContext.setCredentialsProvider(credsProvider)
+            httpContext.setAuthCache(authCache)
+
+            val httpPost: HttpPost = new HttpPost("/$/datasets")
+            val stringEntity = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeApplicationTrig))
+            httpPost.setEntity(stringEntity)
+
+            val start = System.currentTimeMillis()
+            var maybeResponse: Option[CloseableHttpResponse] = None
+
+            maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
+
+            val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                case None => ""
+            }
+
+            val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+            val statusCategory: Int = statusCode / 100
+
+            if (statusCategory != 2) {
+                log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+                throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+            }
+
+            val took = System.currentTimeMillis() - start
+            metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
+            RepositoryUploadedResponse()
+
+        } catch {
+            case e: NotFoundException =>
+                log.error(s"Cannot initialize repository. Config ${configFileName} not found.")
+            case tre: TriplestoreResponseException =>
+                log.error(tre.message)
+            case e: Exception =>
+                log.error(e, s"Failed to connect to triplestore: ${e.getMessage}")
+        }
+
+        // do the check again
+        checkFusekiTriplestore(true)
     }
 
     /**

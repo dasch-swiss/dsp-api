@@ -49,6 +49,10 @@ import scala.language.postfixOps
   */
 class R2RSpec extends Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
+    // override so that we can add our own config
+    override def createActorSystem(): ActorSystem =
+        ActorSystem(actorSystemNameFrom(getClass), TestContainers.PortConfig.withFallback(testConfig))
+
     def actorRefFactory: ActorSystem = system
 
     val settings: KnoraSettingsImpl = KnoraSettings(system)

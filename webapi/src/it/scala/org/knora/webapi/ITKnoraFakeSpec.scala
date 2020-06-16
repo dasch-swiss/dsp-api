@@ -48,10 +48,10 @@ object ITKnoraFakeSpec {
 class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, ITKnoraFakeSpec.defaultConfig))
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraFakeSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
+    def this() = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system

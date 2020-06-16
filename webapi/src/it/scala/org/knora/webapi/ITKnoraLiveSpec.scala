@@ -51,10 +51,10 @@ object ITKnoraLiveSpec {
 class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraLiveSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    def this() = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
     /* needed by the core trait (represents the KnoraTestCore trait)*/
     implicit lazy val system: ActorSystem = _system
