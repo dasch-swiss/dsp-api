@@ -25,7 +25,6 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
-import akka.event.LoggingAdapter
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -75,7 +74,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case ResourcesGetRequestV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, targetSchema, requestingUser) => getResourcePreviewV2(resIris, targetSchema, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
-        case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2, loggingAdapter)
+        case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteResourceRequestV2: DeleteOrEraseResourceRequestV2 => deleteOrEraseResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
@@ -89,7 +88,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param createResourceRequestV2 the request to create the resource.
      * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
      */
-    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2, log: LoggingAdapter): Future[ReadResourcesSequenceV2] = {
+    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
         def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
             for {
@@ -226,11 +225,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
                 throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
-            // If no custom IRI was provided, generate a random IRI for the resource.
-            resourceIri: IRI <- createResourceRequestV2.createResource.resourceIri match {
-                case Some(customResourceIri) => FastFuture.successful(customResourceIri.toString)
-                case None => stringFormatter.makeUnusedIri(stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode), storeManager, log)
-            }
+
+            resourceIri: IRI <- checkEntityIRI(createResourceRequestV2.createResource.resourceIri, stringFormatter.makeRandomResourceIri, createResourceRequestV2.createResource.projectADM.shortcode)
+
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
             taskResult <- IriLocker.runWithIriLock(
                 createResourceRequestV2.apiRequestID,

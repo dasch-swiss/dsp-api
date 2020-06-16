@@ -24,7 +24,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import akka.event.LoggingAdapter
+
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
@@ -170,7 +170,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     */
     protected def checkEntityIRI[T](entityIri: Option[SmartIri],
                                     IriFormatter: (T) => String,
-                                    formatterParameter: Option[T] = None): Future[IRI] = {
+                                    formatterParameter: T): Future[IRI] = {
         entityIri match {
             case Some(customResourceIri) =>
                 for {
