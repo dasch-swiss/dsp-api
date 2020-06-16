@@ -264,18 +264,6 @@ init-db-test-unit-minimal: stack-down-delete-volumes stack-without-api ## initia
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
 #################################
-# Fuseki
-#################################
-
-.PHONY: fuseki-up
-fuseki-up: build-knora-fuseki-image ## start fuseki
-	docker-compose -f docker/knora.docker-compose.yml up db
-
-.PHONY: fuseki-down
-fuseki-down: ## stop fuseki
-	docker-compose -f docker/knora.docker-compose.yml stop db
-
-#################################
 # Other
 #################################
 
