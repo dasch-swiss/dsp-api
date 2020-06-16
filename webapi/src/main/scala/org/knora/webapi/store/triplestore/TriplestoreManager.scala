@@ -42,7 +42,7 @@ import scala.concurrent.ExecutionContext
 class TriplestoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    private val settings = Settings(context.system)
+    private val settings = KnoraSettings(context.system)
     protected implicit val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     private var storeActorRef: ActorRef = _

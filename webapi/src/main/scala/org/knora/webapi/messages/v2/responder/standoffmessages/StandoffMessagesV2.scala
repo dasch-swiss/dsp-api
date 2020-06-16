@@ -81,7 +81,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
       * @param targetSchema the Knora API schema to be used in the JSON-LD document.
       * @return a [[JsonLDDocument]] representing the response.
       */
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"Standoff is available only in the complex schema")
         }
@@ -142,7 +142,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
         Future {
             fromJsonLDSync(
@@ -190,7 +190,7 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
   */
 case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

@@ -22,7 +22,10 @@ package org.knora.webapi.e2e.admin
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.testkit.RouteTestTimeout
+
+import scala.concurrent.Await
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
@@ -185,6 +188,22 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 newListIri.set(listInfo.id)
             }
 
+            "create a list with a custom Iri" in {
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+                val listInfo = receivedList.listinfo
+                listInfo.id should be (SharedTestDataADM.customListIRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
+            }
+
             "return a ForbiddenException if the user creating the list is not project or system admin" in {
                 val params =
                     s"""
@@ -201,6 +220,47 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 response.status should be(StatusCodes.Forbidden)
             }
 
+            "return a BadRequestException during list creation when an invalid list IRI is given" in {
+
+                // invalid list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "listIri": "invalid-list-IRI",
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains("Invalid list IRI")
+                invalidIri should be(true)
+            }
+            "return a DuplicateValueException during list creation when the supplied listIri is not unique" in {
+
+                // duplicate list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "listIri": "${SharedTestDataADM.customListIRI}",
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"List with the IRI: '${SharedTestDataADM.customListIRI}' already exists")
+                invalidIri should be(true)
+            }
             "return a BadRequestException during list creation when payload is not correct" in {
 
                 // no project IRI

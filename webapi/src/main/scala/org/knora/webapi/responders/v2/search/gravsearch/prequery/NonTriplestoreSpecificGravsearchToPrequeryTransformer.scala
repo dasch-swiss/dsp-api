@@ -36,7 +36,7 @@ import org.knora.webapi.responders.v2.search.gravsearch.types._
 class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: ConstructClause,
                                                             typeInspectionResult: GravsearchTypeInspectionResult,
                                                             querySchema: ApiV2Schema,
-                                                            settings: SettingsImpl)
+                                                            settings: KnoraSettingsImpl)
     extends AbstractPrequeryGenerator(
         constructClause = constructClause,
         typeInspectionResult = typeInspectionResult,

@@ -19,6 +19,8 @@
 
 package org.knora.webapi.util.jsonld
 
+import java.util.UUID
+
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
@@ -423,16 +425,49 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       *
       * @return a validated Knora data IRI.
       */
-    def getIDAsKnoraDataIri: SmartIri = {
+    def requireIDAsKnoraDataIri: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val dataIri = requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val iri = requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
 
-        if (!dataIri.isKnoraDataIri) {
-            throw BadRequestException(s"Invalid Knora data IRI: $dataIri")
+        if (!iri.isKnoraDataIri) {
+            throw BadRequestException(s"Invalid Knora data IRI: $iri")
         }
 
-        dataIri
+        iri
+    }
+
+    /**
+     * Validates the optional `@id` of a JSON-LD object as a Knora data IRI.
+     *
+     * @return an optional validated Knora data IRI.
+     */
+    def maybeIDAsKnoraDataIri: Option[SmartIri] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val maybeIri: Option[SmartIri] = maybeStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+
+        maybeIri.foreach {
+            iri =>
+                if (!iri.isKnoraDataIri) {
+                    throw BadRequestException(s"Invalid Knora data IRI: $maybeIri")
+                }
+        }
+
+        maybeIri
+    }
+
+    /**
+      * Validates the optional `uuid` of a JSON-LD object as a value uuid.
+      *
+      * @return an optional validated decoded UUID.
+      */
+    def maybeUUID: Option[UUID] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val maybeUUID: Option[UUID] = maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID, stringFormatter.validateBase64EncodedUuid)
+
+        maybeUUID
     }
 
     /**
@@ -440,7 +475,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       *
       * @return a validated Knora type IRI.
       */
-    def getTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
+    def requireTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val typeIri = requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
@@ -458,7 +493,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       *
       * @return the property IRI and the value.
       */
-    def getResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
+    def requireResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDConstants.ID - JsonLDConstants.TYPE
@@ -621,19 +656,24 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     def maybeBoolean(key: String): Option[Boolean] = body.maybeBoolean(key)
 
     /**
-      * A convenience function that calls `body.getIDAsKnoraDataIri`.
+      * A convenience function that calls `body.requireIDAsKnoraDataIri`.
       */
-    def getIDAsKnoraDataIri: SmartIri = body.getIDAsKnoraDataIri
+    def requireIDAsKnoraDataIri: SmartIri = body.requireIDAsKnoraDataIri
 
     /**
-      * A convenience function that calls `body.getTypeAsKnoraApiV2ComplexTypeIri`.
-      */
-    def getTypeAsKnoraTypeIri: SmartIri = body.getTypeAsKnoraApiV2ComplexTypeIri
+     * A convenience function that calls `body.maybeIDAsKnoraDataIri`.
+     */
+    def maybeIDAsKnoraDataIri: Option[SmartIri] = body.maybeIDAsKnoraDataIri
 
     /**
-      * A convenience function that calls `body.getResourcePropertyApiV2ComplexValue`.
+      * A convenience function that calls `body.requireTypeAsKnoraApiV2ComplexTypeIri`.
       */
-    def getResourcePropertyValue: (SmartIri, JsonLDObject) = body.getResourcePropertyApiV2ComplexValue
+    def requireTypeAsKnoraTypeIri: SmartIri = body.requireTypeAsKnoraApiV2ComplexTypeIri
+
+    /**
+      * A convenience function that calls `body.requireResourcePropertyApiV2ComplexValue`.
+      */
+    def requireResourcePropertyValue: (SmartIri, JsonLDObject) = body.requireResourcePropertyApiV2ComplexValue
 
     /**
       * Converts this JSON-LD object to its compacted Java representation.

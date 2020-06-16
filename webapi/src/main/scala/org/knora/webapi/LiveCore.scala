@@ -35,7 +35,7 @@ import scala.languageFeature.postfixOps
 trait Core {
     implicit val system: ActorSystem
 
-    implicit val settings: SettingsImpl
+    implicit val settings: KnoraSettingsImpl
 
     implicit val materializer: Materializer
 
@@ -57,7 +57,7 @@ trait LiveCore extends Core {
     /**
       * The application's configuration.
       */
-    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
       * Provides the actor materializer (akka-http)

@@ -1003,7 +1003,7 @@ object ConstructResponseUtilV2 {
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        targetSchema: ApiV2Schema,
-                                       settings: SettingsImpl,
+                                       settings: KnoraSettingsImpl,
                                        requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
             valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
@@ -1065,7 +1065,7 @@ object ConstructResponseUtilV2 {
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
                                                      targetSchema: ApiV2Schema,
-                                                     settings: SettingsImpl,
+                                                     settings: KnoraSettingsImpl,
                                                      requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
         val valueObjectValueHasString: Option[String] = valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasString.toSmartIri)
@@ -1243,7 +1243,7 @@ object ConstructResponseUtilV2 {
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
                                         targetSchema: ApiV2Schema,
-                                        settings: SettingsImpl,
+                                        settings: KnoraSettingsImpl,
                                         requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
             val isDeleted: Boolean = rdfData.requireBooleanObject(OntologyConstants.KnoraBase.IsDeleted.toSmartIri)
@@ -1398,7 +1398,7 @@ object ConstructResponseUtilV2 {
                           versionDate: Option[Instant],
                           responderManager: ActorRef,
                           targetSchema: ApiV2Schema,
-                          settings: SettingsImpl,
+                          settings: KnoraSettingsImpl,
                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourcesSequenceV2] = {
 
         val visibleResourceIris: Seq[IRI] = orderByResourceIri.filter(resourceIri => mainResourcesAndValueRdfData.resources.keySet.contains(resourceIri))

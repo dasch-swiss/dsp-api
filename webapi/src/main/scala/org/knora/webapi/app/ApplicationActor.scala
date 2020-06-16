@@ -1,16 +1,17 @@
 package org.knora.webapi.app
 
 import akka.actor.SupervisorStrategy._
-import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
+import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Stash, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler, Route}
 import akka.stream.Materializer
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi._
-import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
@@ -48,7 +49,7 @@ trait LiveManagers extends Managers {
      */
     lazy val storeManager: ActorRef = context.actorOf(
         Props(new StoreManager(self) with LiveActorMaker)
-            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = StoreManagerActorName
     )
 
@@ -57,7 +58,7 @@ trait LiveManagers extends Managers {
      */
     lazy val responderManager: ActorRef = context.actorOf(
         Props(new ResponderManager(self) with LiveActorMaker)
-            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
     // #store-responder
@@ -71,7 +72,7 @@ trait LiveManagers extends Managers {
  * the startup and shutdown sequence. Further, it forwards any messages meant
  * for responders or the store to the respective actor.
  */
-class ApplicationActor extends Actor with LazyLogging with AroundDirectives with Timers {
+class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
     this: Managers =>
 
     private val log = akka.event.Logging(context.system, this.getClass)
@@ -83,7 +84,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     /**
      * The application's configuration.
      */
-    implicit val settings: SettingsImpl = Settings(system)
+    implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
      * Provides the actor materializer (akka-http)
@@ -98,7 +99,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     /**
      * Timeout definition
      */
-    implicit protected val timeout: Timeout = settings.defaultTimeout
+    implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
 
     /**
      * A user representing the Knora API server, used for initialisation on startup.
@@ -139,14 +140,41 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     private var printConfigState = false
     private var ignoreRepository = true
     private var withIIIFService = true
-    private val withCacheService = settings.cacheServiceEnabled
+    private val withCacheService = knoraSettings.cacheServiceEnabled
 
-    def receive: PartialFunction[Any, Unit] = {
 
+    /**
+     * Startup of the ApplicationActor is a two step process:
+     * 1. Step: Start the http server and bind to ip and port. This is done with
+     * the "initializing" behaviour
+     * - Success: After a successful bind, go to step 2.
+     * - Failure: If bind fails, then retry up to 5 times before exiting.
+     *
+     * 2. Step:
+     *
+     */
+    def receive: Receive = initializing()
+
+    def initializing(): Receive = {
         /* Called from main. Initiates application startup. */
-        case appStartMsg: AppStart => appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService)
+        case appStartMsg: AppStart =>
+            println("==> AppStart")
+            appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService, appStartMsg.retryCnt)
+        case AppStop() =>
+            println("==> AppStop")
+            appStop()
+        case AppReady() =>
+            println("==> AppReady")
+            unstashAll() // unstash any messages, so that they can be processed
+            context.become(ready(), discardOld = true)
+        case _ =>
+            stash() // stash any messages which we cannot handle in this state
+    }
 
-        case AppStop() => appStop()
+    def ready(): Receive = {
+        /* Usually only called from tests */
+        case AppStop() =>
+            appStop()
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
         case initStartUp: InitStartUp =>
@@ -163,9 +191,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         case SetAppState(value: AppState) =>
 
             appState = value
-
             logger.debug("appStateChanged - to state: {}", value)
-
             value match {
                 case AppStates.Stopped =>
                 // do nothing
@@ -263,7 +289,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         case GetAllowReloadOverHTTPState() =>
             logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-            sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
+            sender ! (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP)
 
         case SetPrintConfigExtendedState(value) =>
             logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
@@ -271,7 +297,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         case GetPrintConfigExtendedState() =>
             logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
-            sender ! (printConfigState | settings.printExtendedConfig)
+            sender ! (printConfigState | knoraSettings.printExtendedConfig)
 
         /* check repository request */
         case CheckTriplestore() =>
@@ -301,7 +327,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         /* create caches request */
         case CreateCaches() =>
-            CacheUtil.createCaches(settings.caches)
+            CacheUtil.createCaches(knoraSettings.caches)
             self ! SetAppState(AppStates.CachesReady)
 
         case UpdateSearchIndex() =>
@@ -349,65 +375,87 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
 
+    // Our rejection handler. Here we are using the default one from the CORS lib
+    val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler.withFallback(RejectionHandler.default)
+
+    // Our exception handler
+    val exceptionHandler: ExceptionHandler = KnoraExceptionHandler(KnoraSettings(system))
+
+    // Combining the two handlers for convenience
+    val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+
     /**
-     * All routes composed together and CORS activated.
+     * All routes composed together and CORS activated based on the
+     * the configuration in application.conf (akka-http-cors).
+     *
      * ALL requests go through each of the routes in ORDER.
      * The FIRST matching route is used for handling a request.
      */
     private val apiRoutes: Route = logDuration {
         addServerHeader {
-            CORS(
-                new HealthRoute(routeData).knoraApiPath ~
-                    new VersionRoute(routeData).knoraApiPath ~
-                    new RejectingRoute(routeData).knoraApiPath ~
-                    new ClientApiRoute(routeData).knoraApiPath ~
-                    new ResourcesRouteV1(routeData).knoraApiPath ~
-                    new ValuesRouteV1(routeData).knoraApiPath ~
-                    new StandoffRouteV1(routeData).knoraApiPath ~
-                    new ListsRouteV1(routeData).knoraApiPath ~
-                    new ResourceTypesRouteV1(routeData).knoraApiPath ~
-                    new SearchRouteV1(routeData).knoraApiPath ~
-                    new AuthenticationRouteV1(routeData).knoraApiPath ~
-                    new AssetsRouteV1(routeData).knoraApiPath ~
-                    new CkanRouteV1(routeData).knoraApiPath ~
-                    new UsersRouteV1(routeData).knoraApiPath ~
-                    new ProjectsRouteV1(routeData).knoraApiPath ~
-                    new OntologiesRouteV2(routeData).knoraApiPath ~
-                    new SearchRouteV2(routeData).knoraApiPath ~
-                    new ResourcesRouteV2(routeData).knoraApiPath ~
-                    new ValuesRouteV2(routeData).knoraApiPath ~
-                    new StandoffRouteV2(routeData).knoraApiPath ~
-                    new ListsRouteV2(routeData).knoraApiPath ~
-                    new AuthenticationRouteV2(routeData).knoraApiPath ~
-                    new GroupsRouteADM(routeData).knoraApiPath ~
-                    new ListsRouteADM(routeData).knoraApiPath ~
-                    new PermissionsRouteADM(routeData).knoraApiPath ~
-                    new ProjectsRouteADM(routeData).knoraApiPath ~
-                    new StoreRouteADM(routeData).knoraApiPath ~
-                    new UsersRouteADM(routeData).knoraApiPath ~
-                    new SipiRouteADM(routeData).knoraApiPath ~
-                    new SwaggerApiDocsRoute(routeData).knoraApiPath,
-                settings
-            )
+            handleErrors {
+                CorsDirectives.cors(CorsSettings(system)) {
+                    handleErrors {
+                        new HealthRoute(routeData).knoraApiPath ~
+                          new VersionRoute(routeData).knoraApiPath ~
+                          new RejectingRoute(routeData).knoraApiPath ~
+                          new ClientApiRoute(routeData).knoraApiPath ~
+                          new ResourcesRouteV1(routeData).knoraApiPath ~
+                          new ValuesRouteV1(routeData).knoraApiPath ~
+                          new StandoffRouteV1(routeData).knoraApiPath ~
+                          new ListsRouteV1(routeData).knoraApiPath ~
+                          new ResourceTypesRouteV1(routeData).knoraApiPath ~
+                          new SearchRouteV1(routeData).knoraApiPath ~
+                          new AuthenticationRouteV1(routeData).knoraApiPath ~
+                          new AssetsRouteV1(routeData).knoraApiPath ~
+                          new CkanRouteV1(routeData).knoraApiPath ~
+                          new UsersRouteV1(routeData).knoraApiPath ~
+                          new ProjectsRouteV1(routeData).knoraApiPath ~
+                          new OntologiesRouteV2(routeData).knoraApiPath ~
+                          new SearchRouteV2(routeData).knoraApiPath ~
+                          new ResourcesRouteV2(routeData).knoraApiPath ~
+                          new ValuesRouteV2(routeData).knoraApiPath ~
+                          new StandoffRouteV2(routeData).knoraApiPath ~
+                          new ListsRouteV2(routeData).knoraApiPath ~
+                          new AuthenticationRouteV2(routeData).knoraApiPath ~
+                          new GroupsRouteADM(routeData).knoraApiPath ~
+                          new ListsRouteADM(routeData).knoraApiPath ~
+                          new PermissionsRouteADM(routeData).knoraApiPath ~
+                          new ProjectsRouteADM(routeData).knoraApiPath ~
+                          new StoreRouteADM(routeData).knoraApiPath ~
+                          new UsersRouteADM(routeData).knoraApiPath ~
+                          new SipiRouteADM(routeData).knoraApiPath ~
+                          new SwaggerApiDocsRoute(routeData).knoraApiPath
+                    }
+                }
+            }
         }
     }
 
     // #start-api-server
     /**
      * Starts the Knora-API server.
+     *
+     * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
+     * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
+     * @param retryCnt            how many times was this command tried
      */
-    def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean): Unit = {
+    def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http()
-            .bindAndHandle(
-                Route.handlerFlow(apiRoutes),
-                settings.internalKnoraApiHost,
-                settings.internalKnoraApiPort
-            )
+          .bindAndHandle(
+              Route.handlerFlow(apiRoutes),
+              knoraSettings.internalKnoraApiHost,
+              knoraSettings.internalKnoraApiPort
+          )
 
         bindingFuture onComplete {
             case Success(_) =>
-                if (settings.prometheusEndpoint) {
+
+                // Transition to ready state
+                self ! AppReady()
+
+                if (knoraSettings.prometheusEndpoint) {
                     // Load Kamon monitoring
                     Kamon.loadModules()
                 }
@@ -416,14 +464,24 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                 self ! InitStartUp(ignoreRepository, requiresIIIFService)
 
             case Failure(ex) =>
-                logger.error(
-                    "Failed to bind to {}:{}! - {}",
-                    settings.internalKnoraApiHost,
-                    settings.internalKnoraApiPort,
-                    ex.getMessage
-                )
-
-                appStop()
+                if (retryCnt < 5) {
+                    logger.error(
+                        "Failed to bind to {}:{}! - {} - retryCnt: {}",
+                        knoraSettings.internalKnoraApiHost,
+                        knoraSettings.internalKnoraApiPort,
+                        ex.getMessage,
+                        retryCnt
+                    )
+                    self ! AppStart(ignoreRepository, requiresIIIFService, retryCnt + 1)
+                } else {
+                    logger.error(
+                        "Failed to bind to {}:{}! - {}",
+                        knoraSettings.internalKnoraApiHost,
+                        knoraSettings.internalKnoraApiPort,
+                        ex.getMessage
+                    )
+                    self ! AppStop()
+                }
         }
     }
 
@@ -441,7 +499,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         super.postStop()
         logger.info("ApplicationActor - shutdown in progress, initiating post stop cleanup. Bye!")
 
-        if (settings.prometheusEndpoint) {
+        if (knoraSettings.prometheusEndpoint) {
             // Stop Kamon monitoring
             Kamon.stopModules()
         }
@@ -468,30 +526,30 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
 
         msg += "\n"
-        msg += s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}\n"
+        msg += s"Knora API Server started at http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
         msg += "----------------------------------------------------------------\n"
 
-        if (allowReloadOverHTTPState | settings.allowReloadOverHTTP) {
+        if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
             msg += "----------------------------------------------------------------\n"
         }
 
         // which repository are we using
-        msg += s"DB-Name: ${settings.triplestoreDatabaseName}\n"
-        msg += s"DB-Type: ${settings.triplestoreType}\n"
-        msg += s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}\n"
+        msg += s"DB-Name: ${knoraSettings.triplestoreDatabaseName}\n"
+        msg += s"DB-Type: ${knoraSettings.triplestoreType}\n"
+        msg += s"DB Server: ${knoraSettings.triplestoreHost}, DB Port: ${knoraSettings.triplestorePort}\n"
 
 
         if (printConfigState) {
 
-            msg += s"DB User: ${settings.triplestoreUsername}\n"
-            msg += s"DB Password: ${settings.triplestorePassword}\n"
+            msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
+            msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"
 
-            msg += s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
-            msg += s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}\n"
-            msg += s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}\n"
-            msg += s"Sipi internal URL: ${settings.internalSipiBaseUrl}\n"
-            msg += s"Sipi external URL: ${settings.externalSipiBaseUrl}\n"
+            msg += s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
+            msg += s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}\n"
+            msg += s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}\n"
+            msg += s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}\n"
+            msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
         }
 
         msg += "================================================================\n"
