@@ -516,16 +516,16 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         var msg =
             """
-              |   ____  ____  ____         _    ____ ___
-              |  |  _ \/ ___||  _ \       / \  |  _ \_ _|
-              |  | | | \___ \| |_) |____ / _ \ | |_) | |
-              |  | |_| |___) |  __/_____/ ___ \|  __/| |
-              |  |____/|____/|_|       /_/   \_\_|  |___|
+              |  ____  ____  ____         _    ____ ___
+              | |  _ \/ ___||  _ \       / \  |  _ \_ _|
+              | | | | \___ \| |_) |____ / _ \ | |_) | |
+              | | |_| |___) |  __/_____/ ___ \|  __/| |
+              | |____/|____/|_|       /_/   \_\_|  |___|
             """.stripMargin
 
         msg += "\n"
         msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
-        msg += "------------------------------------------------\n\n"
+        msg += "------------------------------------------------\n"
 
         if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting DB is turned ON.\n"
