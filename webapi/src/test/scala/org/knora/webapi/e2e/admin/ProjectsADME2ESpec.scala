@@ -146,6 +146,72 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             }
 
+
+            "CREATE a new project with custom Iri" in {
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createProjectWithCustomIRIRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.OK)
+
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+
+                //check that the custom IRI is correctly assigned
+                result.id should be (SharedTestDataADM.customProjectIri)
+
+                //check the rest of project info
+                result.shortcode should be ("3333")
+                result.shortname should be ("newprojectWithIri")
+                result.longname should be (Some("new project with a custom IRI"))
+                result.keywords should be (Seq("projectIRI"))
+                result.description should be (Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en"))))
+
+            }
+
+            "return 'BadRequest' if the supplied 'projectIri' is not a valid IRI" in {
+                val params =
+                    s"""{
+                       |    "projectIri": "invalid-project-IRI",
+                       |    "shortname": "newprojectWithInvalidIri",
+                       |    "shortcode": "2222",
+                       |    "longname": "new project with a custom invalid IRI",
+                       |    "description": [{"value": "a project created with an invalid custom IRI", "language": "en"}],
+                       |    "keywords": ["projectInvalidIRI"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains("Invalid project IRI")
+                invalidIri should be(true)
+            }
+            "return 'BadRequest' if the supplied 'projectIri' is not unique" in {
+                val params =
+                    s"""{
+                       |    "projectIri": "${SharedTestDataADM.customProjectIri}",
+                       |    "shortname": "newprojectWithDuplicateIri",
+                       |    "shortcode": "2222",
+                       |    "longname": "new project with a duplicate custom invalid IRI",
+                       |    "description": [{"value": "a project created with a duplicate custom IRI", "language": "en"}],
+                       |    "keywords": ["projectDuplicateIRI"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"Project with the IRI: '${SharedTestDataADM.customProjectIri}' already exists")
+                invalidIri should be(true)
+            }
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
                 val params =
                     s"""
@@ -376,7 +442,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(response.status === StatusCodes.OK)
 
                 val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-                keywords.size should be (20)
+                keywords.size should be (21)
             }
 
             "return all keywords for a single project" in {
