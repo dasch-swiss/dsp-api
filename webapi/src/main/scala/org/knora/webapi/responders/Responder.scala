@@ -23,6 +23,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+import akka.event.LoggingAdapter
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
@@ -107,6 +108,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
      * Provides logging
      */
     protected val log: Logger = logger
+    protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     /**
      * Checks whether an entity is used in the triplestore.
@@ -154,5 +156,31 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
             entityExistsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(checkEntityExistsSparql)).mapTo[SparqlSelectResponse]
             result: Boolean = entityExistsResponse.results.bindings.nonEmpty
         } yield result
+    }
+
+    /**
+      * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
+      * If no custom IRI was given, creates a random unused IRI.
+      *
+      * @param entityIri          the optional custom IRI of the entity.
+      * @param IriFormatter       the stringFormatter method that must be used to create a random Iri.
+      * @param formatterParameter the parameter to be used by the string formatter method.
+      * @return IRI of the entity.
+    */
+    protected def checkEntityIRI[T](entityIri: Option[SmartIri],
+                                    IriFormatter: (T) => String,
+                                    formatterParameter: Option[T] = None): Future[IRI] = {
+        entityIri match {
+            case Some(customResourceIri) =>
+                for {
+                    result <- checkEntityExists(entityIri = customResourceIri)
+                    _ = if (result) {
+                        throw DuplicateValueException(s"IRI: '${customResourceIri.toString}' already exists, try another one.")
+                    }
+                } yield customResourceIri.toString
+
+            case None => stringFormatter.makeUnusedIri(IriFormatter(formatterParameter), storeManager, loggingAdapter)
+
+            }
     }
 }
