@@ -598,7 +598,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param propertyIri           the IRI of the property that will point to the value.
      * @param valueToCreate         the value to be created.
      * @param valueHasOrder         the value's `knora-base:valueHasOrder`.
-     * @param resourceCreationDate  the creation date of the resource.
+     * @param resourceCreationDate  the timestamp to be used as the value creation time.
      * @param requestingUser        the user making the request.
      * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
      */

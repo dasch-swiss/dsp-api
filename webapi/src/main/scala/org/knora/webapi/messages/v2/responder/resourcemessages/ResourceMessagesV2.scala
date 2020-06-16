@@ -462,7 +462,6 @@ case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
  * @param values           the resource's values.
  * @param projectADM       the project that the resource should belong to.
  * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
- * @param creationDate     the optional creation date of the resource.
  */
 case class CreateResourceV2(resourceIri: Option[SmartIri],
                             resourceClassIri: SmartIri,
