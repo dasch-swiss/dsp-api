@@ -41,7 +41,8 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM._
 import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
  * Handles requests to read and write Knora values.
@@ -397,10 +398,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         for {
 
             // Make an IRI for the new value.
-            newValueIri: IRI <- maybeValueIri match {
-                case Some(customValueIri) => FastFuture.successful(customValueIri.toString)
-                case None => FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
-            }
+            newValueIri: IRI <- checkEntityIRI(maybeValueIri, () => stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
 
             // Make a UUID for the new value
             newValueUUID: UUID = maybeValueUUID match {
@@ -610,10 +608,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
 
         // Make an IRI for the new value.
-        val newValueIri: IRI = valueToCreate.customValueIri match {
-            case Some(customValueIri) => customValueIri.toString
-            case None => stringFormatter.makeRandomValueIri(resourceIri)
-        }
+        val newValueIri: IRI = Await.result(checkEntityIRI(valueToCreate.customValueIri, () => stringFormatter.makeRandomValueIri(resourceIri)), 5 seconds)
 
         // Make a UUID for the new value.
         val newValueUUID: UUID = valueToCreate.customValueUUID match {
@@ -2006,10 +2001,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         )
 
         // Make an IRI for the new LinkValue.
-        val newLinkValueIri: IRI = customNewLinkValueIri match {
-            case Some(customValueIri) =>  customValueIri.toString
-            case None => stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-        }
+        val newLinkValueIri: IRI = Await.result(checkEntityIRI(customNewLinkValueIri, () => stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)), 5 seconds)
+
         maybeLinkValueInfo match {
             case Some(linkValueInfo) =>
                 // There's already a LinkValue for links between these two resources. Increment

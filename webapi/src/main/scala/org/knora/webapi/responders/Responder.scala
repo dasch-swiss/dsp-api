@@ -164,13 +164,11 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
       * If no custom IRI was given, creates a random unused IRI.
       *
       * @param entityIri          the optional custom IRI of the entity.
-      * @param IriFormatter       the stringFormatter method that must be used to create a random Iri.
-      * @param formatterParameter the parameter to be used by the string formatter method.
+      * @param iriFormatter       the stringFormatter method that must be used to create a random Iri.
       * @return IRI of the entity.
     */
     protected def checkEntityIRI[T](entityIri: Option[SmartIri],
-                                    IriFormatter: (T) => String,
-                                    formatterParameter: T): Future[IRI] = {
+                                    iriFormatter: () => IRI): Future[IRI] = {
         entityIri match {
             case Some(customResourceIri) =>
                 for {
@@ -180,7 +178,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                     }
                 } yield customResourceIri.toString
 
-            case None => stringFormatter.makeUnusedIri(IriFormatter(formatterParameter), storeManager, loggingAdapter)
+            case None => stringFormatter.makeUnusedIri(iriFormatter.apply(), storeManager, loggingAdapter)
 
             }
     }
