@@ -559,7 +559,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         for {
             // Generate SPARQL to create links and LinkValues for standoff links in text values.
 
-            sparqlForStandoffLinks: String <- Future(generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest))
+            sparqlForStandoffLinks: String <- generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest)
 
             // Generate SPARQL for each value.
             sparqlForPropertyValueFutures: Map[SmartIri, Seq[Future[InsertSparqlWithUnverifiedValue]]] = createMultipleValuesRequest.values.map {
@@ -692,7 +692,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param createMultipleValuesRequest the request to create multiple values.
      * @return SPARQL INSERT statements.
      */
-    private def generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): String = {
+    private def generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[String] = {
         // To create LinkValues for the standoff links in the values to be created, we need to compute
         // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
         // that have standoff links to a particular target resource.
@@ -721,33 +721,37 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // standoff links to that IRI.
         val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
 
-        // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
-        // and one LinkValue with its initial reference count.
-        val standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
-            case (targetIri, initialReferenceCount) =>
-                SparqlTemplateLinkUpdate(
-                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                    directLinkExists = false,
-                    insertDirectLink = true,
-                    deleteDirectLink = false,
-                    linkValueExists = false,
-                    linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-                    newLinkValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
-                    linkTargetIri = targetIri,
-                    currentReferenceCount = 0,
-                    newReferenceCount = initialReferenceCount,
-                    newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                    newLinkValuePermissions = standoffLinkValuePermissions
-                )
-        }
+        for {
+            newValueIri: IRI <- makeUnusedValueIri(createMultipleValuesRequest.resourceIri)
 
-        // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-        queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
-            resourceIri = createMultipleValuesRequest.resourceIri,
-            linkUpdates = standoffLinkUpdates,
-            creationDate = createMultipleValuesRequest.creationDate,
-            stringFormatter = stringFormatter
-        ).toString()
+            // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
+            // and one LinkValue with its initial reference count.
+            standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
+                case (targetIri, initialReferenceCount) =>
+                    SparqlTemplateLinkUpdate(
+                        linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                        directLinkExists = false,
+                        insertDirectLink = true,
+                        deleteDirectLink = false,
+                        linkValueExists = false,
+                        linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+                        newLinkValueIri = newValueIri,
+                        linkTargetIri = targetIri,
+                        currentReferenceCount = 0,
+                        newReferenceCount = initialReferenceCount,
+                        newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                        newLinkValuePermissions = standoffLinkValuePermissions
+                    )
+            }
+
+            // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
+            sparqlInsert = queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
+                resourceIri = createMultipleValuesRequest.resourceIri,
+                linkUpdates = standoffLinkUpdates,
+                creationDate = createMultipleValuesRequest.creationDate,
+                stringFormatter = stringFormatter
+            ).toString()
+        } yield sparqlInsert
     }
 
     /**
@@ -1148,7 +1152,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  valuePermissions: String,
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
-            newValueIri: IRI <- stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri), storeManager, loggingAdapter)
+            newValueIri: IRI <- makeUnusedValueIri(resourceInfo.resourceIri)
 
             // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValue.valueContent, newValueVersion) match {
@@ -1174,7 +1178,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     val standoffLinkUpdatesForAddedResourceRefsFuture: Future[Seq[SparqlTemplateLinkUpdate]] = Future.sequence(standoffLinkUpdatesForAddedResourceRefFutures)
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-                    val standoffLinkUpdatesForRemovedResourceRefs: Seq[SparqlTemplateLinkUpdate] = removedResourceRefs.toVector.map {
+                    val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Future[SparqlTemplateLinkUpdate]] = removedResourceRefs.toVector.map {
                         removedTargetResource =>
                             decrementLinkValue(
                                 sourceResourceInfo = resourceInfo,
@@ -1186,8 +1190,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             )
                     }
 
+                    val standoffLinkUpdatesForRemovedResourceRefFuture = Future.sequence(standoffLinkUpdatesForRemovedResourceRefFutures)
+
                     for {
                         standoffLinkUpdatesForAddedResourceRefs <- standoffLinkUpdatesForAddedResourceRefsFuture
+                        standoffLinkUpdatesForRemovedResourceRefs <- standoffLinkUpdatesForRemovedResourceRefFuture
                     } yield standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
 
                 case _ => FastFuture.successful(Vector.empty[SparqlTemplateLinkUpdate])
@@ -1257,17 +1264,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Are we changing the link target?
         if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
-            // Yes. Delete the existing link and decrement its LinkValue's reference count.
-            val sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate = decrementLinkValue(
-                sourceResourceInfo = resourceInfo,
-                linkPropertyIri = linkPropertyIri,
-                targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
-                valueCreator = valueCreator,
-                valuePermissions = valuePermissions,
-                requestingUser = requestingUser
-            )
-
             for {
+                // Yes. Delete the existing link and decrement its LinkValue's reference count.
+                sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate <- decrementLinkValue(
+                    sourceResourceInfo = resourceInfo,
+                    linkPropertyIri = linkPropertyIri,
+                    targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+                    valueCreator = valueCreator,
+                    valuePermissions = valuePermissions,
+                    requestingUser = requestingUser
+                )
+
                 // Create a new link, and create a new LinkValue for it.
                 sparqlTemplateLinkUpdateForNewLink: SparqlTemplateLinkUpdate <- incrementLinkValue(
                     sourceResourceInfo = resourceInfo,
@@ -1313,22 +1320,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 creationDate = currentTime
             )
         } else {
-            // We're not changing the link target, just the metadata on the LinkValue.
-
-            val sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate = changeLinkValueMetadata(
-                sourceResourceInfo = resourceInfo,
-                linkPropertyIri = linkPropertyIri,
-                targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
-                valueCreator = valueCreator,
-                valuePermissions = valuePermissions,
-                requestingUser = requestingUser
-            )
-
-            // Make a timestamp to indicate when the link value was updated.
-            val currentTime: Instant = Instant.now
-
             for {
-                sparqlUpdate <- Future(queries.sparql.v2.txt.changeLinkMetadata(
+                // We're not changing the link target, just the metadata on the LinkValue.
+
+                sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate <- changeLinkValueMetadata(
+                    sourceResourceInfo = resourceInfo,
+                    linkPropertyIri = linkPropertyIri,
+                    targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+                    valueCreator = valueCreator,
+                    valuePermissions = valuePermissions,
+                    requestingUser = requestingUser
+                )
+
+                // Make a timestamp to indicate when the link value was updated.
+                currentTime: Instant = Instant.now
+
+                sparqlUpdate = queries.sparql.v2.txt.changeLinkMetadata(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     linkSourceIri = resourceInfo.resourceIri,
@@ -1336,7 +1343,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     maybeComment = newLinkValue.comment,
                     currentTime = currentTime,
                     requestingUser = requestingUser.id
-                ).toString())
+                ).toString()
 
                 _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
             } yield UnverifiedValueV2(
@@ -1570,21 +1577,21 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             case _ => throw AssertionException("Unreachable code")
         }
 
-        // Delete the existing link and decrement its LinkValue's reference count.
-        val sparqlTemplateLinkUpdate = decrementLinkValue(
-            sourceResourceInfo = resourceInfo,
-            linkPropertyIri = propertyIri,
-            targetResourceIri = currentLinkValueContent.referredResourceIri,
-            valueCreator = currentValue.attachedToUser,
-            valuePermissions = currentValue.permissions,
-            requestingUser = requestingUser
-        )
-
         // Make a timestamp to indicate when the link value was updated.
         val currentTime: Instant = Instant.now
 
         for {
-            sparqlUpdate <- Future(queries.sparql.v2.txt.deleteLink(
+            // Delete the existing link and decrement its LinkValue's reference count.
+            sparqlTemplateLinkUpdate <- decrementLinkValue(
+                sourceResourceInfo = resourceInfo,
+                linkPropertyIri = propertyIri,
+                targetResourceIri = currentLinkValueContent.referredResourceIri,
+                valueCreator = currentValue.attachedToUser,
+                valuePermissions = currentValue.permissions,
+                requestingUser = requestingUser
+            )
+
+            sparqlUpdate = queries.sparql.v2.txt.deleteLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceInfo.resourceIri,
@@ -1592,7 +1599,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 maybeComment = deleteComment,
                 currentTime = currentTime,
                 requestingUser = requestingUser.id
-            ).toString())
+            ).toString()
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield sparqlTemplateLinkUpdate.newLinkValueIri
@@ -1619,7 +1626,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
         // links in standoff markup.
-        val linkUpdates: Seq[SparqlTemplateLinkUpdate] = currentValue.valueContent match {
+        val linkUpdateFutures: Seq[Future[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
             case textValue: TextValueContentV2 =>
                 textValue.standoffLinkTagTargetResourceIris.toVector.map {
                     removedTargetResource =>
@@ -1633,14 +1640,18 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                         )
                 }
 
-            case _ => Seq.empty[SparqlTemplateLinkUpdate]
+            case _ => Seq.empty[Future[SparqlTemplateLinkUpdate]]
         }
+
+        val linkUpdateFuture = Future.sequence(linkUpdateFutures)
 
         // Make a timestamp to indicate when the value was marked as deleted.
         val currentTime: Instant = Instant.now
 
         for {
-            sparqlUpdate <- Future(queries.sparql.v2.txt.deleteValue(
+            linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
+
+            sparqlUpdate = queries.sparql.v2.txt.deleteValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -1651,7 +1662,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 currentTime = currentTime,
                 requestingUser = requestingUser.id,
                 stringFormatter = stringFormatter
-            ).toString())
+            ).toString()
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield currentValue.valueIri
@@ -2074,7 +2085,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
                                    valuePermissions: String,
-                                   requestingUser: UserADM): SparqlTemplateLinkUpdate = {
+                                   requestingUser: UserADM): Future[SparqlTemplateLinkUpdate] = {
 
         // Check whether a LinkValue already exists for this link.
         val maybeLinkValueInfo = findLinkValue(
@@ -2095,10 +2106,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // resources should be removed.
                 val deleteDirectLink = newReferenceCount == 0
 
-                // Generate an IRI for the new LinkValue.
-                val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-
-                SparqlTemplateLinkUpdate(
+                for {
+                    // Generate an IRI for the new LinkValue.
+                    newLinkValueIri: IRI <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
+                } yield SparqlTemplateLinkUpdate(
                     linkPropertyIri = linkPropertyIri,
                     directLinkExists = true,
                     insertDirectLink = false,
@@ -2136,7 +2147,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                         targetResourceIri: IRI,
                                         valueCreator: IRI,
                                         valuePermissions: String,
-                                        requestingUser: UserADM): SparqlTemplateLinkUpdate = {
+                                        requestingUser: UserADM): Future[SparqlTemplateLinkUpdate] = {
 
         // Check whether a LinkValue already exists for this link.
         val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
@@ -2150,10 +2161,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             case Some(linkValueInfo) =>
                 // Yes. Make a SparqlTemplateLinkUpdate.
 
-                // Generate an IRI for the new LinkValue.
-                val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-
-                SparqlTemplateLinkUpdate(
+                for {
+                    // Generate an IRI for the new LinkValue.
+                    newLinkValueIri: IRI <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
+                } yield SparqlTemplateLinkUpdate(
                     linkPropertyIri = linkPropertyIri,
                     directLinkExists = true,
                     insertDirectLink = false,
@@ -2184,5 +2195,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         )
 
         PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
+    }
+
+    /**
+     * A convenience method for generating an unused random value IRI.
+     *
+     * @param resourceIri the IRI of the containing resource.
+     * @return the new value IRI.
+     */
+    private def makeUnusedValueIri(resourceIri: IRI): Future[IRI] = {
+        stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), storeManager, loggingAdapter)
     }
 }
