@@ -27,7 +27,7 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlSelectRequest, SparqlSelectResponse, SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -2126,22 +2126,22 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             // Check that all parts of the resource were erased.
 
             val erasedIrisToCheck: Set[SmartIri] = (
-                standoffTagIrisToErase.toSet +
-                    resourceIriToErase.get +
-                    firstValueIriToErase.get +
-                    secondValueIriToErase.get
-                ).map(_.toSmartIri)
+              standoffTagIrisToErase.toSet +
+                resourceIriToErase.get +
+                firstValueIriToErase.get +
+                secondValueIriToErase.get
+              ).map(_.toSmartIri)
 
             for (erasedIriToCheck <- erasedIrisToCheck) {
                 val sparqlQuery = queries.sparql.admin.txt.checkIriExists(
                     iri = erasedIriToCheck.toString
                 ).toString()
 
-                storeManager ! SparqlSelectRequest(sparqlQuery)
+                storeManager ! SparqlAskRequest(sparqlQuery)
 
                 expectMsgPF(timeout) {
-                    case entityExistsResponse: SparqlSelectResponse =>
-                        assert(entityExistsResponse.results.bindings.isEmpty, s"Entity $erasedIriToCheck should have been erased, but was not")
+                    case entityExistsResponse: SparqlAskResponse =>
+                        entityExistsResponse.result should be (false)
                 }
             }
 
