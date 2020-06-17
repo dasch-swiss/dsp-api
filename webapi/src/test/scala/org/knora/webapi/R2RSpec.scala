@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.pattern.ask
 import akka.util.Timeout
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
@@ -44,14 +45,14 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
+
 /**
-  * Created by subotic on 08.12.15.
+  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
   */
 class R2RSpec extends Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     // override so that we can add our own config
-    override def createActorSystem(): ActorSystem =
-        ActorSystem(actorSystemNameFrom(getClass), TestContainers.PortConfig.withFallback(testConfig))
+    override val testConfig: Config = TestContainers.PortConfig.withFallback(ConfigFactory.load())
 
     def actorRefFactory: ActorSystem = system
 

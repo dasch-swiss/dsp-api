@@ -158,13 +158,13 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     def initializing(): Receive = {
         /* Called from main. Initiates application startup. */
         case appStartMsg: AppStart =>
-            println("==> AppStart")
+            logger.info("==> AppStart")
             appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService, appStartMsg.retryCnt)
         case AppStop() =>
-            println("==> AppStop")
+            logger.info("==> AppStop")
             appStop()
         case AppReady() =>
-            println("==> AppReady")
+            logger.info("==> AppReady")
             unstashAll() // unstash any messages, so that they can be processed
             context.become(ready(), discardOld = true)
         case _ =>
@@ -178,7 +178,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
         case initStartUp: InitStartUp =>
-            logger.info("Startup initiated, please wait ...")
+            logger.info("=> InitStartUp")
 
             if (appState == AppStates.Stopped) {
                 ignoreRepository = initStartUp.ignoreRepository
@@ -264,6 +264,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                     self ! SetAppState(AppStates.Running)
 
                 case AppStates.Running =>
+                    logger.info("=> Running")
                     printBanner()
 
                 case AppStates.MaintenanceMode =>
