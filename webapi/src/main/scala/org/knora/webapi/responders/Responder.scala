@@ -166,8 +166,8 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
      * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
      * @return IRI of the entity.
      */
-    protected def checkEntityIRI[T](entityIri: Option[SmartIri],
-                                    iriFormatter: => IRI): Future[IRI] = {
+    protected def checkEntityIRI(entityIri: Option[SmartIri],
+                                 iriFormatter: => IRI): Future[IRI] = {
         entityIri match {
             case Some(customResourceIri) =>
                 for {
