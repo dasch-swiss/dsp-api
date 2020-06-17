@@ -2133,9 +2133,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ).map(_.toSmartIri)
 
             for (erasedIriToCheck <- erasedIrisToCheck) {
-                val sparqlQuery = queries.sparql.v2.txt.checkEntityExists(
-                    triplestore = settings.triplestoreType,
-                    entityIri = erasedIriToCheck
+                val sparqlQuery = queries.sparql.admin.txt.checkIriExists(
+                    iri = erasedIriToCheck.toString
                 ).toString()
 
                 storeManager ! SparqlSelectRequest(sparqlQuery)

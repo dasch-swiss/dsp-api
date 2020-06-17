@@ -530,9 +530,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Verify that the resource was erased correctly.
 
-                resourceStillExists: Boolean <- checkEntityExists(
-                    entityIri = resourceSmartIri,
-                )
+                resourceStillExists: Boolean <- stringFormatter.checkIriExists(resourceSmartIri.toString, storeManager)
 
                 _ = if (resourceStillExists) {
                     throw UpdateNotPerformedException(s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.")

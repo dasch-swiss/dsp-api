@@ -141,24 +141,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     }
 
     /**
-     * Checks whether an entity exists in the triplestore.
-     *
-     * @param entityIri the IRI of the entity.
-     * @return `true` if the entity exists.
-     */
-    protected def checkEntityExists(entityIri: SmartIri): Future[Boolean] = {
-        for {
-            checkEntityExistsSparql <- Future(queries.sparql.v2.txt.checkEntityExists(
-                triplestore = settings.triplestoreType,
-                entityIri = entityIri
-            ).toString())
-
-            entityExistsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(checkEntityExistsSparql)).mapTo[SparqlSelectResponse]
-            result: Boolean = entityExistsResponse.results.bindings.nonEmpty
-        } yield result
-    }
-
-    /**
      * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
      * If no custom IRI was given, creates a random unused IRI.
      *
@@ -171,7 +153,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
         entityIri match {
             case Some(customResourceIri) =>
                 for {
-                    result <- checkEntityExists(entityIri = customResourceIri)
+                    result <- stringFormatter.checkIriExists(customResourceIri.toString, storeManager)
                     _ = if (result) {
                         throw DuplicateValueException(s"IRI: '${customResourceIri.toString}' already exists, try another one.")
                     }
