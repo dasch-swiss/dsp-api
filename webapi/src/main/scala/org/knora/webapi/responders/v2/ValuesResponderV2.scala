@@ -64,7 +64,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         case createValueRequest: CreateValueRequestV2 => createValueV2(createValueRequest)
         case updateValueRequest: UpdateValueRequestV2 => updateValueV2(updateValueRequest)
         case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
-        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 => generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest)
+        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 => generateSparqlToCreateMultipleValuesV2(createMultipleValuesRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -555,7 +555,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV2]] containing the generated SPARQL and information
      *         about the values to be created.
      */
-    private def generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
+    private def generateSparqlToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
         for {
             // Generate SPARQL to create links and LinkValues for standoff links in text values.
 
