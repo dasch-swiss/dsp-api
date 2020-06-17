@@ -24,7 +24,6 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
@@ -54,8 +53,8 @@ object Responder {
 /**
  * Data needed to be passed to each responder.
  *
- * @param system           the actor system.
- * @param appActor         the main application actor.
+ * @param system   the actor system.
+ * @param appActor the main application actor.
  */
 case class ResponderData(system: ActorSystem,
                          appActor: ActorRef)
@@ -160,15 +159,15 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     }
 
     /**
-      * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
-      * If no custom IRI was given, creates a random unused IRI.
-      *
-      * @param entityIri          the optional custom IRI of the entity.
-      * @param iriFormatter       the stringFormatter method that must be used to create a random Iri.
-      * @return IRI of the entity.
-    */
+     * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
+     * If no custom IRI was given, creates a random unused IRI.
+     *
+     * @param entityIri    the optional custom IRI of the entity.
+     * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
+     * @return IRI of the entity.
+     */
     protected def checkEntityIRI[T](entityIri: Option[SmartIri],
-                                    iriFormatter: () => IRI): Future[IRI] = {
+                                    iriFormatter: => IRI): Future[IRI] = {
         entityIri match {
             case Some(customResourceIri) =>
                 for {
@@ -178,8 +177,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                     }
                 } yield customResourceIri.toString
 
-            case None => stringFormatter.makeUnusedIri(iriFormatter.apply(), storeManager, loggingAdapter)
-
-            }
+            case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
+        }
     }
 }

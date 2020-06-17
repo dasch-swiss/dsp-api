@@ -39,8 +39,8 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
+
+import scala.concurrent.Future
 
 /**
   * Returns information about Knora projects.
@@ -779,7 +779,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
             customProjectIri: Option[SmartIri] = createProjectRequest.projectIri.map(iri => iri.toSmartIri)
 
-            newProjectIRI: IRI <- checkEntityIRI(customProjectIri, () => stringFormatter.makeRandomProjectIri(validatedShortcode))
+            newProjectIRI: IRI <- checkEntityIRI(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
 
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
