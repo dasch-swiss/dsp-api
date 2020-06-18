@@ -189,7 +189,10 @@ In addition to the creation date, in the body of the request, it is possible to 
 the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
 will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
-Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding. For example:
+Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding. Each value of the new resource
+can also have a custom creation date specified by adding `knora-api:creationDate` 
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
+For example:
 ```jsonld
 {
    "@id" : "http://rdfh.ch/0001/a-custom-thing",
@@ -201,7 +204,11 @@ Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without paddin
        "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI",
        "@type" : "knora-api:IntValue",
        "knora-api:intValueAsInt" : 10,
-       "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ"
+       "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
+       "knora-api:creationDate" : {
+               "@type" : "xsd:dateTimeStamp",
+               "@value" : "2020-06-04T12:58:54.502951Z"
+       }
    },
    "rdfs:label" : "test thing with custom IRI",
    "knora-api:creationDate" : {

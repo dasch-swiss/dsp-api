@@ -27,7 +27,7 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlSelectRequest, SparqlSelectResponse, SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -472,12 +472,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
     }
 
-    private def checkCreateResource(inputResource: CreateResourceV2,
+    private def checkCreateResource(inputResourceIri :IRI,
+                                    inputResource: CreateResourceV2,
                                     outputResource: ReadResourceV2,
                                     defaultResourcePermissions: String,
                                     defaultValuePermissions: String,
                                     requestingUser: UserADM): Unit = {
-        assert(outputResource.resourceIri == inputResource.resourceIri)
+        assert(outputResource.resourceIri == inputResourceIri)
         assert(outputResource.resourceClassIri == inputResource.resourceClassIri)
         assert(outputResource.label == inputResource.label)
         assert(outputResource.attachedToUser == requestingUser.id)
@@ -820,7 +821,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "test thing",
                 values = Map.empty,
@@ -840,6 +841,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
 
                     checkCreateResource(
+                        inputResourceIri = resourceIri,
                         inputResource = inputResource,
                         outputResource = outputResource,
                         defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -853,6 +855,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val outputResource = getResource(resourceIri, anythingUserProfile)
 
             checkCreateResource(
+                inputResourceIri = resourceIri,
                 inputResource = inputResource,
                 outputResource = outputResource,
                 defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -867,7 +870,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "test thing",
                 values = Map.empty,
@@ -888,6 +891,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val outputResource = getResource(resourceIri, anythingUserProfile)
 
             checkCreateResource(
+                inputResourceIri = resourceIri,
                 inputResource = inputResource,
                 outputResource = outputResource,
                 defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1025,7 +1029,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "test thing",
                 values = inputValues,
@@ -1045,6 +1049,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val outputResource = getResource(resourceIri, anythingUserProfile)
 
             checkCreateResource(
+                inputResourceIri = resourceIri,
                 inputResource = inputResource,
                 outputResource = outputResource,
                 defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1077,7 +1082,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
                 label = "test thing picture",
                 values = inputValues,
@@ -1097,6 +1102,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val outputResource = getResource(resourceIri, anythingUserProfile)
 
             checkCreateResource(
+                inputResourceIri = resourceIri,
                 inputResource = inputResource,
                 outputResource = outputResource,
                 defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1109,7 +1115,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 label = "invalid book",
                 values = Map.empty,
@@ -1156,7 +1162,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 label = "invalid book",
                 values = inputValues,
@@ -1197,7 +1203,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 label = "invalid book",
                 values = inputValues,
@@ -1242,7 +1248,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 label = "invalid book",
                 values = inputValues,
@@ -1275,7 +1281,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 label = "invalid book",
                 values = inputValues,
@@ -1308,7 +1314,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = inputValues,
@@ -1375,7 +1381,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = inputValues,
@@ -1408,7 +1414,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = inputValues,
@@ -1441,7 +1447,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = inputValues,
@@ -1474,7 +1480,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = inputValues,
@@ -1496,7 +1502,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = Map.empty,
@@ -1532,7 +1538,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "invalid thing",
                 values = values,
@@ -1554,7 +1560,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 label = "test thing",
                 values = Map.empty,
@@ -1757,7 +1763,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -1781,7 +1787,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -1802,7 +1808,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -1836,7 +1842,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = inputValues,
@@ -1872,7 +1878,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = inputValues,
@@ -1905,7 +1911,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = inputValues,
@@ -1945,7 +1951,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = resourceClassIri,
                 label = "test thing",
                 values = inputValues,
@@ -2051,7 +2057,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceWithLinkIri,
+                resourceIri = Some(resourceWithLinkIri.toSmartIri),
                 resourceClassIri = resourceClassIri,
                 label = "thing with link",
                 values = inputValues,
@@ -2120,23 +2126,22 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             // Check that all parts of the resource were erased.
 
             val erasedIrisToCheck: Set[SmartIri] = (
-                standoffTagIrisToErase.toSet +
-                    resourceIriToErase.get +
-                    firstValueIriToErase.get +
-                    secondValueIriToErase.get
-                ).map(_.toSmartIri)
+              standoffTagIrisToErase.toSet +
+                resourceIriToErase.get +
+                firstValueIriToErase.get +
+                secondValueIriToErase.get
+              ).map(_.toSmartIri)
 
             for (erasedIriToCheck <- erasedIrisToCheck) {
-                val sparqlQuery = queries.sparql.v2.txt.checkEntityExists(
-                    triplestore = settings.triplestoreType,
-                    entityIri = erasedIriToCheck
+                val sparqlQuery = queries.sparql.admin.txt.checkIriExists(
+                    iri = erasedIriToCheck.toString
                 ).toString()
 
-                storeManager ! SparqlSelectRequest(sparqlQuery)
+                storeManager ! SparqlAskRequest(sparqlQuery)
 
                 expectMsgPF(timeout) {
-                    case entityExistsResponse: SparqlSelectResponse =>
-                        assert(entityExistsResponse.results.bindings.isEmpty, s"Entity $erasedIriToCheck should have been erased, but was not")
+                    case entityExistsResponse: SparqlAskResponse =>
+                        entityExistsResponse.result should be (false)
                 }
             }
 
