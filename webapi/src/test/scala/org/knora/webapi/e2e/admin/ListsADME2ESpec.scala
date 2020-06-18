@@ -258,7 +258,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 response.status should be(StatusCodes.BadRequest)
 
                 val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"List with the IRI: '${SharedTestDataADM.customListIRI}' already exists")
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customListIRI}' already exists, try another one.")
                 invalidIri should be(true)
             }
             "return a BadRequestException during list creation when payload is not correct" in {

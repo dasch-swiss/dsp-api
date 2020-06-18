@@ -39,6 +39,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
+
 import scala.concurrent.Future
 
 /**
@@ -765,7 +766,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 throw DuplicateValueException(s"Project with the shortname: '${createProjectRequest.shortname}' already exists")
             }
 
-            validatedShortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
+            validatedShortcode: String = StringFormatter.getGeneralInstance.validateProjectShortcode(
                 createProjectRequest.shortcode,
                 errorFun = throw BadRequestException(s"The supplied short code: '${createProjectRequest.shortcode}' is not valid.")
             )
@@ -776,17 +777,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             _ = if (shortcodeExists) {
                 throw DuplicateValueException(s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
             }
+            customProjectIri: Option[SmartIri] = createProjectRequest.projectIri.map(iri => iri.toSmartIri)
 
-            newProjectIRI: IRI = createProjectRequest.projectIri match {
-              case Some(customProjectIri) => customProjectIri
-              case None => stringFormatter.makeRandomProjectIri(validatedShortcode)
-            }
-            projectIriExists <- projectByIriExists(newProjectIRI)
+            newProjectIRI: IRI <- checkEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
 
-            _ = if (projectIriExists) {
-                throw DuplicateValueException(s"Project with the IRI: '${newProjectIRI}' already exists")
-            }
-            // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
