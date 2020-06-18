@@ -204,11 +204,7 @@ test-unit: build-all-images ## runs the unit tests (equivalent to 'sbt webapi/te
 .PHONY: test-unit-ci
 test-unit-ci: build-all-images ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
-	docker run \
-		--rm \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v $(CURRENT_DIR):/src \
-		daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+	sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: test-e2e
 test-e2e: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
@@ -218,11 +214,7 @@ test-e2e: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/test
 .PHONY: test-e2e-ci
 test-e2e-ci: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
-	docker run \
-    	--rm \
-    	-v /var/run/docker.sock:/var/run/docker.sock \
-    	-v $(CURRENT_DIR):/src \
-		daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+	sbt coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: test-it
 test-it: build-all-images ## runs the integration tests (equivalent to 'sbt webapi/it').
@@ -232,25 +224,12 @@ test-it: build-all-images ## runs the integration tests (equivalent to 'sbt weba
 .PHONY: test-it-ci
 test-it-ci: build-all-images ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
 	@echo $@  # print target name
-	docker run \
-    	--rm \
-    	-v /var/run/docker.sock:/var/run/docker.sock \
-    	-v $(CURRENT_DIR):/src \
-		daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
+	sbt coverage webapi/it:test webapi/coverageReport
 
 .PHONY: test
 test: build-all-images ## runs all tests.
 	@echo $@
 	sbt webapi/test webapi/it:test
-
-.PHONY: test-ci
-test-ci: build-all-images ## runs all tests.
-	@echo $@
-	docker run \
-		--rm \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v $(CURRENT_DIR):/src \
-		daschswiss/scala-sbt sbt webapi/test webapi/it:test
 
 .PHONY: test-repository-update
 test-repository-update: stack-without-api
