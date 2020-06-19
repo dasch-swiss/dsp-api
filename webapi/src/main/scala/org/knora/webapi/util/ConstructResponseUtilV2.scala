@@ -302,7 +302,12 @@ object ConstructResponseUtilV2 {
                                             hiddenResourceIris: Set[IRI] = Set.empty)
 
 
-    // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
+    /**
+     * An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
+     *
+     * @param assertions          RDF assertions about the entity.
+     * @param maybeUserPermission the user's permission on the entity, if any.
+     */
     case class RdfWithUserPermission(assertions: ConstructPredicateObjects,
                                      maybeUserPermission: Option[EntityPermission])
 
@@ -371,9 +376,16 @@ object ConstructResponseUtilV2 {
                 }.flatten.toSet
 
                 // Make a map of property IRIs to sequences of value IRIs.
-                val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = mapIriSequence(assertionsExplicit, valueObjectIris )
+                val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = mapIriSequence(assertionsExplicit, valueObjectIris)
 
-                val valuePropertyToValueObject: RdfPropertyValues = makePropertyIriToValueObjectsMap(valuePropertyToObjectIris,resourceIri,requestingUser, assertionsExplicit,nonResourceStatements);
+                // Make an RdfPropertyValues representing the values of the resource.
+                val valuePropertyToValueObject: RdfPropertyValues = makeRdfPropertyValuesForResource(
+                    valuePropertyToObjectIris = valuePropertyToObjectIris,
+                    resourceIri = resourceIri,
+                    requestingUser = requestingUser,
+                    assertionsExplicit = assertionsExplicit,
+                    nonResourceStatements = nonResourceStatements
+                )
 
                 // Flatten the resource assertions.
                 val resourceAssertions: FlatPredicateObjects = assertionsExplicit.map {
@@ -382,7 +394,7 @@ object ConstructResponseUtilV2 {
 
                 val userPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri, assertions, requestingUser)
 
-                // create a map of resource Iris to a `ResourceWithValueRdfData`
+                // Make a ResourceWithValueRdfData for each resource IRI.
                 resourceIri -> ResourceWithValueRdfData(
                     subjectIri = resourceIri,
                     assertions = resourceAssertions,
@@ -415,7 +427,6 @@ object ConstructResponseUtilV2 {
         }.toSet
 
 
-
         // get incoming links for each resource: a map of resource IRIs to resources that link to it
         val incomingLinksForResource: Map[IRI, RdfResources] = getIncomingLink(visibleResources, flatResourcesWithValues)
 
@@ -441,20 +452,20 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-     * This method creates a map of property IRIs to sequences of value IRIs by filtering all necessary assertions and object IRIs
+     * Converts a [[ConstructPredicateObjects]] to a map of property IRIs to sequences of value IRIs.
      *
-     * @param assertionsExplicit        assertion contains all non inferred statements
-     * @param valueObjectIris           set of all value object IRIs
-     * @return                          the sequence of IRIs
+     * @param assertionsExplicit all non-inferred statements.
+     * @param valueObjectIris    a set of all value object IRIs.
+     * @return a map of property IRIs to sequences of value IRIs.
      */
-    private def mapIriSequence(assertionsExplicit: ConstructPredicateObjects, valueObjectIris: Set[IRI] ) :  Map[SmartIri, Seq[IRI]] =  {
-        val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = assertionsExplicit.map {
+    private def mapIriSequence(assertionsExplicit: ConstructPredicateObjects, valueObjectIris: Set[IRI]): Map[SmartIri, Seq[IRI]] = {
+        assertionsExplicit.map {
             case (pred: SmartIri, objs: Seq[LiteralV2]) =>
                 // Get only the assertions in which the object is a value object IRI.
-
                 val valueObjIris: Seq[IriLiteralV2] = objs.collect {
                     case iriObj: IriLiteralV2 if valueObjectIris(iriObj.value) => iriObj
                 }
+
                 // create an entry using pred as a key and valueObjIris as the value
                 pred -> valueObjIris
         }.filter {
@@ -468,31 +479,27 @@ object ConstructResponseUtilV2 {
                 // Replace the assertions with their objects, i.e. the value object IRIs.
                 pred -> valueAssertions.values.flatten.map(_.value).toSeq
         }
-
-        valuePropertyToObjectIris
     }
 
-
     /**
-     * This method creates a map of property IRIs to value RDF data which is used to create a map of Rdf Data
+     * Given the assertions that describe a resource and its values, makes an [[RdfPropertyValues]] representing the values.
      *
-     * @param valuePropertyToObjectIris     the map of sequence IRIs
-     * @param resourceIri                   the IRI of the resource.
-     * @param requestingUser                the user making the request.
-     * @param nonResourceStatements         the statements which got split up containing value objects and standoffs
-     * @return                              the map of IRI sequences
+     * @param valuePropertyToObjectIris a map of property IRIs to value IRIs.
+     * @param resourceIri               the IRI of the resource.
+     * @param requestingUser            the user making the request.
+     * @param assertionsExplicit        all non-inferred statements.
+     * @param nonResourceStatements     statements that are not about the containing resource.
+     * @return an [[RdfPropertyValues]] describing the values of the resource.
      */
-    private def makePropertyIriToValueObjectsMap(valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]], resourceIri:IRI, requestingUser: UserADM,
-                                   assertionsExplicit: ConstructPredicateObjects, nonResourceStatements: Statements)(implicit stringFormatter: StringFormatter): RdfPropertyValues ={
-
-        // Make a map of property IRIs to sequences of value objects.
-        val valuePropertyToValueObject: RdfPropertyValues = valuePropertyToObjectIris.map {
+    private def makeRdfPropertyValuesForResource(valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]],
+                                                 resourceIri: IRI,
+                                                 requestingUser: UserADM,
+                                                 assertionsExplicit: ConstructPredicateObjects,
+                                                 nonResourceStatements: Statements)(implicit stringFormatter: StringFormatter): RdfPropertyValues = {
+        valuePropertyToObjectIris.map {
             case (property: SmartIri, valObjIris: Seq[IRI]) =>
-
-                // mapping over the value object Iris by creating a RDF using RDF assertions of an entity and the user's permission on the entity
-                // attach the resource's project to the value's assertion
-                // mapping the value object Iri by using assertions and the user permission
-                val mappedObjIris: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map {
+                // Make an RdfWithUserPermission for each value of the property.
+                val rdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map {
                     valObjIri: IRI =>
                         val valueObjAssertions: ConstructPredicateObjects = nonResourceStatements(valObjIri)
 
@@ -504,7 +511,7 @@ object ConstructResponseUtilV2 {
                             throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
                         ).head
 
-                        // prepend the resource's project to the value's assertions, and get the user's permission on the value
+                        // add the resource's project to the value's assertions, and get the user's permission on the value
                         val maybeUserPermission = PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(
                             entityIri = valObjIri,
                             assertions = valueObjAssertions + (OntologyConstants.KnoraBase.AttachedToProject.toSmartIri -> Seq(resourceProjectLiteral)),
@@ -514,17 +521,15 @@ object ConstructResponseUtilV2 {
                         valObjIri -> RdfWithUserPermission(valueObjAssertions, maybeUserPermission)
                 }
 
-                // filter all user permission elements
-                val filteredObjIris: Seq[(IRI, RdfWithUserPermission)] = mappedObjIris.filter{
+                // Filter out objects that the user doesn't have permission to see.
+                val visibleRdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = rdfWithUserPermissionsForValues.filter {
                     // check if the user has sufficient permissions to see the value object
                     case (_: IRI, rdfWithUserPermission: RdfWithUserPermission) =>
                         rdfWithUserPermission.maybeUserPermission.nonEmpty
                 }
 
-
-                // applying every map function to the filtered sequence and returning its output
-                // build all the property's value object
-                val valueRdfData : Seq[ValueRdfData] = filteredObjIris.flatMap{
+                // Make a ValueRdfData for each value object.
+                val valueRdfDataForProperty: Seq[ValueRdfData] = visibleRdfWithUserPermissionsForValues.flatMap {
                     case (valObjIri: IRI, valueRdfWithUserPermission: RdfWithUserPermission) =>
                         // get all the standoff node IRIs possibly belonging to this value object
                         val standoffNodeIris: Set[IRI] = valueRdfWithUserPermission.assertions.collect {
@@ -582,28 +587,24 @@ object ConstructResponseUtilV2 {
                         }
                 }
 
-                // create an entry using the property as a key and the valueRdfData the value
-                property -> valueRdfData
+                // Associate each property IRI with its Seq[ValueRdfData].
+                property -> valueRdfDataForProperty
         }.filterNot {
             // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
             case (_, valObjs: Seq[ValueRdfData]) =>
                 valObjs.isEmpty
         }
-
-        valuePropertyToValueObject
-
     }
-
 
     /**
      * This method returns all the incoming link for each resource as a map of resource IRI to resources that link to it.
-     * @param visibleResources          the resources that the user has permission to see
-     * @param flatResourcesWithValues   the set of resources with their representing values, before permission filtering
-     * @return                          the incoming links as a map of resource IRIs
+     *
+     * @param visibleResources        the resources that the user has permission to see
+     * @param flatResourcesWithValues the set of resources with their representing values, before permission filtering
+     * @return the incoming links as a map of resource IRIs
      */
     private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit stringFormatter: StringFormatter): Map[IRI, RdfResources] = {
-        // get incoming links for each resource: a map of resource IRIs to resources that link to it
-        val incomingLinksForResource: Map[IRI, RdfResources] = visibleResources.map {
+        visibleResources.map {
             case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
 
                 // get all incoming links for resourceIri
@@ -652,8 +653,6 @@ object ConstructResponseUtilV2 {
                 // create an entry using the resource's Iri as a key and its incoming links as the value
                 resourceIri -> incomingLinksForRes
         }
-
-        incomingLinksForResource
     }
 
 
@@ -722,7 +721,7 @@ object ConstructResponseUtilV2 {
                     case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
 
                         // check if the property Iri already exists (there could be several instances of the same property)
-                        if (acc.get(propIri).nonEmpty) {
+                        if (acc.contains(propIri)) {
                             // add values to property Iri (keeping the already existing values)
                             acc + (propIri -> (acc(propIri) ++ values).sortBy(_.subjectIri))
                         } else {
@@ -841,7 +840,7 @@ object ConstructResponseUtilV2 {
             case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
                 val mappings: Seq[String] = valObjs.filter {
                     valObj: ValueRdfData =>
-                        valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri).nonEmpty
+                        valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.contains(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
                 }.map {
                     textValObj: ValueRdfData => textValObj.requireIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
                 }
