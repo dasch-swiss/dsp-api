@@ -41,7 +41,7 @@ object MainQueryResultProcessor {
      * @param typeInspectionResult                    results of type inspection of the input query.
      * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
      */
-        //TODO apparently not needed, work is taken care in ConstructResponseUtilV2.nestResources
+    // TODO apparently not needed, work is taken care in ConstructResponseUtilV2.nestResources
     def getRequestedValuesFromResultsWithFullGraphPattern(queryResultsWithFullGraphPattern: RdfResources,
                                                           valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
                                                           allResourceVariablesFromTypeInspection: Set[QueryVariable],

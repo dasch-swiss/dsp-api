@@ -319,9 +319,6 @@ object ConstructResponseUtilV2 {
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse,
                                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
 
-        // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
-        //case class RdfWithUserPermission(assertions: ConstructPredicateObjects, maybeUserPermission: Option[EntityPermission])
-
         // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
         val resultsWithIriSubjects: Statements = constructQueryResults.statements.map {
             case (iriSubject: IriSubjectV2, statements: ConstructPredicateObjects) => iriSubject.value -> statements
@@ -336,6 +333,7 @@ object ConstructResponseUtilV2 {
                 assertions.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, Seq.empty).contains(IriLiteralV2(OntologyConstants.KnoraBase.Resource))
         }
 
+        // create a single map of all resources with their representing values (rdf data)
         val flatResourcesWithValues: RdfResources = resourceStatements.map {
             case (resourceIri: IRI, assertions: ConstructPredicateObjects) =>
                 // remove inferred statements (non explicit) returned in the query result
@@ -375,7 +373,7 @@ object ConstructResponseUtilV2 {
                 // Make a map of property IRIs to sequences of value IRIs.
                 val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = mapIriSequence(assertionsExplicit, valueObjectIris )
 
-                val valuePropertyToValueObject: RdfPropertyValues = mapSequenceObjects(valuePropertyToObjectIris,resourceIri,requestingUser, assertionsExplicit,nonResourceStatements);
+                val valuePropertyToValueObject: RdfPropertyValues = makePropertyIriToValueObjectsMap(valuePropertyToObjectIris,resourceIri,requestingUser, assertionsExplicit,nonResourceStatements);
 
                 // Flatten the resource assertions.
                 val resourceAssertions: FlatPredicateObjects = assertionsExplicit.map {
@@ -443,9 +441,9 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-     * This method creates a map of property IRIs to sequences of value IRIs.
+     * This method creates a map of property IRIs to sequences of value IRIs by filtering all necessary assertions and object IRIs
      *
-     * @param assertionsExplicit
+     * @param assertionsExplicit        assertion contains all non inferred statements
      * @param valueObjectIris           set of all value object IRIs
      * @return                          the sequence of IRIs
      */
@@ -457,7 +455,7 @@ object ConstructResponseUtilV2 {
                 val valueObjIris: Seq[IriLiteralV2] = objs.collect {
                     case iriObj: IriLiteralV2 if valueObjectIris(iriObj.value) => iriObj
                 }
-
+                // create an entry using pred as a key and valueObjIris as the value
                 pred -> valueObjIris
         }.filter {
             case (_: SmartIri, objs: Seq[IriLiteralV2]) => objs.nonEmpty
@@ -471,12 +469,12 @@ object ConstructResponseUtilV2 {
                 pred -> valueAssertions.values.flatten.map(_.value).toSeq
         }
 
-        return valuePropertyToObjectIris
+        valuePropertyToObjectIris
     }
 
 
     /**
-     * This method creates a map of IRI sequences which is used to create a map of Rdf Data
+     * This method creates a map of property IRIs to value RDF data which is used to create a map of Rdf Data
      *
      * @param valuePropertyToObjectIris     the map of sequence IRIs
      * @param resourceIri                   the IRI of the resource.
@@ -484,15 +482,17 @@ object ConstructResponseUtilV2 {
      * @param nonResourceStatements         the statements which got split up containing value objects and standoffs
      * @return                              the map of IRI sequences
      */
-    private def mapSequenceObjects(valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]], resourceIri:IRI, requestingUser: UserADM,
+    private def makePropertyIriToValueObjectsMap(valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]], resourceIri:IRI, requestingUser: UserADM,
                                    assertionsExplicit: ConstructPredicateObjects, nonResourceStatements: Statements)(implicit stringFormatter: StringFormatter): RdfPropertyValues ={
 
         // Make a map of property IRIs to sequences of value objects.
         val valuePropertyToValueObject: RdfPropertyValues = valuePropertyToObjectIris.map {
             case (property: SmartIri, valObjIris: Seq[IRI]) =>
 
-                // build all the property's value objects by mapping over the value object Iris
-                val valueRdfData: Seq[ValueRdfData] = valObjIris.map {
+                // mapping over the value object Iris by creating a RDF using RDF assertions of an entity and the user's permission on the entity
+                // attach the resource's project to the value's assertion
+                // mapping the value object Iri by using assertions and the user permission
+                val mappedObjIris: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map {
                     valObjIri: IRI =>
                         val valueObjAssertions: ConstructPredicateObjects = nonResourceStatements(valObjIri)
 
@@ -512,11 +512,19 @@ object ConstructResponseUtilV2 {
                         )
 
                         valObjIri -> RdfWithUserPermission(valueObjAssertions, maybeUserPermission)
-                }.filter {
+                }
+
+                // filter all user permission elements
+                val filteredObjIris: Seq[(IRI, RdfWithUserPermission)] = mappedObjIris.filter{
                     // check if the user has sufficient permissions to see the value object
                     case (_: IRI, rdfWithUserPermission: RdfWithUserPermission) =>
                         rdfWithUserPermission.maybeUserPermission.nonEmpty
-                }.flatMap {
+                }
+
+
+                // applying every map function to the filtered sequence and returning its output
+                // build all the property's value object
+                val valueRdfData : Seq[ValueRdfData] = filteredObjIris.flatMap{
                     case (valObjIri: IRI, valueRdfWithUserPermission: RdfWithUserPermission) =>
                         // get all the standoff node IRIs possibly belonging to this value object
                         val standoffNodeIris: Set[IRI] = valueRdfWithUserPermission.assertions.collect {
@@ -574,6 +582,7 @@ object ConstructResponseUtilV2 {
                         }
                 }
 
+                // create an entry using the property as a key and the valueRdfData the value
                 property -> valueRdfData
         }.filterNot {
             // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
@@ -581,7 +590,7 @@ object ConstructResponseUtilV2 {
                 valObjs.isEmpty
         }
 
-        return valuePropertyToValueObject
+        valuePropertyToValueObject
 
     }
 
@@ -589,10 +598,10 @@ object ConstructResponseUtilV2 {
     /**
      * This method returns all the incoming link for each resource as a map of resource IRI to resources that link to it.
      * @param visibleResources          the resources that the user has permission to see
-     * @param flatResourcesWithValues
+     * @param flatResourcesWithValues   the set of resources with their representing values, before permission filtering
      * @return                          the incoming links as a map of resource IRIs
      */
-    private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit stringFormatter: StringFormatter): Map[IRI, RdfResources] ={
+    private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit stringFormatter: StringFormatter): Map[IRI, RdfResources] = {
         // get incoming links for each resource: a map of resource IRIs to resources that link to it
         val incomingLinksForResource: Map[IRI, RdfResources] = visibleResources.map {
             case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
@@ -601,6 +610,7 @@ object ConstructResponseUtilV2 {
                 val incomingLinksForRes: RdfResources = flatResourcesWithValues.foldLeft(emptyRdfResources) {
                     case (acc: RdfResources, (otherResourceIri: IRI, otherResource: ResourceWithValueRdfData)) =>
 
+                        // get all incoming links having assertions about value properties pointing to this resource
                         val incomingLinkPropertyAssertions: RdfPropertyValues = otherResource.valuePropertyAssertions.foldLeft(emptyRdfPropertyValues) {
                             case (acc: RdfPropertyValues, (prop: SmartIri, otherResourceValues: Seq[ValueRdfData])) =>
 
@@ -616,18 +626,24 @@ object ConstructResponseUtilV2 {
                                         }
                                 }
 
+                                // check if the link value already exists
                                 if (incomingLinkValues.nonEmpty) {
+                                    // add link value to the existing values
                                     acc + (prop -> incomingLinkValues)
                                 } else {
+                                    // it does not already exists therefore add the new oone
                                     acc
                                 }
                         }
 
+                        // check if the property assertion already exists
                         if (incomingLinkPropertyAssertions.nonEmpty) {
+                            // add resource values to the existing values
                             acc + (otherResourceIri -> values.copy(
                                 valuePropertyAssertions = incomingLinkPropertyAssertions
                             ))
                         } else {
+                            // it does not already exist therefore add the new one
                             acc
                         }
 
@@ -637,7 +653,7 @@ object ConstructResponseUtilV2 {
                 resourceIri -> incomingLinksForRes
         }
 
-        return incomingLinksForResource
+        incomingLinksForResource
     }
 
 
