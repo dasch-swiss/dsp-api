@@ -24,6 +24,7 @@ import java.net.URLEncoder
 import java.time.Instant
 import java.util.UUID
 
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
@@ -40,9 +41,9 @@ import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.duration._
 
 /**
   * Tests the API v2 resources route.
@@ -613,7 +614,39 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri == customIRI)
+        }
 
+        "return a DuplicateValueException during resource creation when the supplied resource Iri is not unique" in {
+
+            // duplicate resource IRI
+            val params =
+                s"""{
+                   |  "@id" : "http://rdfh.ch/0001/a-thing",
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true
+                   |  },
+                   |  "rdfs:label" : "test thing with duplicate iri",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+
+            val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+            val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
+            invalidIri should be(true)
         }
 
         "create a resource with random Iri and a custom value Iri" in {
@@ -635,7 +668,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
               requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIRI)
-
         }
 
         "create a resource with random resource Iri and custom value UUIDs" in {

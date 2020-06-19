@@ -24,7 +24,10 @@ import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.Get
+import akka.http.scaladsl.client.RequestBuilding.{Get, Post}
+import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.Materializer
@@ -898,6 +901,18 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         )
     }
 
+    private def createOntologyTestResponse: Future[TestDataFileContent] = {
+        val params = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
+        for {
+
+            responseStr <- doTestDataRequest(Post(s"$baseApiUrl$OntologiesBasePathString", HttpEntity(RdfMediaTypes.`application/ld+json`, params))
+                            ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, "test")))
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-response"),
+            text = responseStr
+        )
+    }
+
     private def deleteOntology: Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
         delete {
             requestContext => {
@@ -943,6 +958,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
             createOntologyRequest: TestDataFileContent <- createOntologyTestRequest
+            createOntologyResponse: TestDataFileContent <- createOntologyTestResponse
             updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
             createClassTestRequest: Set[TestDataFileContent] <- createClassTestRequest
             addCardinalitiesTestRequest: TestDataFileContent <- addCardinalitiesTestRequest
@@ -951,7 +967,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             replaceCardinalitiesTestRequest: Set[TestDataFileContent] <- replaceCardinalitiesTestRequest
             updatePropertyTestRequest: Set[TestDataFileContent] <- updatePropertyTestRequest
         } yield ontologyResponses + ontologyMetadataResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++
-                ontologyPropertyResponses + createOntologyRequest + updateOntologyMetadataRequest ++
+                ontologyPropertyResponses + createOntologyRequest + createOntologyResponse + updateOntologyMetadataRequest ++
                 createClassTestRequest + addCardinalitiesTestRequest + createPropertyTestRequest ++
                 updateClassTestRequest ++ replaceCardinalitiesTestRequest ++ updatePropertyTestRequest
     }

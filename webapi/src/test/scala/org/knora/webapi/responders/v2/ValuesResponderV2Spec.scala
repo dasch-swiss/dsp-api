@@ -4086,7 +4086,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -4130,7 +4130,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -4172,7 +4172,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,

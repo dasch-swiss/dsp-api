@@ -209,7 +209,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 response.status should be (StatusCodes.BadRequest)
 
                 val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"Project with the IRI: '${SharedTestDataADM.customProjectIri}' already exists")
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customProjectIri}' already exists, try another one.")
                 invalidIri should be(true)
             }
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {

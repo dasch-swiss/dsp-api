@@ -462,8 +462,9 @@ case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
  * @param values           the resource's values.
  * @param projectADM       the project that the resource should belong to.
  * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
+ * @param creationDate     the optional creation date of the resource.
  */
-case class CreateResourceV2(resourceIri: IRI,
+case class CreateResourceV2(resourceIri: Option[SmartIri],
                             resourceClassIri: SmartIri,
                             label: String,
                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
@@ -635,16 +636,9 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
 
-            // If no custom IRI was provided, generate a random IRI for the resource.
-            // TODO: move this logic into ResourcesResponderV2 and run it while holding a lock on the IRI.
-            resourceIri: IRI <- maybeCustomResourceIri match {
-                case Some(customResourceIri) => FastFuture.successful(customResourceIri.toString)
-                case None => stringFormatter.makeUnusedIri(stringFormatter.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
-            }
-
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = maybeCustomResourceIri,
                 resourceClassIri = resourceClassIri,
                 label = label,
                 values = values,
