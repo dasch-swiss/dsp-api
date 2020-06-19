@@ -87,7 +87,7 @@ object MessageUtil {
                 val objClass = obj.getClass
                 val objClassName = objClass.getSimpleName
 
-                val fieldMap: Map[String, Any] = (Map[String, Any]() /: caseClass.getClass.getDeclaredFields) {
+                val fieldMap: Map[String, Any] = caseClass.getClass.getDeclaredFields.foldLeft(Map[String, Any]()) {
                     (acc, field) =>
                         val fieldName = field.getName.trim
 

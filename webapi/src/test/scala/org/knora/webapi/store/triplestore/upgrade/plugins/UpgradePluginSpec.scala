@@ -30,7 +30,8 @@ import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.eclipse.rdf4j.sail.memory.MemoryStore
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
 import org.knora.webapi.util.ErrorHandlingMap
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -38,7 +39,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
   * Provides helper methods for specs that test upgrade plugins.
   */
-abstract class UpgradePluginSpec extends WordSpecLike with Matchers {
+abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
     /**
       * Parses a TriG file and returns it as an RDF4J [[Model]].
       *

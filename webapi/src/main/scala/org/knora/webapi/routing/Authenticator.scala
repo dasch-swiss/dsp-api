@@ -68,7 +68,7 @@ trait Authenticator {
      */
     def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -110,7 +110,7 @@ trait Authenticator {
         for {
             authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
-            settings = Settings(system)
+            settings = KnoraSettings(system)
 
             userADM <- getUserByIdentifier(credentials.identifier)
 
@@ -134,7 +134,7 @@ trait Authenticator {
 
     def presentLoginFormV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val apiUrl = settings.externalKnoraApiBaseUrl
 
@@ -254,7 +254,7 @@ trait Authenticator {
 
         val credentials = extractCredentialsV2(requestContext)
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
         val cookieDomain = Some(settings.cookieDomain)
 
         credentials match {
@@ -322,7 +322,7 @@ trait Authenticator {
     @deprecated("Please use: getUserADM()", "Knora v1.7.0")
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserProfileV1] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -356,7 +356,7 @@ trait Authenticator {
      */
     def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -418,7 +418,7 @@ object Authenticator {
     def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[Boolean] = {
 
         for {
-            settings <- FastFuture.successful(Settings(system))
+            settings <- FastFuture.successful(KnoraSettings(system))
 
             result <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
@@ -645,7 +645,7 @@ object Authenticator {
      */
     private def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         for {
             authenticated <- authenticateCredentialsV2(credentials)

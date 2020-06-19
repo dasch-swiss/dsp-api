@@ -17,7 +17,7 @@ object KnoraExceptionHandler extends LazyLogging {
     // A generic error message that we return to clients when an internal server error occurs.
     private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE = "The request could not be completed because of an internal server error."
 
-    def apply(settingsImpl: SettingsImpl): ExceptionHandler = ExceptionHandler {
+    def apply(settingsImpl: KnoraSettingsImpl): ExceptionHandler = ExceptionHandler {
 
         /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
@@ -83,7 +83,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in JSON format.
       */
-    private def exceptionToJsonHttpResponseV1(ex: Throwable, settings: SettingsImpl): HttpResponse = {
+    private def exceptionToJsonHttpResponseV1(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
         // Get the API status code that corresponds to the exception.
         val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
 
@@ -116,7 +116,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in JSON format.
       */
-    private def exceptionToJsonHttpResponseV2(ex: Throwable, settings: SettingsImpl): HttpResponse = {
+    private def exceptionToJsonHttpResponseV2(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
 
@@ -144,7 +144,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in JSON format.
       */
-    private def exceptionToJsonHttpResponseADM(ex: Throwable, settings: SettingsImpl): HttpResponse = {
+    private def exceptionToJsonHttpResponseADM(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
 
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
@@ -167,7 +167,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in HTML format.
       */
-    private def exceptionToHtmlHttpResponseV1(ex: Throwable, settings: SettingsImpl): HttpResponse = {
+    private def exceptionToHtmlHttpResponseV1(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
         // Get the API status code that corresponds to the exception.
         val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
 
@@ -208,7 +208,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in HTML format.
       */
-    private def exceptionToHtmlHttpResponseV2(ex: Throwable, settings: SettingsImpl): HttpResponse = {
+    private def exceptionToHtmlHttpResponseV2(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
 
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
@@ -241,7 +241,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in HTML format.
       */
-    private def exceptionToHtmlHttpResponseADM(ex: Throwable, settings: SettingsImpl): HttpResponse = {
+    private def exceptionToHtmlHttpResponseADM(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
 
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
@@ -275,7 +275,7 @@ object KnoraExceptionHandler extends LazyLogging {
       * @param settings the application settings.
       * @return an error message suitable for clients.
       */
-    private def makeClientErrorMessage(ex: Throwable, settings: SettingsImpl): String = {
+    private def makeClientErrorMessage(ex: Throwable, settings: KnoraSettingsImpl): String = {
         ex match {
             case rre: RequestRejectedException => rre.toString
 

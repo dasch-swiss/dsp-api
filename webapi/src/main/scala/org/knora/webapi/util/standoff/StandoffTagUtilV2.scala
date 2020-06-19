@@ -1129,7 +1129,7 @@ object StandoffTagUtilV2 {
       * @return a tuple containing the minimum start index and maximum start index, or `(None, None)` if standoff
       *         is not being queried with text values.
       */
-    def getStandoffMinAndMaxStartIndexesForTextValueQuery(queryStandoff: Boolean, settings: SettingsImpl): (Option[Int], Option[Int]) = {
+    def getStandoffMinAndMaxStartIndexesForTextValueQuery(queryStandoff: Boolean, settings: KnoraSettingsImpl): (Option[Int], Option[Int]) = {
         if (queryStandoff) {
             // Yes. Get the first page of standoff with each text value.
             (Some(0), Some(settings.standoffPerPage - 1))
