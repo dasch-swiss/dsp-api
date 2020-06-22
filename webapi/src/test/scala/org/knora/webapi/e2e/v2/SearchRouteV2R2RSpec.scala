@@ -8068,8 +8068,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |    ?thing a anything:Thing .
                    |    {
                    |        ?thing anything:hasRichtext ?richtext .
-                   |        ?richtext knora-api:valueAsString ?richtextLiteral
-                   |        FILTER knora-api:match(?richtextLiteral, "test")
+                   |        FILTER knora-api:matchText(?richtext, "test")
                    |
                    |		?thing anything:hasInteger ?int .
                    |		?int knora-api:intValueAsInt 1
@@ -8077,8 +8076,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |    UNION
                    |    {
                    |        ?thing anything:hasText ?text .
-                   |        ?text knora-api:valueAsString ?textLiteral
-                   |        FILTER knora-api:match(?textLiteral, "test")
+                   |        FILTER knora-api:matchText(?text, "test")
                    |
                    |		?thing anything:hasInteger ?int .
                    |		?int knora-api:intValueAsInt 1
