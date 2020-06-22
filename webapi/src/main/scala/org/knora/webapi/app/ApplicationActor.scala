@@ -529,7 +529,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         msg += "------------------------------------------------\n"
 
         if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
-            msg += "WARNING: Resetting DB is turned ON.\n"
+            msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
             msg += "------------------------------------------------\n"
         }
 
