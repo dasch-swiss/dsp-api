@@ -158,7 +158,7 @@ docs / buildPrequisites := {
 
 
 //////////////////////////////////////
-// Knora's custom GraphDB-SE
+// Knora's custom Jena Fuseki
 //////////////////////////////////////
 
 lazy val jenaFusekiCommonSettings = Seq(
