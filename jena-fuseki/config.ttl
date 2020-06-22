@@ -27,7 +27,6 @@
     # Add any custom classes you want to load.
     # Must have a "public static void init()" method.
     # ja:loadClass "your.code.Class" ;
-    ja:loadClass        "org.apache.jena.query.text.TextQuery";
 
     # End triples.
     .

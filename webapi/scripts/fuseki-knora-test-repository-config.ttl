@@ -1,14 +1,18 @@
 @prefix :           <http://base/#> .
-@prefix tdb:        <http://jena.hpl.hp.com/2008/tdb#> .
-@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix ja:         <http://jena.hpl.hp.com/2005/11/Assembler#> .
-@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix fuseki:     <http://jena.apache.org/fuseki#> .
+@prefix ja:         <http://jena.hpl.hp.com/2005/11/Assembler#> .
+@prefix tdb2:       <http://jena.apache.org/2016/tdb#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix text:       <http://jena.apache.org/text#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
+[] rdf:type        fuseki:Server ;
+   fuseki:services :service_tdb_all ;
+   ja:loadClass    "org.apache.jena.query.text.TextQuery" .
+
 :service_tdb_all        a                                   fuseki:Service ;
-                        rdfs:label                          "TDB knora-test" ;
+                        rdfs:label                          "TDB2 knora-test" ;
                         fuseki:dataset                      :text_dataset ;
                         fuseki:name                         "knora-test" ;
                         fuseki:serviceQuery                 "query" , "sparql" ;
@@ -25,9 +29,9 @@
                         text:index                          :indexLucene .
 
 # A TDB datset used for RDF storage
-:tdb_dataset_readwrite  a                                   tdb:DatasetTDB ;
-                        tdb:unionDefaultGraph               true ;
-                        tdb:location                        "/fuseki/databases/knora-test" .
+:tdb_dataset_readwrite  a                                   tdb2:DatasetTDB2 ;
+                        tdb2:unionDefaultGraph              true ;
+                        tdb2:location                       "/fuseki/databases/knora-test" .
 
 # Text index description
 :indexLucene            a                                   text:TextIndexLucene ;
