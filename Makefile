@@ -232,7 +232,7 @@ test: build-all-images ## runs all tests.
 	sbt webapi/test webapi/it:test
 
 .PHONY: test-repository-update
-test-repository-update: stack-without-api
+test-repository-update: stack-down-delete-volumes stack-without-api
 	@sleep 15
 	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
 	@rm -rf /tmp/knora-test-data/v7.0.0/
