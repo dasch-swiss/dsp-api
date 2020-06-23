@@ -376,7 +376,7 @@ object ConstructResponseUtilV2 {
                 }.flatten.toSet
 
                 // Make a map of property IRIs to sequences of value IRIs.
-                val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = mapIriSequence(assertionsExplicit, valueObjectIris)
+                val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = mapPropertyIrisToValueIris(assertionsExplicit, valueObjectIris)
 
                 // Make an RdfPropertyValues representing the values of the resource.
                 val valuePropertyToValueObject: RdfPropertyValues = makeRdfPropertyValuesForResource(
@@ -458,7 +458,7 @@ object ConstructResponseUtilV2 {
      * @param valueObjectIris    a set of all value object IRIs.
      * @return a map of property IRIs to sequences of value IRIs.
      */
-    private def mapIriSequence(assertionsExplicit: ConstructPredicateObjects, valueObjectIris: Set[IRI]): Map[SmartIri, Seq[IRI]] = {
+    private def mapPropertyIrisToValueIris(assertionsExplicit: ConstructPredicateObjects, valueObjectIris: Set[IRI]): Map[SmartIri, Seq[IRI]] = {
         assertionsExplicit.map {
             case (pred: SmartIri, objs: Seq[LiteralV2]) =>
                 // Get only the assertions in which the object is a value object IRI.
