@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v1
 import java.io.File
 
 import akka.actor.ActorSystem
-import org.knora.webapi.Settings
+import org.knora.webapi.KnoraSettings
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
@@ -31,7 +31,7 @@ object ResourcesResponderV1SpecContextData {
 
     implicit lazy val system = ActorSystem("webapi")
 
-    val settings = Settings(system)
+    val settings = KnoraSettings(system)
 
     /*
 

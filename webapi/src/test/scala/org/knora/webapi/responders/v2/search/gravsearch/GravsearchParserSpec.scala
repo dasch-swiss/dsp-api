@@ -22,154 +22,13 @@ package org.knora.webapi.responders.v2.search.gravsearch
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{ApiV2Simple, ApiV2Complex, CoreSpec, GravsearchException}
+import org.knora.webapi.{ApiV2Complex, ApiV2Simple, CoreSpec, GravsearchException}
 
 /**
-  * Tests [[GravsearchParser]].
-  */
+ * Tests [[GravsearchParser]].
+ */
 class GravsearchParserSpec extends CoreSpec() {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    "The GravsearchParser object" should {
-        "parse a Gravsearch query" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(Query)
-            parsed should ===(ParsedQuery)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with a BIND" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithBind)
-            parsed should ===(ParsedQueryWithBind)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with a FILTER containing a Boolean operator" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryForAThingRelatingToAnotherThing)
-            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with FILTER NOT EXISTS" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithFilterNotExists)
-            parsed should ===(ParsedQueryWithFilterNotExists)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with MINUS" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMinus)
-            parsed should ===(ParsedQueryWithMinus)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with OFFSET" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithOffset)
-            parsed should ===(ParsedQueryWithOffset)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with a FILTER containing a regex function" in {
-            val parsed = GravsearchParser.parseQuery(queryWithFilterContainingRegex)
-            parsed should ===(ParsedQueryWithFilterContainingRegex)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "accept a custom 'match' function in a FILTER" in {
-            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMatchFunction)
-            parsed should ===(ParsedQueryWithMatchFunction)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query with a FILTER containing a lang function" in {
-            val parsed = GravsearchParser.parseQuery(QueryWithFilterContainingLang)
-            parsed should ===(ParsedQueryWithLangFunction)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query containing a FILTER in an OPTIONAL" in {
-            val parsed = GravsearchParser.parseQuery(QueryWithFilterInOptional)
-            parsed should ===(ParsedQueryWithFilterInOptional)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query containing a nested OPTIONAL" in {
-            val parsed = GravsearchParser.parseQuery(QueryStrWithNestedOptional)
-            parsed should ===(ParsedQueryWithNestedOptional)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query containing a UNION in an OPTIONAL" in {
-            val parsed = GravsearchParser.parseQuery(QueryStrWithUnionInOptional)
-            parsed should ===(ParsedQueryWithUnionInOptional)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse a Gravsearch query containing an IRI as a function argument" in {
-            val parsed = GravsearchParser.parseQuery(QueryWithIriArgInFunction)
-            parsed should ===(ParsedQueryWithIriArgInFunction)
-            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "reject a SELECT query" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(SparqlSelect)
-            }
-        }
-
-        "reject a DESCRIBE query" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(SparqlDescribe)
-            }
-        }
-
-        "reject an INSERT" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(SparqlInsert)
-            }
-        }
-
-        "reject a DELETE" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(SparqlDelete)
-            }
-        }
-
-        "reject an internal ontology IRI" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(QueryWithInternalEntityIri)
-            }
-        }
-
-        "reject left-nested UNIONs" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(QueryWithLeftNestedUnion)
-            }
-        }
-
-        "reject right-nested UNIONs" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(QueryStrWithRightNestedUnion)
-            }
-        }
-
-        "reject an unsupported FILTER" in {
-            assertThrows[GravsearchException] {
-                GravsearchParser.parseQuery(QueryWithWrongFilter)
-            }
-        }
-    }
 
     val Query: String =
         """
@@ -648,6 +507,19 @@ class GravsearchParserSpec extends CoreSpec() {
           |}
         """.stripMargin
 
+    val QueryWithMatchTextFunction: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasText ?text .
+          |    FILTER(knora-api:matchText(?text, "foo"))
+          |}
+        """.stripMargin
 
     val QueryWithFilterContainingLang: String =
         """
@@ -712,7 +584,7 @@ class GravsearchParserSpec extends CoreSpec() {
           |    } ORDER BY ?date
         """.stripMargin
 
-    private val ParsedQueryWithFilterInOptional = ConstructQuery(
+    private val ParsedQueryWithFilterInOptional: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -1002,7 +874,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQuery = ConstructQuery(
+    val ParsedQuery: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -1260,7 +1132,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithBind = ConstructQuery(
+    val ParsedQueryWithBind: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -1340,7 +1212,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryForAThingRelatingToAnotherThing = ConstructQuery(
+    val ParsedQueryForAThingRelatingToAnotherThing: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -1451,7 +1323,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithFilterNotExists = ConstructQuery(
+    val ParsedQueryWithFilterNotExists: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -1513,7 +1385,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithMinus = ConstructQuery(
+    val ParsedQueryWithMinus: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -1575,7 +1447,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithOffset = ConstructQuery(
+    val ParsedQueryWithOffset: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -1626,7 +1498,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithFilterContainingRegex = ConstructQuery(
+    val ParsedQueryWithFilterContainingRegex: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -1760,7 +1632,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithMatchFunction = ConstructQuery(
+    val ParsedQueryWithMatchFunction: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -1840,7 +1712,87 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithLangFunction = ConstructQuery(
+    val ParsedQueryWithMatchTextFunction: ConstructQuery = ConstructQuery(
+        constructClause = ConstructClause(
+            statements = Vector(StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef(
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                    value = "true",
+                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                ),
+                namedGraph = None
+            )),
+            querySchema = Some(ApiV2Simple)
+        ),
+        querySchema = Some(ApiV2Simple),
+        offset = 0,
+        orderBy = Nil,
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = QueryVariable(variableName = "text"),
+                    namedGraph = None
+                ),
+                FilterPattern(expression = FunctionCallExpression(
+                    functionIri = IriRef(
+                        iri = "http://api.knora.org/ontology/knora-api/simple/v2#matchText".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    args = Vector(
+                        QueryVariable(variableName = "text"),
+                        XsdLiteral(
+                            value = "foo",
+                            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                        )
+                    )
+                ))
+            ),
+            positiveEntities = Set(
+                QueryVariable(variableName = "thing"),
+                IriRef(
+                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                IriRef(
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                QueryVariable(variableName = "text"),
+                IriRef(
+                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                    propertyPathOperator = None
+                )
+            ),
+            querySchema = Some(ApiV2Simple)
+        )
+    )
+
+    val ParsedQueryWithLangFunction: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -1915,7 +1867,7 @@ class GravsearchParserSpec extends CoreSpec() {
         )
     )
 
-    val ParsedQueryWithNestedOptional = ConstructQuery(
+    val ParsedQueryWithNestedOptional: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -2072,7 +2024,7 @@ class GravsearchParserSpec extends CoreSpec() {
           |}
         """.stripMargin
 
-    val ParsedQueryWithIriArgInFunction = ConstructQuery(
+    val ParsedQueryWithIriArgInFunction: ConstructQuery = ConstructQuery(
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -2197,4 +2149,152 @@ class GravsearchParserSpec extends CoreSpec() {
             querySchema = Some(ApiV2Complex)
         )
     )
+
+    "The GravsearchParser object" should {
+        "parse a Gravsearch query" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(Query)
+            parsed should ===(ParsedQuery)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a BIND" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithBind)
+            parsed should ===(ParsedQueryWithBind)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a Boolean operator" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryForAThingRelatingToAnotherThing)
+            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with FILTER NOT EXISTS" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithFilterNotExists)
+            parsed should ===(ParsedQueryWithFilterNotExists)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with MINUS" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMinus)
+            parsed should ===(ParsedQueryWithMinus)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with OFFSET" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithOffset)
+            parsed should ===(ParsedQueryWithOffset)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a regex function" in {
+            val parsed = GravsearchParser.parseQuery(queryWithFilterContainingRegex)
+            parsed should ===(ParsedQueryWithFilterContainingRegex)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "accept a custom 'match' function in a FILTER" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMatchFunction)
+            parsed should ===(ParsedQueryWithMatchFunction)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "accept a custom 'matchText' function in a FILTER" in {
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMatchTextFunction)
+            parsed should ===(ParsedQueryWithMatchTextFunction)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a lang function" in {
+            val parsed = GravsearchParser.parseQuery(QueryWithFilterContainingLang)
+            parsed should ===(ParsedQueryWithLangFunction)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query containing a FILTER in an OPTIONAL" in {
+            val parsed = GravsearchParser.parseQuery(QueryWithFilterInOptional)
+            parsed should ===(ParsedQueryWithFilterInOptional)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query containing a nested OPTIONAL" in {
+            val parsed = GravsearchParser.parseQuery(QueryStrWithNestedOptional)
+            parsed should ===(ParsedQueryWithNestedOptional)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query containing a UNION in an OPTIONAL" in {
+            val parsed = GravsearchParser.parseQuery(QueryStrWithUnionInOptional)
+            parsed should ===(ParsedQueryWithUnionInOptional)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query containing an IRI as a function argument" in {
+            val parsed = GravsearchParser.parseQuery(QueryWithIriArgInFunction)
+            parsed should ===(ParsedQueryWithIriArgInFunction)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "reject a SELECT query" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(SparqlSelect)
+            }
+        }
+
+        "reject a DESCRIBE query" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(SparqlDescribe)
+            }
+        }
+
+        "reject an INSERT" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(SparqlInsert)
+            }
+        }
+
+        "reject a DELETE" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(SparqlDelete)
+            }
+        }
+
+        "reject an internal ontology IRI" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(QueryWithInternalEntityIri)
+            }
+        }
+
+        "reject left-nested UNIONs" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(QueryWithLeftNestedUnion)
+            }
+        }
+
+        "reject right-nested UNIONs" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(QueryStrWithRightNestedUnion)
+            }
+        }
+
+        "reject an unsupported FILTER" in {
+            assertThrows[GravsearchException] {
+                GravsearchParser.parseQuery(QueryWithWrongFilter)
+            }
+        }
+    }
 }

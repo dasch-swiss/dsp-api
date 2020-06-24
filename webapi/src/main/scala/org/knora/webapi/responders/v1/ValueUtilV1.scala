@@ -39,7 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
-class ValueUtilV1(private val settings: SettingsImpl) {
+class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
     private val stringFormatter = StringFormatter.getGeneralInstance
 

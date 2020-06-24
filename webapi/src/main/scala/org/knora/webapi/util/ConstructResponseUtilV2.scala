@@ -301,6 +301,17 @@ object ConstructResponseUtilV2 {
     case class MainResourcesAndValueRdfData(resources: RdfResources,
                                             hiddenResourceIris: Set[IRI] = Set.empty)
 
+
+    /**
+     * An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
+     *
+     * @param assertions          RDF assertions about the entity.
+     * @param maybeUserPermission the user's permission on the entity, if any.
+     */
+    case class RdfWithUserPermission(assertions: ConstructPredicateObjects,
+                                     maybeUserPermission: Option[EntityPermission])
+
+
     /**
      * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
      * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values,
@@ -312,9 +323,6 @@ object ConstructResponseUtilV2 {
      */
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlExtendedConstructResponse,
                                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
-
-        // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
-        case class RdfWithUserPermission(assertions: ConstructPredicateObjects, maybeUserPermission: Option[EntityPermission])
 
         // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
         val resultsWithIriSubjects: Statements = constructQueryResults.statements.map {
@@ -330,6 +338,7 @@ object ConstructResponseUtilV2 {
                 assertions.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, Seq.empty).contains(IriLiteralV2(OntologyConstants.KnoraBase.Resource))
         }
 
+        // create a single map of all resources with their representing values (rdf data)
         val flatResourcesWithValues: RdfResources = resourceStatements.map {
             case (resourceIri: IRI, assertions: ConstructPredicateObjects) =>
                 // remove inferred statements (non explicit) returned in the query result
@@ -367,120 +376,16 @@ object ConstructResponseUtilV2 {
                 }.flatten.toSet
 
                 // Make a map of property IRIs to sequences of value IRIs.
-                val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = assertionsExplicit.map {
-                    case (pred: SmartIri, objs: Seq[LiteralV2]) =>
-                        // Get only the assertions in which the object is a value object IRI.
+                val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] = mapPropertyIrisToValueIris(assertionsExplicit, valueObjectIris)
 
-                        val valueObjIris: Seq[IriLiteralV2] = objs.collect {
-                            case iriObj: IriLiteralV2 if valueObjectIris(iriObj.value) => iriObj
-                        }
-
-                        pred -> valueObjIris
-                }.filter {
-                    case (_: SmartIri, objs: Seq[IriLiteralV2]) => objs.nonEmpty
-                }.groupBy {
-                    case (pred: SmartIri, _: Seq[IriLiteralV2]) =>
-                        // Turn the sequence of assertions into a Map of predicate IRIs to assertions.
-                        pred
-                }.map {
-                    case (pred: SmartIri, valueAssertions: Map[SmartIri, Seq[IriLiteralV2]]) =>
-                        // Replace the assertions with their objects, i.e. the value object IRIs.
-                        pred -> valueAssertions.values.flatten.map(_.value).toSeq
-                }
-
-                // Make a map of property IRIs to sequences of value objects.
-                val valuePropertyToValueObject: RdfPropertyValues = valuePropertyToObjectIris.map {
-                    case (property: SmartIri, valObjIris: Seq[IRI]) =>
-
-                        // build all the property's value objects by mapping over the value object Iris
-                        val valueRdfData: Seq[ValueRdfData] = valObjIris.map {
-                            valObjIri: IRI =>
-                                val valueObjAssertions: ConstructPredicateObjects = nonResourceStatements(valObjIri)
-
-                                // get the resource's project
-                                // value objects belong to the parent resource's project
-
-                                val resourceProjectLiteral: LiteralV2 = assertionsExplicit.getOrElse(
-                                    OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                                    throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
-                                ).head
-
-                                // prepend the resource's project to the value's assertions, and get the user's permission on the value
-                                val maybeUserPermission = PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(
-                                    entityIri = valObjIri,
-                                    assertions = valueObjAssertions + (OntologyConstants.KnoraBase.AttachedToProject.toSmartIri -> Seq(resourceProjectLiteral)),
-                                    requestingUser = requestingUser
-                                )
-
-                                valObjIri -> RdfWithUserPermission(valueObjAssertions, maybeUserPermission)
-                        }.filter {
-                            // check if the user has sufficient permissions to see the value object
-                            case (_: IRI, rdfWithUserPermission: RdfWithUserPermission) =>
-                                rdfWithUserPermission.maybeUserPermission.nonEmpty
-                        }.flatMap {
-                            case (valObjIri: IRI, valueRdfWithUserPermission: RdfWithUserPermission) =>
-                                // get all the standoff node IRIs possibly belonging to this value object
-                                val standoffNodeIris: Set[IRI] = valueRdfWithUserPermission.assertions.collect {
-                                    case (pred: SmartIri, objs: Seq[LiteralV2]) if pred.toString == OntologyConstants.KnoraBase.ValueHasStandoff => objs.map(_.toString)
-                                }.flatten.toSet
-
-                                // given the standoff node IRIs, get the standoff assertions
-                                val standoffAssertions: FlatStatements = nonResourceStatements.collect {
-                                    case (subjIri: IRI, assertions: ConstructPredicateObjects) if standoffNodeIris(subjIri) =>
-                                        subjIri -> assertions.flatMap {
-                                            case (pred: SmartIri, objs: Seq[LiteralV2]) => objs.map {
-                                                obj => pred -> obj
-                                            }
-                                        }
-                                }
-
-                                // Flatten the value's statements.
-                                val valueStatements: FlatPredicateObjects = valueRdfWithUserPermission.assertions.flatMap {
-                                    case (pred: SmartIri, objs: Seq[LiteralV2]) => objs.map {
-                                        obj => pred -> obj
-                                    }
-                                }
-
-                                // Get the rdf:type of the value.
-                                val rdfTypeLiteral: LiteralV2 = valueStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Value $valObjIri has no rdf:type"))
-
-                                val valueObjectClass: SmartIri = rdfTypeLiteral.asIriLiteral(
-                                    throw InconsistentTriplestoreDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral")
-                                ).value.toSmartIri
-
-                                // check if it is a link value
-                                if (valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
-                                    // create a link value object
-                                    Some(
-                                        ValueRdfData(
-                                            subjectIri = valObjIri,
-                                            valueObjectClass = valueObjectClass,
-                                            userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
-                                            assertions = valueStatements,
-                                            standoff = emptyFlatStatements // link value does not contain standoff
-                                        )
-                                    )
-
-                                } else {
-                                    // create a non-link value object
-                                    Some(
-                                        ValueRdfData(
-                                            subjectIri = valObjIri,
-                                            valueObjectClass = valueObjectClass,
-                                            userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
-                                            assertions = valueStatements,
-                                            standoff = standoffAssertions
-                                        )
-                                    )
-                                }
-                        }
-
-                        property -> valueRdfData
-                }.filterNot {
-                    // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
-                    case (_, valObjs: Seq[ValueRdfData]) =>
-                        valObjs.isEmpty
-                }
+                // Make an RdfPropertyValues representing the values of the resource.
+                val valuePropertyToValueObject: RdfPropertyValues = makeRdfPropertyValuesForResource(
+                    valuePropertyToObjectIris = valuePropertyToObjectIris,
+                    resourceIri = resourceIri,
+                    requestingUser = requestingUser,
+                    assertionsExplicit = assertionsExplicit,
+                    nonResourceStatements = nonResourceStatements
+                )
 
                 // Flatten the resource assertions.
                 val resourceAssertions: FlatPredicateObjects = assertionsExplicit.map {
@@ -489,7 +394,7 @@ object ConstructResponseUtilV2 {
 
                 val userPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri, assertions, requestingUser)
 
-                // create a map of resource Iris to a `ResourceWithValueRdfData`
+                // Make a ResourceWithValueRdfData for each resource IRI.
                 resourceIri -> ResourceWithValueRdfData(
                     subjectIri = resourceIri,
                     assertions = resourceAssertions,
@@ -521,49 +426,10 @@ object ConstructResponseUtilV2 {
             case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
         }.toSet
 
+
         // get incoming links for each resource: a map of resource IRIs to resources that link to it
-        val incomingLinksForResource: Map[IRI, RdfResources] = visibleResources.map {
-            case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
+        val incomingLinksForResource: Map[IRI, RdfResources] = getIncomingLink(visibleResources, flatResourcesWithValues)
 
-                // get all incoming links for resourceIri
-                val incomingLinksForRes: RdfResources = flatResourcesWithValues.foldLeft(emptyRdfResources) {
-                    case (acc: RdfResources, (otherResourceIri: IRI, otherResource: ResourceWithValueRdfData)) =>
-
-                        val incomingLinkPropertyAssertions: RdfPropertyValues = otherResource.valuePropertyAssertions.foldLeft(emptyRdfPropertyValues) {
-                            case (acc: RdfPropertyValues, (prop: SmartIri, otherResourceValues: Seq[ValueRdfData])) =>
-
-                                // collect all link values that point to resourceIri
-                                val incomingLinkValues: Seq[ValueRdfData] = otherResourceValues.foldLeft(Seq.empty[ValueRdfData]) {
-                                    (acc, value: ValueRdfData) =>
-
-                                        // check if it is a link value and points to this resource
-                                        if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue && value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri) == resourceIri) {
-                                            acc :+ value
-                                        } else {
-                                            acc
-                                        }
-                                }
-
-                                if (incomingLinkValues.nonEmpty) {
-                                    acc + (prop -> incomingLinkValues)
-                                } else {
-                                    acc
-                                }
-                        }
-
-                        if (incomingLinkPropertyAssertions.nonEmpty) {
-                            acc + (otherResourceIri -> values.copy(
-                                valuePropertyAssertions = incomingLinkPropertyAssertions
-                            ))
-                        } else {
-                            acc
-                        }
-
-                }
-
-                // create an entry using the resource's Iri as a key and its incoming links as the value
-                resourceIri -> incomingLinksForRes
-        }
 
         val mainResourcesNested: Map[IRI, ResourceWithValueRdfData] = mainResourceIrisVisible.map {
             resourceIri =>
@@ -584,6 +450,211 @@ object ConstructResponseUtilV2 {
             hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible
         )
     }
+
+    /**
+     * Converts a [[ConstructPredicateObjects]] to a map of property IRIs to sequences of value IRIs.
+     *
+     * @param assertionsExplicit all non-inferred statements.
+     * @param valueObjectIris    a set of all value object IRIs.
+     * @return a map of property IRIs to sequences of value IRIs.
+     */
+    private def mapPropertyIrisToValueIris(assertionsExplicit: ConstructPredicateObjects, valueObjectIris: Set[IRI]): Map[SmartIri, Seq[IRI]] = {
+        assertionsExplicit.map {
+            case (pred: SmartIri, objs: Seq[LiteralV2]) =>
+                // Get only the assertions in which the object is a value object IRI.
+                val valueObjIris: Seq[IriLiteralV2] = objs.collect {
+                    case iriObj: IriLiteralV2 if valueObjectIris(iriObj.value) => iriObj
+                }
+
+                // create an entry using pred as a key and valueObjIris as the value
+                pred -> valueObjIris
+        }.filter {
+            case (_: SmartIri, objs: Seq[IriLiteralV2]) => objs.nonEmpty
+        }.groupBy {
+            case (pred: SmartIri, _: Seq[IriLiteralV2]) =>
+                // Turn the sequence of assertions into a Map of predicate IRIs to assertions.
+                pred
+        }.map {
+            case (pred: SmartIri, valueAssertions: Map[SmartIri, Seq[IriLiteralV2]]) =>
+                // Replace the assertions with their objects, i.e. the value object IRIs.
+                pred -> valueAssertions.values.flatten.map(_.value).toSeq
+        }
+    }
+
+    /**
+     * Given the assertions that describe a resource and its values, makes an [[RdfPropertyValues]] representing the values.
+     *
+     * @param valuePropertyToObjectIris a map of property IRIs to value IRIs.
+     * @param resourceIri               the IRI of the resource.
+     * @param requestingUser            the user making the request.
+     * @param assertionsExplicit        all non-inferred statements.
+     * @param nonResourceStatements     statements that are not about the containing resource.
+     * @return an [[RdfPropertyValues]] describing the values of the resource.
+     */
+    private def makeRdfPropertyValuesForResource(valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]],
+                                                 resourceIri: IRI,
+                                                 requestingUser: UserADM,
+                                                 assertionsExplicit: ConstructPredicateObjects,
+                                                 nonResourceStatements: Statements)(implicit stringFormatter: StringFormatter): RdfPropertyValues = {
+        valuePropertyToObjectIris.map {
+            case (property: SmartIri, valObjIris: Seq[IRI]) =>
+                // Make an RdfWithUserPermission for each value of the property.
+                val rdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map {
+                    valObjIri: IRI =>
+                        val valueObjAssertions: ConstructPredicateObjects = nonResourceStatements(valObjIri)
+
+                        // get the resource's project
+                        // value objects belong to the parent resource's project
+
+                        val resourceProjectLiteral: LiteralV2 = assertionsExplicit.getOrElse(
+                            OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
+                            throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
+                        ).head
+
+                        // add the resource's project to the value's assertions, and get the user's permission on the value
+                        val maybeUserPermission = PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(
+                            entityIri = valObjIri,
+                            assertions = valueObjAssertions + (OntologyConstants.KnoraBase.AttachedToProject.toSmartIri -> Seq(resourceProjectLiteral)),
+                            requestingUser = requestingUser
+                        )
+
+                        valObjIri -> RdfWithUserPermission(valueObjAssertions, maybeUserPermission)
+                }
+
+                // Filter out objects that the user doesn't have permission to see.
+                val visibleRdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = rdfWithUserPermissionsForValues.filter {
+                    // check if the user has sufficient permissions to see the value object
+                    case (_: IRI, rdfWithUserPermission: RdfWithUserPermission) =>
+                        rdfWithUserPermission.maybeUserPermission.nonEmpty
+                }
+
+                // Make a ValueRdfData for each value object.
+                val valueRdfDataForProperty: Seq[ValueRdfData] = visibleRdfWithUserPermissionsForValues.flatMap {
+                    case (valObjIri: IRI, valueRdfWithUserPermission: RdfWithUserPermission) =>
+                        // get all the standoff node IRIs possibly belonging to this value object
+                        val standoffNodeIris: Set[IRI] = valueRdfWithUserPermission.assertions.collect {
+                            case (pred: SmartIri, objs: Seq[LiteralV2]) if pred.toString == OntologyConstants.KnoraBase.ValueHasStandoff => objs.map(_.toString)
+                        }.flatten.toSet
+
+                        // given the standoff node IRIs, get the standoff assertions
+                        val standoffAssertions: FlatStatements = nonResourceStatements.collect {
+                            case (subjIri: IRI, assertions: ConstructPredicateObjects) if standoffNodeIris(subjIri) =>
+                                subjIri -> assertions.flatMap {
+                                    case (pred: SmartIri, objs: Seq[LiteralV2]) => objs.map {
+                                        obj => pred -> obj
+                                    }
+                                }
+                        }
+
+                        // Flatten the value's statements.
+                        val valueStatements: FlatPredicateObjects = valueRdfWithUserPermission.assertions.flatMap {
+                            case (pred: SmartIri, objs: Seq[LiteralV2]) => objs.map {
+                                obj => pred -> obj
+                            }
+                        }
+
+                        // Get the rdf:type of the value.
+                        val rdfTypeLiteral: LiteralV2 = valueStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Value $valObjIri has no rdf:type"))
+
+                        val valueObjectClass: SmartIri = rdfTypeLiteral.asIriLiteral(
+                            throw InconsistentTriplestoreDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral")
+                        ).value.toSmartIri
+
+                        // check if it is a link value
+                        if (valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
+                            // create a link value object
+                            Some(
+                                ValueRdfData(
+                                    subjectIri = valObjIri,
+                                    valueObjectClass = valueObjectClass,
+                                    userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
+                                    assertions = valueStatements,
+                                    standoff = emptyFlatStatements // link value does not contain standoff
+                                )
+                            )
+
+                        } else {
+                            // create a non-link value object
+                            Some(
+                                ValueRdfData(
+                                    subjectIri = valObjIri,
+                                    valueObjectClass = valueObjectClass,
+                                    userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
+                                    assertions = valueStatements,
+                                    standoff = standoffAssertions
+                                )
+                            )
+                        }
+                }
+
+                // Associate each property IRI with its Seq[ValueRdfData].
+                property -> valueRdfDataForProperty
+        }.filterNot {
+            // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
+            case (_, valObjs: Seq[ValueRdfData]) =>
+                valObjs.isEmpty
+        }
+    }
+
+    /**
+     * This method returns all the incoming link for each resource as a map of resource IRI to resources that link to it.
+     *
+     * @param visibleResources        the resources that the user has permission to see
+     * @param flatResourcesWithValues the set of resources with their representing values, before permission filtering
+     * @return the incoming links as a map of resource IRIs
+     */
+    private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit stringFormatter: StringFormatter): Map[IRI, RdfResources] = {
+        visibleResources.map {
+            case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
+
+                // get all incoming links for resourceIri
+                val incomingLinksForRes: RdfResources = flatResourcesWithValues.foldLeft(emptyRdfResources) {
+                    case (acc: RdfResources, (otherResourceIri: IRI, otherResource: ResourceWithValueRdfData)) =>
+
+                        // get all incoming links having assertions about value properties pointing to this resource
+                        val incomingLinkPropertyAssertions: RdfPropertyValues = otherResource.valuePropertyAssertions.foldLeft(emptyRdfPropertyValues) {
+                            case (acc: RdfPropertyValues, (prop: SmartIri, otherResourceValues: Seq[ValueRdfData])) =>
+
+                                // collect all link values that point to resourceIri
+                                val incomingLinkValues: Seq[ValueRdfData] = otherResourceValues.foldLeft(Seq.empty[ValueRdfData]) {
+                                    (acc, value: ValueRdfData) =>
+
+                                        // check if it is a link value and points to this resource
+                                        if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue && value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri) == resourceIri) {
+                                            acc :+ value
+                                        } else {
+                                            acc
+                                        }
+                                }
+
+                                // check if the link value already exists
+                                if (incomingLinkValues.nonEmpty) {
+                                    // add link value to the existing values
+                                    acc + (prop -> incomingLinkValues)
+                                } else {
+                                    // it does not already exists therefore add the new oone
+                                    acc
+                                }
+                        }
+
+                        // check if the property assertion already exists
+                        if (incomingLinkPropertyAssertions.nonEmpty) {
+                            // add resource values to the existing values
+                            acc + (otherResourceIri -> values.copy(
+                                valuePropertyAssertions = incomingLinkPropertyAssertions
+                            ))
+                        } else {
+                            // it does not already exist therefore add the new one
+                            acc
+                        }
+
+                }
+
+                // create an entry using the resource's Iri as a key and its incoming links as the value
+                resourceIri -> incomingLinksForRes
+        }
+    }
+
 
     /**
      * Given a resource IRI, finds any link values in the resource, and recursively embeds the target resource in each link value.
@@ -650,7 +721,7 @@ object ConstructResponseUtilV2 {
                     case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
 
                         // check if the property Iri already exists (there could be several instances of the same property)
-                        if (acc.get(propIri).nonEmpty) {
+                        if (acc.contains(propIri)) {
                             // add values to property Iri (keeping the already existing values)
                             acc + (propIri -> (acc(propIri) ++ values).sortBy(_.subjectIri))
                         } else {
@@ -769,7 +840,7 @@ object ConstructResponseUtilV2 {
             case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
                 val mappings: Seq[String] = valObjs.filter {
                     valObj: ValueRdfData =>
-                        valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri).nonEmpty
+                        valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.contains(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
                 }.map {
                     textValObj: ValueRdfData => textValObj.requireIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
                 }
@@ -947,7 +1018,7 @@ object ConstructResponseUtilV2 {
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        targetSchema: ApiV2Schema,
-                                       settings: SettingsImpl,
+                                       settings: KnoraSettingsImpl,
                                        requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
             valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
@@ -1009,7 +1080,7 @@ object ConstructResponseUtilV2 {
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
                                                      targetSchema: ApiV2Schema,
-                                                     settings: SettingsImpl,
+                                                     settings: KnoraSettingsImpl,
                                                      requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
         val valueObjectValueHasString: Option[String] = valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasString.toSmartIri)
@@ -1187,7 +1258,7 @@ object ConstructResponseUtilV2 {
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
                                         targetSchema: ApiV2Schema,
-                                        settings: SettingsImpl,
+                                        settings: KnoraSettingsImpl,
                                         requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
             val isDeleted: Boolean = rdfData.requireBooleanObject(OntologyConstants.KnoraBase.IsDeleted.toSmartIri)
@@ -1342,7 +1413,7 @@ object ConstructResponseUtilV2 {
                           versionDate: Option[Instant],
                           responderManager: ActorRef,
                           targetSchema: ApiV2Schema,
-                          settings: SettingsImpl,
+                          settings: KnoraSettingsImpl,
                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourcesSequenceV2] = {
 
         val visibleResourceIris: Seq[IRI] = orderByResourceIri.filter(resourceIri => mainResourcesAndValueRdfData.resources.keySet.contains(resourceIri))

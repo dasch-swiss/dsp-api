@@ -22,6 +22,7 @@ package org.knora.webapi
 import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -34,7 +35,9 @@ import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowRel
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -49,7 +52,7 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
@@ -59,7 +62,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     /* needed by the core trait (represents the KnoraTestCore trait)*/
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
@@ -69,7 +72,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
@@ -81,8 +84,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start knora without loading ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = true)
+        // Start Knora, reading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
 
         // waits until knora is up and running
         applicationStateRunning()

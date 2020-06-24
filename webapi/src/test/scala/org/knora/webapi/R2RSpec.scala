@@ -21,22 +21,25 @@ package org.knora.webapi
 
 import java.io.{File, StringReader}
 
-import akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.app.appmessages.AppReady
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -44,11 +47,11 @@ import scala.language.postfixOps
 /**
   * Created by subotic on 08.12.15.
   */
-class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
+class R2RSpec extends Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     def actorRefFactory: ActorSystem = system
 
-    val settings = Settings(system)
+    val settings: KnoraSettingsImpl = KnoraSettings(system)
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings)
@@ -57,14 +60,20 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
+    // The main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
 
-    val routeData: KnoraRouteData = KnoraRouteData(system, appActor)
+    val routeData: KnoraRouteData = KnoraRouteData(
+        system = system,
+        appActor = appActor
+    )
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll {
+        // changes the state and behaviour of the ApplicationActor to Ready
+        appActor ! AppReady()
         CacheUtil.createCaches(settings.caches)
         loadTestData(rdfDataObjects)
     }
@@ -89,7 +98,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
     }
 

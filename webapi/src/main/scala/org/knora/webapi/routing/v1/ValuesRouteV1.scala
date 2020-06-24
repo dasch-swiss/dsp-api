@@ -22,6 +22,8 @@ package org.knora.webapi.routing.v1
 import java.time.Instant
 import java.util.UUID
 
+import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
@@ -473,6 +475,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
                             resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
                             projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
+
                             request <- makeChangeFileValueRequest(
                                 resIriStr = resIriStr,
                                 projectShortcode = projectShortcode,

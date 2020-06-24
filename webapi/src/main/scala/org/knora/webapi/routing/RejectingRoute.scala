@@ -20,8 +20,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
-import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
+import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -38,7 +37,7 @@ trait AppStateAccess {
 
     protected def getAppState(): Future[AppState] = for {
 
-        state <- (applicationStateActor ? GetAppState()).mapTo[AppState]
+        state <- (applicationActor ? GetAppState()).mapTo[AppState]
 
     } yield state
 
@@ -47,8 +46,8 @@ trait AppStateAccess {
 /**
  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
  *
- * If the current state of the application is anything other then [[AppState.Running]], then return [[StatusCodes.ServiceUnavailable]].
- * If the current state of the application is [[AppState.Running]], then reject requests to paths as defined
+ * If the current state of the application is anything other then [[AppStates.Running]], then return [[StatusCodes.ServiceUnavailable]].
+ * If the current state of the application is [[AppStates.Running]], then reject requests to paths as defined
  * in 'application.conf'.
  */
 class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with AppStateAccess {
@@ -58,11 +57,11 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
      */
     override def knoraApiPath: Route = {
 
-        path(Remaining) { wholepath =>
+        path(Remaining) { wholePath =>
 
             // check to see if route is on the rejection list
             val rejectSeq: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject: String =>
-                if (wholepath.contains(pathToReject.toCharArray)) {
+                if (wholePath.contains(pathToReject.toCharArray)) {
                     Some(true)
                 } else {
                     None
@@ -74,22 +73,21 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                 case Success(appState) => {
 
                     appState match {
-                        case AppState.Running if rejectSeq.flatten.nonEmpty => {
+                        case AppStates.Running if rejectSeq.flatten.nonEmpty =>
                             // route not allowed. will complete request.
-                            val msg = s"Request to $wholepath not allowed as per configuration for routes to reject."
+                            val msg = s"Request to $wholePath not allowed as per configuration for routes to reject."
                             log.info(msg)
                             complete(StatusCodes.NotFound, "The requested path is deactivated.")
-                        }
-                        case AppState.Running if rejectSeq.flatten.isEmpty => {
+
+                        case AppStates.Running if rejectSeq.flatten.isEmpty =>
                             // route is allowed. by rejecting, I'm letting it through so that some other route can match
                             reject()
-                        }
-                        case other => {
+
+                        case other =>
                             // if any state other then 'Running', then return ServiceUnavailable
-                            val msg = s"Request to $wholepath rejected. Application not available at the moment (state = $other). Please try again later."
+                            val msg = s"Request to $wholePath rejected. Application not available at the moment (state = $other). Please try again later."
                             log.info(msg)
                             complete(StatusCodes.ServiceUnavailable, msg)
-                        }
                     }
                 }
 

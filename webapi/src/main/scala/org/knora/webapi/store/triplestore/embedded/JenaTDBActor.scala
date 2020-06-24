@@ -48,7 +48,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     private val system = context.system
     private implicit val executionContext = system.dispatcher
-    private val settings = Settings(system)
+    private val settings = KnoraSettings(system)
 
 
     private val persist = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
@@ -119,9 +119,9 @@ class JenaTDBActor extends Actor with ActorLogging {
     def receive = {
         case SparqlSelectRequest(sparqlSelectString) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
         case SparqlUpdateRequest(sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(sparqlUpdateString), log)
-        case ResetTriplestoreContent(rdfDataObjects, prependDefaults) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
-        case DropAllTriplestoreContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
-        case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), Future(insertDataIntoTriplestore(rdfDataObjects)), log)
+        case ResetRepositoryContent(rdfDataObjects, prependDefaults) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
+        case DropAllTRepositoryContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
+        case InsertRepositoryContent(rdfDataObjects) => future2Message(sender(), Future(insertDataIntoTriplestore(rdfDataObjects)), log)
         case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
@@ -255,9 +255,9 @@ class JenaTDBActor extends Actor with ActorLogging {
       * Reloads the contents of the triplestore from RDF data files.
       *
       * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
-      * @return an [[ResetTriplestoreContentACK]] indicating that the operation completed successfully.
+      * @return an [[ResetRepositoryContentACK]] indicating that the operation completed successfully.
       */
-    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Future[ResetTriplestoreContentACK] = {
+    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Future[ResetRepositoryContentACK] = {
 
         val resetTriplestoreResult = for {
 
@@ -271,7 +271,7 @@ class JenaTDBActor extends Actor with ActorLogging {
             indexUpdateResult <- Future(updateIndex())
 
             // any errors throwing exceptions until now are already covered so we can ACK the request
-            result = ResetTriplestoreContentACK()
+            result = ResetRepositoryContentACK()
         } yield result
 
         resetTriplestoreResult
@@ -280,9 +280,9 @@ class JenaTDBActor extends Actor with ActorLogging {
     /**
       * Drops all content from the triplestore.
       *
-      * @return a [[DropAllTriplestoreContentACK]]
+      * @return a [[DropAllRepositoryContentACK]]
       */
-    private def dropAllTriplestoreContent(): DropAllTriplestoreContentACK = {
+    private def dropAllTriplestoreContent(): DropAllRepositoryContentACK = {
 
         // log.debug("ResetTripleStoreContent ...")
 
@@ -307,7 +307,7 @@ class JenaTDBActor extends Actor with ActorLogging {
             // Commit transaction
             this.dataset.commit()
 
-            DropAllTriplestoreContentACK()
+            DropAllRepositoryContentACK()
         } catch {
             case ex: Throwable =>
                 this.dataset.abort()

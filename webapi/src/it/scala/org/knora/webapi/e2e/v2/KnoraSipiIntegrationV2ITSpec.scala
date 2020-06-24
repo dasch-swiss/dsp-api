@@ -286,12 +286,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-            stillImageResourceIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            stillImageResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
             val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-            assert(resource.getTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture")
+            assert(resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture")
 
             // Get the new file value from the resource.
 
@@ -311,7 +311,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 case other => throw AssertionException(s"Invalid value object: $other")
             }
 
-            stillImageFileValueIri.set(savedValueObj.getIDAsKnoraDataIri.toString)
+            stillImageFileValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
 
             val savedImage = savedValueToSavedImage(savedValueObj)
             assert(savedImage.internalFilename == uploadedFile.internalFilename)
@@ -360,7 +360,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // Send the JSON in a PUT request to Knora.
             val knoraPostRequest = Put(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc = getResponseJsonLD(knoraPostRequest)
-            stillImageFileValueIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            stillImageFileValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
@@ -453,12 +453,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-            pdfResourceIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            pdfResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
             val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-            assert(resource.getTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument")
+            assert(resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument")
 
             // Get the new file value from the resource.
 
@@ -478,7 +478,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 case other => throw AssertionException(s"Invalid value object: $other")
             }
 
-            pdfValueIri.set(savedValueObj.getIDAsKnoraDataIri.toString)
+            pdfValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
 
             val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
             assert(savedDocument.internalFilename == uploadedFile.internalFilename)
@@ -519,7 +519,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-            pdfValueIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            pdfValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")

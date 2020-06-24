@@ -1,13 +1,21 @@
 package org.knora.webapi.messages.app.appmessages
 
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
-
 sealed trait ApplicationRequest
 
 /**
   * Start Application
+  *
+  * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
+  * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
+  * @param retryCnt            how many times was this command tried
   */
-case class AppStart(skipLoadingOfOntologies: Boolean, requiresIIIFService: Boolean) extends ApplicationRequest
+case class AppStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int = 0) extends ApplicationRequest
+
+/**
+  * After a successful bind, the ApplicationActor will receive this message and
+  * change his behaviour to ready.
+  */
+case class AppReady() extends ApplicationRequest
 
 /**
   * Stop Application
@@ -97,9 +105,10 @@ case class GetAppState() extends ApplicationRequest
 /**
   * Message for initiating the startup sequence.
   *
-  * @param withOntologies a boolean value denoting if loading of ontologies should be skipped or not.
+  * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
+  * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
   */
-case class InitStartUp(withOntologies: Boolean, requiresIIIFService: Boolean) extends ApplicationRequest
+case class InitStartUp(ignoreRepository: Boolean, requiresIIIFService: Boolean) extends ApplicationRequest
 
 /**
   * Acknowledgment message for [[InitStartUp]].
@@ -107,9 +116,14 @@ case class InitStartUp(withOntologies: Boolean, requiresIIIFService: Boolean) ex
 case class InitStartUpAck() extends ApplicationRequest
 
 /**
-  * Message for initiating repository checking. Used only inside the actor itself.
+  * Message for checking whether the triplestore is available. Used only inside the actor itself.
   */
-case class CheckRepository() extends ApplicationRequest
+case class CheckTriplestore() extends ApplicationRequest
+
+/**
+  * Message for updating the repository to work the current version of Knora. Used only inside the actor itself.
+  */
+case class UpdateRepository() extends ApplicationRequest
 
 /**
   * Message for initiating cache creation. Used only inside the actor itself.
@@ -139,15 +153,44 @@ case object CheckCacheService extends ApplicationRequest
 /**
   * Application States at Startup
   */
-object AppState extends Enumeration {
-    type AppState = Value
-    val Stopped, StartingUp,
-    WaitingForRepository, RepositoryReady,
-    CreatingCaches, CachesReady,
-    UpdatingSearchIndex, SearchIndexReady,
-    LoadingOntologies, OntologiesReady,
-    WaitingForIIIFService, IIIFServiceReady,
-    WaitingForCacheService, CacheServiceReady,
-    MaintenanceMode, Running = Value
-}
+sealed trait AppState
 
+object AppStates {
+
+    case object Stopped extends AppState
+
+    case object StartingUp extends AppState
+
+    case object WaitingForTriplestore extends AppState
+
+    case object TriplestoreReady extends AppState
+
+    case object UpdatingRepository extends AppState
+
+    case object RepositoryUpToDate extends AppState
+
+    case object CreatingCaches extends AppState
+
+    case object CachesReady extends AppState
+
+    case object UpdatingSearchIndex extends AppState
+
+    case object SearchIndexReady extends AppState
+
+    case object LoadingOntologies extends AppState
+
+    case object OntologiesReady extends AppState
+
+    case object WaitingForIIIFService extends AppState
+
+    case object IIIFServiceReady extends AppState
+
+    case object WaitingForCacheService extends AppState
+
+    case object CacheServiceReady extends AppState
+
+    case object MaintenanceMode extends AppState
+
+    case object Running extends AppState
+
+}
