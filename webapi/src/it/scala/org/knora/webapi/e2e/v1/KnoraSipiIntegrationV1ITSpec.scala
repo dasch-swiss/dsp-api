@@ -209,7 +209,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 )
             )
 
-
             // Send the multipart/form-data request to the Knora API server.
             val knoraPostRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
             val knoraPostResponseJson = getResponseJson(knoraPostRequest)

@@ -35,9 +35,6 @@ object TestContainers {
 
     val SipiContainer = new GenericContainer("daschswiss/knora-sipi:latest")
     SipiContainer.withExposedPorts(1024)
-    SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
-    SipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "sipi")
-    SipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
     SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", "api")
     SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
     SipiContainer.withCommand("--config=/sipi/config/sipi.knora-docker-config.lua")
@@ -49,6 +46,10 @@ object TestContainers {
         BindMode.READ_ONLY)
     SipiContainer.start()
 
+    // Container needs to be started to get the random IP
+    val sipiIp: IRI = SipiContainer.getHost
+    val sipiPort: Int = SipiContainer.getFirstMappedPort
+
     val RedisContainer = new GenericContainer("redis:5")
     RedisContainer.withExposedPorts(6379)
     RedisContainer.start()
@@ -56,7 +57,10 @@ object TestContainers {
     import scala.collection.JavaConverters._
     private val portMap = Map(
         "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
-        "app.sipi.internal-port" -> SipiContainer.getFirstMappedPort,
+        "app.sipi.external-host" -> sipiIp,
+        "app.sipi.external-port" -> sipiPort,
+        "app.sipi.internal-host" -> sipiIp,
+        "app.sipi.internal-port" -> sipiPort,
         "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
     ).asJava
 

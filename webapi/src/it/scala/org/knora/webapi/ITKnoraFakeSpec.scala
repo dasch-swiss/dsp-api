@@ -65,7 +65,8 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with
     val log = akka.event.Logging(system, this.getClass)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
