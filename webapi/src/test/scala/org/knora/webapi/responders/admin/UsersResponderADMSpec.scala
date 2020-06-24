@@ -257,7 +257,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the username 'root' already exists")))
             }
 
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
@@ -275,7 +275,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the email 'root@example.com' already exists")))
             }
 
             "return a 'BadRequestException' if the supplied 'username' contains invalid characters (@)" in {
@@ -293,7 +293,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException(s"The username: 'donald.duck2@example.com' contains invalid characters")))
+                expectMsg(Failure(BadRequestException(s"The username 'donald.duck2@example.com' contains invalid characters")))
             }
 
             "return a 'BadRequestException' if the supplied 'username' contains invalid characters (-)" in {
@@ -311,7 +311,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException(s"The username: 'donald-duck' contains invalid characters")))
+                expectMsg(Failure(BadRequestException(s"The username 'donald-duck' contains invalid characters")))
             }
 
             "return a 'BadRequestException' if the supplied 'email' is invalid" in {
@@ -329,7 +329,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException(s"The email: 'root3' is invalid")))
+                expectMsg(Failure(BadRequestException(s"The email 'root3' is invalid")))
             }
 
         }
@@ -398,7 +398,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.superUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the username 'root' already exists")))
             }
 
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
@@ -410,7 +410,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.superUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the email 'root@example.com' already exists")))
             }
 
             "return 'BadRequest' if the new 'username' contains invalid characters (@)" in {
@@ -424,7 +424,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
 
-                expectMsg(timeout, Failure(BadRequestException(s"The username: 'donald.duck2@example.com' contains invalid characters")))
+                expectMsg(timeout, Failure(BadRequestException(s"The username 'donald.duck2@example.com' contains invalid characters")))
             }
 
             "return 'BadRequest' if the new 'username' contains invalid characters (-)" in {
@@ -438,7 +438,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
 
-                expectMsg(timeout, Failure(BadRequestException(s"The username: 'donald-duck' contains invalid characters")))
+                expectMsg(timeout, Failure(BadRequestException(s"The username 'donald-duck' contains invalid characters")))
             }
 
 
@@ -453,7 +453,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
 
-                expectMsg(timeout, Failure(BadRequestException(s"The email: 'root3' is invalid")))
+                expectMsg(timeout, Failure(BadRequestException(s"The email address 'root3' is invalid")))
             }
 
             "UPDATE the user's password (by himself)" in {

@@ -265,13 +265,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             // check if we want to change the email
             emailTaken: Boolean <- userByEmailExists(changeUserRequest.email, Some(currentUserInformation.get.email))
             _ = if (emailTaken) {
-                throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
+                throw DuplicateValueException(s"User with the email '${changeUserRequest.email.get}' already exists")
             }
 
             // check if we want to change the username
             usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username, Some(currentUserInformation.get.username))
             _ = if (usernameTaken) {
-                throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
+                throw DuplicateValueException(s"User with the username '${changeUserRequest.username.get}' already exists")
             }
 
             userUpdatePayload = UserUpdatePayloadADM(
@@ -1157,11 +1157,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check username
             _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
-            _ = stringFormatter.validateUsername(createRequest.username, throw BadRequestException(s"The username: '${createRequest.username}' contains invalid characters"))
+            _ = stringFormatter.validateUsername(createRequest.username, throw BadRequestException(s"The username '${createRequest.username}' contains invalid characters"))
 
             // check email
             _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
-            _ = stringFormatter.validateEmailAndThrow(createRequest.email, throw BadRequestException(s"The email: '${createRequest.email}' is invalid"))
+            _ = stringFormatter.validateEmailAndThrow(createRequest.email, throw BadRequestException(s"The email '${createRequest.email}' is invalid"))
 
             // check other
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
@@ -1170,12 +1170,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             usernameTaken: Boolean <- userByUsernameExists(Some(createRequest.username))
             _ = if (usernameTaken) {
-                throw DuplicateValueException(s"User with the username: '${createRequest.username}' already exists")
+                throw DuplicateValueException(s"User with the username '${createRequest.username}' already exists")
             }
 
             emailTaken: Boolean <- userByEmailExists(Some(createRequest.email))
             _ = if (emailTaken) {
-                throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
+                throw DuplicateValueException(s"User with the email '${createRequest.email}' already exists")
             }
 
             userIri = stringFormatter.makeRandomPersonIri
@@ -1189,7 +1189,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraAdmin.User,
-                username = stringFormatter.validateAndEscapeUsername(createRequest.username, throw BadRequestException(s"The username: '${createRequest.username}' contains invalid characters")),
+                username = stringFormatter.validateAndEscapeUsername(createRequest.username, throw BadRequestException(s"The username '${createRequest.username}' contains invalid characters")),
                 email = createRequest.email,
                 password = hashedPassword,
                 givenName = createRequest.givenName,
