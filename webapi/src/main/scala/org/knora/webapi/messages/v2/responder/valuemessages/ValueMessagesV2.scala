@@ -84,27 +84,24 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
+            resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
             _ = if (!resourceIri.isKnoraResourceIri) {
                 throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
             }
 
             // Get the resource class.
-            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+            resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
             // Get the resource property and the value to be created.
-            createValue: CreateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
+            createValue: CreateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    if (jsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
-                        throw BadRequestException("The @id of a value cannot be given in a request to create the value")
-                    }
 
                     for {
                         valueContent: ValueContentV2 <-
@@ -117,12 +114,27 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 log = log
                             )
 
+                        // Get the custom value IRI if provided.
+                        maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
+
+                        // Get the custom value UUID if provided.
+                        maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID
+
+                        // Get the value's creation date.
+                        maybeCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
+                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                            validationFun = stringFormatter.xsdDateTimeStampToInstant
+                        )
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
                         resourceClassIri = resourceClassIri,
                         propertyIri = propertyIri,
                         valueContent = valueContent,
+                        customValueIri = maybeCustomValueIri,
+                        customValueUUID = maybeCustomUUID,
+                        customValueCreationDate = maybeCreationDate,
                         permissions = maybePermissions
                     )
             }
@@ -137,16 +149,18 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 /**
  * Represents a successful response to a [[CreateValueRequestV2]].
  *
- * @param valueIri   the IRI of the value that was created.
- * @param valueType  the type of the value that was created.
- * @param valueUUID  the value's UUID.
- * @param projectADM the project in which the value was created.
+ * @param valueIri          the IRI of the value that was created.
+ * @param valueType         the type of the value that was created.
+ * @param valueUUID         the value's UUID.
+ * @param valueCreationDate the value's creationDate
+ * @param projectADM        the project in which the value was created.
  */
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
+                                 valueCreationDate: Instant,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         if (targetSchema != ApiV2Complex) {
@@ -158,7 +172,11 @@ case class CreateValueResponseV2(valueIri: IRI,
                 Map(
                     JsonLDConstants.ID -> JsonLDString(valueIri),
                     JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-                    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
+                    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
+                    OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = valueCreationDate.toString,
+                        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                    )
                 )
             ),
             context = JsonLDUtil.makeContext(
@@ -204,25 +222,25 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
+            resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
             _ = if (!resourceIri.isKnoraResourceIri) {
                 throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
             }
 
             // Get the resource class.
-            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+            resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
             // Get the resource property and the new value version.
-            updateValue: UpdateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
+            updateValue: UpdateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    val valueIri: IRI = jsonLDObject.getIDAsKnoraDataIri.toString
+                    val valueIri: IRI = jsonLDObject.requireIDAsKnoraDataIri.toString
 
                     // Does the value object just contain knora-api:hasPermissions?
 
@@ -289,7 +307,7 @@ case class UpdateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         if (targetSchema != ApiV2Complex) {
@@ -354,7 +372,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteValueRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -371,25 +389,25 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Get the IRI of the resource that the value is to be created in.
-        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+        val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
 
         if (!resourceIri.isKnoraResourceIri) {
             throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
         }
 
         // Get the resource class.
-        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+        val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
         // Get the resource property and the IRI and class of the value to be deleted.
-        jsonLDDocument.getResourcePropertyValue match {
+        jsonLDDocument.requireResourcePropertyValue match {
             case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                val valueIri = jsonLDObject.getIDAsKnoraDataIri
+                val valueIri = jsonLDObject.requireIDAsKnoraDataIri
 
                 if (!valueIri.isKnoraValueIri) {
                     throw BadRequestException(s"Invalid value IRI: <$valueIri>")
                 }
 
-                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraApiV2ComplexTypeIri
+                val valueTypeIri: SmartIri = jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri
 
                 val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
@@ -438,6 +456,9 @@ case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
 }
 
 case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
+                                                 customValueIri: Option[SmartIri],
+                                                 customValueUUID: Option[UUID],
+                                                 customValueCreationDate: Option[Instant],
                                                  permissions: String) extends IOValueV2
 
 /**
@@ -553,7 +574,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
      * @param settings     the application settings.
      * @return a JSON-LD representation of this value.
      */
-    def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val valueContentAsJsonLD = valueContent.toJsonLDValue(
@@ -650,7 +671,7 @@ case class ReadTextValueV2(valueIri: IRI,
         copy(valueContent = valueContent.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val valueAsJsonLDValue: JsonLDValue = super.toJsonLD(
@@ -762,16 +783,22 @@ case class ReadOtherValueV2(valueIri: IRI,
 /**
  * Represents a Knora value to be created in an existing resource.
  *
- * @param resourceIri      the resource the new value should be attached to.
- * @param resourceClassIri the resource class that the client believes the resource belongs to.
- * @param propertyIri      the property of the new value. If the client wants to create a link, this must be a link value property.
- * @param valueContent     the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
- * @param permissions      the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ * @param resourceIri              the resource the new value should be attached to.
+ * @param resourceClassIri         the resource class that the client believes the resource belongs to.
+ * @param propertyIri              the property of the new value. If the client wants to create a link, this must be a link value property.
+ * @param valueContent             the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri           the optional custom IRI supplied for the value.
+ * @param customValueUUID          the optional custom UUID supplied for the value.
+ * @param customValueCreationDate  the optional custom creation date supplied for the value.
+ * @param permissions              the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
                          resourceClassIri: SmartIri,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
+                         customValueIri: Option[SmartIri] = None,
+                         customValueUUID: Option[UUID] = None,
+                         customValueCreationDate: Option[Instant] = None,
                          permissions: Option[String] = None) extends IOValueV2
 
 
@@ -886,7 +913,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
      * @param settings     the configuration options.
      * @return a [[JsonLDValue]] that can be used to generate JSON-LD representing this value.
      */
-    def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue
+    def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue
 
     /**
      * Undoes the SPARQL-escaping of strings in this [[ValueContentV2]].
@@ -937,7 +964,7 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
                          requestingUser: UserADM,
                          responderManager: ActorRef,
                          storeManager: ActorRef,
-                         settings: SettingsImpl,
+                         settings: KnoraSettingsImpl,
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
     protected def getComment(jsonLDObject: JsonLDObject)(implicit stringFormatter: StringFormatter): Option[String] = {
@@ -964,7 +991,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1073,7 +1100,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DateValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1173,7 +1200,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -1336,7 +1363,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 valueHasLanguage match {
@@ -1545,7 +1572,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1621,7 +1648,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): IntegerValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDInt(valueHasInteger)
 
@@ -1673,7 +1700,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -1709,7 +1736,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DecimalValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val decimalValueAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueHasDecimal.toString,
             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
@@ -1765,7 +1792,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -1805,7 +1832,7 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): BooleanValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDBoolean(valueHasBoolean)
 
@@ -1854,7 +1881,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -1890,7 +1917,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): GeomValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1948,7 +1975,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -1987,7 +2014,7 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): IntervalValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2057,7 +2084,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -2104,7 +2131,7 @@ case class TimeValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): TimeValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2168,7 +2195,7 @@ object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TimeValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -2210,7 +2237,7 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): HierarchicalListValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 listNodeLabel match {
@@ -2276,7 +2303,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -2317,7 +2344,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): ColorValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2375,7 +2402,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -2411,7 +2438,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): UriValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val uriAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueHasUri,
             datatype = OntologyConstants.Xsd.Uri.toSmartIri
@@ -2470,7 +2497,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -2511,7 +2538,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): GeonameValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2569,7 +2596,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }
@@ -2611,7 +2638,7 @@ object FileValueWithSipiMetadata {
                          requestingUser: UserADM,
                          responderManager: ActorRef,
                          storeManager: ActorRef,
-                         settings: SettingsImpl,
+                         settings: KnoraSettingsImpl,
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueWithSipiMetadata] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -2682,7 +2709,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
         targetSchema match {
@@ -2733,7 +2760,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -2780,7 +2807,7 @@ case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DocumentFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
 
         targetSchema match {
@@ -2834,7 +2861,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DocumentFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -2876,7 +2903,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): TextFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
 
         targetSchema match {
@@ -2919,7 +2946,7 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -2981,7 +3008,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         )
     }
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
 
@@ -3049,7 +3076,7 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
     }

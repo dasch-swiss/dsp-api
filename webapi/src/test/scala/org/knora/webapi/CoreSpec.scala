@@ -33,10 +33,12 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.util.{StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 
 object CoreSpec {
@@ -61,7 +63,7 @@ object CoreSpec {
     }
 }
 
-abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
+abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with AnyWordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     /* constructors - individual tests can override the configuration by giving their own */
     def this(name: String, config: Config) = this(ActorSystem(name, ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
@@ -70,7 +72,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
     /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 

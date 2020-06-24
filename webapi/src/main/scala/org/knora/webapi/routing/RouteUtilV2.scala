@@ -192,7 +192,7 @@ object RouteUtilV2 {
      */
     private def runRdfRoute(requestMessage: KnoraRequestV2,
                             requestContext: RequestContext,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
                             targetSchema: ApiV2Schema,
@@ -252,7 +252,7 @@ object RouteUtilV2 {
      */
     def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
-                       settings: SettingsImpl,
+                       settings: KnoraSettingsImpl,
                        responderManager: ActorRef,
                        log: LoggingAdapter,
                        targetSchema: ApiV2Schema)
@@ -301,7 +301,7 @@ object RouteUtilV2 {
      */
     def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
                               requestContext: RequestContext,
-                              settings: SettingsImpl,
+                              settings: KnoraSettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
                               targetSchema: ApiV2Schema,
@@ -387,7 +387,7 @@ object RouteUtilV2 {
                                responseMediaType: MediaType.NonBinary,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
-                               settings: SettingsImpl): HttpResponse = {
+                               settings: KnoraSettingsImpl): HttpResponse = {
         // Find the most specific media type that is compatible with the one requested.
         val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
 

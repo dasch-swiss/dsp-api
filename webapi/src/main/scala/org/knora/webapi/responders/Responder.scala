@@ -20,6 +20,7 @@
 package org.knora.webapi.responders
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -52,8 +53,8 @@ object Responder {
 /**
  * Data needed to be passed to each responder.
  *
- * @param system           the actor system.
- * @param appActor         the main application actor.
+ * @param system   the actor system.
+ * @param appActor the main application actor.
  */
 case class ResponderData(system: ActorSystem,
                          appActor: ActorRef)
@@ -76,7 +77,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     /**
      * The application settings.
      */
-    protected val settings: SettingsImpl = Settings(system)
+    protected val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
      * The main application actor.
@@ -107,6 +108,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
      * Provides logging
      */
     protected val log: Logger = logger
+    protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     /**
      * Checks whether an entity is used in the triplestore.
@@ -139,20 +141,25 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     }
 
     /**
-     * Checks whether an entity exists in the triplestore.
+     * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
+     * If no custom IRI was given, creates a random unused IRI.
      *
-     * @param entityIri the IRI of the entity.
-     * @return `true` if the entity exists.
+     * @param entityIri    the optional custom IRI of the entity.
+     * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
+     * @return IRI of the entity.
      */
-    protected def checkEntityExists(entityIri: SmartIri): Future[Boolean] = {
-        for {
-            checkEntityExistsSparql <- Future(queries.sparql.v2.txt.checkEntityExists(
-                triplestore = settings.triplestoreType,
-                entityIri = entityIri
-            ).toString())
+    protected def checkEntityIri(entityIri: Option[SmartIri],
+                                 iriFormatter: => IRI): Future[IRI] = {
+        entityIri match {
+            case Some(customResourceIri) =>
+                for {
+                    result <- stringFormatter.checkIriExists(customResourceIri.toString, storeManager)
+                    _ = if (result) {
+                        throw DuplicateValueException(s"IRI: '${customResourceIri.toString}' already exists, try another one.")
+                    }
+                } yield customResourceIri.toString
 
-            entityExistsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(checkEntityExistsSparql)).mapTo[SparqlSelectResponse]
-            result: Boolean = entityExistsResponse.results.bindings.nonEmpty
-        } yield result
+            case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
+        }
     }
 }

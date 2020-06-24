@@ -39,7 +39,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import org.knora.webapi.util.{SipiUtil, StringFormatter}
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, NotImplementedException, Settings, SipiException}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, NotImplementedException, KnoraSettings, SipiException}
 import spray.json._
 
 import scala.concurrent.ExecutionContext
@@ -53,7 +53,7 @@ class SipiConnector extends Actor with ActorLogging {
     implicit val system: ActorSystem = context.system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    private val settings = Settings(system)
+    private val settings = KnoraSettings(system)
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
