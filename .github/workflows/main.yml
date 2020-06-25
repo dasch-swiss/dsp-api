@@ -1,6 +1,9 @@
 name: CI
 
-on: [push]
+on:
+  push:
+  release:
+    types: [published]
 
 jobs:
   compile:
@@ -230,9 +233,9 @@ jobs:
           df -h
           docker system df
 
-  # publish only for develop and tags
+  # publish only on release
   publish:
-    name: Publish to Dockerhub
+    name: Publish to Dockerhub (on release only)
     needs: [
       api-unit-tests,
       api-e2e-tests,
@@ -241,7 +244,7 @@ jobs:
       docs-build-test
     ]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags')
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v1
         with:
@@ -273,3 +276,7 @@ jobs:
         run: |
           df -h
           docker system df
+      - name: Generate Github release notes
+        uses: lakto/gren-action@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
