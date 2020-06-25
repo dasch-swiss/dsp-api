@@ -1,4 +1,4 @@
-FROM dhlabbasel/sipi:v@SIPI_VERSION@
+FROM daschswiss/sipi:v@SIPI_VERSION@
 
 COPY stage/scripts /sipi/scripts
 
