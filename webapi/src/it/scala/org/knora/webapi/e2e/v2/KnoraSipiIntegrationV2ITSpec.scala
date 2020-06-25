@@ -9,7 +9,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
@@ -156,18 +156,19 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         val sipiFormData = Multipart.FormData(formDataParts: _*)
 
         // Send Sipi the file in a POST request.
-        val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+        val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
 
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)
         val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
+        // println(s"sipiUploadResponse: $sipiUploadResponse")
 
         // Request the temporary file from Sipi.
         for (responseEntry <- sipiUploadResponse.uploadedFiles) {
             val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
-                Get(responseEntry.temporaryUrl + "/full/full/0/default.jpg")
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/full/0/default.jpg")
             } else {
-                Get(responseEntry.temporaryUrl)
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl))
             }
 
             checkResponseOK(sipiGetTmpFileRequest)
@@ -293,7 +294,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$invalidToken", sipiFormData)
+            val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
             val sipiResponse = singleAwaitingRequest(sipiRequest)
             assert(sipiResponse.status == StatusCodes.Unauthorized)
         }
@@ -461,7 +462,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
-            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl
+            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
 
             // JSON describing the new image to Knora.
             val jsonLdEntity =

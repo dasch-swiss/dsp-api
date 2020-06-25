@@ -73,7 +73,10 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
+
+
 
     override def beforeAll: Unit = {
 
@@ -100,7 +103,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     protected def checkIfSipiIsRunning(): Unit = {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
+        val request = Get(baseInternalSipiUrl + "/server/test.html")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
         if (response.status.isSuccess()) logger.info("Sipi is running.")
