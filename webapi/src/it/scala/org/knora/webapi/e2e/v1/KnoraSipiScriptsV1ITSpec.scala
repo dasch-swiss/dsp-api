@@ -112,8 +112,10 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             /**
               * Send a GET request to Sipi, asking for the preview image.
               * With testcontainers it is not possible to know the random port
-              * in advance, so the started sipi container cannot be configured
-              * correctly.
+              * in advance, so that we can provide it to Sipi at startup.
+              * Instead we need to replace the standard port configured
+              * and returned by sipi to the random port known after sipi has
+              * already started.
               */
             val sipiGetRequest01 = Get(previewPath.replace("http://0.0.0.0:1024", baseExternalSipiUrl))
             val sipiGetResponse01: HttpResponse = singleAwaitingRequest(sipiGetRequest01)
