@@ -6,7 +6,7 @@ print-env-file: env-file ## prints the env file used by sipi
 
 .PHONY: env-file
 env-file: ## write the env file used by sipi
-	@echo SIPI_VERSION=v$(SIPI_VERSION) > .env
+	@echo SIPI_IMAGE=$(SIPI_IMAGE) > .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 
 .PHONY: up
