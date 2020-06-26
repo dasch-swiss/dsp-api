@@ -155,6 +155,8 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
+    val triplestoreAutoInit: Boolean = config.getBoolean("app.triplestore.auto-init")
+
     val triplestorePort: Int = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getInt("app.triplestore.graphdb.port")
         case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
@@ -169,22 +171,18 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     val triplestoreUsername: String = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.username")
+        case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.username")
         case _ => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.password")
+        case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.password")
         case _ => ""
     }
 
     //used in the store package
     val tripleStoreConfig: Config = config.getConfig("app.triplestore")
-
-    val (fusekiTomcat: Boolean, fusekiTomcatContext: String) = if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-        (config.getBoolean("app.triplestore.fuseki.tomcat"), config.getString("app.triplestore.fuseki.tomcat-context"))
-    } else {
-        (false, "")
-    }
 
     private val fakeTriplestore: String = config.getString("app.triplestore.fake-triplestore")
     val prepareFakeTriplestore: Boolean = fakeTriplestore == "prepare"

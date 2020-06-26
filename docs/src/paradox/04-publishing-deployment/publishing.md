@@ -26,26 +26,20 @@ The following Docker images are published:
 
 - Knora-API:
   - https://hub.docker.com/r/daschswiss/knora-api
-- GraphDB-SE (includes `KnoraRules.pie`):
-  - https://hub.docker.com/r/daschswiss/knora-graphdb-se
-- GraphDB-Free (includes `KnoraRules.pie`):
-  - https://hub.docker.com/r/daschswiss/knora-graphdb-free
+- Jena Fuseki:
+  - https://hub.docker.com/r/daschswiss/knora-jena-fuseki
 - Sipi (includes Knora's Sipi scripts):
   - https://hub.docker.com/r/daschswiss/knora-sipi
-- Knora-Assets (Knora-Base ontologies, test data, and scripts):
-  - https://hub.docker.com/r/daschswiss/knora-assets
-- Knora-Upgrade (Knora upgrade tool):
-  - https://hub.docker.com/r/daschswiss/knora-upgrade
 - Salsah 1:
   - https://hub.docker.com/r/daschswiss/knora-salsah1
 - Salsah 2:
   - https://hub.docker.com/r/daschswiss/knora-app-web
 
-Knora's Docker images are published automatically through Github CI each time a pull-request
-is merged into the `develop` branch.
+Knora's Docker images are published automatically through Github CI each time a
+pull-request is merged into the `develop` branch.
 
-Each image is tagged with a version number, where the version is derived by using the result
-of `git describe`. The describe version is built from the
+Each image is tagged with a version number, where the version is derived by
+using the result of `git describe`. The describe version is built from the
 `last tag + number of commits since tag + short hash`, e.g., `8.0.0-7-ga7827e9`.
 
 The images can be published locally by running:
@@ -59,13 +53,3 @@ or to Dockerhub:
 ```bash
 $ make publish-all-images
 ```
-
-## GraphDB Licensing
-
-**GraphDB-Free** is the Free Edition of the triplestore from Ontotext (http://ontotext.com).
-GraphDB-Free must be licensed separately by the user, by registering with Ontotext, i.e.
-filling out the form for downloading the free edition.
-
-**GraphDB-SE** is the Standard Edition of the triplestore from Ontotext (http://ontotext.com).
-
-GraphDB-SE must be licensed separately by the user.

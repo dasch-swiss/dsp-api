@@ -158,13 +158,13 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     def initializing(): Receive = {
         /* Called from main. Initiates application startup. */
         case appStartMsg: AppStart =>
-            println("==> AppStart")
+            logger.info("==> AppStart")
             appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService, appStartMsg.retryCnt)
         case AppStop() =>
-            println("==> AppStop")
+            logger.info("==> AppStop")
             appStop()
         case AppReady() =>
-            println("==> AppReady")
+            logger.info("==> AppReady")
             unstashAll() // unstash any messages, so that they can be processed
             context.become(ready(), discardOld = true)
         case _ =>
@@ -178,7 +178,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         /* Called from the "appStart" method. Entry point for startup sequence. */
         case initStartUp: InitStartUp =>
-            logger.info("Startup initiated, please wait ...")
+            logger.info("=> InitStartUp")
 
             if (appState == AppStates.Stopped) {
                 ignoreRepository = initStartUp.ignoreRepository
@@ -264,6 +264,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                     self ! SetAppState(AppStates.Running)
 
                 case AppStates.Running =>
+                    logger.info("=> Running")
                     printBanner()
 
                 case AppStates.MaintenanceMode =>
@@ -516,28 +517,25 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         var msg =
             """
-              | _   __                              ___  ______ _____
-              || | / /                             / _ \ | ___ \_   _|
-              || |/ / _ __   ___  _ __ __ _ ______/ /_\ \| |_/ / | |
-              ||    \| '_ \ / _ \| '__/ _` |______|  _  ||  __/  | |
-              || |\  \ | | | (_) | | | (_| |      | | | || |    _| |_
-              |\_| \_/_| |_|\___/|_|  \__,_|      \_| |_/\_|    \___/
+              |  ____  ____  ____         _    ____ ___
+              | |  _ \/ ___||  _ \       / \  |  _ \_ _|
+              | | | | \___ \| |_) |____ / _ \ | |_) | |
+              | | |_| |___) |  __/_____/ ___ \|  __/| |
+              | |____/|____/|_|       /_/   \_\_|  |___|
             """.stripMargin
 
-
         msg += "\n"
-        msg += s"Knora API Server started at http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
-        msg += "----------------------------------------------------------------\n"
+        msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
+        msg += "------------------------------------------------\n"
 
         if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
-            msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
-            msg += "----------------------------------------------------------------\n"
+            msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
+            msg += "------------------------------------------------\n"
         }
 
         // which repository are we using
-        msg += s"DB-Name: ${knoraSettings.triplestoreDatabaseName}\n"
-        msg += s"DB-Type: ${knoraSettings.triplestoreType}\n"
-        msg += s"DB Server: ${knoraSettings.triplestoreHost}, DB Port: ${knoraSettings.triplestorePort}\n"
+        msg += s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}\n"
+        msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
 
 
         if (printConfigState) {
@@ -552,7 +550,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
             msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
         }
 
-        msg += "================================================================\n"
+        msg += "================================================\n"
 
         println(msg)
     }

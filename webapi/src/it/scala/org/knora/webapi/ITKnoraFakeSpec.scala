@@ -48,10 +48,10 @@ object ITKnoraFakeSpec {
 class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, ITKnoraFakeSpec.defaultConfig))
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraFakeSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
+    def this() = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
@@ -65,7 +65,8 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with
     val log = akka.event.Logging(system, this.getClass)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */

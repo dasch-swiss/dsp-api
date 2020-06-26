@@ -24,12 +24,13 @@ import java.util.{Calendar, GregorianCalendar}
 import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.util.DateUtilV1.DateRange
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
   * Tests [[DateUtilV1]].
   */
-class DateUtilV1Spec extends WordSpec with Matchers {
+class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
     "The DateUtilV1 class" should {
         "convert a date in YYYY-MM-DD format, in the Julian calendar, into a Julian day count, and back again" in {
             val bundesbriefDateValueV1 = DateValueV1(

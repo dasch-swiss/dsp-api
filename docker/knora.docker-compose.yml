@@ -3,18 +3,17 @@ version: '3.7'
 services:
 
   db:
-    image: ${KNORA_GRAPHDB_IMAGE}
+    image: ${KNORA_FUSEKI_IMAGE}
     ports:
-      - "7200:7200"
+      - "3030:3030"
     volumes:
-      - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import:delegated
-      - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home:delegated
+      - ${KNORA_DB_HOME_DIR}:/fuseki:delegated
+      - ${KNORA_DB_IMPORT_DIR}:/staging:delegated
     networks:
       - knora-net
     environment:
-    - GDB_HEAP_SIZE=$KNORA_GDB_HEAP_SIZE
-    - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/graphdb.license -Dgraphdb.home=/opt/graphdb/home
-    command: ["/graphdb/bin/graphdb"]
+    - ADMIN_PASSWORD=test
+    - JVM_ARGS=-Xmx${FUSEKI_HEAP_SIZE}
 
   sipi:
     image: ${KNORA_SIPI_IMAGE}
@@ -57,9 +56,11 @@ services:
       - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
       - KNORA_WEBAPI_DB_CONNECTIONS=${KNORA_WEBAPI_DB_CONNECTIONS}
       - KNORA_WEBAPI_TRIPLESTORE_HOST=db
-      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=${KNORA_GDB_TYPE}
+      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=fuseki
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
-      - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=${KNORA_GRAPHDB_REPOSITORY_NAME}
+      - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME=${KNORA_DB_REPOSITORY_NAME}
+      - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
+      - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=test
       - KNORA_WEBAPI_CACHE_SERVICE_ENABLED=true
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT=6379
@@ -83,4 +84,3 @@ networks:
 volumes:
   db-home:
   db-import:
-  no-license:
