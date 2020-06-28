@@ -34,8 +34,9 @@ Before starting a new version of Knora, back up your repository, so you can rest
 in case the automatic repository update fails. You can use one of these scripts
 in `webapi/scripts`:
 
-- `graphdb-dump-repository.sh` for GraphDB
 - `fuseki-dump-repository.sh` for Fuseki
+- `graphdb-dump-repository.sh` for GraphDB
+
 
 For information on command-line options, run the script with no arguments.
 

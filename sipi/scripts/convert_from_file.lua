@@ -54,7 +54,7 @@ end
 
 if not exists then
     local error_msg
-    success, error_msg = server.fs.mkdir(storage_dir, 511)
+    success, error_msg = server.fs.mkdir(projectDir, 511)
 
     if not success then
         send_error(500, "server.fs.mkdir() failed: " .. error_msg)

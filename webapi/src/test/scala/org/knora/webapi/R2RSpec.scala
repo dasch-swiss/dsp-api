@@ -27,38 +27,47 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.pattern.ask
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
-import org.knora.webapi.messages.app.appmessages.AppReady
+import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
+import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
+
 /**
-  * Created by subotic on 08.12.15.
+  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
   */
-class R2RSpec extends Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
+class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
-    def actorRefFactory: ActorSystem = system
+    /* needed by the core trait */
+    implicit lazy val _system: ActorSystem = ActorSystem(actorSystemNameFrom(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load()))
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
+    lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    val settings: KnoraSettingsImpl = KnoraSettings(system)
+    // override so that we can use our own system
+    override def createActorSystem(): ActorSystem = _system
+
+    def actorRefFactory: ActorSystem = _system
+
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings)
 
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-    protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     // The main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
@@ -72,14 +81,21 @@ class R2RSpec extends Suite with ScalatestRouteTest with AnyWordSpecLike with Ma
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll {
-        // changes the state and behaviour of the ApplicationActor to Ready
-        appActor ! AppReady()
-        CacheUtil.createCaches(settings.caches)
+        // set allow reload over http
+        appActor ! SetAllowReloadOverHTTPState(true)
+
+        // start the knora service, loading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
+
+        // waits until knora is up and running
+        applicationStateRunning()
+
         loadTestData(rdfDataObjects)
     }
 
     override def afterAll {
-        CacheUtil.removeAllCaches()
+        /* Stop the server when everything else has finished */
+        appActor ! AppStop()
     }
 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {

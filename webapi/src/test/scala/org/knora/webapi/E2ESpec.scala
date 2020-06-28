@@ -59,13 +59,13 @@ object E2ESpec {
 class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-    def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
     /* needed by the core trait */
 
@@ -110,7 +110,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace

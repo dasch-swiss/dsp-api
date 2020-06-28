@@ -38,7 +38,7 @@ object Dependencies {
     lazy val jenaVersion = settingKey[String]("the Jena library version")
     lazy val metricsVersion = settingKey[String]("the metrics library version")
 
-    lazy val knoraGdbImage = SettingKey[String]("the Knora specific GraphDB Image")
+    lazy val knoraJenaFusekiImage = SettingKey[String]("the Knora specific Jena Fuseki Image")
     lazy val knoraSipiImage = SettingKey[String]("the Knora specific Sipi Image")
     lazy val knoraWebapiImage = SettingKey[String]("the Knora webapi Image")
     lazy val knoraSalsah1Image = SettingKey[String]("the Knora Salsah1 Image")
@@ -47,7 +47,7 @@ object Dependencies {
         scalaVersion := "2.12.11",
         akkaVersion := "2.6.5",
         akkaHttpVersion := "10.1.12",
-        jenaVersion := "3.4.0",
+        jenaVersion := "3.14.0",
         metricsVersion := "4.0.1",
         sipiImage := "dhlabbasel/sipi:v2.0.1",
         gdbSEImage := "daschswiss/graphdb:9.0.0-se",
@@ -71,8 +71,6 @@ object Dependencies {
         val akkaHttpJacksonJava    = Def.setting {"com.typesafe.akka"          %% "akka-http-jackson"        % akkaHttpVersion.value}
 
         val typesafeConfig         = "com.typesafe"                             % "config"                   % "1.3.3"
-
-        // testing
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "1.0.0"
@@ -163,7 +161,7 @@ object Dependencies {
         val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.1.2"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
-
+        val testcontainers         = "org.testcontainers"                         % "testcontainers"           % "1.14.3"                 % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
     }
 
     object TestBinaries {
@@ -244,6 +242,7 @@ object Dependencies {
         scallop,
         springSecurityCore,
         swaggerAkkaHttp,
+        WebapiTest.testcontainers,
         typesafeConfig,
         xmlunitCore
     )

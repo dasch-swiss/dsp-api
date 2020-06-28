@@ -8066,6 +8066,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |} WHERE {
                    |    ?thing a knora-api:Resource .
                    |    ?thing a anything:Thing .
+                   |
                    |    {
                    |        ?thing anything:hasRichtext ?richtext .
                    |        FILTER knora-api:matchText(?richtext, "test")
@@ -8082,7 +8083,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |		?int knora-api:intValueAsInt 1
                    |    }
                    |}
-                   |order by (?int)""".stripMargin
+                   |ORDER BY (?int)""".stripMargin
 
             val expectedCount = 1
 

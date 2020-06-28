@@ -51,4 +51,4 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:8080"
 fi
 
-curl -sS -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/fuseki/${REPOSITORY}"
+curl -sS -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/${REPOSITORY}"
