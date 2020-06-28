@@ -24,11 +24,11 @@ docs-build: ## build the docs
 
 .PHONY: bazel-build
 bazel-build: ## build everything
-@bazel build //...
+	@bazel build //...
 
 .PHONY: bazel-test
 bazel-test: ## run all tests
-@bazel test //...
+	@bazel test //...
 
 #################################
 # Docker targets
@@ -42,21 +42,13 @@ docker-build-knora-api-image: # build and publish knora-api docker image locally
 docker-publish-knora-api-image: # publish knora-api image to Dockerhub
 	@docker run //docker/knora-api:push
 
-.PHONY: docker-build-knora-graphdb-se-image
-docker-build-knora-graphdb-se-image: # build and publish knora-graphdb-se docker image locally
-	@bazel run //docker/knora-graphdb-se
+.PHONY: docker-build-knora-jena-fuseki-image
+docker-build-knora-jena-fuseki-image: # build and publish knora-jena-fuseki docker image locally
+	@bazel run //docker/knora-jena-fuseki
 
-.PHONY: docker-publish-knora-graphdb-se-image
-docker-publish-knora-graphdb-se-image: # publish knora-graphdb-se image to Dockerhub
-	@bazel run //docker/knora-graphdb-se:push
-
-.PHONY: docker-build-knora-graphdb-free-image
-docker-build-knora-graphdb-free-image: # build and publish knora-graphdb-free docker image locally
-	@bazel run //docker/knora-graphdb-free
-
-.PHONY: docker-publish-knora-graphdb-free-image
-docker-publish-knora-graphdb-free-image: # publish knora-graphdb-se image to Dockerhub
-	@bazel run //docker/knora-graphdb-free:push
+.PHONY: docker-publish-knora-jena-fuseki-image
+docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Dockerhub
+	@bazel run //docker/knora-jena-fuseki:push
 
 .PHONY: docker-build-knora-sipi-image
 docker-build-knora-sipi-image: # build and publish knora-sipi docker image locally
@@ -74,67 +66,11 @@ docker-build-knora-salsah1-image: # build and publish knora-salsah1 docker image
 docker-publish-knora-salsah1-image: # publish knora-salsah1 image to Dockerhub
 	@bazel run //docker/knora-salsah1:push
 
-.PHONY: docker-build-knora-upgrade-image
-docker-build-knora-upgrade-image: # build and publish knora-upgrade docker image locally
-	@bazel run //docker/knora-upgrade
-
-.PHONY: docker-publish-knora-upgrade-image
-docker-publish-knora-upgrade-image: # publish knora-upgrade image to Dockerhub
-	@bazel run //docker/knora-upgrade:push
-
 .PHONY: docker-build
-docker-build: docker-build-knora-api-image docker-build-knora-graphdb-se-image docker-build-knora-graphdb-free-image docker-build-knora-sipi-image docker-build-knora-salsah1-image docker-build-knora-upgrade-image  ## build and publish all Docker images locally
+docker-build: docker-build-knora-api-image docker-build-knora-jena-fuseki-image docker-build-knora-sipi-image docker-build-knora-salsah1-image ## build and publish all Docker images locally
 
 .PHONY: docker-publish
-docker-publish: docker-publish-knora-api-image docker-publish-knora-graphdb-se-image docker-publish-knora-graphdb-free-image docker-publish-knora-sipi-image docker-publish-knora-salsah1-image docker-publish-knora-upgrade-image ## publish all Docker images to Dockerhub
-.PHONY: build-all-scala
-build-all-scala: ## build all scala projects
-	@sbt clean test:compile it:compile stage webapi/universal:stage knora-jena-fuseki/universal:stage knora-sipi/universal:stage salsah1/universal:stage
-
-## knora-api
-.PHONY: build-knora-api-image
-build-knora-api-image: build-all-scala ## build and publish knora-api docker image locally
-	docker build -t $(KNORA_API_IMAGE) -t $(REPO_PREFIX)/$(KNORA_API_REPO):latest -f docker/knora-api.dockerfile  webapi/target/universal
-
-.PHONY: publish-knora-api
-publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
-	docker push $(KNORA_API_IMAGE)
-
-## knora-fuseki
-.PHONY: build-knora-jena-fuseki-image
-build-knora-jena-fuseki-image: build-all-scala ## build and publish knora-jena-fuseki docker image locally
-	docker build -t $(KNORA_FUSEKI_IMAGE) -t $(REPO_PREFIX)/$(KNORA_FUSEKI_REPO):latest -f docker/knora-jena-fuseki.dockerfile knora-jena-fuseki/target/universal
-
-.PHONY: publish-knora-jena-fuseki-image
-publish-knora-jena-fuseki-image: build-knora-jena-fuseki-image ## publish knora-jena-fuseki image to Dockerhub
-	docker push $(KNORA_FUSEKI_IMAGE)
-
-## knora-sipi
-.PHONY: build-knora-sipi-image
-build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
-	@mkdir -p .docker
-	@sed -e "s/@SIPI_VERSION@/$(SIPI_VERSION)/" docker/knora-sipi.template.dockerfile > .docker/knora-sipi.dockerfile
-	docker build -t $(KNORA_SIPI_IMAGE) -t $(REPO_PREFIX)/$(KNORA_SIPI_REPO):latest -f .docker/knora-sipi.dockerfile  knora-sipi/target/universal
-
-.PHONY: publish-knora-sipi-image
-publish-knora-sipi-image: build-knora-sipi-image ## publish knora-sipi image to Dockerhub
-	docker push $(KNORA_SIPI_IMAGE)
-
-## knora-salsah1
-.PHONY: build-knora-salsah1-image
-build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 docker image locally
-	docker build -t $(KNORA_SALSAH1_IMAGE) -f docker/knora-salsah1.dockerfile  salsah1/target/universal
-
-.PHONY: publish-knora-salsah1-image
-publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
-	docker push $(KNORA_SALSAH1_IMAGE)
-
-## all images
-.PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-jena-fuseki-image build-knora-sipi-image build-knora-salsah1-image ## build all Docker images
-
-.PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-jena-fuseki-image publish-knora-sipi-image publish-knora-salsah1-image ## publish all Docker images
+docker-publish: docker-publish-knora-api-image docker-publish-knora-jena-fuseki-image docker-publish-knora-sipi-image docker-publish-knora-salsah1-image ## publish all Docker images to Dockerhub
 
 #################################
 ## Docker-Compose targets
@@ -173,15 +109,15 @@ endif
 #################################
 
 .PHONY: stack-up
-stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml up -d db
+stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, api, salsah1.
+	docker-compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
-	docker-compose -f docker/knora.docker-compose.yml up -d
+	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: build-all-images env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml up -d
+stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: graphdb, sipi, redis, api, salsah1.
+	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
 stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api, salsah1.
@@ -189,7 +125,7 @@ stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api,
 
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
-	docker-compose -f docker/knora.docker-compose.yml restart api
+	docker-compose -f docker-compose.yml restart api
 	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
 .PHONY: stack-logs
@@ -202,7 +138,7 @@ stack-logs-db: ## prints out and follows the logs of the 'db' container running 
 
 .PHONY: stack-logs-db-no-follow
 stack-logs-db-no-follow: ## prints out the logs of the 'db' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs db
+	docker-compose -f docker-compose.yml logs db
 
 .PHONY: stack-logs-sipi
 stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in knora-stack.
@@ -222,11 +158,11 @@ stack-logs-api: ## prints out and follows the logs of the 'api' container runnin
 
 .PHONY: stack-logs-api-no-follow
 stack-logs-api-no-follow: ## prints out the logs of the 'api' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs api
+	docker-compose -f docker-compose.yml logs api
 
 .PHONY: stack-logs-salsah1
 stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f salsah1
+	docker-compose -f docker-compose.yml logs -f salsah1
 
 .PHONY: stack-health
 stack-health:
@@ -234,19 +170,19 @@ stack-health:
 
 .PHONY: stack-status
 stack-status:
-	docker-compose -f docker/knora.docker-compose.yml ps
+	docker-compose -f docker-compose.yml ps
 
 .PHONY: stack-down
 stack-down: ## stops the knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml down
+	docker-compose -f docker-compose.yml down
 
 .PHONY: stack-down-delete-volumes
 stack-down-delete-volumes: ## stops the knora-stack and delete any created volumes (deletes the database!).
-	docker-compose -f docker/knora.docker-compose.yml down --volumes
+	docker-compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-config
 stack-config: env-file
-	docker-compose -f docker/knora.docker-compose.yml config
+	docker-compose -f docker-compose.yml config
 
 ## stack without api
 .PHONY: stack-without-api
@@ -309,20 +245,7 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 	@echo $@  # print target name
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	@docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src/workspace \
-				-w /src/workspace \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				l.gcr.io/google/bazel:1.2.1 \
-				test //webapi:unit_tests
+	@bazel test //webapi:unit_tests
 
 .PHONY: e2e-tests
 e2e-tests: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
