@@ -632,7 +632,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            listIri = stringFormatter.makeRandomListIri(maybeShortcode)
+            customListIri: Option[SmartIri] = createListRequest.listIri.map(iri => iri.toSmartIri)
+            listIri: IRI <- checkEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
             // Create the new list
             createNewListSparqlString = queries.sparql.admin.txt.createNewList(

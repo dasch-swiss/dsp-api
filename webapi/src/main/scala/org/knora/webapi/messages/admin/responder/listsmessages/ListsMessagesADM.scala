@@ -40,15 +40,20 @@ import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, 
   * label needs to be supplied.
   *
   * @param projectIri the IRI of the project the list belongs to.
+  * @param listIri    the optional custom list IRI.
+  * @param name       the optional name of the list.
   * @param labels     the list's labels.
   * @param comments   the list's comments.
   */
 case class CreateListApiRequestADM(projectIri: IRI,
-                                   name: Option[String],
+                                   listIri: Option[IRI] = None,
+                                   name: Option[String] = None,
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    stringFormatter.validateOptionalListIri(listIri, throw BadRequestException(s"Invalid list IRI"))
 
     if (projectIri.isEmpty) {
         // println(this)
@@ -956,7 +961,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
-    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "name", "labels", "comments")
+    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "listIri", "name", "labels", "comments")
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")

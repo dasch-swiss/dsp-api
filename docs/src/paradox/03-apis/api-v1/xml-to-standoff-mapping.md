@@ -280,6 +280,8 @@ Knora allows the use of all its value types as standoff data types
   type attribute, e.g. `1.1,2.2`).
 - `knora-base:StandoffBooleanTag`: Represents a Boolean value (`true`
   or `false` must be submitted in the data type attribute).
+- `knora-base:StandoffTimeTag`: Represents a timestamp value (an `xsd:dateTimeStamp`
+  must be submitted in the data type attribute).
 
 The basic idea is that parts of a text can be marked up in a way that
 allows using Knora's built-in data types. In order to do so, the typed

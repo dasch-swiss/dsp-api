@@ -20,204 +20,33 @@
 package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructResponse, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryGenerator
+import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris
+import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.util.ConstructResponseUtilV2.{RdfPropertyValues, RdfResources, ResourceWithValueRdfData, ValueRdfData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{ConstructResponseUtilV2, ErrorHandlingMap, SmartIri, StringFormatter}
+import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri, StringFormatter}
 
 object MainQueryResultProcessor {
 
     /**
-      * Represents the IRIs of resources and value objects.
-      *
-      * @param resourceIris    resource IRIs.
-      * @param valueObjectIris value object IRIs.
-      */
-    case class ResourceIrisAndValueObjectIris(resourceIris: Set[IRI], valueObjectIris: Set[IRI])
-
-    /**
-      * Traverses value property assertions and returns the IRIs of the value objects and the dependent resources, recursively traversing their value properties as well.
-      * This is method is needed in order to determine if the whole graph pattern is still present in the results after permissions checking handled in [[ConstructResponseUtilV2.splitMainResourcesAndValueRdfData]].
-      * Due to insufficient permissions, some of the resources (both main and dependent resources) and/or values may have been filtered out.
-      *
-      * @param valuePropertyAssertions the assertions to be traversed.
-      * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object IRIs that have been found in `valuePropertyAssertions`.
-      */
-    def collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropertyAssertions: RdfPropertyValues)(implicit stringFormatter: StringFormatter): ResourceIrisAndValueObjectIris = {
-
-        // look at the value objects and ignore the property IRIs (we are only interested in value instances)
-        val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
-            (acc: Seq[ResourceIrisAndValueObjectIris], valueRdfData: ValueRdfData) =>
-
-                if (valueRdfData.nestedResource.nonEmpty) {
-                    // this is a link value
-                    // recursively traverse the dependent resource's values
-
-                    val dependentRes: ResourceWithValueRdfData = valueRdfData.nestedResource.get
-
-                    // recursively traverse the link value's nested resource and its assertions
-                    val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = collectResourceIrisAndValueObjectIrisFromMainQueryResult(dependentRes.valuePropertyAssertions)
-
-                    // get the dependent resource's IRI from the current link value's rdf:object, or rdf:subject in case of an incoming link
-                    val dependentResIri: IRI = if (valueRdfData.isIncomingLink) {
-                        valueRdfData.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
-                    } else {
-                        valueRdfData.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri)
-                    }
-
-                    // append results from recursion and current value object
-                    ResourceIrisAndValueObjectIris(
-                        resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri,
-                        valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + valueRdfData.subjectIri
-                    ) +: acc
-                } else {
-                    // not a link value or no dependent resource given (in order to avoid infinite recursion)
-                    // no dependent resource present
-                    // append results for current value object
-                    ResourceIrisAndValueObjectIris(
-                        resourceIris = Set.empty[IRI],
-                        valueObjectIris = Set(valueRdfData.subjectIri)
-                    ) +: acc
-                }
-        }
-
-        // convert the collection of `ResourceIrisAndValueObjectIris` into one
-        ResourceIrisAndValueObjectIris(
-            resourceIris = resAndValObjIris.flatMap(_.resourceIris).toSet,
-            valueObjectIris = resAndValObjIris.flatMap(_.valueObjectIris).toSet
-        )
-
-    }
-
-
-    /**
-      * Collects the Iris of dependent resources per main resource from the results returned by the prequery.
-      * Dependent resource Iris are grouped by main resource.
-      *
-      * @param prequeryResponse the results returned by the prequery.
-      * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
-      * @param mainResourceVar  the variable representing the main resource.
-      * @return a [[DependentResourcesPerMainResource]].
-      */
-    def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
-                                                transformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator,
-                                                mainResourceVar: QueryVariable): DependentResourcesPerMainResource = {
-
-        // variables representing dependent resources
-        val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.getDependentResourceVariablesGroupConcat
-
-        val dependentResourcesPerMainRes = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
-            case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
-                // collect all the dependent resource Iris for the current main resource from prequery's response
-
-                // the main resource's Iri
-                val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
-
-                // get the Iris of all the dependent resources for the given main resource
-                val dependentResIris: Set[IRI] = dependentResourceVariablesGroupConcat.flatMap {
-                    dependentResVar: QueryVariable =>
-
-                        // check if key exists: the variable representing dependent resources
-                        // could be contained in an OPTIONAL or a UNION and be unbound
-                        // It would be suppressed by `VariableResultsRow` in that case.
-                        //
-                        // Example: the query contains a dependent resource variable ?book within an OPTIONAL or a UNION.
-                        // If the query returns results for the dependent resource ?book (Iris of resources that match the given criteria),
-                        // those would be accessible via the variable ?book__Concat containing the aggregated results (Iris).
-                        val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
-
-                        dependentResIriOption match {
-                            case Some(depResIri: IRI) =>
-
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                depResIri.split(transformer.groupConcatSeparator).toSeq
-
-                            case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
-                        }
-
-                }
-
-                acc + (mainResIri -> dependentResIris)
-        }
-
-        DependentResourcesPerMainResource(new ErrorHandlingMap(dependentResourcesPerMainRes, { key => throw GravsearchException(s"main resource not found: $key") }))
-    }
-
-    /**
-      * Collects object variables and their values per main resource from the results returned by the prequery.
-      * Value objects variables and their Iris are grouped by main resource.
-      *
-      * @param prequeryResponse the results returned by the prequery.
-      * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
-      * @param mainResourceVar  the variable representing the main resource.
-      * @return [[ValueObjectVariablesAndValueObjectIris]].
-      */
-    def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
-                                                 transformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator,
-                                                 mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
-
-        // value objects variables present in the prequery's WHERE clause
-        val valueObjectVariablesConcat = transformer.getValueObjectVarsGroupConcat
-
-        val valueObjVarsAndIris: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
-            (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
-
-                // the main resource's Iri
-                val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
-
-                // the the variables representing value objects and their Iris
-                val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
-                    valueObjVarConcat: QueryVariable =>
-
-                        // check if key exists: the variable representing value objects
-                        // could be contained in an OPTIONAL or a UNION and be unbound
-                        // It would be suppressed by `VariableResultsRow` in that case.
-
-                        // this logic works like in the case of dependent resources, see `getDependentResourceIrisPerMainResource` above.
-                        val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
-
-                        val valueObjIris: Set[IRI] = valueObjIrisOption match {
-
-                            case Some(valObjIris) =>
-
-                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them
-                                valObjIris.split(transformer.groupConcatSeparator).toSet
-
-                            case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
-
-                        }
-
-                        valueObjVarConcat -> valueObjIris
-                }.toMap
-
-                val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(valueObjVarToIris, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
-                acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
-        }
-
-        ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIris, { key => throw GravsearchException(s"main resource not found: $key") }))
-    }
-
-    /**
-      * Given the results of the main query, filters out all values that the user did not ask for in the input query,
-      * i.e that are not present in its CONSTRUCT clause.
-      *
-      * @param queryResultsWithFullGraphPattern        results with full graph pattern (that user has sufficient permissions on).
-      * @param valueObjectVarsAndIrisPerMainResource   value object variables and their Iris per main resource.
-      * @param allResourceVariablesFromTypeInspection  all variables representing resources.
-      * @param dependentResourceIrisFromTypeInspection Iris of dependent resources used in the input query.
-      * @param transformer                             the transformer that was used to turn the input query into the prequery.
-      * @param typeInspectionResult                    results of type inspection of the input query.
-      * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
-      */
+     * Given the results of the main query, filters out all values that the user did not ask for in the input query,
+     * i.e that are not present in its CONSTRUCT clause.
+     *
+     * @param queryResultsWithFullGraphPattern        results with full graph pattern (that user has sufficient permissions on).
+     * @param valueObjectVarsAndIrisPerMainResource   value object variables and their Iris per main resource.
+     * @param allResourceVariablesFromTypeInspection  all variables representing resources.
+     * @param dependentResourceIrisFromTypeInspection Iris of dependent resources used in the input query.
+     * @param transformer                             the transformer that was used to turn the input query into the prequery.
+     * @param typeInspectionResult                    results of type inspection of the input query.
+     * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
+     */
+    // TODO apparently not needed, work is taken care in ConstructResponseUtilV2.nestResources
     def getRequestedValuesFromResultsWithFullGraphPattern(queryResultsWithFullGraphPattern: RdfResources,
                                                           valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
                                                           allResourceVariablesFromTypeInspection: Set[QueryVariable],
                                                           dependentResourceIrisFromTypeInspection: Set[IRI],
-                                                          transformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator,
+                                                          transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
                                                           typeInspectionResult: GravsearchTypeInspectionResult,
                                                           inputQuery: ConstructQuery): RdfResources = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -232,8 +61,7 @@ object MainQueryResultProcessor {
         // Example: the statement "?page incunabula:seqnum ?seqnum ." is contained in the input query's CONSTRUCT clause.
         // ?seqnum (?seqnum__Concat) is a requested value and is associated with the resource variable ?page.
         val requestedValueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
-            resVar =>
-                GravsearchMainQueryGenerator.collectValueVariablesForResource(inputQuery.constructClause, resVar, typeInspectionResult, transformer.groupConcatVariableSuffix)
+            resVar => transformer.getValueGroupConcatVariablesForResource(resVar)
         }
 
         // for each resource Iri (only dependent resources),
@@ -243,8 +71,7 @@ object MainQueryResultProcessor {
         // Example: the statement "<http://rdfh.ch/5e77e98d2603> incunabula:title ?title ." is contained in the input query's CONSTRUCT clause.
         // ?title (?title__Concat) is a requested value and is associated with the dependent resource Iri <http://rdfh.ch/5e77e98d2603>.
         val requestedValueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
-            depResIri =>
-                GravsearchMainQueryGenerator.collectValueVariablesForResource(inputQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, transformer.groupConcatVariableSuffix)
+            depResIri => transformer.getValueGroupConcatVariablesForResource(IriRef(iri = depResIri.toSmartIri))
         }
 
         // combine all value object variables into one set
@@ -274,12 +101,12 @@ object MainQueryResultProcessor {
                 val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerMainResource.getOrElse(mainResIri, throw AssertionException(s"key $mainResIri is absent in requested value object IRIs collection for resource $mainResIri"))
 
                 /**
-                  * Recursively filters out those values that the user does not want to see.
-                  * Starts with the values of the main resource and also processes link values, possibly containing dependent resources with values.
-                  *
-                  * @param values the values to be filtered.
-                  * @return filtered values.
-                  */
+                 * Recursively filters out those values that the user does not want to see.
+                 * Starts with the values of the main resource and also processes link values, possibly containing dependent resources with values.
+                 *
+                 * @param values the values to be filtered.
+                 * @return filtered values.
+                 */
                 def traverseAndFilterValues(values: ResourceWithValueRdfData): RdfPropertyValues = {
                     values.valuePropertyAssertions.foldLeft(ConstructResponseUtilV2.emptyRdfPropertyValues) {
                         case (acc, (propIri: SmartIri, values: Seq[ValueRdfData])) =>
@@ -334,19 +161,4 @@ object MainQueryResultProcessor {
                 )
         }
     }
-
-    /**
-      * Represents dependent resources organized by main resource.
-      *
-      * @param dependentResourcesPerMainResource a set of dependent resource Iris organized by main resource.
-      */
-    case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: Map[IRI, Set[IRI]])
-
-    /**
-      * Represents value object variables and value object Iris organized by main resource.
-      *
-      * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
-      */
-    case class ValueObjectVariablesAndValueObjectIris(valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]])
-
 }

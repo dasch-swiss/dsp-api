@@ -6,9 +6,8 @@ print-env-file: env-file ## prints the env file used by sipi
 
 .PHONY: env-file
 env-file: ## write the env file used by sipi
-	# FIXME: Get SIPI version from bazel, e.g., generate .env file though bazel
-	# @echo SIPI_VERSION=$(SIPI_VERSION) > .env
-	@echo DOCKERHOST=$(DOCKERHOST) > .env
+	@echo SIPI_VERSION=v$(SIPI_VERSION) > .env
+	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 
 .PHONY: up
 up: env-file ## start sipi

@@ -50,7 +50,7 @@ object RouteUtilADM {
      */
     def runJsonRoute(requestMessageF: Future[KnoraRequestADM],
                      requestContext: RequestContext,
-                     settings: SettingsImpl,
+                     settings: KnoraSettingsImpl,
                      responderManager: ActorRef,
                      log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {

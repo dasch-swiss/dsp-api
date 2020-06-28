@@ -33,23 +33,21 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.scaladsl.{FileIO, Source}
-import akka.stream.{ActorMaterializer, IOResult}
+import akka.stream.{Materializer, IOResult}
 import akka.util.ByteString
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
-import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{BadRequestException, IRI, OntologyConstants, SharedTestDataADM}
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.{BadRequestException, IRI, SharedTestDataADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object ProjectsRouteADM {
-    val ProjectsBasePath = PathMatcher("admin" / "projects")
+    val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
     val ProjectsBasePathString = "/admin/projects"
 }
 
@@ -60,38 +58,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     import ProjectsRouteADM._
 
     /**
-     * The name of this [[ClientEndpoint]].
-     */
-    override val name: String = "ProjectsEndpoint"
-
-    /**
      * The directory name to be used for this endpoint's code.
      */
     override val directoryName: String = "projects"
 
-    /**
-     * The URL path of this [[ClientEndpoint]].
-     */
-    override val urlPath: String = "/projects"
-
-    /**
-     * A description of this [[ClientEndpoint]].
-     */
-    override val description: String = "An endpoint for working with Knora projects."
-
-    // Classes used in client function definitions.
-
-    private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
-    private val StoredProject = Project.toStoredClassRef
-    private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
-    private val ProjectResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectResponse.toSmartIri)
-    private val UpdateProjectRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateProjectRequest.toSmartIri)
-    private val KeywordsResponse = classRef(OntologyConstants.KnoraAdminV2.KeywordsResponse.toSmartIri)
-    private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
-    private val ProjectRestrictedViewSettingsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse.toSmartIri)
-
     private val imagesProjectIriEnc = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
-    private val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+    private val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
 
     /**
      * Returns the route.
@@ -130,16 +102,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectsFunction: ClientFunction =
-        "getProjects" description "Returns a list of all projects." params() doThis {
-            httpGet(BasePath)
-        } returns ProjectsResponse
-
-    private def getProjectsTestResponse: Future[SourceCodeFileContent] = {
+    private def getProjectsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(baseApiUrl + ProjectsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-projects-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-projects-response"),
             text = responseStr
         )
     }
@@ -176,21 +143,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val createProjectFunction: ClientFunction =
-        "createProject" description "Creates a project." params (
-            "project" description "The project to be created." paramType Project
-            ) doThis {
-            httpPost(
-                path = BasePath,
-                body = Some(arg("project"))
-            )
-        } returns ProjectResponse
-
-    private def createProjectTestRequest: Future[SourceCodeFileContent] = {
+    private def createProjectTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("create-project-request"),
-                text = SharedTestDataADM.createProjectRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-project-request"),
+                    text = SharedTestDataADM.createProjectRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-project-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createProjectWithCustomIRIRequest
+                )
             )
         )
     }
@@ -213,17 +176,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getKeywordsFunction: ClientFunction =
-        "getKeywords" description "Gets all the unique keywords for all projects." params() doThis {
-            httpGet(str("Keywords"))
-        } returns KeywordsResponse
-
-
-    private def getKeywordsTestResponse: Future[SourceCodeFileContent] = {
+    private def getKeywordsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-keywords-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-keywords-response"),
             text = responseStr
         )
     }
@@ -248,18 +205,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectKeywordsFunction: ClientFunction =
-        "getProjectKeywords" description "Gets all the keywords for a project." params (
-            "iri" description "The IRI of the project." paramType UriDatatype
-            ) doThis {
-            httpGet(str("iri") / arg("iri") / str("Keywords"))
-        } returns KeywordsResponse
-
-    private def getProjectKeywordsTestResponse: Future[SourceCodeFileContent] = {
+    private def getProjectKeywordsTestResponse: Future[TestDataFileContent] = {
         for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-project-keywords-response"),
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$anythingProjectIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-project-keywords-response"),
             text = responseStr
         )
     }
@@ -286,29 +236,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectFunction: ClientFunction =
-        "getProject" description "Gets a project by a property." params(
-            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
-            "value" description "The value of the property by which the project is identified." paramType StringDatatype
-        ) doThis {
-            httpGet(arg("property") / arg("value"))
-        } returns ProjectResponse
-
-    private def getProjectTestResponse: Future[SourceCodeFileContent] = {
+    private def getProjectTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-project-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-project-response"),
             text = responseStr
         )
     }
-
-    private val getProjectByIriFunction: ClientFunction =
-        "getProjectByIri" description "Gets a project by IRI." params (
-            "iri" description "The IRI of the project." paramType UriDatatype
-            ) doThis {
-            getProjectFunction withArgs(str("iri"), arg("iri") as StringDatatype)
-        } returns ProjectResponse
 
     /**
      * returns a single project identified through shortname.
@@ -332,13 +267,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectByShortnameFunction: ClientFunction =
-        "getProjectByShortname" description "Gets a project by shortname." params (
-            "shortname" description "The shortname of the project." paramType StringDatatype
-            ) doThis {
-            getProjectFunction withArgs(str("shortname"), arg("shortname"))
-        } returns ProjectResponse
-
     /**
      * returns a single project identified through shortcode.
      */
@@ -360,13 +288,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-    private val getProjectByShortcodeFunction: ClientFunction =
-        "getProjectByShortcode" description "Gets a project by shortcode." params (
-            "shortcode" description "The shortcode of the project." paramType StringDatatype
-            ) doThis {
-            getProjectFunction withArgs(str("shortcode"), arg("shortcode"))
-        } returns ProjectResponse
 
     /**
      * update a project identified by iri
@@ -399,21 +320,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val updateProjectFunction: ClientFunction =
-        "updateProject" description "Updates a project." params(
-            "iri" description "The IRI of the project to be updated." paramType UriDatatype,
-            "projectInfo" description "The project info to be updated." paramType UpdateProjectRequest
-        ) doThis {
-            httpPut(
-                path = str("iri") / arg("iri"),
-                body = Some(arg("projectInfo"))
-            )
-        } returns ProjectResponse
-
-    private def updateProjectTestRequest: Future[SourceCodeFileContent] = {
+    private def updateProjectTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-project-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("update-project-request"),
                 text = SharedTestDataADM.updateProjectRequest
             )
         )
@@ -447,15 +357,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val deleteProjectFunction: ClientFunction =
-        "deleteProject" description "Deletes a project. This method does not actually delete a project, but sets the status to false." params (
-            "iri" description "The project IRI." paramType UriDatatype
-            ) doThis {
-            httpDelete(
-                path = str("iri") / arg("iri")
-            )
-        } returns ProjectResponse
-
     /**
      * API MAY CHANGE: returns all members part of a project identified through iri
      */
@@ -480,29 +381,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectMembersFunction: ClientFunction =
-        "getProjectMembers" description "Gets a project's members by a property." params(
-            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
-            "value" description "The value of the property by which the project is identified." paramType StringDatatype
-        ) doThis {
-            httpGet(arg("property") / arg("value") / str("members"))
-        } returns MembersResponse
-
-    private def getProjectMembersTestResponse: Future[SourceCodeFileContent] = {
+    private def getProjectMembersTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-project-members-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-project-members-response"),
             text = responseStr
         )
     }
-
-    private val getProjectMembersByIriFunction: ClientFunction =
-        "getProjectMembersByIri" description "Gets the members of a project by IRI." params (
-            "iri" description "The IRI of the project." paramType UriDatatype
-            ) doThis {
-            getProjectMembersFunction withArgs(str("iri"), arg("iri") as StringDatatype)
-        } returns MembersResponse
 
     /**
      * API MAY CHANGE: returns all members part of a project identified through shortname
@@ -526,13 +412,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-    private val getProjectMembersByShortnameFunction: ClientFunction =
-        "getProjectMembersByShortname" description "Gets a project's members by shortname." params (
-            "shortname" description "The shortname of the project." paramType StringDatatype
-            ) doThis {
-            getProjectMembersFunction withArgs(str("shortname"), arg("shortname"))
-        } returns MembersResponse
 
     /**
      * API MAY CHANGE: returns all members part of a project identified through shortcode
@@ -558,13 +437,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectMembersByShortcodeFunction: ClientFunction =
-        "getProjectMembersByShortcode" description "Gets a project's members by shortcode." params (
-            "shortcode" description "The shortcode of the project." paramType StringDatatype
-            ) doThis {
-            getProjectMembersFunction withArgs(str("shortcode"), arg("shortcode"))
-        } returns MembersResponse
-
     /**
      * API MAY CHANGE: returns all admin members part of a project identified through iri
      */
@@ -588,29 +460,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectAdminMembersFunction: ClientFunction =
-        "getProjectAdminMembers" description "Gets a project's admin members by a property." params(
-            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
-            "value" description "The value of the property by which the project is identified." paramType StringDatatype
-        ) doThis {
-            httpGet(arg("property") / arg("value") / str("admin-members"))
-        } returns MembersResponse
-
-    private def getProjectAdminMembersTestResponse: Future[SourceCodeFileContent] = {
+    private def getProjectAdminMembersTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-project-admin-members-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-project-admin-members-response"),
             text = responseStr
         )
     }
-
-    private val getProjectAdminMembersByIriFunction: ClientFunction =
-        "getProjectAdminMembersByIri" description "Gets the admin members of a project by IRI." params (
-            "iri" description "The IRI of the project." paramType UriDatatype
-            ) doThis {
-            getProjectAdminMembersFunction withArgs(str("iri"), arg("iri") as StringDatatype)
-        } returns MembersResponse
 
     /**
      * API MAY CHANGE: returns all admin members part of a project identified through shortname
@@ -635,13 +492,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectAdminMembersByShortnameFunction: ClientFunction =
-        "getProjectAdminMembersByShortname" description "Gets a project's admin members by shortname." params (
-            "shortname" description "The shortname of the project." paramType StringDatatype
-            ) doThis {
-            getProjectAdminMembersFunction withArgs(str("shortname"), arg("shortname"))
-        } returns MembersResponse
-
     /**
      * API MAY CHANGE: returns all admin members part of a project identified through shortcode
      */
@@ -665,13 +515,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectAdminMembersByShortcodeFunction: ClientFunction =
-        "getProjectAdminMembersByShortcode" description "Gets a project's admin members by shortcode." params (
-            "shortcode" description "The shortcode of the project." paramType StringDatatype
-            ) doThis {
-            getProjectAdminMembersFunction withArgs(str("shortcode"), arg("shortcode"))
-        } returns MembersResponse
-
     /**
      * Returns the project's restricted view settings identified through IRI.
      */
@@ -694,29 +537,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectRestrictedViewSettingsFunction: ClientFunction =
-        "getProjectRestrictedViewSettings" description "Gets a project's restricted view settings by a property." params(
-            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
-            "value" description "The value of the property by which the project is identified." paramType StringDatatype
-        ) doThis {
-            httpGet(arg("property") / arg("value") / str("RestrictedViewSettings"))
-        } returns ProjectRestrictedViewSettingsResponse
-
-    private def getProjectRestrictedViewSettingsTestResponse: Future[SourceCodeFileContent] = {
+    private def getProjectRestrictedViewSettingsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-project-restricted-view-settings-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-project-restricted-view-settings-response"),
             text = responseStr
         )
     }
-
-    private val getProjectRestrictedViewSettingByIriFunction: ClientFunction =
-        "getProjectRestrictedViewSettingByIri" description "Gets a project's restricted view settings by IRI." params (
-            "iri" description "The IRI of the project." paramType UriDatatype
-            ) doThis {
-            getProjectRestrictedViewSettingsFunction withArgs(str("iri"), arg("iri") as StringDatatype)
-        } returns ProjectRestrictedViewSettingsResponse
 
     /**
      * Returns the project's restricted view settings identified through shortname.
@@ -741,13 +569,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private val getProjectRestrictedViewSettingByShortnameFunction: ClientFunction =
-        "getProjectRestrictedViewSettingByShortname" description "Gets a project's restricted view settings by shortname." params (
-            "shortname" description "The shortname of the project." paramType StringDatatype
-            ) doThis {
-            getProjectRestrictedViewSettingsFunction withArgs(str("shortname"), arg("shortname") as StringDatatype)
-        } returns ProjectRestrictedViewSettingsResponse
-
     /**
      * Returns the project's restricted view settings identified through shortcode.
      */
@@ -768,13 +589,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-    private val getProjectRestrictedViewSettingByShortcodeFunction: ClientFunction =
-        "getProjectRestrictedViewSettingByShortcode" description "Gets a project's restricted view settings by shortcode." params (
-            "shortcode" description "The shortcode of the project." paramType StringDatatype
-            ) doThis {
-            getProjectRestrictedViewSettingsFunction withArgs(str("shortcode"), arg("shortcode") as StringDatatype)
-        } returns ProjectRestrictedViewSettingsResponse
 
     /**
      * Returns all ontologies, data, and configuration belonging to a project.
@@ -806,51 +620,24 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     /**
-     * The functions defined by this [[ClientEndpoint]].
-     */
-    override val functions: Seq[ClientFunction] = Seq(
-        getProjectsFunction,
-        createProjectFunction,
-        getKeywordsFunction,
-        getProjectKeywordsFunction,
-        updateProjectFunction,
-        deleteProjectFunction,
-        getProjectFunction,
-        getProjectByIriFunction,
-        getProjectByShortnameFunction,
-        getProjectByShortcodeFunction,
-        getProjectMembersFunction,
-        getProjectMembersByIriFunction,
-        getProjectMembersByShortnameFunction,
-        getProjectMembersByShortcodeFunction,
-        getProjectAdminMembersFunction,
-        getProjectAdminMembersByIriFunction,
-        getProjectAdminMembersByShortnameFunction,
-        getProjectAdminMembersByShortcodeFunction,
-        getProjectRestrictedViewSettingsFunction,
-        getProjectRestrictedViewSettingByIriFunction,
-        getProjectRestrictedViewSettingByShortnameFunction,
-        getProjectRestrictedViewSettingByShortcodeFunction
-    )
-
-    /**
      * Returns test data for this endpoint.
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        Future.sequence {
-            Set(
-                getProjectsTestResponse,
-                getProjectTestResponse,
-                createProjectTestRequest,
-                updateProjectTestRequest,
-                getKeywordsTestResponse,
-                getProjectKeywordsTestResponse,
-                getProjectMembersTestResponse,
-                getProjectAdminMembersTestResponse,
-                getProjectRestrictedViewSettingsTestResponse
-            )
-        }
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
+        for {
+            getProjectsResponse <- getProjectsTestResponse
+            getProjectResponse <- getProjectTestResponse
+            createProjectRequest <- createProjectTestRequest
+            updateProjectRequest <- updateProjectTestRequest
+            getKeywordsResponse <- getKeywordsTestResponse
+            getProjectKeywordsResponse <- getProjectKeywordsTestResponse
+            getProjectMembersResponse <- getProjectMembersTestResponse
+            getProjectAdminMembersResponse <- getProjectAdminMembersTestResponse
+            getProjectRestrictedViewSettingsResponse <- getProjectRestrictedViewSettingsTestResponse
+        } yield createProjectRequest + getProjectsResponse + getProjectResponse + updateProjectRequest +
+                getKeywordsResponse + getProjectKeywordsResponse + getProjectMembersResponse +
+                getProjectAdminMembersResponse + getProjectRestrictedViewSettingsResponse
+
     }
 }

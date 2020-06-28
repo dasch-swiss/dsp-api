@@ -84,6 +84,9 @@
 	<rdf:type rdf:resource="http://api.knora.org/ontology/salsah-gui/v2#Guielement"/>
 	<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
 </rdf:Description>
+<salsah-gui:Guielement rdf:about="http://api.knora.org/ontology/salsah-gui/v2#TimeStamp">
+	<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+</salsah-gui:Guielement>
 <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/salsah-gui/v2#guiAttribute">
 	<knora-api:objectType rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 </owl:DatatypeProperty>

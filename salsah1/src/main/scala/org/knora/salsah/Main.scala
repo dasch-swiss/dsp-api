@@ -29,14 +29,14 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.ContentTypeResolver.Default
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 
 import scala.concurrent.Future
 import scala.io.Source
 
 object Main extends App {
     implicit val system = ActorSystem("salsah-system")
-    implicit val materializer = ActorMaterializer()
+    implicit val materializer = Materializer.matFromSystem(system)
     implicit val ec = system.dispatcher
 
     /**

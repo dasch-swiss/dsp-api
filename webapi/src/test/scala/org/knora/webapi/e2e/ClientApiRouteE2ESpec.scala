@@ -19,19 +19,15 @@
 
 package org.knora.webapi.e2e
 
-import java.nio.file.{Files, Path}
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.commons.io.FileUtils
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
-import scala.sys.process._
 
 object ClientApiRouteE2ESpec {
     val config: Config = ConfigFactory.parseString(
@@ -48,15 +44,14 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
     // FIXME: Ignored Test!
     "The client API route" should {
-        "generate a Zip file of TypeScript code that compiles" ignore {
-            val request = Get(baseApiUrl + s"/clientapi/typescript?mock=true")
+        "generate a Zip file of client test data" in {
+            val request = Get(baseApiUrl + s"/clientapitest")
             val response: HttpResponse = singleAwaitingRequest(request = request, duration = 40960.millis)
             val responseBytes: Array[Byte] = getResponseEntityBytes(response)
             val filenames: Set[String] = getZipContents(responseBytes)
@@ -64,40 +59,24 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
             // Check that some expected filenames are included in the Zip file.
 
             val expectedFilenames: Set[String] = Set(
-                "./package.json",
-                "./tsconfig.json",
-                "./knora-api-config.ts",
-                "./knora-api-connection.ts",
-                "./api/endpoint.ts",
-                "./api/admin/admin-endpoint.ts",
-                "./api/admin/users/users-endpoint.ts",
-                "./api/admin/groups/groups-endpoint.ts",
-                "./api/admin/projects/projects-endpoint.ts",
-                "./api/admin/permissions/permissions-endpoint.ts",
-                "./api/admin/lists/lists-endpoint.ts",
-                "./models/admin/user.ts"
+                "test-data/admin/groups/create-group-request.json",
+                "test-data/admin/groups/get-group-response.json",
+                "test-data/admin/lists/create-list-request.json",
+                "test-data/admin/lists/get-list-response.json",
+                "test-data/v2/lists/treelist.json",
+                "test-data/v2/ontologies/knora-api-ontology.json",
+                "test-data/v2/resources/create-resource-as-user.json",
+                "test-data/v2/resources/resource-graph.json",
+                "test-data/v2/resources/resource-preview.json",
+                "test-data/v2/resources/testding.json",
+                "test-data/v2/resources/thing-with-picture.json",
+                "test-data/v2/search/things.json",
+                "test-data/v2/search/thing-links.json",
+                "test-data/v2/values/create-boolean-value-request.json",
+                "test-data/v2/values/get-boolean-value-response.json"
             )
 
             assert(expectedFilenames.subsetOf(filenames))
-
-            // Unzip the file to a temporary directory.
-            val tempDir: Path = Files.createTempDirectory("clientapi")
-            val zipFilePath: Path = tempDir.resolve("clientapi.zip")
-            val srcPath: Path = tempDir.resolve("src")
-            srcPath.toFile.mkdir()
-            FileUtil.writeBinaryFile(zipFilePath.toFile, responseBytes)
-            unzip(zipFilePath = zipFilePath, outputPath = srcPath)
-
-            // Run 'npm install'.
-            val npmInstallExitCode: Int = Process(Seq("npm", "install"), srcPath.toFile).!
-            assert(npmInstallExitCode == 0)
-
-            // Run the TypeScript compiler.
-            val typeScriptCompilerExitCode: Int = Process(Seq("./node_modules/typescript/bin/tsc"), srcPath.toFile).!
-            assert(typeScriptCompilerExitCode == 0)
-
-            // Delete the temporary directory.
-            FileUtils.deleteDirectory(tempDir.toFile)
         }
     }
 }

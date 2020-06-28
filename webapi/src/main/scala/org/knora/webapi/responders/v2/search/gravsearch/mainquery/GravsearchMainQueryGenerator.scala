@@ -20,18 +20,19 @@
 package org.knora.webapi.responders.v2.search.gravsearch.mainquery
 
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch.types._
+import org.knora.webapi.responders.v2.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter}
 
 object GravsearchMainQueryGenerator {
 
     /**
-      * Constants used in the processing of Gravsearch queries.
-      *
-      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
-      */
+     * Constants used in the processing of Gravsearch queries.
+     *
+     * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
+     */
     private object GravsearchConstants {
 
         // SPARQL variable representing the main resource and its properties
@@ -85,95 +86,140 @@ object GravsearchMainQueryGenerator {
     }
 
     /**
-      *
-      * Collects variables representing values that are present in the CONSTRUCT clause of the input query for the given [[Entity]] representing a resource.
-      *
-      * @param constructClause      the Construct clause to be looked at.
-      * @param resource             the [[Entity]] representing the resource whose properties are to be collected
-      * @param typeInspectionResult results of type inspection.
-      * @param variableConcatSuffix the suffix appended to variable names in prequery results.
-      * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
-      */
-    def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspectionResult: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
+     * Represents dependent resources organized by main resource.
+     *
+     * @param dependentResourcesPerMainResource a set of dependent resource Iris organized by main resource.
+     */
+    case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: Map[IRI, Set[IRI]])
 
-        // make sure resource is a query variable or an IRI
-        resource match {
-            case queryVar: QueryVariable => ()
-            case iri: IriRef => ()
-            case literal: XsdLiteral => throw GravsearchException(s"${literal.toSparql} cannot represent a resource")
-            case other => throw GravsearchException(s"${other.toSparql} cannot represent a resource")
-        }
+    /**
+     * Represents value object variables and value object Iris organized by main resource.
+     *
+     * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
+     */
+    case class ValueObjectVariablesAndValueObjectIris(valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]])
 
-        // TODO: check in type information that resource represents a resource
+    /**
+     * Collects the Iris of dependent resources per main resource from the results returned by the prequery.
+     * Dependent resource Iris are grouped by main resource.
+     *
+     * @param prequeryResponse the results returned by the prequery.
+     * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
+     * @param mainResourceVar  the variable representing the main resource.
+     * @return a [[DependentResourcesPerMainResource]].
+     */
+    def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
+                                                transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+                                                mainResourceVar: QueryVariable): DependentResourcesPerMainResource = {
 
-        // get statements with the main resource as a subject
-        val statementsWithResourceAsSubject: Seq[StatementPattern] = constructClause.statements.filter {
-            statementPattern: StatementPattern => statementPattern.subj == resource
-        }
+        // variables representing dependent resources
+        val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.dependentResourceVariablesGroupConcat
 
-        statementsWithResourceAsSubject.foldLeft(Set.empty[QueryVariable]) {
-            (acc: Set[QueryVariable], statementPattern: StatementPattern) =>
+        val dependentResourcesPerMainRes = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
+            case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
+                // collect all the dependent resource Iris for the current main resource from prequery's response
 
-                // check if the predicate is a Knora value  or linking property
+                // the main resource's Iri
+                val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
 
-                // create a key for the type annotations map
-                val typeableEntity: TypeableEntity = statementPattern.pred match {
-                    case iriRef: IriRef => TypeableIri(iriRef.iri)
-                    case variable: QueryVariable => TypeableVariable(variable.variableName)
-                    case other => throw GravsearchException(s"Expected an IRI or a variable as the predicate of a statement, but ${other.toSparql} given")
-                }
+                // get the Iris of all the dependent resources for the given main resource
+                val dependentResIris: Set[IRI] = dependentResourceVariablesGroupConcat.flatMap {
+                    dependentResVar: QueryVariable =>
 
-                // if the given key exists in the type annotations map, add it to the collection
-                if (typeInspectionResult.entities.contains(typeableEntity)) {
+                        // check if key exists: the variable representing dependent resources
+                        // could be contained in an OPTIONAL or a UNION and be unbound
+                        // It would be suppressed by `VariableResultsRow` in that case.
+                        //
+                        // Example: the query contains a dependent resource variable ?book within an OPTIONAL or a UNION.
+                        // If the query returns results for the dependent resource ?book (Iris of resources that match the given criteria),
+                        // those would be accessible via the variable ?book__Concat containing the aggregated results (Iris).
+                        val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
 
-                    val propTypeInfo: PropertyTypeInfo = typeInspectionResult.entities(typeableEntity) match {
-                        case propType: PropertyTypeInfo => propType
+                        dependentResIriOption match {
+                            case Some(depResIri: IRI) =>
 
-                        case _: NonPropertyTypeInfo =>
-                            throw GravsearchException(s"Expected a property: ${statementPattern.pred.toSparql}")
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
+                                // Ignore empty strings, which could result from unbound variables in a UNION.
+                                depResIri.split(AbstractPrequeryGenerator.groupConcatSeparator).toSeq.filter(_.nonEmpty)
 
-                    }
-
-                    val valueObjectVariable: Set[QueryVariable] = if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(propTypeInfo.objectTypeIri)) {
-
-                        // linking prop: get value object var and information which values are requested for dependent resource
-
-                        // link value object variable
-                        val valObjVar = SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
-                            baseStatement = statementPattern
-                        )
-
-                        // return link value object variable and value objects requested for the dependent resource
-                        Set(QueryVariable(valObjVar.variableName + variableConcatSuffix))
-
-                    } else {
-                        statementPattern.obj match {
-                            case queryVar: QueryVariable => Set(QueryVariable(queryVar.variableName + variableConcatSuffix))
-                            case other => throw GravsearchException(s"Expected a variable: ${other.toSparql}")
+                            case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
                         }
-                    }
 
-                    acc ++ valueObjectVariable
-
-                } else {
-                    // not a knora-api property
-                    acc
                 }
+
+                acc + (mainResIri -> dependentResIris)
         }
+
+        DependentResourcesPerMainResource(new ErrorHandlingMap(dependentResourcesPerMainRes, { key => throw GravsearchException(s"main resource not found: $key") }))
     }
 
     /**
-      * Creates the main query to be sent to the triplestore.
-      * Requests two sets of information: about the main resources and the dependent resources.
-      *
-      * @param mainResourceIris      IRIs of main resources to be queried.
-      * @param dependentResourceIris IRIs of dependent resources to be queried.
-      * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
-      * @param targetSchema          the target API schema.
-      * @param schemaOptions         the schema options submitted with the request.
-      * @return the main [[ConstructQuery]] query to be executed.
-      */
-    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: SettingsImpl): ConstructQuery = {
+     * Collects object variables and their values per main resource from the results returned by the prequery.
+     * Value objects variables and their Iris are grouped by main resource.
+     *
+     * @param prequeryResponse the results returned by the prequery.
+     * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
+     * @param mainResourceVar  the variable representing the main resource.
+     * @return [[ValueObjectVariablesAndValueObjectIris]].
+     */
+    def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
+                                                 transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+                                                 mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
+
+        // value objects variables present in the prequery's WHERE clause
+        val valueObjectVariablesConcat = transformer.valueObjectVariablesGroupConcat
+
+        val valueObjVarsAndIris: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+            (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
+
+                // the main resource's Iri
+                val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+
+                // the the variables representing value objects and their Iris
+                val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
+                    valueObjVarConcat: QueryVariable =>
+
+                        // check if key exists: the variable representing value objects
+                        // could be contained in an OPTIONAL or a UNION and be unbound
+                        // It would be suppressed by `VariableResultsRow` in that case.
+
+                        // this logic works like in the case of dependent resources, see `getDependentResourceIrisPerMainResource` above.
+                        val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+
+                        val valueObjIris: Set[IRI] = valueObjIrisOption match {
+
+                            case Some(valObjIris) =>
+
+                                // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
+                                // Ignore empty strings, which could result from unbound variables in a UNION.
+                                valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet.filter(_.nonEmpty)
+
+                            case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
+
+                        }
+
+                        valueObjVarConcat -> valueObjIris
+                }.toMap
+
+                val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(valueObjVarToIris, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
+                acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
+        }
+
+        ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIris, { key => throw GravsearchException(s"main resource not found: $key") }))
+    }
+
+    /**
+     * Creates the main query to be sent to the triplestore.
+     * Requests two sets of information: about the main resources and the dependent resources.
+     *
+     * @param mainResourceIris      IRIs of main resources to be queried.
+     * @param dependentResourceIris IRIs of dependent resources to be queried.
+     * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
+     * @param targetSchema          the target API schema.
+     * @param schemaOptions         the schema options submitted with the request.
+     * @return the main [[ConstructQuery]] query to be executed.
+     */
+    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: KnoraSettingsImpl): ConstructQuery = {
         import GravsearchConstants._
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

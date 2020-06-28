@@ -69,15 +69,15 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * The IRIs of non-property types that Gravsearch type inspectors return.
-      */
-    val GravsearchTypeIris: Set[IRI] = Set(
+     * The IRIs of value types that Gravsearch type inspectors return.
+     */
+    val GravsearchValueTypeIris: Set[IRI] = Set(
         OntologyConstants.Xsd.Boolean,
         OntologyConstants.Xsd.String,
         OntologyConstants.Xsd.Integer,
         OntologyConstants.Xsd.Decimal,
         OntologyConstants.Xsd.Uri,
-        OntologyConstants.KnoraApiV2Simple.Resource,
+        OntologyConstants.Xsd.DateTimeStamp,
         OntologyConstants.KnoraApiV2Simple.Date,
         OntologyConstants.KnoraApiV2Simple.Geom,
         OntologyConstants.KnoraApiV2Simple.Geoname,
@@ -85,8 +85,6 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Simple.Color,
         OntologyConstants.KnoraApiV2Simple.File,
         OntologyConstants.KnoraApiV2Simple.ListNode,
-        OntologyConstants.KnoraApiV2Complex.Resource,
-        OntologyConstants.KnoraApiV2Complex.StandoffTag,
         OntologyConstants.KnoraApiV2Complex.BooleanValue,
         OntologyConstants.KnoraApiV2Complex.TextValue,
         OntologyConstants.KnoraApiV2Complex.IntValue,
@@ -99,7 +97,17 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Complex.GeonameValue,
         OntologyConstants.KnoraApiV2Complex.ColorValue,
         OntologyConstants.KnoraApiV2Complex.IntervalValue,
-        OntologyConstants.KnoraApiV2Complex.FileValue,
+        OntologyConstants.KnoraApiV2Complex.TimeValue,
+        OntologyConstants.KnoraApiV2Complex.FileValue
+    )
+
+    /**
+      * The IRIs of non-property types that Gravsearch type inspectors return.
+      */
+    val GravsearchTypeIris: Set[IRI] = GravsearchValueTypeIris ++ Set(
+        OntologyConstants.KnoraApiV2Simple.Resource,
+        OntologyConstants.KnoraApiV2Complex.Resource,
+        OntologyConstants.KnoraApiV2Complex.StandoffTag,
         OntologyConstants.KnoraApiV2Complex.KnoraProject
     )
 
@@ -159,6 +167,10 @@ object GravsearchTypeInspectionUtil {
         }
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
     }
 
     /**

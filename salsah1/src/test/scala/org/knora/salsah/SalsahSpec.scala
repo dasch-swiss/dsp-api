@@ -1,20 +1,20 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
- *  This file is part of Knora.
+ * This file is part of Knora.
  *
- *  Knora is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published
- *  by the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  Knora is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU Affero General Public
- *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.salsah
@@ -23,10 +23,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.scalatest._
+import org.knora.salsah.SettingsImpl
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -34,7 +36,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor}
 /**
   * An abstract base class for Selenium tests of the SALSAH user interface.
   */
-abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuilding {
+abstract class SalsahSpec extends AnyWordSpecLike with Matchers with RequestBuilding {
 
     implicit private val system = ActorSystem()
 
@@ -43,7 +45,7 @@ abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuildin
     implicit private val timeout = Timeout(180.seconds)
     implicit private val dispatcher = system.dispatcher
     implicit protected val ec: ExecutionContextExecutor = dispatcher
-    implicit protected val materializer = ActorMaterializer()
+    implicit protected val materializer = Materializer.matFromSystem(system)
 
     /**
       * Loads test data and populates the ontology cache.

@@ -24,7 +24,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import io.gatling.core.Predef._
@@ -57,15 +57,15 @@ object E2ESimSpec {
 abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with TriplestoreJsonProtocol with RequestBuilding with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESimSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("PerfSpec", config.withFallback(E2ESimSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, E2ESimSpec.defaultConfig))
-    def this() = this(ActorSystem("PerfSpec", E2ESimSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESimSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("PerfSpec", TestContainers.PortConfig.withFallback(config.withFallback(E2ESimSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESimSpec.defaultConfig)))
+    def this() = this(ActorSystem("PerfSpec", TestContainers.PortConfig.withFallback(E2ESimSpec.defaultConfig)))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
     // can be overridden in individual spec
@@ -86,7 +86,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         loadTestData(rdfDataObjects)
 

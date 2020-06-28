@@ -592,19 +592,21 @@
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
-								case 'time':
-									{
-										create_entry(propname, pinfo, function(ele, attr, pinfo) {
-											var timebox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											timebox.timeobj('edit');
-											if ((localdata.settings.defaultvalues !== undefined) && (localdata.settings.defaultvalues[propname])) {
-												timebox.timeobj('setStart', localdata.settings.defaultvalues[propname]);
-											}
-											return timebox;
-										});
-										prop_status[propname].attributes = attributes; // save attributes for later use
-										break;
-									}
+								case 'timestamp':
+								{
+									attributes.type = 'text';
+									create_entry(propname, pinfo, function(ele, attr, pinfo) {
+										var timestamp_box = $('<input>', attr).css({
+											width: '85%'
+										}).insertBefore(ele.find('.entrySep'));
+										if ((localdata.settings.defaultvalues !== undefined) && (localdata.settings.defaultvalues[propname])) {
+											timestamp_box.val(localdata.settings.defaultvalues[propname]);
+										}
+										return timestamp_box;
+									});
+									prop_status[propname].attributes = attributes; // save attributes for later use
+									break;
+								}
 								case 'interval':
 									{
 										create_entry(propname, pinfo, function(ele, attr, pinfo) {
@@ -737,6 +739,7 @@
 								switch (rtinfo.properties[pinfo].gui_name) {
 									case 'text':
 									case 'textarea':
+									case 'timestamp':
 										{
 											ele = form.find('[name="' + propname + '"]');
 
@@ -753,6 +756,8 @@
 													propvals[propname] = [{decimal_value: parseFloat(ele.val())}];
 												} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_URI) {
 													propvals[propname] = [{uri_value: ele.val()}];
+												} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_TIME) {
+													propvals[propname] = [{time_value: ele.val()}];
 												} else {
 													// it is a text
 													var richtext_value = {};
@@ -776,6 +781,10 @@
 													} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_URI) {
 														vv = {
 															uri_value: $(this).val()
+														};
+													} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_TIME) {
+														vv = {
+															time_value: $(this).val()
 														};
 													} else {
 														// it is a text

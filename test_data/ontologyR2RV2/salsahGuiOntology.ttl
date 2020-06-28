@@ -54,6 +54,8 @@ salsah-gui:Textarea a salsah-gui:Guielement, owl:NamedIndividual;
   salsah-gui:guiAttributeDefinition "cols:integer", "rows:integer", "width:percent",
     "wrap:string(soft|hard)" .
 
+salsah-gui:TimeStamp a salsah-gui:Guielement, owl:NamedIndividual .
+
 salsah-gui:guiAttribute a owl:DatatypeProperty;
   knora-api:objectType xsd:string .
 

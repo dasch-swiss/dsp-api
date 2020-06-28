@@ -1,208 +1,28 @@
 name: CI
 
-on: [push]
-
-env:
-  KNORA_GDB_LICENSE: ${{ github.workspace }}/ci/graphdb.license
+on:
+  push:
+  release:
+    types: [published]
 
 jobs:
   compile:
-    name: Dump all Contexts
+    name: Build Everything
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "$STRATEGY_CONTEXT"
-      - name: Dump matrix context
-        env:
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        run: echo "$MATRIX_CONTEXT"
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
+      - uses: joschi/setup-jdk@v2
         with:
-          fetch-depth: 1
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
-      - name: add buildcache
-        run: |
-          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
-          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
-        env:
-          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
-      - name: dump .bazelrc
-        run: cat ${{ github.workspace }}/.bazelrc
-      - name: run bazel build
-        run: bazel build //...
-
-  webapi-test:
-    name: Webapi Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: install bazel
         run: |
           wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
           sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
-      - name: add buildcache
-        run: |
-          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
-          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
-        env:
-          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
-      - name: prepare needed graphdb-se files
-        run: |
-          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
-          tar -C ci -xvf ci/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Print env file
-        run: make print-env-file
-      - name: Run webapi tests
-        run: make test-webapi
-
-  upgrade-unit-test:
-    name: Upgrade Unit Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
-      - name: add buildcache
-        run: |
-          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
-          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
-        env:
-          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
-      - name: prepare needed graphdb-se files
-        run: |
-          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
-          tar -C ci -xvf ci/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Print env file
-        run: make print-env-file
-      - name: Run upgrade tests
-        run: make test-upgrade
-
-  upgrade-integration-test:
-    name: Upgrade Integration Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
-      - name: add buildcache
-        run: |
-          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
-          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
-        env:
-          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
-      - name: prepare needed graphdb-se files
-        run: |
-          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
-          tar -C ci -xvf ci/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Print env file
-        run: make print-env-file
-      - name: Run upgrade integration test
-        run: make test-upgrade-integration
-
-  salsah1-test:
-    name: Salsah1 Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
-      - name: add buildcache
-        run: |
-          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
-          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
-        env:
-          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
-      - name: prepare needed graphdb-se files
-        run: |
-          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
-          tar -C ci -xvf ci/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Print env file
-        run: make print-env-file
-      - name: Run webapi tests
-        run: make test-salsah1
-
-  docs-build-test:
-    name: Docs Build Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -212,22 +32,260 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: Run build everything
+        run: make build-all-scala
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+
+  api-unit-tests:
+    name: API Unit Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
+          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: Print env file
+        run: |
+          make env-file
+          make print-env-file
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: Run API unit tests
+        run: make test-unit-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+
+  api-e2e-tests:
+    name: API E2E Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
+          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: print env file
+        run: |
+          make env-file
+          make print-env-file
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: run API E2E tests
+        run: make test-e2e-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+
+  api-integration-tests:
+    name: API Integration Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
+          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: print env file
+        run: |
+          make env-file
+          make print-env-file
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: run API integration tests
+        run: make test-it-ci
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+
+  upgrade-integration-tests:
+    name: Upgrade Integration Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
+          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: install requirements
+        run: sudo apt-get install expect
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: test repository update
+        run: make test-repository-update
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+
+  docs-build-test:
+    name: Docs Build Test
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
-  # publish only for develop and tags
+  # publish only on release
   publish:
-    name: Publish to Dockerhub
-    needs: [webapi-test, upgrade-unit-test, upgrade-integration-test, salsah1-test, docs-build-test]
+    name: Publish to Dockerhub (on release only)
+    needs: [
+      api-unit-tests,
+      api-e2e-tests,
+      api-integration-tests,
+      upgrade-integration-tests,
+      docs-build-test
+    ]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags')
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 50
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
+          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -237,10 +295,21 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: build and publish all images to Dockerhub
         run: |
-          echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_USER --password-stdin
-          make docker-publish
+          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          make publish-all-images
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+      - name: Generate Github release notes
+        uses: lakto/gren-action@v1.1.0
         env:
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
-          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -3,8 +3,7 @@ version: '3'
 services:
   # sipi using default (production-like) configuration with additional routes for testing
   sipi:
-    # FIXME: Get SIPI version from .env file
-    image: dhlabbasel/sipi:v2.0.1
+    image: dhlabbasel/sipi:${SIPI_VERSION}
     container_name: sipi
     ports:
       - "1024:1024"
@@ -26,8 +25,7 @@ services:
 
   # sipi using configuration which disables authentication
   sipi-no-auth:
-    # FIXME: Get SIPI version from .env file
-    image: dhlabbasel/sipi:v2.0.1
+    image: dhlabbasel/sipi:${SIPI_VERSION}
     container_name: sipi-no-auth
     ports:
       - "1024:1024"

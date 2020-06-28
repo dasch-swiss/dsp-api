@@ -20,20 +20,24 @@
 package org.knora.webapi.routing.v2
 
 import java.net.URLEncoder
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.Get
+import akka.http.scaladsl.client.RequestBuilding.{Get, Post}
+import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
+import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -49,12 +53,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     import OntologiesRouteV2._
 
-    // Definitions for ClientEndpoint
-    override val name: String = "OntologiesEndpoint"
+    // Directory name for generated test data
     override val directoryName: String = "ontologies"
-    override val urlPath: String = "ontologies"
-    override val description: String = "An endpoint for working with Knora ontologies."
-    override val functions: Seq[ClientFunction] = Seq.empty
 
     private val ALL_LANGUAGES = "allLanguages"
     private val LAST_MODIFICATION_DATE = "lastModificationDate"
@@ -140,11 +140,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getOntologyMetadataTestResponse: Future[SourceCodeFileContent] = {
+    private def getOntologyMetadataTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/metadata"))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("all-ontology-metadata"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("all-ontology-metadata-response"),
             text = responseStr
         )
     }
@@ -183,6 +183,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def updateOntologyMetadataTestRequest: Future[TestDataFileContent] = {
+      val ontologyIri = SharedOntologyTestDataADM.FOO_ONTOLOGY_IRI_LocalHost
+
+      val newLabel = "The modified foo ontology"
+      val newModificationDate = Instant.now
+      FastFuture.successful(
+          TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("update-ontology-metadata-request"),
+            text = SharedTestDataADM.changeOntologyMetadata(
+              ontologyIri, newLabel, newModificationDate
+            )
+        )
+      )
+    }
     private def getOntologyMetadataForProjects: Route = path(OntologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
         get {
             requestContext => {
@@ -203,6 +217,32 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 )
             }
         }
+    }
+
+    // project ontologies to return in test data.
+    private val testProjectOntologies: Map[String, IRI] = Map(
+        "get-ontologies-project-anything-response" -> SharedTestDataADM.ANYTHING_PROJECT_IRI,
+        "get-ontologies-project-incunabula-response" -> SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        "get-ontologies-project-beol-response" -> SharedTestDataADM.BEOL_PROJECT_IRI
+    )
+
+    /**
+      * Provides JSON-LD responses to requests for ontologies of projects, for use in tests of generated client code.
+      */
+    private def getOntologyMetadataForProjectsTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testProjectOntologies.map {
+            case (filename, projectIri) =>
+                val encodedProjectIri = URLEncoder.encode(projectIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/metadata/$encodedProjectIri"))
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
     }
 
     private def getOntology: Route = path(OntologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
@@ -243,23 +283,23 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     // Ontologies to return in test data.
     private val testOntologies: Map[String, IRI] = Map(
         "knora-api-ontology" -> OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri,
-        "anything-ontology" -> "http://0.0.0.0:3333/ontology/0001/anything/v2",
-        "minimal-ontology" -> "http://0.0.0.0:3333/ontology/0001/minimal/v2",
-        "incunabula-ontology" -> "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
+        "anything-ontology" -> SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
+        "minimal-ontology" -> SharedOntologyTestDataADM.MINIMAL_ONTOLOGY_IRI_LocalHost,
+        "incunabula-ontology" -> SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost
     )
 
     /**
-     * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
+     * Provides JSON-LD responses to requests for ontologies, for use in tests of generated client code.
      */
-    private def getOntologyTestResponses: Future[Set[SourceCodeFileContent]] = {
-        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testOntologies.map {
+    private def getOntologyTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testOntologies.map {
             case (filename, ontologyIri) =>
                 val encodedOntologyIri = URLEncoder.encode(ontologyIri, "UTF-8")
 
                 for {
                     responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/allentities/$encodedOntologyIri"))
-                } yield SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
                     text = responseStr
                 )
         }
@@ -301,6 +341,23 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def createClassTestRequest: Future[Set[TestDataFileContent]] = {
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-class-with-cardinalities-request"),
+                    text = SharedTestDataADM.createClassWithCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-class-without-cardinalities-request"),
+                    text = SharedTestDataADM.createClassWithoutCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                )
+            )
+        )
+    }
+
     private def updateClass: Route = path(OntologiesBasePath / "classes") {
         put {
             // Change the labels or comments of a class.
@@ -333,6 +390,25 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 }
             }
         }
+    }
+
+    private def updateClassTestRequest: Future[Set[TestDataFileContent]] = {
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("change-class-label-request"),
+                    text = SharedTestDataADM.changeClassLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate
+                    )
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("change-class-comment-request"),
+                    text = SharedTestDataADM.changeClassComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate
+                    )
+                )
+            )
+        )
     }
 
     private def addCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
@@ -369,6 +445,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def addCardinalitiesTestRequest: Future[TestDataFileContent] = {
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing-request"),
+                    text = SharedTestDataADM.addCardinality(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                )
+        )
+    }
+
     private def replaceCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
         put {
             // Change a class's cardinalities.
@@ -401,6 +488,27 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 }
             }
         }
+    }
+
+    private def replaceCardinalitiesTestRequest: Future[Set[TestDataFileContent]] = {
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+          Set(
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("replace-class-cardinalities-request"),
+                text = SharedTestDataADM.replaceClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+            ),
+            TestDataFileContent(
+              filePath = TestDataFilePath.makeJsonPath("remove-property-cardinality-request"),
+              text = SharedTestDataADM.removeCardinalityOfProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+            ),
+            TestDataFileContent(
+                  filePath = TestDataFilePath.makeJsonPath("remove-class-cardinalities-request"),
+                  text = SharedTestDataADM.removeAllClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+            )
+          )
+        )
     }
 
     private def getClasses: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
@@ -460,6 +568,33 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 )
             }
         }
+    }
+
+    // Classes to return in test data.
+    private val testClasses: Map[String, IRI] = Map(
+        "get-class-anything-thing-response" ->  SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
+        "get-class-image-bild-response" -> SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost,
+        "get-class-incunabula-book-response" -> SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost,
+        "get-class-incunabula-page-response" -> SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost
+    )
+
+    /**
+      * Provides JSON-LD responses to requests for classes, for use in tests of generated client code.
+      */
+    private def getClassesTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testClasses.map {
+            case (filename, classIri) =>
+                val encodedClassIri = URLEncoder.encode(classIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/classes/$encodedClassIri"))
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
     }
 
     private def deleteClass: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
@@ -536,6 +671,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def createPropertyTestRequest: Future[TestDataFileContent] = {
+        FastFuture.successful(
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("create-property-hasName-request"),
+                text = SharedTestDataADM.createProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)
+            )
+        )
+    }
+
     private def updateProperty: Route = path(OntologiesBasePath / "properties") {
         put {
             // Change the labels or comments of a property.
@@ -568,6 +712,23 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 }
             }
         }
+    }
+
+    private def updatePropertyTestRequest: Future[Set[TestDataFileContent]] = {
+        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("change-property-comment-request"),
+                    text = SharedTestDataADM.changePropertyComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("change-property-label-request"),
+                    text = SharedTestDataADM.changePropertyLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                )
+            )
+        )
     }
 
     private def getProperties: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
@@ -627,6 +788,34 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 )
             }
         }
+    }
+
+    // Classes to return in test data.
+    private val testProperties: Map[String, IRI] = Map(
+        "get-property-listValue-response" ->  SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost,
+        "get-property-DateValue-response" ->  SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost,
+        "get-property-textValue-response" -> SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost,
+        "get-property-linkvalue-response" -> SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost
+    )
+
+
+    /**
+      * Provides JSON-LD responses to requests for classes, for use in tests of generated client code.
+      */
+    private def getPropertiesTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testProperties.map {
+            case (filename, propertyIri) =>
+                val encodedPropertyIri = URLEncoder.encode(propertyIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/properties/$encodedPropertyIri"))
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
     }
 
     private def deleteProperty: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
@@ -703,6 +892,27 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
+    private def createOntologyTestRequest: Future[TestDataFileContent] = {
+        FastFuture.successful(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-request"),
+                    text = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
+            )
+        )
+    }
+
+    private def createOntologyTestResponse: Future[TestDataFileContent] = {
+        val params = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
+        for {
+
+            responseStr <- doTestDataRequest(Post(s"$baseApiUrl$OntologiesBasePathString", HttpEntity(RdfMediaTypes.`application/ld+json`, params))
+                            ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, "test")))
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-response"),
+            text = responseStr
+        )
+    }
+
     private def deleteOntology: Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
         delete {
             requestContext => {
@@ -740,10 +950,25 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
         for {
-            ontologyResponses: Set[SourceCodeFileContent] <- getOntologyTestResponses
-            ontologyMetadataResponses: SourceCodeFileContent <- getOntologyMetadataTestResponse
-        } yield ontologyResponses + ontologyMetadataResponses
+            ontologyResponses: Set[TestDataFileContent] <- getOntologyTestResponses
+            ontologyMetadataResponses: TestDataFileContent <- getOntologyMetadataTestResponse
+            projectOntologiesResponses: Set[TestDataFileContent] <- getOntologyMetadataForProjectsTestResponses
+            ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
+            ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
+            createOntologyRequest: TestDataFileContent <- createOntologyTestRequest
+            createOntologyResponse: TestDataFileContent <- createOntologyTestResponse
+            updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
+            createClassTestRequest: Set[TestDataFileContent] <- createClassTestRequest
+            addCardinalitiesTestRequest: TestDataFileContent <- addCardinalitiesTestRequest
+            createPropertyTestRequest: TestDataFileContent <- createPropertyTestRequest
+            updateClassTestRequest: Set[TestDataFileContent] <- updateClassTestRequest
+            replaceCardinalitiesTestRequest: Set[TestDataFileContent] <- replaceCardinalitiesTestRequest
+            updatePropertyTestRequest: Set[TestDataFileContent] <- updatePropertyTestRequest
+        } yield ontologyResponses + ontologyMetadataResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++
+                ontologyPropertyResponses + createOntologyRequest + createOntologyResponse + updateOntologyMetadataRequest ++
+                createClassTestRequest + addCardinalitiesTestRequest + createPropertyTestRequest ++
+                updateClassTestRequest ++ replaceCardinalitiesTestRequest ++ updatePropertyTestRequest
     }
 }

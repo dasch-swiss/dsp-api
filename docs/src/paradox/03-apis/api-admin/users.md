@@ -68,6 +68,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Required permission: none, self-registration is allowed
   - Required information: email (unique), given name, family name,
     password, password, status, systemAdmin
+  - Username restrictions:
+    - 4 - 50 characters long
+    - Only contains alphanumeric characters, underscore and dot.
+    - Underscore and dot can't be at the end or start of a username
+    - Underscore or dot can't be used multiple times in a row
   - Returns information about the newly created user
   - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
   - POST: `/admin/users`

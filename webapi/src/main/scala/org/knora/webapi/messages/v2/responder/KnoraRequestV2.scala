@@ -24,7 +24,7 @@ import java.util.UUID
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.KnoraSettingsImpl
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
@@ -61,7 +61,7 @@ trait KnoraJsonLDRequestReaderV2[C] {
                    requestingUser: UserADM,
                    responderManager: ActorRef,
                    storeManager: ActorRef,
-                   settings: SettingsImpl,
+                   settings: KnoraSettingsImpl,
                    log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }
 // #KnoraJsonLDRequestReaderV2

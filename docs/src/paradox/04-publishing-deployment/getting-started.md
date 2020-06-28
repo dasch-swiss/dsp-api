@@ -61,47 +61,31 @@ software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
 proprietary options.
 
 Knora is designed to work with any standards-compliant
-triplestore. It is primarily tested with [Ontotext
-GraphDB](http://ontotext.com/products/graphdb/), a high-performance,
-proprietary triplestore. We recommend GraphDB Standard Edition, but
-GraphDB Free (which is proprietary but available free of charge) also
-works, where both need to be licensed separately from
-Ontotext (http://ontotext.com). GraphDB-Free can be simply licensed by filling out
-their registration from.
+triplestore. It is primarily tested with
+[Apache Jena Fuseki](https://jena.apache.org), an open source triplestore.
 
-Built-in support and configuration for other triplestores is planned.
+Built-in support and configuration for a high-performance, proprietary
+triplestore [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is
+provided but unmaintained (GraphDB must be licensed separately by the user).
+Other triplestores are planned.
 
 ## Running the Knora-Stack
 
-Use `git` to clone the Knora repository from [Github](https://github.com/dhlab-basel/Knora).
-
-After having GraphDB licensed, you need to set some environment variables:
-
-**GraphDB-Free**:
+Use `git` to clone the Knora repository from [Github](https://github.com/dasch-swiss/knora-api).
 
 The following environment variables are **optional**:
 
-```bash
-$ export KNORA_GDB_IMPORT=/path/to/some/folder - sets the path to the import directory accessible from inside the GraphDB Workbench
-$ export KNORA_GDB_HOME=/path/to/some/other_folder // sets the path to the folder where GraphDB will store the database files
-```
-
-**GraphDB-SE**:
-
-The following environment variable is **required**:
+- `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
+the database files
+- `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
+inside the docker image
 
 ```bash
-export KNORA_GDB_LICENSE=/path/to/license/file - sets the path to the GraphDB-SE license file
+$ export KNORA_DB_IMPORT=/path/to/some/folder
+$ export KNORA_DB_HOME=/path/to/some/other_folder
 ```
 
-The following environment variables are **optional**:
-
-```bash
-$ export KNORA_GDB_IMPORT=/path/to/some/folder - sets the path to the import directory accessible from inside the GraphDB Workbench
-$ export KNORA_GDB_HOME=/path/to/some/other_folder // sets the path to the folder where GraphDB will store the database files
-```
-
-Then from inside the cloned `Knora` repository folder, run:
+Then from inside the cloned `Knora-API` repository folder, run:
 
 ```bash
 $ make stack-up
@@ -111,30 +95,22 @@ $ make stack-up
 
 To create a test repository called `knora-test` and load test data, run:
 
-  - For GraphDB-SE: `$ make init-db-test`.
-
-  - For GraphDB-Free: `$ make init-db-test-free`.
+```
+$ make init-db-test
+```
 
 The scripts called by `make` can be found under `webapi/scripts`. You can
 create your own scripts based on these scripts, to create new
 repositories and optionally to load existing Knora-compliant RDF data
 into them.
 
-If you are using GraphDB, you must create your repository using a
-repository configuration file that specifies the file `KnoraRules.pie`
-as its `owlim:ruleset`. This enables RDFS inference and Knora-specific
-consistency rules. When using GraphDB, Knora uses RDFS inference to improve
-query performance. The Knora-specific consistency rules help ensure that your
-data is internally consistent and conforms to the Knora ontologies.
+If you need to reload the test data, you need to stop and **delete** the
+running Apache Fuseki instance. **Make sure you don't delete important data.**
+To stop the instance and delete the repository, run the following command:
 
-This file is already packaged inside Knora's Docker images for GraphDB-SE and
-GraphDB-Free.
+```
+$ make stack-down-delete-volumes
+```
 
-When testing with GraphDB, you may sometimes get an error when loading
-the test data that says that there are multiple IDs for the same
-repository `knora-test`. In that case, something went wrong when
-dropping and recreating the repository. You can solve this by deleting
-the repository manually and starting over. **Make sure you don't delete
-important data.** To delete the repository, stop GraphDB, delete the
-`data` directory in your GraphDB installation, and restart GraphDB.
-
+after which you can start the stack again with `make stack-up`, recreate
+the repository and load the data with `make init-db-test`.

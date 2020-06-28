@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2.search
 
 import akka.http.scaladsl.model.{HttpCharsets, MediaType}
 import org.knora.webapi._
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
@@ -74,10 +75,10 @@ case class QueryVariable(variableName: String) extends SelectQueryColumn {
  */
 case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVariableName: String) extends SelectQueryColumn {
 
-    val outputVariable = QueryVariable(outputVariableName)
+    val outputVariable: QueryVariable = QueryVariable(outputVariableName)
 
     override def toSparql: String = {
-        s"(GROUP_CONCAT(DISTINCT(${inputVariable.toSparql}); SEPARATOR='$separator') AS ${outputVariable.toSparql})"
+        s"""(GROUP_CONCAT(DISTINCT(IF(BOUND(${inputVariable.toSparql}), STR(${inputVariable.toSparql}), "")); SEPARATOR='$separator') AS ${outputVariable.toSparql})"""
     }
 }
 
@@ -90,7 +91,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
  */
 case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariableName: String) extends SelectQueryColumn {
 
-    val outputVariable = QueryVariable(outputVariableName)
+    val outputVariable: QueryVariable = QueryVariable(outputVariableName)
 
     val distinctAsStr: String = if (distinct) {
         "DISTINCT"
@@ -138,7 +139,18 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
  * @param datatype the value's XSD type IRI.
  */
 case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
-    override def toSparql: String = "\"" + value + "\"^^" + datatype.toSparql
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    override def toSparql: String = {
+        // We use xsd:dateTimeStamp in Gravsearch, but xsd:dateTime in the triplestore.
+        val transformedDatatype = if (datatype.toString == OntologyConstants.Xsd.DateTimeStamp) {
+            OntologyConstants.Xsd.DateTime.toSmartIri
+        } else {
+            datatype
+        }
+
+        "\"" + value + "\"^^" + transformedDatatype.toSparql
+    }
 }
 
 /**
@@ -184,6 +196,18 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
             case other => other
         }
     }
+}
+
+/**
+ * A virtual query pattern representing a Lucene full-text index search. Will be replaced by a triplestore-specific
+ * [[StatementPattern]] during Gravsearch processing.
+ *
+ * @param subj a variable representing the subject to be found.
+ * @param obj  a variable representing the literal that is indexed.
+ * @param queryString the Lucene query string to be matched.
+ */
+case class LuceneQueryPattern(subj: QueryVariable, obj: QueryVariable, queryString: LuceneQueryString) extends QueryPattern {
+    override def toSparql: String = throw AssertionException("LuceneQueryPattern should have been transformed into a StatementPattern")
 }
 
 /**

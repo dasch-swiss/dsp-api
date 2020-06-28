@@ -26,7 +26,8 @@
  * @param dataNamedGraph the named graph to update.
  * @param resourceIri the IRI of the resource to be marked as deleted.
  *@
-@(resourceIri: IRI)
+@(dataNamedGraph: IRI,
+  resourceIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -35,12 +36,16 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
-    <@resourceIri> ?resourcePred ?resourceObj .
-    ?value ?valuePred ?valueObj .
-    ?standoff ?standoffPred ?standoffObj .
-    ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
-    ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+    GRAPH ?dataNamedGraph {
+        <@resourceIri> ?resourcePred ?resourceObj .
+        ?value ?valuePred ?valueObj .
+        ?standoff ?standoffPred ?standoffObj .
+        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
+        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+    }
 } WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+
     @* Make sure the resource is really a resource. *@
     <@resourceIri> a knora-base:Resource .
 

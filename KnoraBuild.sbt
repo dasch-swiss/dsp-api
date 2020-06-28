@@ -5,18 +5,14 @@ import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
 import sbt.Keys.version
 
+import scala.language.postfixOps
 import scala.sys.process.Process
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-// custom docker-compose plugin settings
-lazy val GDB = config("gdb") extend Default
-
-lazy val GDBSIPI = config("gdbsipi") extend Default
-
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, knoraJenaFuseki, knoraSipi)
 
 lazy val buildSettings = Dependencies.Versions ++ Seq(
     organization := "org.knora",
@@ -33,6 +29,8 @@ lazy val root: Project = Project(id = "knora", file("."))
       // values set for all sub-projects
       // These are normal sbt settings to configure for release, skip if already defined
 
+      Global / onChangedBuildSource := ReloadOnSourceChanges,
+
       ThisBuild / licenses := Seq("AGPL-3.0" -> url("https://opensource.org/licenses/AGPL-3.0")),
       ThisBuild / homepage := Some(url("https://github.com/dhlab-basel/Knora")),
       ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/dasch-swiss/knora-api"), "scm:git:git@github.com:dasch-swiss/knora-api.git")),
@@ -47,6 +45,16 @@ lazy val root: Project = Project(id = "knora", file("."))
       Global / cancelable := true,
 
       publish / skip := true,
+
+      Dependencies.sysProps := sys.props.toString(),
+      Dependencies.sysEnvs := sys.env.toString(),
+
+      dockerImageCreationTask := Seq(
+          (salsah1 / Docker / publishLocal).value,
+          (webapi / Docker / publishLocal).value,
+          (knoraJenaFuseki / Docker / publishLocal).value,
+          (knoraSipi / Docker / publishLocal).value
+      )
   )
 
 
@@ -58,66 +66,66 @@ lazy val root: Project = Project(id = "knora", file("."))
 lazy val ParadoxSite = config("paradox")
 
 lazy val docs = knoraModule("docs")
-        .enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
-        .configs(
-            ParadoxSite
-        )
-        .settings(
-            // Apply default settings to our two custom configuration instances
-            ParadoxSitePlugin.paradoxSettings(ParadoxSite),
-            ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
-            ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite),
+  .enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
+  .configs(
+      ParadoxSite
+  )
+  .settings(
+      // Apply default settings to our two custom configuration instances
+      ParadoxSitePlugin.paradoxSettings(ParadoxSite),
+      ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
+      ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite),
 
-            // Skip packageDoc and packageSrc task on stage
-            Compile / packageDoc / mappings := Seq(),
-            Compile / packageSrc / mappings := Seq(),
-        )
-        .settings(
+      // Skip packageDoc and packageSrc task on stage
+      Compile / packageDoc / mappings := Seq(),
+      Compile / packageSrc / mappings := Seq(),
+  )
+  .settings(
 
-            // Ghpages settings
-            ghpagesNoJekyll := true,
-            git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
-            ghpagesCleanSite / excludeFilter :=
-                    new FileFilter {
-                        def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
-                    } || "LICENSE.md" || "README.md",
+      // Ghpages settings
+      ghpagesNoJekyll := true,
+      git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
+      ghpagesCleanSite / excludeFilter :=
+        new FileFilter {
+            def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
+        } || "LICENSE.md" || "README.md",
 
-            // (sbt-site) Customize the source directory
-            // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
-            ParadoxSite / sourceDirectory := sourceDirectory.value / "paradox",
+      // (sbt-site) Customize the source directory
+      // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
+      ParadoxSite / sourceDirectory := sourceDirectory.value / "paradox",
 
-            // (sbt-site) Customize the output directory (subdirectory of site)
-            ParadoxSite / siteSubdirName := "paradox",
+      // (sbt-site) Customize the output directory (subdirectory of site)
+      ParadoxSite / siteSubdirName := "paradox",
 
-            // Set some paradox properties
-            ParadoxSite / paradoxProperties ++= Map(
-                "project.name" -> "Knora Documentation",
-                "github.base_url" -> "https://github.com/dhlab-basel/Knora",
-                "image.base_url" -> ".../assets/images",
-                "extref.rfc.base_url" -> "http://tools.ietf.org/html/rfc%s",
-                "snip.src.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "main" / "scala").getAbsolutePath,
-                "snip.test.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "test" / "scala").getAbsolutePath
-            ),
+      // Set some paradox properties
+      ParadoxSite / paradoxProperties ++= Map(
+          "project.name" -> "Knora Documentation",
+          "github.base_url" -> "https://github.com/dhlab-basel/Knora",
+          "image.base_url" -> ".../assets/images",
+          "extref.rfc.base_url" -> "http://tools.ietf.org/html/rfc%s",
+          "snip.src.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "main" / "scala").getAbsolutePath,
+          "snip.test.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "test" / "scala").getAbsolutePath
+      ),
 
-            // Paradox Material Theme Settings
-            ParadoxSite / paradoxMaterialTheme ~= {
-                _.withColor("blue", "yellow")
-                        .withRepository(uri("https://github.com/dhlab-basel/Knora/docs"))
-                        .withFavicon("cloud")
-                        .withLogoIcon("cloud")
-                        .withSocial(
-                            uri("https://github.com/dhlab-basel"),
-                            uri("https://twitter.com/dhlabbasel")
-                        )
-                        .withLanguage(java.util.Locale.ENGLISH)
-                        .withCopyright("Copyright 2015-2019 the contributors (see Contributors.md)")
-            },
-            makeSite / mappings ++= Seq(
-                file("docs/src/api-admin/index.html") -> "api-admin/index.html",
-                file("docs/src/api-admin/swagger.json") -> "api-admin/swagger.json"
-            ),
-            makeSite := makeSite.dependsOn(buildPrequisites).value
-        )
+      // Paradox Material Theme Settings
+      ParadoxSite / paradoxMaterialTheme ~= {
+          _.withColor("blue", "yellow")
+            .withRepository(uri("https://github.com/dhlab-basel/Knora/docs"))
+            .withFavicon("cloud")
+            .withLogoIcon("cloud")
+            .withSocial(
+                uri("https://github.com/dhlab-basel"),
+                uri("https://twitter.com/dhlabbasel")
+            )
+            .withLanguage(java.util.Locale.ENGLISH)
+            .withCopyright("Copyright 2015-2019 the contributors (see Contributors.md)")
+      },
+      makeSite / mappings ++= Seq(
+          file("docs/src/api-admin/index.html") -> "api-admin/index.html",
+          file("docs/src/api-admin/swagger.json") -> "api-admin/swagger.json"
+      ),
+      makeSite := makeSite.dependsOn(buildPrequisites).value
+  )
 
 lazy val buildPrequisites = taskKey[Unit]("Build typescript API documentation and Graphviz diagrams.")
 
@@ -150,82 +158,43 @@ docs / buildPrequisites := {
 
 
 //////////////////////////////////////
-// Knora's custom GraphDB-SE
+// Knora's custom Jena Fuseki
 //////////////////////////////////////
-//
-//lazy val graphdbseCommonSettings = Seq(
-//    name := "knora-graphdb-se"
-//)
-//
-//lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
-//  .enablePlugins(DockerPlugin)
-//  .settings(
-//      graphdbseCommonSettings
-//  )
-//  .settings( // enable deployment staging with `sbt stage`
-//      // Skip packageDoc and packageSrc task on stage
-//      Compile / packageDoc / mappings := Seq(),
-//      Compile / packageSrc / mappings := Seq(),
-//      Universal / mappings ++= {
-//          // copy the webapi/scripts folder
-//          directory("webapi/scripts")
-//      },
-//
-//      // add dockerCommands used to create the image
-//      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-//
-//      dockerRepository := Some("dhlabbasel"),
-//
-//      maintainer := "400790+subotic@users.noreply.github.com",
-//
-//      Docker / dockerExposedPorts ++= Seq(7200),
-//      Docker / dockerCommands := Seq(
-//          // FIXME: Someday find out how to reference here Dependencies.Versions.gdbSEImage
-//          Cmd("FROM", "ontotext/graphdb:8.10.1-se"),
-//          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-//          Cmd("COPY", "opt/docker/scripts", "/scripts"),
-//          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
-//      )
-//  )
 
-//////////////////////////////////////
-// Knora's custom GraphDB-Free
-//////////////////////////////////////
-//
-//lazy val graphdbfreeCommonSettings = Seq(
-//    name := "knora-graphdb-free"
-//)
-//
-//lazy val knoraGraphdbFree: Project = knoraModule("knora-graphdb-free")
-//  .enablePlugins(DockerPlugin)
-//  .settings(
-//      graphdbfreeCommonSettings
-//  )
-//  .settings(
-//      // Skip packageDoc and packageSrc task on stage
-//      Compile / packageDoc / mappings := Seq(),
-//      Compile / packageSrc / mappings := Seq(),
-//      Universal / mappings ++= {
-//          // copy the webapi/scripts folder
-//          directory("webapi/scripts")
-//      },
-//
-//      // add dockerCommands used to create the image
-//      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-//
-//      dockerRepository := Some("dhlabbasel"),
-//
-//      maintainer := "400790+subotic@users.noreply.github.com",
-//
-//      Docker / dockerExposedPorts ++= Seq(7200),
-//      Docker / dockerCommands := Seq(
-//          // FIXME: Someday find out how to reference here Dependencies.Versions.gdbFreeImage
-//          Cmd("FROM", "dhlabbasel/graphdb:8.10.0-free"),
-//          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-//          Cmd("COPY", "opt/docker/scripts", "/scripts"),
-//          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
-//      )
-//  )
+lazy val jenaFusekiCommonSettings = Seq(
+    name := "knora-jena-fuseki"
+)
+
+lazy val knoraJenaFuseki: Project = knoraModule("knora-jena-fuseki")
+  .enablePlugins(DockerPlugin)
+  .settings(
+      jenaFusekiCommonSettings
+  )
+  .settings( // enable deployment staging with `sbt stage`
+      // Skip packageDoc and packageSrc task on stage
+      Compile / packageDoc / mappings := Seq(),
+      Compile / packageSrc / mappings := Seq(),
+      Universal / mappings ++= {
+          // copy the jena-fuseki folder
+          directory("jena-fuseki")
+      },
+
+      // add dockerCommands used to create the image
+      // docker:stage, docker:publishLocal, docker:publish, docker:clean
+
+      dockerRepository := Some("daschswiss"),
+
+      maintainer := "400790+subotic@users.noreply.github.com",
+
+      Docker / dockerExposedPorts ++= Seq(3030),
+      Docker / dockerCommands := Seq(
+          // FIXME: Someday find out how to reference here Dependencies.Versions.gdbSEImage
+          Cmd("FROM", "stain/jena-fuseki:3.14.0"),
+          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+          Cmd("COPY", "config.ttl", "/fuseki/config.ttl"),
+      )
+  )
+
 
 //////////////////////////////////////
 // Knora's custom Sipi
@@ -265,134 +234,6 @@ docs / buildPrequisites := {
 //      )
 //  )
 
-
-//////////////////////////////////////
-// Knora's assets
-//////////////////////////////////////
-//
-//lazy val knoraAssetsCommonSettings = Seq(
-//    name := "knora-assets"
-//)
-//
-//lazy val knoraAssets: Project = knoraModule("knora-assets")
-//  .enablePlugins(DockerPlugin)
-//  .settings(
-//      knoraAssetsCommonSettings
-//  )
-//  .settings(
-//      // Skip packageDoc and packageSrc task on stage
-//      Compile / packageDoc / mappings := Seq(),
-//      Compile / packageSrc / mappings := Seq(),
-//      Universal / mappings ++= {
-//          // copy the different folders
-//          directory("webapi/scripts") ++
-//            directory("webapi/_test_data") ++
-//            directory("webapi/_assets") ++
-//            directory("knora-ontologies")
-//      },
-//
-//      // add dockerCommands used to create the image
-//      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-//
-//      dockerRepository := Some("dhlabbasel"),
-//
-//      maintainer := "400790+subotic@users.noreply.github.com",
-//      Docker / dockerExposedPorts ++= Seq(9999), // not used. added just so that there is no warning
-//      Docker / dockerCommands := Seq(
-//          Cmd("FROM", "scratch"),
-//          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-//          Cmd("COPY", "opt/docker", "/assets")
-//      )
-//  )
-
-//////////////////////////////////////
-// Knora upgrade scripts
-//////////////////////////////////////
-//
-//lazy val upgradeCommonSettings = Seq(
-//    name := "upgrade"
-//)
-//
-//lazy val upgrade: Project = knoraModule("upgrade")
-//  .dependsOn(webapi)
-//  .enablePlugins(JavaAppPackaging, DockerPlugin)
-//  .settings(
-//      upgradeCommonSettings,
-//      Dependencies.upgradeLibraryDependencies,
-//      // use jars (and not class directory) for run, test, console
-//      exportJars := true,
-//      unmanagedResourceDirectories in Compile += (rootBaseDir.value / "knora-ontologies"),
-//
-//      // add content of knora-ontologies to jar
-//      mappings in (Compile, packageBin) ++= Seq (
-//          (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
-//          (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
-//          (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
-//          (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
-//          (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
-//      ),
-//      // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
-//      // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
-//
-//  )
-//  .settings(
-//      scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
-//      logLevel := Level.Info,
-//      run / fork := true,
-//      run / javaOptions ++= upgradeJavaRunOptions,
-//      Compile / run / mainClass := Some("org.knora.upgrade.Main"),
-//      Test / fork := true,
-//      Test / javaOptions ++= upgradeJavaTestOptions,
-//      Test / parallelExecution := false,
-//      /* show full stack traces and test case durations */
-//      Test / testOptions += Tests.Argument("-oDF"),
-//  )
-//  .settings(
-//      // Skip packageDoc and packageSrc task on stage
-//      Compile / packageDoc / mappings := Seq(),
-//      Compile / packageSrc / mappings := Seq(),
-//
-//      Universal / mappings ++= {
-//          // copy the different folders
-//          directory("upgrade/graphdb-se")
-//      },
-//
-//      // add dockerCommands used to create the image
-//      // docker:stage, docker:publishLocal, docker:publish, docker:clean
-//      dockerRepository := Some("dhlabbasel"),
-//      dockerUpdateLatest := true,
-//      maintainer := "400790+subotic@users.noreply.github.com",
-//      Docker / dockerCommands := Seq(
-//          Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
-//          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-//          Cmd("RUN apk update && apk upgrade && apk add bash"),
-//
-//          Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
-//          Cmd("COPY", "opt/docker", "/upgrade"),
-//          Cmd("WORKDIR", "/upgrade"),
-//          ExecCmd("ENTRYPOINT", "/upgrade/bin/upgrade"),
-//      ),
-//  )
-//
-//lazy val upgradeJavaRunOptions = Seq(
-//    // "-showversion",
-//    "-Xms1G",
-//    "-Xmx1G"
-//    // "-verbose:gc",
-//    //"-XX:+UseG1GC",
-//    //"-XX:MaxGCPauseMillis=500",
-//    //"-XX:MaxMetaspaceSize=4096m"
-//)
-//
-//lazy val upgradeJavaTestOptions = Seq(
-//    // "-showversion",
-//    "-Xms1G",
-//    "-Xmx1G"
-//    // "-verbose:gc",
-//    //"-XX:+UseG1GC",
-//    //"-XX:MaxGCPauseMillis=500",
-//    //"-XX:MaxMetaspaceSize=4096m"
-//)
 
 //////////////////////////////////////
 // SALSAH1 (./salsah1)
@@ -499,7 +340,6 @@ docs / buildPrequisites := {
 //lazy val javaHeadlessTestOptions = Seq(
 //    "-Dconfig.resource=headless-testing.conf"
 //) ++ javaTestOptions
-
 
 
 //////////////////////////////////////

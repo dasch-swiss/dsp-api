@@ -392,7 +392,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:projectLongname "Anything Project"^^xsd:string ;
   knora-admin:projectDescription "Anything Project"^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
+  knora-admin:projectKeyword "things"^^xsd:string,
+                             "arbitrary test data"^^xsd:string .
 
 <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-admin:User ;
   knora-admin:username "anything.user01"^^xsd:string ;
