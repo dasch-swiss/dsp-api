@@ -1120,74 +1120,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     }
 
     /**
-     * Handles the deprecated function `knora-api:match` in the simple schema.
-     *
-     * @param functionCallExpression the function call to be handled.
-     * @param typeInspectionResult   the type inspection results.
-     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
-     * @return a [[TransformedFilterPattern]].
-     */
-    private def handleMatchFunctionInSimpleSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
-        val functionIri: SmartIri = functionCallExpression.functionIri.iri
-
-        if (querySchema == ApiV2Complex) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchFunction.toSmartIri.toSparql} instead")
-        }
-
-        // The match function must be the top-level expression, otherwise boolean logic won't work properly.
-        if (!isTopLevel) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
-        }
-
-        // two arguments are expected: the first must be a variable representing a string value,
-        // the second must be a string literal
-
-        if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
-
-        // a QueryVariable expected to represent a text value
-        val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
-
-        typeInspectionResult.getTypeOfEntity(textValueVar) match {
-            case Some(nonPropInfo: NonPropertyTypeInfo) =>
-
-                nonPropInfo.typeIri.toString match {
-
-                    case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
-
-                    case _ => throw GravsearchException(s"${textValueVar.toSparql} must be an xsd:string")
-                }
-
-            case _ => throw GravsearchException(s"${textValueVar.toSparql} must be an xsd:string")
-        }
-
-        val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
-
-        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
-        // if that statement hasn't been added already.
-        val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
-            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
-        } else {
-            Seq.empty[StatementPattern]
-        }
-
-        val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-
-        val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
-
-        // Replace the filter with a statement using the deprecated knora-base:matchesTextIndex property.
-        TransformedFilterPattern(
-            None, // FILTER has been replaced by statements
-            valueHasStringStatement ++ Seq(
-                StatementPattern.makeExplicit(
-                    subj = textValHasString,
-                    pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri),
-                    obj = XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)
-                )
-            )
-        )
-    }
-
-    /**
      * Handles the function `knora-api:matchText` in the simple schema.
      *
      * @param functionCallExpression the function call to be handled.
@@ -1249,51 +1181,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                 subj = textValueVar,
                 obj = textValHasString,
                 queryString = searchTerms
-            )
-        )
-    }
-
-    /**
-     * Handles the deprecated function `knora-api:match` in the complex schema.
-     *
-     * @param functionCallExpression the function call to be handled.
-     * @param typeInspectionResult   the type inspection results.
-     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
-     * @return a [[TransformedFilterPattern]].
-     */
-    private def handleMatchFunctionInComplexSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
-        val functionIri: SmartIri = functionCallExpression.functionIri.iri
-
-        if (querySchema == ApiV2Simple) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunction.toSmartIri.toSparql} instead")
-        }
-
-        // The match function must be the top-level expression, otherwise boolean logic won't work properly.
-        if (!isTopLevel) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
-        }
-
-        // two arguments are expected: the first must be a variable representing a string value,
-        // the second must be a string literal
-
-        if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
-
-        // a QueryVariable expected to represent a string
-        val stringVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
-
-        val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-
-        val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
-
-        // Replace the filter with a statement using the deprecated knora-base:matchesTextIndex property.
-        TransformedFilterPattern(
-            None, // FILTER has been replaced by statements
-            Seq(
-                StatementPattern.makeExplicit(
-                    subj = stringVar,
-                    pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri),
-                    XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)
-                )
             )
         )
     }
@@ -1361,105 +1248,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                 obj = textValHasString,
                 queryString = searchTerms
             )
-        )
-    }
-
-    /**
-     * Handles the deprecated function `knora-api:matchInStandoff`.
-     *
-     * @param functionCallExpression the function call to be handled.
-     * @param typeInspectionResult   the type inspection results.
-     * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
-     * @return a [[TransformedFilterPattern]].
-     */
-    private def handleMatchInStandoffFunction(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
-        val functionIri: SmartIri = functionCallExpression.functionIri.iri
-
-        if (querySchema == ApiV2Simple) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema")
-        }
-
-        if (!isTopLevel) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
-        }
-
-        // Three arguments are expected:
-        // 1. a variable representing the string literal value of the text value
-        // 2. a variable representing the standoff tag
-        // 3. a string literal containing space-separated search terms
-
-        if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionIri.toSparql}")
-
-        // A variable representing the object of the text value's valueHasString.
-        val textValueStringLiteralVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
-
-        // A variable representing the standoff tag.
-        val standoffTagVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 1)
-
-        // A string literal representing the search terms.
-        val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(pos = 2, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-
-        val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
-
-        // Generate a statement to search the full-text search index, using the deprecated virtual predicate
-        // knora-base:matchesTextIndex, to assert that text value contains the search terms.
-        val fullTextSearchStatement: Seq[StatementPattern] = Seq(
-            StatementPattern.makeInferred(
-                subj = textValueStringLiteralVar,
-                pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri),
-                XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)
-            )
-        )
-
-        // Generate query patterns to assign the text in the standoff tag to a variable, if we
-        // haven't done so already.
-
-        val startVariable = QueryVariable(standoffTagVar.variableName + "__start")
-        val endVariable = QueryVariable(standoffTagVar.variableName + "__end")
-
-        val markedUpPatternsToAdd: Seq[QueryPattern] = if (!standoffMarkedUpVariables.contains(startVariable)) {
-            standoffMarkedUpVariables += startVariable
-
-            Seq(
-                // ?standoffTag knora-base:standoffTagHasStart ?standoffTag__start .
-                StatementPattern.makeExplicit(standoffTagVar, IriRef(OntologyConstants.KnoraBase.StandoffTagHasStart.toSmartIri), startVariable),
-                // ?standoffTag knora-base:standoffTagHasEnd ?standoffTag__end .
-                StatementPattern.makeExplicit(standoffTagVar, IriRef(OntologyConstants.KnoraBase.StandoffTagHasEnd.toSmartIri), endVariable)
-            )
-        } else {
-            Seq.empty[QueryPattern]
-        }
-
-        // Generate a FILTER pattern for each search term, using the regex function to assert that the text in the
-        // standoff tag contains the term:
-        // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
-        // TODO: handle the differences between regex syntax and Lucene syntax.
-        val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map {
-            term: String =>
-                FilterPattern(
-                    expression = RegexFunction(
-                        textExpr = SubStrFunction(
-                            textLiteralVar = textValueStringLiteralVar,
-                            startExpression = ArithmeticExpression(
-                                leftArg = startVariable,
-                                operator = PlusOperator,
-                                rightArg = IntegerLiteral(1)
-                            ),
-                            lengthExpression = ArithmeticExpression(
-                                leftArg = endVariable,
-                                operator = MinusOperator,
-                                rightArg = startVariable
-                            )
-                        ),
-                        pattern = term, // TODO: Ignore Lucene operators
-                        modifier = Some("i")
-                    )
-                )
-        }
-
-        TransformedFilterPattern(
-            expression = None, // The expression has been replaced by additional patterns.
-            additionalPatterns = fullTextSearchStatement ++ markedUpPatternsToAdd ++ regexFilters
         )
     }
 
@@ -1779,9 +1567,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         // Get a Scala function that implements the Gravsearch function.
         val functionFunction: (FunctionCallExpression, GravsearchTypeInspectionResult, Boolean) => TransformedFilterPattern = functionIri.toString match {
-            case OntologyConstants.KnoraApiV2Simple.MatchFunction => handleMatchFunctionInSimpleSchema // deprecated
-            case OntologyConstants.KnoraApiV2Complex.MatchFunction => handleMatchFunctionInComplexSchema // deprecated
-            case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction => handleMatchInStandoffFunction // deprecated
             case OntologyConstants.KnoraApiV2Simple.MatchTextFunction => handleMatchTextFunctionInSimpleSchema
             case OntologyConstants.KnoraApiV2Complex.MatchTextFunction => handleMatchTextFunctionInComplexSchema
             case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction => handleMatchLabelFunctionInSimpleSchema
