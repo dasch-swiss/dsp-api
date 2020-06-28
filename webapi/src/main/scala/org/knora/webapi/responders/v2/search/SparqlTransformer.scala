@@ -300,10 +300,7 @@ object SparqlTransformer {
 
         val transformedPattern = statement.copy(
             // Replace the deprecated property knora-base:matchesTextIndex with a GraphDB-specific one.
-            pred = statement.pred match {
-                case iri: IriRef if iri.iri == OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri => IriRef(OntologyConstants.Ontotext.LuceneFulltext.toSmartIri) // convert to special Lucene property
-                case other => other // no conversion needed
-            },
+            pred = statement.pred,
             namedGraph = statement.namedGraph match {
                 case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
                 case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
