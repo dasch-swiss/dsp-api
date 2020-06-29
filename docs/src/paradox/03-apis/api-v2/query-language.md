@@ -382,10 +382,6 @@ For example, to search for titles that contain the words 'Zeitglöcklein' and
 FILTER knora-api:matchText(?title, "Zeitglöcklein Lebens")
 ```
 
-Note: the `knora-api:match` function has been deprecated, and will no longer work in
-a future release of Knora. Please change your Gravsearch queries to use `knora-api:matchText`
-instead. Attention: the first argument is different.
-
 #### Filtering Text by Language
 
 To filter a text value by language in the simple schema, use the SPARQL `lang` function
@@ -464,10 +460,6 @@ CONSTRUCT {
 
 Here we are looking for letters containing the words "Grund" and "Richtigkeit"
 within a single paragraph.
-
-Note: the `knora-api:matchInStandoff` function has been deprecated, and will no longer
-work in a future release of Knora. Please change your Gravsearch queries to use
-`knora-api:matchTextInStandoff` instead. Attention: the first argument is different.
 
 #### Matching Standoff Links
 

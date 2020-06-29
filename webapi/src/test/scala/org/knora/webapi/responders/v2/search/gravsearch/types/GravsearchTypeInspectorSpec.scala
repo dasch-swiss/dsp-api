@@ -302,7 +302,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |
           |        ?mainRes ?titleProp ?propVal0 .
           |
-          |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+          |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
           |
           |     }
         """.stripMargin
