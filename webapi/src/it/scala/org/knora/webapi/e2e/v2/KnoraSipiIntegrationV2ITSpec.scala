@@ -27,7 +27,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._

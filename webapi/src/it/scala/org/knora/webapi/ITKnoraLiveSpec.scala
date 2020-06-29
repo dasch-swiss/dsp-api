@@ -216,7 +216,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         val sipiFormData = Multipart.FormData(formDataParts: _*)
 
         // Send Sipi the file in a POST request.
-        val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+        val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
 
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)

@@ -67,7 +67,7 @@ resolutions:
       {
          "duration": ​0,
          "nx": ​95,
-         "path": "http://sipiserver:port/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+         "path": "http://sipiserver:port/knora/incunabula_0000000002.jpg/full/max/0/default.jpg",
          "ny": ​128,
          "fps": ​0,
          "format_name": "JPEG",
