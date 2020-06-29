@@ -62,17 +62,20 @@ A number of core settings is additionally configurable through system environmen
 | app.sipi.external-host                                      | KNORA_WEBAPI_SIPI_EXTERNAL_HOST                                 | localhost            |
 | app.sipi.external-port                                      | KNORA_WEBAPI_SIPI_EXTERNAL_PORT                                 | 443                  |
 | app.ark.resolver                                            | KNORA_WEBAPI_ARK_RESOLVER_URL                                   | http://0.0.0.0:3336  |
-| app.ark.assigned-number                                     | KNORA_WEBAPI_ARK_NAAN                                           | 72163
+| app.ark.assigned-number                                     | KNORA_WEBAPI_ARK_NAAN                                           | 72163                |
 | app.salsah1.base-url                                        | KNORA_WEBAPI_SALSAH1_BASE_URL                                   | http://localhost:3335|
-| app.triplestore.dbtype                                      | KNORA_WEBAPI_TRIPLESTORE_DBTYPE                                 | graphdb-se           |
+| app.triplestore.dbtype                                      | KNORA_WEBAPI_TRIPLESTORE_DBTYPE                                 | fuseki               |
 | app.triplestore.use-https                                   | KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS                              | false                |
 | app.triplestore.host                                        | KNORA_WEBAPI_TRIPLESTORE_HOST                                   | localhost            |
+| app.triplestore.auto-init                                   | KNORA_WEBAPI_TRIPLESTORE_AUTOINIT                               | false                |
 | app.triplestore.graphdb.port                                | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_PORT                           | 7200                 |
 | app.triplestore.graphdb.repository-name                     | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME                | knora-test           |
 | app.triplestore.graphdb.username                            | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_USERNAME                       | admin                |
 | app.triplestore.graphdb.password                            | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_PASSWORD                       | root                 |
 | app.triplestore.fuseki.port                                 | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT                            | 3030                 |
 | app.triplestore.fuseki.repository-name                      | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME                 | knora-test           |
+| app.triplestore.fuseki.username                             | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME                        | admin                |
+| app.triplestore.fuseki.password                             | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD                        | test                 |
 | app.cache-service.enabled                                   | KNORA_WEBAPI_CACHE_SERVICE_ENABLED                              | true                 |
 | app.cache-service.redis.host                                | KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST                           | localhost            |
 | app.cache-service.redis.port                                | KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT                           | 6379                 |

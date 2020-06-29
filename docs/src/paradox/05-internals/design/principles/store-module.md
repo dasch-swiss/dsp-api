@@ -45,7 +45,7 @@ An HTTP-based triplestore is one that is accessed remotely over the HTTP
 protocol. `HttpTriplestoreConnector` supports the following triplestores:
 
    - Ontotext GraphDB
-   - Fuseki 2 (not currently supported)
+   - Fuseki 2
 
 ### GraphDB
 

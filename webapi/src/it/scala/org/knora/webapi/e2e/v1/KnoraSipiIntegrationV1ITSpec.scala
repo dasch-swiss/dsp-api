@@ -49,9 +49,9 @@ object KnoraSipiIntegrationV1ITSpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
-  * `sipi.knora-docker-config.lua`.
-  */
+ * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
+ * `sipi.knora-docker-config.lua`.
+ */
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
@@ -691,7 +691,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         }
 
         "provide a helpful error message if an XSLT file is not found" ignore {
-            // TODO: re-enables this with the preceding test, when we can upload non-image files to Sipi (PR #1206).
+            // TODO: re-enable this with the preceding test, when we can upload non-image files to Sipi (PR #1206).
 
             val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
 

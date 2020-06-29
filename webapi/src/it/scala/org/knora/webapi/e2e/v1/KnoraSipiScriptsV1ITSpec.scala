@@ -45,17 +45,17 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
     "Calling Knora Sipi Scripts" should {
 
         "successfully call C++ functions from Lua scripts" in {
-            val request = Get(baseSipiUrl + "/test_functions" )
+            val request = Get(baseInternalSipiUrl + "/test_functions" )
             getResponseString(request)
         }
 
         "successfully call Lua functions for mediatype handling" in {
-            val request = Get(baseSipiUrl + "/test_file_type" )
+            val request = Get(baseInternalSipiUrl + "/test_file_type" )
             getResponseString(request)
         }
 
         "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" in {
-            val request = Get(baseSipiUrl + "/test_knora_session_cookie" )
+            val request = Get(baseInternalSipiUrl + "/test_knora_session_cookie" )
             getResponseString(request)
         }
     }

@@ -86,13 +86,13 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToCsv = s"_test_data/test_route/files/$csvOriginalFilename"
 
     /**
-      * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
-      * property.
-      *
-      * @param resource            the JSON-LD document.
-      * @param propertyIriInResult the property IRI.
-      * @return a JSON-LD array containing the values of the specified property.
-      */
+     * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
+     * property.
+     *
+     * @param resource            the JSON-LD document.
+     * @param propertyIriInResult the property IRI.
+     * @return a JSON-LD array containing the values of the specified property.
+     */
     private def getValuesFromResource(resource: JsonLDDocument,
                                       propertyIriInResult: SmartIri): JsonLDArray = {
         resource.requireArray(propertyIriInResult.toString)
@@ -129,24 +129,24 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     /**
-      * Represents the information that Knora returns about an image file value that was created.
-      *
-      * @param internalFilename the image's internal filename.
-      * @param iiifUrl          the image's IIIF URL.
-      * @param width            the image's width in pixels.
-      * @param height           the image's height in pixels.
-      */
+     * Represents the information that Knora returns about an image file value that was created.
+     *
+     * @param internalFilename the image's internal filename.
+     * @param iiifUrl          the image's IIIF URL.
+     * @param width            the image's width in pixels.
+     * @param height           the image's height in pixels.
+     */
     protected case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
 
     /**
-      * Represents the information that Knora returns about a document file value that was created.
-      *
-      * @param internalFilename the files's internal filename.
-      * @param url              the file's URL.
-      * @param pageCount        the document's page count.
-      * @param width            the document's width in pixels.
-      * @param height           the document's height in pixels.
-      */
+     * Represents the information that Knora returns about a document file value that was created.
+     *
+     * @param internalFilename the files's internal filename.
+     * @param url              the file's URL.
+     * @param pageCount        the document's page count.
+     * @param width            the document's width in pixels.
+     * @param height           the document's height in pixels.
+     */
     case class SavedDocument(internalFilename: String, url: String, pageCount: Int, width: Option[Int], height: Option[Int])
 
     /**
@@ -223,7 +223,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$invalidToken", sipiFormData)
+            val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
             val sipiResponse = singleAwaitingRequest(sipiRequest)
             assert(sipiResponse.status == StatusCodes.Unauthorized)
         }

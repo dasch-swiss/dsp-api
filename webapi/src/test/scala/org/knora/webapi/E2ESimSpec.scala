@@ -57,10 +57,10 @@ object E2ESimSpec {
 abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with TriplestoreJsonProtocol with RequestBuilding with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESimSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("PerfSpec", config.withFallback(E2ESimSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, E2ESimSpec.defaultConfig))
-    def this() = this(ActorSystem("PerfSpec", E2ESimSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESimSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("PerfSpec", TestContainers.PortConfig.withFallback(config.withFallback(E2ESimSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESimSpec.defaultConfig)))
+    def this() = this(ActorSystem("PerfSpec", TestContainers.PortConfig.withFallback(E2ESimSpec.defaultConfig)))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system

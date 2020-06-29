@@ -43,8 +43,8 @@ object DrawingsGodsV1ITSpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for additional testing of permissions.
-  */
+ * End-to-End (E2E) test specification for additional testing of permissions.
+ */
 class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
