@@ -24,10 +24,11 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{SipiConversionPathRequestV1, SipiConversionRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import spray.json._
 
 import scala.collection.breakOut
@@ -42,16 +43,16 @@ import scala.collection.breakOut
   * @param restype_id the resource type of the resource to be created.
   * @param label      the rdfs:label of the resource.
   * @param properties the properties to be created as a Map of property types to property value(s).
-  * @param file       a file to be attached to the resource (GUI-case).
+  * @param file       the filename of a file that has been uploaded to Sipi's temporary storage.
   * @param project_id the IRI of the project the resources is added to.
   */
 case class CreateResourceApiRequestV1(restype_id: IRI,
                                       label: String,
                                       properties: Map[IRI, Seq[CreateResourceValueV1]],
-                                      file: Option[CreateFileV1] = None,
+                                      file: Option[String] = None,
                                       project_id: IRI) {
 
-    def toJsValue = ResourceV1JsonProtocol.createResourceApiRequestV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.createResourceApiRequestV1Format.write(this)
 
 }
 
@@ -62,14 +63,14 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
   * @param label        the resource's label.
   * @param client_id    the client's unique ID for the resource.
   * @param properties   the resource's properties.
-  * @param file         a file on disk that should be attached to the resource.
+  * @param file         a file in Sipi's temporary storage that should be attached to the resource.
   * @param creationDate the creation date that should be attached to the resource.
   */
 case class CreateResourceFromXmlImportRequestV1(restype_id: IRI,
                                                 client_id: String,
                                                 label: String,
                                                 properties: Map[IRI, Seq[CreateResourceValueV1]],
-                                                file: Option[ReadFileV1] = None,
+                                                file: Option[String] = None,
                                                 creationDate: Option[Instant])
 
 /**
@@ -203,7 +204,7 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
   * @param resourceTypeIri the type of the new resource.
   * @param label           the rdfs:label of the resource.
   * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
-  * @param file            a file that should be attached to the resource.
+  * @param file            a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
   * @param projectIri      the IRI of the project the resources is added to.
   * @param userProfile     the profile of the user making the request.
   * @param apiRequestID    the ID of the API request.
@@ -211,7 +212,7 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
 case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    label: String,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                   file: Option[SipiConversionRequestV1] = None,
+                                   file: Option[StillImageFileValueV1] = None,
                                    projectIri: IRI,
                                    userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
@@ -224,14 +225,14 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
   * @param clientResourceID the client's ID for the resource.
   * @param label            the rdfs:label of the resource.
   * @param values           the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
-  * @param file             a file on disk that should be stored by Sipi and should be attached to the resource.
+  * @param file             a file in Sipi's temporary storage that should be attached to the resource.
   * @param creationDate     the creation date that should be attached to the resource.
   */
 case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                 clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                file: Option[SipiConversionPathRequestV1] = None,
+                                                file: Option[StillImageFileValueV1] = None,
                                                 creationDate: Option[Instant])
 
 /**
@@ -254,9 +255,9 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
   * @param createdResources created resources
   *
   */
-case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleResourcesCreateResponseV1]) extends KnoraResponseV1 {
+case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleResourcesCreateResponseV1], projectADM: ProjectADM) extends KnoraResponseV1 with UpdateResultInProject {
 
-    def toJsValue: JsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.MultipleResourceCreateResponseV1Format.write(this)
 
 }
 
@@ -304,7 +305,7 @@ case class ResourceCheckClassResponseV1(isInClass: Boolean)
   * @param id the IRI of the resource that was marked as deleted.
   */
 case class ResourceDeleteResponseV1(id: IRI) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.resourceDeleteResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceDeleteResponseV1Format.write(this)
 }
 
 /**
@@ -315,7 +316,7 @@ case class ResourceDeleteResponseV1(id: IRI) extends KnoraResponseV1 {
   */
 case class ResourceInfoResponseV1(resource_info: Option[ResourceInfoV1] = None,
                                   rights: Option[Int] = None) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.resourceInfoResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceInfoResponseV1Format.write(this)
 }
 
 /**
@@ -333,7 +334,7 @@ case class ResourceFullResponseV1(resinfo: Option[ResourceInfoV1] = None,
                                   props: Option[PropsV1] = None,
                                   incoming: Seq[IncomingV1] = Nil,
                                   access: String) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.resourceFullResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceFullResponseV1Format.write(this)
 }
 
 /**
@@ -342,7 +343,7 @@ case class ResourceFullResponseV1(resinfo: Option[ResourceInfoV1] = None,
   * @param resource_context resources relating to this resource via `knora-base:partOf`.
   */
 case class ResourceContextResponseV1(resource_context: ResourceContextV1) extends KnoraResponseV1 {
-    def toJsValue = ResourceContextV1JsonProtocol.resourceContextResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceContextV1JsonProtocol.resourceContextResponseV1Format.write(this)
 }
 
 
@@ -353,7 +354,7 @@ case class ResourceContextResponseV1(resource_context: ResourceContextV1) extend
   */
 case class ResourceRightsResponseV1(rights: Option[Int]) extends KnoraResponseV1 {
 
-    def toJsValue = ResourceV1JsonProtocol.resourceRightsResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceRightsResponseV1Format.write(this)
 }
 
 /**
@@ -364,7 +365,7 @@ case class ResourceRightsResponseV1(rights: Option[Int]) extends KnoraResponseV1
   */
 case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = Vector.empty[ResourceSearchResultRowV1]) extends KnoraResponseV1 {
 
-    def toJsValue = ResourceV1JsonProtocol.resourceSearchResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceSearchResponseV1Format.write(this)
 }
 
 /**
@@ -373,12 +374,13 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
   * @param res_id  the IRI ow the new resource.
   * @param results the values that have been attached to the resource. The key in the Map refers
   *                to the property IRI and the Seq contains all instances of values of this type.
+  * @param projectADM the project in which the resource is to be created.
   */
 case class ResourceCreateResponseV1(res_id: IRI,
-                                    results: Map[IRI, Seq[ResourceCreateValueResponseV1]] = Map.empty[IRI, Seq[ResourceCreateValueResponseV1]]) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.resourceCreateResponseV1Format.write(this)
+                                    results: Map[IRI, Seq[ResourceCreateValueResponseV1]] = Map.empty[IRI, Seq[ResourceCreateValueResponseV1]],
+                                    projectADM: ProjectADM) extends KnoraResponseV1 with UpdateResultInProject {
+    def toJsValue: JsValue = ResourceV1JsonProtocol.ResourceCreateResponseV1Format.write(this)
 }
-
 
 /**
   * Requests the properties of a given resource.
@@ -396,7 +398,7 @@ case class PropertiesGetRequestV1(iri: IRI, userProfile: UserADM) extends Resour
   * @param properties the properties of the specified resource.
   */
 case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
 }
 
 /**
@@ -417,7 +419,7 @@ case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userADM
   * @param label  the resource's new label.
   */
 case class ChangeResourceLabelResponseV1(res_id: IRI, label: String) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.changeResourceLabelResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.changeResourceLabelResponseV1Format.write(this)
 }
 
 /**
@@ -438,7 +440,7 @@ case class GraphDataGetRequestV1(resourceIri: IRI, depth: Int, userADM: UserADM)
   * @param edges the edges that are visible in the graph.
   */
 case class GraphDataGetResponseV1(nodes: Seq[GraphNodeV1], edges: Seq[GraphEdgeV1]) extends KnoraResponseV1 {
-    def toJsValue = ResourceV1JsonProtocol.graphDataGetResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.graphDataGetResponseV1Format.write(this)
 }
 
 /**
@@ -461,17 +463,17 @@ object ResourceContextCodeV1 extends Enumeration {
     /**
       * Indicates that a resource has no parts and is not part of another resource.
       */
-    val RESOURCE_CONTEXT_NONE = Value(0)
+    val RESOURCE_CONTEXT_NONE: Value = Value(0)
 
     /**
       * Indicates that a resource is part of another resource.
       */
-    val RESOURCE_CONTEXT_IS_PARTOF = Value(1)
+    val RESOURCE_CONTEXT_IS_PARTOF: Value = Value(1)
 
     /**
       * Indicates that a resource has parts.
       */
-    val RESOURCE_CONTEXT_IS_COMPOUND = Value(2)
+    val RESOURCE_CONTEXT_IS_COMPOUND: Value = Value(2)
 
     object ResourceContextCodeV1Protocol extends DefaultJsonProtocol {
 
@@ -742,7 +744,7 @@ case class ResourceSearchResultRowV1(id: IRI,
                                      value: Seq[String],
                                      rights: Option[Int] = None) {
 
-    def toJsValue = ResourceV1JsonProtocol.resourceSearchResultV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceSearchResultV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -814,7 +816,7 @@ object SalsahGuiConversions {
   * @param id    the value object IRI of the value.
   */
 case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectResponseV1, id: IRI) {
-    def toJsValue = ResourceV1JsonProtocol.resourceCreateValueResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceCreateValueResponseV1Format.write(this)
 }
 
 /**
@@ -823,9 +825,9 @@ case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectRespons
   */
 object LiteralValueType extends Enumeration {
     type ValueType = Value
-    val StringValue = Value(0, "string")
-    val IntegerValue = Value(1, "integer")
-    val DecimalValue = Value(2, "decimal")
+    val StringValue: Value = Value(0, "string")
+    val IntegerValue: Value = Value(1, "integer")
+    val DecimalValue: Value = Value(2, "decimal")
 
     object LiteralValueTypeV1Protocol extends DefaultJsonProtocol {
 
@@ -873,7 +875,7 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
                                                order: Map[LiteralValueType.Value, Int]) {
     // TODO: do we need to add geonames here?
 
-    def toJsValue = ResourceV1JsonProtocol.resourceCreateValueObjectResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.resourceCreateValueObjectResponseV1Format.write(this)
 }
 
 /**
@@ -937,7 +939,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): PropsV1 = ???
 
         /**
           * Converts a [[PropsV1]] into a [[JsValue]].
@@ -983,7 +985,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): PropsGetV1 = ???
 
         /**
           * Converts a [[PropsGetV1]] into a [[JsValue]].
@@ -1040,7 +1042,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           * @param jsonVal the [[JsValue]] to be converted.
           * @return a [[PropsGetForRegionV1]].
           */
-        def read(jsonVal: JsValue) = {
+        def read(jsonVal: JsValue): PropsGetForRegionV1 = {
 
             val jsonObj = jsonVal.asJsObject
 
@@ -1100,7 +1102,6 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
-
     /**
       * Converts between [[ResourceInfoV1]] objects and [[JsValue]] objects.
       */
@@ -1108,7 +1109,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): ResourceInfoV1 = ???
 
         /**
           * Converts a [[ResourceInfoV1]] into [[JsValue]] for formatting as JSON.
@@ -1145,6 +1146,40 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
+    /**
+      * Converts between [[MultipleResourceCreateResponseV1]] objects and [[JsValue]] objects.
+      */
+    implicit object MultipleResourceCreateResponseV1Format extends JsonFormat[MultipleResourceCreateResponseV1] {
+        /**
+          * Not implemented.
+          */
+        override def read(json: JsValue): MultipleResourceCreateResponseV1 = ???
+
+        /**
+          * Converts a [[MultipleResourceCreateResponseV1]] into a [[JsValue]] for formatting as JSON.
+          */
+        override def write(response: MultipleResourceCreateResponseV1): JsValue = {
+            val fields = Map(
+                "createdResources" -> response.createdResources.toJson
+            )
+
+            JsObject(fields)
+        }
+    }
+
+    implicit object ResourceCreateResponseV1Format extends JsonFormat[ResourceCreateResponseV1] {
+        override def read(json: JsValue): ResourceCreateResponseV1 = ???
+
+        override def write(obj: ResourceCreateResponseV1): JsValue = {
+            val fields = Map(
+                "res_id" -> obj.res_id.toJson,
+                "results" -> obj.results.toJson
+            )
+
+            JsObject(fields)
+        }
+    }
+
     implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat15(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val ChangeResourceLabelApiRequestV1Format: RootJsonFormat[ChangeResourceLabelApiRequestV1] = jsonFormat1(ChangeResourceLabelApiRequestV1)
@@ -1161,8 +1196,6 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
     implicit val oneOfMultipleResourcesCreateResponseFormat: JsonFormat[OneOfMultipleResourcesCreateResponseV1] = jsonFormat3(OneOfMultipleResourcesCreateResponseV1)
-    implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat1(MultipleResourceCreateResponseV1)
-    implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat2(ResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat1(ResourceDeleteResponseV1)
     implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat2(ChangeResourceLabelResponseV1)
     implicit val graphNodeV1Format: JsonFormat[GraphNodeV1] = jsonFormat4(GraphNodeV1)

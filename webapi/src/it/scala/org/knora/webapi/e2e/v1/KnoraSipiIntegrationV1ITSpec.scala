@@ -22,11 +22,13 @@ package org.knora.webapi.e2e.v1
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.net.URLEncoder
 
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{HttpEntity, _}
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -50,21 +52,20 @@ object KnoraSipiIntegrationV1ITSpec {
  * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
  * `sipi.knora-docker-config.lua`.
  */
-class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
+class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    private val username = "root@example.com"
+    private val userEmail = "root@example.com"
     private val password = "test"
     private val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
     private val pathToMarblesWithWrongExtension = "_test_data/test_route/images/marbles_with_wrong_extension.jpg"
     private val pathToXSLTransformation = "_test_data/test_route/texts/letterToHtml.xsl"
     private val pathToMappingWithXSLT = "_test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
-    private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
     private val pathToBEOLBodyXSLTransformation = "_test_data/test_route/texts/beol/standoffToTEI.xsl"
@@ -132,7 +133,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                     case _ => false
                 }
 
-            case _ => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+            case _ => throw InvalidApiJsonException("bulk import response should have member 'createdResources'")
         }
 
         if (resIriOption.nonEmpty) {
@@ -153,175 +154,37 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     "Knora and Sipi" should {
+        var loginToken: String = ""
 
-        // TODO: fix as part of https://github.com/dasch-swiss/knora-api/pull/1233
-        "create an 'incunabula:page' with binary data" ignore {
+        "log in as a Knora user" in {
+            /* Correct username and correct password */
 
-            // JSON describing the resource to be created.
-            val paramsPageWithBinaries =
+            val params =
                 s"""
                    |{
-                   |     "restype_id": "http://www.knora.org/ontology/0803/incunabula#page",
-                   |     "label": "test",
-                   |     "project_id": "http://rdfh.ch/projects/0803",
-                   |     "properties": {
-                   |         "http://www.knora.org/ontology/0803/incunabula#pagenum": [
-                   |             {
-                   |                 "richtext_value": {
-                   |                     "utf8str": "test_page"
-                   |                 }
-                   |             }
-                   |         ],
-                   |         "http://www.knora.org/ontology/0803/incunabula#origname": [
-                   |             {
-                   |                 "richtext_value": {
-                   |                     "utf8str": "test"
-                   |                 }
-                   |             }
-                   |         ],
-                   |         "http://www.knora.org/ontology/0803/incunabula#partOf": [
-                   |             {
-                   |                 "link_value": "http://rdfh.ch/0803/5e77e98d2603"
-                   |             }
-                   |         ],
-                   |         "http://www.knora.org/ontology/0803/incunabula#seqnum": [
-                   |             {
-                   |                 "int_value": 999
-                   |             }
-                   |         ]
-                   |     }
+                   |    "email": "$userEmail",
+                   |    "password": "$password"
                    |}
-                 """.stripMargin
+                """.stripMargin
 
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
+            val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK)
 
-            // A multipart/form-data request containing the image and the JSON.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, paramsPageWithBinaries)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
+            val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
+            loginToken = lr.token
 
-            // Send the multipart/form-data request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val knoraPostResponseJson = getResponseJson(knoraPostRequest)
-
-            // Get the IRI of the newly created resource.
-            val resourceIri: String = knoraPostResponseJson.fields("res_id").asInstanceOf[JsString].value
-            firstPageIri.set(resourceIri)
-
-            // Request the resource from the Knora API server.
-            val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
-            val knoraNewResourceJson = getResponseJson(knoraRequestNewResource)
-
-            // Get the URL of the image that was uploaded.
-            val iiifUrl = knoraNewResourceJson.fields.get("resinfo") match {
-                case Some(resinfo: JsObject) =>
-                    resinfo.fields.get("locdata") match {
-                        case Some(locdata: JsObject) =>
-                            locdata.fields.get("path") match {
-                                case Some(JsString(path)) => path
-                                case None => throw InvalidApiJsonException("no 'path' given")
-                                case _ => throw InvalidApiJsonException("'path' could not pe parsed correctly")
-                            }
-                        case None => throw InvalidApiJsonException("no 'locdata' given")
-
-                        case _ => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
-                    }
-
-                case None => throw InvalidApiJsonException("no 'resinfo' given")
-
-                case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
-            }
-
-            // Request the image from Sipi.
-            val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(username, password))
-            checkResponseOK(sipiGetRequest)
-        }
-
-        // TODO: fix as part of https://github.com/dasch-swiss/knora-api/pull/1233
-        "change an 'incunabula:page' with binary data" ignore {
-            // The image to be uploaded.
-            val fileToSend = new File(pathToMarbles)
-            assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
-
-            // A multipart/form-data request containing the image.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            // Send the image in a PUT request to the Knora API server.
-            val knoraPutRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(firstPageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            checkResponseOK(knoraPutRequest)
-        }
-
-        "reject an 'incunabula:page' with binary data if the file extension is incorrect" ignore { // Ignored because of issue #1531.
-            // The image to be uploaded.
-            val fileToSend = new File(pathToMarblesWithWrongExtension)
-            assert(fileToSend.exists(), s"File $pathToMarblesWithWrongExtension does not exist")
-
-            // A multipart/form-data request containing the image.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            // Send the image in a PUT request to the Knora API server.
-            val knoraPutRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(firstPageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
-
-            val exception = intercept[AssertionException] {
-                checkResponseOK(knoraPutRequest)
-            }
-
-            assert(exception.getMessage.contains("MIME type and/or file extension are inconsistent"))
+            loginToken.nonEmpty should be(true)
         }
 
         "create an 'incunabula:page' with parameters" in {
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
+            // Upload the image to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = MediaTypes.`image/tiff`))
             )
 
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiRequest = Post(baseInternalSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val sipiResponseJson = getResponseJson(sipiRequest)
-
-            // Request the thumbnail from Sipi.
-            val jsonFields = sipiResponseJson.fields
-            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
-            val sipiGetRequest = Get(previewUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)) ~> addCredentials(BasicHttpCredentials(username, password))
-            checkResponseOK(sipiGetRequest)
-
-            val fileParams = JsObject(
-                Map(
-                    "originalFilename" -> jsonFields("original_filename"),
-                    "originalMimeType" -> jsonFields("original_mimetype"),
-                    "filename" -> jsonFields("filename")
-                )
-            )
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
             val knoraParams =
                 s"""
@@ -339,14 +202,14 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |        ],
                    |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
                    |    },
-                   |    "file": ${fileParams.compactPrint},
+                   |    "file": "${uploadedFile.internalFilename}",
                    |    "label": "test page",
                    |    "project_id": "http://rdfh.ch/projects/0803"
                    |}
                 """.stripMargin
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val knoraPostResponseJson = getResponseJson(knoraPostRequest)
 
             // Get the IRI of the newly created resource.
@@ -354,49 +217,28 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             secondPageIri.set(resourceIri)
 
             // Request the resource from the Knora API server.
-            val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             checkResponseOK(knoraRequestNewResource)
         }
 
         "change an 'incunabula:page' with parameters" in {
-            // The image to be uploaded.
-            val fileToSend = new File(pathToMarbles)
-            assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
+            // Upload the image to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToMarbles, mimeType = MediaTypes.`image/tiff`))
             )
 
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiRequest = Post(baseInternalSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val sipiResponseJson = getResponseJson(sipiRequest)
-
-            // Request the thumbnail from Sipi.
-            val jsonFields = sipiResponseJson.fields
-            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
-            val sipiGetRequest = Get(previewUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)) ~> addCredentials(BasicHttpCredentials(username, password))
-            checkResponseOK(sipiGetRequest)
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
             // JSON describing the new image to Knora.
             val knoraParams = JsObject(
                 Map(
-                    "file" -> JsObject(
-                        Map(
-                            "originalFilename" -> jsonFields("original_filename"),
-                            "originalMimeType" -> jsonFields("original_mimetype"),
-                            "filename" -> jsonFields("filename")
-                        )
-                    )
+                    "file" -> JsString(s"${uploadedFile.internalFilename}")
                 )
             )
 
             // Send the JSON in a PUT request to the Knora API server.
-            val knoraPutRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(secondPageIri.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPutRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(secondPageIri.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             checkResponseOK(knoraPutRequest)
         }
 
@@ -438,12 +280,11 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             checkResponseOK(knoraPostRequest)
         }
 
-        // TODO: fix as part of https://github.com/dasch-swiss/knora-api/pull/1233
-        "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" ignore {
+        "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
             val fileToUpload = new File(pathToChlaus)
 
             // To be able to run packaged tests inside Docker, we need to copy
@@ -459,6 +300,14 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val absoluteFilePath = dest.getAbsolutePath
 
+            // Upload the image to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = absoluteFilePath, mimeType = MediaTypes.`image/tiff`))
+            )
+
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
@@ -472,7 +321,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |    </p0803-incunabula:book>
                    |    <p0803-incunabula:page id="test_page">
                    |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
-                   |        <knoraXmlImport:file path="$absoluteFilePath" mimetype="${MediaTypes.`image/jpeg`.toString}"/>
+                   |        <knoraXmlImport:file filename="${uploadedFile.internalFilename}"/>
                    |        <p0803-incunabula:origname knoraType="richtext_value">Chlaus</p0803-incunabula:origname>
                    |        <p0803-incunabula:pagenum knoraType="richtext_value">1a</p0803-incunabula:pagenum>
                    |        <p0803-incunabula:partOf>
@@ -485,7 +334,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val knoraPostResponseJson: JsObject = getResponseJson(knoraPostRequest)
 
             val createdResources = knoraPostResponseJson.fields("createdResources").asInstanceOf[JsArray].elements
@@ -495,11 +344,11 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val pageResourceIri = createdResources(1).asJsObject.fields("resourceIri").asInstanceOf[JsString].value
 
             // Request the book resource from the Knora API server.
-            val knoraRequestNewBookResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraRequestNewBookResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             checkResponseOK(knoraRequestNewBookResource)
 
             // Request the page resource from the Knora API server.
-            val knoraRequestNewPageResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraRequestNewPageResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
             val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
             val origname = locdata.fields("origname").asInstanceOf[JsString].value
@@ -507,12 +356,13 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(origname == dest.getName)
 
             // Request the file from Sipi.
-            val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             checkResponseOK(sipiGetRequest)
         }
 
-        // TODO: fix as part of https://github.com/dasch-swiss/knora-api/pull/1233
         "create a TextRepresentation of type XSLTransformation and refer to it in a mapping" ignore {
+
+            // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
 
             // create an XSL transformation
             val knoraParams = JsObject(
@@ -540,7 +390,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             val responseJson: JsObject = getResponseJson(knoraPostRequest)
 
@@ -579,13 +429,14 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // send mapping xml to route
-            val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             checkResponseOK(knoraPostRequest2)
 
         }
 
-        "create a sample BEOL letter" in {
+        "create a sample BEOL letter" ignore {
+            // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
 
             val mapping = FileUtil.readTextFile(new File(pathToBEOLLetterMapping))
 
@@ -612,15 +463,15 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // send mapping xml to route
-            val knoraPostRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
-            val _: JsValue = getResponseJson(knoraPostRequest)
+            getResponseJson(knoraPostRequest)
 
             // create a letter via bulk import
 
             val bulkXML = FileUtil.readTextFile(new File(pathToBEOLBulkXML))
 
-            val bulkRequest = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val bulkRequest = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             val bulkResponse: JsObject = getResponseJson(bulkRequest)
 
@@ -628,8 +479,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         }
 
-        // TODO: fix as part of https://github.com/dasch-swiss/knora-api/pull/1233
         "create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data" ignore {
+            // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
 
             // create an XSL transformation
             val standoffXSLTParams = JsObject(
@@ -657,7 +508,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
 
@@ -696,7 +547,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // send mapping xml to route
-            val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+            val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             getResponseJson(mappingRequest)
 
@@ -726,7 +577,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val gravsearchTemplateRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataGravsearch) ~> addCredentials(BasicHttpCredentials(username, password))
+            val gravsearchTemplateRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataGravsearch) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             val gravsearchTemplateJSON: JsObject = getResponseJson(gravsearchTemplateRequest)
 
@@ -763,7 +614,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val headerXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataHeader) ~> addCredentials(BasicHttpCredentials(username, password))
+            val headerXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataHeader) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
             val headerXSLTJson = getResponseJson(headerXSLTRequest)
 
@@ -839,8 +690,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         }
 
-        // TODO: fix as part of https://github.com/dasch-swiss/knora-api/pull/1233
         "provide a helpful error message if an XSLT file is not found" ignore {
+            // TODO: re-enable this with the preceding test, when we can upload non-image files to Sipi (PR #1206).
+
             val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
 
             val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +

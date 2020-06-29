@@ -43,7 +43,7 @@ are described below.
 The `upload.lua` script is available at Sipi's `upload` route. It processes one
 or more file uploads submitted to Sipi. It converts uploaded images to JPEG 2000
 format, and stores them in Sipi's `tmp` directory. The usage of this script is described in
-@ref:[Creating File Values](../../../03-apis/api-v2/editing-values.md#creating-file-values).
+@ref:[Upload Files to Sipi](../../../03-apis/api-v2/editing-values.md#upload-files-to-sipi).
 
 Each time `upload.lua` processes a request, it also deletes old temporary files
 from `tmp` and (recursively) from any subdirectories. The maximum allowed age of
@@ -96,7 +96,7 @@ If it encounters an error, it returns `SipiException`.
    to create or change a file value. The request includes Sipi's internal filename.
 3. During parsing of this JSON-LD request, a `StillImageFileValueContentV2`
    is constructed to represent the file value. During the construction of this
-   object, a `GetImageMetadataRequestV2` is sent to `SipiConnector`, which
+   object, a `GetFileMetadataRequestV2` is sent to `SipiConnector`, which
    uses Sipi's built-in `knora.json` route to get the rest of the file's
    metadata.
 4. A responder (`ResourcesResponderV2` or `ValuesResponderV2`) validates

@@ -19,17 +19,18 @@
 
 package org.knora.webapi.messages.v1.responder.valuemessages
 
-import java.io.File
 import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.SipiConversionRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueV2, StillImageFileValueContentV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, StringFormatter}
 import spray.json._
@@ -142,14 +143,6 @@ case class CreateFileV1(originalFilename: String,
 }
 
 /**
-  * Represents a file on disk to be added to a Knora resource in the context of a bulk import.
-  *
-  * @param file     the file.
-  * @param mimeType the file's MIME type.
-  */
-case class ReadFileV1(file: File, mimeType: String)
-
-/**
   * Represents an API request payload that asks the Knora API server to change a value of a resource property (i.e. to
   * update its version history).
   *
@@ -205,11 +198,11 @@ case class ChangeValueApiRequestV1(richtext_value: Option[CreateRichtextV1] = No
 
 /**
   * Represents an API request payload that asks the Knora API server to change the file attached to a resource
-  * (i. e. to create a new version of its file values).
+  * (i. e. to create a new version of its file value).
   *
-  * @param file the new file to be attached to the resource (GUI-case).
+  * @param file the name of a file that has been uploaded to Sipi's temporary storage.
   */
-case class ChangeFileValueApiRequestV1(file: CreateFileV1) {
+case class ChangeFileValueApiRequestV1(file: String) {
 
     def toJsValue: JsValue = ApiValueV1JsonProtocol.changeFileValueApiRequestV1Format.write(this)
 }
@@ -484,9 +477,9 @@ case class DeleteValueResponseV1(id: IRI) extends KnoraResponseV1 {
   * In case of an image, two file valueshave to be changed: thumbnail and full quality.
   *
   * @param resourceIri the resource whose files value(s) should be changed.
-  * @param file        the file to be created and added.
+  * @param file        a file that has been uploaded to Sipi's temporary storage.
   */
-case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiConversionRequestV1, apiRequestID: UUID, userProfile: UserADM) extends ValuesResponderRequestV1
+case class ChangeFileValueRequestV1(resourceIri: IRI, file: StillImageFileValueV1, apiRequestID: UUID, userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
   * Represents a response to a [[ChangeFileValueRequestV1]].
@@ -494,8 +487,8 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiConversionReques
   *
   * @param locations the updated file value(s).
   */
-case class ChangeFileValueResponseV1(locations: Vector[LocationV1]) extends KnoraResponseV1 {
-    def toJsValue: JsValue = ApiValueV1JsonProtocol.changeFileValueResponseV1Format.write(this)
+case class ChangeFileValueResponseV1(locations: Vector[LocationV1], projectADM: ProjectADM) extends KnoraResponseV1 with UpdateResultInProject {
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.ChangeFileValueResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1493,6 +1486,20 @@ case class StillImageFileValueV1(internalMimeType: String,
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
+
+    def toStillImageFileValueContentV2: StillImageFileValueContentV2 = {
+        StillImageFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = FileValueV2(
+                internalFilename = internalFilename,
+                internalMimeType = internalMimeType,
+                originalFilename = Some(originalFilename),
+                originalMimeType = Some(internalMimeType)
+            ),
+            dimX = dimX,
+            dimY = dimY
+        )
+    }
 }
 
 case class MovingImageFileValueV1(internalMimeType: String,
@@ -1613,7 +1620,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         def write(calendarV1Value: KnoraCalendarV1.Value): JsValue = JsString(calendarV1Value.toString)
     }
 
-    /**
+    /**å
       * Converts between [[KnoraPrecisionV1]] objects and [[JsValue]] objects.
       */
     implicit object KnoraPrecisionV1JsonFormat extends JsonFormat[KnoraPrecisionV1.Value] {
@@ -1643,6 +1650,16 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         def write(valueV1: ApiValueV1): JsValue = valueV1.toJsValue
     }
 
+    implicit object ChangeFileValueResponseV1Format extends JsonFormat[ChangeFileValueResponseV1] {
+        override def read(json: JsValue): ChangeFileValueResponseV1 = ???
+
+        override def write(obj: ChangeFileValueResponseV1): JsValue = {
+            JsObject(Map(
+                "locations" -> obj.locations.toJson
+            ))
+        }
+    }
+
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
@@ -1659,5 +1676,4 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat4(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat1(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)
-    implicit val changeFileValueResponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat1(ChangeFileValueResponseV1)
 }

@@ -918,7 +918,7 @@ class StringFormatterSpec extends CoreSpec() {
             val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode
             val shortname = SharedTestDataV1.imagesProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.imagesProjectInfo)
+            val result = stringFormatter.projectDataNamedGraphV1(SharedTestDataV1.imagesProjectInfo)
             result should be(expected)
 
             // check consistency of our test data

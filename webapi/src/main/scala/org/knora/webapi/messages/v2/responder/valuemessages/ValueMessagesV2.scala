@@ -30,7 +30,7 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequestV2, GetFileMetadataResponseV2}
+import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponseV2}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -2647,8 +2647,8 @@ object FileValueWithSipiMetadata {
             internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
-            tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
-            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
+            tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, internalFilename)
+            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
                 internalMimeType = fileMetadataResponse.internalMimeType,

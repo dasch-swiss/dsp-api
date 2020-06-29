@@ -19,34 +19,15 @@
 
 package org.knora.webapi.store.iiif
 
-import java.io.File
-
 import akka.actor.{Actor, ActorLogging, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, KnoraSettings, SipiException}
+import org.knora.webapi.{KnoraDispatchers, SipiException}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
-
-/**
-  * Keep track of the temporary files that was written in the route
-  * when submitting a multipart request
-  */
-object SourcePath {
-    private var sourcePath: File = new File("") // for init
-
-    def setSourcePath(path: File) = {
-        sourcePath = path
-    }
-
-    def getSourcePath() = {
-        sourcePath
-    }
-}
 
 /**
   * Constants for [[MockSipiConnector]].
@@ -69,58 +50,15 @@ class MockSipiConnector extends Actor with ActorLogging {
     implicit val system: ActorSystem = context.system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    val settings = KnoraSettings(system)
-
-
     def receive = {
-        case sipiResponderConversionFileRequest: SipiConversionFileRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionFileRequest), log)
-        case sipiResponderConversionPathRequest: SipiConversionPathRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionPathRequest), log)
-        case getFileMetadataRequestV2: GetFileMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
-        case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
-        case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
+        case getFileMetadataRequest: GetFileMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
+        case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
+        case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
         case IIIFServiceGetStatus => future2Message(sender(), FastFuture.successful(IIIFServiceStatusOK), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
-    /**
-      * Imitates the Sipi server by returning a [[SipiConversionResponseV1]] representing an image conversion request.
-      *
-      * @param conversionRequest the conversion request to be handled.
-      * @return a [[SipiConversionResponseV1]] imitating the answer from Sipi.
-      */
-    private def imageConversionResponse(conversionRequest: SipiConversionRequestV1): Future[SipiConversionResponseV1] = {
-        Future {
-            val originalFilename = conversionRequest.originalFilename
-            val originalMimeType: String = conversionRequest.originalMimeType
-
-            // we expect original mimetype to be "image/jpeg"
-            if (originalMimeType != "image/jpeg") throw BadRequestException("Wrong mimetype for jpg file")
-
-            val fileValueV1 = StillImageFileValueV1(
-                internalMimeType = "image/jp2",
-                originalFilename = originalFilename,
-                originalMimeType = Some(originalMimeType),
-                projectShortcode = conversionRequest.projectShortcode,
-                dimX = 800,
-                dimY = 800,
-                internalFilename = "full.jp2"
-            )
-
-            // Whenever Knora had to create a temporary file, store its path
-            // the calling test context can then make sure that is has actually been deleted after the test is done
-            // (on successful or failed conversion)
-            conversionRequest match {
-                case conversionPathRequest: SipiConversionPathRequestV1 =>
-                    // store path to tmp file
-                    SourcePath.setSourcePath(conversionPathRequest.source)
-                case _ => () // params request only
-            }
-
-            SipiConversionResponseV1(fileValueV1, file_type = SipiConstants.FileType.IMAGE)
-        }
-    }
-
-    private def getFileMetadataV2(getFileMetadataRequestV2: GetFileMetadataRequestV2): Try[GetFileMetadataResponseV2] =
+    private def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Try[GetFileMetadataResponseV2] =
         Success {
             GetFileMetadataResponseV2(
                 originalFilename = Some("test2.tiff"),
@@ -132,7 +70,7 @@ class MockSipiConnector extends Actor with ActorLogging {
             )
         }
 
-    private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] = {
+    private def moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest): Try[SuccessResponseV2] = {
         if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
             Failure(SipiException("Sipi failed to move file to permanent storage"))
         } else {
@@ -140,7 +78,7 @@ class MockSipiConnector extends Actor with ActorLogging {
         }
     }
 
-    private def deleteTemporaryFileV2(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2): Try[SuccessResponseV2] = {
+    private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] = {
         if (deleteTemporaryFileRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
             Failure(SipiException("Sipi failed to delete temporary file"))
         } else {
