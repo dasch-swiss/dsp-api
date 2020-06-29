@@ -1348,7 +1348,11 @@
 				}
 				else {
 					data = {
-						file: sipi_response["internalFilename"]
+						file: {
+							originalFilename: sipi_response["original_filename"],
+							originalMimeType: sipi_response["original_mimetype"],
+							filename: sipi_response["filename"]
+						}
 					};
 					SALSAH.ApiPut('filevalue/' + encodeURIComponent(res_id), data, function(data) {
 						if (data.status == ApiErrors.OK) {

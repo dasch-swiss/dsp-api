@@ -29,6 +29,7 @@ import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
+import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -1607,19 +1608,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "add a new image file value to an incunabula:page" in {
 
-            val fileValue = StillImageFileValueV1(
-                internalMimeType = "image/jp2",
-                internalFilename = "gaga.jpg",
-                originalFilename = "test.jpg",
-                originalMimeType = Some("image/jpg"),
+            val fileRequest = SipiConversionFileRequestV1(
+                originalFilename = "Chlaus.jpg",
+                originalMimeType = "image/jpeg",
                 projectShortcode = "0803",
-                dimX = 1000,
-                dimY = 1000
+                filename = "./test_server/images/Chlaus.jpg",
+                userProfile = incunabulaUser.asUserProfileV1
             )
 
             val fileChangeRequest = ChangeFileValueRequestV1(
                 resourceIri = "http://rdfh.ch/0803/8a0b1e75",
-                file = fileValue,
+                file = fileRequest,
                 apiRequestID = UUID.randomUUID,
                 userProfile = incunabulaUser)
 

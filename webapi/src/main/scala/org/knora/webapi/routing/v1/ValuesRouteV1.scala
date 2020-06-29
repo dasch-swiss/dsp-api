@@ -19,6 +19,7 @@
 
 package org.knora.webapi.routing.v1
 
+import java.io.File
 import java.time.Instant
 import java.util.UUID
 
@@ -26,22 +27,24 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.FileInfo
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import akka.stream.scaladsl.FileIO
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponseV2}
+import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceInfoGetRequestV1, ResourceInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.DateUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
+import org.knora.webapi.util.{DateUtilV1, FileUtil}
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 /**
- * Provides an Akka routing function for API routes that deal with values.
+ * Provides a spray-routing function for API routes that deal with values.
  */
 class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
@@ -320,28 +323,39 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         }
 
-        def makeChangeFileValueRequest(resIriStr: IRI, projectShortcode: String, apiRequest: ChangeFileValueApiRequestV1, userADM: UserADM): Future[ChangeFileValueRequestV1] = {
+        def makeChangeFileValueRequest(resIriStr: IRI, projectShortcode: String, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiConversionPathRequestV1], userADM: UserADM): ChangeFileValueRequestV1 = {
+            if (apiRequest.nonEmpty && multipartConversionRequest.nonEmpty) throw BadRequestException("File information is present twice, only one is allowed.")
+
             val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
-            val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, apiRequest.file)
 
-            for {
-                fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponseV2]
-
-                // TODO: check that the file stored is an image.
-            } yield ChangeFileValueRequestV1(
-                resourceIri = resourceIri,
-                file = StillImageFileValueV1(
-                    internalFilename = apiRequest.file,
-                    internalMimeType = fileMetadataResponse.internalMimeType,
-                    originalFilename = fileMetadataResponse.originalFilename.getOrElse(throw SipiException(s"Sipi did not return the original filename of the image")),
-                    originalMimeType = fileMetadataResponse.originalMimeType,
+            if (apiRequest.nonEmpty) {
+                // GUI-case
+                val fileRequest = SipiConversionFileRequestV1(
+                    originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
+                    originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
                     projectShortcode = projectShortcode,
-                    dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
-                    dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
-                ),
-                apiRequestID = UUID.randomUUID,
-                userProfile = userADM
-            )
+                    filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
+                    userProfile = userADM.asUserProfileV1
+                )
+
+                ChangeFileValueRequestV1(
+                    resourceIri = resourceIri,
+                    file = fileRequest,
+                    apiRequestID = UUID.randomUUID,
+                    userProfile = userADM)
+            }
+            else if (multipartConversionRequest.nonEmpty) {
+                // non GUI-case
+                ChangeFileValueRequestV1(
+                    resourceIri = resourceIri,
+                    file = multipartConversionRequest.get,
+                    apiRequestID = UUID.randomUUID,
+                    userProfile = userADM)
+            } else {
+                // no file information was provided
+                throw BadRequestException("A file value change was requested but no file information was provided")
+            }
+
         }
 
         // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
@@ -470,22 +484,97 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest =>
                     requestContext =>
+
                         val requestMessage = for {
                             userADM <- getUserADM(requestContext)
                             resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
                             resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
                             projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
 
-                            request <- makeChangeFileValueRequest(
-                                resIriStr = resIriStr,
-                                projectShortcode = projectShortcode,
-                                apiRequest = apiRequest,
-                                userADM = userADM
-                            )
-                        } yield request
+                        } yield makeChangeFileValueRequest(
+                            resIriStr = resIriStr,
+                            projectShortcode = projectShortcode,
+                            apiRequest = Some(apiRequest),
+                            multipartConversionRequest = None,
+                            userADM = userADM
+                        )
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~ put {
+                entity(as[Multipart.FormData]) { formdata =>
+                    requestContext =>
+
+                        log.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
+
+
+                        val FILE_PART = "file"
+
+                        type Name = String
+
+                        val receivedFile = Promise[File]
+
+                        // this file will be deleted by Knora once it is not needed anymore
+                        // TODO: add a script that cleans files in the tmp location that have a certain age
+                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
+                        // TODO: how to check if the user has sent multiple files?
+
+                        /* get the file data and save file to temporary location */
+                        // collect all parts of the multipart as it arrives into a map
+                        val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
+                            b: FormData.BodyPart =>
+                                if (b.name == FILE_PART) {
+                                    log.debug(s"inside allPartsFuture - processing $FILE_PART")
+                                    val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                                    val tmpFile = FileUtil.createTempFile(settings)
+                                    val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                                    written.map { written =>
+                                        log.debug(s"written result: ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        receivedFile.success(tmpFile)
+                                        (b.name, FileInfo(b.name, filename, b.entity.contentType))
+                                    }
+                                } else {
+                                    throw BadRequestException(s"Unexpected body part '${b.name}' in multipart request")
+                                }
+                        }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
+
+                        val requestMessageFuture = for {
+                            userADM <- getUserADM(requestContext)
+                            allParts <- allPartsFuture
+                            sourcePath <- receivedFile.future
+                            // get the file info containing the original filename and content type.
+                            fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
+                            originalFilename = fileInfo.fileName
+                            originalMimeType = fileInfo.contentType.toString
+
+                            resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
+                            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
+                            projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
+
+                            sipiConvertPathRequest = SipiConversionPathRequestV1(
+                                originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
+                                originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
+                                projectShortcode = projectShortcode,
+                                source = sourcePath,
+                                userProfile = userADM.asUserProfileV1
+                            )
+
+                        } yield makeChangeFileValueRequest(
+                            resIriStr = resIriStr,
+                            projectShortcode = projectShortcode,
+                            apiRequest = None,
+                            multipartConversionRequest = Some(sipiConvertPathRequest),
+                            userADM = userADM
+                        )
+
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,

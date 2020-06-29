@@ -404,14 +404,31 @@ export module basicMessageComponents {
     }
 
     /**
-     * Describes a file value.
+     * Describes a file value (for GUI-case)
      */
     export interface createOrChangeFileValueRequest {
 
         /**
-         * The internal filename returned by Sipi.
+         * Describes a file value (for GUI-case)
          */
-        file: string;
+        file: {
+
+            /**
+             * The file's original name
+             */
+            originalFilename: string;
+
+            /**
+             * The original mime type of the file
+             */
+            originalMimeType: string;
+
+            /**
+             * The file's temporary name
+             */
+            filename: string;
+
+        }
     }
 
     /**

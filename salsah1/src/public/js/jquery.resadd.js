@@ -1051,7 +1051,11 @@
 											ele = form.find('[name="' + propname + '"]');
 											var sipi_response = ele.location('value');
 
-											file = sipi_response["internalFilename"];
+											file = {
+												originalFilename: sipi_response["original_filename"],
+												originalMimeType: sipi_response["original_mimetype"],
+												filename: sipi_response["filename"]
+											};
 
 
 											break;

@@ -91,7 +91,7 @@
 
 							$.ajax({
 								type:'POST',
-								url: SIPI_URL + "/upload?token=" + window.sessionStorage.getItem('token'),
+								url: SIPI_URL + "/make_thumbnail",
 								data: fd,
 								cache: false,
 								contentType: false,
@@ -104,11 +104,8 @@
 									$this.find('.progressNumber').remove();
 									$this.find('.uploadButton').remove();
 
-									var uploadedFile = data["uploadedFiles"][0];
-									var preview_path = uploadedFile["temporaryBaseIIIFUrl"] + "/" + uploadedFile["internalFilename"] + "/full/!128,128/0/default.jpg";
-
 									$this.append($('<div>').addClass('thumbNail')
-										.append($('<img>', {src: preview_path, style: "image-orientation: from-image"}))
+										.append($('<img>', {src: data.preview_path, style: "image-orientation: from-image"}))
 										.append($('<br>'))
 										.append(data.original_filename)
 									);
@@ -116,7 +113,7 @@
 									//$this.append($('<input>').attr({'type': 'hidden'}).addClass('fileData').val(event.target.responseText));
 
 
-									localdata.sipi_response = uploadedFile;
+									localdata.sipi_response = data;
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
 									if (errorThrown !== undefined && jqXHR !== undefined && jqXHR.responseJSON !== undefined) {

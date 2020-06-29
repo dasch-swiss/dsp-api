@@ -37,7 +37,8 @@ function get_session_id(cookie)
     -- space is also treated as a separator
     -- returns nil if it cannot find the session id (pattern does not match)
     server.log("extracted cookie: " .. cookie, server.loglevel.LOG_DEBUG)
-    local session_id = string.match(cookie, "KnoraAuthentication=([^%s;]+)")
+    print("extracted cookie: " .. cookie)
+    session_id = string.match(cookie, "KnoraAuthentication=([^%s;]+)")
 
     return session_id
 

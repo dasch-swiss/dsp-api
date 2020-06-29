@@ -73,7 +73,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String = {
-        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/!128,128/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/max/0/default.jpg"
     }
 
     /**
@@ -107,7 +107,6 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         "application/octet-stream" -> "BINARY-UNKNOWN",
         "image/jpeg" -> "JPEG",
         "image/jp2" -> "JPEG2000",
-        "image/jpx" -> "JPEG2000",
         "application/pdf" -> "PDF",
         "application/postscript" -> "POSTSCRIPT",
         "application/vnd.ms-powerpoint" -> "PPT",

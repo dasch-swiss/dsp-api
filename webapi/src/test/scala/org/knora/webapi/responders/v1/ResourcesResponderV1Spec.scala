@@ -28,6 +28,7 @@ import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{ObjectAccessPermissionADM, ObjectAccessPermissionsForResourceGetADM, PermissionADM}
+import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -1210,7 +1211,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val origname = TextValueSimpleV1("Blatt")
             val seqnum = IntegerValueV1(1)
 
-            val fileValue = StillImageFileValueV1(
+            val fileValueFull = StillImageFileValueV1(
                 internalMimeType = "image/jp2",
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
@@ -1236,7 +1237,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(LinkV1(book)),
                 "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(origname),
                 "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Vector(seqnum),
-                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValue)
+                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValueFull)
             )
 
             responderManager ! ResourceCreateRequestV1(
@@ -1244,7 +1245,13 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Page",
                 projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
-                file = Some(fileValue),
+                file = Some(SipiConversionFileRequestV1(
+                    originalFilename = "test.jpg",
+                    originalMimeType = "image/jpeg",
+                    filename = "./test_server/images/Chlaus.jpg",
+                    projectShortcode = "0803",
+                    userProfile = SharedTestDataADM.incunabulaProjectAdminUser.asUserProfileV1
+                )),
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )

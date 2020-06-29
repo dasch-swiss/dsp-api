@@ -2376,7 +2376,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
      * @param projectInfo the project's [[ProjectInfoV1]].
      * @return the IRI of the project's data named graph.
      */
-    def projectDataNamedGraphV1(projectInfo: ProjectInfoV1): IRI = {
+    def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
         OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
     }
 
@@ -2747,17 +2747,6 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
             case None =>
                 arkUrlWithoutTimestamp
         }
-    }
-
-    /**
-     * Constructs a URL for accessing a file that has been uploaded to Sipi's temporary storage.
-     *
-     * @param settings the application settings.
-     * @param filename the filename.
-     * @return a URL for accessing the file.
-     */
-    def makeSipiTempFileUrl(settings: KnoraSettingsImpl, filename: String): String = {
-        s"${settings.internalSipiBaseUrl}/tmp/$filename"
     }
 
     /**

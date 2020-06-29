@@ -169,6 +169,21 @@ fileserver = {
 routes = {
     {
         method = 'POST',
+        route = '/make_thumbnail',
+        script = 'make_thumbnail.lua'
+    },
+    {
+        method = 'POST',
+        route = '/convert_from_path',
+        script = 'convert_from_path.lua'
+    },
+    {
+        method = 'POST',
+        route = '/convert_from_file',
+        script = 'convert_from_file.lua'
+    },
+    {
+        method = 'POST',
         route = '/upload',
         script = 'upload.lua'
     },
@@ -202,3 +217,4 @@ routes = {
     }
 
 }
+

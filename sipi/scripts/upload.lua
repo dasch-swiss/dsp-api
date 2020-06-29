@@ -39,7 +39,7 @@ end
 local token = get_knora_token()
 
 if token == nil then
-    return
+  return
 end
 
 -- Check that the temp folder is created

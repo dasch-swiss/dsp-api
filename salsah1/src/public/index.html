@@ -212,9 +212,7 @@
 					// When retrieving a file from Sipi (e.g. an IIIF URL), Sipi can send the session id to Knora with the request,
 					// identifying the user that is making the request to Knora.
 					SALSAH.userprofile = data.userProfile;
-
 					window.sessionStorage.setItem('userprofile', JSON.stringify(SALSAH.userprofile));
-					window.sessionStorage.setItem('token', data.sid);
 
 					$('#dologin').simpledialog('loginbox', 'close');
 
@@ -256,8 +254,6 @@
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
 					window.sessionStorage.removeItem('userprofile');
-					window.sessionStorage.removeItem('token');
-
 					SALSAH.userprofile = null;
 
 					$('#dologut').simpledialog('logoutbox', 'close');
