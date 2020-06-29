@@ -610,7 +610,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(savedDocument.height.contains(testPdfHeight))
         }
 
-        "create a resource with a CSV file" ignore { // ignored because of https://github.com/dasch-swiss/sipi/issues/309
+        "create a resource with a CSV file" in {
             // Upload the file to Sipi.
             val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
                 loginToken = loginToken,
@@ -624,21 +624,20 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val jsonLdEntity =
                 s"""{
-                   |  "@type" : "anything:ThingDocument",
-                   |  "knora-api:hasDocumentFileValue" : {
-                   |    "@type" : "knora-api:DocumentFileValue",
+                   |  "@type" : "knora-api:TextRepresentation",
+                   |  "knora-api:hasTextFileValue" : {
+                   |    "@type" : "knora-api:TextFileValue",
                    |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "knora-api:attachedToProject" : {
                    |    "@id" : "http://rdfh.ch/projects/0001"
                    |  },
-                   |  "rdfs:label" : "test thing",
+                   |  "rdfs:label" : "text file",
                    |  "@context" : {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
                    |  }
                    |}""".stripMargin
 

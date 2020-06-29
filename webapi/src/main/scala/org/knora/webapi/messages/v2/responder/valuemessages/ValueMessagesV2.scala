@@ -1046,6 +1046,9 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                 case OntologyConstants.KnoraApiV2Complex.DocumentFileValue =>
                     DocumentFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
+                case OntologyConstants.KnoraApiV2Complex.TextFileValue =>
+                    TextFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
             }
 
