@@ -48,7 +48,7 @@ publish-knora-jena-fuseki-image: build-knora-jena-fuseki-image ## publish knora-
 .PHONY: build-knora-sipi-image
 build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
 	@mkdir -p .docker
-	@sed -e "s/@SIPI_VERSION@/$(SIPI_VERSION)/" docker/knora-sipi.template.dockerfile > .docker/knora-sipi.dockerfile
+	@sed -e "s|@SIPI_IMAGE@|$(SIPI_IMAGE)|g" docker/knora-sipi.template.dockerfile > .docker/knora-sipi.dockerfile
 	docker build -t $(KNORA_SIPI_IMAGE) -t $(REPO_PREFIX)/$(KNORA_SIPI_REPO):latest -f .docker/knora-sipi.dockerfile  knora-sipi/target/universal
 
 .PHONY: publish-knora-sipi-image

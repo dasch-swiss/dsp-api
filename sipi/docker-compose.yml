@@ -4,7 +4,7 @@ version: '3'
 services:
   # sipi using default (production-like) configuration with additional routes for testing
   sipi:
-    image: dhlabbasel/sipi:${SIPI_VERSION}
+    image: ${SIPI_IMAGE}
     container_name: sipi
     ports:
       - "1024:1024"
@@ -26,7 +26,7 @@ services:
 
   # sipi using configuration which disables authentication
   sipi-no-auth:
-    image: dhlabbasel/sipi:${SIPI_VERSION}
+    image: ${SIPI_IMAGE}
     container_name: sipi-no-auth
     ports:
       - "1024:1024"

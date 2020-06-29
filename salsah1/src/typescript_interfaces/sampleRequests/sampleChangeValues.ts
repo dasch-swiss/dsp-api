@@ -31,6 +31,6 @@ let changeFileValueRequest: changeValueFormats.changeFileValueRequest = {
     }
 };
 
-let changeFileValueResponse: changeValueFormats.changeFileValueResponse = {"locations":[{"duration":0,"nx":128,"path":"http://localhost:1024/knora/5XTEI1z10A2-D8ojQHrMiUz.jpg/full/full/0/default.jpg","ny":72,"fps":0,"format_name":"JPEG","origname":"2016-06-26+12.26.45.jpg","protocol":"file"},{"duration":0,"nx":3264,"path":"http://localhost:1024/knora/5XTEI1z10A2-D8ojQHrMiUz.jpx/full/3264,1836/0/default.jpg","ny":1836,"fps":0,"format_name":"JPEG2000","origname":"2016-06-26+12.26.45.jpg","protocol":"file"}],"status":0};
+let changeFileValueResponse: changeValueFormats.changeFileValueResponse = {"locations":[{"duration":0,"nx":128,"path":"http://localhost:1024/knora/5XTEI1z10A2-D8ojQHrMiUz.jpg/full/max/0/default.jpg","ny":72,"fps":0,"format_name":"JPEG","origname":"2016-06-26+12.26.45.jpg","protocol":"file"},{"duration":0,"nx":3264,"path":"http://localhost:1024/knora/5XTEI1z10A2-D8ojQHrMiUz.jpx/full/3264,1836/0/default.jpg","ny":1836,"fps":0,"format_name":"JPEG2000","origname":"2016-06-26+12.26.45.jpg","protocol":"file"}],"status":0};
 
 let changeValueComment: changeValueFormats.changeValueCommentRequest = {"project_id":"http://rdfh.ch/projects/77275339","comment":"dumm"};

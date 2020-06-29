@@ -73,7 +73,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String = {
-        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/full/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/max/0/default.jpg"
     }
 
     /**
