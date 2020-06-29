@@ -1,14 +1,14 @@
 """Primary location for setting Knora-API project wide versions"""
 
-SCALA_VERSION = "2.12.8"
-AKKA_VERSION = "2.5.26"
-AKKA_HTTP_VERSION = "10.1.7"
-JENA_VERSION = "3.4.0"
+SCALA_VERSION = "2.12.11"
+AKKA_VERSION = "2.6.5"
+AKKA_HTTP_VERSION = "10.1.12"
+JENA_VERSION = "3.14.0"
 METRICS_VERSION = "4.0.1"
 
 # Sipi
-SIPI_REPOSITORY = "dhlabbasel/sipi"
-SIPI_VERSION = "2.0.1"
+SIPI_REPOSITORY = "daschswiss/sipi"
+SIPI_VERSION = "3.0.0-rc.3"
 SIPI_TAG = "v" + SIPI_VERSION
 SIPI_IMAGE = SIPI_REPOSITORY + ":" + SIPI_VERSION
 

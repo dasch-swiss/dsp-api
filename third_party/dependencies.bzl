@@ -17,7 +17,7 @@ def dependencies():
         artifacts = [
             # akka
             "com.typesafe.akka:akka-actor_2.12:%s" % (AKKA_VERSION),
-            "com.typesafe.akka:akka-agent_2.12:%s" % (AKKA_VERSION),
+            # "com.typesafe.akka:akka-agent_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-slf4j_2.12:%s" % (AKKA_VERSION),
 
@@ -29,7 +29,7 @@ def dependencies():
             "com.typesafe:config:1.3.3",
 
             # CORS support
-            "ch.megard:akka-http-cors_2.12:0.3.4",
+            "ch.megard:akka-http-cors_2.12:1.0.0",
 
             # Jena
             "org.apache.jena:apache-jena-libs:%s" % (JENA_VERSION),

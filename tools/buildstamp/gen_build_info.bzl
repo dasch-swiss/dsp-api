@@ -11,22 +11,22 @@ def _gen_build_info_impl(ctx):
         template = ctx.file._template,
         output = ctx.outputs.source_file,
         substitutions = {
+            "{SCALA_VERSION}": ctx.attr.scala_version,
             "{AKKA_VERSION}": ctx.attr.akka_version,
             "{AKKA_HTTP_VERSION}": ctx.attr.akka_http_version,
             "{SIPI_VERSION}": ctx.attr.sipi_version,
-            "{GDB_SE_VERSION}": ctx.attr.gdb_se_version,
-            "{GDB_FREE_VERSION}": ctx.attr.gdb_free_version,
+            "{FUSEKI_VERSION}": ctx.attr.fuseki_version,
         },
     )
 
 gen_build_info = rule(
     implementation = _gen_build_info_impl,
     attrs = {
+        "scala_version": attr.string(mandatory = True),
         "akka_version": attr.string(mandatory = True),
         "akka_http_version": attr.string(mandatory = True),
         "sipi_version": attr.string(mandatory = True),
-        "gdb_se_version": attr.string(mandatory = True),
-        "gdb_free_version": attr.string(mandatory = True),
+        "fuseki_version": attr.string(mandatory = True),
         "_template": attr.label(
             default = Label(_TEMPLATE),
             allow_single_file = True,

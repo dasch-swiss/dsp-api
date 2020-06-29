@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2020 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -28,21 +28,17 @@ case object BuildInfo {
 
     val version: String = "{BUILD_SCM_TAG}"
 
-    val scalaVersion: String = "2.12.8"
+    val scalaVersion: String = "{SCALA_VERSION}"
 
-    val sbtVersion: String = "1.2.8"
-
-    val akkaHttp: String = "{AKKA_HTTP_VERSION}"
+    val akkaHttpVersion: String = "{AKKA_HTTP_VERSION}"
 
     val sipiVersion: String = "{SIPI_VERSION}"
 
-    val gdbSE = "{GDB_SE_VERSION}"
-
-    val gdbFree = "{GDB_FREE_VERSION}"
+    val jenaFusekiVersion = "{FUSEKI_VERSION}"
 
     override val toString: String = {
-        "name: %s, version: %s, scalaVersion: %s, sbtVersion: %s, akkaHttp: %s, sipiVersion: %s, gdbSE: %s, gdbFree: %s".format(
-            name, version, scalaVersion, sbtVersion, akkaHttp, sipiVersion, gdbSE, gdbFree
+        "name: %s, version: %s, scalaVersion: %s, akkaHttpVersion: %s, sipiVersion: %s, jenaFusekiVersion: %s".format(
+            name, version, scalaVersion, akkaHttpVersion, sipiVersion, jenaFusekiVersion
         )
     }
 }

@@ -48,17 +48,6 @@ bazel-*
 *.bak
 .sbtrc
 
-/knora-jena-fuseki
-/knora-sipi
-/knora-assets
-/knora-upgrade
-
 **/venv
 **/__pycache__
-knora-assets
-knora-graphdb-free
-knora-graphdb-se
-knora-sipi
-knora-upgrade
-triplestores/fuseki/system
 dump.rdb
