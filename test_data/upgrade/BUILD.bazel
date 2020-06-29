@@ -6,6 +6,7 @@ filegroup(
         "pr1307.trig",
         "pr1322.trig",
         "pr1367.trig",
-        "pr1372.trig"
+        "pr1372.trig",
+        "pr1615.trig",
     ],
 )

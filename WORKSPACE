@@ -182,22 +182,13 @@ container_pull(
     digest = "sha256:4b4266da659f30f27722d52e55066937de3ef8828f2a86fafcc75b72cc979b28",
 )
 
-load("//third_party:versions.bzl", "GDB_SE_REPOSITORY", "GDB_SE_TAG")
+load("//third_party:versions.bzl", "FUSEKI_REPOSITORY", "FUSEKI_TAG")
 container_pull(
-    name = "graphdbse",
+    name = "jenafuseki",
     registry = "docker.io",
-    repository = GDB_SE_REPOSITORY,
-    tag = GDB_SE_TAG,
-    digest = "sha256:a8a5d5dce1de8855ffa2a327b98e0b1ea59b81683d0d02ec8dbbc90838691c65",
-)
-
-load("//third_party:versions.bzl", "GDB_FREE_REPOSITORY", "GDB_FREE_TAG")
-container_pull(
-    name = "graphdbfree",
-    registry = "docker.io",
-    repository = GDB_FREE_REPOSITORY,
-    tag = GDB_FREE_TAG,
-    digest = "sha256:9ee53dbedea3b7f365702c198da3e64c6d0a460397152fd9aee0ed0ac624067d",
+    repository = FUSEKI_REPOSITORY,
+    tag = FUSEKI_TAG,
+    # digest = "sha256:a8a5d5dce1de8855ffa2a327b98e0b1ea59b81683d0d02ec8dbbc90838691c65",
 )
 
 #

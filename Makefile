@@ -241,14 +241,14 @@ test-webapi-unit: stack-without-api ## runs the webapi unit tests.
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: unit-tests-with-coverage
-unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+unit-tests-with-coverage: stack-without-api ## runs the dsp-api unit tests.
 	@echo $@  # print target name
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	@bazel test //webapi:unit_tests
 
 .PHONY: e2e-tests
-e2e-tests: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
+e2e-tests: stack-without-api init-db-test-unit ## runs the dsp-api e2e tests.
 	@docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -304,31 +304,20 @@ test-salsah1: stack-up ## runs salsah1 headless browser tests
 	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
 	@bazel test //salsah1/...
 
-.PHONY: test-upgrade-unit
-test-upgrade-unit: stack-down ## runs upgrade unit tests
-	@echo $@  # print target name
-	@bazel test //upgrade/...
-
 .PHONY: test-upgrade-integration
-test-upgrade-integration: stack-db-only clean-local-tmp ## runs upgrade integration test
-	@sleep 5
+test-upgrade-integration: stack-down-delete-volumes stack-db-only ## runs upgrade integration test
 	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
 	# unzip test data
 	@mkdir -p $(PWD)/.tmp/test_data/v7.0.0/
 	@unzip $(PWD)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(PWD)/.tmp/test_data/v7.0.0/
+	@rm -rf /tmp/knora-test-data/v7.0.0/
 	# empty repository
-	@$(PWD)/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030
 	# load v7.0.0 data
-	@$(PWD)/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $(PWD)/test_data/v7.0.0/v7.0.0-knora-test.trig
-	# dump repository data
-	@mkdir -p $(PWD)/.tmp/upgrade/out
-	@$(PWD)/upgrade/graphdb-se/dump-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $(PWD)/.tmp/upgrade/out/dump.trig
-	# run upgrade from inside docker
-	@docker run --rm --network=knora-net -v $(PWD)/.tmp/upgrade/out:/upgrade/out bazel/docker/knora-upgrade:knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
-	# empty repository
-	@$(PWD)/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-	# load upgraded data
-	@$(PWD)/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 ./.tmp/upgrade/out/dump-upgraded.trig
+	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030 $(PWD)/.tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	# call target which restarts the API and emits error if API does not start after a certain time
+	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
 .PHONY: test
 test:  ## runs all test targets.

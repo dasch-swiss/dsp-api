@@ -10,7 +10,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test_data",
+        "//test_data/upgrade",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -32,7 +32,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test_data",
+        "//test_data/upgrade",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -54,7 +54,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test_data",
+        "//test_data/upgrade",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -76,7 +76,29 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test_data",
+        "//test_data/upgrade",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//upgrade:main_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+    ],
+)
+
+scala_test(
+    name = "UpgradePluginPR1615Spec",
+    size = "small",
+    srcs = [
+        "UpgradePluginPR1615Spec.scala",
+        "UpgradePluginSpec.scala"
+    ],
+    data = [
+        "//test_data/upgrade",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
