@@ -632,6 +632,19 @@ object SharedTestDataADM {
            |    "systemAdmin": false
            |}""".stripMargin
 
+    val createUserWithCustomIriRequest: String =
+        s"""{
+           |    "id": "http://rdfh.ch/users/donaldDock",
+           |    "username": "donald.duck",
+           |    "email": "donald.duck@example.org",
+           |    "givenName": "Donald",
+           |    "familyName": "Duck",
+           |    "password": "test",
+           |    "status": true,
+           |    "lang": "en",
+           |    "systemAdmin": false
+           |}""".stripMargin
+
     val updateUserRequest: String =
         s"""{
            |    "username": "donald.big.duck",

@@ -242,6 +242,16 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 // log.debug(s"iri: ${donaldIri.get}")
             }
 
+            "create a user with a custom Iri " in {
+
+                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createUserWithCustomIriRequest))
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+            }
+
             "authenticate the newly created user using HttpBasicAuth" in {
 
                 val request = Get(baseApiUrl + s"/v2/authentication")  ~> addCredentials(BasicHttpCredentials("donald.duck@example.org", "test"))

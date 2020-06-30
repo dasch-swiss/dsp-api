@@ -40,6 +40,7 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
+  * @param id          the optional IRI of the user to be created (unique).
   * @param username    the username of the user to be created (unique).
   * @param email       the email of the user to be created (unique).
   * @param givenName   the given name of the user to be created.
@@ -49,7 +50,8 @@ import spray.json._
   * @param lang        the default language of the user to be created.
   * @param systemAdmin the system admin membership.
   */
-case class CreateUserApiRequestADM(username: String,
+case class CreateUserApiRequestADM(id: Option[IRI] = None,
+                                   username: String,
                                    email: String,
                                    givenName: String,
                                    familyName: String,
@@ -57,7 +59,7 @@ case class CreateUserApiRequestADM(username: String,
                                    status: Boolean,
                                    lang: String,
                                    systemAdmin: Boolean) {
-
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
 
     // check for required information
@@ -66,6 +68,9 @@ case class CreateUserApiRequestADM(username: String,
     if (password.isEmpty) throw BadRequestException("Password cannot be empty")
     if (givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
     if (familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
+
+    //check the custom Iri
+    stringFormatter.validateOptionalUserIri(id, throw BadRequestException(s"Invalid user IRI"))
 }
 
 /**
@@ -933,7 +938,7 @@ case class UserUpdatePayloadADM(username: Option[String] = None,
 object UsersADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol with GroupsADMJsonProtocol with PermissionsADMJsonProtocol {
 
     implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
-    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat8(CreateUserApiRequestADM)
+    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat9(CreateUserApiRequestADM)
     implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "requesterPassword", "newPassword", "status", "systemAdmin")
     implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
     implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
