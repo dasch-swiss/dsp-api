@@ -638,7 +638,7 @@ object SharedTestDataADM {
            |    "username": "userWithCustomIri",
            |    "email": "userWithCustomIri@example.org",
            |    "givenName": "a user",
-           |    "familyName": "with custom Iri",
+           |    "familyName": "with a custom Iri",
            |    "password": "test",
            |    "status": true,
            |    "lang": "en",
