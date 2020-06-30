@@ -247,7 +247,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createUserWithCustomIriRequest))
                 val response: HttpResponse = singleAwaitingRequest(request)
 
-                log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
             }

@@ -634,11 +634,11 @@ object SharedTestDataADM {
 
     val createUserWithCustomIriRequest: String =
         s"""{
-           |    "id": "http://rdfh.ch/users/donaldDock",
-           |    "username": "donald.duck",
-           |    "email": "donald.duck@example.org",
-           |    "givenName": "Donald",
-           |    "familyName": "Duck",
+           |    "id": "http://rdfh.ch/users/userWithCustomIri",
+           |    "username": "userWithCustomIri",
+           |    "email": "userWithCustomIri@example.org",
+           |    "givenName": "a user",
+           |    "familyName": "with custom Iri",
            |    "password": "test",
            |    "status": true,
            |    "lang": "en",
