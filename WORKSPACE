@@ -3,9 +3,18 @@ workspace(name = "io_dasch_knora_api")
 # load http_archive method
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
+# bazel-skylib 1.0.2 released 2019.10.09 (https://github.com/bazelbuild/bazel-skylib/releases/tag/1.0.2)
+skylib_version = "1.0.2"
+http_archive(
+    name = "bazel_skylib",
+    type = "tar.gz",
+    url = "https://github.com/bazelbuild/bazel-skylib/releases/download/{}/bazel-skylib-{}.tar.gz".format (skylib_version, skylib_version),
+    sha256 = "97e70364e9249702246c0e9444bccdc4b847bed1eb03c5a3ece4f83dfe6abc44",
+)
+
 # download rules_scala repository
-rules_scala_version="0f89c210ade8f4320017daf718a61de3c1ac4773" # update this as needed
-rules_scala_version_sha256="37eb013ea3e6a940da70df43fe2dd6f423d1ac0849042aa586f9ac157321018d"
+rules_scala_version="056d5921d2c595e7ce2d54a627e8bc68ece7e28d" # 16.06.2020
+rules_scala_version_sha256="a39010b90ce921fd627c7158d43c16d8bd540e85d339ce9ac975e37213a843d4"
 http_archive(
     name = "io_bazel_rules_scala",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
@@ -22,35 +31,30 @@ register_toolchains("//toolchains:knora_api_scala_toolchain")
 # set the default scala version
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
 scala_repositories((
-    "2.12.8",
+    "2.12.11",
     {
-       "scala_compiler": "f34e9119f45abd41e85b9e121ba19dd9288b3b4af7f7047e86dc70236708d170",
-       "scala_library": "321fb55685635c931eba4bc0d7668349da3f2c09aee2de93a70566066ff25c28",
-       "scala_reflect": "4d6405395c4599ce04cea08ba082339e3e42135de9aae2923c9f5367e957315a"
+       "scala_compiler": "e901937dbeeae1715b231a7cfcd547a10d5bbf0dfb9d52d2886eae18b4d62ab6",
+       "scala_library": "dbfe77a3fc7a16c0c7cb6cb2b91fecec5438f2803112a744cb1b187926a138be",
+       "scala_reflect": "5f9e156aeba45ef2c4d24b303405db259082739015190b3b334811843bd90d6a"
     }
 ))
 
 #
-# Download the protobuf repository (needed by go)
+# Download the protobuf repository (needed by go and rules_scala_annex)
 #
-protobuf_version="09745575a923640154bcf307fba8aedff47f240a"
-protobuf_version_sha256="416212e14481cff8fd4849b1c1c1200a7f34808a54377e22d7447efdf54ad758"
-
+protobuf_tag = "3.12.3"
+protobuf_sha256 = "e5265d552e12c1f39c72842fa91d84941726026fa056d914ea6a25cd58d7bbf8"
 http_archive(
     name = "com_google_protobuf",
-    url = "https://github.com/protocolbuffers/protobuf/archive/%s.tar.gz" % protobuf_version,
-    strip_prefix = "protobuf-%s" % protobuf_version,
-    sha256 = protobuf_version_sha256,
+    strip_prefix = "protobuf-{}".format(protobuf_tag),
+    type = "zip",
+    url = "https://github.com/protocolbuffers/protobuf/archive/v{}.zip".format(protobuf_tag),
+    sha256 = protobuf_sha256,
 )
 
-# bazel-skylib 0.8.0 released 2019.03.20 (https://github.com/bazelbuild/bazel-skylib/releases/tag/0.8.0)
-skylib_version = "0.8.0"
-http_archive(
-    name = "bazel_skylib",
-    type = "tar.gz",
-    url = "https://github.com/bazelbuild/bazel-skylib/releases/download/%s/bazel-skylib.%s.tar.gz" % (skylib_version, skylib_version),
-    sha256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e",
-)
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+protobuf_deps()
+
 
 #
 # download rules_webtesting (for browser tests of salsah1)
@@ -81,8 +85,8 @@ java_repositories()
 # download rules_jvm_external used for maven dependency resolution
 # defined in the third_party sub-folder
 #
-rules_jvm_external_version = "2.8"
-rules_jvm_external_version_sha256 = "79c9850690d7614ecdb72d68394f994fef7534b292c4867ce5e7dec0aa7bdfad"
+rules_jvm_external_version = "3.2" # 24.02.2020
+rules_jvm_external_version_sha256 = "82262ff4223c5fda6fb7ff8bd63db8131b51b413d26eb49e3131037e79e324af"
 
 http_archive(
     name = "rules_jvm_external",
@@ -101,15 +105,51 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
 #
+# Load rules_scala_annex, required by rules_twirl
+#
+rules_scala_annex_version = "2503b72a166610c14170b117c51033b42a32e48b" # 29.06.2020
+rules_scala_annex_sha256 = "52d677dc8205db25a49824aade45984e3ef1b79c3bf761efede35d921033c3a4"
+http_archive(
+    name = "rules_scala_annex",
+    strip_prefix = "rules_scala-{}".format(rules_scala_annex_version),
+    url = "https://github.com/higherkindness/rules_scala/archive/{}.zip".format(rules_scala_annex_version),
+    sha256 = rules_scala_annex_sha256,
+)
+
+load("@rules_scala_annex//rules/scala:workspace.bzl", "scala_register_toolchains", "scala_repositories")
+scala_repositories()
+load("@annex//:defs.bzl", annex_pinned_maven_install = "pinned_maven_install")
+annex_pinned_maven_install()
+scala_register_toolchains()
+
+load("@rules_scala_annex//rules/scalafmt:workspace.bzl", "scalafmt_default_config", "scalafmt_repositories")
+scalafmt_repositories()
+load("@annex_scalafmt//:defs.bzl", annex_scalafmt_pinned_maven_install = "pinned_maven_install")
+annex_scalafmt_pinned_maven_install()
+scalafmt_default_config()
+
+load("@rules_scala_annex//rules/scala_proto:workspace.bzl", "scala_proto_register_toolchains", "scala_proto_repositories",)
+scala_proto_repositories()
+load("@annex_proto//:defs.bzl", annex_proto_pinned_maven_install = "pinned_maven_install")
+annex_proto_pinned_maven_install()
+scala_proto_register_toolchains()
+
+# Specify the scala compiler we wish to use; in this case, we'll use the default one specified in rules_scala_annex
+bind(
+    name = "default_scala",
+    actual = "@rules_scala_annex//src/main/scala:zinc_2_12_10",
+)
+
+#
 # download the rules_twirl repository (needed to compile twirl templates)
 #
-rules_twirl_version = "105c51e4884d56805e51b36d38fb2113b0381a6d"
-rules_twirl_version_sha256 = "c89d8460d236ec7d3c2544a72f17d21c4855da0eb79556c9dbdc95938c411057"
+rules_twirl_version = "35389750d178f17f7ddd85b9335f7b8b8d662f78" # 29.04.2020
+rules_twirl_version_sha256 = "d072049d0917b87e1eb677a4255509a7133ca71fc21c8de4b4536ca030eb3d3a"
 http_archive(
   name = "io_bazel_rules_twirl",
   strip_prefix = "rules_twirl-%s" % rules_twirl_version,
-  url = "https://github.com/lucidsoftware/rules_twirl/archive/%s.zip" % rules_twirl_version,
   type = "zip",
+  url = "https://github.com/lucidsoftware/rules_twirl/archive/%s.zip" % rules_twirl_version,
   sha256 = rules_twirl_version_sha256,
 )
 
@@ -179,7 +219,7 @@ container_pull(
     registry = "docker.io",
     repository = SIPI_REPOSITORY,
     tag = SIPI_TAG,
-    digest = "sha256:4b4266da659f30f27722d52e55066937de3ef8828f2a86fafcc75b72cc979b28",
+    digest = "sha256:7b7abd324d0887f3ff46de7d7f066dd699b3acd96b94177f153f750f7572031c",
 )
 
 load("//third_party:versions.bzl", "FUSEKI_REPOSITORY", "FUSEKI_TAG")
@@ -188,7 +228,7 @@ container_pull(
     registry = "docker.io",
     repository = FUSEKI_REPOSITORY,
     tag = FUSEKI_TAG,
-    # digest = "sha256:a8a5d5dce1de8855ffa2a327b98e0b1ea59b81683d0d02ec8dbbc90838691c65",
+    digest = "sha256:a019024b94aeecf0ad7ce078a1cc5e7692c16ba32e43528020c70e7c8b7ee86f",
 )
 
 #

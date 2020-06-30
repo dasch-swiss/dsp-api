@@ -32,11 +32,9 @@ import scala.concurrent.duration._
 case class VersionCheckResult(name: String,
                               webapi: String,
                               scala: String,
-                              sbt: String,
                               akkaHttp: String,
                               sipi: String,
-                              gdbSE: String,
-                              gdbFree: String)
+                              fuseki: String)
 
 /**
  * Provides version check logic
@@ -60,11 +58,9 @@ trait VersionCheck {
                     "name" -> JsString(result.name),
                     "webapi" -> JsString(result.webapi),
                     "scala" -> JsString(result.scala),
-                    "sbt" -> JsString(result.sbt),
                     "akkaHttp" -> JsString(result.akkaHttp),
                     "sipi" -> JsString(result.sipi),
-                    "gdbSE" -> JsString(result.gdbSE),
-                    "gdbFree" -> JsString(result.gdbFree)
+                    "fuseki" -> JsString(result.fuseki),
                 ).compactPrint
             )
         )
@@ -75,23 +71,17 @@ trait VersionCheck {
         val sipiIndex = sipiVersion.indexOf(':')
         sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
 
-        var gdbSEVersion = BuildInfo.gdbSE
-        val gdbSEIndex = gdbSEVersion.indexOf(':')
-        gdbSEVersion = if (gdbSEIndex > 0) gdbSEVersion.substring(gdbSEIndex + 1) else gdbSEVersion
-
-        var gdbFreeVersion = BuildInfo.gdbFree
-        val gdbFreeIndex = gdbFreeVersion.indexOf(':')
-        gdbFreeVersion = if (gdbFreeIndex > 0) gdbFreeVersion.substring(gdbFreeIndex + 1) else gdbFreeVersion
+        var fusekiVersion = BuildInfo.jenaFusekiVersion
+        val fusekiIndex = fusekiVersion.indexOf(':')
+        fusekiVersion = if (fusekiIndex > 0) fusekiVersion.substring(fusekiIndex + 1) else fusekiVersion
 
         VersionCheckResult(
             name = "version",
             webapi = BuildInfo.version,
             scala = BuildInfo.scalaVersion,
-            sbt = BuildInfo.sbtVersion,
-            akkaHttp = BuildInfo.akkaHttp,
+            akkaHttp = BuildInfo.akkaHttpVersion,
             sipi = sipiVersion,
-            gdbSE = gdbSEVersion,
-            gdbFree = gdbFreeVersion
+            fuseki = fusekiVersion
         )
     }
 }

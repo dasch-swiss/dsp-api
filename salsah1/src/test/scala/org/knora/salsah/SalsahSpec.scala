@@ -26,7 +26,6 @@ import akka.http.scaladsl.model._
 import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.knora.salsah.SettingsImpl
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

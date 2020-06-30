@@ -1,0 +1,23 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+
+filegroup(
+    name = "srcs",
+    srcs = [
+        "CoreSpec.scala",
+        "E2ESimSpec.scala",
+        "E2ESpec.scala",
+        "ManagersWithMockedSipi.scala",
+        "R2RSpec.scala",
+        "SharedListsTestDataADM.scala",
+        "SharedPermissionsTestData.scala",
+        "SharedTestDataV1.scala",
+        "TestContainers.scala",
+        "TestProbeMaker.scala",
+        "//webapi/src/test/scala/org/knora/webapi/e2e:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/responders:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/store:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/util:srcs",
+    ],
+)

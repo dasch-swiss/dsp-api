@@ -120,7 +120,7 @@ def dependencies():
             "com.typesafe.akka:akka-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
-            "org.scalatest:scalatest_2.12:3.0.4",
+            "org.scalatest:scalatest_2.12:3.1.2",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
 
@@ -129,9 +129,13 @@ def dependencies():
             "org.seleniumhq.selenium:selenium-support:3.141.59",
         ],
         repositories = [
+            "https://repo.maven.apache.org/maven2",
+            "https://maven-central.storage-download.googleapis.com/maven2",
+            "https://mirror.bazel.build/repo1.maven.org/maven2",
+            "https://jcenter.bintray.com",
             "https://dl.bintray.com/typesafe/maven-releases/",
-            "https://jcenter.bintray.com/",
             "https://maven.google.com",
             "https://repo1.maven.org/maven2",
+            "https://central.maven.org/maven2",
         ],
     )

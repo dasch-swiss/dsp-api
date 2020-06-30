@@ -16,7 +16,6 @@ container_image(
     directory = "salsah1",
     files = [
         "//salsah1:salsah1_deploy.jar",
-
     ],
     tars = [
         "//salsah1:public_folder_tar"

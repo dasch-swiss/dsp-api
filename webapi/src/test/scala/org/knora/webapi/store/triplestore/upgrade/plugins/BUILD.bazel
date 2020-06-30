@@ -15,7 +15,6 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "//upgrade:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
@@ -37,7 +36,6 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "//upgrade:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
@@ -59,7 +57,6 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "//upgrade:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
@@ -81,7 +78,6 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "//upgrade:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
@@ -103,7 +99,6 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "//upgrade:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
