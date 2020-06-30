@@ -938,7 +938,7 @@ case class UserUpdatePayloadADM(username: Option[String] = None,
 object UsersADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol with GroupsADMJsonProtocol with PermissionsADMJsonProtocol {
 
     implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
-    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat9(CreateUserApiRequestADM)
+    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(CreateUserApiRequestADM, "id", "username", "email", "givenName", "familyName", "password", "status", "lang", "systemAdmin")
     implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "requesterPassword", "newPassword", "status", "systemAdmin")
     implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
     implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
