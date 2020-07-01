@@ -16,6 +16,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
@@ -37,6 +38,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
@@ -58,6 +60,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
@@ -79,6 +82,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
@@ -100,6 +104,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
