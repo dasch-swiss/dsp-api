@@ -20,7 +20,7 @@ scala_test(
         "//knora-ontologies",
         "//test_data",
     ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
@@ -46,7 +46,7 @@ scala_test(
         "//knora-ontologies",
         "//test_data",
     ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
@@ -73,7 +73,7 @@ scala_test(
         "//knora-ontologies",
         "//test_data",
     ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
@@ -105,7 +105,7 @@ scala_test(
         "//knora-ontologies",
         "//test_data",
     ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
@@ -132,7 +132,7 @@ scala_test(
         "//knora-ontologies",
         "//test_data",
     ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
@@ -158,7 +158,7 @@ scala_test(
         "//knora-ontologies",
         "//test_data",
     ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",

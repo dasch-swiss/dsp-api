@@ -121,6 +121,8 @@ def dependencies():
             "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
             "org.scalatest:scalatest_2.12:3.1.2",
+            "org.testcontainers:testcontainers:1.14.3",
+            "junit:junit:4.13",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
 
@@ -139,3 +141,17 @@ def dependencies():
             "https://central.maven.org/maven2",
         ],
     )
+
+BASE_TEST_DEPENDENCIES = [
+    # Logging
+    "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+    # Test Libs
+    "@maven//:com_typesafe_akka_akka_testkit_2_12",
+    "@maven//:com_typesafe_akka_akka_actor_2_12",
+    "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+    "@maven//:com_typesafe_akka_akka_stream_2_12",
+    "@maven//:com_typesafe_config",
+    "@maven//:io_spray_spray_json_2_12",
+    "@maven//:org_scalatest_scalatest_2_12",
+    "@maven//:org_scalactic_scalactic_2_12",
+]

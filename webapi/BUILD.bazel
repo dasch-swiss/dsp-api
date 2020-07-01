@@ -151,7 +151,6 @@ scala_library(
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_github_jsonld_java_jsonld_java",
         "@maven//:com_jsuereth_scala_arm_2_12",
@@ -164,6 +163,9 @@ scala_library(
         "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_testcontainers_testcontainers",
+        "@maven//:junit_junit",
     ],
 )
 
@@ -203,6 +205,7 @@ scala_library(
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_testcontainers_testcontainers",
         "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
