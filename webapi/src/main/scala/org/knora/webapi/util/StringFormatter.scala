@@ -2578,6 +2578,19 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+      * Given the optional user IRI, checks if it is in a valid format.
+      *
+      * @param maybeIri the optional user's IRI to be checked.
+      * @return the same optional IRI.
+      */
+    def validateOptionalUserIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
+        maybeIri match {
+            case Some(iri) => Some(validateUserIri(iri, errorFun))
+            case None => None
+        }
+    }
+
+    /**
      * Check that the supplied IRI represents a valid user IRI.
      *
      * @param iri      the string to be checked.
