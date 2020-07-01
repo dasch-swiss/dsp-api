@@ -107,6 +107,7 @@ scala_web_test_suite(
     deps = [
         "//salsah1:main_library",
         "@io_bazel_rules_webtesting//java/com/google/testing/web",
+        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
