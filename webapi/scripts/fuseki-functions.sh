@@ -67,8 +67,7 @@ delete-repository() {
 
 create-repository() {
   REPOSITORY_CONFIG=$(sed "s/@REPOSITORY@/${REPOSITORY}/g" ./fuseki-repository-config.ttl.template)
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -F "data=<-" http://${HOST}/\$/datasets <<< "${REPOSITORY_CONFIG}")
-  # STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -F data=@./fuseki-knora-test-repository-config.ttl http://${HOST}/\$/datasets)
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-raw "${REPOSITORY_CONFIG}" -X POST http://${HOST}/\$/datasets)
 
   if [ "${STATUS}" -eq 200 ]; then
     echo "==> create repository done"
