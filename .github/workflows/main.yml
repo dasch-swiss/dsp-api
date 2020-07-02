@@ -262,6 +262,10 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Generate Github release notes
+        uses: lakto/gren-action@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Disk Free
         run: |
           df -h
@@ -276,7 +280,3 @@ jobs:
         run: |
           df -h
           docker system df
-      - name: Generate Github release notes
-        uses: lakto/gren-action@v1.1.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

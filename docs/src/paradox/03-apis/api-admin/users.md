@@ -89,7 +89,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "systemAdmin": false
     }
     ```
-
+    
+    Additionally, each user can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
+    specified by the `id` in the request body as below:
+    ```
+    { "id" : "http://rdfh.ch/users/donaldDuck",
+      "email": "donald.duck@example.org",
+      "givenName": "Donald",
+      "familyName": "Duck",
+      "username": "donald.duck",
+      "password": "test",
+      "status": true,
+      "lang": "en",
+      "systemAdmin": false
+    }
+    ```
+     
 ### Update basic user information**
 
   - Required permission: SystemAdmin / self
@@ -196,7 +211,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - BODY:
     ```JSON
     {
-      "newSystemAdminMembershipStatus": false
+      "systemAdmin": false
     }
     ```
 
