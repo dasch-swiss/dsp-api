@@ -232,14 +232,12 @@ test: build-all-images ## runs all tests.
 	sbt webapi/test webapi/it:test
 
 .PHONY: test-repository-update
-test-repository-update: stack-down-delete-volumes stack-without-api
-	@sleep 15
-	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
+test-repository-update: init-db-test-minimal
 	@rm -rf /tmp/knora-test-data/v7.0.0/
 	@mkdir -p /tmp/knora-test-data/v7.0.0/
 	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
-	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030
-	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
+	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
