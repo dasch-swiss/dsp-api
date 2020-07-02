@@ -23,6 +23,7 @@ upload-graph ../_test_data/ontologies/images-onto.ttl http://www.knora.org/ontol
 upload-graph ../_test_data/demo_data/images-demo-data.ttl http://www.knora.org/data/00FF/images
 upload-graph ../_test_data/ontologies/anything-onto.ttl http://www.knora.org/ontology/0001/anything
 upload-graph ../_test_data/all_data/anything-data.ttl http://www.knora.org/data/0001/anything
+upload-graph ../_test_data/ontologies/minimal-onto.ttl http://www.knora.org/ontology/0001/minimal
 upload-graph ../_test_data/ontologies/something-onto.ttl http://www.knora.org/ontology/0001/something
 upload-graph ../_test_data/ontologies/beol-onto.ttl http://www.knora.org/ontology/0801/beol
 upload-graph ../_test_data/ontologies/biblio-onto.ttl http://www.knora.org/ontology/0801/biblio
