@@ -609,11 +609,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       */
     private def initJenaFusekiTriplestore(): Try[CheckTriplestoreResponse] = {
 
-        val configFileName = s"webapi/scripts/fuseki-${settings.triplestoreDatabaseName}-repository-config.ttl"
+        val configFileName = s"webapi/scripts/fuseki-repository-config.ttl.template"
 
         try {
             // take config from the classpath and write to triplestore
-            val triplestoreConfig: String = FileUtil.readTextResource(configFileName)
+            val triplestoreConfig: String = FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", settings.triplestoreDatabaseName)
 
             val authCache: AuthCache = new BasicAuthCache
             val basicAuth: BasicScheme = new BasicScheme

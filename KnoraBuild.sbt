@@ -415,8 +415,7 @@ lazy val webapi = knoraModule("webapi")
           (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
           (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
           (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
-          (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-repository-config.ttl",
-          (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-unit-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-unit-repository-config.ttl",
+          (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template"
       ),
       // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
       // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
