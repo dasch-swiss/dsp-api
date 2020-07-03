@@ -573,6 +573,15 @@ object SharedTestDataADM {
            |    "selfjoin": false
            |}""".stripMargin
 
+    val createGroupWithCustomIriRequest: String =
+        s"""{   "id": "http://rdfh.ch/groups/00FF/group-with-customIri",
+           |    "name": "NewGroupWithCustomIri",
+           |    "description": "A new group with a custom Iri",
+           |    "project": "$IMAGES_PROJECT_IRI",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
     val updateGroupRequest: String =
         s"""{
            |    "name": "UpdatedGroupName",
