@@ -632,7 +632,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            customListIri: Option[SmartIri] = createListRequest.listIri.map(iri => iri.toSmartIri)
+            customListIri: Option[SmartIri] = createListRequest.id.map(iri => iri.toSmartIri)
             listIri: IRI <- checkEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
             // Create the new list

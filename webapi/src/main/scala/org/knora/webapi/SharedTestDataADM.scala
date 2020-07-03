@@ -688,8 +688,8 @@ object SharedTestDataADM {
 
     val createListWithCustomIriRequest: String =
         s"""{
+           |    "id": "${SharedTestDataADM.customListIRI}",
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "listIri": "${SharedTestDataADM.customListIRI}",
            |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
            |    "comments": []
            |}""".stripMargin
