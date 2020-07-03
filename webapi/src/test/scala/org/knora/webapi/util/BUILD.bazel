@@ -76,7 +76,7 @@ scala_test(
     srcs = [
         "ConstructResponseUtilV2Spec.scala",
         "ConstructResponseUtilV2SpecFullData.scala",
-        # "//webapi/src/test/scala/org/knora/webapi/responders/v2:ResourcesResponderV2SpecFullData.scala",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2:ResourcesResponderV2SpecFullData.scala",
     ],
     data = [
         "//knora-ontologies",

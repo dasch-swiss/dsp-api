@@ -17,7 +17,6 @@ def dependencies():
         artifacts = [
             # akka
             "com.typesafe.akka:akka-actor_2.12:%s" % (AKKA_VERSION),
-            # "com.typesafe.akka:akka-agent_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-slf4j_2.12:%s" % (AKKA_VERSION),
 
@@ -143,11 +142,13 @@ def dependencies():
     )
 
 BASE_TEST_DEPENDENCIES = [
-    # Logging
     "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-    # Test Libs
-    "@maven//:com_typesafe_akka_akka_testkit_2_12",
+    "@maven//:org_slf4j_slf4j_api",
     "@maven//:com_typesafe_akka_akka_actor_2_12",
+    "@maven//:com_typesafe_akka_akka_testkit_2_12",
+    "@maven//:com_typesafe_akka_akka_http_2_12",
+    "@maven//:com_typesafe_akka_akka_http_core_2_12",
+    "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
     "@maven//:com_typesafe_akka_akka_stream_2_12",
     "@maven//:com_typesafe_config",
     "@maven//:org_scalatest_scalatest_2_12",
