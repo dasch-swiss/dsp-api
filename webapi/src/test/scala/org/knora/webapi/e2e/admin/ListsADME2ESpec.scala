@@ -157,7 +157,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
         "given a custom Iri" should {
 
-            "create a list with a custom Iri" in {
+            "create a list with the provided custom Iri" in {
 
                 val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -194,7 +194,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 invalidIri should be(true)
             }
 
-            "return a DuplicateValueException during list creation when the supplied listIri is not unique" in {
+            "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
 
                 // duplicate list IRI
                 val params =
