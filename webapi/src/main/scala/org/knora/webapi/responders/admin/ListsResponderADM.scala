@@ -632,6 +632,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
+            // check the custom IRI; if not given, create an unused IRI
             customListIri: Option[SmartIri] = createListRequest.id.map(iri => iri.toSmartIri)
             listIri: IRI <- checkEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
