@@ -53,4 +53,4 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:8080"
 fi
 
-curl -sS -X GET -H "Accept: application/trig" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/fuseki/${REPOSITORY}" > "${FILE}"
+curl -sS -X GET -H "Accept: application/trig" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/${REPOSITORY}" > "${FILE}"

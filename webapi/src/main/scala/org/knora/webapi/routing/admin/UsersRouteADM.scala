@@ -139,11 +139,17 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def createUserTestRequest: Future[TestDataFileContent] = {
+    private def createUserTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-user-request"),
-                text = SharedTestDataADM.createUserRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-user-request"),
+                    text = SharedTestDataADM.createUserRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-user-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createUserWithCustomIriRequest
+                )
             )
         )
     }
@@ -462,7 +468,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def getUserProjectMembershipsResponse: Future[TestDataFileContent] = {
+    private def getUserProjectMembershipsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield TestDataFileContent(
@@ -716,18 +722,18 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * @return a set of test data files to be used for testing this endpoint.
      */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        Future.sequence {
-            Set(
-                getUsersTestResponse,
-                createUserTestRequest,
-                getUserTestResponse,
-                getUserGroupMembershipsTestResponse,
-                updateUserTestRequest,
-                updateUserPasswordTestRequest,
-                updateUserStatusTestRequest,
-                updateUserSystemAdminMembershipTestRequest,
-                getUserProjectMembershipsResponse
-            )
-        }
+        for {
+            getUsersResponse <- getUsersTestResponse
+            createUserRequest <- createUserTestRequest
+            getUserResponse <- getUserTestResponse
+            getUserGroupMembershipsResponse <- getUserGroupMembershipsTestResponse
+            updateUserRequest <- updateUserTestRequest
+            updateUserPasswordRequest <- updateUserPasswordTestRequest
+            updateUserStatusRequest <- updateUserStatusTestRequest
+            updateUserSystemAdminMembershipRequest <- updateUserSystemAdminMembershipTestRequest
+            getUserProjectMembershipsResponse <- getUserProjectMembershipsTestResponse
+        } yield createUserRequest + updateUserRequest +
+                updateUserPasswordRequest + updateUserStatusRequest + updateUserSystemAdminMembershipRequest +
+                getUserProjectMembershipsResponse + getUsersResponse + getUserResponse + getUserGroupMembershipsResponse
     }
 }

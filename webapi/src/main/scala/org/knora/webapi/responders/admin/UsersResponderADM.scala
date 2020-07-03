@@ -1178,7 +1178,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 throw DuplicateValueException(s"User with the email '${createRequest.email}' already exists")
             }
 
-            userIri = stringFormatter.makeRandomPersonIri
+            // check user Iri
+            customUserIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+            userIri: IRI <- checkEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
             encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
             hashedPassword = encoder.encode(createRequest.password)

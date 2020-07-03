@@ -95,7 +95,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
                 "mimetype_thumb":"image/jpeg",
                 "original_mimetype":"image/jpeg",
                 "nx_thumb":93,
-                "preview_path":"http://localhost:1024/thumbs/CjwDMhlrctI-BG7gms08BJ4.jpg/full/full/0/default.jpg",
+                "preview_path":"http://localhost:1024/thumbs/CjwDMhlrctI-BG7gms08BJ4.jpg/full/max/0/default.jpg",
                 "filename":"CjwDMhlrctI-BG7gms08BJ4",
                 "file_type":"IMAGE",
                 "original_filename":"Chlaus.jpg",
@@ -173,7 +173,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             // Running with KnoraFakeService which always allows access to files.
             // Send a GET request to Sipi, asking for full image
             // not possible as authentication is required and file needs to be known by knora to be able to authenticate the request
-            val sipiGetImageRequest = Get(baseInternalSipiUrl + "/0001/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiGetImageRequest = Get(baseInternalSipiUrl + "/0001/" + filenameFull + "/full/max/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
             checkResponseOK(sipiGetImageRequest)
 
             // Send a GET request to Sipi, asking for the info.json of the image
@@ -219,7 +219,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             //log.debug("sipiConvertFromPathPostResponseJson: {}", sipiConvertFromPathPostResponseJson)
 
             // Running with KnoraFakeService which always allows access to files.
-            val sipiGetImageRequest = Get(baseInternalSipiUrl + "/0001/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiGetImageRequest = Get(baseInternalSipiUrl + "/0001/" + filenameFull + "/full/max/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
             checkResponseOK(sipiGetImageRequest)
 
             // Send a GET request to Sipi, asking for the info.json of the image
