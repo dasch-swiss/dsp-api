@@ -1,0 +1,14 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "config",
+    srcs = [
+        "sipi.init-knora.lua",
+        "sipi.init-knora-no-auth.lua",
+        "sipi.init-knora-test.lua",
+        "sipi.knora-docker-config.lua",
+        "sipi.knora-docker-no-auth-config.lua",
+        "sipi.knora-docker-test-config.lua",
+        "sipi.knora-local-config.lua"
+    ],
+)

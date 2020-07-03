@@ -26,10 +26,6 @@ docs-build: ## build the docs
 bazel-build: ## build everything
 	@bazel build //...
 
-.PHONY: bazel-test
-bazel-test: ## run all tests
-	@bazel test //...
-
 #################################
 # Docker targets
 #################################
@@ -214,95 +210,25 @@ stack-down: ## stops the knora-stack.
 ## Test Targets
 #################################
 
-.PHONY: test-webapi-all
-test-webapi-all: stack-without-api ## runs all webapi tests.
-	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	@bazel test //webapi/...
+.PHONY: test-webapi
+test-webapi: ## runs all webapi tests.
+	bazel test //webapi/...
 
-.PHONY: test-webapi-unit
-test-webapi-unit: stack-without-api ## runs the webapi unit tests.
-	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	@bazel test //webapi/...
-	@docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
+.PHONY: test-unit
+test-unit: ## runs the dsp-api unit tests.
+	bazel test //webapi:unit_tests
 
-.PHONY: unit-tests-with-coverage
-unit-tests-with-coverage: stack-without-api ## runs the dsp-api unit tests.
-	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	@bazel test //webapi:unit_tests
+.PHONY: test-e2e
+test-e2e: ## runs the dsp-api e2e tests.
+	bazel test //webapi:e2e_tests
 
-.PHONY: e2e-tests
-e2e-tests: stack-without-api init-db-test-unit ## runs the dsp-api e2e tests.
-	@docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
-
-.PHONY: e2e-tests-with-coverage
-e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
-	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	@docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src/workspace \
-				-w /src/workspace \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				l.gcr.io/google/bazel:1.2.1 \
-				test //webapi:e2e_tests
-
-.PHONY: it-tests
-it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
-	@docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt 'webapi/it:test'
+.PHONY: test-it
+test-it: ## runs the dsp-api integration tests.
+	bazel test //webapi:it_tests
 
 .PHONY: test-salsah1
-test-salsah1: stack-up ## runs salsah1 headless browser tests
-	@echo $@  # print target name
-	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
-	@bazel test //salsah1/...
+test-salsah1: ## runs salsah1 headless browser tests
+	bazel test //salsah1/...
 
 .PHONY: test-upgrade-integration
 test-upgrade-integration: stack-down-delete-volumes stack-db-only ## runs upgrade integration test
@@ -319,69 +245,23 @@ test-upgrade-integration: stack-down-delete-volumes stack-db-only ## runs upgrad
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
+.PHONY: test-repository-update
+test-repository-update: init-db-test-minimal
+	@rm -rf /tmp/knora-test-data/v7.0.0/
+	@mkdir -p /tmp/knora-test-data/v7.0.0/
+	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
+	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
+	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
+
 .PHONY: test
 test:  ## runs all test targets.
-	@$(MAKE) -f $(THIS_FILE) test-webapi
-	@$(MAKE) -f $(THIS_FILE) test-upgrade
-	@$(MAKE) -f $(THIS_FILE) test-salsah1
+	bazel test //...
 
 #################################
 ## Database Management
 #################################
-	docker-compose -f docker/knora.docker-compose.yml stop api
-	docker-compose -f docker/knora.docker-compose.yml stop sipi
-
-.PHONY: test-only
-test-only: build-all-images ## runs only the supplied tests, e.g., make test-only TARGET="*.CORSSupportE2ESpec".
-	@echo $@  # print target name
-	sbt "webapi/testOnly $(TARGET)"
-
-.PHONY: test-unit
-test-unit: build-all-images ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
-	@echo $@  # print target name
-	sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
-
-.PHONY: test-unit-ci
-test-unit-ci: build-all-images ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
-	@echo $@  # print target name
-	sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
-
-.PHONY: test-e2e
-test-e2e: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
-	@echo $@  # print target name
-	sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
-
-.PHONY: test-e2e-ci
-test-e2e-ci: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
-	@echo $@  # print target name
-	sbt coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
-
-.PHONY: test-it
-test-it: build-all-images ## runs the integration tests (equivalent to 'sbt webapi/it').
-	@echo $@
-	sbt 'webapi/it:test'
-
-.PHONY: test-it-ci
-test-it-ci: build-all-images ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
-	@echo $@  # print target name
-	sbt coverage webapi/it:test webapi/coverageReport
-
-.PHONY: test
-test: build-all-images ## runs all tests.
-	@echo $@
-	sbt webapi/test webapi/it:test
-
-.PHONY: test-repository-update
-test-repository-update: stack-down-delete-volumes stack-without-api
-	@sleep 15
-	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
-	@rm -rf /tmp/knora-test-data/v7.0.0/
-	@mkdir -p /tmp/knora-test-data/v7.0.0/
-	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
-	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030
-	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
-	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
 .PHONY: init-db-test
 init-db-test: stack-down-delete-volumes stack-without-api ## initializes the knora-test repository
@@ -402,23 +282,6 @@ init-db-test-unit: stack-down-delete-volumes stack-without-api ## initializes th
 init-db-test-unit-minimal: stack-down-delete-volumes stack-without-api ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
-
-#################################
-# Other
-#################################
-
-.PHONY: clean-local-tmp
-clean-local-tmp:
-	@rm -rf $(CURRENT_DIR)/.tmp
-	@mkdir $(CURRENT_DIR)/.tmp
-
-.PHONY: init-db-test-local
-init-db-test-local: ## initializes the knora-test-unit repository (for a local GraphDB-SE)
-	$(MAKE) -C webapi/scripts graphdb-se-local-init-knora-test
-
-.PHONY: init-db-test-unit-local
-init-db-test-unit-local: ## initializes the knora-test-unit repository (for a local GraphDB-SE)
-	$(MAKE) -C webapi/scripts graphdb-se-local-init-knora-test-unit
 
 #################################
 ## Other

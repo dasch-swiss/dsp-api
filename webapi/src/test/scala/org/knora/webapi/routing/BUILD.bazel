@@ -36,5 +36,5 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES,
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
