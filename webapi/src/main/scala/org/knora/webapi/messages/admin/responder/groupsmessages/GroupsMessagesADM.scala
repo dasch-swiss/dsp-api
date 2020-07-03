@@ -26,6 +26,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
@@ -35,19 +36,25 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 /**
   * Represents an API request payload that asks the Knora API server to create a new group.
   *
+  * @param id          the optional IRI of the group to be created (unique).
   * @param name        the name of the group to be created (unique).
   * @param description the description of the group to be created.
   * @param project     the project inside which the group will be created.
   * @param status      the status of the group to be created (active = true, inactive = false).
   * @param selfjoin    the status of self-join of the group to be created.
   */
-case class CreateGroupApiRequestADM(name: String,
+case class CreateGroupApiRequestADM(id: Option[IRI] = None,
+                                    name: String,
                                     description: Option[String],
                                     project: IRI,
                                     status: Boolean,
                                     selfjoin: Boolean) extends GroupsADMJsonProtocol {
 
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     def toJsValue: JsValue = createGroupApiRequestADMFormat.write(this)
+
+    //check the custom Iri
+    stringFormatter.validateOptionalGroupIri(id, throw BadRequestException(s"Invalid group IRI"))
 }
 
 /**
@@ -320,7 +327,7 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] = jsonFormat(GroupsGetResponseADM, "groups")
     implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
     implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] = jsonFormat(GroupMembersGetResponseADM, "members")
-    implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] = jsonFormat(CreateGroupApiRequestADM, "name", "description", "project", "status", "selfjoin")
+    implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] = jsonFormat(CreateGroupApiRequestADM, "id", "name", "description", "project", "status", "selfjoin")
     implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] = jsonFormat(ChangeGroupApiRequestADM, "name", "description", "status", "selfjoin")
     implicit val groupOperationResponseADMFormat: RootJsonFormat[GroupOperationResponseADM] = jsonFormat(GroupOperationResponseADM, "group")
 }

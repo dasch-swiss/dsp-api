@@ -299,8 +299,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 case None => throw NotFoundException(s"Cannot create group inside project <${createRequest.project}>. The project was not found.")
             }
 
-            /* generate a new random group IRI */
-            groupIri = stringFormatter.makeRandomGroupIri(projectADM.shortcode)
+            // check group Iri
+            customGroupIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+            groupIri: IRI <- checkEntityIri(customGroupIri, stringFormatter.makeRandomGroupIri(projectADM.shortcode))
+
 
             /* create the group */
             createNewGroupSparqlString = queries.sparql.admin.txt.createNewGroup(
