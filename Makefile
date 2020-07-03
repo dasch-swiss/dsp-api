@@ -216,11 +216,11 @@ test-webapi: ## runs all webapi tests.
 
 .PHONY: test-unit
 test-unit: ## runs the dsp-api unit tests.
-	bazel test //webapi:unit_tests
+	bazel test //webapi/... --deleted_packages=//webapi/src/test/scala/org/knora/webapi/e2e
 
 .PHONY: test-e2e
 test-e2e: ## runs the dsp-api e2e tests.
-	bazel test //webapi:e2e_tests
+	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
 
 .PHONY: test-it
 test-it: ## runs the dsp-api integration tests.

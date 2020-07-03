@@ -71,6 +71,9 @@ scala_library(
     srcs = [
         "//salsah1/src/test/scala/org/knora/salsah:test_srcs",
     ],
+    resources = [
+        "//sipi/config"
+    ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
         "@maven//:ch_qos_logback_logback_classic",
@@ -91,5 +94,7 @@ scala_library(
         # Selenium
         "@maven//:org_seleniumhq_selenium_selenium_support",
         "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
+        "@maven//:org_testcontainers_testcontainers",
+        "@maven//:junit_junit",
     ],
 )
