@@ -607,7 +607,7 @@ object SharedTestDataADM {
 
     val createProjectWithCustomIRIRequest: String =
         s"""{
-           |    "projectIri": "$customProjectIri",
+           |    "id": "$customProjectIri",
            |    "shortname": "newprojectWithIri",
            |    "shortcode": "3333",
            |    "longname": "new project with a custom IRI",
