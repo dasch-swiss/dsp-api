@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
 filegroup(
     name = "srcs",
@@ -27,19 +28,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(
@@ -58,18 +47,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_fasterxml_jackson_core_jackson_core",
-        "@maven//:com_github_jsonld_java_jsonld_java",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON_LD,
 )
 
 scala_test(
@@ -87,18 +65,8 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(
@@ -116,18 +84,8 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 ##
@@ -147,20 +105,9 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_xmlunit_xmlunit_core",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(
@@ -179,15 +126,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-    ],
+    ] + BASE_TEST_DEPENDENCIES,
 )
 
 scala_test(
@@ -207,18 +146,8 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(
@@ -237,16 +166,7 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-    ],
+    ] + BASE_TEST_DEPENDENCIES,
 )
 
 scala_test(
@@ -265,23 +185,10 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Templates
         "@maven//:com_typesafe_play_twirl_api_2_12",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(
@@ -299,16 +206,6 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Templates
         "@maven//:com_typesafe_play_twirl_api_2_12",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-    ],
+    ] + BASE_TEST_DEPENDENCIES,
 )

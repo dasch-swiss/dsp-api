@@ -156,6 +156,12 @@ BASE_TEST_DEPENDENCIES = [
 
 BASE_TEST_DEPENDENCIES_WITH_JSON = BASE_TEST_DEPENDENCIES + [
     "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+    "@maven//:com_typesafe_akka_akka_http_xml_2_12",
     "@maven//:io_spray_spray_json_2_12",
+]
+
+BASE_TEST_DEPENDENCIES_WITH_JSON_LD = BASE_TEST_DEPENDENCIES + [
+    "@maven//:com_fasterxml_jackson_core_jackson_core",
+    "@maven//:com_github_jsonld_java_jsonld_java",
 ]
 
