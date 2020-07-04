@@ -50,6 +50,7 @@ released under the [GNU Affero General Public License](http://www.gnu.org/licens
 * Linux or macOS (with some caveats)
 * [OpenJDK](https://adoptopenjdk.net)
 * [SBT](https://www.scala-sbt.org)
+* [Bazel](https://bazel.build)
 
 [Jena Fuseki](https://jena.apache.org) is recommended. Support for other RDF
 triplestores is planned.
@@ -62,7 +63,8 @@ See [docs/Readme.md](docs/Readme.md).
 
 ### Run the Knora API server
 
-With [Docker](https://www.docker.com) installed, run the following:
+With [Bazel](https://docs.bazel.build/versions/3.3.0/install-os-x.html) and
+[Docker](https://www.docker.com) installed, run the following:
 
 ```
 $ make stack-up

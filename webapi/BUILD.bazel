@@ -146,6 +146,10 @@ scala_library(
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
     ],
+    data = [
+        "//docker/knora-jena-fuseki:build",
+        "//docker/knora-sipi:image",
+    ],
     deps = [
         ":main_library",
         # Logging

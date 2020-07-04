@@ -2,8 +2,9 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 
+# builds the docker image
 container_image(
-    name = "knora-api",
+    name = "image",
     base = "@openjdk11//image",
     cmd = ["java", "-jar", "webapi_deploy.jar"],
     # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
@@ -18,11 +19,20 @@ container_image(
     ],
 )
 
+# push to dockerhub
 container_push(
    name = "push",
-   image = ":knora-api",
+   image = ":image",
    format = "Docker",
    registry = "index.docker.io",
    repository = "dasch-swiss/knora-api",
    tag = "{BUILD_SCM_TAG}"
+)
+
+# use in targets needing an up-to-date docker image locally
+genrule(
+  name = "build",
+  srcs = [":image"],
+  cmd = "docker load -i $(location //docker/knora-api:image) >$@",
+  outs = ["build-output.txt"]
 )

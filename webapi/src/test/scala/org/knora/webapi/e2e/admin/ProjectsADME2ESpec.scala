@@ -65,7 +65,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     "The Projects Route ('admin/projects')" when {

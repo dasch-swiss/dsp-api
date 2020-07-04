@@ -22,8 +22,8 @@ docs-build: ## build the docs
 # Bazel targets
 #################################
 
-.PHONY: bazel-build
-bazel-build: ## build everything
+.PHONY: build
+build: ## build all targets (excluding docs)
 	@bazel build //...
 
 #################################
@@ -32,7 +32,7 @@ bazel-build: ## build everything
 
 .PHONY: docker-build-knora-api-image
 docker-build-knora-api-image: # build and publish knora-api docker image locally
-	@bazel run //docker/knora-api
+	@bazel run //docker/knora-api:image
 
 .PHONY: docker-publish-knora-api
 docker-publish-knora-api-image: # publish knora-api image to Dockerhub
@@ -40,7 +40,7 @@ docker-publish-knora-api-image: # publish knora-api image to Dockerhub
 
 .PHONY: docker-build-knora-jena-fuseki-image
 docker-build-knora-jena-fuseki-image: # build and publish knora-jena-fuseki docker image locally
-	@bazel run //docker/knora-jena-fuseki
+	@bazel run //docker/knora-jena-fuseki:image
 
 .PHONY: docker-publish-knora-jena-fuseki-image
 docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Dockerhub
@@ -48,7 +48,7 @@ docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Doc
 
 .PHONY: docker-build-knora-sipi-image
 docker-build-knora-sipi-image: # build and publish knora-sipi docker image locally
-	@bazel run //docker/knora-sipi
+	@bazel run //docker/knora-sipi:image
 
 .PHONY: docker-publish-knora-sipi-image
 docker-publish-knora-sipi-image: # publish knora-sipi image to Dockerhub
@@ -56,7 +56,7 @@ docker-publish-knora-sipi-image: # publish knora-sipi image to Dockerhub
 
 .PHONY: docker-build-knora-salsah1-image
 docker-build-knora-salsah1-image: # build and publish knora-salsah1 docker image locally
-	@bazel run //docker/knora-salsah1
+	@bazel run //docker/knora-salsah1:image
 
 .PHONY: docker-publish-knora-salsah1-image
 docker-publish-knora-salsah1-image: # publish knora-salsah1 image to Dockerhub
@@ -90,13 +90,7 @@ else
 	$(info Using $(KNORA_DB_IMPORT) for the DB import directory.)
 	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
 endif
-	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
-	@echo KNORA_FUSEKI_IMAGE=$(KNORA_FUSEKI_IMAGE) >> .env
-	@echo FUSEKI_HEAP_SIZE=$(FUSEKI_HEAP_SIZE) >> .env
-	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
-	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
-	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
 	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
@@ -202,10 +196,6 @@ stack-db-only: stack-up ## starts only GraphDB.
 	@docker-compose -f docker-compose.yml stop sipi
 	@docker-compose -f docker-compose.yml stop redis
 
-.PHONY: stack-down
-stack-down: ## stops the knora-stack.
-	@docker-compose -f docker-compose.yml down
-
 #################################
 ## Test Targets
 #################################
@@ -230,34 +220,23 @@ test-it: ## runs the dsp-api integration tests.
 test-salsah1: ## runs salsah1 headless browser tests
 	bazel test //salsah1/...
 
-.PHONY: test-upgrade-integration
-test-upgrade-integration: stack-down-delete-volumes stack-db-only ## runs upgrade integration test
-	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
-	# unzip test data
-	@mkdir -p $(PWD)/.tmp/test_data/v7.0.0/
-	@unzip $(PWD)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(PWD)/.tmp/test_data/v7.0.0/
-	@rm -rf /tmp/knora-test-data/v7.0.0/
-	# empty repository
-	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030
-	# load v7.0.0 data
-	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:3030 $(PWD)/.tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
-	# call target which restarts the API and emits error if API does not start after a certain time
-	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
-
-.PHONY: test-repository-update
-test-repository-update: init-db-test-minimal
-	@rm -rf /tmp/knora-test-data/v7.0.0/
-	@mkdir -p /tmp/knora-test-data/v7.0.0/
+.PHONY: test-repository-upgrade
+test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration test
+	@rm -rf $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
+	@mkdir -p $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
 	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
+	# empty repository
 	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
+	# load v7.0.0 data
 	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	# call target which restarts the API and emits error if API does not start
+	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
 .PHONY: test
-test:  ## runs all test targets.
-	bazel test //...
+test: docker-build ## runs all test targets.
+	bazel test //webapi/...
 
 #################################
 ## Database Management
@@ -305,12 +284,6 @@ clean-docker: ## cleans the docker installation
 info: ## print out all variables
 	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
 	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
-	@echo "SIPI_VERSION: \t\t $(SIPI_VERSION)"
-	@echo "KNORA_API_IMAGE: \t $(KNORA_API_IMAGE)"
-	@echo "KNORA_FUSEKI_IMAGE: \t $(KNORA_FUSEKI_IMAGE)"
-	@echo "KNORA_SIPI_IMAGE: \t $(KNORA_SIPI_IMAGE)"
-	@echo "KNORA_ASSETS_IMAGE: \t $(KNORA_ASSETS_IMAGE)"
-	@echo "KNORA_SALSAH1_IMAGE: \t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_DB_IMPORT: \t $(KNORA_DB_IMPORT)"
 	@echo "KNORA_DB_HOME: \t\t $(KNORA_DB_HOME)"
 

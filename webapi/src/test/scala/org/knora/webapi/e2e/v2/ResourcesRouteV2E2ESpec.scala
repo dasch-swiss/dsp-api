@@ -337,7 +337,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithOneHiddenResource.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test-data/resourcesR2RV2/ThingWithOneHiddenResource.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -354,7 +354,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithOneDeletedResource.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test-data/resourcesR2RV2/ThingWithOneDeletedResource.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.

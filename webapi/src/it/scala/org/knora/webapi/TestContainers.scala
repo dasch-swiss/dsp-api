@@ -27,13 +27,13 @@ import org.testcontainers.containers.{BindMode, GenericContainer}
   */
 object TestContainers {
 
-    val FusekiContainer = new GenericContainer("daschswiss/knora-jena-fuseki:latest")
+    val FusekiContainer = new GenericContainer("bazel/docker/knora-jena-fuseki:image")
     FusekiContainer.withExposedPorts(3030)
     FusekiContainer.withEnv("ADMIN_PASSWORD", "test")
     FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
     FusekiContainer.start()
 
-    val SipiContainer = new GenericContainer("daschswiss/knora-sipi:latest")
+    val SipiContainer = new GenericContainer("bazel/docker/knora-sipi:image")
     SipiContainer.withExposedPorts(1024)
     SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", "api")
     SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")

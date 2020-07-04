@@ -19,10 +19,10 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -39,7 +39,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run build everything
-        run: make build-all-scala
+        run: make build
       - name: Disk Free After
         run: |
           df -h
@@ -60,10 +60,10 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -84,7 +84,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run API unit tests
-        run: make test-unit-ci
+        run: make test-unit
       - name: Disk Free After
         run: |
           df -h
@@ -105,10 +105,10 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -129,7 +129,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API E2E tests
-        run: make test-e2e-ci
+        run: make test-e2e
       - name: Disk Free After
         run: |
           df -h
@@ -150,10 +150,10 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -195,10 +195,10 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -282,10 +282,10 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel_2.0.0-linux-x86_64.deb
-          sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
