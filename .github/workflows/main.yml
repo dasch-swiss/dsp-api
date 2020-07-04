@@ -174,7 +174,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API integration tests
-        run: make test-it-ci
+        run: make test-it
       - name: Disk Free After
         run: |
           df -h
@@ -216,8 +216,8 @@ jobs:
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: test repository update
-        run: make test-repository-update
+      - name: test repository upgrade
+        run: make test-repository-upgrade
       - name: Disk Free After
         run: |
           df -h
@@ -308,7 +308,7 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make publish-all-images
+          make docker-publish
       - name: Disk Free After
         run: |
           df -h
