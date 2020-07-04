@@ -24,9 +24,9 @@ container_push(
 )
 
 # use in targets needing an up-to-date docker image locally
-genrule(
-  name = "build",
-  srcs = [":image"],
-  cmd = "docker load -i $(location //docker/knora-jena-fuseki:image) >$@",
-  outs = ["build-output.txt"]
-)
+#genrule(
+#  name = "build",
+#  srcs = [":image"],
+#  cmd = "docker load -i $(location //docker/knora-jena-fuseki:image) >$@",
+#  outs = ["build-output.txt"]
+#)

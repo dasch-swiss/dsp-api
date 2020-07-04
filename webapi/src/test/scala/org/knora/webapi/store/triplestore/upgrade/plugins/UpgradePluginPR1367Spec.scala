@@ -31,7 +31,7 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1367" should {
         "fix the datatypes of decimal literals" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("upgrade/test_data/pr1367.trig")
+            val model: Model = trigFileToModel("test_data/upgrade/pr1367.trig")
 
             // Use the plugin to transform the input.
             val plugin = new UpgradePluginPR1367

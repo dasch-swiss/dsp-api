@@ -1,4 +1,4 @@
-workspace(name = "io_dasch_knora_api")
+workspace(name = "io_dasch_dsp_api")
 
 # load http_archive method
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")

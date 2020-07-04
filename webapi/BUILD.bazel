@@ -99,7 +99,7 @@ scala_library(
         "@maven//:io_swagger_swagger_jaxrs",
         "@maven//:io_swagger_swagger_models",
         "@maven//:javax_ws_rs_jsr311_api",
-        "@maven//:joda_time_joda_time",
+        # "@maven//:joda_time_joda_time",
         "@maven//:net_sf_ehcache_ehcache",
         "@maven//:net_sf_saxon_Saxon_HE",
         "@maven//:org_apache_commons_commons_csv",
@@ -145,10 +145,6 @@ scala_library(
         "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
-    ],
-    data = [
-        "//docker/knora-jena-fuseki:build",
-        "//docker/knora-sipi:image",
     ],
     deps = [
         ":main_library",

@@ -46,7 +46,7 @@ scala_library(
     resources = [
         "//salsah1/src/main/resources"
     ],
-    unused_dependency_checker_mode = "warn",
+    # unused_dependency_checker_mode = "warn",
     runtime_deps = [
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
@@ -74,7 +74,7 @@ scala_library(
     resources = [
         "//sipi/config"
     ],
-    unused_dependency_checker_mode = "warn",
+    # unused_dependency_checker_mode = "warn",
     runtime_deps = [
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",

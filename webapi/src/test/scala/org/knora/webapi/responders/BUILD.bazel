@@ -21,7 +21,7 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    unused_dependency_checker_mode = "warn",
+    # unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
         "@maven//:org_scalatest_scalatest_2_12",
