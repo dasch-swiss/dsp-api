@@ -134,7 +134,6 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
             assertThrows[BadRequestException](
                 CreateUserApiRequestADM(
-                    id = None,
                     username = "ddd",
                     email = "",
                     givenName = "Donald",
@@ -183,23 +182,6 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
             assertThrows[BadRequestException](
                 CreateUserApiRequestADM(
-                    username = "donald.duck",
-                    email = "donald.duck@example.com",
-                    givenName = "Donald",
-                    familyName = "",
-                    password = "test",
-                    status = true,
-                    lang = "en",
-                    systemAdmin = false
-                )
-            )
-        }
-
-        "throw 'BadRequestException' if 'id' is not in the correct form" in {
-
-            assertThrows[BadRequestException](
-                CreateUserApiRequestADM(
-                    id = Some("not_good"),
                     username = "donald.duck",
                     email = "donald.duck@example.com",
                     givenName = "Donald",
