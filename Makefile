@@ -231,11 +231,11 @@ test-salsah1: ## runs salsah1 headless browser tests
 test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration test
 	@rm -rf $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
 	@mkdir -p $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
-	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
+	@unzip $(CURRENT_DIR)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
 	# empty repository
 	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
 	# load v7.0.0 data
-	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
 	# call target which restarts the API and emits error if API does not start
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
