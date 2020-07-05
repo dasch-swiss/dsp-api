@@ -80,10 +80,9 @@ scala_test(
     # unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:org_scalactic_scalactic_2_12",
+        "//webapi:test_library",
         "@maven//:org_springframework_security_spring_security_core",
-    ],
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(

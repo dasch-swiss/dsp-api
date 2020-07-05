@@ -19,18 +19,25 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
+object UsersMessagesADMSpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /**
-  * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
+  * This spec is used to test subclasses of the [[UsersMessagesADM]] class.
   */
-class UsersMessagesADMSpec extends AnyWordSpecLike with Matchers {
+class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
     private val id = SharedTestDataADM.rootUser.id
     private val username = SharedTestDataADM.rootUser.username
@@ -127,6 +134,7 @@ class UsersMessagesADMSpec extends AnyWordSpecLike with Matchers {
 
             assertThrows[BadRequestException](
                 CreateUserApiRequestADM(
+                    id = None,
                     username = "ddd",
                     email = "",
                     givenName = "Donald",
@@ -175,6 +183,23 @@ class UsersMessagesADMSpec extends AnyWordSpecLike with Matchers {
 
             assertThrows[BadRequestException](
                 CreateUserApiRequestADM(
+                    username = "donald.duck",
+                    email = "donald.duck@example.com",
+                    givenName = "Donald",
+                    familyName = "",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+        }
+
+        "throw 'BadRequestException' if 'id' is not in the correct form" in {
+
+            assertThrows[BadRequestException](
+                CreateUserApiRequestADM(
+                    id = Some("not_good"),
                     username = "donald.duck",
                     email = "donald.duck@example.com",
                     givenName = "Donald",
