@@ -201,11 +201,11 @@ stack-db-only: stack-up ## starts only GraphDB.
 #################################
 
 .PHONY: test-webapi
-test-webapi: ## runs all dsp-api tests.
+test-webapi: docker-build ## runs all dsp-api tests.
 	bazel test //webapi/...
 
 .PHONY: test-unit
-test-unit: ## runs the dsp-api unit tests.
+test-unit: docker-build ## runs the dsp-api unit tests.
 	bazel test \
 	//webapi/src/test/scala/org/knora/webapi/http/... \
 	//webapi/src/test/scala/org/knora/webapi/messages/... \
@@ -216,15 +216,15 @@ test-unit: ## runs the dsp-api unit tests.
 	//webapi/src/test/scala/org/knora/webapi/util/... \
 
 .PHONY: test-e2e
-test-e2e: ## runs the dsp-api e2e tests.
+test-e2e: docker-build ## runs the dsp-api e2e tests.
 	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
 
 .PHONY: test-it
-test-it: ## runs the dsp-api integration tests.
+test-it: docker-build ## runs the dsp-api integration tests.
 	bazel test //webapi/src/it/...
 
 .PHONY: test-salsah1
-test-salsah1: ## runs salsah1 headless browser tests
+test-salsah1: docker-build ## runs salsah1 headless browser tests
 	bazel test //salsah1/...
 
 .PHONY: test-repository-upgrade
