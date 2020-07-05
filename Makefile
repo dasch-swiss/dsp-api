@@ -231,7 +231,7 @@ test-salsah1: docker-build ## runs salsah1 headless browser tests
 test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration test
 	@rm -rf $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
 	@mkdir -p $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
-	@unzip $(CURRENT_DIR)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
+	@unzip $(CURRENT_DIR)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
 	# empty repository
 	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
 	# load v7.0.0 data

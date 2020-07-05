@@ -8196,7 +8196,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8218,7 +8218,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8241,7 +8241,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8264,7 +8264,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8286,7 +8286,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8308,7 +8308,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8330,7 +8330,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
@@ -8352,7 +8352,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
-                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitglöckleinViaLabel.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
