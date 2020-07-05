@@ -43,6 +43,7 @@ scala_library(
     resources = [
         "//webapi/src/main/resources",
         "//webapi/scripts:fuseki_repository_config_ttl_template",
+        "//knora-ontologies",
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
