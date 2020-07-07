@@ -25,7 +25,6 @@ import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
@@ -58,11 +57,11 @@ case class IIIFManifestGetRequestV2(resourceIri: IRI, requestingUser: UserADM) e
 
 case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) extends KnoraResponseV2 {
     /**
-      * Converts the response to a data structure that can be used to generate JSON-LD.
-      *
-      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-      * @return a [[JsonLDDocument]] representing the response.
-      */
+     * Converts the response to a data structure that can be used to generate JSON-LD.
+     *
+     * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+     * @return a [[JsonLDDocument]] representing the response.
+     */
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         // TODO: generate JSON-LD manifest
 
@@ -83,9 +82,42 @@ case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) exten
 
         val body: JsonLDObject = JsonLDObject(
             Map(
-                "https://iiif.io/api/presentation/2/sequences" -> JsonLDArray(
+                JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/manifest.json"),
+                JsonLDConstants.TYPE -> JsonLDString("sc:Manifest"),
+                "label" -> JsonLDString("TEST MANIFEST"),
+                "sequences" -> JsonLDArray(
                     iiifUrls.map {
-                        iiifUrl => JsonLDString(iiifUrl)
+                        iiifUrl =>
+                            JsonLDObject(
+                                Map(
+                                    JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/sequence/normal"),
+                                    JsonLDConstants.TYPE -> JsonLDString("sc:Sequence"),
+                                    "canvases" -> JsonLDArray(
+                                        Seq(
+                                            JsonLDObject(
+                                                Map(
+                                                    JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/canvas/bigcanvas1"),
+                                                    JsonLDConstants.TYPE -> JsonLDString("sc:Canvas"),
+                                                    "images" -> JsonLDArray(
+                                                        Seq(
+                                                            JsonLDObject(
+                                                                Map(
+                                                                    JsonLDConstants.TYPE -> JsonLDString("oa:Annotation"),
+                                                                    "resource" -> JsonLDObject(
+                                                                        Map(
+                                                                            JsonLDConstants.ID -> JsonLDString(iiifUrl)
+                                                                        )
+                                                                    )
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
                     }
                 )
             )
