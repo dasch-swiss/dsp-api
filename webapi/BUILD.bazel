@@ -155,7 +155,6 @@ scala_library(
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_github_jsonld_java_jsonld_java",
         "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",

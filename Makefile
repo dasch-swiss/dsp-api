@@ -34,9 +34,9 @@ build: ## build all targets (excluding docs)
 docker-build-knora-api-image: # build and publish knora-api docker image locally
 	@bazel run //docker/knora-api:image
 
-.PHONY: docker-publish-knora-api
+.PHONY: docker-publish-knora-api-image
 docker-publish-knora-api-image: # publish knora-api image to Dockerhub
-	@docker run //docker/knora-api:push
+	@bazel run //docker/knora-api:push
 
 .PHONY: docker-build-knora-jena-fuseki-image
 docker-build-knora-jena-fuseki-image: # build and publish knora-jena-fuseki docker image locally

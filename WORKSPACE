@@ -209,8 +209,8 @@ container_pull(
     name = "openjdk11",
     registry = "docker.io",
     repository = "adoptopenjdk",
-    tag = "11-hotspot",
-    digest = "sha256:755c2308a261ce0aa29cbc511e8292914057163826004b3ccc0681a7fc28b860",
+    tag = "11-jre-hotspot-bionic",
+    digest = "sha256:0e51b455654bd162c485a6a6b5b120cc82db453d9265cc90f0c4fb5d14e2f62e",
 )
 
 load("//third_party:versions.bzl", "SIPI_REPOSITORY", "SIPI_TAG")

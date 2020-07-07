@@ -25,7 +25,7 @@ container_push(
    image = ":image",
    format = "Docker",
    registry = "index.docker.io",
-   repository = "dasch-swiss/knora-api",
+   repository = "daschswiss/knora-api",
    tag = "{BUILD_SCM_TAG}"
 )
 
