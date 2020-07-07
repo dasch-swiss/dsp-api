@@ -70,59 +70,29 @@ case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) exten
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        // TODO: difference schema?
-        // Make the knora-api prefix for the target schema.
-        val knoraApiPrefixExpansion = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-        }
-
         // Make the JSON-LD context.
-        val context = JsonLDUtil.makeContext(
+        val context: JsonLDObject = JsonLDUtil.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
-                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion
             )
         )
 
         // Make the JSON-LD document
 
-        // TODO: what is the body?
-
-        val contextAsJasonLD: Seq[JsonLDObject] = null
-        /*
-        val entryAsJasonLD: Seq[JsonLDObject] = iiifUrls.map {
-            manifestEntry: String =>
-                JsonLDObject(
-                    Map(
-                        OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> JsonLDUtil.iriToJsonLDObject(resourceIri),
-                        OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.iriToJsonLDObject(manifestEntry)
-                    )
-                )
-        }
-
-        val insideBody = JsonLDObject(
+        val body: JsonLDObject = JsonLDObject(
             Map(
-                //JsonLDConstants.CONTEXT -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).getOntologyName),
-                JsonLDConstants.ID -> JsonLDString(resourceIri),
-                OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(resourceIri.toString),
-                OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> JsonLDUtil.iriToJsonLDObject(resourceIri),
-                OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.iriToJsonLDObject(resourceIri)
+                "https://iiif.io/api/presentation/2/sequences" -> JsonLDArray(
+                    iiifUrls.map {
+                        iiifUrl => JsonLDString(iiifUrl)
+                    }
+                )
             )
         )
-         */
-
-
-        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(contextAsJasonLD)))
 
         JsonLDDocument(body = body, context = context)
-
-        //JsonLDDocument(body = JsonLDObject(Map.empty), context = JsonLDObject(Map.empty))
-
     }
-
 }
 
 /**
