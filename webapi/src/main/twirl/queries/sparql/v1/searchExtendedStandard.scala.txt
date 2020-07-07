@@ -203,7 +203,15 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObject@index knora-base:valueHasDecimal @searchCriterion.searchValue .
+                        ?valueObject@index knora-base:valueHasDecimal "@searchCriterion.searchValue"^^xsd:decimal .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#TimeValue" => {
+
+                        ?valueObject@index knora-base:valueHasTimeStamp "@searchCriterion.searchValue"^^xsd:dateTime .
 
                         BIND('@searchCriterion.searchValue' AS ?literal@index)
 
@@ -249,11 +257,11 @@ WHERE {
 
                         *@
 
-                        ?valueObject@index knora-base:valueHasListNode ?listNode .
-                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
+                        ?valueObject@index knora-base:valueHasListNode ?listNode@index  .
+                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode@index  .
 
-                        ?listNode rdfs:label ?listNodeLabel .
-                        BIND(?listNodeLabel AS ?literal@index)
+                        ?listNode@index rdfs:label ?listNodeLabel@index  .
+                        BIND(?listNodeLabel@index AS ?literal@index)
 
                     }
 
@@ -295,7 +303,15 @@ WHERE {
 
                         ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?literal@index != @searchCriterion.searchValue)
+                        FILTER (?literal@index != "@searchCriterion.searchValue"^^xsd:decimal)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#TimeValue" => {
+
+                        ?valueObject@index knora-base:valueHasTimeStamp ?literal@index .
+
+                        FILTER (?literal@index != "@searchCriterion.searchValue"^^xsd:dateTime)
 
                     }
 
@@ -340,7 +356,15 @@ WHERE {
 
                         ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?literal@index > searchCriterion.searchValue )
+                        FILTER (?literal@index > "@searchCriterion.searchValue"^^xsd:decimal )
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#TimeValue" => {
+
+                        ?valueObject@index knora-base:valueHasTimeStamp ?literal@index .
+
+                        FILTER (?literal@index > "@searchCriterion.searchValue"^^xsd:dateTime )
 
                     }
 
@@ -376,7 +400,15 @@ WHERE {
 
                         ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?literal@index >= @searchCriterion.searchValue)
+                        FILTER (?literal@index >= "@searchCriterion.searchValue"^^xsd:decimal)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#TimeValue" => {
+
+                        ?valueObject@index knora-base:valueHasTimeStamp ?literal@index .
+
+                        FILTER (?literal@index >= "@searchCriterion.searchValue"^^xsd:dateTime)
 
                     }
 
@@ -410,9 +442,17 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?literal@index < @searchCriterion.searchValue)
+                        FILTER (?literal@index < "@searchCriterion.searchValue"^^xsd:decimal)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#TimeValue" => {
+
+                        ?valueObject@index knora-base:valueHasTimeStamp ?literal@index .
+
+                        FILTER (?literal@index < "@searchCriterion.searchValue"^^xsd:dateTime)
 
                     }
 
@@ -446,9 +486,17 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?literal@index <= @searchCriterion.searchValue)
+                        FILTER (?literal@index <= "@searchCriterion.searchValue"^^xsd:decimal)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#TimeValue" => {
+
+                        ?valueObject@index knora-base:valueHasTimeStamp ?literal@index .
+
+                        FILTER (?literal@index <= "@searchCriterion.searchValue"^^xsd:dateTime)
 
                     }
 

@@ -5,12 +5,13 @@ import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
   * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
   */
-class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
+class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
     "querying the user's 'PermissionProfileV1' with 'hasPermissionFor'" should {
 

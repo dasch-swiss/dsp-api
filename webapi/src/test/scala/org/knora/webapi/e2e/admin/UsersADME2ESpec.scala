@@ -23,6 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
@@ -35,6 +36,7 @@ import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
@@ -216,6 +218,68 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.Forbidden)
             }
 
+        }
+
+        "given a custom Iri" should {
+            "create a user with the provided custom IRI " in {
+
+                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createUserWithCustomIriRequest))
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+
+                //check that the custom IRI is correctly assigned
+                result.id should be ("http://rdfh.ch/users/userWithCustomIri")
+            }
+
+            "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
+                val params =
+                    s"""{
+                       |    "id": "invalid-user-IRI",
+                       |    "username": "userWithInvalidCustomIri",
+                       |    "email": "userWithInvalidCustomIri@example.org",
+                       |    "givenName": "a user",
+                       |    "familyName": "with an invalid custom Iri",
+                       |    "password": "test",
+                       |    "status": true,
+                       |    "lang": "en",
+                       |    "systemAdmin": false
+                       |}""".stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"Invalid user IRI")
+                invalidIri should be(true)
+            }
+
+            "return 'BadRequest' if the supplied IRI for the user is not unique" in {
+                val params =
+                    s"""{
+                       |    "id": "http://rdfh.ch/users/userWithCustomIri",
+                       |    "username": "userWithDuplicateCustomIri",
+                       |    "email": "userWithDuplicateCustomIri@example.org",
+                       |    "givenName": "a user",
+                       |    "familyName": "with a duplicate custom Iri",
+                       |    "password": "test",
+                       |    "status": true,
+                       |    "lang": "en",
+                       |    "systemAdmin": false
+                       |}""".stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/users/userWithCustomIri' already exists, try another one.")
+                invalidIri should be(true)
+            }
         }
 
         "used to modify user information" should {

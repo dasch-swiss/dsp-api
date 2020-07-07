@@ -15,7 +15,7 @@
 	rdfs:label "The Yes, No, Maybe List"@en ;
 	rdfs:label "Die Ja, Nein, Vielleicht Liste"@de ;
 	rdfs:comment "This list can be used by all projects."@en ;
-  rdfs:comment "Diese Liste kann von allen Projekten verwendet werden."@de ;
+    rdfs:comment "Diese Liste kann von allen Projekten verwendet werden."@de ;
 	knora-base:attachedToProject knora-admin:SystemProject ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/FFFF/ynm01-01> , <http://rdfh.ch/lists/FFFF/ynm01-02> , <http://rdfh.ch/lists/FFFF/ynm01-03> .
 
@@ -31,34 +31,11 @@
 	knora-base:hasRootNode <http://rdfh.ch/lists/FFFF/ynm01> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "No"@en ;
-  rdfs:label "Nein"@de .
+    rdfs:label "Nein"@de .
 
 <http://rdfh.ch/lists/FFFF/ynm01-03> a knora-base:ListNode ;
 	knora-base:listNodeName "maybe" ;
 	knora-base:hasRootNode <http://rdfh.ch/lists/FFFF/ynm01> ;
 	knora-base:listNodePosition 2 ;
 	rdfs:label "Maybe"@en ;
-  rdfs:label "Vielleicht"@de .
-
-
-##########################################################
-#
-# Sweet and tasty but forbidden resource
-#
-# but of the tree of the knowledge of good and evil, thou shalt not eat of it
-#
-##########################################################
-
-<http://rdfh.ch/0000/forbiddenResource> a knora-base:ForbiddenResource ;
-
-                      rdfs:label "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)" ;
-
-                      knora-base:isDeleted false ;
-
-                      knora-base:attachedToUser <http://rdfh.ch/users/root> ;
-
-                      knora-base:attachedToProject knora-admin:SystemProject ;
-
-                      knora-base:creationDate "2017-10-06T11:05:37Z"^^xsd:dateTime ;
-
-                      knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser" .
+    rdfs:label "Vielleicht"@de .

@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -42,7 +42,7 @@ import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources}
+import org.knora.webapi.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.util._
@@ -55,7 +55,7 @@ import scala.util.{Failure, Success}
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
     /* actor materializer needed for http requests */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
     /**
      * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -126,18 +126,26 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      */
     private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
-        def makeTaskFuture: Future[ReadResourcesSequenceV2] = {
+        def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
             for {
+                //check if resourceIri already exists holding a lock on the IRI
+                result <- stringFormatter.checkIriExists(resourceIri, storeManager)
+                
+                _ = if (result) {
+                  throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+                }
+
                 // Convert the resource to the internal ontology schema.
                 internalCreateResource: CreateResourceV2 <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
-                // Check standoff link targets and list nodes that should exist.
+                // Check link targets and list nodes that should exist.
 
                 _ <- checkStandoffLinkTargets(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
                 _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
                 // Get the class IRIs of all the link targets in the request.
                 linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
+                    resourceIri: IRI,
                     internalCreateResources = Seq(internalCreateResource),
                     requestingUser = createResourceRequestV2.requestingUser
                 )
@@ -188,6 +196,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
                 // for creating the resource.
                 resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
+                    resourceIri = resourceIri,
                     internalCreateResource = internalCreateResource,
                     linkTargetClasses = linkTargetClasses,
                     entityInfo = allEntityInfo,
@@ -260,11 +269,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
+            resourceIri: IRI <- checkEntityIri(createResourceRequestV2.createResource.resourceIri, stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode))
+
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
             taskResult <- IriLocker.runWithIriLock(
                 createResourceRequestV2.apiRequestID,
-                createResourceRequestV2.createResource.resourceIri,
-                () => makeTaskFuture
+                resourceIri,
+                () => makeTaskFuture(resourceIri)
             )
         } yield taskResult
 
@@ -350,8 +361,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     requestingUser = updateResourceMetadataRequestV2.requestingUser
                 )
 
-                _ = if (updatedResourcesSeq.numberOfResources != 1) {
-                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
+                _ = if (updatedResourcesSeq.resources.size != 1) {
+                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}")
                 }
 
                 updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
@@ -545,9 +556,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     ignoreRdfSubjectAndObject = true
                 )
 
+                // Get the IRI of the named graph from which the resource will be erased.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+
                 // Generate SPARQL for erasing the resource.
                 sparqlUpdate = queries.sparql.v2.txt.eraseResource(
                     triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
                     resourceIri = eraseResourceV2.resourceIri
                 ).toString()
 
@@ -558,9 +573,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Verify that the resource was erased correctly.
 
-                resourceStillExists: Boolean <- checkEntityExists(
-                    entityIri = resourceSmartIri,
-                )
+                resourceStillExists: Boolean <- stringFormatter.checkIriExists(resourceSmartIri.toString, storeManager)
 
                 _ = if (resourceStillExists) {
                     throw UpdateNotPerformedException(s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.")
@@ -600,7 +613,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param requestingUser             the user making the request.
      * @return a [[ResourceReadyToCreate]].
      */
-    private def generateResourceReadyToCreate(internalCreateResource: CreateResourceV2,
+    private def generateResourceReadyToCreate(resourceIri: IRI,
+                                              internalCreateResource: CreateResourceV2,
                                               linkTargetClasses: Map[IRI, SmartIri],
                                               entityInfo: EntityInfoGetResponseV2,
                                               clientResourceIDs: Map[IRI, String],
@@ -608,7 +622,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                               defaultPropertyPermissions: Map[SmartIri, String],
                                               creationDate: Instant,
                                               requestingUser: UserADM): Future[ResourceReadyToCreate] = {
-        val resourceIDForErrorMsg: String = clientResourceIDs.get(internalCreateResource.resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
+        val resourceIDForErrorMsg: String = clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
         for {
             // Check that the resource class has a suitable cardinality for each submitted value.
@@ -702,14 +716,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // Ask the values responder for SPARQL for generating the values.
             sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
                 GenerateSparqlToCreateMultipleValuesRequestV2(
-                    resourceIri = internalCreateResource.resourceIri,
+                    resourceIri = resourceIri,
                     values = valuesWithValidatedPermissions,
                     creationDate = creationDate,
                     requestingUser = requestingUser
                 )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
         } yield ResourceReadyToCreate(
             sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
-                resourceIri = internalCreateResource.resourceIri,
+                resourceIri = resourceIri,
                 permissions = resourcePermissions,
                 sparqlForValues = sparqlForValuesResponse.insertSparql,
                 resourceClassIri = internalCreateResource.resourceClassIri.toString,
@@ -729,9 +743,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param requestingUser          the user making the request.
      * @return a map of resource IRIs to class IRIs.
      */
-    private def getLinkTargetClasses(internalCreateResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
+    private def getLinkTargetClasses(resourceIri: IRI, internalCreateResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
         // Get the IRIs of the new and existing resources that are targets of links.
-        val (existingTargets: Set[IRI], newTargets: Set[IRI]) = internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
+        val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) = internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
             case ((accExisting: Set[IRI], accNew: Set[IRI]), valueToCreate: CreateValueInNewResourceV2) =>
                 valueToCreate.valueContent match {
                     case linkValueContentV2: LinkValueContentV2 =>
@@ -747,13 +761,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Make a map of the IRIs of new target resources to their class IRIs.
         val classesOfNewTargets: Map[IRI, SmartIri] = internalCreateResources.map {
-            resourceToCreate => resourceToCreate.resourceIri -> resourceToCreate.resourceClassIri
+            resourceToCreate => resourceIri -> resourceToCreate.resourceClassIri
         }.toMap.filterKeys(newTargets)
 
         for {
             // Get information about the existing resources that are targets of links.
             existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                resourceIris = existingTargets.toSeq,
+                resourceIris = existingTargetIris.toSeq,
                 targetSchema = ApiV2Complex,
                 requestingUser = requestingUser
             )
@@ -887,7 +901,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
         }
 
-        checkResourceIris(standoffLinkTargetsThatShouldExist, requestingUser)
+        getResourcePreviewV2(standoffLinkTargetsThatShouldExist.toSeq, targetSchema = ApiV2Complex, requestingUser).map(_ => ())
     }
 
     /**
@@ -957,6 +971,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                     }
                                 } yield GenerateSparqlForValueInNewResourceV2(
                                     valueContent = valueToCreate.valueContent,
+                                    customValueIri = valueToCreate.customValueIri,
+                                    customValueUUID = valueToCreate.customValueUUID,
+                                    customValueCreationDate = valueToCreate.customValueCreationDate,
                                     permissions = validatedCustomPermissions
                                 )
 
@@ -965,6 +982,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                 FastFuture.successful {
                                     GenerateSparqlForValueInNewResourceV2(
                                         valueContent = valueToCreate.valueContent,
+                                        customValueIri = valueToCreate.customValueIri,
+                                        customValueUUID = valueToCreate.customValueUUID,
+                                        customValueCreationDate = valueToCreate.customValueCreationDate,
                                         permissions = defaultPropertyPermissions(propertyIri)
                                     )
                                 }
@@ -1042,7 +1062,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
-        for {
+        val resourceFuture: Future[ReadResourcesSequenceV2] = for {
             resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
                 resourceIris = Seq(resourceIri),
                 requestingUser = requestingUser,
@@ -1050,11 +1070,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues
             )
 
-            resource: ReadResourceV2 = try {
-                resourcesResponse.toResource(requestedResourceIri = resourceIri)
-            } catch {
-                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
-            }
+            resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
 
             _ = if (resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri) {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
@@ -1102,9 +1118,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     }
             }
         } yield ReadResourcesSequenceV2(
-            numberOfResources = 1,
             resources = Seq(resource.copy(values = Map.empty))
         )
+
+        resourceFuture.recover {
+            case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
+        }
     }
 
     /**
@@ -1157,8 +1176,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             valueUuid: Option[UUID],
                                             versionDate: Option[Instant],
                                             queryStandoff: Boolean,
-                                            requestingUser: UserADM): Future[RdfResources] = {
-
+                                            requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1188,15 +1206,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
-            queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
-
-            // check if all the requested resources were returned
-            requestedButMissing: Set[IRI] = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
-
-            _ = if (requestedButMissing.nonEmpty) {
-                throw NotFoundException(s"One or more requested resources were not found (maybe you do not have permission to see them, or they are marked as deleted): ${requestedButMissing.map(resourceIri => s"<$resourceIri>").mkString(", ")}")
-            }
-        } yield queryResultsSeparated
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = requestingUser
+            )
+        } yield mainResourcesAndValueRdfData
 
     }
 
@@ -1219,7 +1233,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1229,7 +1242,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
 
-            queryResultsSeparated: RdfResources <- getResourcesFromTriplestore(
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
                 resourceIris = resourceIris,
                 preview = false,
                 propertyIri = propertyIri,
@@ -1241,38 +1254,40 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
+                getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, requestingUser)
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
-            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
-                resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(
-                        resourceIri = resIri,
-                        resourceRdfData = queryResultsSeparated(resIri),
-                        mappings = mappingsAsMap,
-                        queryStandoff = queryStandoff,
-                        versionDate = versionDate,
-                        responderManager = responderManager,
-                        targetSchema = targetSchema,
-                        settings = settings,
-                        requestingUser = requestingUser
-                    )
-            }.toVector
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = resourceIrisDistinct,
+                pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+                mappings = mappingsAsMap,
+                queryStandoff = queryStandoff,
+                versionDate = versionDate,
+                calculateMayHaveMoreResults = false,
+                responderManager = responderManager,
+                targetSchema = targetSchema,
+                settings = settings,
+                requestingUser = requestingUser
+            )
 
-            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
+            _ = apiResponse.checkResourceIris(
+                targetResourceIris = resourceIris.toSet,
+                resourcesSequence = apiResponse
+            )
 
             _ = valueUuid match {
                 case Some(definedValueUuid) =>
-                    if (!resourcesResponse.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
+                    if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
                         throw NotFoundException(s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it, or it is marked as deleted)")
                     }
 
                 case None => ()
             }
 
-        } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
+        } yield apiResponse
 
     }
 
@@ -1289,7 +1304,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: RdfResources <- getResourcesFromTriplestore(
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
                 resourceIris = resourceIris,
                 preview = true,
                 propertyIri = None,
@@ -1299,25 +1314,25 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
-                resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(
-                        resourceIri = resIri,
-                        resourceRdfData = queryResultsSeparated(resIri),
-                        mappings = Map.empty[IRI, MappingAndXSLTransformation],
-                        queryStandoff = false,
-                        versionDate = None,
-                        responderManager = responderManager,
-                        targetSchema = targetSchema,
-                        settings = settings,
-                        requestingUser = requestingUser
-                    )
-            }.toVector
+            apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = resourceIrisDistinct,
+                pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+                mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                queryStandoff = false,
+                versionDate = None,
+                calculateMayHaveMoreResults = false,
+                responderManager = responderManager,
+                targetSchema = targetSchema,
+                settings = settings,
+                requestingUser = requestingUser
+            )
 
-            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
-
-        } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
-
+            _ = apiResponse.checkResourceIris(
+                targetResourceIris = resourceIris.toSet,
+                resourcesSequence = apiResponse
+            )
+        } yield apiResponse
     }
 
     /**
@@ -1363,7 +1378,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
             gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = gravsearchTemplateUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
+                fileUrl = gravsearchTemplateUrl,
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
+                senderName = this.getClass.getName
+            )).mapTo[SipiGetTextFileResponse]
             gravsearchTemplate: String = response.content
 
         } yield gravsearchTemplate
@@ -1578,21 +1597,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             )
 
         } yield tei
-    }
-
-    /**
-     * Given a set of resource IRIs, checks that they point to Knora resources.
-     * If not, throws an exception.
-     *
-     * @param targetResourceIris the IRIs to be checked.
-     * @param requestingUser     the user making the request.
-     */
-    private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
-        if (targetResourceIris.isEmpty) {
-            FastFuture.successful(())
-        } else {
-            getResourcePreviewV2(targetResourceIris.toSeq, targetSchema = ApiV2Complex, requestingUser).map(_ => ())
-        }
     }
 
     /**

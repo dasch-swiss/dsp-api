@@ -744,7 +744,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // If we're updating a link, findResourceWithValueResult will contain the IRI of the property that points to the
             // knora-base:LinkValue, but we'll need the IRI of the corresponding link property.
             val propertyIri = changeValueRequest.value match {
-                case linkUpdateV1: LinkUpdateV1 => stringFormatter.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                case linkUpdateV1: LinkUpdateV1 => stringFormatter.linkValuePropertyIriToLinkPropertyIri(findResourceWithValueResult.propertyIri)
                 case _ => findResourceWithValueResult.propertyIri
             }
 
@@ -1075,7 +1075,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
                     }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
 
-                    val linkPropertyIri = stringFormatter.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                    val linkPropertyIri = stringFormatter.linkValuePropertyIriToLinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
                         // Get project info

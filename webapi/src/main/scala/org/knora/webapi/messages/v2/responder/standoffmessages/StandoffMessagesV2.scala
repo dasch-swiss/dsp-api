@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder.standoffmessages
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorRef
@@ -80,7 +81,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
       * @param targetSchema the Knora API schema to be used in the JSON-LD document.
       * @return a [[JsonLDDocument]] representing the response.
       */
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"Standoff is available only in the complex schema")
         }
@@ -141,7 +142,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
         Future {
             fromJsonLDSync(
@@ -189,7 +190,7 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
   */
 case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -307,6 +308,8 @@ object StandoffDataTypeClasses extends Enumeration {
 
     val StandoffIntervalTag: Value = Value(OntologyConstants.KnoraBase.StandoffIntervalTag)
 
+    val StandoffTimeTag: Value = Value(OntologyConstants.KnoraBase.StandoffTimeTag)
+
     val StandoffBooleanTag: Value = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
 
     val StandoffInternalReferenceTag: Value = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
@@ -365,6 +368,11 @@ object StandoffProperties {
         OntologyConstants.KnoraBase.ValueHasIntervalEnd
     )
 
+    // represents the standoff properties defined on the time standoff tag
+    val timeProperties: Set[IRI] = Set(
+        OntologyConstants.KnoraBase.ValueHasTimeStamp
+    )
+
     // represents the standoff properties defined on the boolean standoff tag
     val booleanProperties: Set[IRI] = Set(OntologyConstants.KnoraBase.ValueHasBoolean)
 
@@ -386,7 +394,8 @@ object StandoffProperties {
     // represents the standoff properties defined on the internal reference standoff tag
     val internalReferenceProperties: Set[IRI] = Set(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)
 
-    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ booleanProperties ++ decimalProperties ++ integerProperties ++ uriProperties ++ colorProperties ++ linkProperties ++ internalReferenceProperties
+    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ timeProperties ++ booleanProperties ++ decimalProperties ++
+        integerProperties ++ uriProperties ++ colorProperties ++ linkProperties ++ internalReferenceProperties
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -559,6 +568,30 @@ case class StandoffTagBooleanAttributeV2(standoffPropertyIri: SmartIri, value: B
 
     override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDBoolean(value)
+    }
+}
+
+/**
+ * Represents a standoff tag attribute of type xsd:dateTimeStamp.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
+case class StandoffTagTimeAttributeV2(standoffPropertyIri: SmartIri, value: Instant) extends StandoffTagAttributeV2 {
+
+    def stringValue: String = value.toString
+
+    def rdfValue: String = s""""${value.toString}"^^xsd:dateTime"""
+
+    override def toOntologySchema(targetSchema: OntologySchema): StandoffTagAttributeV2 = {
+        copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
+    }
+
+    override def toJsonLD: (IRI, JsonLDValue) = {
+        standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = value.toString,
+            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+        )
     }
 }
 

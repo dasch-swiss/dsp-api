@@ -227,20 +227,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         "create an empty ontology called 'foo' with a project code" in {
             val label = "The foo ontology"
 
-            val params =
-                s"""
-                   |{
-                   |    "knora-api:ontologyName": "foo",
-                   |    "knora-api:attachedToProject": {
-                   |      "@id": "$imagesProjectIri"
-                   |    },
-                   |    "rdfs:label": "$label",
-                   |    "@context": {
-                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-                   |    }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.createOntology(imagesProjectIri, label)
+
 
             Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -250,7 +238,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/foo/v2")
                 fooIri.set(ontologyIri)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
+
+                val lastModDate = metadata.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 fooLastModDate = lastModDate
             }
         }
@@ -258,18 +252,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         "change the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 
-            val params =
-                s"""
-                   |{
-                   |  "@id": "${fooIri.get}",
-                   |  "rdfs:label": "$newLabel",
-                   |  "knora-api:lastModificationDate": "$fooLastModDate",
-                   |  "@context": {
-                   |    "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |    "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changeOntologyMetadata(fooIri.get, newLabel, fooLastModDate)
+
 
             Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -278,7 +262,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
                 assert(ontologyIri == fooIri.get)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
+
+                val lastModDate = metadata.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(lastModDate.isAfter(fooLastModDate))
                 fooLastModDate = lastModDate
             }
@@ -294,56 +284,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
-            val params =
-                """
-                  |{
-                  |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                  |  "@type" : "owl:Ontology",
-                  |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
-                  |  "@graph" : [ {
-                  |      "@id" : "anything:hasName",
-                  |      "@type" : "owl:ObjectProperty",
-                  |      "knora-api:subjectType" : {
-                  |        "@id" : "anything:Thing"
-                  |      },
-                  |      "knora-api:objectType" : {
-                  |        "@id" : "knora-api:TextValue"
-                  |      },
-                  |      "rdfs:comment" : [ {
-                  |        "@language" : "en",
-                  |        "@value" : "The name of a Thing"
-                  |      }, {
-                  |        "@language" : "de",
-                  |        "@value" : "Der Name eines Dinges"
-                  |      } ],
-                  |      "rdfs:label" : [ {
-                  |        "@language" : "en",
-                  |        "@value" : "has name"
-                  |      }, {
-                  |        "@language" : "de",
-                  |        "@value" : "hat Namen"
-                  |      } ],
-                  |      "rdfs:subPropertyOf" : [ {
-                  |        "@id" : "knora-api:hasValue"
-                  |      }, {
-                  |        "@id" : "http://schema.org/name"
-                  |      } ],
-                  |      "salsah-gui:guiElement" : {
-                  |        "@id" : "salsah-gui:SimpleText"
-                  |      },
-                  |      "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100" ]
-                  |  } ],
-                  |  "@context" : {
-                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                  |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-                  |    "owl" : "http://www.w3.org/2002/07/owl#",
-                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                  |  }
-                  |}
-                """.stripMargin
+            val params = SharedTestDataADM.createProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)
+
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -364,36 +306,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the labels of a property" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:hasName",
-                   |    "@type" : "owl:ObjectProperty",
-                   |    "rdfs:label" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "has name"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "a nom"
-                   |    }, {
-                   |      "@language" : "de",
-                   |      "@value" : "hat Namen"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changePropertyLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -414,36 +327,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the comments of a property" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:hasName",
-                   |    "@type" : "owl:ObjectProperty",
-                   |    "rdfs:comment" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "The name of a Thing"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "Le nom d'une chose"
-                   |    }, {
-                   |      "@language" : "de",
-                   |      "@value" : "Der Name eines Dinges"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changePropertyComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -464,48 +348,9 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:WildThing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:label" : {
-                   |      "@language" : "en",
-                   |      "@value" : "wild thing"
-                   |    },
-                   |    "rdfs:comment" : {
-                   |      "@language" : "en",
-                   |      "@value" : "A thing that is wild"
-                   |    },
-                   |    "rdfs:subClassOf" : [
-                   |      {
-                   |        "@id": "anything:Thing"
-                   |      },
-                   |      {
-                   |        "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |        "owl:maxCardinality": 1,
-                   |        "owl:onProperty": {
-                   |          "@id": "anything:hasName"
-                   |        },
-                   |        "salsah-gui:guiOrder": 1
-                   |      }
-                   |    ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+
+            val params = SharedTestDataADM.createClassWithCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -529,37 +374,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "create a class anything:Nothing with no properties" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:label" : {
-                   |      "@language" : "en",
-                   |      "@value" : "nothing"
-                   |    },
-                   |    "rdfs:comment" : {
-                   |      "@language" : "en",
-                   |      "@value" : "Represents nothing"
-                   |    },
-                   |    "rdfs:subClassOf" : {
-                   |      "@id" : "knora-api:Resource"
-                   |    }
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.createClassWithoutCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -583,33 +399,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the labels of a class" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:label" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "nothing"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "rien"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changeClassLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -630,33 +420,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the comments of a class" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "$AnythingOntologyIri",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:comment" : [ {
-                   |      "@language" : "en",
-                   |      "@value" : "Represents nothing"
-                   |    }, {
-                   |      "@language" : "fr",
-                   |      "@value" : "ne représente rien"
-                   |    } ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "$AnythingOntologyIri#"
-                   |  }
-                   |}
-                """.stripMargin
+            val params = SharedTestDataADM.changeClassComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -682,7 +446,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasOtherNothing",
                    |    "@type" : "owl:ObjectProperty",
@@ -734,33 +501,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "add a cardinality for the property anything:hasOtherNothing to the class anything:Nothing" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:subClassOf" : {
-                   |      "@type": "owl:Restriction",
-                   |      "owl:maxCardinality" : 1,
-                   |      "owl:onProperty" : {
-                   |        "@id" : "anything:hasOtherNothing"
-                   |      }
-                   |    }
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.addCardinality(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
 
@@ -797,26 +539,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "remove the cardinality for the property anything:hasOtherNothing from the class anything:Nothing" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate" ,
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class"
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.removeCardinalityOfProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+
 
             Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -844,7 +568,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -856,7 +586,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasNothingness",
                    |    "@type" : "owl:ObjectProperty",
@@ -913,7 +646,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -963,7 +699,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasEmptiness",
                    |    "@type" : "owl:ObjectProperty",
@@ -1015,33 +754,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "change the cardinalities of the class anything:Nothing, replacing anything:hasNothingness with anything:hasEmptiness" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:subClassOf" : {
-                   |      "@type": "owl:Restriction",
-                   |      "owl:maxCardinality": 1,
-                   |      "owl:onProperty": {
-                   |        "@id" : "anything:hasEmptiness"
-                   |      }
-                   |    }
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.replaceClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1072,33 +785,20 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
         }
 
         "remove all cardinalities from the class anything:Nothing" in {
-            val params =
-                s"""
-                   |{
-                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate" ,
-                   |  "@graph" : [ {
-                   |    "@id" : "anything:Nothing",
-                   |    "@type" : "owl:Class"
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
+            val params = SharedTestDataADM.removeAllClassCardinalities(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -1126,7 +826,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1140,7 +846,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1173,7 +885,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
                 uselessIri.set(ontologyIri)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
+
+                val lastModDate = metadata.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 uselessLastModDate = lastModDate
             }
 
@@ -1182,7 +900,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "${uselessIri.get}",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$uselessLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$uselessLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "useless:hasSharedName",
                    |    "@type" : "owl:ObjectProperty",

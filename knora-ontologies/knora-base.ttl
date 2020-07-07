@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v6" .
+    :ontologyVersion "knora-base v8" .
 
 
 
@@ -456,8 +456,6 @@
                            "has Link to"@en ,
                            "a lien vers"@fr ,
                            "ha Link verso"@it ;
-
-                rdfs:comment "Represents a direct connection between two resources"@en ;
 
                 :isEditable true ;
 
@@ -1535,6 +1533,18 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasTimeStamp
+
+:valueHasTimeStamp rdf:type owl:DatatypeProperty ;
+
+                       rdfs:subPropertyOf :valueHas ;
+
+                       :subjectClassConstraint :TimeBase ;
+
+                       :objectDatatypeConstraint xsd:dateTime .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#valueHasListNode
 
 :valueHasListNode rdf:type owl:ObjectProperty ;
@@ -1544,7 +1554,6 @@
                   :subjectClassConstraint :ListValue ;
 
                   :objectClassConstraint :ListNode .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasOrder
@@ -2008,6 +2017,24 @@
                rdfs:comment "Represents a time interval, e.g. in an audio recording"@en .
 
 
+:TimeBase rdf:type owl:Class ;
+
+              rdfs:subClassOf :ValueBase ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :valueHasTimeStamp ;
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] .
+
+
+###  http://www.knora.org/ontology/knora-base#IntervalValue
+
+:TimeValue rdf:type owl:Class ;
+
+               rdfs:subClassOf :Value ,
+                               :TimeBase ;
+
+               rdfs:comment "Represents a timestamp"@en .
+
 
 ###  http://www.knora.org/ontology/knora-base#LinkObj
 
@@ -2431,6 +2458,16 @@
                         rdfs:comment "Represents an interval in a TextValue"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#StandoffTimeTag
+
+:StandoffTimeTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :TimeBase ;
+
+                        rdfs:comment "Represents a timestamp in a TextValue"@en .
+
+
 ###  http://www.knora.org/ontology/knora-base#StandoffBooleanTag
 
 :StandoffBooleanTag rdf:type owl:Class ;
@@ -2521,19 +2558,6 @@
                     rdfs:comment "A resource containing a text file"@en .
 
 
-### http://www.knora.org/ontology/knora-base#ForbiddenResource
-
-:ForbiddenResource  rdf:type owl:Class ;
-
-                    rdfs:subClassOf :Resource ,
-                    [ rdf:type owl:Restriction ;
-                      owl:onProperty :hasComment ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ];
-
-                    rdfs:label """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en ;
-
-                    rdfs:comment """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en .
 
 ### http://www.knora.org/ontology/knora-base#XSLTransformation
 

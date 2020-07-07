@@ -24,15 +24,14 @@ import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{ClientEndpoint, SmartIri, StringFormatter, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,12 +40,8 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
-    // Definitions for ClientEndpoint
-    override val name: String = "SearchEndpoint"
+    // Directory name for generated test data
     override val directoryName: String = "search"
-    override val urlPath: String = "search"
-    override val description: String = "An endpoint for searching data in Knora."
-    override val functions: Seq[ClientFunction] = Seq.empty
 
     private val LIMIT_TO_PROJECT = "limitToProject"
     private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
@@ -351,16 +346,17 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // Search results to return in test data.
     private val testSearches: Map[String, IRI] = Map(
         "things" -> SharedTestDataADM.gravsearchComplexThingSmallerThanDecimal,
-        "regions" -> SharedTestDataADM.gravsearchComplexRegionsForPage
+        "thing-links" -> SharedTestDataADM.gravsearchThingLinks,
+        "things-with-paging" -> SharedTestDataADM.gravsearchThingsWithPaging
     )
 
-    private def getSearchTestResponses: Future[Set[SourceCodeFileContent]] = {
-        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testSearches.map {
+    private def getSearchTestResponses: Future[Set[TestDataFileContent]] = {
+        val responseFutures: Iterable[Future[TestDataFileContent]] = testSearches.map {
             case (filename, search) =>
                 for {
                     responseStr <- doTestDataRequest(Post(s"$baseApiUrl/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, search)))
-                } yield SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                } yield TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath(filename),
                     text = responseStr
                 )
         }
@@ -451,7 +447,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
         getSearchTestResponses
     }
 }

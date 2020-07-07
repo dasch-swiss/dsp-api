@@ -9,7 +9,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
@@ -156,18 +156,19 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         val sipiFormData = Multipart.FormData(formDataParts: _*)
 
         // Send Sipi the file in a POST request.
-        val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+        val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
 
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)
         val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
+        // println(s"sipiUploadResponse: $sipiUploadResponse")
 
         // Request the temporary file from Sipi.
         for (responseEntry <- sipiUploadResponse.uploadedFiles) {
             val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
-                Get(responseEntry.temporaryUrl + "/full/full/0/default.jpg")
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/max/0/default.jpg")
             } else {
-                Get(responseEntry.temporaryUrl)
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl))
             }
 
             checkResponseOK(sipiGetTmpFileRequest)
@@ -293,7 +294,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$invalidToken", sipiFormData)
+            val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
             val sipiResponse = singleAwaitingRequest(sipiRequest)
             assert(sipiResponse.status == StatusCodes.Unauthorized)
         }
@@ -356,12 +357,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-            stillImageResourceIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            stillImageResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
             val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-            assert(resource.getTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture")
+            assert(resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture")
 
             // Get the new file value from the resource.
 
@@ -381,7 +382,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 case other => throw AssertionException(s"Invalid value object: $other")
             }
 
-            stillImageFileValueIri.set(savedValueObj.getIDAsKnoraDataIri.toString)
+            stillImageFileValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
 
             val savedImage = savedValueToSavedImage(savedValueObj)
             assert(savedImage.internalFilename == uploadedFile.internalFilename)
@@ -430,7 +431,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // Send the JSON in a PUT request to Knora.
             val knoraPostRequest = Put(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc = getResponseJsonLD(knoraPostRequest)
-            stillImageFileValueIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            stillImageFileValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
@@ -461,7 +462,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
-            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl
+            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
 
             // JSON describing the new image to Knora.
             val jsonLdEntity =
@@ -523,12 +524,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-            pdfResourceIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            pdfResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
             val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-            assert(resource.getTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument")
+            assert(resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument")
 
             // Get the new file value from the resource.
 
@@ -548,7 +549,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 case other => throw AssertionException(s"Invalid value object: $other")
             }
 
-            pdfValueIri.set(savedValueObj.getIDAsKnoraDataIri.toString)
+            pdfValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
 
             val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
             assert(savedDocument.internalFilename == uploadedFile.internalFilename)
@@ -589,7 +590,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-            pdfValueIri.set(responseJsonDoc.body.getIDAsKnoraDataIri.toString)
+            pdfValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
             // Get the resource from Knora.
             val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")

@@ -23,63 +23,40 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 @@toc
 
 
-## Starting a Triplestore
+## Running the stack
 
-Start a triplestore (GraphDB-Free or GraphDB-SE). Download distribution from [Ontotext](http://ontotext.com).
-Unzip distribution to a place of your choosing and run the following:
-
-```
-$ cd /to/unziped/location
-$ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
-```
-
-Here we use GraphDB-SE which needs to be licensed separately.
-
-Then in another terminal, initialize the data repository and load some test data:
+With [Docker](https://www.docker.com/) installed, run the following:
 
 ```
-$ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
-$ ./graphdb-se-local-init-knora-test.sh
+$ make stack-up
 ```
 
-Then in another terminal, start the [Redis Server](https://redis.io):
-
-```bash
-$ redis-server
-```
-
-Then go back to the webapi root directory and use SBT to start the API
-server:
+Then to create a test repository and load some test data into the triplestore:
 
 ```
-$ cd KNORA_PROJECT_DIRECTORY
-$ sbt
-> webapi / compile
-> webapi / reStart
+$ make init-db-test
 ```
 
-To shut down Knora:
+Then we need to restart knora-api after loading the data:
 
 ```
-> webapi / reStop
+$ make stack-restart-api
+```
+
+Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
+
+To shut down the Knora-Stack:
+
+```
+$ make stack-down
 ```
 
 ## Running the automated tests
 
-Make sure you've started the triplestore as shown above.
-
-Then in another terminal, initialise the repository used for automated
-testing:
-
-```
-$ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
-$ ./graphdb-se-local-init-knora-test-unit.sh
-```
-
 Run the automated tests from sbt:
 
 ```
-> webapi / graphdb:test
+> webapi / test
 ```
 
 ## Load Testing on Mac OS X

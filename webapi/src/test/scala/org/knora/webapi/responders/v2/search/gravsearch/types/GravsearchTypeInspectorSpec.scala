@@ -30,153 +30,14 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * Tests Gravsearch type inspection.
-  */
+ * Tests Gravsearch type inspection.
+ */
 class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
-
-    private val searchParserV2Spec = new GravsearchParserSpec
-
     private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val timeout = 10.seconds
-
-    "The type inspection utility" should {
-        "remove the type annotations from a WHERE clause" in {
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
-            val whereClauseWithoutAnnotations = GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
-            whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
-        }
-    }
-
-    "The annotation-reading type inspector" should {
-        "get type information from a simple query" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = false)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == SimpleTypeInspectionResult)
-        }
-    }
-
-    "The inferring type inspector" should {
-        "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and and the specified type is a Knora resource class" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
-        }
-
-        "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyIriObjectTypeRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
-        }
-
-        "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
-        }
-
-        "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyTypeFromObjectRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
-        }
-
-        "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
-        }
-
-        "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult2)
-        }
-
-        "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult4)
-        }
-
-        "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryVarTypeFromFunction)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult5)
-        }
-
-        "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult6)
-        }
-
-        "infer the types in a query that requires 6 iterations" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == PathologicalTypeInferenceResult)
-        }
-
-        "reject a query with a non-Knora property whose type cannot be inferred" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            assertThrows[GravsearchException] {
-                Await.result(resultFuture, timeout)
-            }
-        }
-
-        "accept a query with a non-Knora property whose type can be inferred" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithAnnotation)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult3)
-        }
-
-        "reject a query with inconsistent types inferred from statements" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes1)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            assertThrows[GravsearchException] {
-                Await.result(resultFuture, timeout)
-            }
-        }
-
-        "reject a query with inconsistent types inferred from a FILTER" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes2)
-            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-            assertThrows[GravsearchException] {
-                Await.result(resultFuture, timeout)
-            }
-        }
-    }
-
 
     val QueryWithExplicitTypeAnnotations: String =
         """
@@ -216,7 +77,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
         """.stripMargin
 
-    val SimpleTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
+    val SimpleTypeInspectionResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
@@ -226,7 +87,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
-    val WhereClauseWithoutAnnotations = WhereClause(patterns = Vector(
+    val WhereClauseWithoutAnnotations: WhereClause = WhereClause(patterns = Vector(
         StatementPattern(
             obj = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri),
             pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
@@ -441,7 +302,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |
           |        ?mainRes ?titleProp ?propVal0 .
           |
-          |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+          |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
           |
           |     }
         """.stripMargin
@@ -594,7 +455,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
         """.stripMargin
 
-    val PathologicalTypeInferenceResult = GravsearchTypeInspectionResult(entities = Map(
+    val PathologicalTypeInferenceResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "book4") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "titleProp1") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "page1") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
@@ -625,7 +486,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     ))
 
 
-    val TypeInferenceResult1 = GravsearchTypeInspectionResult(entities = Map(
+    val TypeInferenceResult1: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
@@ -637,7 +498,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
-    val TypeInferenceResult2 = GravsearchTypeInspectionResult(entities = Map(
+    val TypeInferenceResult2: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
@@ -647,13 +508,13 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
-    val TypeInferenceResult3 = GravsearchTypeInspectionResult(entities = Map(
+    val TypeInferenceResult3: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableIri(iri = "http://purl.org/dc/terms/title".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
-    val TypeInferenceResult4 = GravsearchTypeInspectionResult(entities = Map(
+    val TypeInferenceResult4: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
         TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
@@ -661,13 +522,13 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
-    val TypeInferenceResult5 = GravsearchTypeInspectionResult(entities = Map(
+    val TypeInferenceResult5: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "titleProp") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "propVal0") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
-    val TypeInferenceResult6 = GravsearchTypeInspectionResult(entities = Map(
+    val TypeInferenceResult6: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri),
         TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri),
         TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
@@ -675,4 +536,195 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableIri(iri = "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri),
         TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri)
     ))
+
+    val QueryWithRdfsLabelAndLiteral: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+          |}
+        """.stripMargin
+
+    val QueryWithRdfsLabelAndVariable: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+        """.stripMargin
+
+    val RdfsLabelWithLiteralResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
+    ))
+
+    val RdfsLabelWithVariableResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "label") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
+    ))
+
+    "The type inspection utility" should {
+        "remove the type annotations from a WHERE clause" in {
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
+            val whereClauseWithoutAnnotations = GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
+            whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
+        }
+    }
+
+    "The annotation-reading type inspector" should {
+        "get type information from a simple query" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = false)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == SimpleTypeInspectionResult)
+        }
+    }
+
+    "The inferring type inspector" should {
+        "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and and the specified type is a Knora resource class" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult1)
+        }
+
+        "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyIriObjectTypeRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult1)
+        }
+
+        "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult1)
+        }
+
+        "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyTypeFromObjectRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult1)
+        }
+
+        "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult1)
+        }
+
+        "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult2)
+        }
+
+        "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult4)
+        }
+
+        "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryVarTypeFromFunction)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult5)
+        }
+
+        "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult6)
+        }
+
+        "infer the types in a query that requires 6 iterations" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == PathologicalTypeInferenceResult)
+        }
+
+        "know the object type of rdfs:label" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndLiteral)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == RdfsLabelWithLiteralResult)
+        }
+
+        "infer the type of a variable used as the object of rdfs:label" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndVariable)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == RdfsLabelWithVariableResult)
+        }
+
+        "reject a query with a non-Knora property whose type cannot be inferred" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            assertThrows[GravsearchException] {
+                Await.result(resultFuture, timeout)
+            }
+        }
+
+        "accept a query with a non-Knora property whose type can be inferred" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithAnnotation)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult3)
+        }
+
+        "reject a query with inconsistent types inferred from statements" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes1)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            assertThrows[GravsearchException] {
+                Await.result(resultFuture, timeout)
+            }
+        }
+
+        "reject a query with inconsistent types inferred from a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes2)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            assertThrows[GravsearchException] {
+                Await.result(resultFuture, timeout)
+            }
+        }
+    }
 }

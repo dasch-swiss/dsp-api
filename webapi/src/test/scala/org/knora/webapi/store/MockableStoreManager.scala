@@ -23,11 +23,11 @@ import akka.actor.{ActorRef, Props}
 import org.knora.webapi.store.iiif.MockableIIIFManager
 import org.knora.webapi.{KnoraDispatchers, LiveActorMaker}
 
-class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef]) extends StoreManager with LiveActorMaker{
+class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef) extends StoreManager(appActor) with LiveActorMaker {
 
     /**
-      * Starts the MockableSipiManager
-      */
-    override lazy val iiifManager = makeActor(Props(new MockableIIIFManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
+     * Starts the MockableIIIFManager
+     */
+    override lazy val iiifManager: ActorRef = makeActor(Props(new MockableIIIFManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
 
 }

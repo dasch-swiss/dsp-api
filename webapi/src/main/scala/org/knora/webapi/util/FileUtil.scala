@@ -25,7 +25,7 @@ import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.{FileWriteException, NotFoundException, SettingsImpl}
+import org.knora.webapi.{FileWriteException, NotFoundException, KnoraSettingsImpl}
 import resource._
 
 import scala.io.{BufferedSource, Codec, Source}
@@ -136,7 +136,7 @@ object FileUtil {
       * @param binaryData the binary file data to be saved.
       * @return the location where the file has been written to.
       */
-    def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): File = {
+    def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): File = {
 
         val fileName = createTempFile(settings)
         // write given file to disk
@@ -152,7 +152,7 @@ object FileUtil {
       * @param fileExtension the extension to be used for the temporary file name, if any,
       * @return the location where the file has been written to.
       */
-    def createTempFile(settings: SettingsImpl, fileExtension: Option[String] = None): File = {
+    def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): File = {
 
         // check if the location for writing temporary files exists
         if (!Files.exists(Paths.get(settings.tmpDataDir))) {

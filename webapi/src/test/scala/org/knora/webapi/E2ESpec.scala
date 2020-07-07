@@ -27,7 +27,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
@@ -37,7 +37,9 @@ import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowRel
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
 import resource.managed
 import spray.json._
 
@@ -54,22 +56,22 @@ object E2ESpec {
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-    def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
     /* needed by the core trait */
 
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // can be overridden in individual spec
@@ -89,8 +91,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service without loading of the ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        // start the knora service, loading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -108,7 +110,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace

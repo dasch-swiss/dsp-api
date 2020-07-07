@@ -20,19 +20,22 @@
 package org.knora.webapi
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.pattern.ask
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.util.{StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -60,17 +63,17 @@ object CoreSpec {
     }
 }
 
-abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
+abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with AnyWordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     /* constructors - individual tests can override the configuration by giving their own */
-    def this(name: String, config: Config) = this(ActorSystem(name, ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
-    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
-    def this(name: String) = this(ActorSystem(name, ConfigFactory.load()))
-    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())))
 
     /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // can be overridden in individual spec
@@ -79,20 +82,25 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     // needs to be initialized early on
     StringFormatter.initForTest()
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
+    // The main application actor forwards messages to the responder manager and the store manager.
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
-    val responderData: ResponderData = ResponderData(system, appActor)
+
+    val responderData: ResponderData = ResponderData(
+        system = system,
+        appActor = appActor
+    )
 
     final override def beforeAll() {
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service without loading of the ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        // Start Knora, without reading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -110,10 +118,10 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         logger.info("Loading test data started ...")
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 479999.milliseconds)
+        Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
         Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     def memusage(): Unit = {

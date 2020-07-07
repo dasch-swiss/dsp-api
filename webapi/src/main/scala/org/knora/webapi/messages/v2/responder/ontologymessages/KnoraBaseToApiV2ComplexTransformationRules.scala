@@ -32,10 +32,15 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-    override val ontologyMetadata = OntologyMetadataV2(
+    override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri.toSmartIri,
         projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the complex schema")
+    )
+
+    private val Label: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.Rdfs.Label,
+        propertyType = OntologyConstants.Owl.DatatypeProperty
     )
 
     private val Result: ReadPropertyInfoV2 = makeProperty(
@@ -79,6 +84,26 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             )
         ),
         objectType = Some(OntologyConstants.Xsd.String)
+    )
+
+    private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.MayHaveMoreResults,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "May have more results"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether more results may be available for a search query"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
     private val UserHasPermission: ReadPropertyInfoV2 = makeProperty(
@@ -1757,7 +1782,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+        Label,
         Result,
+        MayHaveMoreResults,
         Error,
         UserHasPermission,
         VersionDate,

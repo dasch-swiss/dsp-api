@@ -85,7 +85,31 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
   }
 }
 ```
+Each value can have an optional custom IRI (of @ref:[Knora IRI](knora-iris.md#iris-for-data) form) specified by the `@id` attribute, a custom creation date specified by adding 
+`knora-api:creationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
+given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding.
+For example: 
 
+
+```jsonld
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@id" : "http://rdfh.ch/0001/a-customized-thing/values/int-value-IRI",
+    "@type" : "knora-api:IntValue",
+    "knora-api:intValueAsInt" : 21,
+    "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
+    "knora-api:creationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2020-06-04T12:58:54.502951Z"
+      }
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+```
 The format of the object of `knora-api:hasPermissions` is described in
 @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
 
@@ -94,8 +118,12 @@ If permissions are not given, configurable default permissions are used
 
 To create a value, the user must have **modify permission** on the containing resource.
 
-The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
-and type of the value that was created.
+The response is a JSON-LD document containing:
+ 
+- `@id`: the IRI of the value that was created.
+- `@type`: the value's type.
+- `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions
+  (except for link values, as explained below).
 
 ### Creating a Link Between Resources
 
@@ -126,6 +154,15 @@ we can create a link like this:
 ```
 
 As with ordinary values, permissions on links can be specified by adding `knora-api:hasPermissions`.
+
+The response is a JSON-LD document containing:
+ 
+- `@id`: the IRI of the value that was created.
+- `@type`: the value's type.
+- `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions,
+  unless the link is changed to point to a different resource, in which case it is
+  considered a new link and gets a new UUID. Changing a link's metadata, without
+  changing its target, creates a new version of the link value with the same UUID.
 
 ### Creating a Text Value Without Standoff Markup
 
@@ -356,6 +393,14 @@ and type of the new value version.
 
 If you submit an outdated value ID in a request to update a value, the response will be
 an HTTP 404 (Not Found) error.
+
+The response to a value update request contains:
+
+- `@id`: the IRI of the value that was created.
+- `@type`: the value's type.
+- `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions,
+  unless the value is a link value and is changed to point to a different resource, in which
+  case it is considered a new link and gets a new UUID.
 
 ## Deleting a Value
 

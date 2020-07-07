@@ -37,7 +37,7 @@ trait KnoraResponseV2 {
       * @param targetSchema the Knora API schema to be used in the JSON-LD document.
       * @return a [[JsonLDDocument]] representing the response.
       */
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument
 }
 // #KnoraResponseV2
 
@@ -47,7 +47,7 @@ trait KnoraResponseV2 {
   * @param message the message to be returned.
   */
 case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         val (ontologyPrefixExpansion, resultProp) = targetSchema match {
             case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2Simple.Result)
             case ApiV2Complex => (OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2Complex.Result)

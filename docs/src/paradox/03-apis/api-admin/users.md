@@ -68,6 +68,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Required permission: none, self-registration is allowed
   - Required information: email (unique), given name, family name,
     password, password, status, systemAdmin
+  - Username restrictions:
+    - 4 - 50 characters long
+    - Only contains alphanumeric characters, underscore and dot.
+    - Underscore and dot can't be at the end or start of a username
+    - Underscore or dot can't be used multiple times in a row
   - Returns information about the newly created user
   - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
   - POST: `/admin/users`
@@ -84,7 +89,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "systemAdmin": false
     }
     ```
-
+    
+    Additionally, each user can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
+    specified by the `id` in the request body as below:
+    ```
+    { "id" : "http://rdfh.ch/users/donaldDuck",
+      "email": "donald.duck@example.org",
+      "givenName": "Donald",
+      "familyName": "Duck",
+      "username": "donald.duck",
+      "password": "test",
+      "status": true,
+      "lang": "en",
+      "systemAdmin": false
+    }
+    ```
+     
 ### Update basic user information**
 
   - Required permission: SystemAdmin / self
@@ -191,7 +211,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - BODY:
     ```JSON
     {
-      "newSystemAdminMembershipStatus": false
+      "systemAdmin": false
     }
     ```
 

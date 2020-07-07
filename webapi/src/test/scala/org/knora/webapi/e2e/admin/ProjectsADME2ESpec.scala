@@ -32,7 +32,7 @@ import org.eclipse.rdf4j.model.Model
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -65,6 +65,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
     private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
+
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    )
 
     "The Projects Route ('admin/projects')" when {
 
@@ -140,6 +144,74 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 newProjectIri.set(result.id)
                 // log.debug("newProjectIri: {}", newProjectIri.get)
 
+            }
+
+
+            "CREATE a new project with custom Iri" in {
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createProjectWithCustomIRIRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.OK)
+
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+
+                //check that the custom IRI is correctly assigned
+                result.id should be (SharedTestDataADM.customProjectIri)
+
+                //check the rest of project info
+                result.shortcode should be ("3333")
+                result.shortname should be ("newprojectWithIri")
+                result.longname should be (Some("new project with a custom IRI"))
+                result.keywords should be (Seq("projectIRI"))
+                result.description should be (Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en"))))
+
+            }
+
+            "return 'BadRequest' if the supplied 'projectIri' is not a valid IRI" in {
+                val params =
+                    s"""{
+                       |    "projectIri": "invalid-project-IRI",
+                       |    "shortname": "newprojectWithInvalidIri",
+                       |    "shortcode": "2222",
+                       |    "longname": "new project with a custom invalid IRI",
+                       |    "description": [{"value": "a project created with an invalid custom IRI", "language": "en"}],
+                       |    "keywords": ["projectInvalidIRI"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains("Invalid project IRI")
+                invalidIri should be(true)
+            }
+
+            "return 'BadRequest' if the supplied 'projectIri' is not unique" in {
+                val params =
+                    s"""{
+                       |    "projectIri": "${SharedTestDataADM.customProjectIri}",
+                       |    "shortname": "newprojectWithDuplicateIri",
+                       |    "shortcode": "2222",
+                       |    "longname": "new project with a duplicate custom invalid IRI",
+                       |    "description": [{"value": "a project created with a duplicate custom IRI", "language": "en"}],
+                       |    "keywords": ["projectDuplicateIRI"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customProjectIri}' already exists, try another one.")
+                invalidIri should be(true)
             }
 
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
@@ -372,7 +444,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(response.status === StatusCodes.OK)
 
                 val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-                keywords.size should be (18)
+                keywords.size should be (21)
             }
 
             "return all keywords for a single project" in {
@@ -387,8 +459,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return empty list for a project without keywords" in {
-                val anythingIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$dokubibIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -420,6 +492,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(contextIris == Set(
                     "http://www.knora.org/ontology/0001/something",
                     "http://www.knora.org/ontology/0001/anything",
+                    "http://www.knora.org/data/0001/anything",
                     "http://www.knora.org/data/permissions",
                     "http://www.knora.org/data/admin"
                 ))

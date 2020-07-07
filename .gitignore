@@ -12,6 +12,7 @@
 .ensime
 .ensime_cache
 .env
+/.tmp/
 native
 **/.DS_Store
 docs/env
@@ -44,9 +45,8 @@ sipi/test
 *.bak
 .sbtrc
 
+/knora-jena-fuseki
 /knora-sipi
-/knora-graphdb-se
-/knora-graphdb-free
 /knora-assets
 /knora-upgrade
 
@@ -57,4 +57,5 @@ knora-graphdb-free
 knora-graphdb-se
 knora-sipi
 knora-upgrade
+triplestores/fuseki/system
 dump.rdb

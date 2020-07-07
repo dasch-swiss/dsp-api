@@ -28,23 +28,21 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
-import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyConstants, SharedTestDataADM}
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.{BadRequestException, KnoraSystemInstances, SharedTestDataADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 object UsersRouteADM {
-    val UsersBasePath = PathMatcher("admin" / "users")
+    val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
     val UsersBasePathString: String = "/admin/users"
 }
 
@@ -58,34 +56,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     import UsersRouteADM._
 
     /**
-     * The name of this [[ClientEndpoint]].
-     */
-    override val name: String = "UsersEndpoint"
-
-    /**
      * The directory name to be used for this endpoint's code.
      */
     override val directoryName: String = "users"
-
-    /**
-     * The URL path of this [[ClientEndpoint]].
-     */
-    override val urlPath: String = "/users"
-
-    /**
-     * A description of this [[ClientEndpoint]].
-     */
-    override val description: String = "An endpoint for working with Knora users."
-
-    // Classes used in client function definitions.
-
-    private val UsersResponse = classRef(OntologyConstants.KnoraAdminV2.UsersResponse.toSmartIri)
-    private val UserResponse = classRef(OntologyConstants.KnoraAdminV2.UserResponse.toSmartIri)
-    private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
-    private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
-    private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
-    private val UpdateUserRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateUserRequest.toSmartIri)
-    private val StoredUser = User.toStoredClassRef
 
     private val anythingUser1IriEnc = URLEncoder.encode(SharedTestDataADM.anythingUser1.id, "UTF-8")
     private val multiUserIriEnc = URLEncoder.encode(SharedTestDataADM.multiuserUser.id, "UTF-8")
@@ -125,17 +98,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val getUsersFunction: ClientFunction =
-        "getUsers" description "Returns a list of all users." params() doThis {
-            httpGet(BasePath)
-        } returns UsersResponse
-
-
-    private def getUsersTestResponse: Future[SourceCodeFileContent] = {
+    private def getUsersTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(baseApiUrl + UsersBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-users-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-users-response"),
             text = responseStr
         )
     }
@@ -172,23 +139,17 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    // #createUserFunction
-    private val createUserFunction: ClientFunction =
-        "createUser" description "Creates a user." params (
-            "user" description "The user to be created." paramType User
-            ) doThis {
-            httpPost(
-                path = BasePath,
-                body = Some(arg("user"))
-            )
-        } returns UserResponse
-    // #createUserFunction
-
-    private def createUserTestRequest: Future[SourceCodeFileContent] = {
+    private def createUserTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("create-user-request"),
-                text = SharedTestDataADM.createUserRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-user-request"),
+                    text = SharedTestDataADM.createUserRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-user-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createUserWithCustomIriRequest
+                )
             )
         )
     }
@@ -213,33 +174,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    // #getUserFunction
-    private val getUserFunction: ClientFunction =
-        "getUser" description "Gets a user by a property." params(
-            "property" description "The name of the property by which the user is identified." paramType enum("iri", "email", "username"),
-            "value" description "The value of the property by which the user is identified." paramType StringDatatype
-        ) doThis {
-            httpGet(arg("property") / arg("value"))
-        } returns UserResponse
-    // #getUserFunction
-
-    private def getUserTestResponse: Future[SourceCodeFileContent] = {
+    private def getUserTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$anythingUser1IriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-user-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-user-response"),
             text = responseStr
         )
     }
-
-    // #getUserByIriFunction
-    private val getUserByIriFunction: ClientFunction =
-        "getUserByIri" description "Gets a user by IRI." params (
-            "iri" description "The IRI of the user." paramType UriDatatype
-            ) doThis {
-            getUserFunction withArgs(str("iri"), arg("iri") as StringDatatype)
-        } returns UserResponse
-    // #getUserByIriFunction
 
     /**
      * return a single user identified by email
@@ -261,13 +203,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val getUserByEmailFunction: ClientFunction =
-        "getUserByEmail" description "Gets a user by email address." params (
-            "email" description "The email address of the user." paramType StringDatatype
-            ) doThis {
-            getUserFunction withArgs(str("email"), arg("email"))
-        } returns UserResponse
-
     /**
      * return a single user identified by username
      */
@@ -287,13 +222,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
         }
     }
-
-    private val getUserByUsernameFunction: ClientFunction =
-        "getUserByUsername" description "Gets a user by username." params (
-            "username" description "The username of the user." paramType StringDatatype
-            ) doThis {
-            getUserFunction withArgs(str("username"), arg("username"))
-        } returns UserResponse
 
     /**
      * API MAY CHANGE: Change existing user's basic information.
@@ -332,21 +260,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val updateUserBasicInformationFunction: ClientFunction =
-        "updateUserBasicInformation" description "Updates an existing user's basic information." params(
-            "iri" description "The IRI of the user to be updated." paramType UriDatatype,
-            "userInfo" description "The user information to be updated." paramType UpdateUserRequest
-        ) doThis {
-            httpPut(
-                path = str("iri") / arg("iri") / str("BasicUserInformation"),
-                body = Some(arg("userInfo"))
-            )
-        } returns UserResponse
-
-    private def updateUserTestRequest: Future[SourceCodeFileContent] = {
+    private def updateUserTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-user-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("update-user-request"),
                 text = SharedTestDataADM.updateUserRequest
             )
         )
@@ -389,27 +306,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    // #updateUserPasswordFunction
-    private val updateUserPasswordFunction: ClientFunction =
-        "updateUserPassword" description "Updates a user's password." params(
-            "iri" description "The IRI of the user to be updated." paramType UriDatatype,
-            "requesterPassword" description "The requesting user's current password." paramType StringDatatype,
-            "newPassword" description "The specified user's new password." paramType StringDatatype
-        ) doThis {
-            httpPut(
-                path = str("iri") / arg("iri") / str("Password"),
-                body = Some(json(
-                    "requesterPassword" -> arg("requesterPassword"),
-                    "newPassword" -> arg("newPassword")
-                ))
-            )
-        } returns UserResponse
-    // #updateUserPasswordFunction
-
-    private def updateUserPasswordTestRequest: Future[SourceCodeFileContent] = {
+    private def updateUserPasswordTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-user-password-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("update-user-password-request"),
                 text = SharedTestDataADM.changeUserPasswordRequest
             )
         )
@@ -452,21 +352,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val updateUserStatusFunction: ClientFunction =
-        "updateUserStatus" description "Updates a user's status." params(
-            "iri" description "The user's IRI." paramType UriDatatype,
-            "status" description "The user's new status." paramType BooleanDatatype
-        ) doThis {
-            httpPut(
-                path = str("iri") / arg("iri") / str("Status"),
-                body = Some(json("status" -> arg("status")))
-            )
-        } returns UserResponse
-
-    private def updateUserStatusTestRequest: Future[SourceCodeFileContent] = {
+    private def updateUserStatusTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-user-status-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("update-user-status-request"),
                 text = SharedTestDataADM.changeUserStatusRequest
             )
         )
@@ -506,15 +395,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val deleteUserFunction: ClientFunction =
-        "deleteUser" description "Deletes a user. This method does not actually delete a user, but sets the status to false." params (
-            "iri" description "The IRI of the user to be deleted." paramType UriDatatype
-            ) doThis {
-            httpDelete(
-                path = str("iri") / arg("iri")
-            )
-        } returns UserResponse
-
     /**
      * API MAY CHANGE: Change user's SystemAdmin membership.
      */
@@ -552,20 +432,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val updateUserSystemAdminMembershipFunction: ClientFunction =
-        "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params (
-            "user" description "The user to be updated." paramType StoredUser
-            ) doThis {
-            httpPut(
-                path = str("iri") / argMember("user", "id") / str("SystemAdmin"),
-                body = Some(json("systemAdmin" -> argMember("user", "systemAdmin")))
-            )
-        } returns UserResponse
-
-    private def updateUserSystemAdminMembershipTestRequest: Future[SourceCodeFileContent] = {
+    private def updateUserSystemAdminMembershipTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-user-system-admin-membership-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("update-user-system-admin-membership-request"),
                 text = SharedTestDataADM.changeUserSystemAdminMembershipRequest
             )
         )
@@ -598,18 +468,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val getUserProjectMembershipsFunction: ClientFunction =
-        "getUserProjectMemberships" description "Gets a user's project memberships." params (
-            "iri" description "The IRI of the user." paramType UriDatatype
-            ) doThis {
-            httpGet(path = str("iri") / arg("iri") / str("project-memberships"))
-        } returns ProjectsResponse
-
-    private def getUserProjectMembershipsResponse: Future[SourceCodeFileContent] = {
+    private def getUserProjectMembershipsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-user-project-memberships-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-user-project-memberships-response"),
             text = responseStr
         )
     }
@@ -643,16 +506,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val addUserToProjectMembershipFunction: ClientFunction =
-        "addUserToProjectMembership" description "Adds a user to a project." params(
-            "userIri" description "The user's IRI." paramType UriDatatype,
-            "projectIri" description "The project's IRI." paramType UriDatatype
-        ) doThis {
-            httpPost(
-                path = str("iri") / arg("userIri") / str("project-memberships") / arg("projectIri")
-            )
-        } returns UserResponse
-
     /**
      * API MAY CHANGE: remove user from project (and all groups belonging to this project)
      */
@@ -683,16 +536,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val removeUserFromProjectMembershipFunction: ClientFunction =
-        "removeUserFromProjectMembership" description "Removes a user from a project." params(
-            "userIri" description "The user's IRI." paramType UriDatatype,
-            "projectIri" description "The project's IRI." paramType UriDatatype
-        ) doThis {
-            httpDelete(
-                path = str("iri") / arg("userIri") / str("project-memberships") / arg("projectIri")
-            )
-        } returns UserResponse
-
     /**
      * API MAY CHANGE: get user's project admin memberships
      */
@@ -719,13 +562,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
         }
     }
-
-    private val getUserProjectAdminMembershipsFunction: ClientFunction =
-        "getUserProjectAdminMemberships" description "Gets a user's project admin memberships." params (
-            "iri" description "The user's IRI." paramType UriDatatype
-            ) doThis {
-            httpGet(path = str("iri") / arg("iri") / str("project-admin-memberships"))
-        } returns ProjectsResponse
 
     /**
      * API MAY CHANGE: add user to project admin
@@ -757,16 +593,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val addUserToProjectAdminMembershipFunction: ClientFunction =
-        "addUserToProjectAdminMembership" description "Makes a user a project administrator." params(
-            "userIri" description "The IRI of the user." paramType UriDatatype,
-            "projectIri" description "The IRI of the project." paramType UriDatatype
-        ) doThis {
-            httpPost(
-                path = str("iri") / arg("userIri") / str("project-admin-memberships") / arg("projectIri")
-            )
-        } returns UserResponse
-
     /**
      * API MAY CHANGE: remove user from project admin membership
      */
@@ -796,16 +622,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val removeUserFromProjectAdminMembershipFunction: ClientFunction =
-        "removeUserFromProjectAdminMembership" description "Removes a user's project administrator status." params(
-            "userIri" description "The IRI of the user." paramType UriDatatype,
-            "projectIri" description "The IRI of the project." paramType UriDatatype
-        ) doThis {
-            httpDelete(
-                path = str("iri") / arg("userIri") / str("project-admin-memberships") / arg("projectIri")
-            )
-        } returns UserResponse
-
     /**
      * API MAY CHANGE: get user's group memberships
      */
@@ -833,20 +649,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    // #getUserGroupMembershipsFunction
-    private val getUserGroupMembershipsFunction: ClientFunction =
-        "getUserGroupMemberships" description "Gets a user's group memberships." params (
-            "iri" description "The user's IRI." paramType UriDatatype
-            ) doThis {
-            httpGet(path = str("iri") / arg("iri") / str("group-memberships"))
-        } returns GroupsResponse
-    // #getUserGroupMembershipsFunction
-
-    private def getUserGroupMembershipsTestResponse: Future[SourceCodeFileContent] = {
+    private def getUserGroupMembershipsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$anythingUser1IriEnc/group-memberships") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-user-group-memberships-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-user-group-memberships-response"),
             text = responseStr
         )
     }
@@ -880,16 +687,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val addUserToGroupMembershipFunction: ClientFunction =
-        "addUserToGroupMembership" description "Adds a user to a group." params(
-            "userIri" description "The IRI of the user." paramType UriDatatype,
-            "groupIri" description "The IRI of the group." paramType UriDatatype
-        ) doThis {
-            httpPost(
-                path = str("iri") / arg("userIri") / str("group-memberships") / arg("groupIri")
-            )
-        } returns UserResponse
-
     /**
      * API MAY CHANGE: remove user from group
      */
@@ -919,60 +716,24 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val removeUserFromGroupMembershipFunction: ClientFunction =
-        "removeUserFromGroupMembership" description "Removes a user from a project." params(
-            "userIri" description "The IRI of the user." paramType UriDatatype,
-            "groupIri" description "The IRI of the group." paramType UriDatatype
-        ) doThis {
-            httpDelete(
-                path = str("iri") / arg("userIri") / str("group-memberships") / arg("groupIri")
-            )
-        } returns UserResponse
-
-    /**
-     * The functions defined by this [[ClientEndpoint]].
-     */
-    override val functions: Seq[ClientFunction] = Seq(
-        getUsersFunction,
-        getUserFunction,
-        getUserByIriFunction,
-        getUserByEmailFunction,
-        getUserByUsernameFunction,
-        getUserGroupMembershipsFunction,
-        getUserProjectMembershipsFunction,
-        getUserProjectAdminMembershipsFunction,
-        createUserFunction,
-        updateUserBasicInformationFunction,
-        updateUserStatusFunction,
-        updateUserPasswordFunction,
-        addUserToGroupMembershipFunction,
-        removeUserFromGroupMembershipFunction,
-        addUserToProjectMembershipFunction,
-        removeUserFromProjectMembershipFunction,
-        addUserToProjectAdminMembershipFunction,
-        removeUserFromProjectAdminMembershipFunction,
-        updateUserSystemAdminMembershipFunction,
-        deleteUserFunction
-    )
-
     /**
      * Returns test data for this endpoint.
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        Future.sequence {
-            Set(
-                getUsersTestResponse,
-                createUserTestRequest,
-                getUserTestResponse,
-                getUserGroupMembershipsTestResponse,
-                updateUserTestRequest,
-                updateUserPasswordTestRequest,
-                updateUserStatusTestRequest,
-                updateUserSystemAdminMembershipTestRequest,
-                getUserProjectMembershipsResponse
-            )
-        }
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
+        for {
+            getUsersResponse <- getUsersTestResponse
+            createUserRequest <- createUserTestRequest
+            getUserResponse <- getUserTestResponse
+            getUserGroupMembershipsResponse <- getUserGroupMembershipsTestResponse
+            updateUserRequest <- updateUserTestRequest
+            updateUserPasswordRequest <- updateUserPasswordTestRequest
+            updateUserStatusRequest <- updateUserStatusTestRequest
+            updateUserSystemAdminMembershipRequest <- updateUserSystemAdminMembershipTestRequest
+            getUserProjectMembershipsResponse <- getUserProjectMembershipsTestResponse
+        } yield createUserRequest + updateUserRequest +
+                updateUserPasswordRequest + updateUserStatusRequest + updateUserSystemAdminMembershipRequest +
+                getUserProjectMembershipsResponse + getUsersResponse + getUserResponse + getUserGroupMembershipsResponse
     }
 }

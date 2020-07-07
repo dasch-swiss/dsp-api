@@ -51,7 +51,7 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     /**
       * The Knora settings.
       */
-    protected val s: SettingsImpl = Settings(context.system)
+    protected val s: KnoraSettingsImpl = KnoraSettings(context.system)
 
     /**
       * The Redis Client Pool

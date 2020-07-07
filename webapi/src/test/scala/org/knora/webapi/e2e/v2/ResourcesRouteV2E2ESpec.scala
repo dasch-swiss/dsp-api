@@ -22,7 +22,9 @@ package org.knora.webapi.e2e.v2
 import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
+import java.util.UUID
 
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
@@ -39,9 +41,9 @@ import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.duration._
 
 /**
   * Tests the API v2 resources route.
@@ -330,6 +332,40 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
         }
 
+        "perform a full resource request with a link to a resource that the user doesn't have permission to see" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw", "UTF-8")}")
+
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithOneHiddenResource.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request with a link to a resource that is marked as deleted" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A", "UTF-8")}")
+
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithOneDeletedResource.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
         "perform a full resource request for a past version of a resource, using a URL-encoded xsd:dateTimeStamp" in {
             val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")}?version=${URLEncoder.encode("2019-02-12T08:05:10.351Z", "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -551,7 +587,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource with a custom creation date" in {
-            val creationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
+            val creationDate: Instant = SharedTestDataADM.customResourceCreationDate
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomCreationDate(creationDate)
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -567,6 +603,173 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             assert(savedCreationDate == creationDate)
+        }
+
+        "create a resource with a custom Iri" in {
+            val customIRI: IRI = SharedTestDataADM.customResourceIRI
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri == customIRI)
+        }
+
+        "return a DuplicateValueException during resource creation when the supplied resource Iri is not unique" in {
+
+            // duplicate resource IRI
+            val params =
+                s"""{
+                   |  "@id" : "http://rdfh.ch/0001/a-thing",
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true
+                   |  },
+                   |  "rdfs:label" : "test thing with duplicate iri",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+
+            val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+            val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
+            invalidIri should be(true)
+        }
+
+        "create a resource with random Iri and a custom value Iri" in {
+            val customValueIRI: IRI = SharedTestDataADM.customValueIRI
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueIRI(customValueIRI)
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
+              requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIRI)
+        }
+
+        "create a resource with random resource Iri and custom value UUIDs" in {
+
+            val customValueUUID = SharedTestDataADM.customValueUUID
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(customValueUUID = customValueUUID)
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+            assert(valueUUID == customValueUUID)
+
+        }
+
+        "create a resource with random resource Iri and custom value creation date" in {
+
+            val creationDate: Instant = SharedTestDataADM.customValueCreationDate
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueCreationDate(creationDate = creationDate)
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val savedCreationDate: Instant = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+            assert(savedCreationDate == creationDate)
+
+        }
+
+        "create a resource with custom resource Iri, creation date, and a value with custom value Iri and UUID" in {
+            val customResourceIRI: IRI = SharedTestDataADM.customResourceIRI_resourceWithValues
+            val customCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
+            val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
+            val customValueUUID = SharedTestDataADM.customValueUUID
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
+                customResourceIRI = customResourceIRI,
+                customCreationDate = customCreationDate,
+                customValueIRI = customValueIRI,
+                customValueUUID = customValueUUID)
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri ==  customResourceIRI)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
+              requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIRI)
+
+            val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+            assert(valueUUID == customValueUUID)
+
+            val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            assert(savedCreationDate == customCreationDate)
+
+            // when no custom creation date is given to the value, it should have the same creation date as the resource
+            val savedValueCreationDate: Instant = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+            assert(savedValueCreationDate == customCreationDate)
+
+
         }
 
         "create a resource as another user" in {

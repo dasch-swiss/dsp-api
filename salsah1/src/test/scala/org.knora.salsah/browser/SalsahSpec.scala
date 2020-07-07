@@ -23,11 +23,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.salsah.SettingsImpl
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -35,7 +36,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor}
 /**
   * An abstract base class for Selenium tests of the SALSAH user interface.
   */
-abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuilding {
+abstract class SalsahSpec extends AnyWordSpecLike with Matchers with RequestBuilding {
 
     implicit private val system = ActorSystem()
 
@@ -44,7 +45,7 @@ abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuildin
     implicit private val timeout = Timeout(180.seconds)
     implicit private val dispatcher = system.dispatcher
     implicit protected val ec: ExecutionContextExecutor = dispatcher
-    implicit protected val materializer = ActorMaterializer()
+    implicit protected val materializer = Materializer.matFromSystem(system)
 
     /**
       * Loads test data and populates the ontology cache.
