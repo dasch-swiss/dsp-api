@@ -63,47 +63,41 @@ case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) exten
      * @return a [[JsonLDDocument]] representing the response.
      */
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         // TODO: generate JSON-LD manifest
 
         // Manifest must have exactly one id, one specified type and one label
-
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        // Make the JSON-LD context.
-        val context: JsonLDObject = JsonLDUtil.makeContext(
-            fixedPrefixes = Map(
-                "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
-                "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion
-            )
-        )
 
         // Make the JSON-LD document
 
         val body: JsonLDObject = JsonLDObject(
             Map(
                 JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/manifest.json"),
-                JsonLDConstants.TYPE -> JsonLDString("sc:Manifest"),
-                "label" -> JsonLDString("TEST MANIFEST"),
-                "sequences" -> JsonLDArray(
+                JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.IIIF.PresentationV2.Manifest),
+                OntologyConstants.Rdfs.Label -> JsonLDString("TEST MANIFEST"),
+                OntologyConstants.IIIF.PresentationV2.HasSequences -> JsonLDArray(
                     iiifUrls.map {
                         iiifUrl =>
                             JsonLDObject(
                                 Map(
+                                    JsonLDConstants.CONTEXT -> JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl),
                                     JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/sequence/normal"),
-                                    JsonLDConstants.TYPE -> JsonLDString("sc:Sequence"),
-                                    "canvases" -> JsonLDArray(
+                                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.IIIF.PresentationV2.Sequence),
+                                    OntologyConstants.IIIF.PresentationV2.HasCanvases -> JsonLDArray(
                                         Seq(
                                             JsonLDObject(
                                                 Map(
+                                                    JsonLDConstants.CONTEXT -> JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl),
                                                     JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/canvas/bigcanvas1"),
-                                                    JsonLDConstants.TYPE -> JsonLDString("sc:Canvas"),
-                                                    "images" -> JsonLDArray(
+                                                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.IIIF.PresentationV2.Canvas),
+                                                    OntologyConstants.IIIF.PresentationV2.HasImageAnnotations -> JsonLDArray(
                                                         Seq(
                                                             JsonLDObject(
                                                                 Map(
-                                                                    JsonLDConstants.TYPE -> JsonLDString("oa:Annotation"),
-                                                                    "resource" -> JsonLDObject(
+                                                                    JsonLDConstants.CONTEXT -> JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl),
+                                                                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.WebAnnotation.Annotation),
+                                                                    OntologyConstants.WebAnnotation.HasBody -> JsonLDObject(
                                                                         Map(
                                                                             JsonLDConstants.ID -> JsonLDString(iiifUrl)
                                                                         )
@@ -123,7 +117,10 @@ case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) exten
             )
         )
 
-        JsonLDDocument(body = body, context = context)
+        JsonLDDocument(
+            body = body,
+            context = JsonLDArray(Seq(JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl)))
+        )
     }
 }
 

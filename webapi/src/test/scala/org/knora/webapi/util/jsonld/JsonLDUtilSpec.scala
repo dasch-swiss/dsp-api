@@ -19,14 +19,15 @@
 
 package org.knora.webapi.util.jsonld
 
+import org.knora.webapi.OntologyConstants
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.{JsValue, JsonParser}
 
 /**
-  * Tests [[JsonLDUtil]].
-  */
+ * Tests [[JsonLDUtil]].
+ */
 class JsonLDUtilSpec extends AnyWordSpecLike with Matchers {
 
     StringFormatter.initForTest()
@@ -113,6 +114,101 @@ class JsonLDUtilSpec extends AnyWordSpecLike with Matchers {
             val formattedCompactedDoc = compactedJsonLDDoc.toPrettyString
             val receivedOutputAsJsValue: JsValue = JsonParser(formattedCompactedDoc)
             val expectedOutputAsJsValue: JsValue = JsonParser(expectedOutputStr)
+            receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
+        }
+
+        "make a JSON-LD document with a URL as a context" in {
+            val iiifUrls = Seq(
+                "http://example.org/1",
+                "http://example.org/2"
+            )
+
+            val body: JsonLDObject = JsonLDObject(
+                Map(
+                    JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/manifest.json"),
+                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.IIIF.PresentationV2.Manifest),
+                    OntologyConstants.Rdfs.Label -> JsonLDString("TEST MANIFEST"),
+                    OntologyConstants.IIIF.PresentationV2.HasSequences -> JsonLDArray(
+                        iiifUrls.map {
+                            iiifUrl =>
+                                JsonLDObject(
+                                    Map(
+                                        JsonLDConstants.CONTEXT -> JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl),
+                                        JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/sequence/normal"),
+                                        JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.IIIF.PresentationV2.Sequence),
+                                        OntologyConstants.IIIF.PresentationV2.HasCanvases -> JsonLDArray(
+                                            Seq(
+                                                JsonLDObject(
+                                                    Map(
+                                                        JsonLDConstants.CONTEXT -> JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl),
+                                                        JsonLDConstants.ID -> JsonLDString("https://localhost:1025/server/canvas/bigcanvas1"),
+                                                        JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.IIIF.PresentationV2.Canvas),
+                                                        OntologyConstants.IIIF.PresentationV2.HasImageAnnotations -> JsonLDArray(
+                                                            Seq(
+                                                                JsonLDObject(
+                                                                    Map(
+                                                                        JsonLDConstants.CONTEXT -> JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl),
+                                                                        JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.WebAnnotation.Annotation),
+                                                                        OntologyConstants.WebAnnotation.HasBody -> JsonLDObject(
+                                                                            Map(
+                                                                                JsonLDConstants.ID -> JsonLDString(iiifUrl)
+                                                                            )
+                                                                        )
+                                                                    )
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                        }
+                    )
+                )
+            )
+
+            val jsonLDDoc = JsonLDDocument(
+                body = body,
+                context = JsonLDArray(Seq(JsonLDString(OntologyConstants.IIIF.PresentationV2.ContextUrl)))
+            )
+
+            val formattedDoc = jsonLDDoc.toPrettyString
+
+            val expectedOutputDoc =
+                """{
+                  |  "@id" : "https://localhost:1025/server/manifest.json",
+                  |  "@type" : "sc:Manifest",
+                  |  "sc:hasSequences" : [ {
+                  |    "@id" : "https://localhost:1025/server/sequence/normal",
+                  |    "@type" : "sc:Sequence",
+                  |    "sc:hasCanvases" : {
+                  |      "@id" : "https://localhost:1025/server/canvas/bigcanvas1",
+                  |      "@type" : "sc:Canvas",
+                  |      "sc:hasImageAnnotations" : {
+                  |        "@type" : "oa:Annotation",
+                  |        "resource" : "http://example.org/1"
+                  |      }
+                  |    }
+                  |  }, {
+                  |    "@id" : "https://localhost:1025/server/sequence/normal",
+                  |    "@type" : "sc:Sequence",
+                  |    "sc:hasCanvases" : {
+                  |      "@id" : "https://localhost:1025/server/canvas/bigcanvas1",
+                  |      "@type" : "sc:Canvas",
+                  |      "sc:hasImageAnnotations" : {
+                  |        "@type" : "oa:Annotation",
+                  |        "resource" : "http://example.org/2"
+                  |      }
+                  |    }
+                  |  } ],
+                  |  "label" : "TEST MANIFEST",
+                  |  "@context" : "http://iiif.io/api/presentation/2/context.json"
+                  |}""".stripMargin
+
+            val receivedOutputAsJsValue: JsValue = JsonParser(formattedDoc)
+            val expectedOutputAsJsValue: JsValue = JsonParser(expectedOutputDoc)
             receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
         }
     }

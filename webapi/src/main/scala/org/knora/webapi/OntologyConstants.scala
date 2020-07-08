@@ -128,6 +128,25 @@ object OntologyConstants {
         val NumberOfItems: IRI = SchemaOrgPrefixExpansion + "numberOfItems"
     }
 
+    object IIIF {
+        object PresentationV2 {
+            val ContextUrl: IRI = "http://iiif.io/api/presentation/2/context.json"
+            val PresentationV2PrefixExpansion: IRI = "http://iiif.io/api/presentation/2#"
+            val Manifest: IRI = PresentationV2PrefixExpansion + "Manifest"
+            val Sequence: IRI = PresentationV2PrefixExpansion + "Sequence"
+            val Canvas: IRI = PresentationV2PrefixExpansion + "Canvas"
+            val HasSequences: IRI = PresentationV2PrefixExpansion + "hasSequences"
+            val HasCanvases: IRI = PresentationV2PrefixExpansion + "hasCanvases"
+            val HasImageAnnotations: IRI = PresentationV2PrefixExpansion + "hasImageAnnotations"
+        }
+    }
+
+    object WebAnnotation {
+        val WebAnnotationPrefixExpansion: IRI = "http://www.w3.org/ns/oa#"
+        val Annotation: IRI = WebAnnotationPrefixExpansion + "Annotation"
+        val HasBody: IRI = WebAnnotationPrefixExpansion + "hasBody"
+    }
+
     object KnoraInternal {
         // The start and end of an internal Knora ontology IRI.
         val InternalOntologyStart = "http://www.knora.org/ontology"
