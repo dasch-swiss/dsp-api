@@ -201,22 +201,17 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
       - name: Disk Free
         run: |
           df -h
@@ -224,10 +219,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run docs build test
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/docs/target
-          chmod 777 $GITHUB_WORKSPACE/docs/target
-          make docs-build
+        run: make docs-build
       - name: Disk Free After
         run: |
           df -h

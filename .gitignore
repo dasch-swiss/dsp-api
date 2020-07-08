@@ -15,6 +15,7 @@
 /.tmp/
 native
 **/.DS_Store
+site/
 docs/env
 docs/_build
 docs/_format_docu

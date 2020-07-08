@@ -11,12 +11,24 @@ include vars.mk
 #################################
 
 .PHONY: docs-publish
-docs-publish: ## build and publish docs
-	docker run --rm -it -v $(CURRENT_DIR):/knora -v $(HOME)/.ivy2:/root/.ivy2 -v $(HOME)/.ssh:/root/.ssh daschswiss/sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
+docs-publish: ## build and publish docs to Github Pages
+	docker gh-deploy
 
 .PHONY: docs-build
-docs-build: ## build the docs
-	docker run --rm -v $(CURRENT_DIR):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+docs-build: ## build docs into the local 'site' folder
+	mkdocs build
+
+.PHONY: docs-serve
+docs-serve: ## serve docs for local viewing
+	mkdocs serve
+
+.PHONY: docs-install-requirements
+docs-install-requirements: ## install requirements
+	pip3 install -r docs/requirements.txt
+
+.PHONY: docs-clean
+docs-clean: ## cleans the project directory
+	@rm -rf site/
 
 #################################
 # Docker targets
