@@ -301,7 +301,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
             // check the custom IRI; if not given, create an unused IRI
             customGroupIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-            groupIri: IRI <- checkEntityIri(customGroupIri, stringFormatter.makeRandomGroupIri(projectADM.shortcode))
+            groupIri: IRI <- checkOrCreateEntityIri(customGroupIri, stringFormatter.makeRandomGroupIri(projectADM.shortcode))
 
 
             /* create the group */

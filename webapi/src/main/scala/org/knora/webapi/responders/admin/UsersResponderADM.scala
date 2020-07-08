@@ -1180,7 +1180,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // check the custom IRI; if not given, create an unused IRI
             customUserIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-            userIri: IRI <- checkEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
+            userIri: IRI <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
             encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
             hashedPassword = encoder.encode(createRequest.password)

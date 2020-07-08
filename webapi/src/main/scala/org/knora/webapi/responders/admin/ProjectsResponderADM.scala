@@ -780,7 +780,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             // check the custom IRI; if not given, create an unused IRI
             customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
-            newProjectIRI: IRI <- checkEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
+            newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
 
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,

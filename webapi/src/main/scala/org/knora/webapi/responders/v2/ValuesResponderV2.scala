@@ -397,7 +397,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         for {
 
             // Make an IRI for the new value.
-            newValueIri: IRI <- checkEntityIri(maybeValueIri, stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+            newValueIri: IRI <- checkOrCreateEntityIri(maybeValueIri, stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
 
             // Make a UUID for the new value
             newValueUUID: UUID = maybeValueUUID match {
@@ -610,7 +610,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                         resourceCreationDate: Instant,
                                                         requestingUser: UserADM): Future[InsertSparqlWithUnverifiedValue] = {
         for {
-            newValueIri: IRI <- checkEntityIri(valueToCreate.customValueIri, stringFormatter.makeRandomValueIri(resourceIri))
+            newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri, stringFormatter.makeRandomValueIri(resourceIri))
 
             // Make a UUID for the new value.
             newValueUUID: UUID = valueToCreate.customValueUUID match {
@@ -2018,7 +2018,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         for {
             // Make an IRI for the new LinkValue.
-            newLinkValueIri: IRI <- checkEntityIri(customNewLinkValueIri, stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
+            newLinkValueIri: IRI <- checkOrCreateEntityIri(customNewLinkValueIri, stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
 
             linkUpdate = maybeLinkValueInfo match {
                 case Some(linkValueInfo) =>
