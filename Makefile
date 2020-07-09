@@ -104,17 +104,21 @@ stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, 
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	docker-compose -f docker-compose.yml up -d
 
+.PHONY: stack-up-fast
+stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
+	docker-compose -f docker-compose.yml up -d
+
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: graphdb, sipi, redis, api, salsah1.
+stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, redis, api, salsah1.
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
-stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api, salsah1.
+stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, redis, api, salsah1.
 	@docker-compose -f docker-compose.yml restart
 
 .PHONY: stack-restart-api
-stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
+stack-restart-api: ## re-starts the api. Usually used after loading data into fuseki.
 	docker-compose -f docker-compose.yml restart api
 	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
@@ -170,31 +174,34 @@ stack-down: ## stops the knora-stack.
 stack-down-delete-volumes: ## stops the knora-stack and delete any created volumes (deletes the database!).
 	docker-compose -f docker-compose.yml down --volumes
 
+.PHONY: stack-db-remove
+stack-db-remove: ## stops Fuseki and delete any created volumes (deletes the database!).
+	docker-compose -f docker-compose.yml rm -f -v -s db
+	docker volume rm knora-api_db-home
+
 .PHONY: stack-config
 stack-config: env-file
 	docker-compose -f docker-compose.yml config
 
 ## stack without api
 .PHONY: stack-without-api
-stack-without-api: stack-up ## starts the knora-stack without knora-api: graphdb, sipi, redis, salsah1.
+stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki, sipi, redis, salsah1.
 	@docker-compose -f docker-compose.yml stop api
 
 .PHONY: stack-without-api-and-sipi
-stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: graphdb, redis, salsah1.
+stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki, redis, salsah1.
 	@docker-compose -f docker-compose.yml stop api
 	@docker-compose -f docker-compose.yml stop sipi
 
 .PHONY: stack-without-api-and-salsah1
-stack-without-api-and-salsah1: stack-up ## starts the knora-stack without knora-api and salsah1: graphdb, redis, sipi.
+stack-without-api-and-salsah1: stack-up ## starts the knora-stack without knora-api and salsah1: fuseki, redis, sipi.
 	@docker-compose -f docker-compose.yml stop api
 	@docker-compose -f docker-compose.yml stop salsah1
 
 .PHONY: stack-db-only
-stack-db-only: stack-up ## starts only GraphDB.
-	@docker-compose -f docker-compose.yml stop api
-	@docker-compose -f docker-compose.yml stop salsah1
-	@docker-compose -f docker-compose.yml stop sipi
-	@docker-compose -f docker-compose.yml stop redis
+stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuseki.
+	docker-compose -f docker-compose.yml up -d db
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 
 #################################
 ## Test Targets
@@ -249,22 +256,22 @@ test: docker-build ## runs all test targets.
 #################################
 
 .PHONY: init-db-test
-init-db-test: stack-down-delete-volumes stack-without-api ## initializes the knora-test repository
+init-db-test: stack-db-remove stack-db-only ## initializes the knora-test repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: stack-down-delete-volumes stack-without-api ## initializes the knora-test repository with minimal data
+init-db-test-minimal: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
 .PHONY: init-db-test-unit
-init-db-test-unit: stack-down-delete-volumes stack-without-api ## initializes the knora-test-unit repository
+init-db-test-unit: stack-db-remove stack-db-only ## initializes the knora-test-unit repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
 
 .PHONY: init-db-test-unit-minimal
-init-db-test-unit-minimal: stack-down-delete-volumes stack-without-api ## initializes the knora-test-unit repository with minimal data
+init-db-test-unit-minimal: stack-db-remove stack-db-only ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
