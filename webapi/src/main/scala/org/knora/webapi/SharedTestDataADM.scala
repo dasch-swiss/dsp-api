@@ -573,6 +573,15 @@ object SharedTestDataADM {
            |    "selfjoin": false
            |}""".stripMargin
 
+    val createGroupWithCustomIriRequest: String =
+        s"""{   "id": "http://rdfh.ch/groups/00FF/group-with-customIri",
+           |    "name": "NewGroupWithCustomIri",
+           |    "description": "A new group with a custom Iri",
+           |    "project": "$IMAGES_PROJECT_IRI",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
     val updateGroupRequest: String =
         s"""{
            |    "name": "UpdatedGroupName",
@@ -598,7 +607,7 @@ object SharedTestDataADM {
 
     val createProjectWithCustomIRIRequest: String =
         s"""{
-           |    "projectIri": "$customProjectIri",
+           |    "id": "$customProjectIri",
            |    "shortname": "newprojectWithIri",
            |    "shortcode": "3333",
            |    "longname": "new project with a custom IRI",
@@ -679,8 +688,8 @@ object SharedTestDataADM {
 
     val createListWithCustomIriRequest: String =
         s"""{
+           |    "id": "${SharedTestDataADM.customListIRI}",
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "listIri": "${SharedTestDataADM.customListIRI}",
            |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
            |    "comments": []
            |}""".stripMargin

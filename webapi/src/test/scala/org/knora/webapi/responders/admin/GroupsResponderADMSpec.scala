@@ -91,7 +91,12 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
                 responderManager ! GroupCreateRequestADM(
-                    CreateGroupApiRequestADM("NewGroup", Some("""NewGroupDescription with "quotes" and <html tag>"""), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    createRequest = CreateGroupApiRequestADM(
+                        name= "NewGroup",
+                        description = Some("""NewGroupDescription with "quotes" and <html tag>"""),
+                        project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        status = true,
+                        selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
@@ -111,7 +116,12 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "return a 'DuplicateValueException' if the supplied group name is not unique" in {
                 responderManager ! GroupCreateRequestADM(
-                    CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    createRequest = CreateGroupApiRequestADM(
+                        name = "NewGroup",
+                        description = Some("NewGroupDescription"),
+                        project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        status = true,
+                        selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
@@ -125,7 +135,12 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
                 /* missing group name */
                 responderManager ! GroupCreateRequestADM(
-                    CreateGroupApiRequestADM("", Some("NoNameGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    createRequest = CreateGroupApiRequestADM(
+                        name = "",
+                        description = Some("NoNameGroupDescription"),
+                        project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        status = true,
+                        selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
@@ -133,7 +148,12 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
                 /* missing project */
                 responderManager ! GroupCreateRequestADM(
-                    CreateGroupApiRequestADM("OtherNewGroup", Some("OtherNewGroupDescription"), "", status = true, selfjoin = false),
+                    createRequest = CreateGroupApiRequestADM(
+                        name = "OtherNewGroup",
+                        description = Some("OtherNewGroupDescription"),
+                        project = "",
+                        status = true,
+                        selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
