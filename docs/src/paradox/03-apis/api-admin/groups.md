@@ -48,15 +48,27 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - POST: `/admin/groups`
 - BODY:
 
-```
-{
-  "name": "NewGroup",
-  "description": "NewGroupDescription",
-  "project": "http://rdfh.ch/projects/00FF",
-  "status": true,
-  "selfjoin": false
-}
-```
+    ```JSON
+    {
+      "name": "NewGroup",
+      "description": "NewGroupDescription",
+      "project": "http://rdfh.ch/projects/00FF",
+      "status": true,
+      "selfjoin": false
+    }
+    ```
+    Additionally, each group can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
+    specified by the `id` in the request body as below:
+    ```JSON
+    { 
+      "id": "http://rdfh.ch/groups/00FF/group-with-custom-Iri",  
+      "name": "GroupWithCustomIRI",
+      "description": "A new group with a custom IRI",
+      "project": "http://rdfh.ch/projects/00FF",
+      "status": true,
+      "selfjoin": false
+    }
+    ```
 
 ### Update group information
 

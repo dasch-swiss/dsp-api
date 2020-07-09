@@ -118,11 +118,17 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private def createGroupTestRequest: Future[TestDataFileContent] = {
+    private def createGroupTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-group-request"),
-                text = SharedTestDataADM.createGroupRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-group-request"),
+                    text = SharedTestDataADM.createGroupRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-group-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createGroupWithCustomIriRequest
+                )
             )
         )
     }
@@ -332,15 +338,14 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
                              materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        Future.sequence {
-            Set(
-                getGroupsTestResponse,
-                createGroupTestRequest,
-                getGroupByIriTestResponse,
-                updateGroupTestRequest,
-                changeGroupStatusTestRequest,
-                getGroupMembersTestResponse
-            )
+        for {
+            getGroupsResponse <- getGroupsTestResponse
+            createGroupRequest <- createGroupTestRequest
+            getGroupByIriResponse <- getGroupByIriTestResponse
+            updateGroupRequest <- updateGroupTestRequest
+            changeGroupStatusRequest <- changeGroupStatusTestRequest
+            getGroupMembersResponse <- getGroupMembersTestResponse
+        } yield createGroupRequest + getGroupsResponse + getGroupByIriResponse + updateGroupRequest +
+                changeGroupStatusRequest + getGroupMembersResponse
         }
-    }
 }
