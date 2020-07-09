@@ -21,15 +21,5 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 The Knora Util API allows retrieving information about the Knora-stack itself.
 It consists of the following elements:
-* Health: Knora health state
-* Version: Versions of used stack components
-
-@@toc { depth=1 }
-
-@@@ index
-
-- [Health](health.md)
-- [Version](version.md)
-
-
-@@@
+* [Health](health.md): Knora health state
+* [Version](version.md): Versions of used stack components
