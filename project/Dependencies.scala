@@ -132,6 +132,7 @@ object Dependencies {
         val jacksonScala           = "com.fasterxml.jackson.module"            %% "jackson-module-scala"     % "2.9.4"
 
         val jsonldJava             = "com.github.jsonld-java"                   % "jsonld-java"              % "0.12.0"
+        val titaniumJava           = "com.apicatalog"                           %"titanium-json-ld"          % "0.8.3"
 
         // swagger (api documentation)
         val swaggerAkkaHttp        = "com.github.swagger-akka-http"            %% "swagger-akka-http"        % "0.14.0"
