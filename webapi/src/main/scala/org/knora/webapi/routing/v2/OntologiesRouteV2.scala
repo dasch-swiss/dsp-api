@@ -25,8 +25,6 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
@@ -902,14 +900,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def createOntologyTestResponse: Future[TestDataFileContent] = {
-        val params = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
-        for {
-
-            responseStr <- doTestDataRequest(Post(s"$baseApiUrl$OntologiesBasePathString", HttpEntity(RdfMediaTypes.`application/ld+json`, params))
-                ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, "test")))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-response"),
-            text = responseStr
+        FastFuture.successful(
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-response"),
+                text = SharedTestDataADM.createOntologyResponse
+            )
         )
     }
 
