@@ -66,6 +66,7 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "test-data/admin/lists/get-list-response.json",
                 "test-data/v2/lists/treelist.json",
                 "test-data/v2/ontologies/knora-api-ontology.json",
+                "test-data/v2/ontologies/delete-ontology-response.json",
                 "test-data/v2/resources/create-resource-as-user.json",
                 "test-data/v2/resources/resource-graph.json",
                 "test-data/v2/resources/resource-preview.json",
