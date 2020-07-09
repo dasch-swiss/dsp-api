@@ -175,7 +175,8 @@ stack-down-delete-volumes: ## stops the knora-stack and delete any created volum
 	docker-compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-db-remove
-stack-db-remove: ## stops Fuseki and delete any created volumes (deletes the database!).
+stack-db-remove: ## stops Fuseki and webapi, and deletes any created volumes (deletes the database!).
+	docker-compose -f docker-compose.yml stop api
 	docker-compose -f docker-compose.yml rm -f -v -s db
 	docker volume rm knora-api_db-home
 
