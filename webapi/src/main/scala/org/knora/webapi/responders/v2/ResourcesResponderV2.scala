@@ -269,7 +269,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
-            resourceIri: IRI <- checkEntityIri(createResourceRequestV2.createResource.resourceIri, stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode))
+            resourceIri: IRI <- checkOrCreateEntityIri(createResourceRequestV2.createResource.resourceIri, stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode))
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
             taskResult <- IriLocker.runWithIriLock(
