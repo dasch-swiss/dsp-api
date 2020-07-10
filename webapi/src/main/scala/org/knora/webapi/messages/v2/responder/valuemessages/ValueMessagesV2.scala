@@ -996,7 +996,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
 
             valueContent: ValueContentV2 <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2Complex.TextValue =>
