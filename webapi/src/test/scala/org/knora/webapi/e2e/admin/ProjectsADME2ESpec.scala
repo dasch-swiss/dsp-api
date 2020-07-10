@@ -189,8 +189,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.selfjoin should be (false)
 
                 newProjectIri.set(result.id)
-                // log.debug("newProjectIri: {}", newProjectIri.get)
-
             }
 
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
@@ -229,10 +227,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -249,7 +245,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "selfjoin": false
                        |}
                 """.stripMargin
-
 
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -270,7 +265,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "selfjoin": false
                        |}
                 """.stripMargin
-
 
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
