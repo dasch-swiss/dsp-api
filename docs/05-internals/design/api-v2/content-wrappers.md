@@ -51,10 +51,30 @@ input). Each content class class should therefore extend `KnoraContentV2`, and
 thus have a `toOntologySchema` method or converting itself between internal and
 external schemas, in either direction:
 
-@@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraContentV2 }
+```
+/**
+  * A trait for content classes that can convert themselves between internal and internal schemas.
+  *
+  * @tparam C the type of the content class that extends this trait.
+  */
+trait KnoraContentV2[C <: KnoraContentV2[C]] {
+    this: C =>
+    def toOntologySchema(targetSchema: OntologySchema): C
+}
+```
 
 Since read wrappers are used only for output, they need to be able convert
 themselves only from the internal schema to an external schema. Each read wrapper class
 should extend `KnoraReadV2`, and thus have a method for doing this:
 
-@@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraReadV2 }
+```
+/**
+  * A trait for read wrappers that can convert themselves to external schemas.
+  *
+  * @tparam C the type of the read wrapper that extends this trait.
+  */
+trait KnoraReadV2[C <: KnoraReadV2[C]] {
+    this: C =>
+    def toOntologySchema(targetSchema: ApiV2Schema): C
+}
+```

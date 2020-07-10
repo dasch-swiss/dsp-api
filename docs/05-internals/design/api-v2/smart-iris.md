@@ -33,17 +33,22 @@ import org.knora.webapi.util.IriConversions._
 
 Ensure that an implicit instance of `StringFormatter` is in scope:
 
-@@snip [ResourceMessagesV2.scala]($src$/org/knora/webapi/messages/v2/responder/resourcemessages/ResourceMessagesV2.scala) { #getGeneralInstance }
+```scala
+implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+```
 
 Then, if you have a string representing an IRI, you can can convert
 it to a `SmartIri` like this:
 
-@@snip [ValuesResponderV2Spec.scala]($test$/org/knora/webapi/responders/v2/ValuesResponderV2Spec.scala) { #toSmartIri }
-
+```scala
+val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+````
 If the IRI came from a request, use this method to throw a specific
 exception if the IRI is invalid:
 
-@@snip [ResourceMessagesV2.scala]($src$/org/knora/webapi/messages/v2/responder/resourcemessages/ResourceMessagesV2.scala) { #toSmartIriWithErr }
+```scala
+val propertyIri: SmartIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
+```
 
 You can then use methods such as `SmartIri.isKnoraApiV2EntityIri` and
 `SmartIri.getProjectCode` to obtain information about the IRI. To

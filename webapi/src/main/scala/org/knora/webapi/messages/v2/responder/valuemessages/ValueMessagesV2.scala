@@ -995,10 +995,8 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        // #validate-json-ld-iri
         for {
-            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
-            // #validate-json-ld-iri
+            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
             valueContent: ValueContentV2 <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2Complex.TextValue =>
@@ -1215,9 +1213,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
         val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear)
         val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth)
         val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay)
-        // #validate-optional-json-ld-string
         val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra, DateEraV2.parse)
-        // #validate-optional-json-ld-string
 
         val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear)
         val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth)

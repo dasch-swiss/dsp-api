@@ -32,7 +32,12 @@ as for constructing new documents.
 A route that expects a JSON-LD request must first parse the JSON-LD using
 `JsonLDUtil` . For example, this is how `ValuesRouteV2` parses a JSON-LD request to create a value:
 
-@@snip [ValuesRouteV2.scala]($src$/org/knora/webapi/routing/v2/ValuesRouteV2.scala) { #post-value-parse-jsonld }
+````scala
+post {
+            entity(as[String]) { jsonRequest =>
+                requestContext => {
+                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+````
 
 The result is a `JsonLDDocument` in which all prefixes have been expanded
 to full IRIs, with an empty JSON-LD context.
@@ -40,7 +45,20 @@ to full IRIs, with an empty JSON-LD context.
 The next step is to convert the `JsonLDDocument` to a request message that can be
 sent to the Knora responder that will handle the request.
 
-@@snip [ValuesRouteV2.scala]($src$/org/knora/webapi/routing/v2/ValuesRouteV2.scala) { #post-value-create-message }
+```scala
+val requestMessageFuture: Future[CreateValueRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                        requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
+                            requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            requestingUser = requestingUser,
+                            responderManager = responderManager,
+                            storeManager = storeManager,
+                            settings = settings,
+                            log = log
+                        )
+                    } yield requestMessage
+```
 
 This is done in a `Future`, because the processing of JSON-LD input
 could in itself involve sending messages to responders.
@@ -48,7 +66,36 @@ could in itself involve sending messages to responders.
 Each request message case class (in this case `CreateValueRequestV2`) has a companion object
 that implements the `KnoraJsonLDRequestReaderV2` trait:
 
-@@snip [KnoraRequestV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraRequestV2.scala) { #KnoraJsonLDRequestReaderV2 }
+```scala
+/**
+  * A trait for objects that can generate case class instances based on JSON-LD input.
+  *
+  * @tparam C the type of the case class that can be generated.
+  */
+trait KnoraJsonLDRequestReaderV2[C] {
+    /**
+      * Converts JSON-LD input into a case class instance.
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param settings         the application settings.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                   apiRequestID: UUID,
+                   requestingUser: UserADM,
+                   responderManager: ActorRef,
+                   storeManager: ActorRef,
+                   settings: KnoraSettingsImpl,
+                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
+}
+```
 
 This means that the companion object has a method `fromJsonLD` that takes a
 `JsonLDDocument` and returns an instance of the case class. The `fromJsonLD` method
@@ -58,7 +105,10 @@ gets a required member of a JSON-LD object, and validates it using a function
 that is passed as an argument. Here is an example of getting and validating
 a `SmartIri`:
 
-@@snip [ValueMessagesV2.scala]($src$/org/knora/webapi/messages/v2/responder/valuemessages/ValueMessagesV2.scala) { #validate-json-ld-iri }
+```scala
+for {
+      valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
+```
 
 The validation function (in this case `stringFormatter.toSmartIriWithErr`) has to take
 two arguments: a string to be validated, and a function that that throws an exception
@@ -68,7 +118,9 @@ the string is invalid, `requireStringWithValidation` throws `BadRequestException
 
 It is also possible to get and validate an optional JSON-LD object member:
 
-@@snip [ValueMessagesV2.scala]($src$/org/knora/webapi/messages/v2/responder/valuemessages/ValueMessagesV2.scala) { #validate-optional-json-ld-string }
+```scala
+val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra, DateEraV2.parse)
+```
 
 Here `JsonLDObject.maybeStringWithValidation` returns an `Option` that contains
 the return value of the validation function (`DateEraV2.parse`) if it was given,
@@ -80,7 +132,23 @@ Each API response is represented by a message class that extends
 `KnoraResponseV2`, which has a method `toJsonLDDocument` that specifies
 the target ontology schema:
 
-@@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraResponseV2 }
+```scala
+/**
+  *
+  * A trait for Knora API V2 response messages. Any response can be converted into JSON-LD.
+  *
+  */
+trait KnoraResponseV2 {
+
+    /**
+      * Converts the response to a data structure that can be used to generate JSON-LD.
+      *
+      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+      * @return a [[JsonLDDocument]] representing the response.
+      */
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument
+}
+```
 
 The implementation of this method constructs a `JsonLDDocument`,
 in which all object keys are full IRIs (no prefixes are used), but in which
@@ -94,7 +162,17 @@ as possible from JSON-LD generation. As a first step, schema conversion (or at t
 least, the conversion of Knora type IRIs to the target schema) can be done via an
 implementation of `KnoraReadV2`:
 
-@@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraReadV2 }
+```scala
+/**
+  * A trait for read wrappers that can convert themselves to external schemas.
+  *
+  * @tparam C the type of the read wrapper that extends this trait.
+  */
+trait KnoraReadV2[C <: KnoraReadV2[C]] {
+    this: C =>
+    def toOntologySchema(targetSchema: ApiV2Schema): C
+}
+```
 
 This means that the response message class has the method `toOntologySchema`, which returns
 a copy of the same message, with Knora type IRIs (and perhaps other content) adjusted
@@ -105,12 +183,22 @@ The response message class could then have a private method called `generateJson
 generates a `JsonLDDocument` that has the correct structure for the target schema, like
 this:
 
-@@snip [ResourceMessagesV2.scala]($src$/org/knora/webapi/messages/v2/responder/resourcemessages/ResourceMessagesV2.scala) { #generateJsonLD }
+````scala
+private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument
+````
 
 This way, the implementation of `toJsonLDDocument` can call `toOntologySchema`,
 then construct a `JsonLDDocument` from the resulting object. For example:
 
-@@snip [ResourceMessagesV2.scala]($src$/org/knora/webapi/messages/v2/responder/resourcemessages/ResourceMessagesV2.scala) { #toJsonLDDocument }
+```scala
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption] = Set.empty): JsonLDDocument = {
+        toOntologySchema(targetSchema).generateJsonLD(
+            targetSchema = targetSchema,
+            settings = settings,
+            schemaOptions = schemaOptions
+        )
+    }
+```
 
 ## Selecting the Response Schema
 
@@ -122,11 +210,31 @@ should be. Some routes support only one response schema. Others allow the client
 to choose. To use the schema requested by the client, the route can call
 `RouteUtilV2.getOntologySchema`:
 
-@@snip [ResourcesRouteV2.scala]($src$/org/knora/webapi/routing/v2/ResourcesRouteV2.scala) { #use-requested-schema }
+```scala
+RouteUtilV2.runRdfRouteWithFuture(
+    requestMessageF = requestMessageFuture,
+    requestContext = requestContext,
+    settings = settings,
+    responderManager = responderManager,
+    log = log,
+    targetSchema = targetSchema,
+    schemaOptions = schemaOptions
+)
+```
 
 If the route only supports one schema, it can specify the schema directly instead:
 
-@@snip [ValuesRouteV2.scala]($src$/org/knora/webapi/routing/v2/ValuesRouteV2.scala) { #specify-response-schema }
+```scala
+RouteUtilV2.runRdfRouteWithFuture(
+    requestMessageF = requestMessageFuture,
+    requestContext = requestContext,
+    settings = settings,
+    responderManager = responderManager,
+    log = log,
+    targetSchema = ApiV2Complex,
+    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+)
+```
 
 ## Generating Other RDF Formats
 

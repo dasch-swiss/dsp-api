@@ -50,10 +50,10 @@ $ make stack-down
 
 ## Running the automated tests
 
-Run the automated tests from sbt:
+Run the automated tests from terminal:
 
 ```
-> webapi / test
+$ make test
 ```
 
 ## Load Testing on Mac OS X
@@ -72,26 +72,11 @@ Additionally, in Github there is a small checkmark beside every commit,
 signaling the status of the build (successful, unsuccessful, ongoing).
 
 The build that is executed on Github CI Actions is defined in
-`.github/workflows/main.yml`, and looks like this:
-
-@@snip[main.yml](../../../../../.github/workflows/main.yml) { }
+`.github/workflows/main.yml`.
 
 ## Webapi Server Startup-Flags
 
-The Webapi-Server can be started with a number of flags. These flags can
-be supplied either to the `reStart` or the `run` command in sbt, e.g.,:
-
-```
-$ sbt
-> webapi / reStart flag
-```
-
-or
-
-```
-$ sbt
-> webapi / run flag
-```
+The Webapi-Server can be started with a number of flags.
 
 ### `loadDemoData` - Flag
 
@@ -100,12 +85,6 @@ startup, the data which is configured in `application.conf` under the
 `app.triplestore.rdf-data` key is loaded into the triplestore, and any
 data in the triplestore is removed beforehand.
 
-Usage:
-
-```
-$ sbt
-> webapi / reStart loadDemoData
-```
 ### `allowReloadOverHTTP` - Flag
 
 When the webapi.server is started with the `allowReloadOverHTTP` flag (`reStart -r`),
@@ -139,10 +118,3 @@ This content corresponds to the payload sent with the
 `org.knora.webapi.messages.v1.store.triplestoremessages` package. The
 `path` being the relative path to the `ttl` file which will be loaded
 into a named graph by the name of `name`.
-
-Usage:
-
-```
-$ sbt
-> webapi / reStart allowReloadOverHTTP
-```

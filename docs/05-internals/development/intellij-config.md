@@ -21,23 +21,17 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Create an IntelliJ Project for Knora
 
-  - Download and install [IntelliJ
-    IDEA](https://www.jetbrains.com/idea/).
+  - Download and install [IntelliJ IDEA](https://www.jetbrains.com/idea/).
   - Follow the installation procedure and install the `Scala plugin`
 
 ![screenshot 'Install Scala Plugin'](figures/install-scala-plugin.png)
 
-  - Import the root "Knora" directory from the source tree: `Import
-    Project` -\> Choose the option `module SBT`
-
-![screenshot 'import existing SBT project'](figures/import-from-sbt.png)
-
-  - SBT project configuration:
-![screenshot 'import SBT configuration'](figures/sbt-config.png)
-
-  - IntelliJ's window after the import is finished:
-
-![screenshot 'IntelliJ windows after import'](figures/intellij-after-import.png)
+  - Add Bazel Plugin and Project to IntelliJ
+  - The latest version of the [Bazel plugin](https://plugins.jetbrains.com/plugin/8609-bazel/versions)
+    supports only IntelliJ upto version `2019.03.05`. After you make sure to
+    run this version of IntelliJ, install the plugin from inside IntelliJ.
+  - Click on `File -> Import Bazel Project` and select twice `next`.
+  - Uncomment the `Scala` language and click `Finish`.
 
   - make sure that the tab size is set correctly to **4 spaces** (so you
     can use automatic code reformatting): `Preferences -> Code Style ->
@@ -45,12 +39,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ![screenshot 'setting tab size'](figures/setting-tab-space.png)
 
-## Twirl
 
-By default, Intellij excludes some folders like the twirl template
-files. To include them, go to `Project Structure` and remove
-`target/scala-2.1*/twirl` from excluded folders. Then Intellij will
-correctly resolve the references to the template files.
 
 ## Use IntelliJ IDEA's Debugger with Knora
 

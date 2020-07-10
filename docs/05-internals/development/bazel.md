@@ -1,8 +1,38 @@
-# Bazel Notes
+# Bazel
 
-This file should be moved to the documentation after the MkDocs PR is merged.
+The following section discusses on how to build and run tests for Knora-API
+with [Bazel](https://bazel.build).
 
-1. Install [Bazel](https://bazel.build/). On macOS use `brew install bazel`.
+## Prerequisites
+To install Bazel on macOS, run `brew install bazel`.
+
+## Commands
+
+Build `webapi`:
+
+```
+# build webapi
+$ bazel build //webapi
+
+# run api (webapi)
+$ bazel run //:api
+
+# run all tests
+$ bazel test //...
+```
+
+## Build Structure
+
+The Bazel build is defined in a number of files:
+  - WORKSPACE - here are external dependencies defined
+  - BUILD - there are a number of BUILD files throughout the directory structure
+    where each represents a separate package responsible for everything underneath.
+  - *.bzl - custom extensions loaded and used in BUILD files
+
+For a more detailed discussion, please see the [Concepts and Terminology](https://docs.bazel.build/versions/master/build-ref.html)
+section in the Bazel documentation.
+
+## Some Notes
 
 1. Override some `.bazelrc` settings in your own copy created at `~/.bazelrc`:
     ```
