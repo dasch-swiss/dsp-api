@@ -142,29 +142,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             }
 
-            "return 'BadRequest' if the supplied project IRI is not a valid IRI" in {
-                val params =
-                    s"""{
-                       |    "id": "invalid-project-IRI",
-                       |    "shortname": "newprojectWithInvalidIri",
-                       |    "shortcode": "2222",
-                       |    "longname": "new project with a custom invalid IRI",
-                       |    "description": [{"value": "a project created with an invalid custom IRI", "language": "en"}],
-                       |    "keywords": ["projectInvalidIRI"],
-                       |    "logo": "/fu/bar/baz.jpg",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}""".stripMargin
-
-
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains("Invalid project IRI")
-                invalidIri should be(true)
-            }
-
             "return 'BadRequest' if the supplied project IRI is not unique" in {
                 val params =
                     s"""{
