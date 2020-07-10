@@ -32,7 +32,7 @@ For example, when using "GraphDB Free", the nedded script is
 
 ```scala
 val rdfDataObjects = List (
-       RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
+       RdfDataObject(path = "test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
 )
 ```
 The data will be automatically loaded before any tests are executed. These tests should be stored inside

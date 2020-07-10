@@ -10,6 +10,7 @@ import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 
+// FIXME: Rename to something without spec in the name since it is not a spec
 class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
     // one title is missing

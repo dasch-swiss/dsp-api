@@ -538,7 +538,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
 
 
-        if (printConfigState) {
+        if (printConfigState | knoraSettings.printExtendedConfig) {
 
             msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
             msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"

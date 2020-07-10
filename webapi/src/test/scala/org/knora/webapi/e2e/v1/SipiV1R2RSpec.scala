@@ -35,13 +35,11 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceAp
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store.iiif.SourcePath
-import org.knora.webapi.testing.tags.E2ETest
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class SipiV1R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -60,8 +58,8 @@ class SipiV1R2RSpec extends R2RSpec {
     private val testPass = "test"
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
     /* we need to run our app with the mocked sipi actor */
@@ -93,7 +91,7 @@ class SipiV1R2RSpec extends R2RSpec {
             project_id = "http://rdfh.ch/projects/0803"
         )
 
-        val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
+        val pathToFile = "test_data/test_route/images/Chlaus.jpg"
 
         def createTmpFileDir(): Unit = {
             // check if tmp datadir exists and create it if not

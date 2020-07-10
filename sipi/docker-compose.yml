@@ -1,6 +1,5 @@
 version: '3'
 
-
 services:
   # sipi using default (production-like) configuration with additional routes for testing
   sipi:

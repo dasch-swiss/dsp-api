@@ -1,4 +1,5 @@
 /*
+/*
  * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
@@ -20,14 +21,13 @@
 package org.knora.webapi
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
 import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import io.gatling.core.scenario.Simulation
+import io.gatling.core.Predef._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
@@ -109,3 +109,4 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
         Await.result(responseFuture, duration)
     }
 }
+*/

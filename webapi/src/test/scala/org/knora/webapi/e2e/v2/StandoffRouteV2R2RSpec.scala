@@ -28,10 +28,9 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.StandoffRouteV2
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.ExecutionContextExecutor
@@ -41,7 +40,6 @@ import scala.concurrent.ExecutionContextExecutor
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class StandoffRouteV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -63,28 +61,28 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
     object RequestParams {
 
-        val pathToLetterMapping = "_test_data/test_route/texts/mappingForLetter.xml"
+        val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
 
-        val pathToLetterXML = "_test_data/test_route/texts/letter.xml"
+        val pathToLetterXML = "test_data/test_route/texts/letter.xml"
 
-        val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
+        val pathToLetter2XML = "test_data/test_route/texts/letter2.xml"
 
-        val pathToLetter3XML = "_test_data/test_route/texts/letter3.xml"
+        val pathToLetter3XML = "test_data/test_route/texts/letter3.xml"
 
         // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
-        val pathToStandardHTML = "_test_data/test_route/texts/StandardHTML.xml"
+        val pathToStandardHTML = "test_data/test_route/texts/StandardHTML.xml"
 
-        val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
+        val pathToHTMLMapping = "test_data/test_route/texts/mappingForHTML.xml"
 
-        val pathToHTML = "_test_data/test_route/texts/HTML.xml"
+        val pathToHTML = "test_data/test_route/texts/HTML.xml"
 
     }
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
 
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
 
     )
 
@@ -126,7 +124,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
                 compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }

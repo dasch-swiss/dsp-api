@@ -8,7 +8,7 @@ the following documentation sources:
 
  - `src/jekyll`: The Knora Documentation Overview Website
  - `src/paradox`: The Paradox-Mardown-based Knora general documentation
- - `src/api-v1`: The Knora JSON API V1 Request and Response Format documentation. Source can be found in `salsah1/src/typescript_interfaces`
+ - `src/api-v1`: The Knora JSON API V1 Request and Response Format documentation.
  - `src/api-v2`: The Knora JSON-LD API V2 Request and Response Format documentation.
  - `src/api-admin`: The Knora JSON Admin API Request and Response format Swagger-based documentation.
 

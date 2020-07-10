@@ -36,8 +36,8 @@ object GenerateContributorsFile extends App {
 
     // Configuration
 
-    val contributorsUrl = "https://api.github.com/repos/dhlab-basel/Knora/contributors"
-    val defaultOutputFile = "../Contributors.md"
+    val contributorsUrl = "https://api.github.com/repos/dasch-swiss/knora-api/contributors"
+    val defaultOutputFile = "Contributors.md"
 
     // Command-line args
 
