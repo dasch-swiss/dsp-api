@@ -89,7 +89,25 @@ environment variables if we want to run SIPI behind a proxy:
 
 These variables are only used by `make_thumbnail.lua`:
 
-@@snip[make_thumbnail.lua](../../../../sipi/scripts/make_thumbnail.lua) { #snip_marker }
+```lua
+    server.log("make_thumbnail - external_protocol: " .. get_external_protocol(), server.loglevel.LOG_DEBUG)
+
+    server.log("make_thumbnail - external_hostname: " .. get_external_hostname(), server.loglevel.LOG_DEBUG)
+
+    server.log("make_thumbnail - external_port: " .. get_external_port(), server.loglevel.LOG_DEBUG)
+
+    answer = {
+        nx_thumb = dims.nx,
+        ny_thumb = dims.ny,
+        mimetype_thumb = 'image/jpeg',
+        preview_path =  get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .."/thumbs/" .. thumbName .. "/full/max/0/default.jpg",
+        filename = tmpName, -- make this a IIIF URL
+        original_mimetype = submitted_mimetype.mimetype,
+        original_filename = filename,
+        file_type = 'IMAGE'
+    }
+```
+
 
 ## Additional Sipi Environment Variables
 
@@ -100,4 +118,24 @@ Additionaly, these environment variables can be used to further configure sipi:
 
 These variables need to be explicitly used like in `sipi.ini-knora.lua`:
 
-@@snip[sipi.init-knora.lua](../../../../sipi/config/sipi.init-knora.lua) { #snip_marker }
+```lua
+    --
+    -- Allows to set SIPI_WEBAPI_HOSTNAME environment variable and use its value.
+    --
+    local webapi_hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
+    if webapi_hostname == nil then
+        webapi_hostname = config.knora_path
+    end
+    server.log("webapi_hostname: " .. webapi_hostname, server.loglevel.LOG_DEBUG)
+
+    --
+    -- Allows to set SIPI_WEBAPI_PORT environment variable and use its value.
+    --
+    local webapi_port = os.getenv("SIPI_WEBAPI_PORT")
+    if webapi_port == nil then
+        webapi_port = config.knora_port
+    end
+    server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
+
+    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' ..  identifier
+```

@@ -43,7 +43,6 @@ trait Managers {
 trait LiveManagers extends Managers {
     this: Actor =>
 
-    // #store-responder
     /**
      * The actor that forwards messages to actors that deal with persistent storage.
      */
@@ -61,7 +60,6 @@ trait LiveManagers extends Managers {
           .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
-    // #store-responder
 }
 
 /**
@@ -433,7 +431,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         }
     }
 
-    // #start-api-server
     /**
      * Starts the Knora-API server.
      *
@@ -485,8 +482,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                 }
         }
     }
-
-    // #start-api-server
 
     /**
      * Stops Knora-API.
