@@ -41,7 +41,6 @@ A number of core settings is additionally configurable through system environmen
 | akka.loglevel                                               | KNORA_AKKA_LOGLEVEL                                             | INFO                 |
 | akka.actor.deployment.httpTriplestoreRouter.nr-of-instances | KNORA_WEBAPI_DB_CONNECTIONS                                     | 2                    |
 | akka.stdout-loglevel                                        | KNORA_AKKA_STDOUT_LOGLEVEL                                      | INFO                 |
-| app.print-short-config                                      | KNORA_WEBAPI_PRINT_SHORT_CONFIG                                 | true                 |
 | app.print-extended-config                                   | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG                              | false                |
 | app.bcrypt-password-strength                                | KNORA_WEBAPI_BCRYPT_PASSWORD_STRENGTH                           | 12                   |
 | app.jwt-secret-key                                          | KNORA_WEBAPI_JWT_SECRET_KEY                                     | super-secret-key     |

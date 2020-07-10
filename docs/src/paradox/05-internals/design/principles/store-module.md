@@ -128,27 +128,27 @@ In `application.conf` set to use the embedded triplestore:
 
         rdf-data = [
             {
-                path = "../knora-ontologies/knora-base.ttl"
+                path = "knora-ontologies/knora-base.ttl"
                 name = "http://www.knora.org/ontology/knora-base"
             }
             {
-                path = "../knora-ontologies/salsah-gui.ttl"
+                path = "knora-ontologies/salsah-gui.ttl"
                 name = "http://www.knora.org/ontology/salsah-gui"
             }
             {
-                path = "_test_data/ontologies/incunabula-onto.ttl"
+                path = "test_data/ontologies/incunabula-onto.ttl"
                 name = "http://www.knora.org/ontology/0803/incunabula"
             }
             {
-                path = "_test_data/demo_data/incunabula-demo-data.ttl"
+                path = "test_data/demo_data/incunabula-demo-data.ttl"
                 name = "http://www.knora.org/data/incunabula"
             }
             {
-                path = "_test_data/ontologies/images-onto.ttl"
+                path = "test_data/ontologies/images-onto.ttl"
                 name = "http://www.knora.org/ontology/0804/dokubib"
             }
             {
-                path = "_test_data/demo_data/images-demo-data.ttl"
+                path = "test_data/demo_data/images-demo-data.ttl"
                 name = "http://www.knora.org/data/dokubib"
             }
         ]
@@ -187,13 +187,13 @@ As an example, to use it inside a test you could write something like:
 
 ```scala
     val rdfDataObjects = List (
-           RdfDataObject(path = "../knora-ontologies/knora-base.ttl",
+           RdfDataObject(path = "knora-ontologies/knora-base.ttl",
                          name = "http://www.knora.org/ontology/knora-base"),
-           RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl",
+           RdfDataObject(path = "knora-ontologies/salsah-gui.ttl",
                          name = "http://www.knora.org/ontology/salsah-gui"),
-           RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl",
+           RdfDataObject(path = "test_data/ontologies/incunabula-onto.ttl",
                          name = "http://www.knora.org/ontology/0803/incunabula"),
-           RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl",
+           RdfDataObject(path = "test_data/all_data/incunabula-data.ttl",
                          name = "http://www.knora.org/data/incunabula")
     )
 

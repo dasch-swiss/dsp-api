@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "resources",
+    srcs = [
+        "fuseki.conf",
+        "graphdb-free.conf",
+        "graphdb-se.conf",
+        "logback-test.xml",
+        "test.conf",
+    ],
+)

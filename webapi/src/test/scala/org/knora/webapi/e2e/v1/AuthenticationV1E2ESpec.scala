@@ -28,7 +28,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 
 import scala.concurrent.Await
@@ -48,7 +47,6 @@ object AuthenticationV1E2ESpec {
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-@E2ETest
 class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)

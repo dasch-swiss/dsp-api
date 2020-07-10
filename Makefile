@@ -19,57 +19,54 @@ docs-build: ## build the docs
 	docker run --rm -v $(CURRENT_DIR):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 
 #################################
+# Bazel targets
+#################################
+
+.PHONY: build
+build: ## build all targets (excluding docs)
+	@bazel build //...
+
+#################################
 # Docker targets
 #################################
 
-.PHONY: build-all-scala
-build-all-scala: ## build all scala projects
-	@sbt clean test:compile it:compile stage webapi/universal:stage knora-jena-fuseki/universal:stage knora-sipi/universal:stage salsah1/universal:stage
+.PHONY: docker-build-knora-api-image
+docker-build-knora-api-image: # build and publish knora-api docker image locally
+	@bazel run //docker/knora-api:image
 
-## knora-api
-.PHONY: build-knora-api-image
-build-knora-api-image: build-all-scala ## build and publish knora-api docker image locally
-	docker build -t $(KNORA_API_IMAGE) -t $(REPO_PREFIX)/$(KNORA_API_REPO):latest -f docker/knora-api.dockerfile  webapi/target/universal
+.PHONY: docker-publish-knora-api-image
+docker-publish-knora-api-image: # publish knora-api image to Dockerhub
+	@bazel run //docker/knora-api:push
 
-.PHONY: publish-knora-api
-publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
-	docker push $(KNORA_API_IMAGE)
+.PHONY: docker-build-knora-jena-fuseki-image
+docker-build-knora-jena-fuseki-image: # build and publish knora-jena-fuseki docker image locally
+	@bazel run //docker/knora-jena-fuseki:image
 
-## knora-fuseki
-.PHONY: build-knora-jena-fuseki-image
-build-knora-jena-fuseki-image: build-all-scala ## build and publish knora-jena-fuseki docker image locally
-	docker build -t $(KNORA_FUSEKI_IMAGE) -t $(REPO_PREFIX)/$(KNORA_FUSEKI_REPO):latest -f docker/knora-jena-fuseki.dockerfile knora-jena-fuseki/target/universal
+.PHONY: docker-publish-knora-jena-fuseki-image
+docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Dockerhub
+	@bazel run //docker/knora-jena-fuseki:push
 
-.PHONY: publish-knora-jena-fuseki-image
-publish-knora-jena-fuseki-image: build-knora-jena-fuseki-image ## publish knora-jena-fuseki image to Dockerhub
-	docker push $(KNORA_FUSEKI_IMAGE)
+.PHONY: docker-build-knora-sipi-image
+docker-build-knora-sipi-image: # build and publish knora-sipi docker image locally
+	@bazel run //docker/knora-sipi:image
 
-## knora-sipi
-.PHONY: build-knora-sipi-image
-build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
-	@mkdir -p .docker
-	@sed -e "s|@SIPI_IMAGE@|$(SIPI_IMAGE)|g" docker/knora-sipi.template.dockerfile > .docker/knora-sipi.dockerfile
-	docker build -t $(KNORA_SIPI_IMAGE) -t $(REPO_PREFIX)/$(KNORA_SIPI_REPO):latest -f .docker/knora-sipi.dockerfile  knora-sipi/target/universal
+.PHONY: docker-publish-knora-sipi-image
+docker-publish-knora-sipi-image: # publish knora-sipi image to Dockerhub
+	@bazel run //docker/knora-sipi:push
 
-.PHONY: publish-knora-sipi-image
-publish-knora-sipi-image: build-knora-sipi-image ## publish knora-sipi image to Dockerhub
-	docker push $(KNORA_SIPI_IMAGE)
+.PHONY: docker-build-knora-salsah1-image
+docker-build-knora-salsah1-image: # build and publish knora-salsah1 docker image locally
+	@bazel run //docker/knora-salsah1:image
 
-## knora-salsah1
-.PHONY: build-knora-salsah1-image
-build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 docker image locally
-	docker build -t $(KNORA_SALSAH1_IMAGE) -f docker/knora-salsah1.dockerfile  salsah1/target/universal
+.PHONY: docker-publish-knora-salsah1-image
+docker-publish-knora-salsah1-image: # publish knora-salsah1 image to Dockerhub
+	@bazel run //docker/knora-salsah1:push
 
-.PHONY: publish-knora-salsah1-image
-publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
-	docker push $(KNORA_SALSAH1_IMAGE)
+.PHONY: docker-build
+docker-build: docker-build-knora-api-image docker-build-knora-jena-fuseki-image docker-build-knora-sipi-image docker-build-knora-salsah1-image ## build and publish all Docker images locally
 
-## all images
-.PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-jena-fuseki-image build-knora-sipi-image build-knora-salsah1-image ## build all Docker images
-
-.PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-jena-fuseki-image publish-knora-sipi-image publish-knora-salsah1-image ## publish all Docker images
+.PHONY: docker-publish
+docker-publish: docker-publish-knora-api-image docker-publish-knora-jena-fuseki-image docker-publish-knora-sipi-image docker-publish-knora-salsah1-image ## publish all Docker images to Dockerhub
 
 #################################
 ## Docker-Compose targets
@@ -93,72 +90,74 @@ else
 	$(info Using $(KNORA_DB_IMPORT) for the DB import directory.)
 	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
 endif
-	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
-	@echo KNORA_FUSEKI_IMAGE=$(KNORA_FUSEKI_IMAGE) >> .env
-	@echo FUSEKI_HEAP_SIZE=$(FUSEKI_HEAP_SIZE) >> .env
-	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
-	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
-	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
 	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
-## knora stack
+#################################
+## Knora Stack Targets
+#################################
+
 .PHONY: stack-up
-stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml up -d db
+stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, api, salsah1.
+	docker-compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
-	docker-compose -f docker/knora.docker-compose.yml up -d
+	docker-compose -f docker-compose.yml up -d
+	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+
+.PHONY: stack-up-fast
+stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
+	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: build-all-images env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml up -d
+stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, redis, api, salsah1.
+	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
-stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml restart
+stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, redis, api, salsah1.
+	@docker-compose -f docker-compose.yml restart
 
 .PHONY: stack-restart-api
-stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
-	docker-compose -f docker/knora.docker-compose.yml restart api
+stack-restart-api: ## re-starts the api. Usually used after loading data into fuseki.
+	docker-compose -f docker-compose.yml restart api
 	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f
+	@docker-compose -f docker-compose.yml logs -f
 
 .PHONY: stack-logs-db
 stack-logs-db: ## prints out and follows the logs of the 'db' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f db
+	@docker-compose -f docker-compose.yml logs -f db
 
 .PHONY: stack-logs-db-no-follow
 stack-logs-db-no-follow: ## prints out the logs of the 'db' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs db
+	docker-compose -f docker-compose.yml logs db
 
 .PHONY: stack-logs-sipi
 stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f sipi
+	@docker-compose -f docker-compose.yml logs -f sipi
 
 .PHONY: stack-logs-sipi-no-follow
 stack-logs-sipi-no-follow: ## prints out the logs of the 'sipi' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs sipi
+	@docker-compose -f docker-compose.yml logs sipi
 
 .PHONY: stack-logs-redis
 stack-logs-redis: ## prints out and follows the logs of the 'redis' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f redis
+	@docker-compose -f docker-compose.yml logs -f redis
 
 .PHONY: stack-logs-api
 stack-logs-api: ## prints out and follows the logs of the 'api' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f api
+	@docker-compose -f docker-compose.yml logs -f api
 
 .PHONY: stack-logs-api-no-follow
 stack-logs-api-no-follow: ## prints out the logs of the 'api' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs api
+	docker-compose -f docker-compose.yml logs api
 
 .PHONY: stack-logs-salsah1
 stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f salsah1
+	docker-compose -f docker-compose.yml logs -f salsah1
 
 .PHONY: stack-health
 stack-health:
@@ -166,129 +165,140 @@ stack-health:
 
 .PHONY: stack-status
 stack-status:
-	docker-compose -f docker/knora.docker-compose.yml ps
+	docker-compose -f docker-compose.yml ps
 
 .PHONY: stack-down
 stack-down: ## stops the knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml down
+	docker-compose -f docker-compose.yml down
 
 .PHONY: stack-down-delete-volumes
 stack-down-delete-volumes: ## stops the knora-stack and delete any created volumes (deletes the database!).
-	docker-compose -f docker/knora.docker-compose.yml down --volumes
+	docker-compose -f docker-compose.yml down --volumes
+
+.PHONY: stack-db-remove
+stack-db-remove: ## stops Fuseki and webapi, and deletes any created volumes (deletes the database!).
+	docker-compose -f docker-compose.yml stop api
+	docker-compose -f docker-compose.yml rm -f -v -s db
+	@docker volume rm -f knora-api_db-home
 
 .PHONY: stack-config
 stack-config: env-file
-	docker-compose -f docker/knora.docker-compose.yml config
+	docker-compose -f docker-compose.yml config
 
 ## stack without api
 .PHONY: stack-without-api
-stack-without-api: stack-up ## starts the knora-stack without knora-api: graphdb, sipi, redis, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml stop api
+stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki, sipi, redis, salsah1.
+	@docker-compose -f docker-compose.yml stop api
 
-## stack without api and sipi
 .PHONY: stack-without-api-and-sipi
-stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: graphdb, redis, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml stop api
-	docker-compose -f docker/knora.docker-compose.yml stop sipi
+stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki, redis, salsah1.
+	@docker-compose -f docker-compose.yml stop api
+	@docker-compose -f docker-compose.yml stop sipi
 
-.PHONY: test-only
-test-only: build-all-images ## runs only the supplied tests, e.g., make test-only TARGET="*.CORSSupportE2ESpec".
-	@echo $@  # print target name
-	sbt "webapi/testOnly $(TARGET)"
+.PHONY: stack-without-api-and-salsah1
+stack-without-api-and-salsah1: stack-up ## starts the knora-stack without knora-api and salsah1: fuseki, redis, sipi.
+	@docker-compose -f docker-compose.yml stop api
+	@docker-compose -f docker-compose.yml stop salsah1
+
+.PHONY: stack-db-only
+stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuseki.
+	docker-compose -f docker-compose.yml up -d db
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+
+#################################
+## Test Targets
+#################################
+
+.PHONY: test-webapi
+test-webapi: docker-build ## runs all dsp-api tests.
+	bazel test //webapi/...
 
 .PHONY: test-unit
-test-unit: build-all-images ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
-	@echo $@  # print target name
-	sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
-
-.PHONY: test-unit-ci
-test-unit-ci: build-all-images ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
-	@echo $@  # print target name
-	sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+test-unit: docker-build ## runs the dsp-api unit tests.
+	bazel test \
+	//webapi/src/test/scala/org/knora/webapi/http/... \
+	//webapi/src/test/scala/org/knora/webapi/messages/... \
+	//webapi/src/test/scala/org/knora/webapi/other/... \
+	//webapi/src/test/scala/org/knora/webapi/responders/... \
+	//webapi/src/test/scala/org/knora/webapi/routing/... \
+	//webapi/src/test/scala/org/knora/webapi/store/... \
+	//webapi/src/test/scala/org/knora/webapi/util/... \
 
 .PHONY: test-e2e
-test-e2e: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
-	@echo $@  # print target name
-	sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
-
-.PHONY: test-e2e-ci
-test-e2e-ci: build-all-images ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
-	@echo $@  # print target name
-	sbt coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+test-e2e: docker-build ## runs the dsp-api e2e tests.
+	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
 
 .PHONY: test-it
-test-it: build-all-images ## runs the integration tests (equivalent to 'sbt webapi/it').
-	@echo $@
-	sbt 'webapi/it:test'
+test-it: docker-build ## runs the dsp-api integration tests.
+	bazel test //webapi/src/it/...
 
-.PHONY: test-it-ci
-test-it-ci: build-all-images ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
-	@echo $@  # print target name
-	sbt coverage webapi/it:test webapi/coverageReport
+.PHONY: test-salsah1
+test-salsah1: docker-build ## runs salsah1 headless browser tests
+	bazel test //salsah1/...
+
+.PHONY: test-repository-upgrade
+test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration test
+	@rm -rf $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
+	@mkdir -p $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
+	@unzip $(CURRENT_DIR)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
+	# empty repository
+	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
+	# load v7.0.0 data
+	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
+	# call target which restarts the API and emits error if API does not start
+	# after a certain time. at startup, data should be upgraded.
+	@$(MAKE) -f $(THIS_FILE) stack-up || $(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 
 .PHONY: test
-test: build-all-images ## runs all tests.
-	@echo $@
-	sbt webapi/test webapi/it:test
+test: docker-build ## runs all test targets.
+	bazel test //webapi/...
 
-.PHONY: test-repository-update
-test-repository-update: init-db-test-minimal
-	@rm -rf /tmp/knora-test-data/v7.0.0/
-	@mkdir -p /tmp/knora-test-data/v7.0.0/
-	@unzip $(CURRENT_DIR)/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d /tmp/knora-test-data/v7.0.0/
-	$(CURRENT_DIR)/webapi/scripts/fuseki-empty-repository.sh -r knora-test -u admin -p test -h localhost:3030
-	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 /tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
-	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
+#################################
+## Database Management
+#################################
 
 .PHONY: init-db-test
-init-db-test: stack-down-delete-volumes stack-without-api ## initializes the knora-test repository
+init-db-test: stack-db-remove stack-db-only ## initializes the knora-test repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: stack-down-delete-volumes stack-without-api ## initializes the knora-test repository with minimal data
+init-db-test-minimal: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
 .PHONY: init-db-test-unit
-init-db-test-unit: stack-down-delete-volumes stack-without-api ## initializes the knora-test-unit repository
+init-db-test-unit: stack-db-remove stack-db-only ## initializes the knora-test-unit repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
 
 .PHONY: init-db-test-unit-minimal
-init-db-test-unit-minimal: stack-down-delete-volumes stack-without-api ## initializes the knora-test-unit repository with minimal data
+init-db-test-unit-minimal: stack-db-remove stack-db-only ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
 #################################
-# Other
+## Other
 #################################
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
-	@rm -rf $(CURRENT_DIR)/.tmp
-	@mkdir $(CURRENT_DIR)/.tmp
+	@rm -rf .tmp
+	@mkdir .tmp
 
 clean: ## clean build artifacts
-	@rm -rf .docker
 	@rm -rf .env
+	@bazel clean
 	@sbt clean
 	@rm -rf .tmp
 
 clean-docker: ## cleans the docker installation
-	docker system prune -af
+	@docker system prune -af
 
 .PHONY: info
 info: ## print out all variables
 	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
 	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
-	@echo "SIPI_VERSION: \t\t $(SIPI_VERSION)"
-	@echo "KNORA_API_IMAGE: \t $(KNORA_API_IMAGE)"
-	@echo "KNORA_FUSEKI_IMAGE: \t $(KNORA_FUSEKI_IMAGE)"
-	@echo "KNORA_SIPI_IMAGE: \t $(KNORA_SIPI_IMAGE)"
-	@echo "KNORA_ASSETS_IMAGE: \t $(KNORA_ASSETS_IMAGE)"
-	@echo "KNORA_SALSAH1_IMAGE: \t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_DB_IMPORT: \t $(KNORA_DB_IMPORT)"
 	@echo "KNORA_DB_HOME: \t\t $(KNORA_DB_HOME)"
 

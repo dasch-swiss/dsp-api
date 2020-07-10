@@ -13,7 +13,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
@@ -38,7 +37,6 @@ object OntologyV2R2RSpec {
 /**
   * End-to-end test specification for API v2 ontology routes.
   */
-@E2ETest
 class OntologyV2R2RSpec extends R2RSpec {
 
     import OntologyV2R2RSpec._
@@ -62,8 +60,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val writeGetTestResponses = false
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
-        RdfDataObject(path = "_test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
+        RdfDataObject(path = "test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
     /**
@@ -77,7 +75,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private case class HttpGetTest(urlPath: String, fileBasename: String, disableWrite: Boolean = false) {
         def makeFile(mediaType: MediaType.NonBinary): File = {
             val fileSuffix = mediaType.fileExtensions.head
-            new File(s"src/test/resources/test-data/ontologyR2RV2/$fileBasename.$fileSuffix")
+            new File(s"test_data/ontologyR2RV2/$fileBasename.$fileSuffix")
         }
 
         /**
@@ -88,7 +86,13 @@ class OntologyV2R2RSpec extends R2RSpec {
           */
         def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
             if (!disableWrite) {
-                FileUtil.writeTextFile(makeFile(mediaType), responseStr)
+                // Per default only read access is allowed in the bazel sandbox.
+                // This workaround allows to save test output.
+                val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+                val file = makeFile(mediaType)
+                val newOutputFile = new File(testOutputDir, file.getPath)
+                newOutputFile.getParentFile.mkdirs()
+                FileUtil.writeTextFile(newOutputFile, responseStr)
             }
         }
 

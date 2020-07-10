@@ -21,7 +21,6 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.{AppStates, SetAppState}
-import org.knora.webapi.testing.tags.E2ETest
 
 
 object HealthRouteE2ESpec {
@@ -35,7 +34,6 @@ object HealthRouteE2ESpec {
 /**
   * End-to-End (E2E) test specification for testing route rejections.
   */
-@E2ETest
 class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)

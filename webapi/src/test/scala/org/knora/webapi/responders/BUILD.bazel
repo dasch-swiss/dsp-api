@@ -1,0 +1,30 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+
+filegroup(
+    name = "srcs",
+    srcs = [
+        "MockableResponderManager.scala",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2:srcs",
+    ],
+)
+
+scala_test(
+    name = "IriLockerSpec",
+    size = "small",  # 60s
+    srcs = [
+        "IriLockerSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+    ],
+)
