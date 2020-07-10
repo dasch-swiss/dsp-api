@@ -52,7 +52,7 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
     "The CreateProjectApiRequestADM case class" should {
 
         "return a 'BadRequest' when project description is not supplied" in {
-            assertThrows[BadRequestException](
+            val caught = intercept[BadRequestException](
                 CreateProjectApiRequestADM(
                     shortname = "newproject5",
                     shortcode = "1114",
@@ -64,6 +64,39 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
                     selfjoin = false
                 )
             )
+            assert(caught.getMessage === "Project description needs to be supplied.")
+        }
+
+        "return a 'BadRequest' when project shortname is not supplied" in {
+            val caught = intercept[BadRequestException](
+                CreateProjectApiRequestADM(
+                    shortname = "",
+                    shortcode = "1114",
+                    longname = Some("project longname"),
+                    description = Seq(StringLiteralV2("a project description", Some("en"))),
+                    keywords = Seq("keywords"),
+                    logo = Some("/fu/bar/baz.jpg"),
+                    status = true,
+                    selfjoin = false
+                )
+            )
+            assert(caught.getMessage === "Project shortname needs to be supplied.")
+        }
+
+        "return a 'BadRequest' when project shortcode is not supplied" in {
+            val caught = intercept[BadRequestException](
+                CreateProjectApiRequestADM(
+                    shortname = "newproject2",
+                    shortcode = "",
+                    longname = Some("project longname"),
+                    description = Seq(StringLiteralV2("a project description", Some("en"))),
+                    keywords = Seq("keywords"),
+                    logo = Some("/fu/bar/baz.jpg"),
+                    status = true,
+                    selfjoin = false
+                )
+            )
+            assert(caught.getMessage === "Project shortcode needs to be supplied.")
         }
 
         "return 'BadRequest' if the supplied project IRI is not a valid IRI" in {
