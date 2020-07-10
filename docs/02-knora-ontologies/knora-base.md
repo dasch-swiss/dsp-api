@@ -1464,7 +1464,7 @@ that is a subclass of the one specified in the base property. However,
 it is not possible for the subproperty to make the base property's
 constraint less restrictive.
 
-See also [Why doesn’t Knora use rdfs:domain and rdfs:range for consistency checking?](../faq.md#why-doesnt-knora-use-rdfs-domain-and-rdfs-range-for-consistency-checking-)
+See also [Why doesn’t Knora use rdfs:domain and rdfs:range for consistency checking?](../faq/index.md#why-doesnt-knora-use-rdfs-domain-and-rdfs-range-for-consistency-checking-)
 
 ### Consistency Constraint Example
 

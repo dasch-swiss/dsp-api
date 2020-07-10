@@ -60,3 +60,4 @@ knora-sipi
 knora-upgrade
 triplestores/fuseki/system
 dump.rdb
+/site/

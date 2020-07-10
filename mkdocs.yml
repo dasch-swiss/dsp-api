@@ -1,6 +1,7 @@
 site_name: Knora Documentation
 
 nav:
+  - Home: index.md
   - Introduction:
       - Index: 01-introduction/index.md
       - What is Knora?: 01-introduction/what-is-knora.md
