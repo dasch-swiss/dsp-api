@@ -19,10 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Knora API v2
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [Introduction](introduction.md)
 - [Authentication](authentication.md)
 - [Knora IRIs](knora-iris.md)

@@ -20,9 +20,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Building and Running
 
-@@toc
-
-
 ## Running the stack
 
 With [Docker](https://www.docker.com/) installed, run the following:

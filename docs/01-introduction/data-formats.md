@@ -19,7 +19,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Data Formats in Knora
 
-As explained in @ref:[What Is Knora?](what-is-knora.md), Knora stores data
+As explained in [What Is Knora?](what-is-knora.md), Knora stores data
 in a small number of formats that are suitable for long-term preservation while
 facilitating data reuse.
 
@@ -28,9 +28,9 @@ can be stored and managed by Knora:
 
 | Original Format                              | Format in Knora                                                                                                              |
 |----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| Text (XML, LaTeX, Microsoft Word, etc.)      | @ref:[Knora resources](../03-apis/api-v2/editing-resources.md) (RDF) containing @ref:[Standoff/RDF](standoff-rdf.md)            |
-| Tabular data, including relational databases | @ref:[Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
-| Data in tree or graph structures             | @ref:[Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
+| Text (XML, LaTeX, Microsoft Word, etc.)      | [Knora resources](../03-apis/api-v2/editing-resources.md) (RDF) containing [Standoff/RDF](standoff-rdf.md)            |
+| Tabular data, including relational databases | [Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
+| Data in tree or graph structures             | [Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
 | Images (JPEG, PNG, etc.)                     | JPEG 2000 files stored by [Sipi](https://github.com/dhlab-basel/Sipi)                                                        |
 | Audio and video files                        | Audio and video files stored by [Sipi](https://github.com/dhlab-basel/Sipi) (in archival formats to be determined)           |
-| PDF                                          | Can be stored by Sipi, but data reuse is improved by extracting the text for storage as @ref:[Standoff/RDF](standoff-rdf.md) |
+| PDF                                          | Can be stored by Sipi, but data reuse is improved by extracting the text for storage as [Standoff/RDF](standoff-rdf.md) |

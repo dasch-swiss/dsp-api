@@ -69,12 +69,12 @@ iri = "<", string, ">" ;
 ```
 
 The attributes used with each GUI element are described below under
-@ref:[Individuals](#individuals).
+[Individuals](#individuals).
 
 `guiAttributeDefinition`
 
 :   Used only in the `salsah-gui` ontology itself, as a predicate
-    attached to instances of `Guielement` (see @ref:[Individuals](#individuals)),
+    attached to instances of `Guielement` (see [Individuals](#individuals)),
     to specify the attributes that can be given as objects of `guiAttribute` when a given
     `Guielement`. is used. The objects of this predicate are written in
     a DSL with the following syntax:
@@ -135,7 +135,7 @@ identifier = letter , { letter } ;
 `List`
 
 :   A GUI element for selecting an item in a hierarchical list (see
-    @ref:[ListValue](knora-base.md#listvalue)). A property definition that
+    [ListValue](knora-base.md#listvalue)). A property definition that
     uses this element must also contain this `guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
@@ -144,7 +144,7 @@ identifier = letter , { letter } ;
 `Pulldown`
 
 :   A GUI element for selecting an item in a flat list (see
-    @ref:[ListValue](knora-base.md#listvalue)) using a pull-down menu. A
+    [ListValue](knora-base.md#listvalue)) using a pull-down menu. A
     property definition that uses this element must also contain this
     `guiAttribute` predicate:
 
@@ -154,7 +154,7 @@ identifier = letter , { letter } ;
 `Radio`
 
 :   A GUI element for selecting an item in a flat list (see
-    @ref:[ListValue](knora-base.md#listvalue)) using radio buttons. A property
+    [ListValue](knora-base.md#listvalue)) using radio buttons. A property
     definition that uses this element must also contain this
     `guiAttribute` predicate:
 

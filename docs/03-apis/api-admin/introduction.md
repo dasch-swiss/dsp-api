@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Introduction: Using the Admin API
 
-@@toc { depth=2 }
-
 ## RESTful API
 
 The Knora Admin API is a RESTful API that allows for reading and adding of
@@ -35,11 +33,11 @@ values (see
 ## Knora IRIs in the Admin API
 
 Every resource that is created or hosted by Knora is identified by a
-unique ID called an Internationalized Resource Identifier (@extref[IRI](rfc:3987)). The IRI is required for every API operation to identify the resource in question. A Knora IRI has itself the format of a URL.
+unique ID called an Internationalized Resource Identifier ([IRI](https://tools.ietf.org/html/rfc3987)). The IRI is required for every API operation to identify the resource in question. A Knora IRI has itself the format of a URL.
 For some API operations, the IRI has to be URL-encoded (HTTP GET requests).
 
 Unlike the Knora API v2, the admin API uses internal IRIs, i.e. the actual IRIs
-that are stored in the triplestore (see @ref:[Knora IRIs](../api-v2/knora-iris.md)).
+that are stored in the triplestore (see [Knora IRIs](../api-v2/knora-iris.md)).
 
 ## Admin Path Segment
 
@@ -66,7 +64,7 @@ For all API operations that target at changing resources or values, the
 client has to provide credentials (username and password) so that the
 API server can authenticate the user making the request. Credentials can
 be sent as a part of the HTTP header or as parts of the URL (see
-@ref:[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
+[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
 ## OpenAPI/Swagger
 

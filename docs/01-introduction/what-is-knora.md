@@ -43,7 +43,7 @@ all the programs that were used to create and read old data files, or even
 all the operating systems that these programs ran on.
 
 Instead of preserving all these data formats, Knora supports
-the conversion of all sorts of data to a @ref:[small number of formats](data-formats.md)
+the conversion of all sorts of data to a [small number of formats](data-formats.md)
 that are suitable for long-term preservation, and that maintain the data's meaning and
 structure:
 
@@ -64,7 +64,7 @@ from different research projects in a unified way.
 
 Each project creates its own data model (or *ontology*), describing the types of
 items it wishes to store, using basic data types defined in Knora's
-@ref:[base ontology](../02-knora-ontologies/knora-base.md).
+[base ontology](../02-knora-ontologies/knora-base.md).
 This gives projects the freedom to describe their data in a way that makes
 sense to them, while allowing Knora to support searching and linking across projects.
 
@@ -82,7 +82,7 @@ it possible to search for a date in one calendar, and get search results in othe
 
 Commonly used text markup systems, such as [TEI/XML](http://www.tei-c.org/),
 have to represent a text as a hierarchy, and therefore have trouble supporting
-overlapping markup. Knora supports @ref:[Standoff/RDF markup](standoff-rdf.md): the markup is stored
+overlapping markup. Knora supports [Standoff/RDF markup](standoff-rdf.md): the markup is stored
 as RDF data, separately from the text, allowing for overlapping markup. Knora's RDF-based standoff
 is designed to support the needs of complex digital critical editions. Knora
 can import any XML document (including TEI/XML) for storage as standoff/RDF,
@@ -90,7 +90,7 @@ and can regenerate the original XML document at any time.
 
 ## Powerful Searches
 
-Knora's API provides a search language, @ref:[Gravsearch](../03-apis/api-v2/query-language.md),
+Knora's API provides a search language, [Gravsearch](../03-apis/api-v2/query-language.md),
 that is designed to meet the needs of humanities researchers. Gravsearch supports Knora's
 humanites-focused data structures, including calendar-independent dates and standoff markup, as well
 as fast full-text searches. This allows searches to combine text-related criteria with any other
@@ -110,9 +110,9 @@ user's permissions.
 RDF does not have a concept of data history. Knora maintains all previous
 versions of each item of data. Ordinary searches return only the latest version,
 but you can
-@ref:[obtain](../03-apis/api-v2/reading-and-searching-resources.md#get-a-full-representation-of-a-version-of-a-resource-by-iri)
+[obtain](../03-apis/api-v2/reading-and-searching-resources.md#get-a-full-representation-of-a-version-of-a-resource-by-iri)
 and
-@ref:[cite](../03-apis/api-v2/permalinks.md)
+[cite](../03-apis/api-v2/permalinks.md)
 an item as it was at any point in the past.
 
 ## Data Consistency

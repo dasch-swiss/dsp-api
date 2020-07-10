@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/.
 
 # Administration (Users, Projects, Groups, Institutions, Permissions)
 
-@@toc
-
 ## Scope
 
 This Section includes management (creation, updating, deletion) of

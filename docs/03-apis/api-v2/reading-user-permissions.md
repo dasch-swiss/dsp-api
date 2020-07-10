@@ -19,7 +19,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Reading the User's Permissions on Resources and Values
 
-In the @ref:[complex API schema](introduction.md#api-schema), each
+In the [complex API schema](introduction.md#api-schema), each
 resource and value is returned with the predicate `knora-api:userHasPermission`.
 The object of this predicate is a string containing a permission code, which
 indicates the requesting user's maximum permission on the resource or value.
@@ -32,4 +32,4 @@ These are the possible permission codes, in ascending order:
 - `CR`: change rights permission (most privileged)
 
 Each permission implies all lesser permissions. For more details, see
-@ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
+[Permissions](../../02-knora-ontologies/knora-base.md#permissions).

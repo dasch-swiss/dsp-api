@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # SPARQL Query Design
 
-@@toc
-
 ## Inference
 
 Knora does not require the triplestore to perform inference, but may be able
@@ -89,7 +87,7 @@ the execution of a SPARQL query, by expanding the query itself. The expanded que
 the first example, using property path syntax, and therefore it is not likely to be more efficient. Moreover,
 other triplestores may not provide a way to return explicit rather than inferred triples. To support such
 a triplestore, Knora uses property path syntax rather than inference.
-See @ref:[the Gravsearch design documentation](gravsearch.md#inference) for information on how this is done
+See [the Gravsearch design documentation](gravsearch.md#inference) for information on how this is done
 for Gravsearch queries.
 
 The support for Apache Jena Fuseki currently works in this way. However, Fuseki supports both forward-chaining

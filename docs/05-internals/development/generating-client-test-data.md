@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Generating Client Test Data
 
-@@toc
-
 ## Requirements
 
 Generate test requests and responses for Knora's routes, to be used in testing

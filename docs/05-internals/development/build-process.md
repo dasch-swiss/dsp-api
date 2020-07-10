@@ -19,13 +19,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Build Process
 
-@@toc
-
 ## SBT Build Configuration
 
-Knora's complete build definition is defined in `KnoraBuild.sbt`:
-
-@@snip[KnoraBuild.sbt](../../../../../KnoraBuild.sbt) { }
+Knora's complete build definition is defined in `KnoraBuild.sbt`.
 
 
 ## Building Deployment Packages

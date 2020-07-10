@@ -39,7 +39,7 @@ question. A Knora IRI has itself the format of a URL. For some API
 operations, the IRI has to be URL-encoded (HTTP GET requests).
 
 Unlike Knora API v2, Knora API v1 uses internal IRIs, i.e. the actual IRIs
-that are stored in the triplestore (see @ref:[Knora IRIs](../api-v2/knora-iris.md)).
+that are stored in the triplestore (see [Knora IRIs](../api-v2/knora-iris.md)).
 
 ## V1 Path Segment
 
@@ -77,7 +77,7 @@ API server can authenticate the user making the request. When using the
 SALSAH web interface, after logging in a session is established (cookie
 based). When using the API with another client application, credentials
 can be sent as a part of the HTTP header or as parts of the URL (see
-@ref:[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
+[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
 Also when reading resources authentication my be needed as resources and
 their values may have restricted view permissions.

@@ -19,10 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Development
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [Overview](overview.md)
 - [Starting Fuseki 2](fuseki.md)
 - [Starting GraphDB](graphdb.md)
@@ -36,5 +32,3 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Starting the Knora Stack inside Docker Container](docker-compose.md)
 - [Updating Repositories](updating-repositories.md)
 - [Generating Client Test Data](generating-client-test-data.md)
-
-@@@

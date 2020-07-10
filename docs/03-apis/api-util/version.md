@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Version
 
-@@toc
-
 The version endpoint provides the versions of the used components in the Knora-stack.
 The response has the type `application/json` and contains the following information:
 

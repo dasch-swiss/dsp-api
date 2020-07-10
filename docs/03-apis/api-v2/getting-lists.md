@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Getting Lists
 
-@@toc
-
 ## Getting a complete List
 
 In order to request a complete list, make a HTTP GET request to the `lists` route appending the Iri of the list's root node (URL-encoded):

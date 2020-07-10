@@ -15,7 +15,7 @@ $(error The '$(TYPEDOC)' command was not found. Make sure you have Typedoc insta
 endif
 
 # Graphviz diagrams to be converted to PNG
-DOT_FIGURES = $(shell find src/paradox -type f -name '*.dot')
+DOT_FIGURES = $(shell find ./ -type f -name '*.dot')
 PNG_FIGURES = $(patsubst %.dot,%.dot.png,$(DOT_FIGURES))
 
 .PHONY: clean

@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # XML to Standoff Mapping in API v1
 
-@@toc
-
 ## The Knora Standard Mapping
 
 ### Description

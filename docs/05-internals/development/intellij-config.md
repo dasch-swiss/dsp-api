@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Setup IntelliJ for development of Knora
 
-@@toc
-
 ## Create an IntelliJ Project for Knora
 
   - Download and install [IntelliJ

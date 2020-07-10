@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Content Wrappers
 
-@@toc
-
 Whenever possible, the same data structures are used to represent the same
 types of data, regardless of the API operation (reading, creating, or
 modifying). However, often more data is available in output than in input. For

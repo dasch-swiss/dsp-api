@@ -21,10 +21,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 The Knora admin API makes it possible to administer Knora projects, users, user groups, permissions, and hierarchical lists.
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [Introduction](introduction.md)
 - [Overview](overview.md)
 - [Users Endpoint](users.md)

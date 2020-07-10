@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Updating Repositories When Upgrading Knora
 
-@@toc
-
 When a new version of Knora introduces changes that are not backwards-compatible
 with existing data, your repository will need to be updated.
 
@@ -70,7 +68,7 @@ The overall procedure is:
 1. Follow the instructions in `upgrade/graphdb-se/old/1263-knora-admin/README.md`.
 
 2. Follow the instructions in
-   @ref:[Upgrading from Knora 7.0.0 or Later](#upgrading-from-knora-7-0-0-or-later).
+   [Upgrading from Knora 7.0.0 or Later](#upgrading-from-knora-7-0-0-or-later).
 
 ### Upgrading from Knora 5.0.0 
 
@@ -81,4 +79,4 @@ The overall procedure is:
 3. Follow the instructions in `upgrade/graphdb-se/old/1263-knora-admin/README.md`.
 
 4. Follow the instructions in
-   @ref:[Upgrading from Knora 7.0.0 or Later](#upgrading-from-knora-7-0-0-or-later).
+   [Upgrading from Knora 7.0.0 or Later](#upgrading-from-knora-7-0-0-or-later).

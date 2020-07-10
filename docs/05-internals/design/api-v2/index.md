@@ -19,10 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Knora API v2 Design
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [API v2 Design Overview](overview.md)
 - [Ontology Schemas](ontology-schemas.md)
 - [Smart IRIs](smart-iris.md)
@@ -36,4 +32,3 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Archival Resource Key (ARK) Identifiers](ark.md)
 - [SPARQL Query Design](query-design.md)
 
-@@@

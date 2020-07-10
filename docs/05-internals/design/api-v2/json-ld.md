@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # JSON-LD Parsing and Formatting
 
-@@toc
-
 ## JsonLDUtil
 
 Knora provides a utility object called `JsonLDUtil`, which wraps the
@@ -100,7 +98,7 @@ implementation of `KnoraReadV2`:
 
 This means that the response message class has the method `toOntologySchema`, which returns
 a copy of the same message, with Knora type IRIs (and perhaps other content) adjusted
-for the target schema. (See @ref:[Smart IRIs](smart-iris.md) on how to convert Knora
+for the target schema. (See [Smart IRIs](smart-iris.md) on how to convert Knora
 type IRIs to the target schema.)
 
 The response message class could then have a private method called `generateJsonLD`, which
@@ -133,6 +131,6 @@ If the route only supports one schema, it can specify the schema directly instea
 ## Generating Other RDF Formats
 
 `RouteUtilV2.runRdfRouteWithFuture` implements
-@extref[HTTP content negotiation](rfc:7231#section-5.3.2), and converts JSON-LD
+[HTTP content negotiation](https://tools.ietf.org/html/rfc7231#section-5.3.2), and converts JSON-LD
 responses into [Turtle](https://www.w3.org/TR/turtle/)
 or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/) as appropriate.

@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # How to Add an API v1 Route
 
-@@toc
-
 ## Write SPARQL templates
 
 Add any SPARQL templates you need to `src/main/twirl/queries/sparql/v1`,
@@ -47,7 +45,7 @@ and add it to the `org.knora.webapi.responders.v1` package.
 Give your responder a `receive(msg: YourCustomType)` method that handles each of your
 request message types by generating a `Future` containing a response message.
 
-See @ref:[Triplestore Access](../principles/design-overview.md#triplestore-access) for details of how
+See [Triplestore Access](../principles/design-overview.md#triplestore-access) for details of how
 to access the triplestore in your responder.
 
 Add the path of your responder to the `org.knora.webapi.responders` package object,
@@ -55,8 +53,8 @@ and add code to `ResponderManager` to instantiate an object for your responder c
 Then add a `case` to the `receive` method in `ResponderManager`, to match
 messages that extend your request message trait, and pass them to the responder's
 receive method. The responder's resulting `Future` must be passed to the `ActorUtil.future2Message`.
-See @ref:[Futures with Akka](../principles/futures-with-akka.md) and
-@ref:[Error Handling](../principles/design-overview.md#error-handling) for details.
+See [Futures with Akka](../principles/futures-with-akka.md) and
+[Error Handling](../principles/design-overview.md#error-handling) for details.
 
 ## Write a Route
 

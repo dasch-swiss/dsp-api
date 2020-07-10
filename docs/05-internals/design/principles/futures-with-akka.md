@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Futures with Akka
 
-@@toc
-
 ## Introduction
 
 [Scala's documentation on

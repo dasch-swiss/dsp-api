@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # How to Add an API v2 Route
 
-@@toc
-
 ## Write SPARQL templates
 
 Add any SPARQL templates you need to `src/main/twirl/queries/sparql/v2`,
@@ -35,7 +33,7 @@ response messages. Add a trait that the responder's request messages
 extend. Each request message type should contain a `UserADM`.
 
 Request and response messages should be designed following the patterns described
-in @ref:[JSON-LD Parsing and Formatting](json-ld.md). Each responder's
+in [JSON-LD Parsing and Formatting](json-ld.md). Each responder's
 request messages should extend a responder-specific trait, so that
 `ResponderManager` will know which responder to route those messages to.
 
@@ -47,7 +45,7 @@ and add it to the `org.knora.webapi.responders.v2` package.
 Give your responder a `receive(msg: YourCustomType)` method that handles each of your
 request message types by generating a `Future` containing a response message.
 
-See @ref:[Triplestore Access](../principles/design-overview.md#triplestore-access) for details of how
+See [Triplestore Access](../principles/design-overview.md#triplestore-access) for details of how
 to access the triplestore in your responder.
 
 Add the path of your responder to the `org.knora.webapi.responders` package object,
@@ -55,8 +53,8 @@ and add code to `ResponderManager` to instantiate the new responder. Then add a 
 the `receive` method in `ResponderManager`, to match messages that extend your request
 message trait, and pass them them to that responder's receive method.
 The responder's resulting `Future` must be passed to the `ActorUtil.future2Message`.
-See @ref:[Futures with Akka](../principles/futures-with-akka.md) and
-@ref:[Error Handling](../principles/design-overview.md#error-handling) for details.
+See [Futures with Akka](../principles/futures-with-akka.md) and
+[Error Handling](../principles/design-overview.md#error-handling) for details.
 
 ## Write a Route
 

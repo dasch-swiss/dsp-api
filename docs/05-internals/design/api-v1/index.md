@@ -19,11 +19,5 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Knora API v1 Design
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [JSON in API v1](json.md)
 - [How to Add an API v1 Route](how-to-add-a-route.md)
-
-@@@

@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Authentication
 
-@@toc
-
 Access to the Knora API can for certain operations require a user to authenticate.
 Authentication can be performed in two ways:
 
@@ -59,7 +57,7 @@ When accessing any route, the *access token* would need to be supplied, we suppo
 
 - the session cookie,
 - in the URL submitting the parameter `token` (e.g., <http://knora-host/v1/resources/resIri?token=1234567890>), and
-- in the HTTP authorization header with the @extref[HTTP bearer scheme](rfc:6750#section-2.1).
+- in the HTTP authorization header with the [HTTP bearer scheme](https://tools.ietf.org/html/rfc6750#section-2.1).
 
 If the token is successfully validated, then the user is deemed authenticated.
 

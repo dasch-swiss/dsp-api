@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Store Module
 
-@@toc
-
 ## Overview
 
 The store module houses the different types of data stores supported by

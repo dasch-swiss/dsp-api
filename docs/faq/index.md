@@ -19,13 +19,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Frequently Asked Questions
 
-@@toc { depth=2 }
-
 ## Data Formats
 
 ### What data formats does Knora store?
 
-See @ref:[Data Formats in Knora](01-introduction/data-formats.md).
+See [Data Formats in Knora](../01-introduction/data-formats.md).
 
 ### Does Knora store XML files?
 
@@ -34,8 +32,8 @@ is better suited to its goal of facilitating data reuse.
 
 If your XML files represent text with markup (e.g. [TEI/XML](http://www.tei-c.org/)),
 the recommended approach is to allow Knora to store it as
-@ref:[Standoff/RDF](01-introduction/standoff-rdf.md). This will allow both text and
-markup to be searched using @ref:[Gravsearch](03-apis/api-v2/query-language.md). Knora
+[Standoff/RDF](../01-introduction/standoff-rdf.md). This will allow both text and
+markup to be searched using [Gravsearch](../03-apis/api-v2/query-language.md). Knora
 can also regenerate, at any time, an XML document that is equivalent to the original one.
 
 If you have XML that simply represents structured data (rather than text documents),
@@ -61,10 +59,10 @@ if they have been used in ontologies or data created by other projects.
 However, an ontology can be defined as shared, meaning that it can be used by multiple
 projects, and that its creators promise not to change it in ways that could
 affect other ontologies or data that are based on it. See
-@ref:[Shared Ontologies](02-knora-ontologies/introduction.md#shared-ontologies) for details.
+[Shared Ontologies](../02-knora-ontologies/introduction.md#shared-ontologies) for details.
 
 There will be a standardisation process for shared ontologies
-(issue @github[#523](#523)).
+(issue [#523](https://github.com/dasch-swiss/knora-api/issues/523)).
 
 ### Why doesn't Knora use `rdfs:domain` and `rdfs:range` for consistency checking?
 
@@ -139,13 +137,13 @@ Moreover, even if the owner of `Foo2` did have that permission, the inferred
 link would not have a `knora-base:LinkValue` (a reification), which every Knora
 link must have. The `LinkValue` is what stores metadata about the creator
 of the link, its creation date, its permissions, and so on
-(see @ref:[LinkValue](02-knora-ontologies/knora-base.md#linkvalue)).
+(see [LinkValue](../02-knora-ontologies/knora-base.md#linkvalue)).
 
 Finally, if an update to one resource could modify another
 resource, this would violate Knora's model of transaction integrity, in which
 each transaction can modify only one resource
-(see @ref:[Application-level Locking](05-internals/design/principles/triplestore-updates.md#application-level-locking)). Knora
-would then be unable to ensure that concurrent transactions do not
+(see [Application-level Locking](../05-internals/design/principles/triplestore-updates.md#application-level-locking)).
+Knora would then be unable to ensure that concurrent transactions do not
 interfere with each other.
 
 ### Should `0.0.0.0` or `localhost` be used to access Knora locally

@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Overview
 
-@@toc
-
 Developing for Knora requires a complete local
 installation of Knora. The different parts are:
 
@@ -54,8 +52,8 @@ removed in the future.
 
 Built-in support and configuration for other triplestores is planned.
 
-See the chapters on @ref:[Starting GraphDB](graphdb.md) and
-@ref:[Starting Fuseki](fuseki.md) for more details.
+See the chapters on [Starting GraphDB](graphdb.md) and
+[Starting Fuseki](fuseki.md) for more details.
 
 ## Sipi
 

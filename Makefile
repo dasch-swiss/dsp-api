@@ -12,14 +12,17 @@ include vars.mk
 
 .PHONY: docs-publish
 docs-publish: ## build and publish docs to Github Pages
-	docker gh-deploy
+	@$(MAKE) -C docs graphvizfigures
+	mkdocs gh-deploy
 
 .PHONY: docs-build
 docs-build: ## build docs into the local 'site' folder
+	@$(MAKE) -C docs graphvizfigures
 	mkdocs build
 
 .PHONY: docs-serve
 docs-serve: ## serve docs for local viewing
+	@$(MAKE) -C docs graphvizfigures
 	mkdocs serve
 
 .PHONY: docs-install-requirements

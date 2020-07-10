@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Knora API Server Design Overview
 
-@@toc
-
 ## Introduction
 
 Knora's responsibilities include:
@@ -33,7 +31,7 @@ Knora's responsibilities include:
 - Transforming query results into Knora API responses.
 - Ensuring that ontologies and data in the triplestore are consistent and
   conform to the requirements of the
-  @ref:[knora-base](../../../02-knora-ontologies/knora-base.md) ontology.
+  [knora-base](../../../02-knora-ontologies/knora-base.md) ontology.
 - Managing the versioning of data in the triplestore.
 - Working with [Sipi](http://sipi.io) to store files that cannot be stored
   as RDF data.
@@ -49,13 +47,13 @@ for other triplestores coming soon).
 
 Knora supports different versions of its API for working with humanities data:
 
-- @ref:[Knora API v2](../../../03-apis/api-v2/index.md), a standards-based
+- [Knora API v2](../../../03-apis/api-v2/index.md), a standards-based
   API currently under development.
-- @ref:[Knora API v1](../../../03-apis/api-v1/index.md), a stable, legacy API
+- [Knora API v1](../../../03-apis/api-v1/index.md), a stable, legacy API
   that focuses on maintaining compatibility with applications that used
   Knora's prototype software.
 
-There is also a @ref:[Knora admin API](../../../03-apis/api-admin/index.md) for
+There is also a [Knora admin API](../../../03-apis/api-admin/index.md) for
 administering Knora repositories.
 
 The Knora code base includes some functionality that is shared by these different
@@ -173,7 +171,7 @@ reduction in performance.
 
 To manage asynchronous communication between actors, the Knora API
 server uses Scala's `Future` monad extensively. See
-@ref:[Futures with Akka](futures-with-akka.md) for details.
+[Futures with Akka](futures-with-akka.md) for details.
 
 We use Akka's asynchronous logging interface (see [Akka Logging](http://doc.akka.io/docs/akka/current/scala/logging.html)).
 
@@ -203,7 +201,7 @@ messages to `StoreManager`.
 
 Parsing of SPARQL query results is handled by this module.
 
-See @ref:[Store Module](store-module.md) for a more detailed discussion.
+See [Store Module](store-module.md) for a more detailed discussion.
 
 ## Triplestore Access
 
@@ -297,7 +295,7 @@ actors. However, the design of reply message passing from actors (by
 using `future2Message`), makes sure that any exceptions thrown inside
 actors, will reach the route, where they will be handled.
 
-See also @ref:[Fuures with Akka](futures-with-akka.md).
+See also [Fuures with Akka](futures-with-akka.md).
 
 ## API Routing
 

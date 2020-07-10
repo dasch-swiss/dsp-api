@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Gravsearch: Virtual Graph Search
 
-@@toc
-
 ## Basic Concept
 
 Gravsearch is intended to offer the advantages of SPARQL endpoints
@@ -73,7 +71,7 @@ HTTP GET to http://host/v2/searchextended/QUERY
 ```
 
 The response to a Gravsearch query is an RDF graph, which can be requested in various
-formats (see @ref:[Responses Describing Resources](reading-and-searching-resources.md#responses-describing-resources)).
+formats (see [Responses Describing Resources](reading-and-searching-resources.md#responses-describing-resources)).
 
 To request the number of results rather than the results themselves, you can
 do a count query:
@@ -88,14 +86,14 @@ The response to a count query request is an object with one predicate,
 ## Gravsearch and API Schemas
 
 A Gravsearch query can be written in either of the two
-@ref:[Knora API v2 schemas](introduction.md#api-schema). The simple schema
+[Knora API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
 anything below the level of a Knora value. If your query needs to refer to
 standoff markup, you must use the complex schema. Each query must use a single
-schema, with one exception (see @ref:[Date Comparisons](#date-comparisons)).
+schema, with one exception (see [Date Comparisons](#date-comparisons)).
 
 Gravsearch query results can be requested in the simple or complex schema;
-see @ref:[API Schema](introduction.md#api-schema).
+see [API Schema](introduction.md#api-schema).
 
 All examples hereafter run with Knora started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.html). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
@@ -112,7 +110,7 @@ PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 
 In the simple schema, Knora values are represented as literals, which
 can be used `FILTER` expressions
-(see @ref:[Filtering on Values in the Simple Schema](#filtering-on-values-in-the-simple-schema)).
+(see [Filtering on Values in the Simple Schema](#filtering-on-values-in-the-simple-schema)).
 
 ### Using the Complex Schema
 
@@ -128,7 +126,7 @@ PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
 In the complex schema, Knora values are represented as objects belonging
 to subclasses of `knora-api:Value`, e.g. `knora-api:TextValue`, and have
 predicates of their own, which can be used in `FILTER` expressions
-(see @ref:[Filtering on Values in the Complex Schema](#filtering-on-values-in-the-complex-schema)).
+(see [Filtering on Values in the Complex Schema](#filtering-on-values-in-the-complex-schema)).
 
 ## Main and Dependent Resources
 
@@ -138,7 +136,7 @@ referred to as dependent resources. If the client asks for a resource A
 relating to a resource B, then all matches for A will be presented as
 main resources and those for B as dependent resources. The main resource
 must be represented by a variable, marked with `knora-api:isMainResource`,
-as explained under @ref:[CONSTRUCT Clause](#construct-clause).
+as explained under [CONSTRUCT Clause](#construct-clause).
 
 ## Virtual incoming Links
 
@@ -220,7 +218,7 @@ Every Gravsearch query is a valid SPARQL 1.1
 [CONSTRUCT](https://www.w3.org/TR/sparql11-query/#construct) query.
 However, Gravsearch only supports a subset of the elements that can be used
 in a SPARQL Construct query, and a Gravsearch
-@ref:[CONSTRUCT Clause](#construct-clause) has to indicate which variable
+[CONSTRUCT Clause](#construct-clause) has to indicate which variable
 is to be used for the main resource in each search result.
 
 ### Supported SPARQL Syntax
@@ -324,7 +322,7 @@ FILTER(?seqnumInt <= 10)
 
 To match a date value in the complex schema, you must use the
 `knora-api:toSimpleDate` function in a `FILTER`
-(see @ref:[Date Comparisons](#date-comparisons)). The predicates of
+(see [Date Comparisons](#date-comparisons)). The predicates of
 `knora-api:DateValue` (`knora-api:dateValueHasStartYear`, etc.) are not
 available in Gravsearch.
 
@@ -359,7 +357,7 @@ CONSTRUCT {
 ```
 
 You can also use `knora-api:toSimpleDate` with to search for date tags in standoff
-text markup (see @ref:[Matching Standoff Dates](#matching-standoff-dates)).
+text markup (see [Matching Standoff Dates](#matching-standoff-dates)).
 
 #### Searching for Matching Words
 
@@ -369,7 +367,7 @@ The first argument must represent a text value (a `knore-api:TextValue` in
 the complex schema, or an `xsd:string` in the simple schema). The second
 argument is a string literal containing the words to be matched, separated by spaces.
 The function supports the
-@ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+[Lucene Query Parser syntax](../../08-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
 This function can only be used as the top-level expression in a `FILTER`.
@@ -701,7 +699,7 @@ OFFSET 0 # get first page of results
 
 The `incunabula:book` with the IRI `http://rdfh.ch/0803/c5058f3a` has
 402 pages. (This result can be obtained by doing a count query; see
-@ref:[Submitting Gravsearch Queries](#submitting-gravsearch-queries).)
+[Submitting Gravsearch Queries](#submitting-gravsearch-queries).)
 However, with `OFFSET 0`, only the first page of results is returned.
 The same query can be sent again with `OFFSET 1` to get the next page of
 results, and so forth. When a page of results is not full (see settings

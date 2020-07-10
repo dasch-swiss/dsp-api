@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Gravsearch Design
 
-@@toc
-
 ## Gravsearch Package
 
 The classes that process Gravsearch queries and results can be found in `org.knora.webapi.responders.v2.search.gravsearch`.
@@ -29,7 +27,7 @@ The classes that process Gravsearch queries and results can be found in `org.kno
 
 The code that converts Gravserch queries into SPARQL queries, and processes the query results, needs to know the
 types of the entities that are used in the input query. As explained in
-@ref:[Type Inference](../../../03-apis/api-v2/query-language.md#type-inference), these types can be inferred,
+[Type Inference](../../../03-apis/api-v2/query-language.md#type-inference), these types can be inferred,
 or they can be specified in the query using type annotations.
 
 Type inspection is implemented in the package `org.knora.webapi.responders.v2.search.gravsearch.types`.
@@ -57,7 +55,7 @@ The entities that are considered to need type information are:
 There are two type inspectors in the pipeline:
 
 - `AnnotationReadingGravsearchTypeInspector`: reads
-   @ref:[type annotations](../../../03-apis/api-v2/query-language.md#type-annotations) included in a Gravsearch query.
+   [type annotations](../../../03-apis/api-v2/query-language.md#type-annotations) included in a Gravsearch query.
 - `InferringGravsearchTypeInspector`: infers the types of entities from the context in which they are used, as well
   as from ontology information that it requests from `OntologyResponderV2`.
 
@@ -273,7 +271,7 @@ to the maximum allowed page size, the predicate
 ## Inference
 
 Gravsearch queries support a subset of RDFS reasoning
-(see @ref:[Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
+(see [Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
 on Gravsearch). This is implemented as follows:
 
 When the non-triplestore-specific version of a SPARQL query is generated, statements that do not need

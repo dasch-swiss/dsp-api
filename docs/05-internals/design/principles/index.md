@@ -19,10 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Knora Design Principles
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [Design Overview](design-overview.md)
 - [Futures with Akka](futures-with-akka.md)
 - [HTTP Module](http-module.md)
@@ -30,5 +26,3 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Triplestore Updates](triplestore-updates.md)
 - [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
-
-@@@

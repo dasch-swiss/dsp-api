@@ -18,5 +18,3 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Health
-
-@@toc

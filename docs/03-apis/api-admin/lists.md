@@ -64,7 +64,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "comments": []
     } 
     ```
-  Each list can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `listIri` in the request body as below:
+  Each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `listIri` in the request body as below:
   ```jsonld
     {
         "projectIri": "http://rdfh.ch/projects/0001",

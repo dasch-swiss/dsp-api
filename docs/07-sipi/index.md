@@ -26,11 +26,5 @@ embedded metadata, and implements the [International Image
 Interoperability Framework (IIIF)](http://iiif.io/). Knora is designed
 to use Sipi for converting and serving media files.
 
-@@toc { depth=1 }
-
-@@@ index
-
 * [Setting Up Sipi for Knora](setup-sipi-for-knora.md)
 * [Interaction Between Sipi and Knora](sipi-and-knora.md)
-
-@@@

@@ -19,16 +19,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Ontology Schemas
 
-@@toc
-
 ## OntologySchema Type
 
-As explained in @ref:[API Schema](../../../03-apis/api-v2/introduction.md#api-schema),
+As explained in [API Schema](../../../03-apis/api-v2/introduction.md#api-schema),
 Knora can represent the same RDF data in different forms: an "internal schema"
 for use in the triplestore, and different "external schemas" for use in Knora
 API v2. Different schemas use different IRIs, as explained in
-@ref:[Knora IRIs](../../../03-apis/api-v2/knora-iris.md). Internally,
-Knora uses a @ref:[SmartIri](smart-iris.md) class to convert IRIs between
+[Knora IRIs](../../../03-apis/api-v2/knora-iris.md). Internally,
+Knora uses a [SmartIri](smart-iris.md) class to convert IRIs between
 schemas.
 
 The data type representing a schema itself is `OntologySchema`, which
@@ -40,7 +38,7 @@ pattern:
 This class hierarchy allows method declarations to restrict the schemas
 they accept. A method that can accept any schema can take a parameter of type
 `OntologySchema`, while a method that accepts only external schemas can take
-a parameter of type `ApiV2Schema`. For examples, see @ref:[Content Wrappers](content-wrappers.md).
+a parameter of type `ApiV2Schema`. For examples, see [Content Wrappers](content-wrappers.md).
 
 ## Generation of Ontologies in External Schemas
 
@@ -54,7 +52,7 @@ for this conversion:
 
 Since these are Scala objects rather than classes, they are initialised before
 the Akka `ActorSystem` starts, and therefore need a special instance of
-Knora's `StringFormatter` class (see @ref:[Smart IRIs](smart-iris.md#implementation)).
+Knora's `StringFormatter` class (see [Smart IRIs](smart-iris.md#implementation)).
 
 Each of these rule objects implements this trait:
 

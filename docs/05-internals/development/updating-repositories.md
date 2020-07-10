@@ -30,7 +30,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Design
 
 As explained in
-@ref:[Knora Ontology Versions](../../02-knora-ontologies/knora-base.md#knora-ontology-versions),
+[Knora Ontology Versions](../../02-knora-ontologies/knora-base.md#knora-ontology-versions),
 the `knora-base` ontology contains a version string to ensure compatibility
 between a repository and a given version of Knora. The same version string
 is therefore hard-coded in the Knora source code, in the string constant

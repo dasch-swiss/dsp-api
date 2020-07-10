@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Archival Resource Key (ARK) Identifiers
 
-@@toc
-
 ## Requirements
 
 Knora must produce an ARK URL for each resource and each value. The ARK identifiers used
@@ -45,17 +43,17 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[/VALUE_UUID][.TIMESTAMP]
 
 - `VERSION`: the version of the Knora ARK URL format being used (always 1 for now).
 
-- `PROJECT`: the @ref:[short code](../../../03-apis/api-v2/knora-iris.md#project-short-codes) of the
+- `PROJECT`: the [short code](../../../03-apis/api-v2/knora-iris.md#project-short-codes) of the
   project that the resource belongs to.
 
 - `RESOURCE_UUID`: the resource's unique ID, which is normally a
-  @extref[base64url-encoded](rfc:4648#section-5) UUID, as described in
-  @ref:[IRIs for Data](../../../03-apis/api-v2/knora-iris.md#iris-for-data).
+  [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5) UUID, as described in
+  [IRIs for Data](../../../03-apis/api-v2/knora-iris.md#iris-for-data).
 
 - `VALUE_UUID`: optionally, the `knora-base:valueHasUUID` of one of the
   resource's values, normally a
-  @extref[base64url-encoded](rfc:4648#section-5) UUID, as described in
-  @ref:[IRIs for Data](../../../03-apis/api-v2/knora-iris.md#iris-for-data).
+  [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5) UUID, as described in
+  [IRIs for Data](../../../03-apis/api-v2/knora-iris.md#iris-for-data).
 
 - `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
   the state of the resource at a specific time in the past. The format

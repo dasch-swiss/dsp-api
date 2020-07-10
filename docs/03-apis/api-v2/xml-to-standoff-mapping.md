@@ -19,11 +19,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # XML to Standoff Mapping in API v2
 
-@@toc
-
 ## General Information
 
-Please see v1 documentation for general information about the XML to standoff mapping: @ref:[XML To Standoff Mapping in API v1](../api-v1/xml-to-standoff-mapping.md).
+Please see v1 documentation for general information about the XML to standoff mapping: [XML To Standoff Mapping in API v1](../api-v1/xml-to-standoff-mapping.md).
 
 ## Validating a Mapping and sending it to Knora
 

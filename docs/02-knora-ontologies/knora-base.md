@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # The Knora Base Ontology
 
-@@toc { depth=3 }
-
 ## Overview
 
 The Knora base ontology is the main built-in Knora ontology. Each
@@ -75,10 +73,10 @@ property name):
 :   The `kb:Institution` that the project belongs to.
 
 Ontologies, resources, and valuesare associated with a project by means of the
-`kb:attachedToProject` property, as described in @ref:[Ontologies](#ontologies)
-and @ref:[Properties of Resource](#properties-of-resource)). Users are associated with a project by
+`kb:attachedToProject` property, as described in [Ontologies](#ontologies)
+and [Properties of Resource](#properties-of-resource)). Users are associated with a project by
 means of the `kb:isInProject` property, as described in
-@ref:[Users and Groups](#users-and-groups).
+[Users and Groups](#users-and-groups).
 
 ### Ontologies
 
@@ -101,27 +99,27 @@ Resources have properties that point to different parts of the content
 they contain. For example, a resource representing a book could have a
 property called `hasAuthor`, pointing to the author of the book. There
 are two possible kinds of content in a Knora resource: Knora values (see
-@ref:[Values](#values)) or links to other resources (see
-@ref:[Links Between Resources](#links-between-resources)). Properties that point to Knora values
+[Values](#values)) or links to other resources (see
+[Links Between Resources](#links-between-resources)). Properties that point to Knora values
 must be subproperties of `kb:hasValue`, and properties that point to
 other resources must be subproperties of `kb:hasLinkTo`. Either of these
 two types of properties may also be a subproperty of any other property,
 e.g. an industry-standard property such as `foaf:name`; this can
 facilitate searches across projects. Each property definition must
 specify the types that its subjects and objects must belong to (see
-@ref:[Constraints on the Types of Property Subjects and Objects](#constraints-on-the-types-of-property-subjects-and-objects) for details).
+[Constraints on the Types of Property Subjects and Objects](#constraints-on-the-types-of-property-subjects-and-objects) for details).
 
 Each user-created resource class definition must use OWL cardinality
 restrictions to specify the properties that resources of that class can
-have (see @ref:[OWL Cardinalities](#owl-cardinalities) for details).
+have (see [OWL Cardinalities](#owl-cardinalities) for details).
 
 Resources are not versioned; only their values are versioned (see
-@ref:[Values](#values)).
+[Values](#values)).
 
 Every resource is required to have an `rdfs:label`. The object of this
 property is an `xsd:string`, rather than a Knora value; hence it is not
 versioned. A user who has modify permission on a resource (see
-@ref:[Authorisation](#authorisation)) can change its label.
+[Authorisation](#authorisation)) can change its label.
 
 A resource can be marked as deleted; Knora does this by
 adding the predicate `kb:isDeleted true` to the resource. An optional
@@ -169,8 +167,8 @@ resource.
 :   If the resource has been deleted, indicates why it was deleted.
 
 Resources can have properties that point to other resources; see
-@ref:[Links Between Resources](#links-between-resources). A resource grants permissions to groups
-of users; see @ref:[Authorisation](#authorisation).
+[Links Between Resources](#links-between-resources). A resource grants permissions to groups
+of users; see [Authorisation](#authorisation).
 
 #### Representations
 
@@ -180,8 +178,8 @@ stores such data outside the triplestore, in ordinary files. A resource
 can have metadata about a file attached to it. The technical term for such a
 resource in Knora is a **Representation**. For each file, there is a
 `kb:FileValue` in the triplestore containing metadata about the file
-(see @ref:[FileValue](#filevalue)). Knora uses [Sipi](https://github.com/dhlab-basel/Sipi)
-to store files. The @ref:[Knora APIs](../03-apis/index.md) provide ways
+(see [FileValue](#filevalue)). Knora uses [Sipi](https://github.com/dhlab-basel/Sipi)
+to store files. The [Knora APIs](../03-apis/index.md) provide ways
 to create file values using Knora and Sipi.
 
 A resource that has a file value must belong to one of the subclasses of
@@ -229,9 +227,9 @@ the world (such as `ex:Painting`) and also belongs to a subclass of
 of file attached to it. For example, if paintings are represented only
 by still images, `ex:Painting` could be a subclass of
 `StillImageRepresentation`. This is the only approach supported in
-@ref:[Knora API v1](../03-apis/api-v1/index.md).
+[Knora API v1](../03-apis/api-v1/index.md).
 
-The more flexible approach, which is supported by @ref:[Knora API
+The more flexible approach, which is supported by [Knora API
 v2](../03-apis/api-v2/index.md), is for each `ex:Painting` to link (using
 `kb:hasRepresentation` or a subproperty) to other resources containing files
 that represent the painting. Each of these other resources can extend a
@@ -248,7 +246,7 @@ project:
 `Region`
 
 :   Represents a region of a `Representation` (see
-    @ref:[Representations](#representations)).
+    [Representations](#representations)).
 
 `Annotation`
 
@@ -262,7 +260,7 @@ project:
     has a `hasLinkTo` property pointing to each resource that it
     connects, as well as a `hasLinkToValue` property pointing to a
     reification of each of these direct links (see
-    @ref:[Links Between Resources](#links-between-resources)). A `LinkObj` is more complex (and
+    [Links Between Resources](#links-between-resources)). A `LinkObj` is more complex (and
     hence less convenient and readable) than a simple direct link, but
     it has the advantage that it can be annotated using an `Annotation`.
     For improved readability, a project can make its own subclasses of
@@ -364,7 +362,7 @@ created by copying data from a deleted value.
 :   If the value has been deleted, indicates why it was deleted.
 
 Each Knora value can grant permissions (see
-@ref:[Authorisation](#authorisation)).
+[Authorisation](#authorisation)).
 
 #### Subclasses of Value
 
@@ -382,13 +380,13 @@ Markup is stored using this property:
 `valueHasStandoff` (0-n)
 
 :   Points to a standoff markup tag. See
-    @ref:[Text with Standoff Markup](#text-with-standoff-markup).
+    [Text with Standoff Markup](#text-with-standoff-markup).
 
 `valueHasMapping` (0-1)
 
 :   Points to the mapping used to create the standoff markup and to
     convert it back to the original XML. See
-    @ref:[Mapping to Create Standoff From XML](#mapping-to-create-standoff-from-xml).
+    [Mapping to Create Standoff From XML](#mapping-to-create-standoff-from-xml).
 
 A text value can have a specified language:
 
@@ -553,7 +551,7 @@ Each `ListNode` can have the following properties:
 ##### FileValue
 
 Knora stores certain kinds of data outside the triplestore, in files
-(see @ref:[Representations](#representations)). Each digital object that
+(see [Representations](#representations)). Each digital object that
 is stored outside the triplestore has associated metadata, which is
 stored in the triplestore in a `kb:FileValue`. The base class
 `FileValue`, which is not intended to be used directly, has these
@@ -643,12 +641,12 @@ well as of `Value`. It has these properties:
 
 :   The reference count of the link. This is meaningful when the
     `LinkValue` describes resource references in Standoff text markup
-    (see @ref:[StandoffLinkTag](#standofflinktag)). Otherwise, the
+    (see [StandoffLinkTag](#standofflinktag)). Otherwise, the
     reference count will always be 1 (if the link exists) or 0 (if it
     has been deleted).
 
 For details about how links are created in Knora, see
-@ref:[Links Between Resources](#links-between-resources).
+[Links Between Resources](#links-between-resources).
 
 ##### ExternalResValue
 
@@ -688,7 +686,7 @@ is necessary to create an RDF "reification". A reification makes
 statements about a particular triple (subject, predicate, object), in
 this case the triple that expresses the link between the resources.
 Knora uses reifications of type `kb:LinkValue` (described in
-@ref:[LinkValue](#linkvalue) to store metadata about links.
+[LinkValue](#linkvalue) to store metadata about links.
 
 For example, suppose a project describes paintings that belong to
 collections. The project can define an ontology as follows (expressed
@@ -750,7 +748,7 @@ subproperty of `kb:hasLinkTo`.
 
 We must then add a "link value property", which will point from a
 painting to a `kb:LinkValue` (described in
-@ref:[LinkValue](#linkvalue)), which will contain metadata about
+[LinkValue](#linkvalue)), which will contain metadata about
 the link between the property and the collection. In particular, the
 link value specifies the creator of the link, the date when it was
 created, and the permissions that determine who can view or modify it.
@@ -927,25 +925,25 @@ Associates data in some Knora value type with a substring in a text.
 Standoff data type tags are subclasses of `ValueBase` classes.
 
 * `StandoffLinkTag` Indicates that a substring refers to another `kb:Resource`.
-  See @ref:[StandoffLinkTag](#standofflinktag).
+  See [StandoffLinkTag](#standofflinktag).
 * `StandoffInternalReferenceTag` Indicates that a substring refers to another
-  standoff tag in the same text value. See @ref:[Internal Links in a TextValue](#internal-links-in-a-textvalue).
+  standoff tag in the same text value. See [Internal Links in a TextValue](#internal-links-in-a-textvalue).
 * `StandoffUriTag` Indicates that a substring is associated with a URI, which
-  is stored in the same form that is used for `kb:UriValue`. See @ref:[UriValue](#urivalue).
+  is stored in the same form that is used for `kb:UriValue`. See [UriValue](#urivalue).
 * `StandoffDateTag` Indicates that a substring represents a date, which is stored
-  in the same form that is used for `kb:DateValue`. See @ref:[DateValue](#datevalue).
+  in the same form that is used for `kb:DateValue`. See [DateValue](#datevalue).
 * `StandoffColorTag` Indicates that a substring represents a color, which is stored
-  in the same form that is used for `kb:ColorValue`. See @ref:[ColorValue](#colorvalue).
+  in the same form that is used for `kb:ColorValue`. See [ColorValue](#colorvalue).
 * `StandoffIntegerTag` Indicates that a substring represents an integer, which is
-  stored in the same form that is used for `kb:IntegerValue`. See @ref:[IntValue](#intvalue).
+  stored in the same form that is used for `kb:IntegerValue`. See [IntValue](#intvalue).
 * `StandoffDecimalTag` Indicates that a substring represents a number with fractions,
-  which is stored in the same form that is used for `kb:DecimalValue`. See @ref:[DecimalValue](#decimalvalue).
+  which is stored in the same form that is used for `kb:DecimalValue`. See [DecimalValue](#decimalvalue).
 * `StandoffIntervalTag` Indicates that a substring represents an interval, which
-  is stored in the same form that is used for `kb:IntervalValue`. See @ref:[IntervalValue](#intervalvalue).
+  is stored in the same form that is used for `kb:IntervalValue`. See [IntervalValue](#intervalvalue).
 * `StandoffBooleanTag` Indicates that a substring represents a Boolean, which is stored
-  in the same form that is used for `kb:BooleanValue`. See @ref:[BooleanValue](#booleanvalue).
+  in the same form that is used for `kb:BooleanValue`. See [BooleanValue](#booleanvalue).
 * `StandoffTimeTag` Indicates that a substring represents a timestamp, which is stored
-  in the same form that is used for `kb:TimeValue`. See @ref:[TimeValue](#timevalue).
+  in the same form that is used for `kb:TimeValue`. See [TimeValue](#timevalue).
 
 ##### StandoffLinkTag
 
@@ -966,7 +964,7 @@ indirect links. Therefore, when a text value contains a resource
 reference in its standoff nodes, Knora automatically
 creates a direct link between the containing resource and the target
 resource, along with an RDF reification (a `kb:LinkValue`) describing
-the link, as discussed in @ref:[Links Between Resources](#links-between-resources). In this case,
+the link, as discussed in [Links Between Resources](#links-between-resources). In this case,
 the link property is always `kb:hasStandoffLinkTo`, and the link value
 property (which points to the `LinkValue`) is always
 `kb:hasStandoffLinkToValue`.
@@ -976,7 +974,7 @@ for standoff resource references when text values are updated. To do
 this, it keeps track of the number of text values in each resource that
 contain at least one standoff reference to a given target resource. It
 stores this number as the reference count of the `LinkValue` (see
-@ref:[LinkValue](#linkvalue)) describing the direct link. Each
+[LinkValue](#linkvalue)) describing the direct link. Each
 time this number changes, it makes a new version of the `LinkValue`,
 with an updated reference count. When the reference count reaches zero,
 it removes the direct link and makes a new version of the `LinkValue`,
@@ -1014,7 +1012,7 @@ The result can be visualized like this:
 
 Link values created automatically for resource references in standoff
 are visible to all users, and the creator of these link values is always
-`kb:SystemUser` (see @ref:[Users and Groups](#users-and-groups)). The
+`kb:SystemUser` (see [Users and Groups](#users-and-groups)). The
 Knora API server allows a user to see a standoff link if the user has
 permission to see the source and target resources.
 
@@ -1029,14 +1027,14 @@ has the following property:
 :   Points to a `StandoffTag` that belongs to the same `TextValue`. It
     has an `objectClassConstraint` of `StandoffTag`.
 
-For links to a `kb:Resource`, see @ref:[StandoffLinkTag](#standofflinktag).
+For links to a `kb:Resource`, see [StandoffLinkTag](#standofflinktag).
 
 #### Mapping to Create Standoff From XML
 
 A mapping allows for the conversion of an XML document to RDF-standoff
 and back. A mapping defines one-to-one relations between XML elements
 (with or without a class) and attributes and standoff classes and
-properties (see @ref:[XML to Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md)).
+properties (see [XML to Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains
 one or more `kb:MappingElement`. A `kb:MappingElement` maps an XML
@@ -1265,7 +1263,7 @@ belong to the OWL class `knora-admin:UserGroup`.
 
 There is one built-in `knora-admin:SystemUser`, which is the creator of link values
 created automatically for resource references in standoff markup (see
-@ref:[StandoffLinkTag](#standofflinktag)).
+[StandoffLinkTag](#standofflinktag)).
 
 ### Permissions
 
@@ -1315,7 +1313,7 @@ calculated in the following way:
 To view a link between resources, a user needs permission to view the
 source and target resources. He also needs permission to view the
 `LinkValue` representing the link, unless the link property is
-`hasStandoffLinkTo` (see @ref:[StandoffLinkTag](#standofflinktag)).
+`hasStandoffLinkTo` (see [StandoffLinkTag](#standofflinktag)).
 
 The format of the object of `kb:hasPermissions` is as follows:
 
@@ -1352,7 +1350,7 @@ some triplestores than with others.
 
 ### OWL Cardinalities
 
-As noted in @ref:[Resources](#resources), each subclass of
+As noted in [Resources](#resources), each subclass of
 `Resource` must use OWL cardinality restrictions to specify the
 properties it can have. More specifically, a resource is allowed to have
 a property that is a subproperty of `kb:hasValue` or `kb:hasLinkTo` only
@@ -1405,7 +1403,7 @@ of the corresponding link value property.
 
 Each `owl:Restriction` may have the predicate `salsah-gui:guiOrder` to
 indicate the order in which properties should be displayed in a GUI
-(see @ref:[The SALSAH GUI Ontology](salsah-gui.md)).
+(see [The SALSAH GUI Ontology](salsah-gui.md)).
 
 A resource class inherits cardinalities from its superclasses. This
 follows from the rules of
@@ -1466,7 +1464,7 @@ that is a subclass of the one specified in the base property. However,
 it is not possible for the subproperty to make the base property's
 constraint less restrictive.
 
-See also @ref:[Why doesn’t Knora use rdfs:domain and rdfs:range for consistency checking?](../faq.md#why-doesnt-knora-use-rdfs-domain-and-rdfs-range-for-consistency-checking-)
+See also [Why doesn’t Knora use rdfs:domain and rdfs:range for consistency checking?](../faq.md#why-doesnt-knora-use-rdfs-domain-and-rdfs-range-for-consistency-checking-)
 
 ### Consistency Constraint Example
 
@@ -1496,7 +1494,7 @@ this simplified example:
 
 An ontology can refer to a Knora ontology in another project only if the other
 ontology is built-in or shared
-(see @ref:[Shared Ontologies](../03-apis/api-v2/knora-iris.md#shared-ontologies)).
+(see [Shared Ontologies](../03-apis/api-v2/knora-iris.md#shared-ontologies)).
 
 ### Restrictions on Classes
 
@@ -1548,12 +1546,12 @@ user-created ontologies. We envisage a process in which two or more
 projects would initiate the process by starting a public discussion on
 proposed entities to be shared. Once a consensus was reached, the
 [DaSCH](http://dasch.swiss/) would publish these entities in a
-@ref:[shared ontology](../03-apis/api-v2/knora-iris.md#shared-ontologies)).
+[shared ontology](../03-apis/api-v2/knora-iris.md#shared-ontologies)).
 
 ## Knora Ontology Versions
 
 The Knora base ontology has the property `kb:ontologyVersion`, whose
 object is a string that indicates the deployed version of all the Knora
 built-in ontologies. This allows the
-@ref:[repository update program](../04-publishing-deployment/updates.md) to determine
+[repository update program](../04-publishing-deployment/updates.md) to determine
 which repository updates are needed when Knora is upgraded.

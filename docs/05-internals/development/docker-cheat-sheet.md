@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Docker Cheat Sheet
 
-@@toc
-
 A complete cheat sheet can be found
 [here](https://github.com/wsargent/docker-cheat-sheet)
 

@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Introduction: Using API v2
 
-@@toc
-
 Version 2 of the Knora API aims to make both the response and request
 formats more generic and consistent. Version 1 was basically the result
 of the reimplementation of the existing API of the SALSAH prototype.
@@ -45,7 +43,7 @@ All API v2 responses can be returned in
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
 [Turtle](https://www.w3.org/TR/turtle/),
 or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/), using
-@extref[HTTP content negotiation](rfc:7231#section-5.3.2). The client
+[HTTP content negotiation](https://tools.ietf.org/html/rfc7231#section-5.3.2). The client
 can request these formats using the following MIME types:
 
 | Format  | MIME Type             |
@@ -79,7 +77,7 @@ other objects.
 ## Knora IRIs
 
 Resources and entities are identified by IRIs. The format of these IRIs
-is explained in @ref:[Knora IRIs](knora-iris.md).
+is explained in [Knora IRIs](knora-iris.md).
 
 ## API Schema
 
@@ -106,12 +104,12 @@ and external representations. This approach encapsulates the internals
 and adds a layer of abstraction to them.
 
 IRIs representing ontologies and ontology entities are different in different
-schemas; see @ref:[Knora IRIs](knora-iris.md).
+schemas; see [Knora IRIs](knora-iris.md).
 
 Some API operations inherently require the client to accept responses in
 the complex schema. For example, if an ontology is requested using an IRI
 indicating the simple schema, the ontology will be returned in the simple schema (see
-@ref:[Querying, Creating, and Updating Ontologies](ontology-information.md)).
+[Querying, Creating, and Updating Ontologies](ontology-information.md)).
 
 Other API operations can return data in either schema. In this case, the
 complex schema is used by default in the response, unless the request specifically

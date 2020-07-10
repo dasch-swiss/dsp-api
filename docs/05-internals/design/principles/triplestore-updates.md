@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Triplestore Updates
 
-@@toc
-
 ## Requirements
 
 ### General
@@ -73,7 +71,7 @@ have permission to modify the current version of the
 value; no permissions on the resource are needed.
 
 Since changing a link requires deleting the old link and creating a new
-one (as described in @ref:[Linking](#linking)), a user wishing
+one (as described in [Linking](#linking)), a user wishing
 to change a link must have modify permission on both the containing
 resource and the `knora-base:LinkValue` for the existing link.
 
@@ -257,7 +255,7 @@ To prevent deadlocks, Knora locks only one resource per API operation.
 It then does the pre-update checks and the update, then releases the
 lock. The lock implementation (in `IriLocker`) requires each API
 request message to include a random UUID, which is generated in the
-@ref:[API Routing](design-overview.md#api-routing) package. Using
+[API Routing](design-overview.md#api-routing) package. Using
 application-level locks allows us to do pre-update checks in their own
 transactions, and finally to do the SPARQL update in its own
 transaction.
@@ -270,7 +268,7 @@ Knora enforces consistency constraints using three redundant mechanisms:
     ontology data.
 2.  By doing checks in the `WHERE` clauses of SPARQL updates.
 3.  By using GraphDB's built-in consistency checker (see
-    @ref:[Consistency Checking](consistency-checking.md)).
+    [Consistency Checking](consistency-checking.md)).
 
 We take the view that redundant consistency checks are a good thing.
 
@@ -386,7 +384,7 @@ INSERT {
 ```
 
 To find out whether the insert succeeded, the application can use the
-query in @ref:[Finding a value IRI in a value's version history](#finding-a-value-iri-in-a-values-version-history)
+query in [Finding a value IRI in a value's version history](#finding-a-value-iri-in-a-values-version-history)
 to look for the new IRI in the property's version history.
 
 ### Adding a new version of a value
@@ -427,7 +425,7 @@ not in fact the most recent version (because someone else has done an
 update), this operation will do nothing (because the `WHERE` clause will
 return no rows). To find out whether the update succeeded, the
 application will then need to do a SELECT query using the query in
-@ref:[Finding a value IRI in a value's version history](#finding-a-value-iri-in-a-values-version-history).
+[Finding a value IRI in a value's version history](#finding-a-value-iri-in-a-values-version-history).
 In the case of concurrent updates, there are two possibilities:
 
 1.  Users A and B are looking at version 1. User A submits an update and

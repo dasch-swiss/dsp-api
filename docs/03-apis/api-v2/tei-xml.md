@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # TEI/XML: Converting Standoff to TEI/XML
 
-@@toc
-
 ## General
 
 Knora offers a way to convert standoff markup to TEI/XML. The conversion is based on the assumption that a whole resource is to be turned into a TEI document.
@@ -89,7 +87,7 @@ TEI body:
 - additional mapping from standoff to XML (URL parameter `mappingIri`)
 - XSL transformation to turn the XML into a valid TEI body (referred to by the mapping).
 
-The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup (see @ref:[XML To Standoff Mapping in API v1](../api-v1/xml-to-standoff-mapping.md)). This step is necessary because the mapping assumes a one to one relation between standoff classes and properties and XML elements and attributes.
+The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup (see [XML To Standoff Mapping in API v1](../api-v1/xml-to-standoff-mapping.md)). This step is necessary because the mapping assumes a one to one relation between standoff classes and properties and XML elements and attributes.
 For example, we may want to convert a `standoff:StandoffItalicTag` into TEI/XML. TEI expresses this as `<hi rend="italic">...</hi>`. In the mapping, the `standoff:StandoffItalicTag` may be mapped to a a temporary XML element that is going to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
 
 For sample data, see `webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) and `webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. The standoff entities are defined in `beol-onto.ttl`.
@@ -194,7 +192,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced by the Iri of the resource the request is performed for.
 The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. This information is converted to the TEI header in the format required by [correspSearch](https://correspsearch.net).
 
-To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (see @ref:[Introduction](introduction.md)).
+To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (see [Introduction](introduction.md)).
 
 The Gravsearch query's result may look like this (`RDF/XML`):
 

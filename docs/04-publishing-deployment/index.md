@@ -19,10 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Deploying Knora
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [Publishing](publishing.md)
 - [Getting Started with Knora](getting-started.md)
 - [Configuration](configuration.md)

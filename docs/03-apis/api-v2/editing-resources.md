@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Editing Resources
 
-@@toc
-
 ## Creating a Resource
 
 To create a new resources, use this route:
@@ -30,11 +28,11 @@ HTTP POST to http://host/v2/resources
 ```
 
 The body of the request is a JSON-LD document in the
-@ref:[complex API schema](introduction.md#api-schema), specifying the resource's IRI, type,
+[complex API schema](introduction.md#api-schema), specifying the resource's IRI, type,
 and `rdfs:label`, along with its Knora resource properties and their values. The representation of the
 resource is the same as when it is returned in a `GET` request, except that its `knora-api:attachedToUser` is not given,
 and the resource IRI and those of its values can be optionally specified. The format of the values submitted
-is described in @ref:[Editing Values](editing-values.md). If there are multiple values for a property,
+is described in [Editing Values](editing-values.md). If there are multiple values for a property,
 these must be given in an array.
 
 For example, here is a request to create a resource with various value types:
@@ -172,10 +170,10 @@ resource's creator can be specfied by adding `knora-api:attachedToUser`. For exa
 ```
 
 The format of the object of `knora-api:hasPermissions` is described in
-@ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
+[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
 
 If permissions are not given, configurable default permissions are used
-(see @ref:[Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)).
+(see [Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)).
 
 To create a resource, the user must have permission to create resources
 of that class in that project.
@@ -185,7 +183,7 @@ than the requesting user only if the requesting user is an administrator of the
 project or a system administrator. The specified creator must also
 have permission to create resources of that class in that project.
 
-In addition to the creation date, in the body of the request, it is possible to specify a custom IRI (of @ref:[Knora IRI](knora-iris.md#iris-for-data) form) for a resource through
+In addition to the creation date, in the body of the request, it is possible to specify a custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) for a resource through
 the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
 will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
@@ -226,12 +224,12 @@ For example:
 ```
  
 The response is a JSON-LD document containing a
-@ref:[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
+[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
 of the resource.
 
 ## Modifying a Resource's Values
 
-See @ref:[Editing Values](editing-values.md).
+See [Editing Values](editing-values.md).
 
 ## Modifying a Resource's Metadata
 
@@ -256,7 +254,7 @@ The request body is a JSON-LD object containing the following information about 
 The submitted JSON-LD object must also contain one or more of the following predicates, representing the metadata you want to change:
 
 - `rdfs:label`: a string
-- `knora-api:hasPermissions`, in the format described in @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions)
+- `knora-api:hasPermissions`, in the format described in [Permissions](../../02-knora-ontologies/knora-base.md#permissions)
 - `knora-api:newModificationDate`: an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp).
 
 Here is an example:
@@ -338,7 +336,7 @@ with a confirmation message.
 ## Erasing a Resource from the Triplestore
 
 Normally, resources are not actually removed from the triplestore; they are
-only marked as deleted (see @ref:[Deleting a Resource](#deleting-a-resource)).
+only marked as deleted (see [Deleting a Resource](#deleting-a-resource)).
 However, sometimes it is necessary to erase a resource from the triplestore.
 To do so, use this route:
 
@@ -346,7 +344,7 @@ To do so, use this route:
 HTTP POST to http://host/v2/resources/erase
 ```
 
-The request body is the same as for @ref:[Deleting a Resource](#deleting-a-resource),
+The request body is the same as for [Deleting a Resource](#deleting-a-resource),
 except that `knora-api:deleteComment` is not relevant and will be ignored.
 
 To do this, a user must be a system administrator or an administrator of the
@@ -355,8 +353,8 @@ not otherwise checked.
 
 A resource cannot be erased if any other resource has a link to it. Any such
 links must first be changed or marked as deleted
-(see @ref:[Updating a Value](editing-values.md#updating-a-value) and
-@ref:[Deleting a Value](editing-values.md#deleting-a-value)). Then,
+(see [Updating a Value](editing-values.md#updating-a-value) and
+[Deleting a Value](editing-values.md#deleting-a-value)). Then,
 when the resource is erased, the deleted link values that referred to
 it will also be erased.
 

@@ -90,7 +90,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     }
     ```
     
-    Additionally, each user can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
+    Additionally, each user can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
     specified by the `id` in the request body as below:
     ```
     { "id" : "http://rdfh.ch/users/donaldDuck",

@@ -19,10 +19,5 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Admin API Design
 
-@@toc { depth=1 }
-
-@@@ index
-
 - [Administration](administration.md)
 
-@@@

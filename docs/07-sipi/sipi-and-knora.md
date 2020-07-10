@@ -89,7 +89,7 @@ representing the information about the file to be attached to the new
 resource. Along with the other parameters, it is sent to the resources
 responder.
 
-See @ref:[Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder) for
+See [Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder) for
 details of how the resources responder then handles the request.
 
 #### Change the Digital Representation of a Resource
@@ -105,7 +105,7 @@ the Sipi responder, a `SipiResponderConversionFileRequestV1` is created.
 A `ChangeFileValueRequestV1` containing the resource Iri and the message
 for Sipi is then created and sent to the values responder.
 
-See @ref:[Further Handling of the GUI and the non GUI-case in the Values Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-values-responder)
+See [Further Handling of the GUI and the non GUI-case in the Values Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-values-responder)
 for details of how the values responder then handles the request.
 
 ### Non-GUI case
@@ -140,7 +140,7 @@ information about the file (i.e. the temporary path to the file) to be
 attached to the new resource. Along with the other parameters, it is
 sent to the resources responder.
 
-See @ref:[Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder) for
+See [Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder) for
 details of how the resources responder then handles the request.
 
 #### Change the Digital Representation of a Resource
@@ -152,14 +152,14 @@ existing file values of the given resource.*
 
 For the request, no json parameters are required. So its body just
 consists of the binary data
-(see @ref:[Create a new Resource with a Digital Representation](#create-a-new-resource-with-a-digital-representation)).
+(see [Create a new Resource with a Digital Representation](#create-a-new-resource-with-a-digital-representation)).
 The values route stores the submitted
 binaries as a temporary file and creates a
 `SipiResponderConversionPathRequestV1`. A `ChangeFileValueRequestV1`
 containing the resource Iri and the message for Sipi is then created and
 sent to the values responder.
 
-See @ref:[Further Handling of the GUI and the non GUI-case in the Values Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-values-responder) for details
+See [Further Handling of the GUI and the non GUI-case in the Values Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-values-responder) for details
 of how the values responder then handles the request.
 
 ### Further Handling of the GUI and the Non-GUI case in the Resources Responder
@@ -230,7 +230,7 @@ considered for the sake of consistency (otherwise a full quality value's
 
 With the file values being returned, we actually know about the current
 Iris of the value objects. Now the Sipi responder is called to handle
-the file conversion request (see @ref:[Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder)).
+the file conversion request (see [Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder)).
 After that, it is checked that the `file_type` returned by Sipi responder
 corresponds to the property type of the existing file values. For
 example, if the `file_type` is an image, the property pointing to the

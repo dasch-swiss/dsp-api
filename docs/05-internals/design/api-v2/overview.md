@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # API v2 Design Overview
 
-@@toc
-
 ## General Principles
 
   - Knora API v2 requests and responses are RDF documents. Any API v2
@@ -57,7 +55,7 @@ provided.
 
 Each schema has its own type IRIs, which are derived from the ones used
 in the triplestore. For details of these different IRI formats, see
-@ref:[Knora IRIs](../../../03-apis/api-v2/knora-iris.md).
+[Knora IRIs](../../../03-apis/api-v2/knora-iris.md).
 
 ## Implementation
 
@@ -87,7 +85,7 @@ A route that receives JSON-LD requests should use
 ### Generation of Other RDF Formats
 
 `RouteUtilV2.runRdfRoute` implements
-@extref[HTTP content negotiation](rfc:7231#section-5.3.2), and converts JSON-LD
+[HTTP content negotiation](https://tools.ietf.org/html/rfc7231#section-5.3.2), and converts JSON-LD
 responses into [Turtle](https://www.w3.org/TR/turtle/)
 or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/) as appropriate.
 

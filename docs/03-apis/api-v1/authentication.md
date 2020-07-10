@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Authentication
 
-@@toc
-
 ## Login and Logout
 
 When a client accesses the **/v1/session?login** route successfully, it

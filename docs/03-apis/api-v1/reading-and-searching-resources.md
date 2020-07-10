@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Reading and Searching Resources
 
-@@toc
-
 In order to get an existing resource, the HTTP method `GET` has to be
 used. The request has to be sent to the Knora server using the
 `resources` path segment (depending on the type of request, this segment
@@ -205,7 +203,7 @@ interface `vocabularyResponse` in module `resourceResponseFormats`.
 This is a simplified way for searching for resources just by their label. 
 Search by label automatically adds Lucene operators, 
 search strings are expected not to contain any characters with a special meaning in 
-@ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+[Lucene Query Parser syntax](../../08-lucene/index.md).
 
 It is a simple string-based method:
 
@@ -237,7 +235,7 @@ TypeScript interface `resourceLabelSearchResponse` in module
 
 Knora offers a fulltext search that searches through all textual
 representations of values. The search terms have to be URL encoded.
-Fulltext search supports the @ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+Fulltext search supports the [Lucene Query Parser syntax](../../08-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
 ```
@@ -345,7 +343,7 @@ Explanation of the comparison operators:
   syntax rules would be violated.
 * `MATCH`: checks if a resource's text value *matches* the search
   value. The behaviour depends on the used triplestore's full text
-  index, see @ref:[Lucene](../../08-lucene/index.md).
+  index, see [Lucene](../../08-lucene/index.md).
 * `LIKE`: checks if the search value is contained in a resource's
   text value.
 * `!LIKE`: checks if the search value is not contained in a

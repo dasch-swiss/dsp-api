@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Adding Resources
 
-@@toc
-
 To create a resource, the HTTP method `POST` has to be used.
 The request has to be sent to the Knora server using the `resources`
 path segment:
@@ -52,7 +50,7 @@ The request header's content type has to be set to `application/json`.
 Certain resource classes can have attached image files. There are two ways to
 attach a file to a resource: Either by submitting directly the binaries of the file in a
 an HTTP Multipart request, or by indicating the location of the file. The two cases are referred to
-as non-GUI case and GUI case (see @ref:[Sipi and Knora](../../07-sipi/sipi-and-knora.md)).
+as non-GUI case and GUI case (see [Sipi and Knora](../../07-sipi/sipi-and-knora.md)).
 
 ### Including the binaries (non-GUI case)
 
@@ -109,7 +107,7 @@ set to `application/json`.
 
 In addition to [Adding Resources Without Image Files](#adding-resources-without-a-digital-representation), the
 (temporary) name of the file, its original name, and mime type have to
-be provided (see @ref:[GUI Case](../../07-sipi/sipi-and-knora.md#gui-case)).
+be provided (see [GUI Case](../../07-sipi/sipi-and-knora.md#gui-case)).
 
 ## Response to a Resource Creation
 
@@ -150,20 +148,20 @@ update in a single database transaction.
 Only system or project administrators may use the bulk import.
 
 The procedure for using this feature is as follows
-(see the @ref:[example below](#bulk-import-example)).
+(see the [example below](#bulk-import-example)).
 
-1.  Make an HTTP GET request to Knora to @ref:[get XML schemas](#1-get-xml-schemas) describing
+1.  Make an HTTP GET request to Knora to [get XML schemas](#1-get-xml-schemas) describing
     the XML to be provided for the import.
-2.  @ref:[Generate an XML import document](#2-generate-xml-import-document) representing the
+2.  [Generate an XML import document](#2-generate-xml-import-document) representing the
     data to be imported, following the Knora import schemas that were generated in step 1.
     You will probably want to write a script to do this. Knora is not involved in this step.
     If you are also importing image files, this XML document needs to
-    @ref:[contain the filesystem paths](#bulk-import-with-image-files) of those files.
-3.  @ref:[Validate your XML import document](#3-validate-xml-import-document), using an XML schema validator such as
+    [contain the filesystem paths](#bulk-import-with-image-files) of those files.
+3.  [Validate your XML import document](#3-validate-xml-import-document), using an XML schema validator such as
     [Apache Xerces](http://xerces.apache.org) or [Saxon](http://www.saxonica.com), or an
     XML development environment such as [Oxygen](https://www.oxygenxml.com). This will
     help ensure that the data you submit to Knora is correct. Knora is not involved in this step.
-4.  @ref:[Submit the XML import document to Knora](#4-submit-xml-import-document-to-knora).
+4.  [Submit the XML import document to Knora](#4-submit-xml-import-document-to-knora).
 
 In this procedure, the person responsible for generating the XML import
 data need not be familiar with RDF or with the ontologies involved.

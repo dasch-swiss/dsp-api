@@ -19,19 +19,17 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Querying, Creating, and Updating Ontologies
 
-@@toc
-
 ## Querying Ontology Information
 
 Before reading this document, you should have a basic understanding of
-Knora API v2 external ontology schemas (see @ref:[API Schema](introduction.md#api-schema)).
+Knora API v2 external ontology schemas (see [API Schema](introduction.md#api-schema)).
 
 Each request returns a single RDF graph, which can be represented in
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
 [Turtle](https://www.w3.org/TR/turtle/),
 or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/), using
-@extref[HTTP content negotiation](rfc:7231#section-5.3.2) (see
-@ref:[Response Formats](introduction.md#response-formats)).
+[HTTP content negotiation](https://tools.ietf.org/html/rfc7231#section-5.3.2) (see
+[Response Formats](introduction.md#response-formats)).
 
 The response format uses prefixes to shorten IRIs, making them more
 human-readable. A client may wish to convert these to full IRIs for
@@ -157,7 +155,7 @@ HTTP GET to http://0.0.0.0:3333/v2/ontologies/allentities/http%3A%2F%2Fapi.knora
 
 By default, this returns the ontology in JSON-LD; to request Turtle
 or RDF/XML, add an HTTP `Accept` header
-(see @ref:[Response Formats](introduction.md#response-formats)).
+(see [Response Formats](introduction.md#response-formats)).
 
 If the client dereferences a project-specific ontology IRI as a URL, the
 Knora API server running on the hostname in the IRI will serve the
@@ -177,14 +175,14 @@ testing, you can configure your local `/etc/hosts` file to resolve
 
 The external ontologies used by Knora API v2 are different to the internal
 ontologies that are actually stored in the triplestore (see
-@ref:[API Schema](introduction.md#api-schema)). In general, the external
+[API Schema](introduction.md#api-schema)). In general, the external
 ontologies use simpler data structures, but they also provide additional
 information to make it easier for clients to use them. This is illustrated
 in the examples in the next sections.
 
 The internal predicates `knora-base:subjectClassConstraint` and
 `knora-base:objectClassConstraint` (see
-@ref:[Constraints on the Types of Property Subjects and Objects](../../02-knora-ontologies/knora-base.md#constraints-on-the-types-of-property-subjects-and-objects))
+[Constraints on the Types of Property Subjects and Objects](../../02-knora-ontologies/knora-base.md#constraints-on-the-types-of-property-subjects-and-objects))
 are represented as `knora-api:subjectType` and `knora-api:objectType` in
 external ontologies.
 
@@ -409,7 +407,7 @@ ontology.
 In a class definition, cardinalities for properties of the class are
 represented as in OWL, using objects of type `owl:Restriction`. The
 supported cardinalities are the ones indicated in
-@ref:[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities).
+[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities).
 
 The class definitions include cardinalities that are directly defined on
 each class, as well as cardinalities inherited from base classes. For
@@ -877,7 +875,7 @@ updates links will need the IRIs of their link values. The predicate
 properties of a class, and the predicates `salsah-gui:guiElement` and
 `salsah-gui:guiAttribute` specify how to configure a GUI element for
 editing the value of a property. For more information on the
-`salsah-gui` ontology, see @ref:[The SALSAH GUI Ontology](../../02-knora-ontologies/salsah-gui.md).
+`salsah-gui` ontology, see [The SALSAH GUI Ontology](../../02-knora-ontologies/salsah-gui.md).
 
 ## Ontology Updates
 
@@ -951,7 +949,7 @@ HTTP POST to http://host/v2/ontologies
 ```
 
 The ontology name must follow the rules given in
-@ref:[Knora IRIs](knora-iris.md).
+[Knora IRIs](knora-iris.md).
 
 If the ontology is to be shared by multiple projects, it must be
 created in the default shared ontologies project,
@@ -962,7 +960,7 @@ and the request must have this additional boolean property:
 "knora-api:isShared" : true
 ```
 
-See @ref:[Shared Ontologies](knora-iris.md#shared-ontologies) for details about
+See [Shared Ontologies](knora-iris.md#shared-ontologies) for details about
 shared ontologies.
 
 A successful response will be a JSON-LD document providing only the
@@ -1115,7 +1113,7 @@ HTTP POST to http://host/v2/ontologies/classes
 
 `OWL_CARDINALITY_PREDICATE` and `OWL_CARDINALITY_VALUE` must correspond
 to the supported combinations given in
-@ref:[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
+[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
@@ -1126,7 +1124,7 @@ At least one base class must be provided.
 
 When a cardinality on a link property is submitted, an identical cardinality
 on the corresponding link value property is automatically added (see
-@ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
 
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
@@ -1271,7 +1269,7 @@ subproperties, with the exception of file properties (subproperties of
 `knora-api:hasLinkToValue`).
 
 If the property is a link property, the corresponding link value property
-(see @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources))
+(see [Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources))
 will automatically be created.
 
 The property definition must specify its `knora-api:objectType`. If the
@@ -1289,9 +1287,9 @@ provide `knora-api:subjectType`, which must be a subclass of
 The predicates `salsah-gui:guiElement` and `salsah-gui:guiAttribute` are
 optional. If provided, the object of `guiElement` must be one of the OWL
 named individuals defined in
-@ref:[The SALSAH GUI Ontology](../../02-knora-ontologies/salsah-gui.md#individuals). Some GUI elements
+[The SALSAH GUI Ontology](../../02-knora-ontologies/salsah-gui.md#individuals). Some GUI elements
 take required or optional attributes, which are provided as objects of
-`salsah-gui:guiAttribute`; see @ref:[The SALSAH GUI Ontology](../../02-knora-ontologies/salsah-gui.md)
+`salsah-gui:guiAttribute`; see [The SALSAH GUI Ontology](../../02-knora-ontologies/salsah-gui.md)
 for details.
 
 A successful response will be a JSON-LD document providing the new
@@ -1416,13 +1414,13 @@ At least one cardinality must be submitted.
 
 `OWL_CARDINALITY_PREDICATE` and `OWL_CARDINALITY_VALUE` must correspond
 to the supported combinations given in
-@ref:[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
+[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
 When a cardinality on a link property is submitted, an identical cardinality
 on the corresponding link value property is automatically added (see
-@ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
 
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
@@ -1473,13 +1471,13 @@ HTTP PUT to http://host/v2/ontologies/cardinalities
 
 `OWL_CARDINALITY_PREDICATE` and `OWL_CARDINALITY_VALUE` must correspond
 to the supported combinations given in
-@ref:[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
+[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
 When a cardinality on a link property is submitted, an identical cardinality
 on the corresponding link value property is automatically added (see
-@ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
 
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
@@ -1497,7 +1495,7 @@ The property IRI and the ontology's last modification date must be
 URL-encoded.
 
 If the property is a link property, the corresponding link value property
-(see @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources))
+(see [Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources))
 will automatically be deleted.
 
 A successful response will be a JSON-LD document providing only the

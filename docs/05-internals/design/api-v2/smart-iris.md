@@ -19,12 +19,10 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Smart IRIs
 
-@@toc
-
 ## Usage
 
 The `SmartIri` trait can be used to parse and validate IRIs, and in
-particular for converting @ref:[Knora type IRIs](../../../03-apis/api-v2/knora-iris.md)
+particular for converting [Knora type IRIs](../../../03-apis/api-v2/knora-iris.md)
 between internal and external schemas. It validates each IRI it parses. To use it,
 import the following:
 
@@ -89,7 +87,7 @@ There are in fact two instances of `StringFormatter`:
 - one returned by `StringFormatter.getInstanceForConstantOntologies`,
   which is available before Akka has started, and is used only by the
   hard-coded constant `knora-api` ontologies (see
-  @ref:[Generation of Ontologies in External Schemas](ontology-schemas.md#generation-of-ontologies-in-external-schemas)).
+  [Generation of Ontologies in External Schemas](ontology-schemas.md#generation-of-ontologies-in-external-schemas)).
 
 This is the reason for the existence of the `SmartIri` trait, which is a
 top-level definition and has its own `equals` and `hashCode` methods.

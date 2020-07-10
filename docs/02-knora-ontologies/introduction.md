@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Introduction
 
-@@toc { depth=2 }
-
 ## Resource Description Framework (RDF)
 
 Knora uses a hierarchy of ontologies based on the Resource Description
@@ -43,7 +41,7 @@ connect many subjects, like this:
 
 In RDF, each subject and predicate has a unique, URL-like identifier
 called an Internationalized Resource Identifier
-(@extref[IRI](rfc:3987)). Within a given project,
+([IRI](https://tools.ietf.org/html/rfc3987)). Within a given project,
 IRIs typically differ only in their last component (the "local part"),
 which is often the fragment following a `#` character. Such IRIs share a
 long "prefix". In [Turtle](http://www.w3.org/TR/turtle/) and similar
@@ -62,7 +60,7 @@ write prefixed names for IRIs:
 To ensure the interoperability of data produced by different projects,
 each project must describe its data model by creating one or more ontologies that
 extend Knora's built-in ontologies. The main built-in ontology in Knora
-is @ref:[knora-base](knora-base.md).
+is [knora-base](knora-base.md).
 
 ## Shared Ontologies
 
@@ -78,9 +76,9 @@ ontology, existing classes and properties cannot safely be changed, but new ones
 can be added. (It is not even safe to add an optional cardinality to an existing
 class, because this could cause subclasses to violate the rule that a class cannot
 have a cardinality on property P as well as a cardinality on a subproperty of P;
-see @ref:[Restrictions on Classes](knora-base.md#restrictions-on-classes).)
+see [Restrictions on Classes](knora-base.md#restrictions-on-classes).)
 
 A standardisation process for shared ontologies is planned (issue @github[#523](#523)).
 
 For more details about shared ontologies, see
-@ref:[Shared Ontology IRIs](../03-apis/api-v2/knora-iris.md#shared-ontology-iris).
+[Shared Ontology IRIs](../03-apis/api-v2/knora-iris.md#shared-ontology-iris).

@@ -60,7 +60,7 @@ refuses to serve the file. However, all of this behaviour is defined in
 the preflight function in Sipi and not controlled by Knora. Knora only
 provides the permission code.
 
-See @ref:[Sharing the Session ID with Sipi](sipi-and-knora.md#sharing-the-session-id-with-sipi) for more
+See [Sharing the Session ID with Sipi](sipi-and-knora.md#sharing-the-session-id-with-sipi) for more
 information about sharing the session id.
 
 ## Using Sipi in Test Mode

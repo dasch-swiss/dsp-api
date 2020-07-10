@@ -19,8 +19,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Knora IRIs
 
-@@toc
-
 The IRIs used in Knora repositories and in the Knora API v2 follow
 certain conventions.
 
@@ -35,7 +33,7 @@ belong to the Knora system project.
 A user-created ontology IRI must always include its project shortcode.
 
 Project ID `0000` is reserved for shared ontologies
-(see @ref:[Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies)).
+(see [Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies)).
 
 The range of project IDs from `0001` to `00FF` inclusive is reserved for
 local testing. Thus, the first useful project will be `0100`.
@@ -175,7 +173,7 @@ has the following IRIs:
 
 ### Shared Ontology IRIs
 
-As explained in @ref:[Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies),
+As explained in [Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies),
 a user-created ontology can be defined as shared, meaning that it can be used by
 multiple projects, and that its creators will not change it in ways that could
 affect other ontologies or data that are based on it.
@@ -201,13 +199,13 @@ project, `0000`, is assumed. The sample shared ontology, `example-box`, has thes
 ## IRIs for Data
 
 Knora generates IRIs for data that it creates in the triplestore. Each
-generated data IRI contains one or more @extref[UUID](rfc:4122)
+generated data IRI contains one or more [UUID](https://tools.ietf.org/html/rfc4122)
 identifiers to make it unique. To keep data IRIs relatively short, each UUID is
-@extref[base64url-encoded](rfc:4648#section-5), without padding;
+[base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5), without padding;
 thus each UUID is a 22-character string.
 
 Data IRIs are not currently intended to be dereferenced as URLs.
-Instead, each Knora resource has a separate @ref:[permalink](permalinks.md).
+Instead, each Knora resource has a separate [permalink](permalinks.md).
 
 A Knora value does not have a stable IRI throughout its version history.
 Each time a new version of a value is made, the new version gets a new IRI.
