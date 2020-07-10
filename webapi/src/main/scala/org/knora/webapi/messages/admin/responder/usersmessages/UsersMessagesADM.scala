@@ -59,6 +59,7 @@ case class CreateUserApiRequestADM(id: Option[IRI] = None,
                                    status: Boolean,
                                    lang: String,
                                    systemAdmin: Boolean) {
+
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
 
