@@ -53,3 +53,4 @@ bazel-*
 **/__pycache__
 dump.rdb
 /site/
+dependencies.txt

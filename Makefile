@@ -296,19 +296,17 @@ init-db-test-unit-minimal: stack-db-remove stack-db-only ## initializes the knor
 ## Other
 #################################
 
+clean-docker: ## cleans the docker installation
+	@docker system prune -af
+
 .PHONY: clean-local-tmp
 clean-local-tmp:
 	@rm -rf .tmp
 	@mkdir .tmp
 
-clean: ## clean build artifacts
+clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 	@rm -rf .env
 	@bazel clean
-	@sbt clean
-	@rm -rf .tmp
-
-clean-docker: ## cleans the docker installation
-	@docker system prune -af
 
 .PHONY: info
 info: ## print out all variables
