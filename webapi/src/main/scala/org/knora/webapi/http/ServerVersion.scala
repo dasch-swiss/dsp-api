@@ -27,7 +27,7 @@ import org.knora.webapi.BuildInfo
   */
 object ServerVersion {
 
-    private val ServerVersionString = s"${BuildInfo.name}/${BuildInfo.version}" + " " + s"akka-http/${BuildInfo.akkaHttp}"
+    private val ServerVersionString = s"${BuildInfo.name}/${BuildInfo.version}" + " " + s"akka-http/${BuildInfo.akkaHttpVersion}"
     private val ServerVersionHeader = `Server`(ServerVersionString)
 
     def addServerHeader(route: Route):Route = respondWithHeader(ServerVersionHeader) {route}

@@ -44,7 +44,7 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     val exampleOrigin = HttpOrigin("http://example.com")

@@ -1,4 +1,5 @@
 /*
+/*
  * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
@@ -23,7 +24,6 @@ import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import org.knora.webapi.E2ESimSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.testing.tags.E2ETest
 
 import scala.concurrent.duration._
 
@@ -33,7 +33,6 @@ import scala.concurrent.duration._
   * This simulation scenario accesses the groups endpoint with
   * 1000 users concurrently.
   */
-@E2ETest
 class GroupsADME2ESimSpec extends E2ESimSpec {
 
     override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
@@ -62,3 +61,4 @@ class GroupsADME2ESimSpec extends E2ESimSpec {
 }
 
 
+*/

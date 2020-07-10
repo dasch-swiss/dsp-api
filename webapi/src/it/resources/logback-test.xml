@@ -32,15 +32,15 @@
             <pattern>[%date{ISO8601}] %-5level - %logger{0} - %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>logs/console.log</File>
-        <encoder>
-            <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
+<!--    <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <File>logs/console.log</File>-->
+<!--        <encoder>-->
+<!--            <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>-->
+<!--        </rollingPolicy>-->
+<!--    </appender>-->
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
@@ -77,6 +77,10 @@
     <logger name="org.knora.webapi.e2e.v1.KnoraSipiIntegrationV1ITSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.KnoraSipiScriptsV1ITSpec" level="INFO"/>
 
+    <!-- Spec Logging -->
+    <logger name="org.knora.webapi.ITKnoraLiveSpec" level="INFO"/>
+    <logger name="org.knora.webapi.ITKnoraFakeSpec" level="INFO"/>
+
     <!-- metrics logging (info level turns them on, error level turns them off -->
     <logger name="M-Main$" level="ERROR"/>
     <logger name="M-UsersResponderADM" level="ERROR"/>
@@ -87,6 +91,6 @@
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
-        <appender-ref ref="R"/>
+<!--        <appender-ref ref="R"/>-->
     </root>
 </configuration>

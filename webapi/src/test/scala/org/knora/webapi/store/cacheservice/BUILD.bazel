@@ -1,0 +1,40 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+
+scala_test(
+    name = "CacheSerializationSpec",
+    size = "small",  # 60s
+    srcs = [
+        "CacheSerializationSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//webapi:test_library",
+    ] + BASE_TEST_DEPENDENCIES,
+)
+
+scala_test(
+    name = "CacheServiceManagerSpec",
+    size = "small",  # 60s
+    srcs = [
+        "CacheServiceManagerSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//webapi:test_library",
+    ] + BASE_TEST_DEPENDENCIES,
+)

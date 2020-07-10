@@ -69,7 +69,7 @@ object CacheUtil {
                     cacheConfig.timeToIdleSeconds)
                 cacheManager.addCache(cache)
                 cache.getCacheEventNotificationService.registerListener(new LoggingCacheEventListener(log))
-                log.debug(s"CacheUtil: Created application cache '${cacheConfig.cacheName}'")
+                log.info(s"CacheUtil: Created application cache '${cacheConfig.cacheName}'")
         }
     }
 

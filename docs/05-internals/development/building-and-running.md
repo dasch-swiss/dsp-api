@@ -116,19 +116,19 @@ following example content:
 ```
 [
   {
-    "path": "../knora-ontologies/knora-base.ttl",
+    "path": "knora-ontologies/knora-base.ttl",
     "name": "http://www.knora.org/ontology/knora-base"
   },
   {
-    "path": "../knora-ontologies/salsah-gui.ttl",
+    "path": "knora-ontologies/salsah-gui.ttl",
     "name": "http://www.knora.org/ontology/salsah-gui"
   },
   {
-    "path": "_test_data/ontologies/incunabula-onto.ttl",
+    "path": "test_data/ontologies/incunabula-onto.ttl",
     "name": "http://www.knora.org/ontology/0803/incunabula"
   },
   {
-    "path": "_test_data/all_data/incunabula-data.ttl",
+    "path": "test_data/all_data/incunabula-data.ttl",
     "name": "http://www.knora.org/data/incunabula"
   }
 ]

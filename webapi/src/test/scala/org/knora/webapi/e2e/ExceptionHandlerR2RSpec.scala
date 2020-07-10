@@ -19,13 +19,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
-import org.knora.webapi.testing.tags.E2ETest
 
 
 /**
   * Route (R2R) test specification for testing exception handling.
   */
-@E2ETest
 class ExceptionHandlerR2RSpec extends R2RSpec {
 
     private val nfe = path( ("v1" | "v2" | "admin") / "nfe") {

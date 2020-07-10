@@ -17,6 +17,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -33,7 +39,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run build everything
-        run: make build-all-scala
+        run: make build
       - name: Disk Free After
         run: |
           df -h
@@ -52,6 +58,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -72,7 +84,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run API unit tests
-        run: make test-unit-ci
+        run: make test-unit
       - name: Disk Free After
         run: |
           df -h
@@ -91,6 +103,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -111,7 +129,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API E2E tests
-        run: make test-e2e-ci
+        run: make test-e2e
       - name: Disk Free After
         run: |
           df -h
@@ -130,6 +148,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -150,7 +174,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API integration tests
-        run: make test-it-ci
+        run: make test-it
       - name: Disk Free After
         run: |
           df -h
@@ -169,9 +193,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - uses: actions/setup-java@v1
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
         with:
-          java-version: '11.x.x'
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -189,8 +216,8 @@ jobs:
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: test repository update
-        run: make test-repository-update
+      - name: test repository upgrade
+        run: make test-repository-upgrade
       - name: Disk Free After
         run: |
           df -h
@@ -252,6 +279,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -289,7 +322,7 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make publish-all-images
+          make docker-publish
       - name: run docs build
         run: make docs-build
       - name: Deploy docs

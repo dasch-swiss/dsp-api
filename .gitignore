@@ -1,4 +1,5 @@
 /.project
+.ijwb
 **/.idea
 **/*.iml
 **/*.ipr
@@ -24,12 +25,14 @@ docs/project
 salsah1/project
 webapi/project
 webapi/_fuseki/run
-webapi/build
+webapi-it
+webapi-test
 upgrade/project
 upgrade/target
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test
+bazel-*
 
 **/project/target/
 /target/
@@ -46,18 +49,7 @@ sipi/test
 *.bak
 .sbtrc
 
-/knora-jena-fuseki
-/knora-sipi
-/knora-assets
-/knora-upgrade
-
 **/venv
 **/__pycache__
-knora-assets
-knora-graphdb-free
-knora-graphdb-se
-knora-sipi
-knora-upgrade
-triplestores/fuseki/system
 dump.rdb
 /site/

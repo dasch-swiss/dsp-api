@@ -1,0 +1,137 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+
+filegroup(
+    name = "src",
+    srcs = glob(["**/*.scala"]),
+)
+
+scala_test(
+    name = "VersionRouteITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "e2e/VersionRouteITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "ErrorV1ITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "e2e/v1/ErrorV1ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "KnoraSipiIntegrationV1ITSpec",
+    size = "medium",
+    srcs = [
+        "e2e/v1/KnoraSipiIntegrationV1ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+        "@maven//:org_scala_lang_modules_scala_xml_2_12",
+        "@maven//:org_xmlunit_xmlunit_core",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "KnoraSipiPermissionsV1ITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "e2e/v1/KnoraSipiPermissionsV1ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "KnoraSipiScriptsV1ITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "e2e/v1/KnoraSipiScriptsV1ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "KnoraSipiIntegrationV2ITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "e2e/v2/KnoraSipiIntegrationV2ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "DrawingsGodsV1ITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "other/v1/DrawingsGodsV1ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:it_library",
+        "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)

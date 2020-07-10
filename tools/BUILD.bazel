@@ -1,0 +1,15 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "all",
+    srcs = [
+        "//tools/buildstamp:all"
+    ],
+)
+
+filegroup(
+    name = "srcs",
+    srcs = [
+       "//tools/buildstamp:srcs"
+    ],
+)
