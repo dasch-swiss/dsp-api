@@ -47,13 +47,37 @@ released under the [GNU Affero General Public License](http://www.gnu.org/licens
 
 ### For developing and testing the API server
 
+Each developer machine should have the following prerequisites installed:
+
 * Linux or macOS (with some caveats)
-* [OpenJDK](https://adoptopenjdk.net)
-* [SBT](https://www.scala-sbt.org)
+* Docker Desktop: https://www.docker.com/products/docker-desktop
+* Homebrew (on macOS): https://brew.sh
+* [OpenJDK](https://adoptopenjdk.net) 11
 * [Bazel](https://bazel.build)
 
-[Jena Fuseki](https://jena.apache.org) is recommended. Support for other RDF
-triplestores is planned.
+#### Java Adoptopenjdk 11
+
+To install, follow these steps:
+
+```bash
+$ brew tap AdoptOpenJDK/openjdk
+$ brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
+```
+
+To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
+
+```
+export JAVA_HOME=`/usr/libexec/java_home -v 11`
+```
+
+#### Bazel build tools
+
+To install, follow these steps:
+
+```
+$ brew install bazel
+$ brew upgrade bazel
+```
 
 ### For building the documentation
 
