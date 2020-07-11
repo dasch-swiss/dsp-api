@@ -98,8 +98,6 @@ nav:
       - Development:
           - Index: 05-internals/development/index.md
           - Overview: 05-internals/development/overview.md
-          - Starting Fuseki 2: 05-internals/development/fuseki.md
-          - Starting GraphDB: 05-internals/development/graphdb.md
           - Build and Running: 05-internals/development/building-and-running.md
           - Build Process: 05-internals/development/build-process.md
           - Setup IntelliJ for development of Knora: 05-internals/development/intellij-config.md
@@ -111,6 +109,7 @@ nav:
           - Starting the Knora-Stack inside Docker Container: 05-internals/development/docker-compose.md
           - Updating Repositories: 05-internals/development/updating-repositories.md
           - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
+          - Starting GraphDB: 05-internals/development/graphdb.md
   - Salsah:
       - Index: 06-salsah/index.md
   - SIPI:

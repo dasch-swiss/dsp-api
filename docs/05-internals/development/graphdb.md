@@ -19,6 +19,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Starting GraphDB
 
+**Attention!** The information on this page is left inside the documentation
+for historic reasons. GraphDB is not used for active development anymore.  
+
 ## GraphDB SE
 
 Inside the Knora git repository, there is a folder called
