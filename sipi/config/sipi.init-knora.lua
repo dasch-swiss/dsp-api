@@ -69,7 +69,6 @@ function pre_flight(prefix, identifier, cookie)
         end
     end
 
-    -- #snip_marker
     --
     -- Allows to set SIPI_WEBAPI_HOSTNAME environment variable and use its value.
     --
@@ -89,7 +88,6 @@ function pre_flight(prefix, identifier, cookie)
     server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
     knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' ..  identifier
-    -- #snip_marker
 
     -- print("knora_url: " .. knora_url)
     server.log("pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)

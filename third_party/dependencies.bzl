@@ -98,6 +98,7 @@ def dependencies():
             "com.fasterxml.jackson.module:jackson-module-scala_2.12:2.9.4",
 
             "com.github.jsonld-java:jsonld-java:0.12.0",
+            "com.apicatalog:titanium-json-ld:0.8.3",
 
             # swagger (api documentation)
             "com.github.swagger-akka-http:swagger-akka-http_2.12:0.14.0",
@@ -164,5 +165,6 @@ BASE_TEST_DEPENDENCIES_WITH_JSON = BASE_TEST_DEPENDENCIES + [
 BASE_TEST_DEPENDENCIES_WITH_JSON_LD = BASE_TEST_DEPENDENCIES + [
     "@maven//:com_fasterxml_jackson_core_jackson_core",
     "@maven//:com_github_jsonld_java_jsonld_java",
+    "@maven//:com_apicatalog_titanium_json_ld",
 ]
 

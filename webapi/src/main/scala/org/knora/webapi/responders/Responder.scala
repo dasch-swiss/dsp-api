@@ -122,7 +122,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                                errorFun: => Nothing,
                                ignoreKnoraConstraints: Boolean = false,
                                ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
-        // #sparql-select
+
         for {
             isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
@@ -132,7 +132,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
             ).toString())
 
             isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
-            // #sparql-select
 
             _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
                 errorFun

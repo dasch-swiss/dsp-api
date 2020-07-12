@@ -17,7 +17,6 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #OntologySchema
 package org.knora.webapi
 
 /**
@@ -120,4 +119,3 @@ object SchemaOptions {
         targetSchema == ApiV2Complex && schemaOptions.contains(MarkupAsStandoff)
     }
 }
-// #OntologySchema

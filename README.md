@@ -30,13 +30,13 @@ released under the [GNU Affero General Public License](http://www.gnu.org/licens
 
 ### Stable
 
-* [Knora Ontologies](https://docs.knora.org/paradox/02-knora-ontologies/index.html)
-* [Knora API v1](https://docs.knora.org/paradox/03-apis/api-v1/index.html)
+* [Knora Ontologies](https://docs.knora.org/02-knora-ontologies/)
+* [Knora API v1](https://docs.knora.org/03-apis/api-v1/)
 
 ### Beta stage
 
-* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
-* [Knora Admin API](https://docs.knora.org/paradox/03-apis/api-admin/index.html)
+* [Knora API v2](https://docs.knora.org/03-apis/api-v2/)
+* [Knora Admin API](https://docs.knora.org/03-apis/api-admin/)
 * Distribution packaging using [Docker](https://www.docker.com/)
 
 ### New features under development
@@ -47,13 +47,37 @@ released under the [GNU Affero General Public License](http://www.gnu.org/licens
 
 ### For developing and testing the API server
 
+Each developer machine should have the following prerequisites installed:
+
 * Linux or macOS (with some caveats)
-* [OpenJDK](https://adoptopenjdk.net)
-* [SBT](https://www.scala-sbt.org)
+* Docker Desktop: https://www.docker.com/products/docker-desktop
+* Homebrew (on macOS): https://brew.sh
+* [OpenJDK](https://adoptopenjdk.net) 11
 * [Bazel](https://bazel.build)
 
-[Jena Fuseki](https://jena.apache.org) is recommended. Support for other RDF
-triplestores is planned.
+#### Java Adoptopenjdk 11
+
+To install, follow these steps:
+
+```bash
+$ brew tap AdoptOpenJDK/openjdk
+$ brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
+```
+
+To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
+
+```
+export JAVA_HOME=`/usr/libexec/java_home -v 11`
+```
+
+#### Bazel build tools
+
+To install, follow these steps:
+
+```
+$ brew install bazel
+$ brew upgrade bazel
+```
 
 ### For building the documentation
 
