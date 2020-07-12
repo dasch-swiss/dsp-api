@@ -30,13 +30,13 @@ released under the [GNU Affero General Public License](http://www.gnu.org/licens
 
 ### Stable
 
-* [Knora Ontologies](https://docs.knora.org/paradox/02-knora-ontologies/index.html)
-* [Knora API v1](https://docs.knora.org/paradox/03-apis/api-v1/index.html)
+* [Knora Ontologies](https://docs.knora.org/02-knora-ontologies/)
+* [Knora API v1](https://docs.knora.org/03-apis/api-v1/)
 
 ### Beta stage
 
-* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
-* [Knora Admin API](https://docs.knora.org/paradox/03-apis/api-admin/index.html)
+* [Knora API v2](https://docs.knora.org/03-apis/api-v2/)
+* [Knora Admin API](https://docs.knora.org/03-apis/api-admin/)
 * Distribution packaging using [Docker](https://www.docker.com/)
 
 ### New features under development
