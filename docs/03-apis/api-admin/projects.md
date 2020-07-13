@@ -73,7 +73,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - POST: `/admin/projects/`
   - BODY:
   
-```
+```json
     {
       "shortname": "newproject",
       "longname": "project longname",
@@ -87,7 +87,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 Additionally, each project can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
     
-```
+```json
     {
         "id": "http://rdfh.ch/projects/3333",
         "shortname": "newprojectWithIri",
@@ -110,7 +110,7 @@ Additionally, each project can have an optional custom IRI (of [Knora IRI](../ap
   - PUT: `/admin/projects/iri/<projectIri>`
   - BODY:
 
-```
+```json
     {
       "shortname": "newproject",
       "longname": "project longname",

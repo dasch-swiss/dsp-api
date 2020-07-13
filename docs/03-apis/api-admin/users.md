@@ -78,7 +78,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - POST: `/admin/users`
   - BODY:
   
-```
+```json
     {
       "email": "donald.duck@example.org",
       "givenName": "Donald",
@@ -94,7 +94,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 Additionally, each user can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
 specified by the `id` in the request body as below:
 
-```
+```json
     { 
       "id" : "http://rdfh.ch/users/donaldDuck",
       "email": "donald.duck@example.org",
@@ -117,7 +117,7 @@ specified by the `id` in the request body as below:
   - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
   - BODY:
 
-```
+```json
     {
       "username": "donald.big.duck",
       "email": "donald.big.duck@example.org",
@@ -134,7 +134,7 @@ specified by the `id` in the request body as below:
   - PUT: `/admin/users/iri/<userIri>/Password`
   - BODY:
   
-```
+```json
     {
       "requesterPassword": "test",
       "newPassword": "test1234"

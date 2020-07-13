@@ -58,7 +58,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - POST: `/admin/lists`
   - BODY:
   
-```
+```json
     {
         "projectIri": "someprojectiri",
         "labels": [{ "value": "Neue Liste", "language": "de"}],
@@ -68,7 +68,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
 
-```
+```json
     {
         "id": "http://rdfh.ch/lists/0001/a-list-with-IRI",
         "projectIri": "http://rdfh.ch/projects/0001",
@@ -86,7 +86,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
   - POST: `/admin/lists/<nodeIri>`
   - BODY:
   
-```
+```json
     {
         "parentNodeIri": "nodeIri",
         "projectIri": "someprojectiri",
@@ -109,7 +109,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
  - PUT: `/admin/lists/infos/<listIri>`
  - BODY:
  
-```
+```json
    {
        "listIri": "listIri",
        "projectIri": "someprojectiri",
