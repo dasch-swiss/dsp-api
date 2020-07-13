@@ -1,20 +1,12 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
-load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON")
-
-filegroup(
-    name = "SessionMessagesV1",
-    srcs = [
-        "v1/responder/sessionmessages/SessionMessagesV1.scala",
-    ],
-)
 
 scala_test(
-    name = "InputOntologyV2Spec",
+    name = "UserMessagesV1Spec",
     size = "small",  # 60s
     srcs = [
-        "v2/responder/ontologymessages/InputOntologyV2Spec.scala",
+        "UserMessagesV1Spec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -25,5 +17,8 @@ scala_test(
     deps = [
         "//webapi:main_library",
         "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES,
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_springframework_security_spring_security_core",
+    ],
 )
