@@ -63,13 +63,17 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Optional information: longname, description, keywords, logo
   - Returns information about the newly created project
   - Remark: There are two distinct use cases / payload combination:
+  
     (1) change ontology and data graph: ontologygraph, datagraph,
+    
     (2) basic project information: shortname, longname, description,
     keywords, logo, institution, status, selfjoin
+    
   - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
   - POST: `/admin/projects/`
   - BODY:
-    ```JSON
+  
+```
     {
       "shortname": "newproject",
       "longname": "project longname",
@@ -79,9 +83,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "status": true,
       "selfjoin": false
     }
-    ```
-    Additionally, each project can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
-    ```JSON
+```
+
+Additionally, each project can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+    
+```
     {
         "id": "http://rdfh.ch/projects/3333",
         "shortname": "newprojectWithIri",
@@ -93,7 +99,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "status": true,
         "selfjoin": false
     }   
-    ```
+```
+
 ### Update project information:
 
   - Required permission: SystemAdmin / ProjectAdmin
@@ -102,7 +109,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
   - PUT: `/admin/projects/iri/<projectIri>`
   - BODY:
-    ```JSON
+
+```
     {
       "shortname": "newproject",
       "longname": "project longname",
@@ -112,7 +120,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "status": true,
       "selfjoin": false
     }
-    ```
+```
 
 ### Delete project (update project status):
 

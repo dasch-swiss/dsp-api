@@ -57,22 +57,25 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Required permission: SystemAdmin / ProjectAdmin
   - POST: `/admin/lists`
   - BODY:
-    ```JSON
+  
+```
     {
         "projectIri": "someprojectiri",
         "labels": [{ "value": "Neue Liste", "language": "de"}],
         "comments": []
     } 
-    ```
-    Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
-    ```JSON
+```
+
+Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+
+```
     {
         "id": "http://rdfh.ch/lists/0001/a-list-with-IRI",
         "projectIri": "http://rdfh.ch/projects/0001",
         "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
         "comments": []
     }
-    ```
+```
 
 ### Create new child node
 
@@ -82,7 +85,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     are currently only appended.
   - POST: `/admin/lists/<nodeIri>`
   - BODY:
-    ```
+  
+```
     {
         "parentNodeIri": "nodeIri",
         "projectIri": "someprojectiri",
@@ -90,7 +94,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
         "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
     }
-    ```
+```
 
 ### Get list's information
 
@@ -104,14 +108,15 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  - Update list information
  - PUT: `/admin/lists/infos/<listIri>`
  - BODY:
-   ```
+ 
+```
    {
        "listIri": "listIri",
        "projectIri": "someprojectiri",
        "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
        "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
    }
-   ```
+```
 
 ## List Node Operations
 

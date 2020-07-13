@@ -67,7 +67,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
   - Required permission: none, self-registration is allowed
   - Required information: email (unique), given name, family name,
-    password, password, status, systemAdmin
+    password, status, systemAdmin
   - Username restrictions:
     - 4 - 50 characters long
     - Only contains alphanumeric characters, underscore and dot.
@@ -77,7 +77,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
   - POST: `/admin/users`
   - BODY:
-    ```JSON
+  
+```
     {
       "email": "donald.duck@example.org",
       "givenName": "Donald",
@@ -88,11 +89,12 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "lang": "en",
       "systemAdmin": false
     }
-    ```
+```
     
-    Additionally, each user can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
-    specified by the `id` in the request body as below:
-    ```JSON
+Additionally, each user can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
+specified by the `id` in the request body as below:
+
+```
     { 
       "id" : "http://rdfh.ch/users/donaldDuck",
       "email": "donald.duck@example.org",
@@ -104,7 +106,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "lang": "en",
       "systemAdmin": false
     }
-    ```
+```
      
 ### Update basic user information**
 
@@ -114,7 +116,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - TypeScript Docs: userFormats - ChangeUserApiRequestADM
   - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
   - BODY:
-    ```
+
+```
     {
       "username": "donald.big.duck",
       "email": "donald.big.duck@example.org",
@@ -122,7 +125,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "familyName": "Duckmann",
       "lang": "de"
     }
-    ```
+```
 
 ### Update user's password
 
@@ -130,12 +133,13 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Changeable information: password
   - PUT: `/admin/users/iri/<userIri>/Password`
   - BODY:
-    ```
+  
+```
     {
       "requesterPassword": "test",
       "newPassword": "test1234"
     }
-    ```
+```
 
 ### Delete user
 
@@ -144,11 +148,12 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     `false`. To un-delete, set `status` to `true`.
   - PUT: `/admin/users/iri/<userIri>/Status`
   - BODY:
-    ```
+  
+```
     {
       "status": false // true or false
     }
-    ```
+```
 
 ### Delete user (-\update user)**
 
@@ -210,11 +215,12 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     `true` or `false`
   - PUT: `/admin/users/iri/<userIri>/SystemAdmin`
   - BODY:
-    ```JSON
+  
+```
     {
       "systemAdmin": false
     }
-    ```
+```
 
 ## Example Data
 
