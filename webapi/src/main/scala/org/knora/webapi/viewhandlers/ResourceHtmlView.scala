@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullRespo
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.{KnoraSystemInstances, OntologyConstants}
 import org.slf4j.LoggerFactory
+import org.knora.webapi.twirl
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -86,7 +87,7 @@ object ResourceHtmlView {
         log.debug(s"non-empty locations: ${properties.find(_.locations.nonEmpty)}")
         log.debug(s"imgpath: $imgpath , nonEmpty: ${imgpath.nonEmpty}")
 
-        val content: play.twirl.api.Html = views.html.resource.properties(propMap, imgpath)
+        val content: play.twirl.api.Html = twirl.views.html.resource.properties(propMap, imgpath)
         content.toString
     }
 

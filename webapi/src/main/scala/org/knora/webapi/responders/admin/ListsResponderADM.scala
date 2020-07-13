@@ -91,7 +91,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // log.debug("listsGetRequestV2")
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getLists(
+            sparqlQuery <- Future(twirl.queries.sparql.admin.txt.getLists(
                 triplestore = settings.triplestoreType,
                 maybeProjectIri = projectIri
             ).toString())
@@ -215,7 +215,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
+            sparqlQuery <- Future(twirl.queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri
             ).toString())
@@ -328,7 +328,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     private def listNodeGetADM(nodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Option[ListNodeADM]] = {
         for {
             // this query will give us only the information about the root node.
-            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
+            sparqlQuery <- Future(twirl.queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri
             ).toString())
@@ -476,7 +476,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         for {
             nodeChildrenQuery <- Future {
-                queries.sparql.admin.txt.getListNodeWithChildren(
+                twirl.queries.sparql.admin.txt.getListNodeWithChildren(
                     triplestore = settings.triplestoreType,
                     startNodeIri = ofNodeIri
                 ).toString()
@@ -550,7 +550,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // TODO: Rewrite using a construct sparql query
         for {
             nodePathQuery <- Future {
-                queries.sparql.admin.txt.getNodePath(
+                twirl.queries.sparql.admin.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = requestingUser.lang,
@@ -637,7 +637,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             listIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
             // Create the new list
-            createNewListSparqlString = queries.sparql.admin.txt.createNewList(
+            createNewListSparqlString = twirl.queries.sparql.admin.txt.createNewList(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
@@ -718,7 +718,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
             // Update the list
-            changeListInfoSparqlString = queries.sparql.admin.txt.updateListInfo(
+            changeListInfoSparqlString = twirl.queries.sparql.admin.txt.updateListInfo(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
@@ -828,7 +828,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             newListNodeIri = stringFormatter.makeRandomListIri(maybeShortcode)
 
             // Create the new list node
-            createNewListSparqlString = queries.sparql.admin.txt.createNewListChildNode(
+            createNewListSparqlString = twirl.queries.sparql.admin.txt.createNewListChildNode(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -876,7 +876,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -893,7 +893,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
             // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -910,7 +910,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
             //_ = log.debug("listNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -927,7 +927,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def listNodeByNameExists(name: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
+            askString <- Future(twirl.queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
             //_ = log.debug("listNodeByNameExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -948,7 +948,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         listNodeName match {
             case Some(name) => {
                 for {
-                    askString <- Future(queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
+                    askString <- Future(twirl.queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
                     //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
 
                     askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

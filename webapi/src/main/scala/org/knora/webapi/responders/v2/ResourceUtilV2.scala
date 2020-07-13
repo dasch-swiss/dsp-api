@@ -33,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultIn
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
 import org.knora.webapi.{ForbiddenException, IRI, KnoraSystemInstances, NotFoundException}
+import org.knora.webapi.twirl
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -126,7 +127,7 @@ object ResourceUtilV2 {
     def checkListNodeExists(listNodeIri: IRI,
                             storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
 
             checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 

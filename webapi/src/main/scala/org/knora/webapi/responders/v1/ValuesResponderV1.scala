@@ -380,7 +380,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(
+                standoffLinkInsertSparql: String = twirl.queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(
                     resourceIri = createMultipleValuesRequest.resourceIri,
                     linkUpdates = standoffLinkUpdates,
                     creationDate = createMultipleValuesRequest.creationDate,
@@ -454,7 +454,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                         )
 
                                         // Generate INSERT DATA clause statements for the link.
-                                        queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                        twirl.queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
                                             creationDate = createMultipleValuesRequest.creationDate,
@@ -497,7 +497,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                         }
 
                                         // Generate INSERT DATA clause statements for the value.
-                                        queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                        twirl.queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             propertyIri = propertyIri,
                                             value = valueWithRealStandoffLinkIris,
@@ -634,7 +634,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 resourceIri <- Future(changeFileValueRequest.resourceIri)
 
-                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(
+                getFileValuesSparql = twirl.queries.sparql.v1.txt.getFileValuesForResource(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri
                 ).toString()
@@ -982,7 +982,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 currentTime: String = Instant.now.toString
 
                 // Generate a SPARQL update.
-                sparqlUpdate = queries.sparql.v1.txt.changeComment(
+                sparqlUpdate = twirl.queries.sparql.v1.txt.changeComment(
                     dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
@@ -1100,7 +1100,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             userProfile = deleteValueRequest.userProfile
                         )
 
-                        sparqlUpdate = queries.sparql.v1.txt.deleteLink(
+                        sparqlUpdate = twirl.queries.sparql.v1.txt.deleteLink(
                             dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
@@ -1151,7 +1151,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
                         }
 
-                        sparqlUpdate = queries.sparql.v1.txt.deleteValue(
+                        sparqlUpdate = twirl.queries.sparql.v1.txt.deleteValue(
                             dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
@@ -1170,7 +1170,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // Check whether the update succeeded.
-            sparqlQuery = queries.sparql.v1.txt.checkValueDeletion(
+            sparqlQuery = twirl.queries.sparql.v1.txt.checkValueDeletion(
                 triplestore = settings.triplestoreType,
                 valueIri = deletedValueIri
             ).toString()
@@ -1237,7 +1237,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         for {
             // Do a SPARQL query to get the versions of the value.
             sparqlQuery <- Future {
-                queries.sparql.v1.txt.getVersionHistory(
+                twirl.queries.sparql.v1.txt.getVersionHistory(
                     triplestore = settings.triplestoreType,
                     resourceIri = versionHistoryRequest.resourceIri,
                     propertyIri = versionHistoryRequest.propertyIri,
@@ -1437,7 +1437,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       */
     private def findValue(valueIri: IRI, userProfile: UserADM): Future[Option[ValueQueryResult]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getValue(
+            sparqlQuery <- Future(twirl.queries.sparql.v1.txt.getValue(
                 triplestore = settings.triplestoreType,
                 valueIri = valueIri
             ).toString())
@@ -1472,7 +1472,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         val userProfileV1 = userProfile.asUserProfileV1
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getLinkSourceAndTargetPermissions(
+            sparqlQuery <- Future(twirl.queries.sparql.v1.txt.getLinkSourceAndTargetPermissions(
                 triplestore = settings.triplestoreType,
                 linkValueIri = linkValueIri
             ).toString())
@@ -1522,7 +1522,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     private def findLinkValueByIri(subjectIri: IRI, predicateIri: IRI, objectIri: Option[IRI], linkValueIri: IRI, userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
-                queries.sparql.v1.txt.findLinkValueByIri(
+                twirl.queries.sparql.v1.txt.findLinkValueByIri(
                     triplestore = settings.triplestoreType,
                     subjectIri = subjectIri,
                     predicateIri = predicateIri,
@@ -1556,7 +1556,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     private def findLinkValueByLinkTriple(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
-                queries.sparql.v1.txt.findLinkValueByObject(
+                twirl.queries.sparql.v1.txt.findLinkValueByObject(
                     triplestore = settings.triplestoreType,
                     subjectIri = subjectIri,
                     predicateIri = predicateIri,
@@ -1817,7 +1817,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // Do a SPARQL query to look for the value in the resource's version history.
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
-                queries.sparql.v1.txt.findValueInVersions(
+                twirl.queries.sparql.v1.txt.findValueInVersions(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1901,7 +1901,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       */
     private def findResourceWithValue(valueIri: IRI): Future[FindResourceWithValueResult] = {
         for {
-            findResourceSparqlQuery <- Future(queries.sparql.v1.txt.findResourceWithValue(
+            findResourceSparqlQuery <- Future(twirl.queries.sparql.v1.txt.findResourceWithValue(
                 triplestore = settings.triplestoreType,
                 searchValueIri = valueIri
             ).toString())
@@ -2006,7 +2006,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             currentTime: Instant = Instant.now
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v1.txt.createLink(
+            sparqlUpdate = twirl.queries.sparql.v1.txt.createLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
@@ -2080,7 +2080,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v1.txt.createValue(
+            sparqlUpdate = twirl.queries.sparql.v1.txt.createValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
@@ -2173,7 +2173,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             currentTime: String = Instant.now.toString
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v1.txt.changeLink(
+            sparqlUpdate = twirl.queries.sparql.v1.txt.changeLink(
                 dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
@@ -2320,7 +2320,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             currentTime: String = Instant.now.toString
 
             // Generate a SPARQL update.
-            sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
+            sparqlUpdate = twirl.queries.sparql.v1.txt.addValueVersion(
                 dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,

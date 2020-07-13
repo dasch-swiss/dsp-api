@@ -433,7 +433,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v2.txt.createValue(
+            sparqlUpdate = twirl.queries.sparql.v2.txt.createValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -512,7 +512,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v2.txt.createLink(
+            sparqlUpdate = twirl.queries.sparql.v2.txt.createLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -648,7 +648,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     )
 
                     // Generate SPARQL for the link.
-                    queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
+                    twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
                         resourceIri = resourceIri,
                         linkUpdate = sparqlTemplateLinkUpdate,
                         creationDate = valueCreationDate,
@@ -660,7 +660,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 case otherValueContentV2 =>
                     // We're creating an ordinary value. Generate SPARQL for it.
-                    queries.sparql.v2.txt.generateInsertStatementsForCreateValue(
+                    twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateValue(
                         resourceIri = resourceIri,
                         propertyIri = propertyIri,
                         value = otherValueContentV2,
@@ -745,7 +745,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-            sparqlInsert = queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
+            sparqlInsert = twirl.queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
                 resourceIri = createMultipleValuesRequest.resourceIri,
                 linkUpdates = standoffLinkUpdates,
                 creationDate = createMultipleValuesRequest.creationDate,
@@ -906,7 +906,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
                 currentTime: Instant = Instant.now
 
-                sparqlUpdate = queries.sparql.v2.txt.changeValuePermissions(
+                sparqlUpdate = twirl.queries.sparql.v2.txt.changeValuePermissions(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceInfo.resourceIri,
@@ -1204,7 +1204,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             currentTime: Instant = Instant.now
 
             // Generate a SPARQL update.
-            sparqlUpdate = queries.sparql.v2.txt.addValueVersion(
+            sparqlUpdate = twirl.queries.sparql.v2.txt.addValueVersion(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -1292,7 +1292,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 newLinkValueUUID = UUID.randomUUID
 
                 // Generate a SPARQL update string.
-                sparqlUpdate <- Future(queries.sparql.v2.txt.changeLinkTarget(
+                sparqlUpdate <- Future(twirl.queries.sparql.v2.txt.changeLinkTarget(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     linkSourceIri = resourceInfo.resourceIri,
@@ -1335,7 +1335,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // Make a timestamp to indicate when the link value was updated.
                 currentTime: Instant = Instant.now
 
-                sparqlUpdate = queries.sparql.v2.txt.changeLinkMetadata(
+                sparqlUpdate = twirl.queries.sparql.v2.txt.changeLinkMetadata(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     linkSourceIri = resourceInfo.resourceIri,
@@ -1477,7 +1477,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 )
 
                 // Check whether the update succeeded.
-                sparqlQuery = queries.sparql.v2.txt.checkValueDeletion(
+                sparqlQuery = twirl.queries.sparql.v2.txt.checkValueDeletion(
                     triplestore = settings.triplestoreType,
                     valueIri = deletedValueIri
                 ).toString()
@@ -1591,7 +1591,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 requestingUser = requestingUser
             )
 
-            sparqlUpdate = queries.sparql.v2.txt.deleteLink(
+            sparqlUpdate = twirl.queries.sparql.v2.txt.deleteLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceInfo.resourceIri,
@@ -1651,7 +1651,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         for {
             linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
 
-            sparqlUpdate = queries.sparql.v2.txt.deleteValue(
+            sparqlUpdate = twirl.queries.sparql.v2.txt.deleteValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -1767,7 +1767,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             propertyIrisForGravsearchQuery: Seq[SmartIri] = (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri).map(_.toOntologySchema(ApiV2Complex))
 
             // Make a Gravsearch query from a template.
-            gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+            gravsearchQuery: String = twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
                 resourceIri = resourceIri,
                 propertyIris = propertyIrisForGravsearchQuery
             ).toString()

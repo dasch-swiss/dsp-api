@@ -209,7 +209,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     }
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
-        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+        val lastModSparqlQuery = twirl.queries.sparql.v1.txt.getLastModificationDate(
             triplestore = settings.triplestoreType,
             resourceIri = resourceIri
         ).toString()
@@ -816,7 +816,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -903,7 +903,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -979,7 +979,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1037,7 +1037,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1100,7 +1100,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1178,7 +1178,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1341,7 +1341,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = resourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1421,7 +1421,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The old LinkValue should be deleted now, and the old direct link should have been removed.
 
-            val oldLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val oldLinkValueSparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1442,7 +1442,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-            val newLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val newLinkValueSparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1483,7 +1483,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: DeleteValueResponseV1 => linkObjLinkValueIri.set(msg.id)
             }
 
-            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val deletedLinkValueSparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1816,7 +1816,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val initialLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val initialLinkValueSparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = thingWithTextValues,
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1883,7 +1883,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // It should have a previousValue, and the direct link should still exist.
 
-            val decrementedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val decrementedLinkValueSparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = thingWithTextValues,
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1940,7 +1940,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The LinkValue should point to its previous version. There should be no direct link.
 
-            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val deletedLinkValueSparqlQuery = twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = thingWithTextValues,
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,

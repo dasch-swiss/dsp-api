@@ -78,7 +78,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
-            countSparql <- Future(queries.sparql.v2.txt.searchFulltext(
+            countSparql <- Future(twirl.queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
@@ -131,7 +131,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
-            searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
+            searchSparql <- Future(twirl.queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
@@ -597,7 +597,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             }
 
             // Do a SELECT prequery to get the IRIs of the requested page of resources.
-            prequery = queries.sparql.v2.txt.getResourcesInProjectPrequery(
+            prequery = twirl.queries.sparql.v2.txt.getResourcesInProjectPrequery(
                 triplestore = settings.triplestoreType,
                 projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
                 resourceClassIri = internalClassIri,
@@ -626,7 +626,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 for {
                     // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
                     // at most one page of standoff per text value.
-                    resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                    resourceRequestSparql <- Future(twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
                         triplestore = settings.triplestoreType,
                         resourceIris = mainResourceIris,
                         preview = false,
@@ -686,7 +686,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
-            countSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
+            countSparql <- Future(twirl.queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
@@ -735,7 +735,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
-            searchResourceByLabelSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
+            searchResourceByLabelSparql <- Future(twirl.queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,

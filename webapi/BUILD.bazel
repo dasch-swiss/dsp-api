@@ -45,7 +45,6 @@ scala_library(
     srcs = [
         "//webapi/src/main:scala",
         "//webapi/src/main:twirl-templates",
-
     ],
     resources = [
         "//webapi/src/main/resources",

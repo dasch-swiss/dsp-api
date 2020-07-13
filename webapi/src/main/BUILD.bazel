@@ -1,5 +1,4 @@
 package(default_visibility = ["//visibility:public"])
-
 load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
 
 filegroup(
@@ -18,9 +17,7 @@ twirl_templates(
     "play.twirl.api.Xml",
   ],
   source_directory = "twirl",
-  srcs = glob(["twirl/**/*.scala.html"])
-    + glob(["twirl/**/*.scala.xml"])
-    + glob(["twirl/**/*.scala.js"])
-    + glob(["twirl/**/*.scala.txt"]),
+  srcs = glob(["twirl/**/*.scala.txt"])
+    + glob(["twirl/**/*.scala.html"])
+    + glob(["twirl/**/*.scala.xml"]),
 )
-

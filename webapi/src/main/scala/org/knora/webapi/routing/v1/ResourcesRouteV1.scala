@@ -569,7 +569,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } :+ knoraXmlImportSchemaNamespaceInfo
 
                         // Generate the schema using a Twirl template.
-                        val unformattedSchemaXml = xsd.v1.xml.xmlImport(
+                        val unformattedSchemaXml = twirl.xsd.v1.xml.xmlImport(
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaceInfos,
                             knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,

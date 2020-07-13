@@ -155,7 +155,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
         for {
             // Get the search results with paging.
-            searchSparql <- Future(queries.sparql.v1.txt.searchFulltext(
+            searchSparql <- Future(twirl.queries.sparql.v1.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = LuceneQueryString(searchGetRequest.searchValue),
                 preferredLanguage = searchGetRequest.userProfile.lang,
@@ -492,7 +492,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             )
 
             // Get the search results.
-            searchSparql = queries.sparql.v1.txt.searchExtended(
+            searchSparql = twirl.queries.sparql.v1.txt.searchExtended(
                 triplestore = settings.triplestoreType,
                 searchCriteria = searchCriteria,
                 preferredLanguage = searchGetRequest.userProfile.lang,

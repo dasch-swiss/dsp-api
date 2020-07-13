@@ -143,7 +143,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
             // Get all ontology metadata.
-            allOntologyMetadataSparql <- FastFuture.successful(queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
+            allOntologyMetadataSparql <- FastFuture.successful(twirl.queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
             allOntologyMetadataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql)).mapTo[SparqlSelectResponse]
             allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = buildOntologyMetadata(allOntologyMetadataResponse)
 
@@ -157,7 +157,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             // Get the contents of each named graph containing an ontology.
             ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] = allOntologyMetadata.keys.map {
                 ontologyIri =>
-                    val ontologyGraphConstructQuery = queries.sparql.v2.txt.getOntologyGraph(
+                    val ontologyGraphConstructQuery = twirl.queries.sparql.v2.txt.getOntologyGraph(
                         triplestore = settings.triplestoreType,
                         ontologyGraph = ontologyIri
                     ).toString
@@ -1608,7 +1608,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
             }
 
-            getOntologyInfoSparql = queries.sparql.v2.txt.getOntologyInfo(
+            getOntologyInfoSparql = twirl.queries.sparql.v2.txt.getOntologyInfo(
                 triplestore = settings.triplestoreType,
                 ontologyIri = internalOntologyIri
             ).toString()
@@ -1711,7 +1711,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                createOntologySparql = queries.sparql.v2.txt.createOntology(
+                createOntologySparql = twirl.queries.sparql.v2.txt.createOntology(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -1805,7 +1805,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.changeOntologyMetadata(
+                updateSparql = twirl.queries.sparql.v2.txt.changeOntologyMetadata(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -1962,7 +1962,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.createClass(
+                updateSparql = twirl.queries.sparql.v2.txt.createClass(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2326,7 +2326,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.addCardinalitiesToClass(
+                updateSparql = twirl.queries.sparql.v2.txt.addCardinalitiesToClass(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2491,7 +2491,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.replaceClassCardinalities(
+                updateSparql = twirl.queries.sparql.v2.txt.replaceClassCardinalities(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2601,7 +2601,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.deleteClass(
+                updateSparql = twirl.queries.sparql.v2.txt.deleteClass(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2719,7 +2719,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.deleteProperty(
+                updateSparql = twirl.queries.sparql.v2.txt.deleteProperty(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2805,7 +2805,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
-                isOntologyUsedSparql = queries.sparql.v2.txt.isOntologyUsed(
+                isOntologyUsedSparql = twirl.queries.sparql.v2.txt.isOntologyUsed(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     classIris = ontology.classes.keySet,
@@ -2824,7 +2824,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Delete everything in the ontology's named graph.
 
-                updateSparql = queries.sparql.v2.txt.deleteOntology(
+                updateSparql = twirl.queries.sparql.v2.txt.deleteOntology(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri
                 ).toString()
@@ -3052,7 +3052,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.createProperty(
+                updateSparql = twirl.queries.sparql.v2.txt.createProperty(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -3202,7 +3202,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.changePropertyLabelsOrComments(
+                updateSparql = twirl.queries.sparql.v2.txt.changePropertyLabelsOrComments(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -3354,7 +3354,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.changeClassLabelsOrComments(
+                updateSparql = twirl.queries.sparql.v2.txt.changeClassLabelsOrComments(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -3472,7 +3472,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       */
     private def loadPropertyDefinition(propertyIri: SmartIri): Future[PropertyInfoContentV2] = {
         for {
-            sparql <- Future(queries.sparql.v2.txt.getPropertyDefinition(
+            sparql <- Future(twirl.queries.sparql.v2.txt.getPropertyDefinition(
                 triplestore = settings.triplestoreType,
                 propertyIri = propertyIri
             ).toString())
@@ -3632,7 +3632,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       */
     private def loadClassDefinition(classIri: SmartIri): Future[ClassInfoContentV2] = {
         for {
-            sparql <- Future(queries.sparql.v2.txt.getClassDefinition(
+            sparql <- Future(twirl.queries.sparql.v2.txt.getClassDefinition(
                 triplestore = settings.triplestoreType,
                 classIri = classIri
             ).toString())

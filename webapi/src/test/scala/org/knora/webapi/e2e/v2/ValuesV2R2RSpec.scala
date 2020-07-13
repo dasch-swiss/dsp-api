@@ -71,7 +71,7 @@ class ValuesV2R2RSpec extends R2RSpec {
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       userEmail: String): JsonLDDocument = {
         // Make a Gravsearch query from a template.
-        val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+        val gravsearchQuery: String = twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
             propertyIris = propertyIrisForGravsearch
         ).toString()

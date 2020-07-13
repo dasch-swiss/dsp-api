@@ -22,6 +22,7 @@ package org.knora.webapi.util
 import java.io.File
 import java.net.{URL, URLConnection}
 
+import org.knora.webapi.twirl
 import org.knora.webapi.AssertionException
 import org.knora.webapi.twirl.Contributor
 import org.rogach.scallop._
@@ -82,7 +83,7 @@ object GenerateContributorsFile extends App {
     val contributorsSorted = contributorsWithNames.sortBy(_.contributions).reverse
 
     // Generate Markdown.
-    val contributorsText: String = queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
+    val contributorsText: String = twirl.queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
 
     // Write Contributors.md.
     FileUtil.writeTextFile(outputFile, contributorsText)

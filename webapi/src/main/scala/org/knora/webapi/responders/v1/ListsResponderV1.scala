@@ -146,7 +146,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             listQuery <- Future {
-                queries.sparql.v1.txt.getList(
+                twirl.queries.sparql.v1.txt.getList(
                     triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
                     preferredLanguage = userProfile.userData.lang,
@@ -218,7 +218,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             nodePathQuery <- Future {
-                queries.sparql.v1.txt.getNodePath(
+                twirl.queries.sparql.v1.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = userProfile.userData.lang,

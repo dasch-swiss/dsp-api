@@ -64,7 +64,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
         log.debug(s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}")
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getFileValue(
+            sparqlQuery <- Future(twirl.queries.sparql.admin.txt.getFileValue(
                 triplestore = settings.triplestoreType,
                 filename = request.filename
             ).toString())
