@@ -63,8 +63,6 @@ case class CreateProjectApiRequestADM(id: Option[IRI] = None,
     def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
 
     if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
-    if (shortname.isEmpty) throw BadRequestException("Project shortname needs to be supplied.")
-    if (shortcode.isEmpty) throw BadRequestException("Project shortcode needs to be supplied.")
 
     stringFormatter.validateOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
 }
