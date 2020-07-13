@@ -35,7 +35,6 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait KnoraRequestV2
 
-// #KnoraJsonLDRequestReaderV2
 /**
   * A trait for objects that can generate case class instances based on JSON-LD input.
   *
@@ -64,4 +63,3 @@ trait KnoraJsonLDRequestReaderV2[C] {
                    settings: KnoraSettingsImpl,
                    log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }
-// #KnoraJsonLDRequestReaderV2

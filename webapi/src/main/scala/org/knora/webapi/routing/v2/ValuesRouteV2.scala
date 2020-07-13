@@ -157,14 +157,11 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private def createValue: Route = path(ValuesBasePath) {
-        // #post-value-parse-jsonld
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                    // #post-value-parse-jsonld
 
-                    // #post-value-create-message
                     val requestMessageFuture: Future[CreateValueRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                         requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
@@ -177,9 +174,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             log = log
                         )
                     } yield requestMessage
-                    // #post-value-create-message
 
-                    // #specify-response-schema
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
@@ -189,7 +184,6 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         targetSchema = ApiV2Complex,
                         schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
-                    // #specify-response-schema
                 }
             }
         }
