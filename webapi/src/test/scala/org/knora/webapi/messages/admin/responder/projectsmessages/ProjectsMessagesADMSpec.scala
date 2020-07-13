@@ -30,7 +30,7 @@ object ProjectsMessagesADMSpec {
 }
 
 /**
-  * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
+  *  This spec is used to test subclasses of the [[ProjectsMessagesADM]] class.
   */
 class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
 
