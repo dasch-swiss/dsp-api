@@ -239,7 +239,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12'
-          check-latest: true
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -261,7 +260,7 @@ jobs:
 
   # publish only on release
   publish:
-    name: Publish to Dockerhub (on release only)
+    name: Publish (on release only)
     needs: [
       api-unit-tests,
       api-e2e-tests,
@@ -290,10 +289,9 @@ jobs:
         with:
           python-version: 3.8
       - name: Set up Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v1
         with:
           node-version: '12'
-          check-latest: true
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
