@@ -1,0 +1,80 @@
+<div class="dialog-frame" style="width: 600px;">
+  <div class="dialog-header" bind="dialogHeader">RDF settings</div>
+  <div class="dialog-body" bind="dialogBody">
+    <div class="grid-layout grid-layout-for-text layout-normal layout-full"><table>
+      <tr>
+        <td>Base IRI:</td>
+        <td width="70%"><div class="input-container"><input bind="baseIRI"></div></td>
+      </tr>
+      <tr>
+        <td>Base IRI prefix:</td>
+        <td><div class="input-container"><input bind="baseIRIPrefix"></div></td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>
+          <input id="generate-iris" bind="generateIRIs" type="checkbox"> <label for="generate-iris">Generate row and record IRIs based on column values</label>
+        </td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>
+          <input id="escape-values" bind="escapeValues" type="checkbox"> <label for="escape-values">Automatically escape column values for IRIs</label>
+        </td>
+      </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <input id="detect-iris" bind="detectIRIs" type="checkbox"> <label for="detect-iris">Automatically detect IRIs in cell values</label>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <input id="use-recon" bind="useRecon" type="checkbox"> <label for="use-recon">Replace cell values with reconciliation IRIs</label>
+            </td>
+        </tr>
+      <tr><td>&nbsp;</td></tr>
+      <tr>
+        <td>Row type IRI:</td>
+        <td><div class="input-container"><input bind="rowType"></div></td>
+      </tr>
+      <tr>
+        <td>Row number IRI:</td>
+        <td><div class="input-container"><input bind="rowNumber"></div></td>
+      </tr>
+      <tr><td>&nbsp;</td></tr>
+      <tr>
+        <td>Record type IRI:</td>
+        <td><div class="input-container"><input bind="recordType"></div></td>
+      </tr>
+      <tr>
+        <td>Record number IRI:</td>
+        <td><div class="input-container"><input bind="recordNumber"></div></td>
+      </tr>
+      <tr>
+        <td>Record id IRI:</td>
+        <td><div class="input-container"><input bind="recordId"></div></td>
+      </tr>
+      <tr>
+        <td>Record to row link IRI:</td>
+        <td><div class="input-container"><input bind="recordToRowLink"></div></td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>
+          <input id="record-to-row-link" bind="ignoreRecords" type="checkbox"> <label for="record-to-row-link">Ignore records</label>
+        </td>
+      </tr>
+    </table></div>
+  </div>
+  <div class="dialog-footer" bind="dialogFooter"><div class="grid-layout layout-normal layout-full"><table><tr>
+    <td align="left">
+      <button class="btn btn-primary" bind="resetButton">Restore defaults</button>
+    </td>
+    <td style="text-align: right;">
+      <button class="btn btn-primary" bind="okButton">OK</button>
+      <button class="btn btn-secondary" bind="cancelButton">Cancel</button>
+    </td>
+  </tr></table></div></div>
+</div>

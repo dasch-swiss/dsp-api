@@ -73,7 +73,6 @@ trait LiveCore extends Core {
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
 
-    // #supervisor
     /**
       * The main application supervisor actor which is at the top of the actor
       * hierarchy. All other actors are instantiated as child actors. Further,
@@ -85,5 +84,4 @@ trait LiveCore extends Core {
           .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = APPLICATION_MANAGER_ACTOR_NAME
     )
-    // #supervisor
 }

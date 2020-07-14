@@ -1,0 +1,13 @@
+#RDFRank properties
+#Thu Jan 30 08:38:35 UTC 2020
+lastRankedID=0
+computedConfigHash=0
+maxRank=
+excludedGraphs=
+includeExplicit=true
+minRank=
+includedPredicates=
+includeImplicit=true
+excludedPredicates=
+filtering=false
+includedGraphs=

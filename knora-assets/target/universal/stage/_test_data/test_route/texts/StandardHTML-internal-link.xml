@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<text documentType="html">
+    <p>ref to note <a class="internal-link" href="#_note1" id="_ref-note1">[1]</a>
+    </p>
+    <p>
+        <a class="internal-link" href="#_ref-note1" id="_note1">[1]</a> note 1
+    </p>
+</text>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
+                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                          xsi:schemaLocation="http://api.knora.org/ontology/0801/beol/xml-import/v1# p0801-beol.xsd"
+                          xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
+                          xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+
+    <p0801-beol:person id="Scheuchzer">
+        <knoraXmlImport:label>Johann Jacob Scheuchzer</knoraXmlImport:label>
+        <p0801-beol:hasFamilyName knoraType="richtext_value">Scheuchzer</p0801-beol:hasFamilyName>
+        <p0801-beol:hasGivenName knoraType="richtext_value">Johann Jacob</p0801-beol:hasGivenName>
+        <p0801-beol:hasIAFIdentifier knoraType="richtext_value">(DE-588)118607308</p0801-beol:hasIAFIdentifier>
+    </p0801-beol:person>
+
+    <p0801-beol:person id="Hermann">
+        <knoraXmlImport:label>Jacob Hermann</knoraXmlImport:label>
+        <p0801-beol:hasFamilyName knoraType="richtext_value">Hermann</p0801-beol:hasFamilyName>
+        <p0801-beol:hasGivenName knoraType="richtext_value">Jacob</p0801-beol:hasGivenName>
+        <p0801-beol:hasIAFIdentifier knoraType="richtext_value">(DE-588)119112450</p0801-beol:hasIAFIdentifier>
+    </p0801-beol:person>
+
+    <p0801-beol:letter id="testletter">
+        <knoraXmlImport:label>Testletter</knoraXmlImport:label>
+
+        <p0801-beol:creationDate knoraType="date_value">GREGORIAN:1703-06-10</p0801-beol:creationDate>
+
+        <p0801-beol:hasAuthor>
+            <p0801-beol:person knoraType="link_value" linkType="ref" target="Scheuchzer"/>
+        </p0801-beol:hasAuthor>
+
+        <p0801-beol:hasRecipient>
+            <p0801-beol:person knoraType="link_value" linkType="ref" target="Hermann"/>
+        </p0801-beol:hasRecipient>
+
+        <p0801-beol:hasText knoraType="richtext_value" mapping_id="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLMapping">
+            <text xmlns="">
+                <p>[...] Viro Clarissimo.</p>
+                <p>Dn. Jacobo Hermanno S. S. M. C. </p>
+                <p>et Ph. M.</p>
+                <p>S. P. D. </p>
+                <p>J. J. Sch.</p>
+                <p>En quae desideras, vir Erud.<sup>e</sup> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<ref>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</ref> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>
+                <p>d. [10] Jun. 1703.<ref>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</ref>
+                </p>
+            </text>
+        </p0801-beol:hasText>
+
+        <p0801-beol:title knoraType="richtext_value">Testbrief</p0801-beol:title>
+
+
+
+    </p0801-beol:letter>
+
+
+</knoraXmlImport:resources>

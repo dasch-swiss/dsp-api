@@ -1,0 +1,336 @@
+[debug] :: resolving dependencies :: org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT
+[debug] 	confs: [compile, runtime, test, provided, optional, aspectj-runner, universal, universal-docs, universal-src, docker, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool, scoveragePlugin]
+[debug] 	validate = true
+[debug] 	refresh = false
+[debug] resolving dependencies for configuration 'compile'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default]
+[debug] sbt-chain: Checking cache for: dependency: org.scala-lang#scala-library;2.12.8 {compile=[default, compile, runtime, default(compile), master], runtime=[default, compile, runtime, default(compile), master], test=[default, compile, runtime, default(compile), master], compile-internal=[default, compile, runtime, default(compile), master], runtime-internal=[default, compile, runtime, default(compile), master], test-internal=[default, compile, runtime, default(compile), master], scala-tool=[default, master(*), compile, runtime(*), master(compile), runtime, optional, optional(default), compile(*), master]}
+[debug] sbt-chain: module revision found in cache: org.scala-lang#scala-library;2.12.8
+[debug] 	found org.scala-lang#scala-library;2.12.8 in sbt-chain
+[debug] 	[2.12.8] org.scala-lang#scala-library;2.12.8
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] resolving dependencies for configuration 'runtime'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [runtime]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] resolving dependencies for configuration 'test'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [test]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [runtime]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->master]
+[debug] resolving dependencies for configuration 'provided'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [provided]
+[debug] resolving dependencies for configuration 'optional'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [optional]
+[debug] resolving dependencies for configuration 'aspectj-runner'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [aspectj-runner]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->default]
+[debug] sbt-chain: Checking cache for: dependency: org.aspectj#aspectjweaver;1.8.10 {aspectj-runner=[default, compile, runtime, default(compile), master]}
+[debug] sbt-chain: module revision found in cache: org.aspectj#aspectjweaver;1.8.10
+[debug] 	found org.aspectj#aspectjweaver;1.8.10 in sbt-chain
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.aspectj#aspectjweaver;1.8.10 [aspectj-runner->master]
+[debug] resolving dependencies for configuration 'universal'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [universal]
+[debug] resolving dependencies for configuration 'universal-docs'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [universal-docs]
+[debug] resolving dependencies for configuration 'universal-src'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [universal-src]
+[debug] resolving dependencies for configuration 'docker'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [docker]
+[debug] resolving dependencies for configuration 'compile-internal'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile-internal]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [optional]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [provided]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile-internal->master]
+[debug] resolving dependencies for configuration 'runtime-internal'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [runtime-internal]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [runtime]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [optional]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime-internal->master]
+[debug] resolving dependencies for configuration 'test-internal'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [test-internal]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [test]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [runtime]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [compile->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [runtime->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test->master]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [optional]
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [provided]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->default(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [test-internal->master]
+[debug] resolving dependencies for configuration 'plugin'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [plugin]
+[debug] resolving dependencies for configuration 'pom'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [pom]
+[debug] resolving dependencies for configuration 'scala-tool'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [scala-tool]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->default]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->master(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->runtime(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->master(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->optional]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->optional(default)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->compile(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-library;2.12.8 [scala-tool->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->compile]
+[debug] sbt-chain: Checking cache for: dependency: org.scala-lang.modules#scala-xml_2.12;1.0.6 {scala-tool=[compile, runtime(*), master(compile), runtime, compile(*), master]}
+[debug] sbt-chain: module revision found in cache: org.scala-lang.modules#scala-xml_2.12;1.0.6
+[debug] 	found org.scala-lang.modules#scala-xml_2.12;1.0.6 in sbt-chain
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->runtime(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->master(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->compile(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang.modules#scala-xml_2.12;1.0.6 [scala-tool->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->default]
+[debug] sbt-chain: Checking cache for: dependency: org.scala-lang#scala-compiler;2.12.8 {scala-tool=[default, compile, runtime, optional, optional(default), master]}
+[debug] sbt-chain: module revision found in cache: org.scala-lang#scala-compiler;2.12.8
+[debug] 	found org.scala-lang#scala-compiler;2.12.8 in sbt-chain
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->optional]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->optional(default)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-compiler;2.12.8 [scala-tool->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->compile]
+[debug] sbt-chain: Checking cache for: dependency: org.scala-lang#scala-reflect;2.12.8 {scala-tool=[compile, runtime(*), master(compile), runtime, compile(*), master]}
+[debug] sbt-chain: module revision found in cache: org.scala-lang#scala-reflect;2.12.8
+[debug] 	found org.scala-lang#scala-reflect;2.12.8 in sbt-chain
+[debug] 	[2.12.8] org.scala-lang#scala-reflect;2.12.8
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->runtime(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->master(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->runtime]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->compile]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->compile(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->org.scala-lang#scala-reflect;2.12.8 [scala-tool->master]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->jline#jline;2.14.6 [scala-tool->compile]
+[debug] sbt-chain: Checking cache for: dependency: jline#jline;2.14.6 {scala-tool=[compile, master(compile), compile(*), master]}
+[debug] sbt-chain: module revision found in cache: jline#jline;2.14.6
+[debug] 	found jline#jline;2.14.6 in sbt-chain
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->jline#jline;2.14.6 [scala-tool->master(compile)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->jline#jline;2.14.6 [scala-tool->compile(*)]
+[debug] == resolving dependencies org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT->jline#jline;2.14.6 [scala-tool->master]
+[debug] resolving dependencies for configuration 'scoveragePlugin'
+[debug] == resolving dependencies for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT [scoveragePlugin]
+[debug] 	resolved ivy file produced in cache
+[debug] :: downloading artifacts ::
+[debug] 	[NOT REQUIRED] org.aspectj#aspectjweaver;1.8.10!aspectjweaver.jar(src)
+[debug] 	[NOT REQUIRED] org.scala-lang#scala-compiler;2.12.8!scala-compiler.jar(src)
+[debug] 	[NOT REQUIRED] org.scala-lang#scala-reflect;2.12.8!scala-reflect.jar(src)
+[debug] 	[NOT REQUIRED] org.scala-lang.modules#scala-xml_2.12;1.0.6!scala-xml_2.12.jar(src)
+[debug] 	[NOT REQUIRED] jline#jline;2.14.6!jline.jar(src)
+[debug] 	[NOT REQUIRED] org.scala-lang#scala-library;2.12.8!scala-library.jar(src)
+[debug] :: resolution report :: resolve 7ms :: artifacts dl 1ms
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT compile produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-compile.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT runtime produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-runtime.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT test produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-test.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT provided produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-provided.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT optional produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-optional.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT aspectj-runner produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-aspectj-runner.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT universal produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-universal.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT universal-docs produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-universal-docs.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT universal-src produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-universal-src.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT docker produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-docker.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT compile-internal produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-compile-internal.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT runtime-internal produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-runtime-internal.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT test-internal produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-test-internal.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT plugin produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-plugin.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT pom produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-pom.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT scala-tool produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-scala-tool.xml
+[debug] 	report for org.knora#knora-assets$sources;11.0.0-8-g69ebe85-SNAPSHOT scoveragePlugin produced in /Users/nemk/knora-api/knora-assets/target/scala-2.12/resolution-cache/reports/org.knora-knora-assets$sources-scoveragePlugin.xml
+[debug] 	resolve done (7ms resolve - 1ms download)

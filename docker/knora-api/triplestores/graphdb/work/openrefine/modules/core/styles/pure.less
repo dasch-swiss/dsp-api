@@ -1,0 +1,124 @@
+/*
+/*
+
+Copyright 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,           
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY           
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+/*.button, a.button { */
+/*background: -webkit-gradient(linear, left top, left bottom, from(#f9f9f9), to(#e3e3e3));*/
+/*background: -moz-linear-gradient(top,  #f9f9f9,  #e3e3e3);*/
+/*filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f9f9f9', endColorstr='#e3e3e3');*/
+/*}*/
+/*.button:active, a.button:active { */
+/*background: -webkit-gradient(linear, left top, left bottom, from(#e3e3e3), to(#f9f9f9));*/
+/*background: -moz-linear-gradient(top,  #e3e3e3,  #f9f9f9);*/
+/*filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#e3e3e3', endColorstr='#f9f9f9');*/
+/*}*/
+@import url("theme.less");
+
+.gradient (@startColor: #eee, @endColor: white) {
+  background-color: @startColor;
+  background: -webkit-gradient(linear, left top, left bottom, from(@startColor), to(@endColor));
+  background: -webkit-linear-gradient(top, @startColor, @endColor);
+  background: -moz-linear-gradient(top, @startColor, @endColor);
+  background: -ms-linear-gradient(top, @startColor, @endColor);
+  background: -o-linear-gradient(top, @startColor, @endColor);
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  visibility: hidden;
+  margin: 50px 0;
+}
+
+input[type="file"]::before {
+  content: '';
+}
+
+.label-upload {
+  float: left;
+  padding-left: 60px;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  i {
+    color: @chrome_primary;
+    margin-right: 5px;
+    font-size: 2.8em;
+  }
+  i:hover {
+    color: @chrome_secondary;
+  }
+}
+
+#projects-workspace-controls a {
+  color: @blue_links !important;
+}
+
+.upload-parent:hover i {
+  color: @chrome_secondary;
+}
+
+input[type=file] {
+  outline: none !important;
+}
+
+.form-control {
+  border-radius: 0 !important;
+}
+//Cross browser fixes
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  #upload {
+    display: none;
+  }
+
+  #project-tar-file-input {
+    display: none;
+  }
+}
+
+@supports (-ms-accelerator:true) {
+  input[type="file"]#upload {
+    display: none !important;
+  }
+
+  #project-tar-file-input {
+    display: none !important;
+  }
+}
+
+_:-ms-lang(x), _:-webkit-full-screen, input[type="file"]#upload, input[type="file"]#project-tar-file-input { display:none; }
+
+@-moz-document url-prefix() {
+  input[type="file"]#upload {
+    display: none !important;
+  }
+  input[type="file"]#project-tar-file-input {
+    display: none !important;
+  }
+}

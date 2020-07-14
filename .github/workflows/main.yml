@@ -17,6 +17,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -33,7 +39,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run build everything
-        run: make build-all-scala
+        run: make build
       - name: Disk Free After
         run: |
           df -h
@@ -52,6 +58,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -72,7 +84,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: Run API unit tests
-        run: make test-unit-ci
+        run: make test-unit
       - name: Disk Free After
         run: |
           df -h
@@ -91,6 +103,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -111,7 +129,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API E2E tests
-        run: make test-e2e-ci
+        run: make test-e2e
       - name: Disk Free After
         run: |
           df -h
@@ -130,6 +148,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -150,7 +174,7 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API integration tests
-        run: make test-it-ci
+        run: make test-it
       - name: Disk Free After
         run: |
           df -h
@@ -169,9 +193,12 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - uses: actions/setup-java@v1
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
         with:
-          java-version: '11.x.x'
+          version: 3.3.0
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -189,8 +216,8 @@ jobs:
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: test repository update
-        run: make test-repository-update
+      - name: test repository upgrade
+        run: make test-repository-upgrade
       - name: Disk Free After
         run: |
           df -h
@@ -201,33 +228,31 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: cache maven artifacts
-        uses: actions/cache@v1
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
         with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          sudo apt-get install graphviz
       - name: Disk Free
         run: |
           df -h
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: run docs build test
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/docs/target
-          chmod 777 $GITHUB_WORKSPACE/docs/target
-          make docs-build
+      - name: run docs build
+        run: make docs-build
       - name: Disk Free After
         run: |
           df -h
@@ -235,7 +260,7 @@ jobs:
 
   # publish only on release
   publish:
-    name: Publish to Dockerhub (on release only)
+    name: Publish (on release only)
     needs: [
       api-unit-tests,
       api-e2e-tests,
@@ -253,6 +278,26 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 3.3.0
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          sudo apt-get install graphviz
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -275,7 +320,13 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make publish-all-images
+          make docker-publish
+      - name: run docs build
+        run: make docs-build
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Disk Free After
         run: |
           df -h

@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
-  * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
+  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
   * in tests, allows easier updating of details as they change over time.
   */
 object SharedTestDataV1 {

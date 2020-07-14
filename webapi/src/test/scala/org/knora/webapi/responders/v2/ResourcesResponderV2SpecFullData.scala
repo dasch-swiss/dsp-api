@@ -10,6 +10,7 @@ import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 
+// FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
     val expectedReadResourceV2ForZeitgloecklein: ReadResourceV2 = ReadResourceV2(

@@ -1,0 +1,23 @@
+<form bind="form">
+    <div class="grid-layout layout-normal">
+        <table>
+            <tr>
+                <td id="or-import-locate-files"></td>
+            </tr>
+            <tr>
+                <td class="upload-parent">
+                    <label for="upload" class="label-upload">
+                        <i class="icon-upload icon-lg text-primary" tooltip="Select files" tooltip-trigger="mouseenter"
+                           tooltip-append-to-body="true"></i>
+                    </label>
+                    <input type="file" bind="fileInput" name="upload" id="upload"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button bind="nextButton" class="btn btn-primary" type="button"></button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</form>

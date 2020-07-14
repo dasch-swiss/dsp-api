@@ -1,0 +1,63 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix gravsearchtest1: <http://www.knora.org/ontology/0666/gravsearchtest1#> .
+
+<http://www.knora.org/ontology/0666/gravsearchtest1> a owl:Ontology ;
+    rdfs:label "Test ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0666> .
+
+gravsearchtest1:isInProjectValue rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf knora-base:hasLinkToValue ;
+  knora-base:objectClassConstraint knora-base:LinkValue ;
+  rdfs:label """isInProjectValue"""@en .
+
+gravsearchtest1:isInProject rdf:type owl:ObjectProperty ;
+     rdfs:subPropertyOf knora-base:hasLinkTo ;
+     rdfs:label """isInProject"""@en ;
+     knora-base:objectClassConstraint gravsearchtest1:Project ;
+     salsah-gui:guiElement salsah-gui:Searchbox .
+
+gravsearchtest1:Project rdf:type owl:Class ;
+  rdfs:subClassOf knora-base:Resource ;
+  rdfs:label """Project"""@en .
+
+gravsearchtest1:Person rdf:type owl:Class ;
+    rdfs:subClassOf knora-base:Resource ,
+    [
+    rdf:type owl:Restriction ;
+    owl:onProperty gravsearchtest1:isInProjectValue ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+    [
+    rdf:type owl:Restriction ;
+    owl:onProperty gravsearchtest1:isInProject ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
+    rdfs:label """Person"""@en .
+
+gravsearchtest1:BibliographicNotice rdf:type owl:Class ;
+    rdfs:subClassOf knora-base:Resource ,
+    [
+    rdf:type owl:Restriction ;
+    owl:onProperty gravsearchtest1:isInProjectValue ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+    [
+    rdf:type owl:Restriction ;
+    owl:onProperty gravsearchtest1:isInProject ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger ]  ;
+        rdfs:label """BibliographicNotice"""@en .
+
+gravsearchtest1:Relation rdf:type owl:Class ;
+    rdfs:subClassOf knora-base:Resource ,
+    [
+    rdf:type owl:Restriction ;
+    owl:onProperty gravsearchtest1:isInProjectValue ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+    [
+    rdf:type owl:Restriction ;
+    owl:onProperty gravsearchtest1:isInProject ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger ]  ;
+        rdfs:label """Relation"""@en .

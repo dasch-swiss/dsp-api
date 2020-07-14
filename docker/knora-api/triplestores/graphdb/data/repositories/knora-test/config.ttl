@@ -1,0 +1,21 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rep: <http://www.openrdf.org/config/repository#> .
+@prefix sail: <http://www.openrdf.org/config/sail#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<#knora-test> a rep:Repository;
+  rep:repositoryID "knora-test";
+  rep:repositoryImpl [
+      rep:repositoryType "owlim:MonitorRepository";
+      <http://www.openrdf.org/config/repository/sail#sailImpl> [
+          <http://www.ontotext.com/trree/owlim#base-URL> "http://rdfh.ch/";
+          <http://www.ontotext.com/trree/owlim#check-for-inconsistencies> "true";
+          <http://www.ontotext.com/trree/owlim#query-limit-results> "50000";
+          <http://www.ontotext.com/trree/owlim#query-timeout> "30";
+          <http://www.ontotext.com/trree/owlim#repository-type> "file-repository";
+          <http://www.ontotext.com/trree/owlim#ruleset> "/graphdb/KnoraRules.pie";
+          <http://www.ontotext.com/trree/owlim#throw-QueryEvaluationException-on-timeout> "true";
+          sail:sailType "owlim:Sail"
+        ]
+    ];
+  rdfs:label "Knora test repository" .

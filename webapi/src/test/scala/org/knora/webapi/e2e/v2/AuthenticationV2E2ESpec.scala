@@ -28,7 +28,6 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.MutableTestString
 import org.knora.webapi.{E2ESpec, SharedTestDataADM}
 
@@ -49,7 +48,6 @@ object AuthenticationV2E2ESpec {
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-@E2ETest
 class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)

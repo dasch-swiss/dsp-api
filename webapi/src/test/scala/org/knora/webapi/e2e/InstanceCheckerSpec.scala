@@ -24,7 +24,6 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.knora.webapi.{AssertionException, E2ESpec}
@@ -34,7 +33,6 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests [[InstanceChecker]].
   */
-@E2ETest
 class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -46,7 +44,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
     "The InstanceChecker" should {
         "accept a JSON-LD instance of anything:Thing" in {
-            val testDing = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/Testding.jsonld"))
+            val testDing = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/Testding.jsonld"))
 
             jsonLDInstanceChecker.check(
                 instanceResponse = testDing,

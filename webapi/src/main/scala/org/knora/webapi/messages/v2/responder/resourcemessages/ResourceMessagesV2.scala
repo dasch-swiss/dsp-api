@@ -597,9 +597,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             storeManager: ActorRef,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
-        // #getGeneralInstance
+
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        // #getGeneralInstance
 
         for {
             // Get the resource class.
@@ -655,9 +654,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
             valueFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
                 propertyIriStr =>
-                    // #toSmartIriWithErr
                     val propertyIri: SmartIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-                    // #toSmartIriWithErr
+
                     val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
 
                     val propertyValues = valuesArray.value.map {
@@ -921,9 +919,7 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
         propertyIriOntologies ++ valueOntologies + resource.resourceClassIri.getOntologyFromEntity
     }
 
-    // #generateJsonLD
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-        // #generateJsonLD
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Generate JSON-LD for the resources.
@@ -983,7 +979,6 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
 
     }
 
-    // #toJsonLDDocument
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption] = Set.empty): JsonLDDocument = {
         toOntologySchema(targetSchema).generateJsonLD(
             targetSchema = targetSchema,
@@ -991,8 +986,6 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
             schemaOptions = schemaOptions
         )
     }
-
-    // #toJsonLDDocument
 
     /**
      * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource.

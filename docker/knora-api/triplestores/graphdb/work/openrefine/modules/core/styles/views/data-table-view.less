@@ -1,0 +1,405 @@
+/*
+
+Copyright 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,           
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY           
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+@import-less url("../theme.less");
+
+html {
+  font-family: RubikWeb, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.viewpanel-header {
+  background: white;
+  font-size: 1.3em;
+  padding: @padding_normal;
+  overflow: hidden;
+  color: #fff !important;
+  div .action{
+    color: @blue_links;
+    font-weight: 400;
+  }
+  }
+
+.viewpanel-rowrecord, .viewpanel-pagesize, .viewpanel-sorting {
+  color: black;
+  }
+
+.viewpanel-rowrecord span a.selected{
+  color: #fff;
+  background-color: @onto_orange;
+  padding: 3px;
+  font-weight: normal;
+}
+
+.viewpanel-rowrecord span a.action{
+  color: @blue_links;
+  font-weight: 400;
+  padding: 3px;
+}
+
+.viewpanel-pagesize {
+  a.selected{
+    color: #fff;
+    background-color: @onto_orange;
+    padding: 3px;
+    font-weight: 400;
+  }
+  a.action{
+    color: @blue_links;
+    font-weight: 400;
+    padding: 3px;
+  }
+  }
+
+.viewpanel-sorting {
+  left: 350px;
+  }
+
+.viewpanel-pagingcount {
+  padding: 3px;
+  color: #333;
+  }
+
+.data-header-table-container {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  background: @fill_primary;
+  overflow: visible;
+  }
+
+.data-header-table {
+  width: 1px;
+  position: relative;
+  }
+  
+.data-table-container {
+  overflow: auto;
+  }
+
+.data-header-table, .data-table {
+  margin: 0;
+  padding: 0;
+  font-size: 1em !important;
+  border-collapse: collapse;
+  }
+
+.data-table td, .data-header-table td {
+  padding: 2px 5px;
+  }
+.data-table td {
+  border-bottom: 1px dotted #ddd;
+  border-right: 1px solid #ddd;
+  }
+.data-header-table td {
+  border-bottom: 1px dotted #ddd;
+  border-right: 1px solid #ddd;
+  }
+
+table.data-header-table > tbody > tr > td {
+  overflow: hidden !important;
+  }
+
+table.data-table > tbody > tr.odd > td {
+  background: @fill_secondary;
+  }
+
+table.data-table > tbody > tr.contextual > td > div {
+  opacity: 0.3;
+  }
+
+table.data-header-table td.column-header, table.data-table td.column-header, .default-importing-parsing-data-panel table td.column-header {
+  vertical-align: top;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 4px 6px 4px 4px;
+  border-bottom: none;
+  font-weight: 500;
+  font-size: 11px;
+  }
+
+.default-importing-parsing-data-panel table td.column-header{
+  text-align: center;
+  background: #ebeef8;
+  border: 1px solid #003663;
+}
+
+#right-panel-body > div:nth-child(1) > div:nth-child(5) > div > div.default-importing-parsing-data-panel > table > tbody > tr:nth-child(1) > td:nth-child(1){
+  border-left: 0;
+}
+
+#right-panel-body > div:nth-child(1) > div:nth-child(5) > div > div.default-importing-parsing-data-panel > table > tbody > tr:nth-child(1) > td:last-child{
+  border-right: 0;
+}
+
+/* For the preview in the importing stage */
+table.data-table td.column-header {
+  background: @fill_primary;
+  border-bottom: 2px solid @chrome_primary;
+  }
+
+.column-header-name {
+  margin: 0 0 0 21px;
+  padding: 2px 0 0 0;
+  display: block;
+  }
+
+a.column-header-menu {
+  float: left;
+  display: block;
+  margin: 2px 4px 0 0;
+  width: 17px;
+  height: 19px;
+  //background-image: url(../../images/menu-dropdown.png);
+  background-repeat: no-repeat;
+  .icon-caret-down{
+    border: 1px solid #ddd;
+    padding: 0;
+    font-size: 1.2em;
+    background: white;
+  }
+  }
+
+a.column-header-menu:hover {
+  background-position: -17px 0px;
+  text-decoration: none;
+  }
+  
+.column-header-recon-stats-bar {
+  margin-top: 10px;
+  height: 4px;
+  background: #ddd;
+  border: 1px solid #ccc;
+  position: relative;
+  width: 100%;
+  }
+
+.column-header-recon-stats-matched {
+  position: absolute;
+  height: 100%;
+  background: @green_primary;
+  }
+  
+.column-header-recon-stats-blanks {
+  position: absolute;
+  height: 100%;
+  background: @green_secondary;
+  }
+
+div.data-table-cell-content {
+  line-height: 1.2;
+  color: #222;
+  position: relative;
+  font-size: 12px;
+  }
+
+div.data-table-cell-content-numeric {
+  text-align: right;
+  }
+
+a.data-table-cell-edit {
+  position: absolute;
+  top: 2px;
+  right: -4px;
+  display: block;
+  width: 14px;
+  height: 14px;
+  text-decoration: none;
+  //background-image: url(../../images/edit-map.png);
+  background-repeat: no-repeat;
+  visibility: hidden;
+  }
+
+.data-table-cell-edit.icon-edit.odd{
+  background-color: #f2f2f2; //odd
+}
+
+.data-table-cell-edit.icon-edit.even{
+  background-color: white; //even
+}
+
+a.data-table-cell-edit:hover {
+  background-position: -25px 0px;
+  }
+
+div.data-table-cell-content-numeric > a.data-table-cell-edit {
+  left: 0px;
+  right: auto;
+  }
+
+.data-table-value-nonstring {
+  color: #282;
+  }
+
+.data-table-error {
+  color: red;
+  }
+  
+div.data-table-recon-candidates {
+  padding: 1px 0;
+  min-width: 15em;
+  color: @metadata_grey;
+  }
+  
+div.data-table-recon-candidate {
+  padding: 1px 1px 1px;
+  position: relative;
+  }
+
+a.data-table-recon-topic {
+  color: @link_secondary;
+  }
+
+.data-table-recon-score, .data-table-recon-new {
+  color: #aaa;
+  margin: 0 0.5em;
+  }
+
+a.data-table-recon-action, .data-table-recon-extra > a {
+  text-decoration: none;
+  color: @link_secondary;
+  }
+  
+a.data-table-recon-action, .data-table-recon-extra {
+  font-size: 0.8em;
+  display: block;
+  margin: 3px 0 0;
+  }
+
+a.data-table-recon-match, a.data-table-recon-match-similar {
+  /*
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-decoration: none;
+  */
+  }
+  
+a.data-table-recon-match:hover {
+  }
+
+a.data-table-recon-match-similar {
+  //left: 16px;
+  }
+  
+a.data-table-recon-match-similar:hover {
+  }
+
+a.data-table-star-on, a.data-table-star-off, a.data-table-flag-on, a.data-table-flag-off {
+  display: block;
+  width: 16px;
+  height: 16px;
+  font-size: 1.4em;
+  //background-image: url('../../images/star-flag-map.png');
+  background-repeat: no-repeat;
+  text-decoration: none;
+  color: @onto_orange;
+  }
+  
+a.data-table-star-on {
+  background-position: 0 0;
+  }
+
+a.data-table-star-off {
+  background-position: -17px 0;
+  }
+
+a.data-table-flag-on {
+  background-position: 0 -17px;
+  }
+
+a.data-table-flag-off {
+  background-position: -17px -17px;
+  }
+
+.data-table-cell-editor, .data-table-topic-popup {
+  border: 1px solid @chrome_primary;
+  background: #f2f2f2;
+  padding: @padding_tight;
+  //.rounded_corners();
+}
+ 
+.data-table-topic-popup-header {
+  padding: 0 0 5px;
+  }
+  
+.data-table-cell-editor-editor {
+  display: block;
+  width: 98%;
+  height: 3em;
+  font-family: Menlo, Consolas, "Ubuntu Mono", monospace;
+  margin: 3px 0;
+  }
+
+.data-table-cell-editor-action {
+  float: left;
+  vertical-align: bottom;
+  text-align: center;
+  margin-left: 5px;
+  margin-top: 10px;
+  }
+
+.data-table-cell-editor-action:first-child{
+  margin-left: 0;
+}
+
+.data-table-cell-editor-key {
+  font-size: 0.8em;
+  color: @chrome_primary;
+  }
+
+ul.sorting-dialog-blank-error-positions {
+  margin: 0;
+  padding: 5px;
+  height: 10em;
+  border: 1px solid #ccc;
+  .rounded_corners(3px);
+  }
+  
+ul.sorting-dialog-blank-error-positions > li {
+  display: block;
+  border: 1px solid #ccc;
+  background: #eee;
+  padding: 5px;
+  margin: 2px;
+  cursor: move;
+  .rounded_corners(3px);
+  }
+
+.fa.fa-caret-down.no-border{
+  padding: 0 3px;
+  font-size: 1.4em;
+  color: @blue_links;
+}
+
+a.text-primary:focus, a.text-primary:hover{
+  color: @onto_orange !important;
+}

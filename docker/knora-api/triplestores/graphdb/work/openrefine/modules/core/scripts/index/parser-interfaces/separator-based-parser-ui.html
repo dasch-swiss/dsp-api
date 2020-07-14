@@ -1,0 +1,92 @@
+<div class="grid-layout layout-loose layout-full">
+    <div class="container-fluid">
+        <div class="row clear-margin">
+            <div class="col-sm-12">
+                <form class="form-inline">
+                    <div class="row">
+                        <div class="form-group col-md-8">
+                            <label id="or-import-encoding"></label>
+                            <input bind="encodingInput"/>
+                        </div>
+                        <button type="button" class="btn btn-primary pull-right" bind="previewButton"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row clear-margin">
+            <div class="col-sm-4">
+                <p id="or-import-colsep"></p>
+                <div class="radio">
+                    <input type="radio" name="column-separator" value="comma"
+                           id="$column-separator-comma"/>
+                    <label for="$column-separator-comma" id="or-import-commas"></label>
+
+                </div>
+                <div class="radio">
+                    <input type="radio" name="column-separator" value="tab"
+                           id="$column-separator-tab"/>
+                    <label for="$column-separator-tab" id="or-import-tabs"></label>
+
+                </div>
+                <div class="radio">
+                    <input type="radio" name="column-separator" value="custom"
+                           id="$column-separator-custom"/>
+                    <label for="$column-separator-custom" id="or-import-custom"></label>
+                    <input bind="columnSeparatorInput" type="text" class="lightweight" size="5"/>
+                </div>
+                <p id="or-import-escape"></p>
+            </div>
+            <div class="col-sm-8">
+                <div class="checkbox">
+                    <input type="checkbox" bind="ignoreCheckbox" id="$ignore"/>
+                    <label for="$ignore" id="or-import-ignore"></label>
+                    <input bind="ignoreInput" type="text" class="lightweight" size="2" value="0"/>
+                    <label for="$ignore" id="or-import-lines"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="headerLinesCheckbox" id="$headers"/>
+                    <label for="$headers" id="or-import-parse"></label>
+                    <input bind="headerLinesInput" type="text" class="lightweight" size="2" value="1"/>
+                    <label for="$headers" id="or-import-header"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="skipCheckbox" id="$skip"/>
+                    <label for="$skip" id="or-import-discard"></label>
+                    <input bind="skipInput" type="text" class="lightweight" size="2" value="0"/>
+                    <label for="$skip" id="or-import-rows"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="limitCheckbox" id="$limit"/>
+                    <label for="$limit" id="or-import-load"></label>
+                    <input bind="limitInput" type="text" class="lightweight" size="2" value="0"/>
+                    <label for="$limit" id="or-import-rows2"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="guessCellValueTypesCheckbox" id="$guess"/>
+                    <label for="$guess" id="or-import-parseCell"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="processQuoteMarksCheckbox" id="$quotes"/>
+                    <label for="$quotes" id="or-import-quote"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="storeBlankRowsCheckbox" id="$store-blank-rows"/>
+                    <label for="$store-blank-rows" id="or-import-blank"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="storeBlankCellsAsNullsCheckbox"
+                           id="$store-blank-cells"/>
+                    <label for="$store-blank-cells" id="or-import-null"></label>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" bind="includeFileSourcesCheckbox"
+                           id="$include-file-sources"/>
+                    <label for="$include-file-sources" id="or-import-source"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+          
+          

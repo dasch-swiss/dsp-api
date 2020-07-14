@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ivy-report.xsl"?>
+<ivy-report version="1.0">
+	<info
+		organisation="org.knora"
+		module="knora-assets_2.12"
+		revision="11.0.0-8-g69ebe85-SNAPSHOT"
+		conf="aspectj-runner"
+		confs="compile, runtime, test, provided, optional, aspectj-runner, universal, universal-docs, universal-src, docker, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool, scoveragePlugin"
+		date="20200225153321"/>
+	<dependencies>
+		<module organisation="org.aspectj" name="aspectjweaver">
+			<revision name="1.8.10" status="release" pubdate="20161212204903" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.aspectj.org" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="0">
+				<license name="Eclipse Public License - v 1.0" url="http://www.eclipse.org/legal/epl-v10.html"/>
+				<metadata-artifact status="no" details="" size="2518" time="0" location="/Users/nemk/.ivy2/cache/org.aspectj/aspectjweaver/ivy-1.8.10.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/aspectj/aspectjweaver/1.8.10/aspectjweaver-1.8.10.pom"/>
+				<caller organisation="org.knora" name="knora-assets_2.12" conf="aspectj-runner" rev="1.8.10" rev-constraint-default="1.8.10" rev-constraint-dynamic="1.8.10" callerrev="11.0.0-8-g69ebe85-SNAPSHOT"/>
+				<artifacts>
+					<artifact name="aspectjweaver" type="jar" ext="jar" status="no" details="" size="1929029" time="0" location="/Users/nemk/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.10.jar">
+						<origin-location is-local="false" location="https://repo1.maven.org/maven2/org/aspectj/aspectjweaver/1.8.10/aspectjweaver-1.8.10.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+	</dependencies>
+</ivy-report>

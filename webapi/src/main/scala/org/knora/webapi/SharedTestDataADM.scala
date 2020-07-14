@@ -32,7 +32,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.util.StringFormatter
 
 /**
- * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
+ * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
  * in tests, allows easier updating of details as they change over time.
  */
 object SharedTestDataADM {
