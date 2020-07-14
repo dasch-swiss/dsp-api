@@ -33,7 +33,7 @@ object GroupsMessagesADMSpec {
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class ProjectsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
+class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
 
     "The CreateGroupsApiRequestADM case class" should {
 
