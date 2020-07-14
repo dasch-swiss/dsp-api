@@ -6,5 +6,3 @@ filegroup(
         "v1/responder/sessionmessages/SessionMessagesV1.scala",
     ],
 )
-
-
