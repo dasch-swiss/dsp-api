@@ -174,7 +174,7 @@ scala_test(
     size = "medium",
     srcs = [
         "ValuesRouteV2E2ESpec.scala",
-        "//webapi/src/main:twirl-templates",
+        "//webapi/src/main:twirl_templates",
     ],
     data = [
         "//knora-ontologies",

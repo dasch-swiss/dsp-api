@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
+
 load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 
 filegroup(
     name = "scala",
@@ -7,7 +9,7 @@ filegroup(
 )
 
 twirl_templates(
-  name = "twirl-templates",
+  name = "all_twirl_templates",
   additional_imports = [
     "play.twirl.api.TwirlFeatureImports._",
     "play.twirl.api.TwirlHelperImports._",
@@ -16,8 +18,19 @@ twirl_templates(
     "play.twirl.api.Txt",
     "play.twirl.api.Xml",
   ],
-  source_directory = "twirl",
-  srcs = glob(["twirl/**/*.scala.txt"])
-    + glob(["twirl/**/*.scala.html"])
-    + glob(["twirl/**/*.scala.xml"]),
+  source_directory = "twirl_templates",
+  srcs = glob(["twirl_templates/**/*.scala.txt"])
+    + glob(["twirl_templates/**/*.scala.html"])
+    + glob(["twirl_templates/**/*.scala.xml"]),
+)
+
+scala_library(
+    name = "twirl_templates_library",
+    srcs = [
+        ":all_twirl_templates"
+    ],
+    deps = [
+        "@maven//:com_typesafe_play_twirl_api_2_12",
+    ]
+
 )
