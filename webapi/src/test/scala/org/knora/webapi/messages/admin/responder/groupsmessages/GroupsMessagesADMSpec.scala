@@ -31,7 +31,7 @@ object GroupsMessagesADMSpec {
 }
 
 /**
- * This spec is used to test 'ListAdminMessages'.
+ * This spec is used to test 'GroupAdminMessages'.
  */
 class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
 
