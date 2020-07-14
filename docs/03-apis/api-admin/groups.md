@@ -85,7 +85,7 @@ hasProjectRestrictedGroupAdminPermission (for this group)
 ```json
 {
   "name": "UpdatedGroupName",
-  "description": "UpdatedGroupDescription".
+  "description": "UpdatedGroupDescription",
   "selfjoin": false
 }
 ```
