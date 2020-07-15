@@ -777,9 +777,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             _ = if (shortcodeExists) {
                 throw DuplicateValueException(s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
             }
-            customProjectIri: Option[SmartIri] = createProjectRequest.projectIri.map(iri => iri.toSmartIri)
 
-            newProjectIRI: IRI <- checkEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
+            // check the custom IRI; if not given, create an unused IRI
+            customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
+            newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
 
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,

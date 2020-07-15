@@ -74,28 +74,24 @@ class VersionRouteITSpec extends ITKnoraLiveSpec(VersionRouteITSpec.config) {
             assert(value.equals("version"))
         }
 
-        "contain nonempty value for key 'akkaHttp'" in {
-            assert(checkNonEmpty("akkaHttp"))
-        }
-
-        "contain nonempty value for key 'gdbSE'" in {
-            assert(checkNonEmpty("gdbSE"))
-        }
-
-        "contain nonempty value for key 'gdbFree'" in {
-            assert(checkNonEmpty("gdbFree"))
-        }
-
-        "contain nonempty value for key 'sbt'" in {
-            assert(checkNonEmpty("sbt"))
+        "contain nonempty value for key 'webapi'" in {
+            assert(checkNonEmpty("webapi"))
         }
 
         "contain nonempty value for key 'scala'" in {
             assert(checkNonEmpty("scala"))
         }
 
-        "contain nonempty value for key 'webapi'" in {
-            assert(checkNonEmpty("webapi"))
+        "contain nonempty value for key 'akkaHttp'" in {
+            assert(checkNonEmpty("akkaHttp"))
+        }
+
+        "contain nonempty value for key 'sipi'" in {
+            assert(checkNonEmpty("sipi"))
+        }
+
+        "contain nonempty value for key 'fuseki'" in {
+            assert(checkNonEmpty("fuseki"))
         }
 
         "fail for nonexisting key 'fail'" in {

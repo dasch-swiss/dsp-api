@@ -13,7 +13,8 @@
     - Sepideh Alassi <https://github.com/SepidehAlassi>
     - André Kilchenmann <https://github.com/kilchenmann>
     - Stefan Münnich <https://github.com/musicEnfanthen>
+    - Lukas Stöckli <https://github.com/LukasStoeckli>
     - Lukas Rosenthaler <https://github.com/lrosenth>
     - Gilles Faucherand <https://github.com/gfoo>
     - <https://github.com/janCstoffregen>
-    - Lukas Stöckli <https://github.com/LukasStoeckli>
+    - <https://github.com/apps/dependabot>

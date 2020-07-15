@@ -19,18 +19,25 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
+object UsersMessagesADMSpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /**
-  * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
+  * This spec is used to test subclasses of the [[UsersMessagesADM]] class.
   */
-class UsersMessagesADMSpec extends AnyWordSpecLike with Matchers {
+class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
     private val id = SharedTestDataADM.rootUser.id
     private val username = SharedTestDataADM.rootUser.username
@@ -186,6 +193,25 @@ class UsersMessagesADMSpec extends AnyWordSpecLike with Matchers {
                 )
             )
         }
+
+        "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
+
+            val caught = intercept[BadRequestException](
+                CreateUserApiRequestADM(
+                    id = Some("invalid-user-IRI"),
+                    username = "userWithInvalidCustomIri",
+                    email = "userWithInvalidCustomIri@example.org",
+                    givenName = "a user",
+                    familyName = "with an invalid custom Iri",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+            assert(caught.getMessage === "Invalid user IRI")
+        }
+
     }
 
     "The UserIdentifierADM case class" should {

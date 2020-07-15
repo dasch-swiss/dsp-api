@@ -25,7 +25,6 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
@@ -41,15 +40,15 @@ object ClientApiRouteE2ESpec {
 /**
  * Tests client code generation.
  */
-@E2ETest
 class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "_test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
+    // FIXME: Ignored Test!
     "The client API route" should {
         "generate a Zip file of client test data" in {
             val request = Get(baseApiUrl + s"/clientapitest")
@@ -66,6 +65,7 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "test-data/admin/lists/get-list-response.json",
                 "test-data/v2/lists/treelist.json",
                 "test-data/v2/ontologies/knora-api-ontology.json",
+                "test-data/v2/ontologies/delete-ontology-response.json",
                 "test-data/v2/resources/create-resource-as-user.json",
                 "test-data/v2/resources/resource-graph.json",
                 "test-data/v2/resources/resource-preview.json",

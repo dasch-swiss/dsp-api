@@ -1714,6 +1714,15 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+      * Returns `true` if an IRI string looks like a Knora group IRI.
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraGroupIriStr(iri: IRI): Boolean = {
+        isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
+    }
+
+    /**
      * Checks that a string represents a valid resource identifier in a standoff link.
      *
      * @param s               the string to be checked.
@@ -2562,6 +2571,33 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+      * Given the group IRI, checks if it is in a valid format.
+      *
+      * @param iri the group's IRI.
+      * @return the IRI of the list.
+      */
+    def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraGroupIriStr(iri)) {
+            iri
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Given the optional group IRI, checks if it is in a valid format.
+      *
+      * @param maybeIri the optional group's IRI to be checked.
+      * @return the same optional IRI.
+      */
+    def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
+        maybeIri match {
+            case Some(iri) => Some(validateGroupIri(iri, errorFun))
+            case None => None
+        }
+    }
+
+    /**
      * Check that the supplied IRI represents a valid user IRI.
      *
      * @param iri      the string to be checked.
@@ -2574,6 +2610,19 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
             iri
         } else {
             errorFun
+        }
+    }
+
+    /**
+      * Given the optional user IRI, checks if it is in a valid format.
+      *
+      * @param maybeIri the optional user's IRI to be checked.
+      * @return the same optional IRI.
+      */
+    def validateOptionalUserIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
+        maybeIri match {
+            case Some(iri) => Some(validateUserIri(iri, errorFun))
+            case None => None
         }
     }
 

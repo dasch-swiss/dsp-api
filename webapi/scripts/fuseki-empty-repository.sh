@@ -48,7 +48,7 @@ if [[ -z "${PASSWORD}" ]]; then
 fi
 
 if [[ -z "${HOST}" ]]; then
-    HOST="localhost:8080"
+    HOST="localhost:3030"
 fi
 
 curl -sS -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/${REPOSITORY}"

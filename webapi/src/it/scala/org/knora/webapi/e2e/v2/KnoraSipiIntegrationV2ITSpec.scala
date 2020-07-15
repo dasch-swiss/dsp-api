@@ -44,29 +44,29 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pdfValueIri = new MutableTestIri
 
     private val marblesOriginalFilename = "marbles.tif"
-    private val pathToMarbles = s"_test_data/test_route/images/$marblesOriginalFilename"
+    private val pathToMarbles = s"test_data/test_route/images/$marblesOriginalFilename"
     private val marblesWidth = 1419
     private val marblesHeight = 1001
 
-    private val pathToMarblesWithWrongExtension = "_test_data/test_route/images/marbles_with_wrong_extension.jpg"
+    private val pathToMarblesWithWrongExtension = "test_data/test_route/images/marbles_with_wrong_extension.jpg"
 
     private val trp88OriginalFilename = "Trp88.tiff"
-    private val pathToTrp88 = s"_test_data/test_route/images/$trp88OriginalFilename"
+    private val pathToTrp88 = s"test_data/test_route/images/$trp88OriginalFilename"
     private val trp88Width = 499
     private val trp88Height = 630
 
     private val minimalPdfOriginalFilename = "minimal.pdf"
-    private val pathToMinimalPdf = s"_test_data/test_route/files/$minimalPdfOriginalFilename"
+    private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
     private val minimalPdfWidth = 1250
     private val minimalPdfHeight = 600
 
     private val testPdfOriginalFilename = "test.pdf"
-    private val pathToTestPdf = s"_test_data/test_route/files/$testPdfOriginalFilename"
+    private val pathToTestPdf = s"test_data/test_route/files/$testPdfOriginalFilename"
     private val testPdfWidth = 2480
     private val testPdfHeight = 3508
 
     private val csvOriginalFilename = "eggs.csv"
-    private val pathToCsv = s"_test_data/test_route/files/$csvOriginalFilename"
+    private val pathToCsv = s"test_data/test_route/files/$csvOriginalFilename"
 
     /**
      * Represents a file to be uploaded to Sipi.

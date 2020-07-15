@@ -1,48 +1,39 @@
-#  Defined in KnoraBuild.sbt:
-# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file (can be overridden through environment variable KNORA_GDB_LICENSE)
-# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data can be overridden through environment variable KNORA_GDB_HOME)
-# - KNORA_GDB_TYPE - the GraphDB version used ('graphdb-se' or 'graphdb-free')
-#
-# To run: $ sbt dockerComposeUp
-
-version: '3'
+version: '3.7'
 
 services:
 
-  graphdb:
-    image: ${KNORA_GDB_IMAGE}<localBuild>
+  db:
+    image: bazel/docker/knora-jena-fuseki:image
     ports:
-      - "7200:7200"
+      - "3030:3030"
     volumes:
-      - ${KNORA_GDB_LICENSE}:/graphdb/GRAPHDB_SE.license
-      - ${KNORA_GDB_HOME}:/opt/graphdb/home:delegated
-      - ${KNORA_GDB_HOME}/graphdb-import:/root/graphdb-import
+      - ${KNORA_DB_HOME_DIR}:/fuseki:delegated
+      - ${KNORA_DB_IMPORT_DIR}:/staging:delegated
     networks:
       - knora-net
     environment:
-    - GDB_HEAP_SIZE=4G
-    - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license -Dgraphdb.home=/opt/graphdb/home
-    command: ["/graphdb/bin/graphdb"]
+      - ADMIN_PASSWORD=test
+      - JVM_ARGS=-Xmx3G
 
   sipi:
-    image: ${KNORA_SIPI_IMAGE}<localBuild>
+    image: bazel/docker/knora-sipi:image
     ports:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
-      - ${PWD}/sipi/config:/sipi/config
-      - ${PWD}/sipi/images:/sipi/images:delegated
-      - ${PWD}/sipi/server:/sipi/server:delegated
+      - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
+      - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
+      - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
     networks:
       - knora-net
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http
-      - SIPI_EXTERNAL_HOSTNAME=0.0.0.0
+      - SIPI_EXTERNAL_HOSTNAME=sipi
       - SIPI_EXTERNAL_PORT=1024
-      - SIPI_WEBAPI_HOSTNAME=webapi
+      - SIPI_WEBAPI_HOSTNAME=api
       - SIPI_WEBAPI_PORT=3333
-    command: --config=/sipi/config/sipi.knora-docker-it-config.lua
+    command: --config=/sipi/config/sipi.knora-docker-config.lua
 
   redis:
     image: redis:5
@@ -51,11 +42,10 @@ services:
     networks:
       - knora-net
 
-  webapi:
-    image: ${KNORA_WEBAPI_IMAGE}<localBuild>
+  api:
+    image: bazel/docker/knora-api:image
     ports:
       - "3333:3333"
-      - "10001:10001"
     volumes:
       - /tmp:/tmp
     networks:
@@ -63,18 +53,20 @@ services:
     environment:
       - KNORA_AKKA_LOGLEVEL=DEBUG
       - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
-      - KNORA_WEBAPI_DB_CONNECTIONS=${KNORA_WEBAPI_DB_CONNECTIONS}
-      - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
-      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=${KNORA_GDB_TYPE}
+      - KNORA_WEBAPI_DB_CONNECTIONS=2
+      - KNORA_WEBAPI_TRIPLESTORE_HOST=db
+      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=fuseki
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
-      - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=knora-test
+      - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME=${KNORA_DB_REPOSITORY_NAME}
+      - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
+      - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=test
       - KNORA_WEBAPI_CACHE_SERVICE_ENABLED=true
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT=6379
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
 
   salsah1:
-    image: ${KNORA_SALSAH1_IMAGE}<localBuild>
+    image: bazel/docker/knora-salsah1:image
     ports:
       - "3335:3335"
     networks:
@@ -87,3 +79,8 @@ services:
 
 networks:
   knora-net:
+    name: knora-net
+
+volumes:
+  db-home:
+  db-import:

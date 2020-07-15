@@ -1,0 +1,24 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+
+scala_test(
+    name = "UserMessagesV1Spec",
+    size = "small",  # 60s
+    srcs = [
+        "UserMessagesV1Spec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_springframework_security_spring_security_core",
+    ],
+)

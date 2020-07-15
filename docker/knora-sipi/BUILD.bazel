@@ -1,0 +1,34 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@io_bazel_rules_docker//contrib:test.bzl", "container_test")
+
+container_image(
+    name = "image",
+    base = "@sipi//image",
+    env = {},
+    tars = [
+        "//sipi/scripts:sipi-scripts",
+    ],
+    labels = {
+        "MAINTAINER": "400790+subotic@users.noreply.github.com",
+    },
+    ports = ["1024/tcp"],
+)
+
+container_push(
+   name = "push",
+   image = ":image",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "daschswiss/knora-sipi",
+   tag = "{BUILD_SCM_TAG}"
+)
+
+# use in targets needing an up-to-date docker image locally
+#genrule(
+#  name = "build",
+#  srcs = [":image"],
+#  cmd = "docker load -i $(location //docker/knora-sipi:image) >$@",
+#  outs = ["build-output.txt"],
+#)

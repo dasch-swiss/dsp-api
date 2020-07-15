@@ -32,7 +32,6 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
@@ -42,7 +41,6 @@ import org.xmlunit.diff.Diff
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-@E2ETest
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
     private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
@@ -72,7 +70,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private var linkValueUUID = UUID.randomUUID
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private def getResourceWithValues(resourceIri: IRI,
@@ -1208,7 +1206,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "create a text value with standoff containing escaped text" in {
             val resourceIri = SharedTestDataADM.AThing.iri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/CreateValueWithEscape.jsonld"))
+            val jsonLDEntity = FileUtil.readTextFile(new File("test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -1238,7 +1236,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "create a TextValue from XML representing HTML with an attribute containing escaped quotes" in {
             // Create the mapping.
 
-            val xmlFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
+            val xmlFileToSend = new File("test_data/test_route/texts/mappingForHTML.xml")
 
             val mappingParams =
                 s"""{
@@ -2239,7 +2237,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "update a text value with standoff containing escaped text" in {
             val resourceIri = SharedTestDataADM.AThing.iri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
+            val jsonLDEntity = FileUtil.readTextFile(new File("test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
             val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)

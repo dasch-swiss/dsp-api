@@ -345,7 +345,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser = requestingUser
                 )
 
-                // #use-requested-schema
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
@@ -355,7 +354,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     targetSchema = targetSchema,
                     schemaOptions = schemaOptions
                 )
-                // #use-requested-schema
             }
         }
     }

@@ -80,6 +80,8 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
+    val log = akka.event.Logging(system, this.getClass)
+
     override def beforeAll {
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
@@ -128,6 +130,11 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
       */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
+            // Per default only read access is allowed in the bazel sandbox.
+            // This workaround allows to save test output.
+            val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+            val newOutputFile = new File(testOutputDir, file.getPath)
+            newOutputFile.getParentFile.mkdirs()
             FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
