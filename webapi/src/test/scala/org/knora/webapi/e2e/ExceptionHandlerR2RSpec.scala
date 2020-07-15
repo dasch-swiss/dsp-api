@@ -19,6 +19,9 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AuthenticationException, BadCredentialsException, DuplicateValueException, EditConflictException, ForbiddenException, GravsearchException, NotFoundException, OntologyConstraintException, UpdateNotPerformedException}
+import org.knora.webapi.http.handler
+import org.knora.webapi.http.handler.KnoraExceptionHandler
 
 
 /**
@@ -80,7 +83,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         }
     }
 
-    private val route: Route = Route.seal(handleExceptions(KnoraExceptionHandler(settings)) {
+    private val route: Route = Route.seal(handleExceptions(handler.KnoraExceptionHandler(settings)) {
         nfe ~ fe ~ bce ~ dve ~ oce ~ ece ~ sse ~ unpe ~ ae
     })
 

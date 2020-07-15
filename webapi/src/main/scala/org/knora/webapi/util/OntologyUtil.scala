@@ -19,7 +19,8 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.util.stringformatter.SmartIri
 
 /**
   * Utility functions for working with ontology entities.

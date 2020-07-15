@@ -29,6 +29,8 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException, InconsistentTriplestoreDataException, InvalidStandoffException, NotFoundException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
@@ -41,10 +43,12 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util._
+import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.XMLTagItem
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 import org.xml.sax.SAXException
 
 import scala.concurrent.{ExecutionContext, Future}

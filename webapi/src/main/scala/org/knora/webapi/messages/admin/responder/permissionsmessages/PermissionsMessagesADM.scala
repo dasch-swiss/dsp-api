@@ -17,10 +17,13 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import spray.json._
 

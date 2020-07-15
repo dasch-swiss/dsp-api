@@ -1,0 +1,29 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+
+scala_library(
+    name = "version",
+    srcs = glob(["*.scala"]),
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//tools/buildstamp:version_info_jar",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/util/jsonld",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_parsing_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_apache_commons_commons_csv",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_commons_commons_pool2",
+        "@maven//:org_apache_commons_commons_text",
+        "@maven//:org_scala_lang_modules_scala_xml_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)

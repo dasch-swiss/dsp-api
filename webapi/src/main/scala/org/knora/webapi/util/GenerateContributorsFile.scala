@@ -22,8 +22,8 @@ package org.knora.webapi.util
 import java.io.File
 import java.net.{URL, URLConnection}
 
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.twirl
-import org.knora.webapi.AssertionException
 import org.knora.webapi.twirl.Contributor
 import org.rogach.scallop._
 import spray.json._

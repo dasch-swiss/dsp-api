@@ -23,7 +23,10 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi._
+import org.knora.webapi.core.ActorMaker
+import org.knora.webapi.exceptions.UnsuportedTriplestoreException
 import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector

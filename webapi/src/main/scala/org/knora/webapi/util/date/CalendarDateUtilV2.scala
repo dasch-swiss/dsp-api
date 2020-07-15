@@ -23,7 +23,8 @@ import java.util.Date
 
 import com.ibm.icu.util._
 import org.knora.webapi._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 /**
   * Indicates the era (CE or BCE) in Gregorian and Julian calendar dates.

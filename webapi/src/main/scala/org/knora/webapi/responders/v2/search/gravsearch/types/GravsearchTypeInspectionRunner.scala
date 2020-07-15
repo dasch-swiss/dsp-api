@@ -19,11 +19,13 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{GravsearchException, KnoraDispatchers, OntologyConstants}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.settings.KnoraDispatchers
 
 import scala.concurrent.{ExecutionContext, Future}
 

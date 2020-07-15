@@ -5,7 +5,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.messages.admin.responder.listsmessages.ListADM
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetResponseV2, NodeGetResponseV2}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

@@ -27,8 +27,9 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

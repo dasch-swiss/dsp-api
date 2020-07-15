@@ -21,8 +21,9 @@ package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.{CoreSpec, SharedTestDataADM}
+import org.knora.webapi.CoreSpec
 import spray.json.JsString
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object JWTHelperSpec {
     val config: Config = ConfigFactory.parseString(

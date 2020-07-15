@@ -39,6 +39,8 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, ForbiddenException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
@@ -47,10 +49,11 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonPro
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri}
+import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.util.{DateUtilV1, FileUtil}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException

@@ -29,6 +29,8 @@ import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServicePutProjectADM, CacheServiceRemoveValues}
@@ -37,8 +39,9 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{InstrumentationSupport, SmartIri}
 
 import scala.concurrent.Future
 

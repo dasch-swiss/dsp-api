@@ -23,6 +23,8 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi.constances.KnoraSystemInstances
+import org.knora.webapi.exceptions.{ForbiddenException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
@@ -31,9 +33,10 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
 import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
-import org.knora.webapi.{ForbiddenException, IRI, KnoraSystemInstances, NotFoundException}
+import org.knora.webapi.util.PermissionUtilADM
+import org.knora.webapi.{IRI, NotFoundException}
 import org.knora.webapi.twirl
+import org.knora.webapi.util.stringformatter.SmartIri
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}

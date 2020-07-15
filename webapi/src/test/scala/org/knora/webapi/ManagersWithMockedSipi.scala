@@ -21,6 +21,7 @@ package org.knora.webapi
 
 import akka.actor.{Actor, ActorRef, Props}
 import org.knora.webapi.app.Managers
+import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
 import org.knora.webapi.store.{MockableStoreManager, SipiConnectorActorName, StoreManagerActorName}
 import org.knora.webapi.store.iiif.MockSipiConnector

@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+
+scala_library(
+    name = "messages",
+    srcs = glob(["*.scala"]),
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi/messages/admin/responder"
+    ],
+)

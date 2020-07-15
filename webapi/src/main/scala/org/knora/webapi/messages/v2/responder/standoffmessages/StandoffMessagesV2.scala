@@ -26,12 +26,16 @@ import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.{ExecutionContext, Future}

@@ -31,6 +31,8 @@ import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.PermissionUtilADM
 import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, filterPermissionRelevantAssertionsFromValueProps}
 import org.knora.webapi._
+import org.knora.webapi.constances.KnoraSystemInstances
+import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
 
 import scala.concurrent.Future
 

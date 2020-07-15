@@ -20,13 +20,16 @@
 package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DataConversionException, GravsearchException, NotImplementedException}
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.collection.mutable
 

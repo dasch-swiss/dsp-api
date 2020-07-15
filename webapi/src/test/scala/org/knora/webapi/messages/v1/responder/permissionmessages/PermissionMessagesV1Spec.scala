@@ -1,6 +1,6 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
-import org.knora.webapi.SharedOntologyTestDataADM._
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation

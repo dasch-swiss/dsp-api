@@ -24,7 +24,8 @@ import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 

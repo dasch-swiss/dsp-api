@@ -24,6 +24,8 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -32,7 +34,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.SmartIri
 
 import scala.annotation.tailrec
 import scala.collection.breakOut

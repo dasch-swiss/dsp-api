@@ -19,12 +19,14 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.{BadRequestException, SharedListsTestDataADM, SharedTestDataADM}
+import org.knora.webapi.SharedListsTestDataADM
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
   * This spec is used to test 'ListAdminMessages'.

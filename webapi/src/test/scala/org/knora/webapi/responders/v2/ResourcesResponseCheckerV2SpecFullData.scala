@@ -6,9 +6,10 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM._
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
-import org.knora.webapi.{InternalSchema, SharedTestDataADM}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.InternalSchema
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 // FIXME: Rename to something without spec in the name since it is not a spec
 class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFormatter) {

@@ -20,8 +20,9 @@
 package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{CoreSpec, OntologyConstants}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.constances.OntologyConstants
 
 /**
   * Tests [[SparqlTransformer]].

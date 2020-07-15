@@ -26,8 +26,11 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{DuplicateValueException, UnexpectedMessageException}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps

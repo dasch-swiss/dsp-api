@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
 
 import scala.collection.{GenTraversableOnce, Iterator, MapLike}
 

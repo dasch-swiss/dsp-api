@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v2
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 class ResourcesResponseCheckerV2Spec extends CoreSpec() {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

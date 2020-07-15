@@ -7,6 +7,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.util.stringformatter.SmartIri
 
 import scala.reflect.runtime.{universe => ru}
 

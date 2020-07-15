@@ -12,10 +12,12 @@ import org.eclipse.rdf4j.model.impl.{LinkedHashModel, SimpleValueFactory}
 import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
+import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
-import org.knora.webapi.util.{FileUtil, StringFormatter}
-import org.knora.webapi.{InconsistentTriplestoreDataException, KnoraDispatchers, KnoraSettingsImpl}
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}

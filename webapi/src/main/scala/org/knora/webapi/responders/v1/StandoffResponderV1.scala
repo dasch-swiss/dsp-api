@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 import scala.concurrent.Future
 

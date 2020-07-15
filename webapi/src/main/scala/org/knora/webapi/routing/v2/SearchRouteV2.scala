@@ -26,12 +26,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{ClientEndpoint, SmartIri, StringFormatter, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 

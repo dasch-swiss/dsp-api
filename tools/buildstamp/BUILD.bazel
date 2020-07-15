@@ -17,9 +17,9 @@ filegroup(
 )
 
 # Generates a scala source file that includes version information
-load("//tools/buildstamp:gen_build_info.bzl", "gen_build_info")
-gen_build_info(
-    name = "build_info_src",
+load("//tools/buildstamp:gen_version_info.bzl", "gen_version_info")
+gen_version_info(
+    name = "version_info_src",
     scala_version = SCALA_VERSION,
     akka_version = AKKA_VERSION,
     akka_http_version = AKKA_HTTP_VERSION,
@@ -28,6 +28,6 @@ gen_build_info(
 )
 
 scala_library(
-    name = "build_info_jar",
-    srcs = [":build_info_src"],
+    name = "version_info_jar",
+    srcs = [":version_info_src"],
 )

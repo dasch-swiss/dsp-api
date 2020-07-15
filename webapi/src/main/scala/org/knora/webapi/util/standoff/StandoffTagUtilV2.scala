@@ -27,14 +27,18 @@ import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException, InvalidStandoffException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SmartIriLiteralV2}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{DateUtilV1, SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, SmartIri}
 
 import scala.concurrent.{ExecutionContext, Future}
 

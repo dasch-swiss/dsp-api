@@ -29,7 +29,9 @@ import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter}
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, InvalidStandoffException, StandoffConversionException, StandoffInternalException}
+import org.knora.webapi.util.ErrorHandlingMap
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 import scala.xml._
 

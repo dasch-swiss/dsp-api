@@ -35,7 +35,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM}
+import org.knora.webapi.{E2ESpec, IRI}
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._

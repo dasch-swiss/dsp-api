@@ -24,9 +24,12 @@ import org.eclipse.rdf4j.query.parser.sparql._
 import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.collection.JavaConverters._
 

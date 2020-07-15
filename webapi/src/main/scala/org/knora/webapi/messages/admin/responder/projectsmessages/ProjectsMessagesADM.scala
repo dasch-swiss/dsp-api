@@ -25,13 +25,14 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, OntologyConstraintException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, DataConversionException, IRI, OntologyConstraintException}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.{DataConversionException, IRI, OntologyConstraintException}
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

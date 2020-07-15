@@ -23,10 +23,12 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadCredentialsException, BadRequestException}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.util.{CacheUtil, StringFormatter}
+import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.util.stringformatter.StringFormatter
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future

@@ -24,8 +24,9 @@ import java.util.UUID
 import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{CoreSpec, SharedTestDataADM}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.CoreSpec
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

@@ -25,7 +25,9 @@ import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.{FileWriteException, NotFoundException, KnoraSettingsImpl}
+import org.knora.webapi.exceptions.{FileWriteException, NotFoundException}
+import org.knora.webapi.FileWriteException
+import org.knora.webapi.settings.KnoraSettingsImpl
 import resource._
 
 import scala.io.{BufferedSource, Codec, Source}

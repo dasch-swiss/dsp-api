@@ -23,6 +23,8 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{ApplicationCacheException, AssertionException, BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
@@ -31,7 +33,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest,
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.{CacheUtil, PermissionUtilADM}
+import org.knora.webapi.util.PermissionUtilADM
+import org.knora.webapi.util.cache.CacheUtil
 
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer

@@ -24,6 +24,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.core.Core
 
 import scala.concurrent.duration.FiniteDuration
 

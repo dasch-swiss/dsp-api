@@ -20,11 +20,15 @@
 package org.knora.webapi.responders.v2.search.gravsearch.mainquery
 
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.ErrorHandlingMap
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 object GravsearchMainQueryGenerator {
 

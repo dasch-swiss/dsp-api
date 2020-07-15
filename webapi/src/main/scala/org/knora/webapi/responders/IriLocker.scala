@@ -23,7 +23,8 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 import org.knora.webapi.util.JavaUtil
-import org.knora.webapi.{ApplicationLockException, IRI}
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.ApplicationLockException
 
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}

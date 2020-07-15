@@ -21,8 +21,9 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.stringformatter.StringFormatter
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 

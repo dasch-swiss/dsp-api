@@ -26,10 +26,12 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.http.ApiStatusCodesV1
+import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import spray.json.{JsNumber, JsObject}

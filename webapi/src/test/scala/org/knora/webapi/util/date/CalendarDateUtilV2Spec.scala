@@ -19,7 +19,8 @@
 
 package org.knora.webapi.util.date
 
-import org.knora.webapi.{BadRequestException, CoreSpec}
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.exceptions.BadRequestException
 
 /**
   * Tests [[CalendarDateUtilV2]].

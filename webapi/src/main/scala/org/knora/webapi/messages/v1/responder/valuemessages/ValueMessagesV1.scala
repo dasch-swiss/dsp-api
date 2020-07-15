@@ -25,13 +25,17 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiConversionRequestV1
+import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.{DateUtilV1, StringFormatter}
+import org.knora.webapi.util.DateUtilV1
+import org.knora.webapi.util.stringformatter.StringFormatter
 import spray.json._
 
 

@@ -23,7 +23,7 @@ import java.io.{StringReader, StringWriter}
 
 import javax.xml.transform.stream.StreamSource
 import net.sf.saxon.s9api.XsltExecutable
-import org.knora.webapi.StandoffConversionException
+import org.knora.webapi.exceptions.StandoffConversionException
 
 object XMLUtil {
 

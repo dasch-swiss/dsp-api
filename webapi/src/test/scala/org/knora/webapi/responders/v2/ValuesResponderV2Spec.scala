@@ -26,6 +26,8 @@ import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException, OntologyConstraintException, SipiException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder._
@@ -34,10 +36,12 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
+import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.iiif.MockSipiConnector
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
-import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.duration._
 

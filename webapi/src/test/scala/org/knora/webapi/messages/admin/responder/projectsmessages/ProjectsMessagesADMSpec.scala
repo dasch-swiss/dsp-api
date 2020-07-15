@@ -17,9 +17,10 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.{SharedTestDataADM, _}
+import org.knora.webapi.exceptions.{BadRequestException, OntologyConstraintException}
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 object ProjectsMessagesADMSpec {
     val config = ConfigFactory.parseString(

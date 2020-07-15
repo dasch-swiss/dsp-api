@@ -20,7 +20,9 @@
 package org.knora.webapi.messages.v2.responder
 
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.jsonld._
 
 /**

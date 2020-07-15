@@ -20,6 +20,8 @@
 package org.knora.webapi.responders.v2.search.gravsearch
 
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchEntityTypeInfo, GravsearchTypeInspectionResult, NonPropertyTypeInfo, PropertyTypeInfo}
 

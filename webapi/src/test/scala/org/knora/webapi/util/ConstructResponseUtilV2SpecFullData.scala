@@ -2,12 +2,14 @@ package org.knora.webapi.util
 
 import java.time.Instant
 
-import org.knora.webapi.{InternalSchema, SharedTestDataADM}
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{StandoffDataTypeClasses, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{IntegerValueContentV2, LinkValueContentV2, ReadLinkValueV2, ReadOtherValueV2, ReadTextValueV2, TextValueContentV2}
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, ViewPermission}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.StringFormatter
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

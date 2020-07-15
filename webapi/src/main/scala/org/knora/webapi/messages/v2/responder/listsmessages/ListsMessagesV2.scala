@@ -20,13 +20,15 @@
 package org.knora.webapi.messages.v2.responder.listsmessages
 
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld._
+import org.knora.webapi.util.stringformatter.StringFormatter
 
 
 /**

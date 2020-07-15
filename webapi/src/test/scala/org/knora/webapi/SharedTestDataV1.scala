@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import org.knora.webapi.SharedOntologyTestDataADM._
+import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}

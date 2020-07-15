@@ -22,7 +22,7 @@ package org.knora.webapi.twirl
 import java.util.UUID
 
 import org.knora.webapi.IRI
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.SmartIri
 
 /**
   * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`

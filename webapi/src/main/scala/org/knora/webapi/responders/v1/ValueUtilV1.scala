@@ -23,6 +23,8 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotImplementedException, OntologyConstraintException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -30,8 +32,10 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, StringFormatter}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap}
 
 import scala.concurrent.{ExecutionContext, Future}
 

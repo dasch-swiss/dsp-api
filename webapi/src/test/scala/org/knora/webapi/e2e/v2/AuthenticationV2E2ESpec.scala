@@ -29,7 +29,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.util.MutableTestString
-import org.knora.webapi.{E2ESpec, SharedTestDataADM}
+import org.knora.webapi.E2ESpec
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

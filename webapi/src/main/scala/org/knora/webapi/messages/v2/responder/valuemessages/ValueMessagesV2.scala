@@ -28,19 +28,23 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, NotImplementedException, SipiException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequestV2, GetFileMetadataResponseV2}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
 import org.knora.webapi.util.date._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -22,6 +22,7 @@ package org.knora.webapi.util
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.{CoreSpec, SharedTestDataV1}
 
 object CacheUtilSpec {

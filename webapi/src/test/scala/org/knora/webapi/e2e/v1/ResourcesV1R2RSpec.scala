@@ -23,9 +23,11 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.knora.webapi.SharedOntologyTestDataADM._
-import org.knora.webapi.SharedTestDataADM._
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._

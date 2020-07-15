@@ -26,6 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.responders.admin.ListsResponderADM._

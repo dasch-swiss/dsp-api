@@ -19,9 +19,11 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.IRI
+import org.knora.webapi.constances.OntologyConstants
 
 /**
   * Represents an intermediate result during type inspection. This is different from [[GravsearchTypeInspectionResult]]

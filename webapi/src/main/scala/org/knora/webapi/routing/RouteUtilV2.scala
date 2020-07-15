@@ -31,11 +31,14 @@ import org.eclipse.rdf4j.rio._
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, UnexpectedMessageException}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util.jsonld.JsonLDDocument
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception.catching

@@ -26,7 +26,8 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
+import org.knora.webapi.ITKnoraLiveSpec
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import spray.json._
 
 object DrawingsGodsV1ITSpec {

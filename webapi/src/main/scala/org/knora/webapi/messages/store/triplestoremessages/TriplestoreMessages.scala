@@ -30,10 +30,13 @@ import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle.TurtleParser
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{DataConversionException, InconsistentTriplestoreDataException, NotImplementedException, TriplestoreResponseException}
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{ErrorHandlingMap, SmartIri, StringFormatter}
+import org.knora.webapi.util.ErrorHandlingMap
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
 import scala.collection.mutable

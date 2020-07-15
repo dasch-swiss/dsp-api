@@ -24,6 +24,8 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{ApplicationCacheException, ForbiddenException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
@@ -31,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.cache.CacheUtil
 
 import scala.concurrent.Future
 

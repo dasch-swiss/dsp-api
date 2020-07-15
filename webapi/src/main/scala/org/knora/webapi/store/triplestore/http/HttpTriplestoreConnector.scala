@@ -45,7 +45,9 @@ import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{NotFoundException, TriplestoreConnectionException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException, UnexpectedMessageException, UnsuportedTriplestoreException}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._

@@ -20,8 +20,10 @@
 package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched

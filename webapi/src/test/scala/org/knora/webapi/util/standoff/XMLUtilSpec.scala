@@ -22,7 +22,8 @@ package org.knora.webapi.util.standoff
 import java.io.File
 
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.{CoreSpec, StandoffConversionException}
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.exceptions.StandoffConversionException
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 

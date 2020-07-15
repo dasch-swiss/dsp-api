@@ -23,9 +23,11 @@ import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{ForbiddenException, RedisException, UnexpectedMessageException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
 import org.knora.webapi.messages.store.cacheservicemessages._
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.InstrumentationSupport
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}

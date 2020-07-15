@@ -10,12 +10,15 @@ import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor

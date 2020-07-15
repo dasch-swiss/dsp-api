@@ -32,7 +32,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Strin
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataV1}
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 

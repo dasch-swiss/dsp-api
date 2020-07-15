@@ -23,8 +23,11 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserInformationTypeADM, UserResponseADM}
-import org.knora.webapi.{ForbiddenException, IRI, KnoraSystemInstances}
+import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.IRI
+import org.knora.webapi.constances.KnoraSystemInstances
 
 import scala.concurrent.{ExecutionContext, Future}
 

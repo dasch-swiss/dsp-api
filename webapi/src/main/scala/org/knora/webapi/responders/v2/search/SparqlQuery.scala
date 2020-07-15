@@ -21,9 +21,12 @@ package org.knora.webapi.responders.v2.search
 
 import akka.http.scaladsl.model.{HttpCharsets, MediaType}
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 /**
  * Constants used in processing SPARQL queries.

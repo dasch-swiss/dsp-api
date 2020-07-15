@@ -19,9 +19,10 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import org.knora.webapi.{ApiV2Complex, ApiV2Schema, ApiV2Simple, BadRequestException, OntologyConstants}
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.{ApiV2Complex, ApiV2Schema, ApiV2Simple}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.SmartIri
 
 /**
   * A trait for objects that provide rules for converting an ontology from the internal schema to an external schema.

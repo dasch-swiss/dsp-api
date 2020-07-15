@@ -24,9 +24,13 @@ import java.util.UUID
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.JavaUtil
+
 
 /**
   * Constant strings used in JSON-LD.
@@ -193,7 +197,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets a required string value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property is not found or if its value is not a string.
-      * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * Then parses the value with the specified validation function (see [[StringFormatter]]
       * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
       *
       * @param key           the key of the required value.
@@ -225,7 +229,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets an optional string value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property's value is not a string. Parses the value with the specified validation
-      * function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions), throwing
+      * function (see [[StringFormatter]] for examples of such functions), throwing
       * [[BadRequestException]] if the validation fails.
       *
       * @param key           the key of the optional value.
@@ -244,7 +248,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets a required IRI value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property is not found or if its value is not a JSON-LD object.
-      * Then parses the object's ID with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * Then parses the object's ID with the specified validation function (see [[StringFormatter]]
       * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
       *
       * @param key the key of the required value.
@@ -257,7 +261,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets an optional IRI value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property's value is not a JSON-LD object. Parses the object's ID with the
-      * specified validation function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions),
+      * specified validation function (see [[StringFormatter]] for examples of such functions),
       * throwing [[BadRequestException]] if the validation fails.
       *
       * @param key           the key of the optional value.
@@ -274,7 +278,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets a required datatype value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property is not found or if its value is not a JSON-LD object.
-      * Then parses the object's literal value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * Then parses the object's literal value with the specified validation function (see [[StringFormatter]]
       * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
       *
       * @param key the key of the required value.
@@ -289,7 +293,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets an optional datatype value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property's value is not a JSON-LD object. Parses the object's literal value with the
-      * specified validation function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions),
+      * specified validation function (see [[StringFormatter]] for examples of such functions),
       * throwing [[BadRequestException]] if the validation fails.
       *
       * @param key           the key of the optional value.

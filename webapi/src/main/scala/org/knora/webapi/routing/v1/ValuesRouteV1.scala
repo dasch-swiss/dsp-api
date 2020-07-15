@@ -32,6 +32,8 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.scaladsl.FileIO
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceInfoGetRequestV1, ResourceInfoResponseV1}

@@ -19,9 +19,9 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
-import org.knora.webapi.OntologyConstants
+import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.responders.v2.search.{Entity, IriRef, QueryVariable}
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.stringformatter.SmartIri
 
 /**
   * Represents the type information that was found concerning a Gravsearch entity.

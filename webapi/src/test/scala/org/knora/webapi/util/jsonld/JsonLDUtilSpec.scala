@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util.jsonld
 
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.stringformatter.StringFormatter
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.{JsValue, JsonParser}

@@ -59,7 +59,7 @@ scala_library(
         "@maven//:ch_qos_logback_logback_core",
     ],
     deps = [
-        "//tools/buildstamp:build_info_jar",
+        "//tools/buildstamp:version_info_jar",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_jcl_over_slf4j",

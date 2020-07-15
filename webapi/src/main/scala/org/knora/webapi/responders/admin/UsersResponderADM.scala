@@ -23,8 +23,9 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi
-import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants, webapi}
+import org.knora.webapi.{exceptions, _}
+import org.knora.webapi.exceptions.{ApplicationCacheException, BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
@@ -35,8 +36,9 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{InstrumentationSupport, SmartIri}
+import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.util.InstrumentationSupport
+import org.knora.webapi.util.stringformatter.SmartIri
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -926,7 +928,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // get group's info. we need the project IRI.
             maybeGroupADM <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
-            projectIri = maybeGroupADM.getOrElse(throw webapi.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
+            projectIri = maybeGroupADM.getOrElse(throw InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
 
             // check if the requesting user is allowed to perform updates
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
@@ -993,7 +995,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // get group's info. we need the project IRI.
             maybeGroupADM <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
-            projectIri = maybeGroupADM.getOrElse(throw webapi.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
+            projectIri = maybeGroupADM.getOrElse(throw exceptions.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
 
             // check if the requesting user is allowed to perform updates
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {

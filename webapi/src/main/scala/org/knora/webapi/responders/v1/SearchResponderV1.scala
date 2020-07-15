@@ -21,6 +21,8 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
@@ -29,7 +31,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
 import scala.concurrent.Future
@@ -324,8 +326,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       * @return a [[SearchGetResponseV1]] containing the search results.
       */
     private def extendedSearchV1(searchGetRequest: ExtendedSearchGetRequestV1): Future[SearchGetResponseV1] = {
-
-        import org.knora.webapi.util.StringFormatter
+        import org.knora.webapi.util.stringformatter.StringFormatter
 
         val userProfileV1 = searchGetRequest.userProfile.asUserProfileV1
         val limit = checkLimit(searchGetRequest.showNRows)

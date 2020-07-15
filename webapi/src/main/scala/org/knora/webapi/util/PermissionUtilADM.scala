@@ -24,6 +24,8 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
@@ -32,6 +34,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.{IriSubjectV2, LiteralV2, SparqlExtendedConstructResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
+import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -161,9 +164,9 @@ object PermissionUtilADM extends LazyLogging {
 
     /**
       * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
-      * is the case if the property is [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]],
-      * [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], or
-      * or [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
+      * is the case if the property is [[OntologyConstants.KnoraBase.AttachedToUser]],
+      * [[OntologyConstants.KnoraBase.AttachedToProject]], or
+      * or [[OntologyConstants.KnoraBase.HasPermissions]].
       *
       * @param p the IRI of the property.
       * @return `true` if the property is relevant to calculating permissions.
@@ -365,9 +368,9 @@ object PermissionUtilADM extends LazyLogging {
       * @param entityIri      the IRI of the entity.
       * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
       *                       pertaining to the entity. The predicates must include
-      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
+      *                       [[OntologyConstants.KnoraBase.AttachedToUser]] and
+      *                       [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
+      *                       [[OntologyConstants.KnoraBase.HasPermissions]].
       *                       Other predicates may be included, but they will be ignored, so there is no need to filter
       *                       them before passing them to this function.
       * @param requestingUser the profile of the user making the request.
@@ -396,9 +399,9 @@ object PermissionUtilADM extends LazyLogging {
       * @param entityIri      the IRI of the entity.
       * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
       *                       pertaining to the entity. The predicates must include
-      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
+      *                       [[OntologyConstants.KnoraBase.AttachedToUser]] and
+      *                       [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
+      *                       [[OntologyConstants.KnoraBase.HasPermissions]].
       *                       Other predicates may be included, but they will be ignored, so there is no need to filter
       *                       them before passing them to this function.
       * @param requestingUser the profile of the user making the request.
@@ -699,9 +702,9 @@ object PermissionUtilADM extends LazyLogging {
       * @param entityIri   the IRI of the entity.
       * @param assertions  a [[Seq]] containing all the permission-relevant predicates and objects
       *                    pertaining to the entity. The predicates must include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
+      *                    [[OntologyConstants.KnoraBase.AttachedToUser]] and
+      *                    [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
+      *                    [[OntologyConstants.KnoraBase.HasPermissions]].
       *                    Other predicates may be included, but they will be ignored, so there is no need to filter
       *                    them before passing them to this function.
       * @param userProfile the profile of the user making the request.
@@ -742,9 +745,9 @@ object PermissionUtilADM extends LazyLogging {
       * @param valueIri      the IRI of the `knora-base:Value`.
       * @param valueProps    a [[ValueProps]] containing the permission-relevant predicates and objects
       *                      pertaining to the value, grouped by predicate. The predicates must include
-      *                      [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]], and should include
-      *                      [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]]
-      *                      and [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
+      *                      [[OntologyConstants.KnoraBase.AttachedToUser]], and should include
+      *                      [[OntologyConstants.KnoraBase.AttachedToProject]]
+      *                      and [[OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
       *                      included, but they will be ignored, so there is no need to filter them before passing them to
       *                      this function.
       * @param entityProject if provided, the `knora-base:attachedToProject` of the resource containing the value. Otherwise,

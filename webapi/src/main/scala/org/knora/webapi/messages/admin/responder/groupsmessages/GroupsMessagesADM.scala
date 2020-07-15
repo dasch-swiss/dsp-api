@@ -22,12 +22,12 @@ package org.knora.webapi.messages.admin.responder.groupsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, IRI}
+import org.knora.webapi.util.stringformatter.StringFormatter
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ case class ChangeGroupApiRequestADM(name: Option[String] = None,
 // Messages
 
 /**
-  * An abstract trait representing a request message that can be sent to [[GroupsResponderADM]].
+  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
   */
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM
 

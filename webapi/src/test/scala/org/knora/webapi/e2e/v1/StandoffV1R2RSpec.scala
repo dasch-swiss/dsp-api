@@ -28,6 +28,8 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.routing.v1.{StandoffRouteV1, ValuesRouteV1}
 import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}

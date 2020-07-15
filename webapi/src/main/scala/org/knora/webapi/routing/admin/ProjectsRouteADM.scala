@@ -33,15 +33,17 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.scaladsl.{FileIO, Source}
-import akka.stream.{Materializer, IOResult}
+import akka.stream.{IOResult, Materializer}
 import akka.util.ByteString
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.{BadRequestException, IRI, SharedTestDataADM}
+import org.knora.webapi.IRI
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try

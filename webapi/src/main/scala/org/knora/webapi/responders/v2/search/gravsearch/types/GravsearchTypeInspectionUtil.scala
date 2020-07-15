@@ -19,9 +19,11 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
+import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.{AssertionException, IRI}
 
 /**
   * Utilities for Gravsearch type inspection.

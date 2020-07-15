@@ -22,13 +22,16 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedOntologyTestDataADM._
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedPermissionsTestData._
-import org.knora.webapi.SharedTestDataADM._
+import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.exceptions.DuplicateValueException
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.util.{CacheUtil, StringFormatter}
+import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.util.stringformatter.StringFormatter
 import org.scalatest.PrivateMethodTester
 
 import scala.collection.Map
