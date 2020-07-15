@@ -160,6 +160,24 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             thrown.getMessage should equal (LABEL_MISSING_ERROR)
         }
 
+        "throw a 'BadRequestException' for `CreateListApiRequestADM` when an invalid list IRI is given" in {
+
+            // invalid list IRI
+            val payload =
+                s"""
+                   |{
+                   |    "id": "invalid-list-IRI",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "New List", "language": "en"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+
+            thrown.getMessage should equal ("Invalid list IRI")
+        }
+
         "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is empty" in {
 
             val payload =

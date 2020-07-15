@@ -30,7 +30,7 @@ object ProjectsMessagesADMSpec {
 }
 
 /**
-  * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
+  *  This spec is used to test subclasses of the [[ProjectsMessagesADM]] class.
   */
 class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
 
@@ -52,7 +52,7 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
     "The CreateProjectApiRequestADM case class" should {
 
         "return a 'BadRequest' when project description is not supplied" in {
-            assertThrows[BadRequestException](
+            val caught = intercept[BadRequestException](
                 CreateProjectApiRequestADM(
                     shortname = "newproject5",
                     shortcode = "1114",
@@ -64,6 +64,24 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
                     selfjoin = false
                 )
             )
+            assert(caught.getMessage === "Project description needs to be supplied.")
+        }
+
+        "return 'BadRequest' if the supplied project IRI is not a valid IRI" in {
+            val caught = intercept[BadRequestException](
+                CreateProjectApiRequestADM(
+                    id = Some("invalid-project-IRI"),
+                    shortname = "newprojectWithInvalidIri",
+                    shortcode = "2222",
+                    longname = Some("new project with a custom invalid IRI"),
+                    description = Seq(StringLiteralV2("a project created with an invalid custom IRI", Some("en"))),
+                    keywords = Seq("projectInvalidIRI"),
+                    logo = Some("/fu/bar/baz.jpg"),
+                    status = true,
+                    selfjoin = false
+                )
+            )
+            assert(caught.getMessage === "Invalid project IRI")
         }
     }
 

@@ -1,13 +1,13 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
-load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES_WITH_JSON")
 
 scala_test(
     name = "DrawingsGodsV1E2ESpec",
     size = "small",  # 60s
     srcs = [
-        "v1/DrawingsGodsV1E2ESpec.scala",
+        "DrawingsGodsV1E2ESpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -25,25 +25,7 @@ scala_test(
     name = "DrawingsGodsV1Spec",
     size = "small",  # 60s
     srcs = [
-        "v1/DrawingsGodsV1Spec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
-)
-
-scala_test(
-    name = "LumieresLausanneV2E2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "v2/LumieresLausanneV2E2ESpec.scala",
+        "DrawingsGodsV1Spec.scala",
     ],
     data = [
         "//knora-ontologies",
