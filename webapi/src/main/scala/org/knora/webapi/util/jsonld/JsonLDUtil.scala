@@ -21,6 +21,7 @@ package org.knora.webapi.util.jsonld
 
 import java.util.UUID
 
+import com.apicatalog.jsonld.JsonLd
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
@@ -841,15 +842,20 @@ object JsonLDUtil {
       * @return a [[JsonLDDocument]].
       */
     def parseJsonLD(jsonLDString: String): JsonLDDocument = {
+        /*
         val jsonObject: AnyRef = try {
             JsonUtils.fromString(jsonLDString)
         } catch {
             case e: com.fasterxml.jackson.core.JsonParseException => throw BadRequestException(s"Couldn't parse JSON-LD: ${e.getMessage}")
         }
 
-        val context: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]()
         val options: JsonLdOptions = new JsonLdOptions()
         val compact: java.util.Map[IRI, AnyRef] = JsonLdProcessor.compact(jsonObject, context, options)
+         */
+
+        // we want to parse with an empty context
+        val context: String = ""
+        val compact = JsonLd.compact(jsonLDString,context)
         val scalaColl: Any = JavaUtil.deepJavaToScala(compact)
 
         val scalaMap: Map[String, Any] = try {
