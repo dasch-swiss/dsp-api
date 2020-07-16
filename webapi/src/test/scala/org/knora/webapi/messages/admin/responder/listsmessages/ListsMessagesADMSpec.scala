@@ -26,7 +26,7 @@ import org.knora.webapi.SharedListsTestDataADM
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
   * This spec is used to test 'ListAdminMessages'.

@@ -24,7 +24,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServiceGetUserADM, CacheServicePutProjectADM, CacheServicePutUserADM}
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 object CacheServiceManagerSpec {
     val config = ConfigFactory.parseString(

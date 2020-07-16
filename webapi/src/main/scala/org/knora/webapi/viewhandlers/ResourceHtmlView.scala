@@ -26,9 +26,10 @@ import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.slf4j.LoggerFactory
 import org.knora.webapi.twirl
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.KnoraSystemInstances
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

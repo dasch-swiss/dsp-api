@@ -16,8 +16,8 @@ import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
+import org.knora.webapi.messages.StringFormatter
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}

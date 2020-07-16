@@ -17,19 +17,19 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package webapi.src.main.scala.org.knora.webapi.sharedtestdata
+package org.knora.webapi.sharedtestdata
 
 import java.net.URLEncoder
 import java.time.Instant
 import java.util.UUID
 
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 
 /**
  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object

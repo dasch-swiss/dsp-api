@@ -30,15 +30,15 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.util.jsonld.JsonLDDocument
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
 import scala.concurrent.{ExecutionContext, Future}
 

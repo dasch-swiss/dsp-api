@@ -21,8 +21,8 @@ package org.knora.webapi
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataV1._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionADM, DefaultObjectAccessPermissionADM, ObjectAccessPermissionADM, PermissionADM}
+import org.knora.webapi.messages.OntologyConstants
 
 /* Helper case classes */
 case class ap (iri: String, p: AdministrativePermissionADM)

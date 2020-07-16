@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v1
 import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetRequestADM, ProjectsGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -33,7 +32,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.ValueUtilV1
 
 import scala.concurrent.Future
 

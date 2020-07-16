@@ -34,10 +34,12 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.jsonld.JsonLDDocument
+import org.knora.webapi.util.stringformatter.SmartIri
 import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 

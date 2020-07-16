@@ -25,11 +25,10 @@ import java.util.UUID
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.{AssertionException, DuplicateValueException, ForbiddenException, NotFoundException, OntologyConstraintException}
 import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -37,9 +36,9 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, Reso
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 
 import scala.concurrent.duration._
 

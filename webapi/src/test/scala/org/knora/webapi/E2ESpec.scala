@@ -37,14 +37,15 @@ import org.knora.webapi.core.Core
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.util.jsonld.JsonLDDocument
 import org.knora.webapi.util.{FileUtil, StartupUtils}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import resource.managed
 import spray.json._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._

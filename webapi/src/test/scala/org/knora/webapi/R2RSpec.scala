@@ -32,7 +32,6 @@ import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
-import org.knora.webapi.constances.KnoraSystemInstances
 import org.knora.webapi.core.Core
 import org.knora.webapi.http.handler
 import org.knora.webapi.http.handler.KnoraExceptionHandler
@@ -41,12 +40,13 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.util.jsonld.JsonLDDocument
 import org.knora.webapi.util.{FileUtil, StartupUtils}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil, KnoraSystemInstances}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}

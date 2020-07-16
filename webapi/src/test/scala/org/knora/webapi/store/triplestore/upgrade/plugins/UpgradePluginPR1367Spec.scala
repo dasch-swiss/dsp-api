@@ -22,8 +22,8 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.util.Models
 import org.eclipse.rdf4j.model.{Literal, Model}
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.util.JavaUtil._
+import org.knora.webapi.messages.OntologyConstants
 
 class UpgradePluginPR1367Spec extends UpgradePluginSpec {
     private val valueFactory = SimpleValueFactory.getInstance

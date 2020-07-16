@@ -20,7 +20,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
-import webapi.src.main.scala.org.knora.webapi.http.version.ServerVersion
+import org.knora.webapi.http.version.ServerVersion
 
 
 object ServerVersionE2ESpec {

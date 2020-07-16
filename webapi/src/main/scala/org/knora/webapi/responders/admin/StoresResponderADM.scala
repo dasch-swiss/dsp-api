@@ -21,12 +21,12 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.KnoraSystemInstances
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM, StoreResponderRequestADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceFlushDB, CacheServiceFlushDBACK}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK}
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}

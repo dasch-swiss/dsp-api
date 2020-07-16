@@ -22,8 +22,8 @@ package org.knora.webapi.responders.v2.search.gravsearch
 import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.knora.webapi.{ApiV2Complex, ApiV2Simple, CoreSpec}
+import org.knora.webapi.messages.StringFormatter
 
 /**
  * Tests [[GravsearchParser]].

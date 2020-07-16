@@ -23,7 +23,6 @@ import java.time.Instant
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, NotImplementedException, OntologyConstraintException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -39,9 +38,10 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.util._
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ValueUtilV1}
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut

@@ -23,10 +23,10 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.util.Models
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.{IRI, Model, Statement, Value}
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.messages.OntologyConstants
 
 import scala.collection.JavaConverters._
 

@@ -17,9 +17,9 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package webapi.src.main.scala.org.knora.webapi.sharedtestdata
+package org.knora.webapi.sharedtestdata
 
-import org.knora.webapi.constances.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants
 
 object SharedOntologyTestDataADM {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"

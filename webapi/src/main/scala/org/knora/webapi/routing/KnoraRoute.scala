@@ -25,8 +25,8 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.knora.webapi.KnoraSettingsImpl
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.ExecutionContext
 

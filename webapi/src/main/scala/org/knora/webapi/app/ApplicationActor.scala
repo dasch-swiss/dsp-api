@@ -12,10 +12,9 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi._
-import org.knora.webapi.constances.KnoraSystemInstances
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
-import webapi.src.main.scala.org.knora.webapi.http.version.ServerVersion.addServerHeader
+import org.knora.webapi.http.version.ServerVersion.addServerHeader
 import org.knora.webapi.http.handler
 import org.knora.webapi.http.handler.KnoraExceptionHandler
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
@@ -24,6 +23,7 @@ import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
 import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, SuccessResponseV2}

@@ -28,8 +28,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIde
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.scalatest.PrivateMethodTester
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.Future
 

@@ -26,7 +26,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DuplicateValueException, EditConflictException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, OntologyConstraintException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -44,13 +43,13 @@ import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.util._
-import org.knora.webapi.util.date.CalendarNameGregorian
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.{CalendarNameGregorian, ConstructResponseUtilV2, KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

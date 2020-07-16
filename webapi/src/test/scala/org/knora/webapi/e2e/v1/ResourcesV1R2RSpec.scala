@@ -23,10 +23,9 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
@@ -38,6 +37,7 @@ import org.scalatest.Assertion
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
+import org.knora.webapi.messages.OntologyConstants
 
 import scala.concurrent.ExecutionContextExecutor
 

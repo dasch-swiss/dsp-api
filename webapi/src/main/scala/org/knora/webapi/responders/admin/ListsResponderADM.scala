@@ -24,35 +24,21 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.admin.ListsResponderADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
 import scala.concurrent.Future
-
-object ListsResponderADM {
-
-    val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
-    val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
-    val LIST_NODE_IRI_MISSING_ERROR = "List node IRI cannot be empty."
-    val LIST_NODE_IRI_INVALID_ERROR = "List node IRI is invalid."
-    val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
-    val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
-    val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
-    val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
-    val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
-    val REQUEST_NOT_CHANGING_DATA_ERROR = "No data would be changed."
-}
 
 /**
   * A responder that returns information about hierarchical lists.

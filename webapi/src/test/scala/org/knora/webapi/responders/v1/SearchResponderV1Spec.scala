@@ -20,7 +20,7 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit._
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.searchmessages._

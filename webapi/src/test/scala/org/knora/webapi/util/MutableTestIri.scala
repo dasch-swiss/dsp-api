@@ -20,7 +20,7 @@
 package org.knora.webapi.util
 
 import org.knora.webapi.IRI
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 /**
   * Holds an optional, mutable IRI for use in tests.

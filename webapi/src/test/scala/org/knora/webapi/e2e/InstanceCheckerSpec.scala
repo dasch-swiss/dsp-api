@@ -28,7 +28,7 @@ import org.knora.webapi.util.stringformatter.IriConversions._
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.ExecutionContextExecutor
 

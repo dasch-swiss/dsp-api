@@ -25,7 +25,6 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, OntologyConstraintException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -39,10 +38,11 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM._
-import org.knora.webapi.util.stringformatter.SmartIri
-import org.knora.webapi.util.{ActorUtil, PermissionUtilADM}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.util.ActorUtil
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
 import scala.concurrent.Future
 

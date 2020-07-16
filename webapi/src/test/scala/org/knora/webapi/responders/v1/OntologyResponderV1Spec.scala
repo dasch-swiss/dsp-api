@@ -22,10 +22,10 @@ package org.knora.webapi.responders.v1
 
 import akka.testkit._
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.MessageUtil
 
 import scala.concurrent.duration._
 

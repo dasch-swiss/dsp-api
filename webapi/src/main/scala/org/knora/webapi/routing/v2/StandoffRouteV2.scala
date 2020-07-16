@@ -30,8 +30,8 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffPageRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.util.JsonLDUtil
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

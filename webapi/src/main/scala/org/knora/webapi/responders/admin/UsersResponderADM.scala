@@ -23,7 +23,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants, webapi}
+import org.knora.webapi.constances.webapi
 import org.knora.webapi.{exceptions, _}
 import org.knora.webapi.exceptions.{ApplicationCacheException, BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
@@ -36,10 +36,11 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.InstrumentationSupport
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.IriConversions._
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.util.KnoraSystemInstances
 
 import scala.concurrent.Future
 

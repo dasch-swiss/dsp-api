@@ -25,7 +25,6 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, OntologyConstraintException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -38,13 +37,15 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.util._
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.util.{ErrorHandlingMap, GroupedProps, KnoraSystemInstances, PermissionUtilADM, ValueUtilV1}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.collection.immutable
 import scala.concurrent.Future

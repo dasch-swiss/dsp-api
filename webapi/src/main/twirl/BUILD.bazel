@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
+
+twirl_templates(
+    name = "twirl",
+    additional_imports = [
+        "play.twirl.api.TwirlFeatureImports._",
+        "play.twirl.api.TwirlHelperImports._",
+        "play.twirl.api.Html",
+        "play.twirl.api.JavaScript",
+        "play.twirl.api.Txt",
+        "play.twirl.api.Xml",
+    ],
+    source_directory = ".",
+    srcs = glob(["**/*.scala.txt"])
+        + glob(["**/*.scala.html"])
+        + glob(["**/*.scala.xml"]),
+
+
+)

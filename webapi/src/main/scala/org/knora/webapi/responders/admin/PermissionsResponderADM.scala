@@ -21,19 +21,17 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants}
-import org.knora.webapi.exceptions.{ApplicationCacheException, AssertionException, BadRequestException, DuplicateValueException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.admin.PermissionsResponderADM._
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.PermissionUtilADM
 import org.knora.webapi.util.cache.CacheUtil
 
 import scala.collection.immutable.Iterable
@@ -700,8 +698,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       */
     private def defaultObjectAccessPermissionGetADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Future[Option[DefaultObjectAccessPermissionADM]] = {
 
-        val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
-        val permissionFromCache = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsCacheName, key)
+        val key = PermissionsMessagesUtilADM.getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
+        val permissionFromCache = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsMessagesUtilADM.PermissionsCacheName, key)
 
         val maybeDefaultObjectAccessPermissionADM: Future[Option[DefaultObjectAccessPermissionADM]] = permissionFromCache match {
             case Some(permission) =>
@@ -751,7 +749,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                         val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
                         // write permission to cache
-                        writeDefaultObjectAccessPermissionADMToCache(doap)
+                        PermissionsMessagesUtilADM.writeDefaultObjectAccessPermissionADMToCache(doap)
 
                         Some(doap)
                     } else {
@@ -1170,63 +1168,4 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
 }
 
-/**
-  * Companion object providing helper methods.
-  */
-object PermissionsResponderADM {
 
-    val PermissionsCacheName = "permissionsCache"
-
-    ////////////////////
-    // Helper Methods //
-    ////////////////////
-
-    /**
-      * Creates a key representing the supplied parameters.
-      *
-      * @param projectIri       the project IRI
-      * @param groupIri         the group IRI
-      * @param resourceClassIri the resource class IRI
-      * @param propertyIri      the property IRI
-      * @return a string.
-      */
-    def getDefaultObjectAccessPermissionADMKey(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): String = {
-
-        projectIri.toString + " | " + groupIri.toString + " | " + resourceClassIri.toString + " | " + propertyIri.toString
-    }
-
-    /**
-      * Writes a [[DefaultObjectAccessPermissionADM]] object to cache.
-      *
-      * @param doap a [[DefaultObjectAccessPermissionADM]].
-      * @return true if writing was successful.
-      * @throws ApplicationCacheException when there is a problem with writing to cache.
-      */
-    def writeDefaultObjectAccessPermissionADMToCache(doap: DefaultObjectAccessPermissionADM): Boolean = {
-
-        val key = doap.cacheKey
-
-        CacheUtil.put(PermissionsCacheName, key, doap)
-
-        if (CacheUtil.get(PermissionsCacheName, key).isEmpty) {
-            throw ApplicationCacheException("Writing the permission to cache was not successful.")
-        }
-
-        true
-    }
-
-    /**
-      * Removes a [[DefaultObjectAccessPermissionADM]] object from cache.
-      *
-      * @param projectIri       the project IRI
-      * @param groupIri         the group IRI
-      * @param resourceClassIri the resource class IRI
-      * @param propertyIri      the property IRI
-      */
-    def invalidateCachedDefaultObjectAccessPermissionADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Unit = {
-
-        val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
-
-        CacheUtil.remove(PermissionsCacheName, key)
-    }
-}

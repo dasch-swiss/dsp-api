@@ -41,9 +41,9 @@ import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings}
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import org.knora.webapi.util.SipiUtil
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.knora.webapi.{NotImplementedException, SipiException}
 import spray.json._
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try

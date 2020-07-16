@@ -22,6 +22,7 @@ package org.knora.webapi.util
 import java.io.File
 
 import org.knora.webapi.CoreSpec
+import webapi.src.main.scala.org.knora.webapi.contributors.GenerateContributorsFile
 
 /**
   * Tests [[GenerateContributorsFile]].

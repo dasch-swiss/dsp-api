@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1

@@ -26,7 +26,7 @@ import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetR
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 import scala.language.postfixOps
 

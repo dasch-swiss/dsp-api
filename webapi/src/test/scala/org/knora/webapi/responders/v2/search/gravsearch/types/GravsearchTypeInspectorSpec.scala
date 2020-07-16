@@ -25,7 +25,7 @@ import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

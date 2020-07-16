@@ -17,7 +17,7 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package webapi.src.main.scala.org.knora.webapi.http.version
+package org.knora.webapi.http.version
 
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.Server

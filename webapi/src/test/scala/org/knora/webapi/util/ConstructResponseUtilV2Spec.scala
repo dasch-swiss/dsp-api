@@ -27,7 +27,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

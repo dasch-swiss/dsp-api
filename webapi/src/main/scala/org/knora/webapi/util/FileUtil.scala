@@ -26,7 +26,6 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.{FileWriteException, NotFoundException}
-import org.knora.webapi.FileWriteException
 import org.knora.webapi.settings.KnoraSettingsImpl
 import resource._
 

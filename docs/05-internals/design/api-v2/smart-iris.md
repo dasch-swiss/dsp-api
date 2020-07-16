@@ -28,7 +28,7 @@ import the following:
 
 ```scala
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.stringformatter.IriConversions._
+import webapi.src.main.scala.org.knora.webapi.messages.IriConversions._
 ```
 
 Ensure that an implicit instance of `StringFormatter` is in scope:

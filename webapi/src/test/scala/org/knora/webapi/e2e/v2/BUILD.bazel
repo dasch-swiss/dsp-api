@@ -131,7 +131,7 @@ scala_test(
 
 scala_test(
     name = "SearchRouteV2R2RSpec",
-    size = "medium", # 300s
+    size = "medium",  # 300s
     srcs = [
         "ResponseCheckerV2.scala",
         "SchemaHeader.scala",
@@ -174,7 +174,7 @@ scala_test(
     size = "medium",
     srcs = [
         "ValuesRouteV2E2ESpec.scala",
-        "//webapi/src/main:twirl_templates",
+        "//webapi/src/main:twirl",
     ],
     data = [
         "//knora-ontologies",

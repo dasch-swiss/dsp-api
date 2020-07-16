@@ -29,8 +29,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIde
 import org.knora.webapi.messages.store.cacheservicemessages._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.util.ActorUtil.future2Message
-import org.knora.webapi.util.InstrumentationSupport
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
+import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 

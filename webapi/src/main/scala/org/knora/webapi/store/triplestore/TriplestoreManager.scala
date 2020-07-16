@@ -26,13 +26,13 @@ import org.knora.webapi._
 import org.knora.webapi.core.ActorMaker
 import org.knora.webapi.exceptions.UnsuportedTriplestoreException
 import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
+import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FakeTriplestore
 
 import scala.concurrent.ExecutionContext
 

@@ -25,7 +25,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.constances.{KnoraSystemInstances, OntologyConstants, webapi}
+import org.knora.webapi.constances.webapi
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ckanmessages._
@@ -36,6 +36,8 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.KnoraSystemInstances
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

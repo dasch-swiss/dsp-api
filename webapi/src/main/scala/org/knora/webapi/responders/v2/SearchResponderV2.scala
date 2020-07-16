@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, GravsearchException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -37,11 +36,13 @@ import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.ApacheLuceneSupport._
-import org.knora.webapi.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util._
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.concurrent.Future
 

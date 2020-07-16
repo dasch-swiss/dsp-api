@@ -28,11 +28,11 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.messages.OntologyConstants
 
 import scala.concurrent.ExecutionContextExecutor
 

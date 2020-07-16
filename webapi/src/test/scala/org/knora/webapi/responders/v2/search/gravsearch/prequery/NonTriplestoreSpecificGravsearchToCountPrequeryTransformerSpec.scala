@@ -8,9 +8,9 @@ import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeIns
 import org.knora.webapi.responders.v2.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.knora.webapi.CoreSpec
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

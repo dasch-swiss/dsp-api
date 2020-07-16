@@ -1,35 +1,34 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoContentV2, ReadClassInfoV2, _}
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +363,7 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
     }
 
     /**
-      * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
+      * Returns a [[Map]] of properties to [[Value]] objects representing the resource class's
       * cardinalities on those properties.
       */
     def knoraResourceCardinalities: Map[IRI, KnoraCardinalityInfo] = {
@@ -429,7 +428,7 @@ class PropertyInfoV1(propertyInfoV2: ReadPropertyInfoV2) extends EntityInfoV1 {
 
     /**
       * Returns `true` if this is a subproperty (directly or indirectly) of
-      * [[OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
+      * [[org.knora.webapi.messages.OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
       */
     def isStandoffInternalReferenceProperty: Boolean = propertyInfoV2.isStandoffInternalReferenceProperty
 }

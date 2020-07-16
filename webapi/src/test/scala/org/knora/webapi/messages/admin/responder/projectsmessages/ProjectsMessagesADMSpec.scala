@@ -20,7 +20,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.exceptions.{BadRequestException, OntologyConstraintException}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.util.stringformatter.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 object ProjectsMessagesADMSpec {
     val config = ConfigFactory.parseString(

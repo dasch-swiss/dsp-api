@@ -9,15 +9,16 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.constances.OntologyConstants
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDValue}
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.SmartIri
 import org.knora.webapi.util.{MutableTestIri, SmartIri}
 import spray.json._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

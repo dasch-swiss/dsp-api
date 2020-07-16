@@ -31,9 +31,10 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.util.stringformatter.SmartIri
 import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 

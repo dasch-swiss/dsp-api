@@ -26,13 +26,12 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectIdenti
 import org.knora.webapi.messages.admin.responder.sipimessages.{SipiFileInfoGetRequestADM, SipiFileInfoGetResponseADM, SipiResponderRequestADM}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.v1.GroupedProps.ValueProps
+import org.knora.webapi.messages.util.GroupedProps.ValueProps
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.PermissionUtilADM
 import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, filterPermissionRelevantAssertionsFromValueProps}
 import org.knora.webapi._
-import org.knora.webapi.constances.KnoraSystemInstances
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 
 import scala.concurrent.Future
 

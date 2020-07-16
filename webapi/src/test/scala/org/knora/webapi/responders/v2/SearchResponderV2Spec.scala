@@ -25,9 +25,9 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.stringformatter.StringFormatter
 import org.knora.webapi.{ApiV2Complex, CoreSpec, MarkupAsXml, SchemaOptions}
-import webapi.src.main.scala.org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 

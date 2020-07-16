@@ -35,10 +35,11 @@ import org.knora.webapi.exceptions.{AssertionException, BadRequestException, Une
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.util.stringformatter.IriConversions._
-import org.knora.webapi.util.jsonld.JsonLDDocument
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.JsonLDDocument
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception.catching

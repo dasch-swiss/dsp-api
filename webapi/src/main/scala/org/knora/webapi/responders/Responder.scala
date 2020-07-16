@@ -28,9 +28,11 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{DuplicateValueException, UnexpectedMessageException}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.stringformatter.{SmartIri, StringFormatter}
+import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -53,14 +55,7 @@ object Responder {
     }
 }
 
-/**
- * Data needed to be passed to each responder.
- *
- * @param system   the actor system.
- * @param appActor the main application actor.
- */
-case class ResponderData(system: ActorSystem,
-                         appActor: ActorRef)
+
 
 /**
  * An abstract class providing values that are commonly used in Knora responders.
