@@ -30,17 +30,29 @@ import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
   * @param entities a map of Gravsearch entities to the types that were determined for them. If an entity
   *                 has more than one type, this means that it has been used with inconsistent types.
   */
-case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]]) {
+case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]],
+                                            entitiesInferredFromProperties: Set[TypeableEntity] = Set.empty) {
     /**
       * Adds types for an entity.
       *
       * @param entity      the entity for which types have been found.
       * @param entityTypes the types to be added.
+     *  @param inferredFromProperty `true` if any of the types of this entity were inferred from its use with a property.
       * @return a new [[IntermediateTypeInspectionResult]] containing the additional type information.
       */
-    def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo]): IntermediateTypeInspectionResult = {
+    def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo], inferredFromProperty: Boolean = false): IntermediateTypeInspectionResult = {
         val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
-        IntermediateTypeInspectionResult(entities = entities + (entity -> newTypes))
+
+        val newEntitiesInferredFromProperties = if (inferredFromProperty) {
+            entitiesInferredFromProperties + entity
+        } else {
+            entitiesInferredFromProperties
+        }
+
+        IntermediateTypeInspectionResult(
+            entities = entities + (entity -> newTypes),
+            entitiesInferredFromProperties = newEntitiesInferredFromProperties
+        )
     }
 
     /**
@@ -74,7 +86,8 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
                     } else {
                         throw AssertionException(s"Cannot generate final type inspection result because of inconsistent types")
                     }
-            }
+            },
+            entitiesInferredFromProperties = entitiesInferredFromProperties
         )
     }
 }

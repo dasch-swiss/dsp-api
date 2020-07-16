@@ -32,19 +32,11 @@ sealed trait GravsearchEntityTypeInfo
   * Represents type information about a property.
   *
   * @param objectTypeIri an IRI representing the type of the objects of the property.
+  * @param objectIsResourceType `true` if the property's object type is a resource type.
+  * @param objectIsValueType `true` if the property's object type is a value type.
   */
-case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTypeInfo {
+case class PropertyTypeInfo(objectTypeIri: SmartIri, objectIsResourceType: Boolean = false, objectIsValueType: Boolean = false) extends GravsearchEntityTypeInfo {
     override def toString: String = s"knora-api:objectType ${IriRef(objectTypeIri).toSparql}"
-
-    /**
-     * `true` if the property's object type is a resource type.
-     */
-    val objectIsResourceType: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(objectTypeIri)
-
-    /**
-     * `true` if the property's object type is a value type.
-     */
-    val objectIsValueType: Boolean = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeIri.toString)
 }
 
 /**
@@ -52,19 +44,11 @@ case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTyp
   * or an IRI.
   *
   * @param typeIri an IRI representing the entity's type.
+  * @param isResourceType `true` if this is a resource type.
+  * @param isValueType `true` if this is a value type.
   */
-case class NonPropertyTypeInfo(typeIri: SmartIri) extends GravsearchEntityTypeInfo {
+case class NonPropertyTypeInfo(typeIri: SmartIri, isResourceType: Boolean = false, isValueType: Boolean = false) extends GravsearchEntityTypeInfo {
     override def toString: String = s"rdf:type ${IriRef(typeIri).toSparql}"
-
-    /**
-     * `true` if this is a resource type.
-     */
-    val isResourceType: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri)
-
-    /**
-     * `true` if this is a value type.
-     */
-    val isValueType: Boolean = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeIri.toString)
 }
 
 /**
@@ -95,7 +79,7 @@ case class TypeableIri(iri: SmartIri) extends TypeableEntity {
   *
   * @param entities a map of Gravsearch entities to the types that were determined for them.
   */
-case class GravsearchTypeInspectionResult(entities: Map[TypeableEntity, GravsearchEntityTypeInfo]) {
+case class GravsearchTypeInspectionResult(entities: Map[TypeableEntity, GravsearchEntityTypeInfo], entitiesInferredFromProperties: Set[TypeableEntity]) {
     /**
       * Given an [[Entity]], returns its type, if the entity is typeable and its type is available.
       *
