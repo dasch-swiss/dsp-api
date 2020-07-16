@@ -280,7 +280,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
 
         val maybeSubjectTypeIri: Option[SmartIri] = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-            case Some(NonPropertyTypeInfo(subjectTypeIri)) => Some(subjectTypeIri)
+            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) => Some(nonPropertyTypeInfo.typeIri)
             case _ => None
         }
 
@@ -1513,7 +1513,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
         typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-            case Some(NonPropertyTypeInfo(typeIri)) if typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
+            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
             case _ => throw GravsearchException(s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
         }
 
