@@ -178,10 +178,10 @@ go_rules_dependencies()
 go_register_toolchains()
 
 #
-# Download the rules_docker repository at release v0.12.0
+# Download the rules_docker repository at release v0.14.4
 #
-rules_docker_version="0.13.0"
-rules_docker_version_sha256="df13123c44b4a4ff2c2f337b906763879d94871d16411bf82dcfeba892b58607"
+rules_docker_version="0.14.4"
+rules_docker_version_sha256="4521794f0fba2e20f3bf15846ab5e01d5332e587e9ce81629c7f96c793bb7036"
 http_archive(
     name = "io_bazel_rules_docker",
     sha256 = rules_docker_version_sha256,

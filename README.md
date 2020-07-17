@@ -75,9 +75,13 @@ export JAVA_HOME=`/usr/libexec/java_home -v 11`
 To install, follow these steps:
 
 ```
-$ brew install bazel
-$ brew upgrade bazel
+$ npm install -g @bazel/bazelisk
 ```
+
+This will install [bazelisk](https://github.com/bazelbuild/bazelisk) which is
+a wrapper to the `bazel` binary that will automatically install the supported
+Bazel version, defined in the `.bazelversion` file in the root of the
+`knora-api` repository.
 
 ### For building the documentation
 
