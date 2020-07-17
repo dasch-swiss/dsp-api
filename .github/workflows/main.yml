@@ -20,9 +20,9 @@ jobs:
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: Set up Node
-          uses: actions/setup-node@v1
-          with:
-            node-version: '12'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
       - name: Install dependencies
         run: |
           npm install --global @bazel/bazelisk
@@ -64,9 +64,9 @@ jobs:
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: Set up Node
-          uses: actions/setup-node@v1
-          with:
-            node-version: '12'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
       - name: Install dependencies
         run: |
           npm install --global @bazel/bazelisk
@@ -112,9 +112,9 @@ jobs:
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: Set up Node
-          uses: actions/setup-node@v1
-          with:
-            node-version: '12'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -163,9 +163,9 @@ jobs:
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: Set up Node
-          uses: actions/setup-node@v1
-          with:
-            node-version: '12'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
       - name: Install dependencies
         run: |
           npm install --global @bazel/bazelisk
@@ -211,9 +211,9 @@ jobs:
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: Set up Node
-          uses: actions/setup-node@v1
-          with:
-            node-version: '12'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
       - name: Install dependencies
         run: |
           npm install --global @bazel/bazelisk
