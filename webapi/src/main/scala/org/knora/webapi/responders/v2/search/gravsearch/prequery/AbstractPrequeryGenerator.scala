@@ -171,9 +171,8 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             // create additional statements in order to query permissions and other information for a resource
 
             Seq(
-                StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
                 StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-            )
+                )
         } else {
             // inputEntity is target of a value property
             // properties are handled by `convertStatementForPropertyType`, no processing needed here

@@ -9,6 +9,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{AssertionException, CoreSpec, KnoraSettingsImpl, SharedTestDataADM}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -126,19 +127,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
             ),
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -281,19 +270,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
             ),
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -447,19 +424,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
             ),
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -610,19 +575,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
             ),
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -773,19 +726,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
             ),
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -938,18 +879,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
                             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
                             propertyPathOperator = None
                         ),
@@ -1054,19 +983,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
             ),
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -1194,19 +1111,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             isAscending = true
         )),
         whereClause = WhereClause(
-            patterns = Vector(
-                StatementPattern(
-                    subj = QueryVariable(variableName = "book"),
-                    pred = IriRef(
-                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = IriRef(
-                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    namedGraph = None
-                ),
+            patterns = ArrayBuffer(
                 StatementPattern(
                     subj = QueryVariable(variableName = "book"),
                     pred = IriRef(
@@ -1322,19 +1227,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             isAscending = true
         )),
         whereClause = WhereClause(
-            patterns = Vector(
-                StatementPattern(
-                    subj = QueryVariable(variableName = "book"),
-                    pred = IriRef(
-                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = IriRef(
-                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    namedGraph = None
-                ),
+            patterns = ArrayBuffer(
                 StatementPattern(
                     subj = QueryVariable(variableName = "book"),
                     pred = IriRef(
@@ -1396,19 +1289,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             isAscending = true
         )),
         whereClause = WhereClause(
-            patterns = Vector(
-                StatementPattern(
-                    subj = QueryVariable(variableName = "book"),
-                    pred = IriRef(
-                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = IriRef(
-                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    namedGraph = None
-                ),
+            patterns = ArrayBuffer(
                 StatementPattern(
                     subj = QueryVariable(variableName = "book"),
                     pred = IriRef(
