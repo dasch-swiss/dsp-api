@@ -34,7 +34,7 @@ import scala.concurrent.Future
   * 1. For a variable or IRI representing a resource or value, a type annotation is a triple whose subject is the variable
   * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
   * such as `knora-api:date`, or an XSD type such as `xsd:integer`.
-  * 1. For a variable or IRI representing a property, a type annotation is a triple whose subject is the variable or
+  * 2. For a variable or IRI representing a property, a type annotation is a triple whose subject is the variable or
   * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
   * of object that is required by the property.
   */
@@ -47,8 +47,16 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
       * @param typeableEntity the entity whose type was annotated.
       * @param annotationProp the annotation property.
       * @param typeIri        the type IRI that was given in the annotation.
+      * @param isResource     the given type IRI is that of a resource.
+      * @param isValue        the given type IRI is that of a value.
       */
-    private case class GravsearchTypeAnnotation(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationProperty, typeIri: SmartIri)
+    private case class GravsearchTypeAnnotation(
+                                                 typeableEntity: TypeableEntity,
+                                                 annotationProp: TypeAnnotationProperty,
+                                                 typeIri: SmartIri,
+                                                 isResource: Boolean = false,
+                                                 isValue : Boolean = false
+                                               )
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
@@ -68,10 +76,10 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
                 case (acc: IntermediateTypeInspectionResult, typeAnnotation: GravsearchTypeAnnotation) =>
                     typeAnnotation.annotationProp match {
                         case TypeAnnotationProperties.RdfType =>
-                            acc.addTypes(typeAnnotation.typeableEntity, Set(NonPropertyTypeInfo(typeAnnotation.typeIri)))
+                            acc.addTypes(typeAnnotation.typeableEntity, Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = typeAnnotation.isResource, isValueType = typeAnnotation.isValue)))
 
                         case TypeAnnotationProperties.ObjectType =>
-                            acc.addTypes(typeAnnotation.typeableEntity, Set(PropertyTypeInfo(typeAnnotation.typeIri)))
+                            acc.addTypes(typeAnnotation.typeableEntity, Set(PropertyTypeInfo(typeAnnotation.typeIri, objectIsResourceType = typeAnnotation.isResource, objectIsValueType = typeAnnotation.isValue)))
                     }
             }
 
@@ -127,7 +135,9 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
         GravsearchTypeAnnotation(
             typeableEntity = typeableEntity,
             annotationProp = annotationProp,
-            typeIri = typeIri
+            typeIri = typeIri,
+            isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri),
+            isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeIri.toString)
         )
     }
 

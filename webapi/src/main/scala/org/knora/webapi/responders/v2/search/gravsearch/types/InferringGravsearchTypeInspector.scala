@@ -226,7 +226,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -283,7 +283,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -333,7 +333,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                     }
 
                                 case _ =>
-                                    // The predicate isn't a Knora IRI, or is a type inspection predicate, so this rule isn't relevant.
+                                    // The predicate isn't a Knora IRI, or is a type annotation predicate, so this rule isn't relevant.
                                     None
                             }
                     }
@@ -345,7 +345,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -401,7 +401,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = false),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -486,7 +486,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -632,7 +632,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         Some(new PropertyTypeFromObjectRule(None)))))))))))
 
     // The inference rule pipeline for subsequent iterations. Excludes rules that cannot return additional
-    // if they are run more than once.
+    // information if they are run more than once.
     private val subsequentIterationRulePipeline = new TypeOfObjectFromPropertyRule(
         Some(new PropertyTypeFromObjectRule(None)))
 

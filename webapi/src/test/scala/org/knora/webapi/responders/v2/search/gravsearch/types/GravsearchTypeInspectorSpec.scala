@@ -596,7 +596,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     }
 
     "The inferring type inspector" should {
-        "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and and the specified type is a Knora resource class" in {
+        "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
