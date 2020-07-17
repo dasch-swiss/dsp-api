@@ -19,10 +19,13 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
-        with:
-          version: 3.3.0
+      - name: Set up Node
+          uses: actions/setup-node@v1
+          with:
+            node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -60,10 +63,13 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
-        with:
-          version: 3.3.0
+      - name: Set up Node
+          uses: actions/setup-node@v1
+          with:
+            node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -105,10 +111,16 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
-        with:
-          version: 3.3.0
+      - name: Set up Node
+          uses: actions/setup-node@v1
+          with:
+            node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -150,10 +162,13 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
-        with:
-          version: 3.3.0
+      - name: Set up Node
+          uses: actions/setup-node@v1
+          with:
+            node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -195,10 +210,13 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
-        with:
-          version: 3.3.0
+      - name: Set up Node
+          uses: actions/setup-node@v1
+          with:
+            node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -244,6 +262,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
+          npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
       - name: Disk Free
         run: |
@@ -280,10 +299,6 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
-        with:
-          version: 3.3.0
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -297,6 +312,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
+          npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
       - name: cache maven artifacts
         uses: actions/cache@v1
