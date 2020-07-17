@@ -226,7 +226,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = false),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
