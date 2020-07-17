@@ -233,29 +233,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 result.id should be ("http://rdfh.ch/users/userWithCustomIri")
             }
 
-            "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
-                val params =
-                    s"""{
-                       |    "id": "invalid-user-IRI",
-                       |    "username": "userWithInvalidCustomIri",
-                       |    "email": "userWithInvalidCustomIri@example.org",
-                       |    "givenName": "a user",
-                       |    "familyName": "with an invalid custom Iri",
-                       |    "password": "test",
-                       |    "status": true,
-                       |    "lang": "en",
-                       |    "systemAdmin": false
-                       |}""".stripMargin
-
-
-                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"Invalid user IRI")
-                invalidIri should be(true)
-            }
-
             "return 'BadRequest' if the supplied IRI for the user is not unique" in {
                 val params =
                     s"""{
