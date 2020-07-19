@@ -50,9 +50,9 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
+import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException
 import spray.json._
@@ -572,7 +572,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } :+ knoraXmlImportSchemaNamespaceInfo
 
                         // Generate the schema using a Twirl template.
-                        val unformattedSchemaXml = twirl.xsd.v1.xml.xmlImport(
+                        val unformattedSchemaXml = org.knora.webapi.messages.twirl.xsd.v1.xml.xmlImport(
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaceInfos,
                             knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,

@@ -7,6 +7,7 @@ scala_library(
     srcs = glob(["**/*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
+        "//tools/buildstamp:version_info_jar",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
@@ -18,7 +19,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
-        "//webapi/src/main/scala/org/knora/webapi/viewhandlers",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
@@ -47,5 +47,6 @@ scala_library(
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_io_commons_io",
         "@maven//:commons_validator_commons_validator",
+        "@maven//:com_typesafe_play_twirl_api_2_12",
     ],
 )

@@ -23,6 +23,7 @@ import akka.actor.Terminated
 import org.knora.webapi.messages.app.appmessages.{AppStart, SetAllowReloadOverHTTPState, SetLoadDemoDataState}
 
 import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
  * Starts Knora by bringing everything into scope by using the cake pattern.

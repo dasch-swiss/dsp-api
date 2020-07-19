@@ -12,8 +12,14 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/http/handler",
         "//webapi/src/main/scala/org/knora/webapi/http/version",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/responders",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:ch_megard_akka_http_cors_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -36,6 +42,8 @@ scala_library(
         # "@maven//:io_kamon_kamon_logback_2_12",
         # "@maven//:io_kamon_kamon_prometheus_2_12",
         "@maven//:io_kamon_kamon_scala_future_2_12",
+        "@maven//:redis_clients_jedis",
+        "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",
     ],
 )
 

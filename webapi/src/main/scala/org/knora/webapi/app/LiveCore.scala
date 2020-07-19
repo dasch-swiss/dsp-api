@@ -22,7 +22,7 @@ package org.knora.webapi.app
 import akka.actor._
 import akka.stream.Materializer
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps

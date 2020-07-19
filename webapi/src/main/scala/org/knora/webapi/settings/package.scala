@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-package object app {
+package object settings {
 
     val APPLICATION_MANAGER_ACTOR_NAME = "applicationManager"
     val APPLICATION_MANAGER_ACTOR_PATH = "/user/" + APPLICATION_MANAGER_ACTOR_NAME
@@ -111,5 +111,31 @@ package object app {
 
     val USERS_ADM_ACTOR_NAME: String = "usersADM"
     val USERS_ADM_ACTOR_PATH: String = RESPONDER_MANAGER_ACTOR_PATH + "/" + USERS_ADM_ACTOR_NAME
+
+
+    val StoreManagerActorName: String = "storeManager"
+    val StoreManagerActorPath: String = "/user/" + APPLICATION_MANAGER_ACTOR_NAME + StoreManagerActorName
+
+    /* Triplestores */
+
+    val TriplestoreManagerActorName: String = "triplestoreManager"
+    val TriplestoreManagerActorPath: String = StoreManagerActorPath + "/" + TriplestoreManagerActorName
+
+    val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
+    val EmbeddedJenaActorName: String = "embeddedJenaTDB"
+    val EmbeddedGraphDBActorNAme: String = "embeddedJenaGraphDB"
+    val FakeTriplestoreActorName: String = "fakeTriplestore"
+
+    /* Sipi */
+
+    val IIIFManagerActorName: String = "iiifManager"
+    val IIIFManagerActorPath: String = StoreManagerActorPath + "/" + IIIFManagerActorName
+
+    val SipiConnectorActorName: String = "sipiConnector"
+
+
+    /* Redis */
+    val RedisManagerActorName: String = "redisManager"
+    val RedisManagerActorPath: String = StoreManagerActorPath + "/" + RedisManagerActorName
 
 }

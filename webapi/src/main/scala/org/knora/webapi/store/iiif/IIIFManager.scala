@@ -22,11 +22,10 @@ package org.knora.webapi.store.iiif
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import org.knora.webapi.{ActorMaker, _}
+import org.knora.webapi.core.ActorMaker
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.store.SipiConnectorActorName
+import org.knora.webapi.settings.{KnoraDispatchers, _}
 
 /**
   * Makes requests to IIIF servers.

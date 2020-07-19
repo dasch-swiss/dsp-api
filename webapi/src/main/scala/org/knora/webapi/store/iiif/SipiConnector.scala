@@ -31,6 +31,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi.exceptions.{BadRequestException, NotImplementedException, SipiException}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.SipiConstants.FileType
@@ -41,9 +42,7 @@ import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings}
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import org.knora.webapi.util.SipiUtil
-import org.knora.webapi.{NotImplementedException, SipiException}
 import spray.json._
-import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
