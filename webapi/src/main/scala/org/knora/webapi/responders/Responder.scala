@@ -29,10 +29,8 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{DuplicateValueException, UnexpectedMessageException}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.stringformatter.SmartIri
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -122,7 +120,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                                ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
 
         for {
-            isEntityUsedSparql <- Future(twirl.queries.sparql.v2.txt.isEntityUsed(
+            isEntityUsedSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
                 entityIri = entityIri,
                 ignoreKnoraConstraints = ignoreKnoraConstraints,

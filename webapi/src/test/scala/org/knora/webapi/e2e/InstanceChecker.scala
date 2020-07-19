@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.messages.util.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue, OntologyUtil}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}

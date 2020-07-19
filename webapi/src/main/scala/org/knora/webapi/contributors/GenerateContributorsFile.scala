@@ -17,14 +17,14 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package webapi.src.main.scala.org.knora.webapi.contributors
+package org.knora.webapi.contributors
 
 import java.io.File
 import java.net.{URL, URLConnection}
 
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.twirl
-import org.knora.webapi.twirl.Contributor
+import org.knora.webapi.messages.twirl
+import org.knora.webapi.messages.twirl.Contributor
 import org.knora.webapi.util.FileUtil
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import spray.json.{JsArray, JsNull, JsNumber, JsObject, JsString, JsValue, JsonParser}
@@ -84,7 +84,7 @@ object GenerateContributorsFile extends App {
     val contributorsSorted = contributorsWithNames.sortBy(_.contributions).reverse
 
     // Generate Markdown.
-    val contributorsText: String = twirl.queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
+    val contributorsText: String = org.knora.webapi.messages.twirl.queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
 
     // Write Contributors.md.
     FileUtil.writeTextFile(outputFile, contributorsText)

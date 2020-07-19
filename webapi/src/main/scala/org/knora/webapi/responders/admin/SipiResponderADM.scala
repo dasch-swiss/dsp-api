@@ -22,16 +22,15 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.knora.webapi._
+import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectIdentifierADM, ProjectRestrictedViewSettingsADM, ProjectRestrictedViewSettingsGetADM}
 import org.knora.webapi.messages.admin.responder.sipimessages.{SipiFileInfoGetRequestADM, SipiFileInfoGetResponseADM, SipiResponderRequestADM}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.messages.util.GroupedProps.ValueProps
-import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, filterPermissionRelevantAssertionsFromValueProps}
-import org.knora.webapi._
-import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 
 import scala.concurrent.Future
 
@@ -65,7 +64,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
         log.debug(s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}")
 
         for {
-            sparqlQuery <- Future(twirl.queries.sparql.admin.txt.getFileValue(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getFileValue(
                 triplestore = settings.triplestoreType,
                 filename = request.filename
             ).toString())

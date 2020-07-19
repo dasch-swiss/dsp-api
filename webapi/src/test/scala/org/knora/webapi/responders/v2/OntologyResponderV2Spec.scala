@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.util.{MutableTestIri, SmartIri}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 

@@ -25,7 +25,7 @@ import java.util.UUID
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 

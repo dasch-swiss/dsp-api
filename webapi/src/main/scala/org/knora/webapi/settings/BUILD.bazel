@@ -10,7 +10,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_config",
     ],
 )

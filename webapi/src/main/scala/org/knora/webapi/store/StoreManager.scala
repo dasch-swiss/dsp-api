@@ -21,8 +21,7 @@ package org.knora.webapi.store
 
 import akka.actor._
 import akka.event.LoggingReceive
-import org.knora.webapi._
-import org.knora.webapi.core.{ActorMaker, LiveActorMaker}
+import org.knora.webapi.{LiveActorMaker, _}
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest

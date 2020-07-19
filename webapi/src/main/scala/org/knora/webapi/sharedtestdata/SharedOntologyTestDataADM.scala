@@ -20,6 +20,7 @@
 package org.knora.webapi.sharedtestdata
 
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.IRI
 
 object SharedOntologyTestDataADM {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"

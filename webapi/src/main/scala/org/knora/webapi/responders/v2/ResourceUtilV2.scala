@@ -23,19 +23,18 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{ForbiddenException, NotFoundException}
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
 import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.{IRI, NotFoundException}
-import org.knora.webapi.twirl
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -129,7 +128,7 @@ object ResourceUtilV2 {
     def checkListNodeExists(listNodeIri: IRI,
                             storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
         for {
-            askString <- Future(twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
 
             checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 

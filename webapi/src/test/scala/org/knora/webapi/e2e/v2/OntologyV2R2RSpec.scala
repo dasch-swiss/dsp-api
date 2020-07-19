@@ -18,7 +18,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.{JsonLDArray, JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil}
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import spray.json._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 

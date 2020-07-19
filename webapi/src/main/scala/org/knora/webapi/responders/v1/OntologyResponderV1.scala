@@ -19,22 +19,21 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetRequestADM, ProjectsGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.{ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.ValueUtilV1
 
 import scala.concurrent.Future
 

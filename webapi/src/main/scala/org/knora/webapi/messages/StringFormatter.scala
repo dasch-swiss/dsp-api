@@ -404,7 +404,7 @@ object StringFormatter {
 
 /**
  * Represents a parsed IRI with Knora-specific functionality. To construct a `SmartIri`,
- * `import org.knora.webapi.util.stringformatter.IriConversions.ConvertibleIri`, then call one of the methods that
+ * `import org.knora.webapi.messages.StringFormatter.IriConversions.ConvertibleIri`, then call one of the methods that
  * it implicitly defines on `String`, e.g.:
  *
  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIri
@@ -2811,7 +2811,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     def checkIriExists(iri: IRI,
                        storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Boolean] = {
         for {
-            askString <- Future(twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
             response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
         } yield response.result
     }

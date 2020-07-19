@@ -23,15 +23,14 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.slf4j.LoggerFactory
-import org.knora.webapi.twirl
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.KnoraSystemInstances
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 
@@ -88,7 +87,7 @@ object ResourceHtmlView {
         log.debug(s"non-empty locations: ${properties.find(_.locations.nonEmpty)}")
         log.debug(s"imgpath: $imgpath , nonEmpty: ${imgpath.nonEmpty}")
 
-        val content: play.twirl.api.Html = twirl.views.html.resource.properties(propMap, imgpath)
+        val content: play.twirl.api.Html = org.knora.webapi.messages.twirl.views.html.resource.properties(propMap, imgpath)
         content.toString
     }
 

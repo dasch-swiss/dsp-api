@@ -29,7 +29,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi._
+import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{AuthenticationException, BadCredentialsException, BadRequestException}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._

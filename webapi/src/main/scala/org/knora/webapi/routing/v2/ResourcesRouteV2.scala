@@ -37,7 +37,7 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.jsonld.JsonLDDocument
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 

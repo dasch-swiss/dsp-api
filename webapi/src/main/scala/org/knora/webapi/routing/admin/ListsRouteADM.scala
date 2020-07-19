@@ -37,6 +37,8 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
 import scala.concurrent.{ExecutionContext, Future}
 
 object ListsRouteADM {

@@ -20,7 +20,7 @@
 package org.knora.webapi.store
 
 import akka.actor.{ActorRef, Props}
-import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.store.iiif.MockableIIIFManager
 import org.knora.webapi.settings.KnoraDispatchers
 

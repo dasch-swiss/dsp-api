@@ -7,7 +7,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.standoffmessages.{StandoffDataTypeClasses, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{IntegerValueContentV2, LinkValueContentV2, ReadLinkValueV2, ReadOtherValueV2, ReadTextValueV2, TextValueContentV2}
 import org.knora.webapi.messages.util.PermissionUtilADM.{ChangeRightsPermission, ViewPermission}
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.StringFormatter.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 

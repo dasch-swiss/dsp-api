@@ -39,7 +39,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.util.date.CalendarNameGregorian
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.util.{MutableTestIri, SmartIri}
 import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
@@ -166,7 +166,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       requestingUser: UserADM): ReadResourceV2 = {
         // Make a Gravsearch query from a template.
-        val gravsearchQuery: String = twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+        val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
             propertyIris = propertyIrisForGravsearch
         ).toString()

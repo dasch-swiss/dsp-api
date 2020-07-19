@@ -22,17 +22,17 @@ package org.knora.webapi.responders.v1
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.twirl.SearchCriterion
+import org.knora.webapi.messages.util.{DateUtilV1, PermissionUtilADM, ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.{DateUtilV1, PermissionUtilADM, ValueUtilV1}
 
 import scala.concurrent.Future
 
@@ -157,7 +157,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
         for {
             // Get the search results with paging.
-            searchSparql <- Future(twirl.queries.sparql.v1.txt.searchFulltext(
+            searchSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = LuceneQueryString(searchGetRequest.searchValue),
                 preferredLanguage = searchGetRequest.userProfile.lang,
@@ -493,7 +493,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             )
 
             // Get the search results.
-            searchSparql = twirl.queries.sparql.v1.txt.searchExtended(
+            searchSparql = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.searchExtended(
                 triplestore = settings.triplestoreType,
                 searchCriteria = searchCriteria,
                 preferredLanguage = searchGetRequest.userProfile.lang,

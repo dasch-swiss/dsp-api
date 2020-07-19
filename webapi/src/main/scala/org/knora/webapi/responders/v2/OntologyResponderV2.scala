@@ -24,22 +24,22 @@ import java.time.Instant
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{ApplicationCacheException, AssertionException, BadRequestException, EditConflictException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException, UpdateNotPerformedException}
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{ErrorHandlingMap, KnoraSystemInstances, OntologyUtil, ResponderData}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.messages.util.{ErrorHandlingMap, KnoraSystemInstances, OntologyUtil}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
 import scala.collection.immutable
 import scala.concurrent.Future
@@ -147,7 +147,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
             // Get all ontology metadata.
-            allOntologyMetadataSparql <- FastFuture.successful(twirl.queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
+            allOntologyMetadataSparql <- FastFuture.successful(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
             allOntologyMetadataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql)).mapTo[SparqlSelectResponse]
             allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = buildOntologyMetadata(allOntologyMetadataResponse)
 
@@ -161,7 +161,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             // Get the contents of each named graph containing an ontology.
             ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] = allOntologyMetadata.keys.map {
                 ontologyIri =>
-                    val ontologyGraphConstructQuery = twirl.queries.sparql.v2.txt.getOntologyGraph(
+                    val ontologyGraphConstructQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getOntologyGraph(
                         triplestore = settings.triplestoreType,
                         ontologyGraph = ontologyIri
                     ).toString
@@ -1612,7 +1612,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
             }
 
-            getOntologyInfoSparql = twirl.queries.sparql.v2.txt.getOntologyInfo(
+            getOntologyInfoSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getOntologyInfo(
                 triplestore = settings.triplestoreType,
                 ontologyIri = internalOntologyIri
             ).toString()
@@ -1715,7 +1715,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                createOntologySparql = twirl.queries.sparql.v2.txt.createOntology(
+                createOntologySparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createOntology(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -1809,7 +1809,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.changeOntologyMetadata(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changeOntologyMetadata(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -1966,7 +1966,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.createClass(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createClass(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2330,7 +2330,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.addCardinalitiesToClass(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.addCardinalitiesToClass(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2495,7 +2495,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.replaceClassCardinalities(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.replaceClassCardinalities(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2605,7 +2605,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.deleteClass(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.deleteClass(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2723,7 +2723,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.deleteProperty(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.deleteProperty(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -2809,7 +2809,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
-                isOntologyUsedSparql = twirl.queries.sparql.v2.txt.isOntologyUsed(
+                isOntologyUsedSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isOntologyUsed(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     classIris = ontology.classes.keySet,
@@ -2828,7 +2828,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Delete everything in the ontology's named graph.
 
-                updateSparql = twirl.queries.sparql.v2.txt.deleteOntology(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.deleteOntology(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri
                 ).toString()
@@ -3056,7 +3056,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.createProperty(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createProperty(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -3206,7 +3206,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.changePropertyLabelsOrComments(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changePropertyLabelsOrComments(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -3358,7 +3358,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = twirl.queries.sparql.v2.txt.changeClassLabelsOrComments(
+                updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changeClassLabelsOrComments(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
@@ -3476,7 +3476,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       */
     private def loadPropertyDefinition(propertyIri: SmartIri): Future[PropertyInfoContentV2] = {
         for {
-            sparql <- Future(twirl.queries.sparql.v2.txt.getPropertyDefinition(
+            sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getPropertyDefinition(
                 triplestore = settings.triplestoreType,
                 propertyIri = propertyIri
             ).toString())
@@ -3636,7 +3636,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       */
     private def loadClassDefinition(classIri: SmartIri): Future[ClassInfoContentV2] = {
         for {
-            sparql <- Future(twirl.queries.sparql.v2.txt.getClassDefinition(
+            sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getClassDefinition(
                 triplestore = settings.triplestoreType,
                 classIri = classIri
             ).toString())

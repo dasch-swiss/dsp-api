@@ -23,26 +23,23 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, GravsearchException, InconsistentTriplestoreDataException}
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
+import org.knora.webapi.messages.util.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToCountPrequeryTransformer, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
+import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap, ResponderData}
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.ResponderData
-import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch._
-import org.knora.webapi.responders.v2.search.gravsearch.prequery._
-import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.ApacheLuceneSupport._
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util._
-import org.knora.webapi.util.stringformatter.SmartIri
-import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.util.ApacheLuceneSupport._
 
 import scala.concurrent.Future
 
@@ -82,7 +79,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
-            countSparql <- Future(twirl.queries.sparql.v2.txt.searchFulltext(
+            countSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
@@ -128,14 +125,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption],
                                  requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-        import FullTextMainQueryGenerator.FullTextSearchConstants
+        import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
-            searchSparql <- Future(twirl.queries.sparql.v2.txt.searchFulltext(
+            searchSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
@@ -345,7 +342,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-        import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
+        import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
@@ -601,7 +598,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             }
 
             // Do a SELECT prequery to get the IRIs of the requested page of resources.
-            prequery = twirl.queries.sparql.v2.txt.getResourcesInProjectPrequery(
+            prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcesInProjectPrequery(
                 triplestore = settings.triplestoreType,
                 projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
                 resourceClassIri = internalClassIri,
@@ -630,7 +627,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 for {
                     // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
                     // at most one page of standoff per text value.
-                    resourceRequestSparql <- Future(twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                    resourceRequestSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
                         triplestore = settings.triplestoreType,
                         resourceIris = mainResourceIris,
                         preview = false,
@@ -690,7 +687,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
-            countSparql <- Future(twirl.queries.sparql.v2.txt.searchResourceByLabel(
+            countSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
@@ -739,7 +736,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
-            searchResourceByLabelSparql <- Future(twirl.queries.sparql.v2.txt.searchResourceByLabel(
+            searchResourceByLabelSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,

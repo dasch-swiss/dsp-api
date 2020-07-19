@@ -33,7 +33,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.stringformatter.SmartIri
+import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.util.{MutableTestIri, SmartIri}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
@@ -76,7 +76,7 @@ class ValuesV2R2RSpec extends R2RSpec {
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       userEmail: String): JsonLDDocument = {
         // Make a Gravsearch query from a template.
-        val gravsearchQuery: String = twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+        val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
             propertyIris = propertyIrisForGravsearch
         ).toString()

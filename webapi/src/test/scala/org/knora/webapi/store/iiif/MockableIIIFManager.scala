@@ -20,7 +20,7 @@
 package org.knora.webapi.store.iiif
 
 import akka.actor.ActorRef
-import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.store.SipiConnectorActorName
 
 /**

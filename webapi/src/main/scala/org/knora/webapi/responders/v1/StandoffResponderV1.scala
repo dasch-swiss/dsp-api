@@ -23,15 +23,16 @@ import java.util.UUID
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v1.responder.ontologymessages.{ConvertOntologyClassV2ToV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.Future
 

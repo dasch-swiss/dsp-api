@@ -7,7 +7,9 @@ scala_library(
     srcs = glob(["**/*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -32,5 +34,6 @@ scala_library(
         "@maven//:org_scala_lang_scala_library",
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:com_jsuereth_scala_arm_2_12",
+        "@maven//:com_typesafe_play_twirl_api_2_12",
     ],
 )

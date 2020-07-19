@@ -29,9 +29,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.cache.CacheUtil
 
 import scala.collection.immutable.Iterable
@@ -329,7 +329,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // FIXME: Check user's permission for operation (issue #370)
 
         for {
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getAdministrativePermissionsForProject(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getAdministrativePermissionsForProject(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIRI
             ).toString())
@@ -374,7 +374,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // FIXME: Check user's permission for operation (issue #370)
 
         for {
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getAdministrativePermissionByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getAdministrativePermissionByIri(
                 triplestore = settings.triplestoreType,
                 administrativePermissionIri = administrativePermissionIri
             ).toString())
@@ -421,7 +421,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
             _ = if (groupIri.isEmpty) throw BadRequestException("Group cannot be empty")
 
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getAdministrativePermissionForProjectAndGroup(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getAdministrativePermissionForProjectAndGroup(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri,
                 groupIri = groupIri
@@ -527,7 +527,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     private def objectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
         for {
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getObjectAccessPermission(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getObjectAccessPermission(
                 triplestore = settings.triplestoreType,
                 resourceIri = Some(resourceIri),
                 valueIri = None
@@ -564,7 +564,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     private def objectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForValueGetV1 - resourceIRI: $valueIri")
         for {
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getObjectAccessPermission(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getObjectAccessPermission(
                 triplestore = settings.triplestoreType,
                 resourceIri = None,
                 valueIri = Some(valueIri)
@@ -609,7 +609,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // FIXME: Check user's permission for operation (issue #370)
 
         for {
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermissionsForProject(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermissionsForProject(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri
             ).toString())
@@ -654,7 +654,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // FIXME: Check user's permission for operation (issue #370)
 
         for {
-            sparqlQueryString <- Future(twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermissionByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermissionByIri(
                 triplestore = settings.triplestoreType,
                 defaultObjectAccessPermissionIri = permissionIri
             ).toString())
@@ -718,7 +718,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     _ = if (groupIri.isDefined && resourceClassIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together")
                     _ = if (groupIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and propertyIri together")
 
-                    sparqlQueryString = twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermission(
+                    sparqlQueryString = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermission(
                         triplestore = settings.triplestoreType,
                         projectIri = projectIri,
                         maybeGroupIri = groupIri,

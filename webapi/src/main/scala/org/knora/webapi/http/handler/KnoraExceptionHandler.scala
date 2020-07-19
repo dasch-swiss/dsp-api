@@ -25,11 +25,10 @@ import akka.http.scaladsl.server.ExceptionHandler
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.exceptions.{InternalServerException, RequestRejectedException}
 import org.knora.webapi.http.status.{ApiStatusCodesV1, ApiStatusCodesV2}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject}
-import org.knora.webapi.settings.KnoraSettingsImpl
-import spray.json.{JsNumber, JsObject, JsString, JsValue}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.settings.KnoraSettingsImpl
+import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
 /**
   * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing

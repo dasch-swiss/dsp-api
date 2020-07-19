@@ -24,7 +24,7 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.util.stringformatter.IriConversions._
+import org.knora.webapi.messages.StringFormatter.IriConversions._
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.exceptions.AssertionException
