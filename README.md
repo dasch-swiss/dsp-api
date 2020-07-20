@@ -79,9 +79,9 @@ $ npm install -g @bazel/bazelisk
 ```
 
 This will install [bazelisk](https://github.com/bazelbuild/bazelisk) which is
-a wrapper to the `bazel` binary that will automatically install the supported
-Bazel version, defined in the `.bazelversion` file in the root of the
-`knora-api` repository.
+a wrapper to the `bazel` binary. It will, when `bazel` is run on the command line,
+automatically install the supported Bazel version, defined in the `.bazelversion`
+file in the root of the `knora-api` repository.
 
 ### For building the documentation
 
