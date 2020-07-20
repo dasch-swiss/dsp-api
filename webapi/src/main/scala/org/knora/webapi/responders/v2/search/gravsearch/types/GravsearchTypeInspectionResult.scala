@@ -32,11 +32,20 @@ sealed trait GravsearchEntityTypeInfo
   * Represents type information about a property.
   *
   * @param objectTypeIri an IRI representing the type of the objects of the property.
-  * @param objectIsResourceType `true` if the property's object type is a resource type.
-  * @param objectIsValueType `true` if the property's object type is a value type.
   */
-case class PropertyTypeInfo(objectTypeIri: SmartIri, objectIsResourceType: Boolean = false, objectIsValueType: Boolean = false) extends GravsearchEntityTypeInfo {
+case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTypeInfo {
     override def toString: String = s"knora-api:objectType ${IriRef(objectTypeIri).toSparql}"
+
+
+    /**
+     * `true` if the property's object type is a resource type.
+     */
+    val objectIsResourceType: Boolean = OntologyConstants.KnoraApi.isKnoraApiV2Resource(objectTypeIri)
+
+    /**
+     * `true` if the property's object type is a value type.
+     */
+    val objectIsValueType: Boolean = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeIri.toString)
 }
 
 /**

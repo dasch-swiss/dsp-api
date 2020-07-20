@@ -76,10 +76,13 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
                 case (acc: IntermediateTypeInspectionResult, typeAnnotation: GravsearchTypeAnnotation) =>
                     typeAnnotation.annotationProp match {
                         case TypeAnnotationProperties.RdfType =>
-                            acc.addTypes(typeAnnotation.typeableEntity, Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = typeAnnotation.isResource, isValueType = typeAnnotation.isValue)))
+
+                            val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeAnnotation.typeIri)
+                            val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeAnnotation.typeIri.toString)
+                            acc.addTypes(typeAnnotation.typeableEntity, Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = isResource, isValueType = isValue)))
 
                         case TypeAnnotationProperties.ObjectType =>
-                            acc.addTypes(typeAnnotation.typeableEntity, Set(PropertyTypeInfo(typeAnnotation.typeIri, objectIsResourceType = typeAnnotation.isResource, objectIsValueType = typeAnnotation.isValue)))
+                            acc.addTypes(typeAnnotation.typeableEntity, Set(PropertyTypeInfo(typeAnnotation.typeIri)))
                     }
             }
 
@@ -135,9 +138,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
         GravsearchTypeAnnotation(
             typeableEntity = typeableEntity,
             annotationProp = annotationProp,
-            typeIri = typeIri,
-            isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri),
-            isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeIri.toString)
+            typeIri = typeIri
         )
     }
 

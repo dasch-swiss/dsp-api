@@ -129,7 +129,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                         // Yes. Is it a resource class?
                                         if (classDef.isResourceClass) {
                                             // Yes. Infer rdf:type knora-api:Resource.
-                                            val inferredType = NonPropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(usageIndex.querySchema))
+                                            val inferredType = NonPropertyTypeInfo(classDef.entityInfoContent.classIri, isResourceType = classDef.isResourceClass, isValueType = classDef.isValueClass)
                                             log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                             Some(inferredType)
                                         } else if (classDef.isStandoffClass) {
@@ -138,17 +138,18 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                             Some(inferredType)
                                         } else {
-                                            val inferredType = NonPropertyTypeInfo(rdfType)
 
                                             // It's not a resource class or standoff class. Is it valid in a type inspection result?
                                             if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
                                                 // Yes. Return it.
-                                                val inferredType = NonPropertyTypeInfo(rdfType)
+                                                val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(rdfType)
+                                                val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)
+                                                val inferredType = NonPropertyTypeInfo(rdfType, isResourceType = isResource, isValueType = isValue)
                                                 log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                                 Some(inferredType)
                                             } else {
                                                 // No. This must mean it's not allowed in Gravsearch queries.
-                                                throw GravsearchException(s"Type not allowed in Gravsearch queries: $entityToType $inferredType")
+                                                throw GravsearchException(s"Type not allowed in Gravsearch queries: $entityToType")
                                             }
                                         }
 
@@ -159,7 +160,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 }
                             } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
                                 // This isn't a Knora entity. If it's valid in a type inspection result, return it.
-                                val inferredType = NonPropertyTypeInfo(rdfType)
+
+                                val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(rdfType)
+                                val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)
+                                val inferredType = NonPropertyTypeInfo(rdfType, isResourceType = isResource, isValueType = isValue)
                                 log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                 Some(inferredType)
                             } else {
@@ -248,28 +252,34 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     // Yes. Try to infer type information from the predicate of each of those statements.
                     statements.flatMap {
                         statement =>
+
                             // Is the predicate typeable?
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
                                 case Some(typeablePred: TypeableEntity) =>
                                     // Yes. Do we have its types?
-                                    intermediateResult.entities.get(typeablePred) match {
-                                        case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
-                                            // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
-                                            entityTypes.flatMap {
-                                                case propertyTypeInfo: PropertyTypeInfo =>
-                                                    val inferredType: GravsearchEntityTypeInfo = NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri)
-                                                    log.debug("TypeOfObjectFromPropertyRule: {} {} .", entityToType, inferredType)
-                                                    Some(inferredType)
+                                    if (intermediateResult.entities.get(entityToType).isEmpty) {
+                                        intermediateResult.entities.get(typeablePred) match {
+                                            case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
+                                                // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
+                                                entityTypes.flatMap {
+                                                    case propertyTypeInfo: PropertyTypeInfo =>
+                                                        val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)
+                                                        val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(propertyTypeInfo.objectTypeIri.toString)
+                                                        val inferredType: GravsearchEntityTypeInfo = NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri, isResourceType = isResource, isValueType = isValue)
+                                                        log.debug("TypeOfObjectFromPropertyRule: {} {} .", entityToType, inferredType)
+                                                        Some(inferredType)
 
-                                                case _ =>
-                                                    None
-                                            }
+                                                    case _ =>
+                                                        None
+                                                }
 
-                                        case _ =>
-                                            // We don't have the predicate's type.
-                                            Set.empty[GravsearchEntityTypeInfo]
+                                            case _ =>
+                                                // We don't have the predicate's type.
+                                                Set.empty[GravsearchEntityTypeInfo]
+                                        }
+                                    } else {
+                                            None
                                     }
-
                                 case None =>
                                     // The predicate isn't typeable.
                                     Set.empty[GravsearchEntityTypeInfo]
@@ -316,7 +326,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
                                                 case Some(subjectTypeIri: SmartIri) =>
                                                     // Yes. Use that type.
-                                                    val inferredType = NonPropertyTypeInfo(subjectTypeIri)
+                                                    val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(subjectTypeIri.toString)
+                                                    val inferredType = NonPropertyTypeInfo(subjectTypeIri, isResourceType = readPropertyInfo.isResourceProp, isValueType = isValue)
                                                     log.debug("TypeOfSubjectFromPropertyRule: {} {} .", entityToType, inferredType)
                                                     Some(inferredType)
 
@@ -370,23 +381,26 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.obj) match {
                                 case Some(typeableObj: TypeableEntity) =>
                                     // Yes. Do we have its types?
-                                    intermediateResult.entities.get(typeableObj) match {
-                                        case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
-                                            // Yes. Use those types.
-                                            entityTypes.flatMap {
-                                                case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                                    val inferredType: GravsearchEntityTypeInfo = PropertyTypeInfo(nonPropertyTypeInfo.typeIri)
-                                                    log.debug("PropertyTypeFromObjectRule: {} {} .", entityToType, inferredType)
-                                                    Some(inferredType)
+                                    if (intermediateResult.entities.get(entityToType).isEmpty) {
+                                        intermediateResult.entities.get(typeableObj) match {
+                                            case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
+                                                // Yes. Use those types.
+                                                entityTypes.flatMap {
+                                                    case nonPropertyTypeInfo: NonPropertyTypeInfo =>
+                                                        val inferredType: GravsearchEntityTypeInfo = PropertyTypeInfo(nonPropertyTypeInfo.typeIri)
+                                                        log.debug("PropertyTypeFromObjectRule: {} {} .", entityToType, inferredType)
+                                                        Some(inferredType)
 
-                                                case _ =>
-                                                    None
-                                            }
-
-                                        case _ =>
-                                            // We don't have the object's type.
-                                            Set.empty[GravsearchEntityTypeInfo]
-                                    }
+                                                    case _ =>
+                                                        None
+                                                }
+                                            case _ =>
+                                                // We don't have the object's type.
+                                                Set.empty[GravsearchEntityTypeInfo]
+                                        }
+                                    } else {
+                                            None
+                                        }
 
                                 case None =>
                                     // The object isn't typeable.
@@ -530,10 +544,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           */
         def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2, entityInfo: EntityInfoGetResponseV2, querySchema: ApiV2Schema): Option[SmartIri] = {
             // Is this a resource property?
-            if (readPropertyInfo.isResourceProp) {
-                // Yes. Infer knora-api:subjectType knora-api:Resource.
-                Some(getResourceTypeIriForSchema(querySchema))
-            } else {
+//            if (readPropertyInfo.isResourceProp) {
+//                // Yes. Infer knora-api:subjectType knora-api:Resource.
+//                Some(getResourceTypeIriForSchema(querySchema))
+//            } else {
                 // It's not a resource property. Get the knora-api:subjectType that the ontology responder provided.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri).
                     orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri)) match {
@@ -544,6 +558,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         if (subjectTypeStr == OntologyConstants.KnoraApiV2Complex.Value || OntologyConstants.KnoraApiV2Complex.ValueBaseClasses.contains(subjectTypeStr)) {
                             // Yes. Don't use it.
                             None
+                        } else if (readPropertyInfo.isResourceProp){
+                            Some(subjectType)
                         } else if (OntologyConstants.KnoraApiV2Complex.FileValueClasses.contains(subjectTypeStr)) {
                             // No. If it's a file value class, return the representation of file values in the specified schema.
                             Some(getFileTypeForSchema(querySchema))
@@ -568,7 +584,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
                     case None => None
                 }
-            }
+//            }
         }
 
         /**
