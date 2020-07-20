@@ -24,11 +24,11 @@ import java.io.File
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._

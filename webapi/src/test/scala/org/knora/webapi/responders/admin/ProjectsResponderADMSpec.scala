@@ -35,6 +35,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 

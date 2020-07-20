@@ -36,6 +36,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceAp
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.store.iiif.SourcePath
 
 /**

@@ -30,7 +30,8 @@ import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtoco
 import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.{E2ESpec, SharedTestDataV1}
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
 

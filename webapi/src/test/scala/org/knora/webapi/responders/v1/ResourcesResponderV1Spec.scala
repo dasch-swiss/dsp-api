@@ -24,22 +24,23 @@ import java.util.UUID
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi._
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
+import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, OntologyConstraintException}
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{ObjectAccessPermissionADM, ObjectAccessPermissionsForResourceGetADM, PermissionADM}
 import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{DateUtilV1, KnoraSystemInstances, MessageUtil, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import spray.json.JsValue
-import org.knora.webapi.messages.util.{DateUtilV1, KnoraSystemInstances, MessageUtil, ValueUtilV1}
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 
 import scala.concurrent.duration._
 

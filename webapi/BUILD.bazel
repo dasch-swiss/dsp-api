@@ -47,10 +47,10 @@ scala_library(
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
-        "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:org_slf4j_log4j_over_slf4j",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
     ],
     deps = [
         "//tools/buildstamp:version_info_jar",
@@ -143,11 +143,13 @@ scala_library(
     ],
 )
 
+
+
 scala_library(
     name = "test_library",
     testonly = True,
     srcs = [
-        "//webapi/src/test/scala",
+        "//webapi/src/test/scala/org/knora/webapi:srcs",
     ],
     resources = [
         "//sipi/config",
@@ -155,11 +157,10 @@ scala_library(
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_jcl_over_slf4j",
-        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
         "//tools/buildstamp:version_info_jar",
@@ -205,7 +206,7 @@ scala_library(
     name = "it_library",
     testonly = True,
     srcs = [
-        "//webapi/src/it/scala",
+        "//webapi/src/it/scala/org/knora/webapi:src",
     ],
     resources = [
         "//sipi/config",
@@ -213,11 +214,10 @@ scala_library(
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_jcl_over_slf4j",
-        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
         "//tools/buildstamp:version_info_jar",

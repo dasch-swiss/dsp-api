@@ -25,24 +25,23 @@ import java.util.UUID
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
-import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, EditConflictException, ForbiddenException, NotFoundException, OntologyConstraintException}
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlAskRequest, SparqlAskResponse, SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.knora.webapi.util.date.CalendarNameGregorian
-import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
 

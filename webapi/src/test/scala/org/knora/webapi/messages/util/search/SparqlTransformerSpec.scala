@@ -17,10 +17,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search
+package org.knora.webapi.util.search
 
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.search.{IriRef, QueryVariable, SparqlTransformer, XsdLiteral}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 

@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
 

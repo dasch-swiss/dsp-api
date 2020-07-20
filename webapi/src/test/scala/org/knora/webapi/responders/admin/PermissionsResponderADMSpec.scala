@@ -22,7 +22,6 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.DuplicateValueException
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
@@ -30,8 +29,9 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.cache.CacheUtil
 import org.scalatest.PrivateMethodTester
 
@@ -316,7 +316,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 ))
 
                 val key = perm001_d3.p.cacheKey
-                val maybePermission = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsResponderADM.PermissionsCacheName, key)
+                val maybePermission = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsMessagesUtilADM.PermissionsCacheName, key)
                 maybePermission should be (Some(perm001_d3.p))
             }
         }

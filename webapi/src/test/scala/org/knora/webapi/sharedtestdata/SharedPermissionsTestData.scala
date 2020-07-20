@@ -17,12 +17,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi
+package org.knora.webapi.sharedtestdata
 
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.SharedTestDataV1._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionADM, DefaultObjectAccessPermissionADM, ObjectAccessPermissionADM, PermissionADM}
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionADM, DefaultObjectAccessPermissionADM, ObjectAccessPermissionADM, PermissionADM}
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 
 /* Helper case classes */
 case class ap (iri: String, p: AdministrativePermissionADM)

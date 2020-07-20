@@ -3,19 +3,22 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES")
 
-filegroup(
-    name = "srcs",
-    srcs = [
-        "ResourcesResponseCheckerV2.scala",
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":GravsearchParserSpec",
+        ":GravsearchTypeInspectorSpec",
+        ":NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec",
+        ":NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec",
+        ":SparqlTransformerSpec",
     ],
 )
 
 scala_test(
-    name = "ListsResponderV2Spec",
-    size = "medium",
+    name = "SparqlTransformerSpec",
+    size = "small",  # 60s
     srcs = [
-        "ListsResponderV2Spec.scala",
-        "ListsResponderV2SpecFullData.scala",
+        "SparqlTransformerSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -30,10 +33,10 @@ scala_test(
 )
 
 scala_test(
-    name = "OntologyResponderV2Spec",
-    size = "medium",
+    name = "NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec",
+    size = "small",  # 60s
     srcs = [
-        "OntologyResponderV2Spec.scala",
+        "gravsearch/prequery/NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -48,33 +51,10 @@ scala_test(
 )
 
 scala_test(
-    name = "ResourcesResponderV2Spec",
-    size = "medium",
-    srcs = [
-        "ResourcesResponderV2Spec.scala",
-        "ResourcesResponderV2SpecFullData.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-        "@maven//:com_typesafe_play_twirl_api_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
-    ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-    name = "ResourcesResponseCheckerV2Spec",
+    name = "NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec",
     size = "small",
     srcs = [
-        "ResourcesResponderV2SpecFullData.scala",
-        "ResourcesResponseCheckerV2Spec.scala",
-        "ResourcesResponseCheckerV2SpecFullData.scala",
+        "gravsearch/prequery/NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -89,11 +69,11 @@ scala_test(
 )
 
 scala_test(
-    name = "SearchResponderV2Spec",
-    size = "medium",
+    name = "GravsearchTypeInspectorSpec",
+    size = "small",  # 60s
     srcs = [
-        "SearchResponderV2Spec.scala",
-        "SearchResponderV2SpecFullData.scala",
+        "gravsearch/GravsearchParserSpec.scala",
+        "gravsearch/types/GravsearchTypeInspectorSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -108,10 +88,10 @@ scala_test(
 )
 
 scala_test(
-    name = "ValuesResponderV2Spec",
-    size = "small",
+    name = "GravsearchParserSpec",
+    size = "small",  # 60s
     srcs = [
-        "ValuesResponderV2Spec.scala",
+        "gravsearch/GravsearchParserSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -122,7 +102,5 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
-        # Templates
-        "@maven//:com_typesafe_play_twirl_api_2_12",
     ] + BASE_TEST_DEPENDENCIES,
 )

@@ -17,13 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.util.cache
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.{CoreSpec, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 object CacheUtilSpec {
     val config: Config = ConfigFactory.parseString(

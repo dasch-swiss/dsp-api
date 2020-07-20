@@ -17,13 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.jsonld
+package org.knora.webapi.util
 
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.{JsValue, JsonParser}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 
 /**
   * Tests [[JsonLDUtil]].

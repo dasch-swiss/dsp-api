@@ -30,13 +30,14 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectIdentifierADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 

@@ -22,11 +22,11 @@ package org.knora.webapi.util
 import java.util.{Calendar, GregorianCalendar}
 
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.DateUtilV1.DateRange
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.knora.webapi.messages.util.DateUtilV1
 
 /**
   * Tests [[DateUtilV1]].

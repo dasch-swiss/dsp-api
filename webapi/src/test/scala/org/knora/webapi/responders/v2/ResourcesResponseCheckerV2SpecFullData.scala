@@ -2,14 +2,13 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.messages.util.PermissionUtilADM._
-import org.knora.webapi.util.date.CalendarNameJulian
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 // FIXME: Rename to something without spec in the name since it is not a spec

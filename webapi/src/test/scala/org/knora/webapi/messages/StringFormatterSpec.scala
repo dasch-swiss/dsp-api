@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.messages
 
 import java.time.Instant
 import java.util.UUID
@@ -26,8 +26,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
 
 /**
   * Tests [[StringFormatter]].

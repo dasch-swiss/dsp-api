@@ -142,8 +142,22 @@ def dependencies():
         ],
     )
 
-ALL_WEBAPI_PACKAGES = [
-
+ALL_WEBAPI_MAIN_DEPENDENCIES = [
+    "//tools/buildstamp:version_info_jar",
+    "//webapi/src/main/scala/org/knora/webapi",
+    "//webapi/src/main/scala/org/knora/webapi/core",
+    "//webapi/src/main/scala/org/knora/webapi/exceptions",
+    "//webapi/src/main/scala/org/knora/webapi/http/handler",
+    "//webapi/src/main/scala/org/knora/webapi/http/version",
+    "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+    "//webapi/src/main/scala/org/knora/webapi/messages",
+    "//webapi/src/main/scala/org/knora/webapi/responders",
+    "//webapi/src/main/scala/org/knora/webapi/routing",
+    "//webapi/src/main/scala/org/knora/webapi/settings",
+    "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+    "//webapi/src/main/scala/org/knora/webapi/store",
+    "//webapi/src/main/scala/org/knora/webapi/util",
+    "//webapi/src/main/scala/org/knora/webapi/util/cache",
 ]
 
 BASE_TEST_DEPENDENCIES = [

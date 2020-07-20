@@ -3,18 +3,16 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
-filegroup(
-    name = "SessionMessagesV1",
-    srcs = [
-        "v1/responder/sessionmessages/SessionMessagesV1.scala",
-    ],
-)
-
 scala_test(
-    name = "StringFormatterSpec",
+    name = "GenerateContributorsFileSpec",
     size = "small",
     srcs = [
-        "StringFormatterSpec.scala",
+        "GenerateContributorsFileSpec.scala",
+    ],
+    resources = [
+        "//webapi/src/main/resources",
+        "//webapi/scripts:fuseki_repository_config_ttl_template",
+        "//knora-ontologies",
     ],
     data = [
         "//knora-ontologies",
@@ -23,7 +21,10 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:main_library",
+        "//webapi/src/main/scala/org/knora/webapi/contributors",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
 )

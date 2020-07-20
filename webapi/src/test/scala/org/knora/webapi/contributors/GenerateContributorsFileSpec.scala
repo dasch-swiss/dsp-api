@@ -17,12 +17,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.contributors
 
 import java.io.File
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.contributors.GenerateContributorsFile
+import org.knora.webapi.util.FileUtil
 
 /**
   * Tests [[GenerateContributorsFile]].

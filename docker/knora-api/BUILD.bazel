@@ -9,7 +9,7 @@ container_image(
     cmd = ["java", "-jar", "webapi_deploy.jar"],
     # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     files = [
-        "//webapi:webapi_deploy.jar"
+        "//webapi/src/main/scala/org/knora/webapi/app:knora_api_cli_deploy.jar",
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",

@@ -34,7 +34,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import scala.concurrent.Await
