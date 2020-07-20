@@ -178,10 +178,10 @@ go_rules_dependencies()
 go_register_toolchains()
 
 #
-# Download the rules_docker repository at release v0.12.0
+# Download the rules_docker repository at release v0.14.4
 #
-rules_docker_version="0.13.0"
-rules_docker_version_sha256="df13123c44b4a4ff2c2f337b906763879d94871d16411bf82dcfeba892b58607"
+rules_docker_version="0.14.4"
+rules_docker_version_sha256="4521794f0fba2e20f3bf15846ab5e01d5332e587e9ce81629c7f96c793bb7036"
 http_archive(
     name = "io_bazel_rules_docker",
     sha256 = rules_docker_version_sha256,
@@ -189,22 +189,36 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_docker/releases/download/v%s/rules_docker-v%s.tar.gz" % (rules_docker_version, rules_docker_version),
 )
 
-# load rules_docker repositories
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
 )
 container_repositories()
 
-# load further dependencies of this rule
 load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
 container_deps()
+
+load("@io_bazel_rules_docker//repositories:pip_repositories.bzl", "pip_deps")
+
+pip_deps()
 
 # load container_pull method
 load(
     "@io_bazel_rules_docker//container:container.bzl",
-    "container_pull"
+    "container_pull",
 )
+
+# get distroless java
+container_pull(
+  name = "java_base",
+  registry = "gcr.io",
+  repository = "distroless/java",
+  # 'tag' is also supported, but digest is encouraged for reproducibility.
+  digest = "sha256:deadbeef",
+)
+
+# get openjdk
 container_pull(
     name = "openjdk11",
     registry = "docker.io",
@@ -213,6 +227,7 @@ container_pull(
     digest = "sha256:0e51b455654bd162c485a6a6b5b120cc82db453d9265cc90f0c4fb5d14e2f62e",
 )
 
+# get sipi
 load("//third_party:versions.bzl", "SIPI_REPOSITORY", "SIPI_TAG")
 container_pull(
     name = "sipi",
@@ -222,6 +237,7 @@ container_pull(
     digest = "sha256:7b7abd324d0887f3ff46de7d7f066dd699b3acd96b94177f153f750f7572031c",
 )
 
+# get fuseki
 load("//third_party:versions.bzl", "FUSEKI_REPOSITORY", "FUSEKI_TAG")
 container_pull(
     name = "jenafuseki",
