@@ -43,6 +43,7 @@ import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.knora.webapi.util.{MutableTestIri, SmartIri}
 import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 

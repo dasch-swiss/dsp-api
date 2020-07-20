@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", "scala_repl")
 
 scala_library(
     name = "app",
@@ -50,7 +50,20 @@ scala_library(
 scala_binary(
     name = "knora_api_cli",
     main_class = "org.knora.webapi.app.Main",
+    jvm_flags = [
+        "-Dconfig.resource=application.conf",
+        "-Dlogging.config=logback.xml",
+    ],
+    resources = [
+        "//webapi/src/main/resources",
+    ],
     runtime_deps = [
         ":app",
     ],
+
+)
+
+scala_repl(
+    name = "knora_api_repl",
+    deps = [":app"],
 )

@@ -23,7 +23,6 @@ import java.io.File
 import java.net.{URL, URLConnection}
 
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.twirl.Contributor
 import org.knora.webapi.util.FileUtil
 import org.rogach.scallop.{ScallopConf, ScallopOption}

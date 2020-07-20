@@ -142,6 +142,10 @@ def dependencies():
         ],
     )
 
+ALL_WEBAPI_PACKAGES = [
+
+]
+
 BASE_TEST_DEPENDENCIES = [
     "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
     "@maven//:org_slf4j_slf4j_api",

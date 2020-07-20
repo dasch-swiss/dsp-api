@@ -20,7 +20,7 @@
 package org.knora.webapi.responders
 
 import akka.actor._
-import org.knora.webapi.{ActorMaker, LiveActorMaker}
+import org.knora.webapi.core.{ActorMaker, LiveActorMaker}
 
 /**
  * A subclass of [[ResponderManager]] that allows tests to substitute custom responders for the standard ones.

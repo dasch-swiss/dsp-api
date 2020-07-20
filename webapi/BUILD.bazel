@@ -4,9 +4,9 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", 
 
 scala_binary(
     name = "GenerateContributorsFile",
-    main_class = "org.knora.webapi.util.GenerateContributorsFile",
+    main_class = "org.knora.webapi.contributors.GenerateContributorsFile",
     deps = [
-        ":main_library",
+        "//webapi/src/main/scala/org/knora/webapi/contributors",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
@@ -25,7 +25,7 @@ scala_binary(
         "//webapi/src/main/resources",
     ],
     deps = [
-        ":main_library",
+        "//webapi/src/main/scala/org/knora/webapi/app",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
@@ -34,18 +34,12 @@ scala_binary(
 )
 
 scala_repl(
-    name = "main_library_repl",
-    deps = [
-        ":main_library",
-    ],
+    name = "knora_api_repl",
+    deps = ["//webapi/src/main/scala/org/knora/webapi/app"],
 )
 
 scala_library(
     name = "main_library",
-    srcs = [
-        "//webapi/src/main:scala",
-        "//webapi/src/main:twirl_templates_library",
-    ],
     resources = [
         "//knora-ontologies",
         "//webapi/scripts:fuseki_repository_config_ttl_template",
@@ -60,6 +54,19 @@ scala_library(
     ],
     deps = [
         "//tools/buildstamp:version_info_jar",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/http/handler",
+        "//webapi/src/main/scala/org/knora/webapi/http/version",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/util/cache",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_jcl_over_slf4j",
@@ -155,7 +162,22 @@ scala_library(
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
-        ":main_library",
+        "//tools/buildstamp:version_info_jar",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/app",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/http/handler",
+        "//webapi/src/main/scala/org/knora/webapi/http/version",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/util/cache",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
@@ -198,7 +220,22 @@ scala_library(
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
-        ":main_library",
+        "//tools/buildstamp:version_info_jar",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/app",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/http/handler",
+        "//webapi/src/main/scala/org/knora/webapi/http/version",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/util/cache",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",

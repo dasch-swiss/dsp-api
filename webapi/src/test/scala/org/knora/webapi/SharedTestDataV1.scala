@@ -19,11 +19,12 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, _}
+import SharedOntologyTestDataADM._
 
 /**
   * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object

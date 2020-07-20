@@ -23,7 +23,7 @@ import akka.dispatch.MessageDispatcher
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.Core
+import org.knora.webapi.core.Core
 import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
 import org.knora.webapi.settings.KnoraDispatchers
 

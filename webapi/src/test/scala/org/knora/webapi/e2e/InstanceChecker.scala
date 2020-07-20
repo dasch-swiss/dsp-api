@@ -24,13 +24,10 @@ import java.net.URLEncoder
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.util.jsonld._
-import org.knora.webapi.messages.StringFormatter.SmartIri
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.messages.util.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue, OntologyUtil}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.collection.mutable

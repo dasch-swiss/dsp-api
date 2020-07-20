@@ -26,6 +26,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object UsersMessagesADMSpec {
     val config = ConfigFactory.parseString(

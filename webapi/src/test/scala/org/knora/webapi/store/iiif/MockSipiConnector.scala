@@ -29,7 +29,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.SipiException
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}

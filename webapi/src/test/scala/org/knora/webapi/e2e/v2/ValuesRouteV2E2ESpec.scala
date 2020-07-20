@@ -31,16 +31,15 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.knora.webapi.util.jsonld._
-import org.knora.webapi.messages.StringFormatter.SmartIri
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

@@ -27,6 +27,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.collection.Map
 

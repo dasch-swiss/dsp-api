@@ -1,15 +1,16 @@
 package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.responders.ResponderData
-import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil}
-import org.knora.webapi.responders.v2.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil}
+import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
+import org.knora.webapi.messages.util.search._
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Await

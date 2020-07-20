@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequ
 import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

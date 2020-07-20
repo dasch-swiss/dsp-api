@@ -19,11 +19,10 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.util.jsonld._
 import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util._
 
 object ResponseCheckerV2 {
 

@@ -21,6 +21,7 @@ import org.knora.webapi.exceptions.{BadRequestException, OntologyConstraintExcep
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object ProjectsMessagesADMSpec {
     val config = ConfigFactory.parseString(

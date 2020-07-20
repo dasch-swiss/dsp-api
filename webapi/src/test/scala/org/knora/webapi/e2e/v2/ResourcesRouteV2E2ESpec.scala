@@ -43,6 +43,7 @@ import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, ExecutionContextExecutor}

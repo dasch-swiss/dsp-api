@@ -10,15 +10,14 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDValue}
-import org.knora.webapi.util.jsonld._
-import org.knora.webapi.messages.StringFormatter.SmartIri
-import org.knora.webapi.util.{MutableTestIri, SmartIri}
-import spray.json._
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.MutableTestIri
+import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
