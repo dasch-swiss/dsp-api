@@ -30,6 +30,7 @@ import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_
 import org.knora.webapi.util.cache.CacheUtil
 import org.scalatest.PrivateMethodTester
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Future
 

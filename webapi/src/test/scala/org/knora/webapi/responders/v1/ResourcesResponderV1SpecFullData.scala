@@ -20,7 +20,6 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.ActorSystem
-import org.knora.webapi.KnoraSettingsImpl
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}

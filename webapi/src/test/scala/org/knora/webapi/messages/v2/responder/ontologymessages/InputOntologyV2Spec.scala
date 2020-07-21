@@ -22,12 +22,12 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.{ApiV2Complex, CoreSpec}
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.util.JsonLDUtil
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.{ApiV2Complex, CoreSpec}
 
 /**
   * Tests [[InputOntologyV2]].

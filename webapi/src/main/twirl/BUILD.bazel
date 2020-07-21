@@ -1,9 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 
 twirl_templates(
-    name = "twirl",
+    name = "twirl_sources",
     additional_imports = [
         "play.twirl.api.TwirlFeatureImports._",
         "play.twirl.api.TwirlHelperImports._",
@@ -18,4 +19,16 @@ twirl_templates(
         + glob(["**/*.scala.xml"]),
 
 
+)
+
+genrule(
+    name = "twirl",
+    srcs = [
+        ":twirl_sources",
+    ],
+    outs = [
+        "twirl.srcjar"
+    ],
+    cmd = "jar -cf \"$@\" $(locations :twirl_sources)",
+    # tools = ["jar"],
 )

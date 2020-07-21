@@ -11,16 +11,15 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
-import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.{JsonLDArray, JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil}
-import org.knora.webapi.util._
-import org.knora.webapi.util.jsonld._
-import org.knora.webapi.messages.StringFormatter.SmartIri
-import spray.json._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util._
+import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
 

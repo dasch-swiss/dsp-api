@@ -24,17 +24,16 @@ import java.util.UUID
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException, EditConflictException, ForbiddenException, InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.StringFormatter.SmartIri
-import org.knora.webapi.util.{MutableTestIri, SmartIri}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 import scala.language.postfixOps

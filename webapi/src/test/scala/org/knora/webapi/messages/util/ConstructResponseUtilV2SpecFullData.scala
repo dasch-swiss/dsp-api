@@ -9,6 +9,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.standoffmessages.{StandoffDataTypeClasses, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.messages.IriConversions._
 
 class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

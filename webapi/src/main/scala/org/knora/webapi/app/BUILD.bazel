@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", "scala_repl")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_repl")
 
 scala_library(
     name = "app",
@@ -21,6 +21,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:ch_megard_akka_http_cors_2_12",
+        "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
@@ -29,45 +30,33 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_apache_commons_commons_csv",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_apache_commons_commons_pool2",
-        "@maven//:org_apache_commons_commons_text",
-        "@maven//:org_eclipse_rdf4j_rdf4j_client",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_slf4j_slf4j_api",
         "@maven//:io_kamon_kamon_core_2_12",
-        "@maven//:io_kamon_kamon_instrumentation_common_2_12",
-        # "@maven//:io_kamon_kamon_logback_2_12",
-        # "@maven//:io_kamon_kamon_prometheus_2_12",
-        "@maven//:io_kamon_kamon_scala_future_2_12",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_slf4j_slf4j_api",
         "@maven//:redis_clients_jedis",
-        "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",
     ],
 )
 
 scala_binary(
-    name = "knora_api_cli",
-    main_class = "org.knora.webapi.app.Main",
+    name = "app_cli",
     jvm_flags = [
         "-Dconfig.resource=application.conf",
         "-Dlogging.config=logback.xml",
     ],
+    main_class = "org.knora.webapi.app.Main",
     resources = [
         "//webapi/src/main/resources",
     ],
     runtime_deps = [
         ":app",
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
-
 )
 
 scala_repl(
-    name = "knora_api_repl",
+    name = "app_repl",
     deps = [":app"],
 )

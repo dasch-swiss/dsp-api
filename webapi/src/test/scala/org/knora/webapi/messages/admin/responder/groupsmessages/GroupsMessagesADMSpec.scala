@@ -20,9 +20,9 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.{SharedTestDataADM, _}
 
 object GroupsMessagesADMSpec {
     val config = ConfigFactory.parseString(
