@@ -186,9 +186,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-      * Infers a Knora property's `knora-api:objectType` if the property's IRI is used as a predicate.
+      * Infers the `knora-api:objectType` of a property if the property's IRI is used as a predicate.
       */
-    private class PropertyIriObjectTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+    private class KnoraObjectTypeFromPropertyIriRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
                            intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
@@ -205,7 +205,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
                                     case Some(objectTypeIri: SmartIri) =>
                                         val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
-                                        log.debug("PropertyIriObjectTypeRule: {} {} .", entityToType, inferredType)
+                                        log.debug("KnoraObjectTypeFromPropertyIriRule: {} {} .", entityToType, inferredType)
                                         Set(inferredType)
 
                                     case None =>
@@ -257,7 +257,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
                                 case Some(typeablePred: TypeableEntity) =>
                                     // Yes. Do we have its types?
-                                    if (intermediateResult.entities.get(entityToType).isEmpty) {
+                                    if (intermediateResult.entities.get(entityToType).get.isEmpty) {
                                         intermediateResult.entities.get(typeablePred) match {
                                             case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
                                                 // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
@@ -366,7 +366,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     /**
       * Infers the `knora-api:objectType` of a property variable or IRI if it's used with an object whose type is known.
       */
-    private class PropertyTypeFromObjectRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+    private class KnoraObjectTypeFromObjectRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
                            intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
@@ -381,14 +381,14 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.obj) match {
                                 case Some(typeableObj: TypeableEntity) =>
                                     // Yes. Do we have its types?
-                                    if (intermediateResult.entities.get(entityToType).isEmpty) {
+                                    if (intermediateResult.entities.get(entityToType).get.isEmpty) {
                                         intermediateResult.entities.get(typeableObj) match {
                                             case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
                                                 // Yes. Use those types.
                                                 entityTypes.flatMap {
                                                     case nonPropertyTypeInfo: NonPropertyTypeInfo =>
                                                         val inferredType: GravsearchEntityTypeInfo = PropertyTypeInfo(nonPropertyTypeInfo.typeIri)
-                                                        log.debug("PropertyTypeFromObjectRule: {} {} .", entityToType, inferredType)
+                                                        log.debug("KnoraObjectTypeFromObjectRule: {} {} .", entityToType, inferredType)
                                                         Some(inferredType)
 
                                                     case _ =>
@@ -500,7 +500,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -641,16 +641,16 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     // The inference rule pipeline for the first iteration. Includes rules that cannot return additional
     // information if they are run more than once.
     private val firstIterationRulePipeline = new RdfTypeRule(
-        Some(new PropertyIriObjectTypeRule(
+        Some(new KnoraObjectTypeFromPropertyIriRule(
             Some(new TypeOfSubjectFromPropertyRule(
                 Some(new EntityTypeFromFilterRule(
                     Some(new TypeOfObjectFromPropertyRule(
-                        Some(new PropertyTypeFromObjectRule(None)))))))))))
+                        Some(new KnoraObjectTypeFromObjectRule(None)))))))))))
 
     // The inference rule pipeline for subsequent iterations. Excludes rules that cannot return additional
     // information if they are run more than once.
     private val subsequentIterationRulePipeline = new TypeOfObjectFromPropertyRule(
-        Some(new PropertyTypeFromObjectRule(None)))
+        Some(new KnoraObjectTypeFromObjectRule(None)))
 
     /**
       * An index of entity usage in a Gravsearch query.

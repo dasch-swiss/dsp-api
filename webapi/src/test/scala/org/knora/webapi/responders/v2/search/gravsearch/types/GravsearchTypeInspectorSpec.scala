@@ -156,7 +156,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |} ORDER BY ?date
         """.stripMargin
 
-    val QueryPropertyIriObjectTypeRule: String =
+    val QueryKnoraObjectTypeFromPropertyIriRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -204,7 +204,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |} ORDER BY ?date
         """.stripMargin
 
-    val QueryPropertyTypeFromObjectRule: String =
+    val QueryKnoraObjectTypeFromObjectRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -608,12 +608,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
         "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyIriObjectTypeRule)
+            val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromPropertyIriRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
             assert(result.entities.toString() == TypeInferenceResult1.entities.toString())
         }
-        // TODO continue debugging from here
+
         "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
@@ -624,12 +624,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
         "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyTypeFromObjectRule)
+            val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromObjectRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
+            assert(result.entities.toString() == TypeInferenceResult1.entities.toString())
         }
-
+        // TODO continue debugging from here
         "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
