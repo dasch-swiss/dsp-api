@@ -31,7 +31,7 @@ scala_test(
 
 scala_test(
     name = "OntologyResponderV2Spec",
-    size = "medium",
+    size = "large",
     srcs = [
         "OntologyResponderV2Spec.scala",
     ],
@@ -109,7 +109,7 @@ scala_test(
 
 scala_test(
     name = "ValuesResponderV2Spec",
-    size = "small",
+    size = "medium",
     srcs = [
         "ValuesResponderV2Spec.scala",
     ],
