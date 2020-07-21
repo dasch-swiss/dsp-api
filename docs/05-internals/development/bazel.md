@@ -4,7 +4,16 @@ The following section discusses on how to build and run tests for Knora-API
 with [Bazel](https://bazel.build).
 
 ## Prerequisites
-To install Bazel on macOS, run `brew install bazel`.
+To install the Bazel build tool, follow these steps:
+
+```
+$ npm install -g @bazel/bazelisk
+```
+
+This will install [bazelisk](https://github.com/bazelbuild/bazelisk) which is
+a wrapper to the `bazel` binary. It will, when the `bazel` command ir run,
+automatically install the supported Bazel version, defined in the `.bazelversion`
+file in the root of the `knora-api` repository.
 
 ## Commands
 
@@ -12,13 +21,10 @@ Build `webapi`:
 
 ```
 # build webapi
-$ bazel build //webapi
+$ bazel build //webapi/...
 
-# run api (webapi)
-$ bazel run //:api
-
-# run all tests
-$ bazel test //...
+# run all webapi tests
+$ bazel test //webapi//...
 ```
 
 ## Build Structure
