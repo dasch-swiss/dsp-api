@@ -56,6 +56,22 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
     }
 
     /**
+     * removes types of an entity.
+     *
+     * @param entity      the entity for which types must be removed.
+     * @param typeToRemove the types to be removed.
+     * @return a new [[IntermediateTypeInspectionResult]] without the specified type information assigned to the entity.
+     */
+    def removeType(entity: TypeableEntity, typeToRemove: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
+        val remainingTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) - typeToRemove
+
+        IntermediateTypeInspectionResult(
+            entities = entities + (entity -> remainingTypes),
+            entitiesInferredFromProperties = entitiesInferredFromProperties
+        )
+    }
+
+    /**
       * Returns the entities for which types have not been found.
       */
     def untypedEntities: Set[TypeableEntity] = {
