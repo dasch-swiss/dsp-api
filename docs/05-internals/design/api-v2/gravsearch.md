@@ -21,7 +21,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Gravsearch Package
 
-The classes that process Gravsearch queries and results can be found in `org.knora.webapi.responders.v2.search.gravsearch`.
+The classes that process Gravsearch queries and results can be found in `org.knora.webapi.messages.util.search.gravsearch`.
 
 ## Type Inspection
 
@@ -30,7 +30,7 @@ types of the entities that are used in the input query. As explained in
 [Type Inference](../../../03-apis/api-v2/query-language.md#type-inference), these types can be inferred,
 or they can be specified in the query using type annotations.
 
-Type inspection is implemented in the package `org.knora.webapi.responders.v2.search.gravsearch.types`.
+Type inspection is implemented in the package `org.knora.webapi.messages.util.search.gravsearch.types`.
 The entry point to this package is `GravsearchTypeInspectionRunner`, which is instantiated by `SearchResponderV2`.
 The result of type inspection is a `GravsearchTypeInspectionResult`, in which each typeable entity in the input query is
 associated with a `GravsearchEntityTypeInfo`, which can be either:
@@ -126,7 +126,7 @@ Sort criteria can be submitted by the user, but the result is always determinist
 This is necessary to support paging.
 A prequery is a SPARQL SELECT query.
 
-The classes involved in generating prequeries can be found in `org.knora.webapi.responders.v2.search.gravsearch.prequery`.
+The classes involved in generating prequeries can be found in `org.knora.webapi.messages.util.search.gravsearch.prequery`.
 
 If the client submits a count query, the prequery returns the overall number of hits, but not the results themselves.
 
@@ -226,7 +226,7 @@ the main query can specifically ask for more detailed information on these resou
 #### Generating the Main Query
 
 The classes involved in generating the main query can be found in
-`org.knora.webapi.responders.v2.search.gravsearch.mainquery`.
+`org.knora.webapi.messages.util.search.gravsearch.mainquery`.
 
 The main query is a SPARQL CONSTRUCT query. Its generation is handled by the
 method `GravsearchMainQueryGenerator.createMainQuery`.

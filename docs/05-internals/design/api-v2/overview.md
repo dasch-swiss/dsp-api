@@ -123,8 +123,8 @@ schemas. It validates each IRI it parses. To use it, import the
 following:
 
 ```scala
-import org.knora.webapi.util.SmartIri
-import webapi.src.main.scala.org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.IriConversions._
 ```
 
 Ensure that an implicit instance of `StringFormatter` is in scope:
