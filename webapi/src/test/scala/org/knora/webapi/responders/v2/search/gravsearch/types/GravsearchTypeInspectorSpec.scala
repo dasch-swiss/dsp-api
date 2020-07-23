@@ -25,6 +25,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -488,7 +489,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     val TypeInferenceResult1: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri),
         TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
@@ -608,6 +609,26 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(intermediateTypesWithoutResource.entities.size == 1)
             intermediateTypesWithoutResource.entities should contain ((TypeableVariable(variableName = "mainRes") -> Set(
                 NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true))))
+        }
+
+        "refine the determined types for each typeableEntity" in {
+            val typeInspectionRunner = new InferringGravsearchTypeInspector(nextInspector = None, responderData = responderData)
+            val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
+            val  (usageIndex , entityInfo) = Await.result(typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser), timeout)
+            val multipleDetectedTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
+                TypeableVariable(variableName = "letter") -> Set(
+                    NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))
+                ),
+                entitiesInferredFromProperties = Set.empty
+            )
+
+            val refinedIntermediateResults = typeInspectionRunner.refineDeterminedTypes(
+                intermediateResult = multipleDetectedTypes,
+                entityInfo = entityInfo)
+            assert(refinedIntermediateResults.entities.size == 1)
+            refinedIntermediateResults.entities should contain ((TypeableVariable(variableName = "letter") -> Set(
+                NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))))
         }
 
         "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
