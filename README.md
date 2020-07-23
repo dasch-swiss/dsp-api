@@ -92,22 +92,17 @@ See [docs/Readme.md](docs/Readme.md).
 ### Run the Knora API server
 
 With [Bazel](https://docs.bazel.build/versions/3.3.0/install-os-x.html) and
-[Docker](https://www.docker.com) installed, run the following:
-
-```
-$ make stack-up
-```
-
-Then to create a test repository and load some test data into the triplestore:
+[Docker](https://www.docker.com) installed, run the following to create a test
+repository and load some test data into the triplestore:
 
 ```
 $ make init-db-test
 ```
 
-Then we need to restart knora-api after loading the data:
+Then we need to start knora-api after loading the data:
 
 ```
-$ make stack-restart-api
+$ make stack-up
 ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
