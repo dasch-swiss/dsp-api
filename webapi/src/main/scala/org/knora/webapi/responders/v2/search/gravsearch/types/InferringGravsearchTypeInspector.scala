@@ -682,7 +682,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       *                                        FILTER expressions.
       * @param typedEntitiesInFilters          a map of entities to types found for them in FILTER expressions.
       */
-    private case class UsageIndex(knoraClassIris: Set[SmartIri] = Set.empty[SmartIri],
+    case class UsageIndex(knoraClassIris: Set[SmartIri] = Set.empty[SmartIri],
                                   knoraPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
                                   subjectIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
@@ -696,6 +696,43 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                               requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
         log.debug("========== Starting type inference ==========")
 
+        for {
+
+            // get index of entity usage in the query and ontology information about all the Knora class and property IRIs mentioned in the query
+            (usageIndex, allEntityInfo) <- getUsageIndexAndEntityInfos(whereClause, requestingUser)
+
+            // Iterate over the inference rules until no new type information can be inferred.
+            intermediateResult: IntermediateTypeInspectionResult = doIterations(
+                iterationNumber = 1,
+                intermediateResult = previousResult,
+                entityInfo = allEntityInfo,
+                usageIndex = usageIndex
+            )
+
+            //refine the determined types before sending to the next inspector
+            refinedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
+                intermediateResult = intermediateResult,
+                entityInfo = allEntityInfo
+            )
+
+            // Pass the intermediate result to the next type inspector in the pipeline.
+            lastResult: IntermediateTypeInspectionResult <- runNextInspector(
+                intermediateResult = refinedIntermediateResult,
+                whereClause = whereClause,
+                requestingUser = requestingUser
+            )
+        } yield lastResult
+    }
+
+    /**
+     * Get index of entity usage in the where clause of query and all ontology information about all the Knora class and property IRIs mentioned in the query.
+     *
+     * @param whereClause    the query where clause.
+     * @param requestingUser the user requesting the query.
+     * @return a tuple containing the usage index and all entity information acquired from the ontology.
+     */
+    def getUsageIndexAndEntityInfos(whereClause: WhereClause,
+                                    requestingUser: UserADM) : Future[(UsageIndex, EntityInfoGetResponseV2)] = {
         for {
             // Make an index of entity usage in the query.
             usageIndex <- Future(makeUsageIndex(whereClause))
@@ -764,27 +801,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 classInfoMap = initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
             )
 
-            // Iterate over the inference rules until no new type information can be inferred.
-            intermediateResult: IntermediateTypeInspectionResult = doIterations(
-                iterationNumber = 1,
-                intermediateResult = previousResult,
-                entityInfo = allEntityInfo,
-                usageIndex = usageIndexWithAdditionalClasses
-            )
-
-            //refine the determined types before sending to the next inspector
-            refinedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
-                intermediateResult = intermediateResult,
-                entityInfo = allEntityInfo
-            )
-
-            // Pass the intermediate result to the next type inspector in the pipeline.
-            lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-                intermediateResult = refinedIntermediateResult,
-                whereClause = whereClause,
-                requestingUser = requestingUser
-            )
-        } yield lastResult
+        } yield (usageIndexWithAdditionalClasses, allEntityInfo)
     }
 
     /**
@@ -837,32 +854,54 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
      * @param intermediateResult this rule's intermediate result.
      * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
      */
-    //todo move this to inspectTypes, iterate over every typeableEntity, from list of its types remove the baseClasses
-    private def refineDeterminedTypes (  intermediateResult: IntermediateTypeInspectionResult,
-                                         entityInfo: EntityInfoGetResponseV2
-                                       ): IntermediateTypeInspectionResult= {
+    def refineDeterminedTypes (  intermediateResult: IntermediateTypeInspectionResult,
+                                 entityInfo: EntityInfoGetResponseV2
+                               ): IntermediateTypeInspectionResult = {
 
+        def refineDeterminedTypesRec(typedEntity: TypeableEntity, currType: GravsearchEntityTypeInfo, types: Set[GravsearchEntityTypeInfo], refinedResults: IntermediateTypeInspectionResult): IntermediateTypeInspectionResult = {
+
+            if (types.isEmpty) refinedResults
+            else {
+
+                // Is the currType a base class of any of other determined types for this entity?
+                if (typeInBaseClasses(currType, types)) {
+                    // yes, remove the type
+                    refineDeterminedTypesRec(typedEntity, types.head, types.tail, refinedResults.removeType(typedEntity, currType))
+                } else {
+                    //no, check the other elements
+                    refineDeterminedTypesRec(typedEntity, types.head, types.tail, refinedResults)
+                }
+            }
+        }
+
+        def typeInBaseClasses(currType: GravsearchEntityTypeInfo, allTypes: Set[GravsearchEntityTypeInfo]): Boolean = {
+            val currTypeIri = iriOfGravsearchTypeInfo(currType)
+            allTypes.exists(aType =>
+                entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
+                    case Some(classDef: ReadClassInfoV2) =>
+                        if (classDef.allBaseClasses.contains(currTypeIri))
+                            true
+                        else false
+                    case _ => false
+                })
+        }
+
+        def iriOfGravsearchTypeInfo(typeInfo: GravsearchEntityTypeInfo): SmartIri = {
+            typeInfo match {
+                case PropertyTypeInfo(objectTypeIri) => objectTypeIri
+                case NonPropertyTypeInfo(typeIri, _, _) => typeIri
+                case _ => throw GravsearchException(s"There is an invalid type")
+            }
+        }
+
+        // iterate over all typeableEntities
         intermediateResult.entities.keySet.foldLeft(intermediateResult) {
-            (refinementResult, entityToType) =>
-                intermediateResult.entities.getOrElse(entityToType, Set.empty[GravsearchEntityTypeInfo])
-                    .foldLeft(refinementResult)((currentIntermediateResult, knownType) =>
-                        knownType match {
-                          case PropertyTypeInfo(objectTypeIri) =>
-//                              if (entityInfo.classInfoMap.get(inferredClassIri).contains(objectTypeIri))
-//                                  currentIntermediateResult.removeType(entityToType, knownType)
-//                              else currentIntermediateResult
-                              intermediateResult
-                          case NonPropertyTypeInfo(typeIri, _, _) =>
-//                              if (entityInfo.classInfoMap.get(inferredClassIri).contains(typeIri))
-//                                  currentIntermediateResult.removeType(entityToType, knownType)
-//                              else currentIntermediateResult
-                              intermediateResult
-                          case _ => intermediateResult
-                    }
-
-            )
+            (acc, typedEntity) =>
+                val types = intermediateResult.entities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
+                refineDeterminedTypesRec(typedEntity, types.head, types.tail, acc)
         }
     }
+
 
     /**
       * Runs all the inference rules repeatedly until no new type information can be found.
