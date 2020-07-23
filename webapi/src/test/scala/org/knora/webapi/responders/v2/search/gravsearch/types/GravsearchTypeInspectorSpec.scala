@@ -596,6 +596,20 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     }
 
     "The inferring type inspector" should {
+        "remove a type from IntermediateTypeInspectionResult" in {
+            val multipleDetectedTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
+                TypeableVariable(variableName = "mainRes") -> Set(
+                    NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true))
+                ),
+                entitiesInferredFromProperties = Set.empty
+            )
+            val intermediateTypesWithoutResource: IntermediateTypeInspectionResult = multipleDetectedTypes.removeType(TypeableVariable(variableName = "mainRes"), NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri))
+            assert(intermediateTypesWithoutResource.entities.size == 1)
+            intermediateTypesWithoutResource.entities should contain ((TypeableVariable(variableName = "mainRes") -> Set(
+                NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true))))
+        }
+
         "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
@@ -629,7 +643,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val result = Await.result(resultFuture, timeout)
             assert(result.entities.toString() == TypeInferenceResult1.entities.toString())
         }
-        // TODO continue debugging from here
+
         "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)

@@ -104,37 +104,6 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-     * Make sure that the most specific type is stored for each typeableEntity.
-     *
-     * @param entityToType       the entity whose type needs to be determined.
-     * @param inferredClassIri   the inferred class Iri for the typeable entity.
-     * @param intermediateResult this rule's intermediate result.
-     * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
-     */
-    //todo move this to inspectTypes, iterate over every typeableEntity, from list of its types remove the baseClasses
-    protected def refineDeterminedType ( entityToType: TypeableEntity,
-                                         inferredClassIri: SmartIri,
-                                         intermediateResult: IntermediateTypeInspectionResult,
-                                         entityInfo: EntityInfoGetResponseV2
-                                       ): IntermediateTypeInspectionResult= {
-        intermediateResult
-          .entities
-          .getOrElse(entityToType, Set.empty[GravsearchEntityTypeInfo])
-          .foldLeft(intermediateResult) ((currentIntermediateResult, knownType) => knownType match {
-              case PropertyTypeInfo(objectTypeIri) =>
-                  if (entityInfo.classInfoMap.get(inferredClassIri).contains(objectTypeIri))
-                      currentIntermediateResult.removeType(entityToType, knownType)
-                  else currentIntermediateResult
-              case NonPropertyTypeInfo(typeIri, _, _) =>
-                  if (entityInfo.classInfoMap.get(inferredClassIri).contains(typeIri))
-                      currentIntermediateResult.removeType(entityToType, knownType)
-                  else currentIntermediateResult
-              case _ => currentIntermediateResult
-          })
-
-    }
-
-    /**
      * Make sure that no specific type is stored for the typeableEntity.
      *
      * @param entityToType       the entity whose type needs to be determined.
@@ -319,7 +288,6 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                                     case propertyTypeInfo: PropertyTypeInfo =>
                                                         val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)
                                                         val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(propertyTypeInfo.objectTypeIri.toString)
-                                                        refineDeterminedType(entityToType, propertyTypeInfo.objectTypeIri, intermediateResult, entityInfo)
                                                         val inferredType: GravsearchEntityTypeInfo = NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri, isResourceType = isResource, isValueType = isValue)
                                                         log.debug("TypeOfObjectFromPropertyRule: {} {} .", entityToType, inferredType)
                                                         Some(inferredType)
@@ -378,7 +346,6 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                                 case Some(subjectTypeIri: SmartIri) =>
                                                     // Yes. Use that type.
                                                     val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(subjectTypeIri.toString)
-                                                    refineDeterminedType(entityToType, subjectTypeIri, intermediateResult, entityInfo)
                                                     val inferredType = NonPropertyTypeInfo(subjectTypeIri, isResourceType = readPropertyInfo.isResourceProp, isValueType = isValue)
                                                     log.debug("TypeOfSubjectFromPropertyRule: {} {} .", entityToType, inferredType)
                                                     Some(inferredType)
@@ -805,9 +772,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 usageIndex = usageIndexWithAdditionalClasses
             )
 
+            //refine the determined types before sending to the next inspector
+            refinedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
+                intermediateResult = intermediateResult,
+                entityInfo = allEntityInfo
+            )
+
             // Pass the intermediate result to the next type inspector in the pipeline.
             lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-                intermediateResult = intermediateResult,
+                intermediateResult = refinedIntermediateResult,
                 whereClause = whereClause,
                 requestingUser = requestingUser
             )
@@ -856,6 +829,39 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             classInfoMap = toInputSchema(usageIndex.knoraClassIris, entityInfo.classInfoMap),
             propertyInfoMap = toInputSchema(usageIndex.knoraPropertyIris, entityInfo.propertyInfoMap)
         )
+    }
+
+    /**
+     * Make sure that the most specific type is stored for each typeableEntity.
+     *
+     * @param intermediateResult this rule's intermediate result.
+     * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
+     */
+    //todo move this to inspectTypes, iterate over every typeableEntity, from list of its types remove the baseClasses
+    private def refineDeterminedTypes (  intermediateResult: IntermediateTypeInspectionResult,
+                                         entityInfo: EntityInfoGetResponseV2
+                                       ): IntermediateTypeInspectionResult= {
+
+        intermediateResult.entities.keySet.foldLeft(intermediateResult) {
+            (refinementResult, entityToType) =>
+                intermediateResult.entities.getOrElse(entityToType, Set.empty[GravsearchEntityTypeInfo])
+                    .foldLeft(refinementResult)((currentIntermediateResult, knownType) =>
+                        knownType match {
+                          case PropertyTypeInfo(objectTypeIri) =>
+//                              if (entityInfo.classInfoMap.get(inferredClassIri).contains(objectTypeIri))
+//                                  currentIntermediateResult.removeType(entityToType, knownType)
+//                              else currentIntermediateResult
+                              intermediateResult
+                          case NonPropertyTypeInfo(typeIri, _, _) =>
+//                              if (entityInfo.classInfoMap.get(inferredClassIri).contains(typeIri))
+//                                  currentIntermediateResult.removeType(entityToType, knownType)
+//                              else currentIntermediateResult
+                              intermediateResult
+                          case _ => intermediateResult
+                    }
+
+            )
+        }
     }
 
     /**
