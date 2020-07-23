@@ -99,7 +99,7 @@ repository and load some test data into the triplestore:
 $ make init-db-test
 ```
 
-Then we need to restart knora-api after loading the data:
+Then we need to start knora-api after loading the data:
 
 ```
 $ make stack-up
