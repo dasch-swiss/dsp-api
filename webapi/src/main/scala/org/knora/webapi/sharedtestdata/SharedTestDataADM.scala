@@ -2264,6 +2264,7 @@ object SharedTestDataADM {
             """.stripMargin
     }
 
+
     def createClassWithoutCardinalities(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
@@ -2298,6 +2299,187 @@ object SharedTestDataADM {
            |  }
            |}
             """.stripMargin
+    }
+
+    val createClassWithoutCardinalitiesResponse: String = {
+        """{
+          |    "@graph": [
+          |        {
+          |            "@id": "anything:Nothing",
+          |            "@type": "owl:Class",
+          |            "knora-api:canBeInstantiated": true,
+          |            "knora-api:isResourceClass": true,
+          |            "rdfs:comment": {
+          |                "@language": "en",
+          |                "@value": "Represents nothing"
+          |            },
+          |            "rdfs:label": {
+          |                "@language": "en",
+          |                "@value": "nothing"
+          |            },
+          |            "rdfs:subClassOf": [
+          |                {
+          |                    "@id": "knora-api:Resource"
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:arkUrl"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:attachedToProject"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:attachedToUser"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:creationDate"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:maxCardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:deleteComment"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:maxCardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:deleteDate"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:maxCardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:deletedBy"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:minCardinality": 0,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:hasIncomingLinkValue"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:hasPermissions"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:minCardinality": 0,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:hasStandoffLinkTo"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:minCardinality": 0,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:hasStandoffLinkToValue"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:maxCardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:isDeleted"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:maxCardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:lastModificationDate"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:userHasPermission"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:versionArkUrl"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:maxCardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "knora-api:versionDate"
+          |                    }
+          |                },
+          |                {
+          |                    "@type": "owl:Restriction",
+          |                    "knora-api:isInherited": true,
+          |                    "owl:cardinality": 1,
+          |                    "owl:onProperty": {
+          |                        "@id": "rdfs:label"
+          |                    }
+          |                }
+          |            ]
+          |        }
+          |    ],
+          |    "@id": "http://0.0.0.0:3333/ontology/0001/anything/v2",
+          |    "@type": "owl:Ontology",
+          |    "knora-api:attachedToProject": {
+          |        "@id": "http://rdfh.ch/projects/0001"
+          |    },
+          |    "knora-api:lastModificationDate": {
+          |        "@type": "xsd:dateTimeStamp",
+          |        "@value": "2020-07-24T11:24:29.824Z"
+          |    },
+          |    "rdfs:label": "The anything ontology",
+          |    "@context": {
+          |        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+          |        "owl": "http://www.w3.org/2002/07/owl#",
+          |        "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+          |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          |        "xsd": "http://www.w3.org/2001/XMLSchema#",
+          |        "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |    }
+          |}""".stripMargin
     }
 
     def addCardinality(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
