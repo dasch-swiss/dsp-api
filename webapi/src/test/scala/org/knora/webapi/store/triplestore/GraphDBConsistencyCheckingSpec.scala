@@ -3,7 +3,8 @@ package org.knora.webapi.store.triplestore
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK, SparqlUpdateRequest}
-import org.knora.webapi.{CoreSpec, TriplestoreResponseException}
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.exceptions.TriplestoreResponseException
 
 import scala.concurrent.duration._
 import scala.language.postfixOps

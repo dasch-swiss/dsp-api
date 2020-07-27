@@ -21,6 +21,7 @@ package org.knora.webapi
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.testkit.TestProbe
+import org.knora.webapi.core.ActorMaker
 
 /**
   * This trait is part of the cake pattern used in the creation of actors. This trait provides an implementation of the

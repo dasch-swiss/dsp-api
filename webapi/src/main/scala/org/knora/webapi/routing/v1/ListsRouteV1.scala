@@ -21,10 +21,10 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.BadRequestException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.messages.StringFormatter
 
 /**
  * Provides API routes that deal with lists.

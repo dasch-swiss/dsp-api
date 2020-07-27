@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
-load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES")
+load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES")
 
 filegroup(
     name = "srcs",
@@ -23,7 +23,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
@@ -31,7 +31,7 @@ scala_test(
 
 scala_test(
     name = "OntologyResponderV2Spec",
-    size = "medium",
+    size = "large",
     srcs = [
         "OntologyResponderV2Spec.scala",
     ],
@@ -41,7 +41,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
@@ -60,7 +60,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
         "@maven//:com_typesafe_play_twirl_api_2_12",
@@ -82,7 +82,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
@@ -101,7 +101,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
@@ -109,7 +109,7 @@ scala_test(
 
 scala_test(
     name = "ValuesResponderV2Spec",
-    size = "small",
+    size = "medium",
     srcs = [
         "ValuesResponderV2Spec.scala",
     ],
@@ -119,7 +119,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
         # Templates

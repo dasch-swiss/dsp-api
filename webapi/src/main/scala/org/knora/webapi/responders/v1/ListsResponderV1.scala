@@ -21,11 +21,13 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -146,7 +148,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             listQuery <- Future {
-                queries.sparql.v1.txt.getList(
+                org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getList(
                     triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
                     preferredLanguage = userProfile.userData.lang,
@@ -218,7 +220,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             nodePathQuery <- Future {
-                queries.sparql.v1.txt.getNodePath(
+                org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = userProfile.userData.lang,

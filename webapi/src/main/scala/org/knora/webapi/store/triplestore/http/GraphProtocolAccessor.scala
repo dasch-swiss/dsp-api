@@ -30,6 +30,8 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Await, ExecutionContext}

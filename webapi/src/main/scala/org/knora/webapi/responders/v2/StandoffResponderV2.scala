@@ -29,22 +29,26 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
+import org.knora.webapi.messages.util.{ConstructResponseUtilV2, KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.standoff.StandoffTagUtilV2.XMLTagItem
+import org.knora.webapi.util.cache.CacheUtil
 import org.xml.sax.SAXException
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -76,7 +80,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
 
         for {
-            resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+            resourceRequestSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = Seq(getStandoffRequestV2.resourceIri),
                 preview = false,
@@ -350,7 +354,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
                 // check if the mapping IRI already exists
-                getExistingMappingSparql = queries.sparql.v2.txt.getMapping(
+                getExistingMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
                     triplestore = settings.triplestoreType,
                     mappingIri = mappingIri
                 ).toString()
@@ -360,7 +364,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                     throw BadRequestException(s"mapping IRI $mappingIri already exists")
                 }
 
-                createNewMappingSparql = queries.sparql.v2.txt.createNewMapping(
+                createNewMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createNewMapping(
                     triplestore = settings.triplestoreType,
                     dataNamedGraph = namedGraph,
                     mappingIri = mappingIri,
@@ -624,7 +628,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
      */
     private def getMappingFromTriplestore(mappingIri: IRI, requestingUser: UserADM): Future[MappingXMLtoStandoff] = {
 
-        val getMappingSparql = queries.sparql.v2.txt.getMapping(
+        val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
             triplestore = settings.triplestoreType,
             mappingIri = mappingIri
         ).toString()

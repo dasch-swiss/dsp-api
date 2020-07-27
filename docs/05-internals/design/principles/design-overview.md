@@ -102,7 +102,7 @@ API v2, but API v2 does not depend on API v1.
 - `org.knora.webapi.util`: Utilities needed by different parts of the application,
   such as parsing and formatting tools.
 - `org.knora.webapi.messages`: The Akka messages used by each responder.
-- `org.knora.webapi.twirl`: Text-generation templates for use with
+- `org.knora.webapi.messages.twirl`: Text-generation templates for use with
   [the Twirl template engine](https://github.com/playframework/twirl). Knora
   uses Twirl to generate SPARQL requests and other types of text documents.
 

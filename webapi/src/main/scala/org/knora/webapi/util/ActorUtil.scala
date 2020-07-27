@@ -24,6 +24,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{ExceptionUtil, RequestRejectedException, UnexpectedMessageException, WrapperException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag

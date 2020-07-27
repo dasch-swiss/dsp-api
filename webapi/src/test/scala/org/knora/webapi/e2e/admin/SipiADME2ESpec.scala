@@ -30,7 +30,8 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRespo
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-import org.knora.webapi.{E2ESpec, SharedTestDataV1}
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

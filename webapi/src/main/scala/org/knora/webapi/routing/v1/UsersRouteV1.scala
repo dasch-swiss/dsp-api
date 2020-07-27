@@ -25,6 +25,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 

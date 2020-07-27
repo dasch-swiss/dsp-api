@@ -23,11 +23,12 @@ import java.io.File
 
 import akka.actor.{Actor, ActorLogging, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
+import org.knora.webapi.exceptions.{BadRequestException, SipiException}
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, KnoraSettings, SipiException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}

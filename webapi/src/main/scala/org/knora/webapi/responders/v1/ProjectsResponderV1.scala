@@ -22,13 +22,16 @@ package org.knora.webapi.responders.v1
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{NamedGraphV1, NamedGraphsGetRequestV1, NamedGraphsResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
 
 import scala.concurrent.Future
 
@@ -86,7 +89,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     private def projectsGetV1(userProfile: Option[UserProfileV1]): Future[Seq[ProjectInfoV1]] = {
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjects(
                 triplestore = settings.triplestoreType
             ).toString())
             //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
@@ -212,7 +215,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
         //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri
             ).toString())
@@ -250,7 +253,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
         //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
                 shortname = shortName
             ).toString())
@@ -344,7 +347,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
       */
     def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -361,7 +364,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
       */
     def projectByShortnameExists(shortname: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -378,7 +381,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
       */
     def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

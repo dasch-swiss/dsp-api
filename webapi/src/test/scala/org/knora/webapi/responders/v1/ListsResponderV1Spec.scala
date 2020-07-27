@@ -25,6 +25,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.listmessages._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 

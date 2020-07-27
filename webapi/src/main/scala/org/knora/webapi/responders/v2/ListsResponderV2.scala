@@ -19,13 +19,13 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM, ListNodeInfoGetRequestADM, ListNodeInfoGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.listsmessages._
-import org.knora.webapi.responders.{Responder, ResponderData}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future

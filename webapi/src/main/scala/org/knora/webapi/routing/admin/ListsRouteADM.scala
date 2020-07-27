@@ -32,9 +32,12 @@ import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, NotImplementedException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
+
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 

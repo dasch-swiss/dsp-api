@@ -29,6 +29,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.routing.v1.ValuesRouteV1
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
 
