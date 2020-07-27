@@ -459,30 +459,30 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     val PathologicalTypeInferenceResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "book4") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "titleProp1") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableVariable(variableName = "page1") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "page1") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
         TypeableVariable(variableName = "book1") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "titleProp2") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableVariable(variableName = "page3") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "page3") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOf".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableIri(iri = "http://rdfh.ch/1749ad09ac06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/1749ad09ac06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri),
         TypeableVariable(variableName = "linkObj") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "title2") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableIri(iri = "http://rdfh.ch/52431ecfab06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/52431ecfab06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri),
         TypeableVariable(variableName = "title3") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableIri(iri = "http://rdfh.ch/dc4e3c44ac06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableVariable(variableName = "page2") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableVariable(variableName = "page4") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/dc4e3c44ac06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri),
+        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
+        TypeableVariable(variableName = "page2") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
+        TypeableVariable(variableName = "page4") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
+        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri),
         TypeableVariable(variableName = "titleProp4") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableIri(iri = "http://rdfh.ch/8d3d8f94ab06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/8d3d8f94ab06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri),
         TypeableVariable(variableName = "title1") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "titleProp3") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableVariable(variableName = "linkProp2") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "linkProp2") -> PropertyTypeInfo(objectTypeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
         TypeableVariable(variableName = "partOfProp") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "title4") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "book3") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableVariable(variableName = "linkProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "linkProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri),
         TypeableVariable(variableName = "book2") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
@@ -499,6 +499,18 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
+    val TypeInferenceResultNoSubject: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri),
+        TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri),
+        TypeableVariable(variableName = "name") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+    ))
+
     val TypeInferenceResult2: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
@@ -510,21 +522,21 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     ))
 
     val TypeInferenceResult3: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
-        TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
         TypeableIri(iri = "http://purl.org/dc/terms/title".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
-        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+        TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
     val TypeInferenceResult4: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
-        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
         TypeableVariable(variableName = "pubdate") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
         TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
     val TypeInferenceResult5: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
-        TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
         TypeableVariable(variableName = "titleProp") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "propVal0") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
@@ -532,7 +544,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     val TypeInferenceResult6: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri),
         TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri),
-        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri),
         TypeableIri(iri = "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
         TypeableIri(iri = "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri),
         TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri)
@@ -568,12 +580,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         """.stripMargin
 
     val RdfsLabelWithLiteralResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
-        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
         TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
     val RdfsLabelWithVariableResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
-        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
         TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "label") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
@@ -617,8 +629,10 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val  (usageIndex , entityInfo) = Await.result(typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser), timeout)
             val multipleDetectedTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
                 TypeableVariable(variableName = "letter") -> Set(
+                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true),
                     NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))
+                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true)
+                    )
                 ),
                 entitiesInferredFromProperties = Set.empty
             )
@@ -670,7 +684,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult1)
+            assert(result.entities.toString() == TypeInferenceResultNoSubject.entities.toString())
         }
 
         "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
@@ -678,7 +692,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult2)
+            assert(result.entities.toString() == TypeInferenceResult2.entities.toString())
         }
 
         "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
@@ -686,7 +700,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult4)
+            assert(result.entities.toString() == TypeInferenceResult4.entities.toString())
         }
 
         "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
@@ -694,7 +708,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryVarTypeFromFunction)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult5)
+            assert(result.entities.toString() == TypeInferenceResult5.entities.toString())
         }
 
         "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
@@ -702,7 +716,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult6)
+            assert(result.entities.toString() == TypeInferenceResult6.entities.toString())
         }
 
         "infer the types in a query that requires 6 iterations" in {
@@ -710,7 +724,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == PathologicalTypeInferenceResult)
+            assert(result.entities.toString() == PathologicalTypeInferenceResult.entities.toString())
         }
 
         "know the object type of rdfs:label" in {
@@ -718,7 +732,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndLiteral)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == RdfsLabelWithLiteralResult)
+            assert(result.entities.toString() == RdfsLabelWithLiteralResult.entities.toString())
         }
 
         "infer the type of a variable used as the object of rdfs:label" in {
@@ -726,7 +740,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndVariable)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == RdfsLabelWithVariableResult)
+            assert(result.entities.toString() == RdfsLabelWithVariableResult.entities.toString())
         }
 
         "reject a query with a non-Knora property whose type cannot be inferred" in {
@@ -743,7 +757,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithAnnotation)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == TypeInferenceResult3)
+            assert(result.entities.toString() == TypeInferenceResult3.entities.toString())
         }
 
         "reject a query with inconsistent types inferred from statements" in {
