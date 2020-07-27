@@ -278,12 +278,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         }
 
-        val maybeSubjectTypeIri: Option[SmartIri] = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-            case Some(NonPropertyTypeInfo(subjectTypeIri, _, _)) => Some(subjectTypeIri)
-            case _ => None
+        val maybeSubjectType: (Option[SmartIri], Boolean) = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
+            case Some(NonPropertyTypeInfo(subjectTypeIri, isResourceType, _)) => (Some(subjectTypeIri), isResourceType)
+            case _ => (None, false)
         }
-
-        val subjectIsResource: Boolean = maybeSubjectTypeIri.exists(iri => OntologyConstants.KnoraApi.isKnoraApiV2Resource(iri))
+        val maybeSubjectTypeIri : Option[SmartIri] = maybeSubjectType._1
+        val subjectIsResource: Boolean = maybeSubjectType._2
 
         // Is the subject of the statement a resource?
         if (subjectIsResource) {
