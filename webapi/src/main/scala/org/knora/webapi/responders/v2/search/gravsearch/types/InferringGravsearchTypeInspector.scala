@@ -104,30 +104,6 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-     * Make sure that no specific type is stored for the typeableEntity.
-     *
-     * @param entityToType       the entity whose type needs to be determined.
-     * @param intermediateResult this rule's intermediate result.
-     */
-    protected def noSpecificTypeIsKnown ( entityToType: TypeableEntity,
-                                         intermediateResult: IntermediateTypeInspectionResult
-                                       ): Boolean = {
-        intermediateResult
-          .entities
-          .getOrElse(entityToType, Set.empty[GravsearchEntityTypeInfo]).foldLeft(false) ((_, knownType) => knownType match {
-            case PropertyTypeInfo(objectTypeIri) =>
-                if (objectTypeIri.isKnoraApiV2EntityIri) true
-                else {
-                    false
-                }
-            case NonPropertyTypeInfo(typeIri, _, _) =>
-                if (typeIri.isKnoraApiV2EntityIri) true
-                else false
-            case _ => false
-        })
-    }
-
-    /**
       * Infers the type of an entity if there is an `rdf:type` statement about it.
       */
     private class RdfTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
