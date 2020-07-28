@@ -31,7 +31,7 @@ import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
   *                 has more than one type, this means that it has been used with inconsistent types.
   */
 case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]],
-                                            entitiesInferredFromProperties: Set[TypeableEntity] = Set.empty) {
+                                            entitiesInferredFromProperties:  Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty) {
     /**
       * Adds types for an entity.
       *
@@ -44,7 +44,7 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
         val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
 
         val newEntitiesInferredFromProperties = if (inferredFromProperty) {
-            entitiesInferredFromProperties + entity
+            entitiesInferredFromProperties + (entity -> entityTypes)
         } else {
             entitiesInferredFromProperties
         }
@@ -59,15 +59,21 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
      * removes types of an entity.
      *
      * @param entity      the entity for which types must be removed.
-     * @param typeToRemove the types to be removed.
+     * @param typeToRemove the type to be removed.
      * @return a new [[IntermediateTypeInspectionResult]] without the specified type information assigned to the entity.
      */
     def removeType(entity: TypeableEntity, typeToRemove: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
         val remainingTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) - typeToRemove
 
+        val updatedEntitiesInferredFromProperties = if (entitiesInferredFromProperties.exists(aType => aType._1 == entity &&  aType._2 == Set(typeToRemove))) {
+            entitiesInferredFromProperties - entity
+        } else {
+            entitiesInferredFromProperties
+        }
+
         IntermediateTypeInspectionResult(
             entities = entities + (entity -> remainingTypes),
-            entitiesInferredFromProperties = entitiesInferredFromProperties
+            entitiesInferredFromProperties = updatedEntitiesInferredFromProperties
         )
     }
 

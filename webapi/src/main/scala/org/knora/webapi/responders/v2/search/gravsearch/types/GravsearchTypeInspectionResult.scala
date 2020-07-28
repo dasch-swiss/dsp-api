@@ -88,7 +88,7 @@ case class TypeableIri(iri: SmartIri) extends TypeableEntity {
   *
   * @param entities a map of Gravsearch entities to the types that were determined for them.
   */
-case class GravsearchTypeInspectionResult(entities: Map[TypeableEntity, GravsearchEntityTypeInfo], entitiesInferredFromProperties: Set[TypeableEntity] = Set.empty) {
+case class GravsearchTypeInspectionResult(entities: Map[TypeableEntity, GravsearchEntityTypeInfo], entitiesInferredFromProperties: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty) {
     /**
       * Given an [[Entity]], returns its type, if the entity is typeable and its type is available.
       *
