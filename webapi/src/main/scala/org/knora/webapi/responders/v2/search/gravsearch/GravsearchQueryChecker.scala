@@ -67,9 +67,7 @@ object GravsearchQueryChecker {
                                     // If it's a variable that doesn't represent a property, and we're using the complex schema and the statement
                                     // is in the CONSTRUCT clause, check that it refers to a resource or value.
                                     if (inConstructClause && querySchema == ApiV2Complex) {
-                                        val typeIriStr = nonPropertyTypeInfo.typeIri.toString
-
-                                        if (!(typeIriStr == OntologyConstants.KnoraApiV2Complex.Resource || OntologyConstants.KnoraApiV2Complex.ValueClasses.contains(typeIriStr))) {
+                                        if (!(nonPropertyTypeInfo.isResourceType || nonPropertyTypeInfo.isValueType)) {
                                             throw GravsearchException(s"${queryVar.toSparql} is not allowed in a CONSTRUCT clause")
                                         }
                                     }
