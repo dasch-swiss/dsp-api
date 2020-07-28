@@ -1441,7 +1441,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val resourceVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
 
         typeInspectionResult.getTypeOfEntity(resourceVar) match {
-            case Some(nonPropInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropInfo.typeIri) => ()
+            case Some(nonPropInfo: NonPropertyTypeInfo) if nonPropInfo.isResourceType => ()
             case _ => throw GravsearchException(s"${resourceVar.toSparql} must be a knora-api:Resource")
         }
 
