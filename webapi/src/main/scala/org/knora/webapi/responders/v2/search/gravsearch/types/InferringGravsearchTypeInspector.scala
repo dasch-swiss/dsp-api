@@ -141,11 +141,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                         } else {
 
                                             // It's not a resource class or standoff class. Is it valid in a type inspection result?
-                                            if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
+                                            if (GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)) {
                                                 // Yes. Return it.
-                                                val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(rdfType)
-                                                val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)
-                                                val inferredType = NonPropertyTypeInfo(rdfType, isResourceType = isResource, isValueType = isValue)
+                                                val inferredType = NonPropertyTypeInfo(rdfType, isValueType = true)
                                                 log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                                 Some(inferredType)
                                             } else {
@@ -159,12 +157,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                         // This should have caused an error earlier from the ontology responder.
                                         throw AssertionException(s"No information found about class ${IriRef(rdfType).toString}")
                                 }
-                            } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
+                            } else if (GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)) {
                                 // This isn't a Knora entity. If it's valid in a type inspection result, return it.
 
-                                val isResource = OntologyConstants.KnoraApi.isKnoraApiV2Resource(rdfType)
-                                val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)
-                                val inferredType = NonPropertyTypeInfo(rdfType, isResourceType = isResource, isValueType = isValue)
+                                val inferredType = NonPropertyTypeInfo(rdfType, isValueType = true)
                                 log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                 Some(inferredType)
                             } else {
@@ -570,7 +566,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             if (isStandoffClass) {
                                 // Yes. Infer knora-api:subjectType knora-api:StandoffTag.
                                 Some(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)
-                            } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(subjectTypeStr)) {
+                            } else if (GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(subjectTypeStr)) {
                                 // It's not any of those. If it's valid in a type inspection result, return it.
                                 Some(subjectType)
                             } else {
@@ -626,7 +622,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             if (isStandoffClass) {
                                 // Yes. Infer knora-api:subjectType knora-api:StandoffTag.
                                 Some(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)
-                            } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(objectTypeStr)) {
+                            } else if (GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeStr)) {
                                 // It's not any of those. If it's valid in a type inspection result, return it.
                                 Some(objectType)
                             } else {
