@@ -43,7 +43,7 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
     def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo], inferredFromProperty: Boolean = false): IntermediateTypeInspectionResult = {
         val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
 
-        val newEntitiesInferredFromProperties = if (inferredFromProperty) {
+        val newEntitiesInferredFromProperties = if (inferredFromProperty && entityTypes.nonEmpty) {
             entitiesInferredFromProperties + (entity -> entityTypes)
         } else {
             entitiesInferredFromProperties

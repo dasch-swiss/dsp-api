@@ -590,6 +590,29 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableVariable(variableName = "label") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 
+    val queryWithReduntentTypes: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?author knora-api:isMainResource true .
+          |} WHERE {
+          |    ?letter rdf:type beol:writtenSource .
+          |
+          |    ?letter rdf:type beol:letter .
+          |
+          |    ?letter beol:hasAuthor ?author .
+          |
+          |    ?author beol:hasFamilyName ?familyName .
+          |
+          |    FILTER knora-api:matchText(?familyName, "Bernoulli")
+          |
+          |} ORDER BY ?date
+        """.stripMargin
+
     "The type inspection utility" should {
         "remove the type annotations from a WHERE clause" in {
             val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
@@ -613,17 +636,20 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val multipleDetectedTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
                 TypeableVariable(variableName = "mainRes") -> Set(
                     NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true))
+                    NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)
+                )
                 ),
-                entitiesInferredFromProperties = Set.empty
+                entitiesInferredFromProperties = Map(TypeableVariable(variableName = "mainRes") -> Set(
+                    NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)))
             )
             val intermediateTypesWithoutResource: IntermediateTypeInspectionResult = multipleDetectedTypes.removeType(TypeableVariable(variableName = "mainRes"), NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri))
             assert(intermediateTypesWithoutResource.entities.size == 1)
             intermediateTypesWithoutResource.entities should contain ((TypeableVariable(variableName = "mainRes") -> Set(
-                NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true))))
+                NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))))
+            assert(intermediateTypesWithoutResource.entitiesInferredFromProperties.isEmpty)
         }
 
-        "refine the determined types for each typeableEntity" in {
+        "refine the inspected types for each typeableEntity" in {
             val typeInspectionRunner = new InferringGravsearchTypeInspector(nextInspector = None, responderData = responderData)
             val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
             val  (usageIndex , entityInfo) = Await.result(typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser), timeout)
@@ -634,7 +660,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                     NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true)
                     )
                 ),
-                entitiesInferredFromProperties = Set.empty
+                entitiesInferredFromProperties = Map(TypeableVariable(variableName = "letter") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true)))
             )
 
             val refinedIntermediateResults = typeInspectionRunner.refineDeterminedTypes(
@@ -643,6 +669,16 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(refinedIntermediateResults.entities.size == 1)
             refinedIntermediateResults.entities should contain ((TypeableVariable(variableName = "letter") -> Set(
                 NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))))
+            assert(refinedIntermediateResults.entitiesInferredFromProperties.isEmpty)
+        }
+
+        "infer the most specific type from redundant ones given in a query" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(queryWithReduntentTypes)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result.entities.size == 5)
+            result.entitiesInferredFromProperties.keySet should not contain(TypeableVariable("letter"))
         }
 
         "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
@@ -651,8 +687,9 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
             assert(result.entities.toString() == TypeInferenceResult1.entities.toString())
-            result.entitiesInferredFromProperties should contain (TypeableVariable("linkingProp1"))
-            result.entitiesInferredFromProperties should contain (TypeableIri("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri))
+            result.entitiesInferredFromProperties.keySet should contain(TypeableVariable("date"))
+            result.entitiesInferredFromProperties.keySet should contain(TypeableIri("http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri))
+            result.entitiesInferredFromProperties.keySet should not contain(TypeableVariable("linkingProp1"))
         }
 
         "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {

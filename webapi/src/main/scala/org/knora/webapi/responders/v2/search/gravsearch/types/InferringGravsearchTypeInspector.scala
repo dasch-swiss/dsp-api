@@ -387,10 +387,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
                                                 // Yes. Use those types.
                                                 entityTypes.flatMap {
-                                                    case nonPropertyTypeInfo: NonPropertyTypeInfo=>
-//                                                       val objectTypeIri = if (GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(nonPropertyTypeInfo.typeIri.toString))
-//                                                                            nonPropertyTypeInfo.typeIri
-//                                                                            else InferenceRuleUtil.getResourceTypeIriForSchema(usageIndex.querySchema)
+                                                    case nonPropertyTypeInfo: NonPropertyTypeInfo =>
                                                         val inferredType: GravsearchEntityTypeInfo = PropertyTypeInfo(objectTypeIri =  nonPropertyTypeInfo.typeIri)
                                                         log.debug("KnoraObjectTypeFromObjectRule: {} {} .", entityToType, inferredType)
                                                         Some(inferredType)
@@ -604,8 +601,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 // Yes. Infer knora-api:objectType knora-api:Resource.
                 Some(getResourceTypeIriForSchema(querySchema))
                 //Todo: another optimization step can be that the real resource is returned
-//                readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
-//                  orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri))
+
             } else if (readPropertyInfo.isFileValueProp) {
                 // No. If it's a file value property, return the representation of file values in the specified schema.
                 Some(getFileTypeForSchema(querySchema))
@@ -852,9 +848,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             allTypes.exists(aType =>
                 entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
                     case Some(classDef: ReadClassInfoV2) =>
-                        if (classDef.allBaseClasses.contains(currTypeIri))
-                            true
-                        else false
+                        classDef.allBaseClasses.contains(currTypeIri)
                     case _ => false
                 })
         }
