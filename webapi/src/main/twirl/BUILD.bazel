@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load(":generate_srcjar.bzl", "generate_srcjar")
 
 twirl_templates(
     name = "twirl_sources",
@@ -17,18 +18,33 @@ twirl_templates(
     srcs = glob(["**/*.scala.txt"])
         + glob(["**/*.scala.html"])
         + glob(["**/*.scala.xml"]),
-
-
 )
 
-genrule(
+# Generates a src jar with the sources inside a correct package folder
+# structure. This rule fixes the generated folder structure from the
+# twirl_templates rule. The prefix contains the value for which the package
+# folder structure needs to be corrected. This should fix DSP-475.
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# The prefix value needs to be corrected if the twirl_templates
+# rule is moved to another package
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+generate_srcjar(
     name = "twirl",
+    prefix = "bazel-out/darwin-fastbuild/bin/webapi/src/main/twirl/gen/twirl_sources/webapi/src/main/twirl",
     srcs = [
-        ":twirl_sources",
+        ":twirl_sources"
     ],
-    outs = [
-        "twirl.srcjar"
-    ],
-    cmd = "jar -cf \"$@\" $(locations :twirl_sources)",
-    # tools = ["jar"],
 )
+
+#genrule(
+#    name = "twirl",
+#    srcs = [
+#        ":twirl_sources",
+#    ],
+#    outs = [
+#        "twirl.srcjar"
+#    ],
+#    cmd = "jar -cf \"$@\" $(locations :twirl_sources)",
+#    # tools = ["jar"],
+#)
