@@ -133,7 +133,10 @@ object IntermediateTypeInspectionResult {
 
         // Find the IRIs that represent resource metadata properties, and get their object types.
         val resourceMetadataPropertyTypesUsed: Map[TypeableIri, PropertyTypeInfo] = OntologyConstants.ResourceMetadataPropertyAxioms.filterKeys(irisUsed).map {
-            case (propertyIri, objectTypeIri) => TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(objectTypeIri = objectTypeIri.toSmartIri)
+            case (propertyIri, objectTypeIri) => {
+                val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeIri)
+                TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(objectTypeIri = objectTypeIri.toSmartIri, objectIsResourceType = !isValue, objectIsValueType = isValue)
+            }
         }
 
         // Add those types to the IntermediateTypeInspectionResult.
