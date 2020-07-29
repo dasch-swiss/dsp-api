@@ -26,7 +26,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.{TypeAnnotationProperties, TypeAnnotationProperty}
-
+import org.knora.webapi.messages.{OntologyConstants}
 import scala.concurrent.Future
 
 /**
