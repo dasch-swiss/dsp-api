@@ -169,7 +169,7 @@ object GravsearchTypeInspectionUtil {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
     }

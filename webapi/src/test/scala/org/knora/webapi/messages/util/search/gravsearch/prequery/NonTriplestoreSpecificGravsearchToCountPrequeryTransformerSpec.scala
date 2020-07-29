@@ -138,18 +138,6 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                             propertyPathOperator = None
                         ))
                     ),
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
                     OptionalPattern(patterns = Vector(
                         StatementPattern(
                             subj = QueryVariable(variableName = "thing"),
@@ -254,18 +242,6 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                             iri = "http://www.knora.org/explicit".toSmartIri,
                             propertyPathOperator = None
                         ))
-                    ),
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
                     ),
                     OptionalPattern(patterns = Vector(
                         StatementPattern(

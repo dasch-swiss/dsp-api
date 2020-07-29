@@ -40,7 +40,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -59,7 +59,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        override def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             moveIsDeletedToEnd(patterns)
         }
 
@@ -79,7 +79,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -98,7 +98,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        override def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             moveIsDeletedToEnd(patterns)
         }
 

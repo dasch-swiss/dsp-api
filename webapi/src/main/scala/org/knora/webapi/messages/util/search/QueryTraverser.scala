@@ -55,7 +55,7 @@ trait WhereTransformer {
      * @param patterns the query patterns to be optimised.
      * @return the optimised query patterns.
      */
-    def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+    def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern]
 
     /**
      * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -242,7 +242,7 @@ object QueryTraverser {
             case bindPattern: BindPattern => Seq(bindPattern)
         }
 
-        whereTransformer.optimiseQueryPatternOrder(transformedPatterns)
+        whereTransformer.optimiseQueryPattern(transformedPatterns)
     }
 
     /**
