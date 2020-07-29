@@ -24,14 +24,17 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{ApplicationCacheException, ForbiddenException, NotFoundException}
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.cache.CacheUtil
 
 import scala.concurrent.Future
 
@@ -79,7 +82,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 }
             )
 
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUsers(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUsers(
                 triplestore = settings.triplestoreType
             ).toString())
 
@@ -136,7 +139,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         //log.debug("userDataByIriGetV1 - userIri: {}", userIri)
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
@@ -172,7 +175,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
             case None =>
                 for {
-                    sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+                    sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
                         triplestore = settings.triplestoreType,
                         userIri = userIri
                     ).toString())
@@ -236,7 +239,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
             case None =>
                 for {
-                    sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
+                    sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByEmail(
                         triplestore = settings.triplestoreType,
                         email = email
                     ).toString())
@@ -290,7 +293,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     def userProjectMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserProjectMembershipsGetResponseV1] = {
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
@@ -324,7 +327,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     def userProjectAdminMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseV1] = {
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
@@ -358,7 +361,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     def userGroupMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseV1] = {
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
@@ -528,7 +531,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     def userExists(userIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString)
             // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -545,7 +548,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             // _ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -562,7 +565,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             // _ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

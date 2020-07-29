@@ -30,11 +30,14 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi._
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.responders.v2.search.SparqlQueryConstants
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.knora.webapi.util.jsonld._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -77,7 +80,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       userEmail: String): JsonLDDocument = {
         // Make a Gravsearch query from a template.
-        val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+        val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
             propertyIris = propertyIrisForGravsearch
         ).toString()

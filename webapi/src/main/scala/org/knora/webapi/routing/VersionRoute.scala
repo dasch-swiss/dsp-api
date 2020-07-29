@@ -23,7 +23,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.BuildInfo
+import org.knora.webapi.http.version.VersionInfo
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
@@ -67,19 +67,19 @@ trait VersionCheck {
     }
 
     private def getVersion() = {
-        var sipiVersion = BuildInfo.sipiVersion
+        var sipiVersion = VersionInfo.sipiVersion
         val sipiIndex = sipiVersion.indexOf(':')
         sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
 
-        var fusekiVersion = BuildInfo.jenaFusekiVersion
+        var fusekiVersion = VersionInfo.jenaFusekiVersion
         val fusekiIndex = fusekiVersion.indexOf(':')
         fusekiVersion = if (fusekiIndex > 0) fusekiVersion.substring(fusekiIndex + 1) else fusekiVersion
 
         VersionCheckResult(
             name = "version",
-            webapi = BuildInfo.version,
-            scala = BuildInfo.scalaVersion,
-            akkaHttp = BuildInfo.akkaHttpVersion,
+            webapi = VersionInfo.version,
+            scala = VersionInfo.scalaVersion,
+            akkaHttp = VersionInfo.akkaHttpVersion,
             sipi = sipiVersion,
             fuseki = fusekiVersion
         )

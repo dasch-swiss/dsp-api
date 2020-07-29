@@ -20,10 +20,10 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.ActorSystem
-import org.knora.webapi.{KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}
+import org.knora.webapi.settings.{KnoraSettings, KnoraSettingsImpl}
 
 // FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 object ResourcesResponderV1SpecFullData {

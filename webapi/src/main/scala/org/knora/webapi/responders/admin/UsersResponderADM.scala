@@ -23,8 +23,9 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi
-import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
@@ -32,11 +33,12 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetUserADM, CacheServicePutUserADM, CacheServiceRemoveValues}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{InstrumentationSupport, SmartIri}
+import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.{exceptions, _}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -93,7 +95,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 }
             )
 
-            sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
                 maybeIri = None,
                 maybeUsername = None,
@@ -654,7 +656,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
@@ -926,7 +928,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // get group's info. we need the project IRI.
             maybeGroupADM <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
-            projectIri = maybeGroupADM.getOrElse(throw webapi.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
+            projectIri = maybeGroupADM.getOrElse(throw InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
 
             // check if the requesting user is allowed to perform updates
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
@@ -993,7 +995,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // get group's info. we need the project IRI.
             maybeGroupADM <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
-            projectIri = maybeGroupADM.getOrElse(throw webapi.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
+            projectIri = maybeGroupADM.getOrElse(throw exceptions.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
 
             // check if the requesting user is allowed to perform updates
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
@@ -1071,7 +1073,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             _ = invalidateCachedUserADM(maybeCurrentUser)
 
             /* Update the user */
-            updateUserSparqlString <- Future(queries.sparql.admin.txt.updateUser(
+            updateUserSparqlString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateUser(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -1186,7 +1188,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             hashedPassword = encoder.encode(createRequest.password)
 
             // Create the new user.
-            createNewUserSparqlString = queries.sparql.admin.txt.createNewUser(
+            createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewUser(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -1274,7 +1276,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      * Tries to retrieve a [[UserADM]] from the triplestore.
      */
     private def getUserFromTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = for {
-        sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+        sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getUsers(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
             maybeUsername = identifier.toUsernameOption,
@@ -1389,7 +1391,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def userExists(userIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
             // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1414,7 +1416,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                     stringFormatter.validateUsername(username, throw BadRequestException(s"The username '$username' contains invalid characters"))
 
                     for {
-                        askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
+                        askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
                         // _ = log.debug("userExists - query: {}", askString)
 
                         checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1441,7 +1443,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                     stringFormatter.validateEmailAndThrow(email, throw BadRequestException(s"The email address '$email' is invalid"))
 
                     for {
-                        askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
+                        askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
                         // _ = log.debug("userExists - query: {}", askString)
 
                         checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1460,7 +1462,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             // _ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1477,7 +1479,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             // _ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

@@ -26,13 +26,16 @@ import akka.stream.Materializer
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.core.Core
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.ResponderData
-import org.knora.webapi.util.{StartupUtils, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike

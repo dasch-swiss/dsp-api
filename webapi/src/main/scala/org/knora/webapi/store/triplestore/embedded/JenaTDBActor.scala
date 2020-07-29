@@ -32,10 +32,12 @@ import org.apache.jena.tdb.{TDB, TDBFactory}
 import org.apache.jena.update.{UpdateAction, UpdateFactory, UpdateRequest}
 import org.apache.lucene.store._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{TriplestoreInternalException, TriplestoreResponseException, UnexpectedMessageException}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.ErrorHandlingMap
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future

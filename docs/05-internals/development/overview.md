@@ -52,8 +52,7 @@ removed in the future.
 
 Built-in support and configuration for other triplestores is planned.
 
-See the chapters on [Starting GraphDB](graphdb.md) and
-[Starting Fuseki](fuseki.md) for more details.
+See the chapter on [Starting GraphDB](graphdb.md) for more details.
 
 ## Sipi
 

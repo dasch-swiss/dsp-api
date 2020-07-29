@@ -24,9 +24,11 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{FileUtil, StringFormatter}
-import org.knora.webapi.{AssertionException, E2ESpec}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.ExecutionContextExecutor
 

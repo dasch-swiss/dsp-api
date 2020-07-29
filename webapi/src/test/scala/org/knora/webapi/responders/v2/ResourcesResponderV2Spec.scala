@@ -25,17 +25,21 @@ import java.util.UUID
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlSelectRequest, SparqlSelectResponse, SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -505,7 +509,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
-        val sparqlQuery = queries.sparql.v2.txt.getStandoffTagByUUID(
+        val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getStandoffTagByUUID(
             triplestore = settings.triplestoreType,
             uuid = uuid,
             stringFormatter = stringFormatter
@@ -2133,7 +2137,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
               ).map(_.toSmartIri)
 
             for (erasedIriToCheck <- erasedIrisToCheck) {
-                val sparqlQuery = queries.sparql.admin.txt.checkIriExists(
+                val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(
                     iri = erasedIriToCheck.toString
                 ).toString()
 
@@ -2147,7 +2151,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Check that the deleted link value that pointed to the resource has also been erased.
 
-            val isEntityUsedSparql: String = queries.sparql.v2.txt.isEntityUsed(
+            val isEntityUsedSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
                 entityIri = resourceIriToErase.get.toSmartIri,
                 ignoreKnoraConstraints = true

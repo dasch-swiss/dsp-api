@@ -27,8 +27,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}

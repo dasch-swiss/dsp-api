@@ -21,8 +21,8 @@ package org.knora.webapi.store.cacheservice
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 import com.twitter.chill.MeatLocker
-import org.knora.webapi.RedisException
-import org.knora.webapi.util.InstrumentationSupport
+import org.knora.webapi.exceptions.RedisException
+import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 

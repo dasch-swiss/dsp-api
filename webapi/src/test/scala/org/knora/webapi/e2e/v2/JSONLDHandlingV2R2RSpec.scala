@@ -29,8 +29,8 @@ import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.util.{FileUtil, JavaUtil}
 
 import scala.concurrent.ExecutionContextExecutor

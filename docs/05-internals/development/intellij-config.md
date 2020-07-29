@@ -87,7 +87,7 @@ triangle on an orange circle, with the tooltip "Run with VisualVM":
 
 ![screenshot 'Run with VisualVM button'](figures/launch-visualvm.png)
 
-You can use this button to run the class `org.knora.webapi.Main` and
+You can use this button to run the class `org.knora.webapi.app.Main` and
 profile it in VisualVM. The first time you do this, IntelliJ will ask
 you for the path to the VisualVM executable. On macOS this is
 `/Applications/VisualVM.app/Contents/MacOS/visualvm`.

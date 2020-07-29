@@ -20,7 +20,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 # Development
 
 - [Overview](overview.md)
-- [Starting Fuseki 2](fuseki.md)
 - [Starting GraphDB](graphdb.md)
 - [Build and Running](building-and-running.md)
 - [Build Process](build-process.md)
