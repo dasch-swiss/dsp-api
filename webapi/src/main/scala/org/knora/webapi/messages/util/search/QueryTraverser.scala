@@ -55,7 +55,15 @@ trait WhereTransformer {
      * @param patterns the query patterns to be optimised.
      * @return the optimised query patterns.
      */
-    def optimiseQueryPattern(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+    def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+
+    /**
+     * Optimise the type statements by removing the entity types that can be inferred form a property
+     *
+     * @param patterns the query patterns to be optimised.
+     * @return the optimised query patterns.
+     */
+    def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern]
 
     /**
      * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -184,7 +192,10 @@ object QueryTraverser {
     def transformWherePatterns(patterns: Seq[QueryPattern],
                                inputOrderBy: Seq[OrderCriterion],
                                whereTransformer: WhereTransformer): Seq[QueryPattern] = {
-        val transformedPatterns: Seq[QueryPattern] = patterns.flatMap {
+
+        val optimisedPatterns = whereTransformer.optimiseEntityTypeStatements(patterns)
+
+        val transformedPatterns: Seq[QueryPattern] = optimisedPatterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
                     statementPattern = statementPattern,
@@ -242,7 +253,7 @@ object QueryTraverser {
             case bindPattern: BindPattern => Seq(bindPattern)
         }
 
-        whereTransformer.optimiseQueryPattern(transformedPatterns)
+        whereTransformer.optimiseQueryPatternOrder(transformedPatterns)
     }
 
     /**

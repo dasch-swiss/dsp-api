@@ -1686,4 +1686,42 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     }
 
+    protected def removeEntitiesInferredFromProperty (patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val optionalEntities = patterns.filter {
+
+            case OptionalPattern(_) => true
+            case _ => false
+        }
+        val subjects = optionalEntities.flatMap {
+            case optionalPattern: OptionalPattern =>
+                optionalPattern.patterns.flatMap{
+                case pattern:StatementPattern =>
+                    GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj)
+                  case _ => None
+                }
+            case _ => None
+        }
+
+        // remove statements whose predicate is rdf:type and type of subject is inferred from a property
+        val optimisedPatterns = patterns.filter {
+            case stamentPattern: StatementPattern =>
+                stamentPattern.pred match {
+                    case iriRef: IriRef =>
+                        val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(stamentPattern.subj)
+                        subject match {
+                            case Some(typeableEntity) =>
+                                if (iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
+                                    && !subjects.contains(typeableEntity))
+                                    false
+                                else true
+                            case _=> true
+                        }
+
+                    case _ => true
+                }
+            case _ => true
+        }
+        optimisedPatterns
+    }
+
 }
