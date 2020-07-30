@@ -1708,7 +1708,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                         val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(stamentPattern.subj)
                         subject match {
                             case Some(typeableEntity) =>
-                                (iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
+                                !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
                                     && !optionalEntities.contains(typeableEntity))
                             case _=> true
                         }
