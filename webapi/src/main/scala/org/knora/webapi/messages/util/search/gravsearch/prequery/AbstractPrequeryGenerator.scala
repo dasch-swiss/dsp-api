@@ -1688,11 +1688,9 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     protected def removeEntitiesInferredFromProperty (patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         val optionalEntities = patterns.filter {
-
             case OptionalPattern(_) => true
             case _ => false
-        }
-        val subjects = optionalEntities.flatMap {
+        }.flatMap {
             case optionalPattern: OptionalPattern =>
                 optionalPattern.patterns.flatMap{
                 case pattern:StatementPattern =>
@@ -1710,10 +1708,8 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                         val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(stamentPattern.subj)
                         subject match {
                             case Some(typeableEntity) =>
-                                if (iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
-                                    && !subjects.contains(typeableEntity))
-                                    false
-                                else true
+                                (iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
+                                    && !optionalEntities.contains(typeableEntity))
                             case _=> true
                         }
 
