@@ -694,9 +694,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 entityInfo = allEntityInfo
             )
 
+            //sanitize the inconsistent resource types inferred for an entity
+            sanitizedResults: IntermediateTypeInspectionResult = sanitizeInconsistentResourceTypes(refinedIntermediateResult, usageIndex.querySchema)
+
             // Pass the intermediate result to the next type inspector in the pipeline.
             lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-                intermediateResult = refinedIntermediateResult,
+                intermediateResult = sanitizedResults,
                 whereClause = whereClause,
                 requestingUser = requestingUser
             )
@@ -827,6 +830,52 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         )
     }
 
+
+    /**
+     * Sanitize determined results, if there were multiple resource types, replace with rdfs:type
+     *
+     * @param lastResults this type inspection results.
+     * @param querySchema the ontology schema that the query is written in.
+     **/
+    def sanitizeInconsistentResourceTypes (lastResults: IntermediateTypeInspectionResult, querySchema: ApiV2Schema) : IntermediateTypeInspectionResult = {
+
+        def getIsResourceFlags(typeInfo: GravsearchEntityTypeInfo): Boolean = {
+            typeInfo match {
+                case PropertyTypeInfo(_, objectIsResourceType, _) => objectIsResourceType
+                case NonPropertyTypeInfo(_, isResourceType, _) => isResourceType
+                case _ => throw GravsearchException(s"There is an invalid type")
+            }
+        }
+        // get inconsistentTypes
+        val inconsistentEntities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = lastResults.entitiesWithInconsistentTypes
+
+        // check if inconsistent types are of resources, then replace them with rdfs:type otherwise throw error
+        inconsistentEntities.keySet.foldLeft(lastResults) {
+            (acc, typedEntity) =>
+                // all inconsistent types
+                val typesToBeChecked = inconsistentEntities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
+                if (typesToBeChecked.count(elem => elem.isInstanceOf[NonPropertyTypeInfo]) == typesToBeChecked.size &&
+                    typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
+                    // all elements are of type NonPropertyType and resource types
+                    val newType = NonPropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(querySchema), isResourceType = true)
+                    val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
+                        (sanitizeResults, currType) => sanitizeResults.removeType(typedEntity, currType)
+                    }
+                    withoutInconsistentTypes.addTypes(typedEntity, Set(newType))
+                } else if (typesToBeChecked.count(elem => elem.isInstanceOf[PropertyTypeInfo]) == typesToBeChecked.size &&
+                  typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
+                    // all elements are of type PropertyType and resource types
+                    val newType = PropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(querySchema), objectIsResourceType = true)
+                    val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
+                        (sanitizeResults, currType) => sanitizeResults.removeType(typedEntity, currType)
+                    }
+                    withoutInconsistentTypes.addTypes(typedEntity, Set(newType))
+                } else {
+                    acc
+                }
+        }
+    }
+
     /**
      * Make sure that the most specific type is stored for each typeableEntity.
      *
@@ -859,16 +908,13 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         intermediateResult.entities.keySet.foldLeft(intermediateResult) {
             (acc, typedEntity) =>
                 val types = intermediateResult.entities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
-                if (types.isEmpty) intermediateResult
-                else {
-                    types.foldLeft(acc) {
+                types.foldLeft(acc) {
                         (refinedResults, currType) =>
                         if (typeInBaseClasses(currType, types - currType)) {
                             refinedResults.removeType(typedEntity, currType)
                         } else refinedResults
                     }
                 }
-        }
     }
 
 
