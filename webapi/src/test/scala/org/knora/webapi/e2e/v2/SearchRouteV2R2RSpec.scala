@@ -4186,8 +4186,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-
-        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (with type inference)" in {
+        // a correct type cannot be inferred here because in the ontology Representation is not subclass of book or vice versa
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf (with type inference)" in {
             var gravsearchQuery =
                 """
                   |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -4205,9 +4205,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-                  |     }
                   |
                   |     FILTER NOT EXISTS {
                   |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
@@ -6327,8 +6324,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-
-        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (submitting the complex schema)" in {
+        // Same here.
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf (submitting the complex schema)" in {
             var gravsearchQuery =
                 """
                   |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -6345,10 +6342,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
                   |
                   |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
-                  |
-                  |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-                  |     }
                   |
                   |     FILTER NOT EXISTS {
                   |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
