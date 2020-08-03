@@ -1687,6 +1687,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     }
 
     protected def removeEntitiesInferredFromProperty (patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+
         val optionalEntities = patterns.filter {
             case OptionalPattern(_) => true
             case _ => false
@@ -1694,7 +1695,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case optionalPattern: OptionalPattern =>
                 optionalPattern.patterns.flatMap{
                 case pattern:StatementPattern =>
-                    GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj)
+                    GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.obj)
                   case _ => None
                 }
             case _ => None
