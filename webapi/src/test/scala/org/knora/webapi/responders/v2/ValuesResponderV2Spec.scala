@@ -165,7 +165,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       requestingUser: UserADM): ReadResourceV2 = {
         // Make a Gravsearch query from a template.
-        val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+        val gravsearchQuery: String = org.knora.webapi.messages.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
             propertyIris = propertyIrisForGravsearch
         ).toString()

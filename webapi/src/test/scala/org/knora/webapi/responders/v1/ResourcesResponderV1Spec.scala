@@ -746,7 +746,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     }
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
-        val lastModSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getLastModificationDate(
+        val lastModSparqlQuery = org.knora.webapi.messages.queries.sparql.v1.txt.getLastModificationDate(
             triplestore = settings.triplestoreType,
             resourceIri = resourceIri
         ).toString()

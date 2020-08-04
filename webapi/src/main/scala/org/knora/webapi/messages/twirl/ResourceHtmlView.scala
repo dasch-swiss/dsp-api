@@ -86,7 +86,7 @@ object ResourceHtmlView {
         log.debug(s"non-empty locations: ${properties.find(_.locations.nonEmpty)}")
         log.debug(s"imgpath: $imgpath , nonEmpty: ${imgpath.nonEmpty}")
 
-        val content: play.twirl.api.Html = org.knora.webapi.messages.twirl.views.html.resource.properties(propMap, imgpath)
+        val content: play.twirl.api.Html = org.knora.webapi.messages.views.html.resource.properties(propMap, imgpath)
         content.toString
     }
 

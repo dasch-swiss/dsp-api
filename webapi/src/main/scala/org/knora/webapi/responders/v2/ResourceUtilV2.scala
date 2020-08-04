@@ -128,7 +128,7 @@ object ResourceUtilV2 {
     def checkListNodeExists(listNodeIri: IRI,
                             storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
 
             checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 

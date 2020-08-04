@@ -143,20 +143,20 @@ bind(
 #
 # download the rules_twirl repository (needed to compile twirl templates)
 #
-rules_twirl_version = "9ac789845e3a481fe520af57bd47a4261edb684f" # 20.07.2020
-rules_twirl_version_sha256 = "b1698a2a59b76dc9df233314c2a1ca8cee4a0477665cff5eafd36f92057b2044"
-http_archive(
-  name = "io_bazel_rules_twirl",
-  strip_prefix = "rules_twirl-%s" % rules_twirl_version,
-  type = "zip",
-  url = "https://github.com/subotic/rules_twirl/archive/%s.zip" % rules_twirl_version,
-  sha256 = rules_twirl_version_sha256,
-)
-
-#local_repository(
-#    name = "io_bazel_rules_twirl",
-#    path = "../../subotic/rules_twirl",
+#rules_twirl_version = "9ac789845e3a481fe520af57bd47a4261edb684f" # 20.07.2020
+#rules_twirl_version_sha256 = "b1698a2a59b76dc9df233314c2a1ca8cee4a0477665cff5eafd36f92057b2044"
+#http_archive(
+#  name = "io_bazel_rules_twirl",
+#  strip_prefix = "rules_twirl-%s" % rules_twirl_version,
+#  type = "zip",
+#  url = "https://github.com/subotic/rules_twirl/archive/%s.zip" % rules_twirl_version,
+#  sha256 = rules_twirl_version_sha256,
 #)
+
+local_repository(
+    name = "io_bazel_rules_twirl",
+    path = "../../subotic/rules_twirl",
+)
 
 load("@io_bazel_rules_twirl//:workspace.bzl", "twirl_repositories")
 twirl_repositories()

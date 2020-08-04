@@ -95,7 +95,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 }
             )
 
-            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getUsers(
+            sparqlQueryString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
                 maybeIri = None,
                 maybeUsername = None,
@@ -656,7 +656,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
 
         for {
-            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
@@ -1073,7 +1073,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             _ = invalidateCachedUserADM(maybeCurrentUser)
 
             /* Update the user */
-            updateUserSparqlString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateUser(
+            updateUserSparqlString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.updateUser(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -1188,7 +1188,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             hashedPassword = encoder.encode(createRequest.password)
 
             // Create the new user.
-            createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewUser(
+            createNewUserSparqlString = org.knora.webapi.messages.queries.sparql.admin.txt.createNewUser(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -1276,7 +1276,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      * Tries to retrieve a [[UserADM]] from the triplestore.
      */
     private def getUserFromTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = for {
-        sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getUsers(
+        sparqlQueryString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.getUsers(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
             maybeUsername = identifier.toUsernameOption,
@@ -1391,7 +1391,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def userExists(userIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
             // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1416,7 +1416,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                     stringFormatter.validateUsername(username, throw BadRequestException(s"The username '$username' contains invalid characters"))
 
                     for {
-                        askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
+                        askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
                         // _ = log.debug("userExists - query: {}", askString)
 
                         checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1443,7 +1443,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                     stringFormatter.validateEmailAndThrow(email, throw BadRequestException(s"The email address '$email' is invalid"))
 
                     for {
-                        askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
+                        askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
                         // _ = log.debug("userExists - query: {}", askString)
 
                         checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1462,7 +1462,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             // _ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1479,7 +1479,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             // _ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

@@ -148,7 +148,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             listQuery <- Future {
-                org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getList(
+                org.knora.webapi.messages.queries.sparql.v1.txt.getList(
                     triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
                     preferredLanguage = userProfile.userData.lang,
@@ -220,7 +220,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             nodePathQuery <- Future {
-                org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getNodePath(
+                org.knora.webapi.messages.queries.sparql.v1.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = userProfile.userData.lang,

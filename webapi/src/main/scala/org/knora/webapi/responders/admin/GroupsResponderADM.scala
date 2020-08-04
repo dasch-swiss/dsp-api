@@ -74,7 +74,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         log.debug("groupsGetADM")
 
         for {
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getGroups(
+            sparqlQuery <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.getGroups(
                 triplestore = settings.triplestoreType,
                 maybeIri = None
             ).toString())
@@ -136,7 +136,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     private def groupGetADM(groupIri: IRI, requestingUser: UserADM): Future[Option[GroupADM]] = {
 
         for {
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getGroups(
+            sparqlQuery <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.getGroups(
                 triplestore = settings.triplestoreType,
                 maybeIri = Some(groupIri)
 
@@ -216,7 +216,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                     throw NotFoundException(s"Group <$groupIri> not found")
             }
 
-            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getGroupMembersByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.queries.sparql.v1.txt.getGroupMembersByIri(
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri
             ).toString())
@@ -307,7 +307,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
 
             /* create the group */
-            createNewGroupSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewGroup(
+            createNewGroupSparqlString = org.knora.webapi.messages.queries.sparql.admin.txt.createNewGroup(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri,
@@ -489,7 +489,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
 
             /* Update group */
-            updateProjectSparqlString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateGroup(
+            updateProjectSparqlString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.updateGroup(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri,
@@ -589,7 +589,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       */
     private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             //_ = log.debug("groupExists - query: {}", askString)
 
             checkGroupExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -608,7 +608,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
 
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)
             //_ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

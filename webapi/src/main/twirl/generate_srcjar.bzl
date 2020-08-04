@@ -8,7 +8,7 @@ def _generate_srcjar_impl(ctx):
     ctx.actions.run(
         inputs = ctx.files.srcs,
         outputs = [out],
-        arguments = ["cfM"] + [out.path] + ["-C"] + [ctx.attr.prefix] + ["."],
+        arguments = ["cf"] + [out.path] + ["-C"] + [ctx.attr.prefix] + ["."],
         progress_message = "Bundling srcs into srcjar",
         executable = "jar",
     )

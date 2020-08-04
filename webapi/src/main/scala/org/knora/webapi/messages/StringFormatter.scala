@@ -2811,7 +2811,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     def checkIriExists(iri: IRI,
                        storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
+            askString <- Future(org.knora.webapi.messages.queries.sparql.admin.txt.checkIriExists(iri).toString)
             response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
         } yield response.result
     }

@@ -80,7 +80,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
 
         for {
-            resourceRequestSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
+            resourceRequestSparql <- Future(org.knora.webapi.messages.queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = Seq(getStandoffRequestV2.resourceIri),
                 preview = false,
@@ -354,7 +354,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
                 // check if the mapping IRI already exists
-                getExistingMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
+                getExistingMappingSparql = org.knora.webapi.messages.queries.sparql.v2.txt.getMapping(
                     triplestore = settings.triplestoreType,
                     mappingIri = mappingIri
                 ).toString()
@@ -364,7 +364,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                     throw BadRequestException(s"mapping IRI $mappingIri already exists")
                 }
 
-                createNewMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createNewMapping(
+                createNewMappingSparql = org.knora.webapi.messages.queries.sparql.v2.txt.createNewMapping(
                     triplestore = settings.triplestoreType,
                     dataNamedGraph = namedGraph,
                     mappingIri = mappingIri,
@@ -628,7 +628,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
      */
     private def getMappingFromTriplestore(mappingIri: IRI, requestingUser: UserADM): Future[MappingXMLtoStandoff] = {
 
-        val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
+        val getMappingSparql = org.knora.webapi.messages.queries.sparql.v2.txt.getMapping(
             triplestore = settings.triplestoreType,
             mappingIri = mappingIri
         ).toString()

@@ -120,7 +120,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                                ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
 
         for {
-            isEntityUsedSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isEntityUsed(
+            isEntityUsedSparql <- Future(org.knora.webapi.messages.queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
                 entityIri = entityIri,
                 ignoreKnoraConstraints = ignoreKnoraConstraints,
