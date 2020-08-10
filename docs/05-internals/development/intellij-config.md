@@ -26,7 +26,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ![screenshot 'Install Scala Plugin'](figures/install-scala-plugin.png)
 
-  - Add Bazel Plugin: run InteliJ and install install the plugin from inside IntelliJ.
+  - Add Bazel Plugin: run InteliJ and install the plugin from inside IntelliJ.
   - Create a project for Knora: restart InteliJ and create a project for Knora using `Import Bazel Project` option.
   
   ![screenshot 'Import Project'](figures/import-bazel-project.png)
@@ -35,7 +35,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   
   ![screenshot 'Workspace'](figures/bazel-workspace.png)
   
-  - Select the `Generate Build File` option and give the path to the main `Build.bazel` file of Knora, click `next`.
+  - Select the `Generate from BUILD file` option and give the path to the main `BUILD.bazel` file of Knora, click `next`.
   
   ![screenshot 'Bazel build'](figures/bazel-buildFile.png)
   
@@ -43,14 +43,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   
   ![screenshot 'Bazel Scala'](figures/bazel-UncommentScala.png)
   
-  At this point a `.ijwb` file is created for Knora Project and added to the welcome screen of InteiJ. You can open the project by clicking on it.
+  At this point a `.ijwb` file is created for Knora project and added to the welcome screen of InteiJ. You can open the project by clicking on it.
 
-  - Once the project is built and opened in InteliJ, make sure that project in synced with Bazel build files, by clicking
-   on Bazel logo `Sync Project with Build Files`. This needs to be repeated every time there is a change in `Build.bazel` files.
+  - Once the project is built and opened in InteliJ, make sure that project in synced with Bazel build files by clicking
+   on Bazel logo `Sync Project with Build Files`. This needs to be repeated every time there is a change in a `BUILD.bazel` file.
    
    ![screenshot 'Bazel sync'](figures/bazel-sync.png)
    
-  - make sure that the tab size is set correctly to **4 spaces** (so you
+  - Make sure that the tab size is set correctly to **4 spaces** (so you
     can use automatic code reformatting): `Preferences -> Code Style ->
     Scala`:
 
@@ -60,11 +60,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Use IntelliJ IDEA's Run/Debugger Configuration with Knora
 
 First, you need to create an application configuration to run or debug a code. Here the configuration is explained using a test as an 
-  example, but similarly the application configuaration of InteliJ can also be used for building the webapi.
+  example, but similarly the application configuration of InteliJ can be used for building the webapi.
   
-To run a specific test in a command line using Bazel, you would need  to give the path of the test relative to its 
-  package as defined in the `BUILD.bazel` of the package. For example, to run the test  `GravsearchTypeInspectorSpec`, in the
-   command line you would need to enter the `bazel test //webapi/src/test/scala/org/knora/webapi/messages/util/search:GravsearchTypeInspectorSpec`.
+To run a specific test in a command line using Bazel, you would need to give the path of the test relative to its 
+  package as defined in the `BUILD.bazel` of the package. For example, to run the test  `GravsearchTypeInspectorSpec` in the
+   command line, you would need to enter `bazel test //webapi/src/test/scala/org/knora/webapi/messages/util/search:GravsearchTypeInspectorSpec`.
   Now to run or debug the same test and its underlying code in InteliJ, a new configuration should be
   set up:
   
@@ -76,22 +76,24 @@ To run a specific test in a command line using Bazel, you would need  to give th
    
 ![screenshot 'new_configuration'](figures/bazel-command-config.png)
 
-   - Give the type of the command, i.e. `test` and the path , as shown below. Then press `Apply`, and finish configuration by pressing `OK`.
+   - Give the type of the command, i.e. `test` and the path parameter, as shown below. Then press `Apply`, and finish 
+   the configuration by pressing `OK`.
 
 ![screenshot 'configuration_setup'](figures/bazel-config-setup.png)
 
-After the configuration is completed, the configuration will appear in a drop-down menu that shows all available configurations. 
+After the configuration is completed, it will appear in a drop-down menu that shows all available configurations. 
 
-  - To run a configured command, eg. to run the test `GravsearchTypeInspectorSpec`, chose its configuration from the drop-down menu
-    - click on the `Run` symbol, the results will appear in the a `Run` window. Note that, before running the test, the 
+  - To run a configured command, eg. to run the test `GravsearchTypeInspectorSpec`, 
+    1. choose its configuration from the drop-down menu
+    2. click on the `Run` symbol, the results will appear in the a `Run` window. Note that, before running the test, the 
     docker container of api should be stopped. 
     
 ![screenshot 'configuration_run'](figures/bazel-run-config.png)
 
   - To debug the code for example by executing a test: 
-    - Click on a line-number to add a breakpoint. 
-    - Choose the respective configuration from the drop-down menu. 
-    - Click on the debugging symbol to start the application with a debugger attached, as shown below:
+    1. Click on a line-number to add a breakpoint. 
+    2. Choose the respective configuration from the drop-down menu. 
+    3. Click on the debugging symbol to start the application with a debugger attached, as shown below:
 
 ![screenshot 'debug'](figures/bazel-debug.png)
 
