@@ -21,6 +21,7 @@ package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.messages.util.search.SparqlTransformer.moveLuceneToBeginning
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
@@ -169,7 +170,7 @@ object GravsearchTypeInspectionUtil {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 

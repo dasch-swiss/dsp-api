@@ -21,6 +21,7 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.search.SparqlTransformer.moveLuceneToBeginning
 import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil}
 import org.knora.webapi.messages.util.search._
 
@@ -84,7 +85,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(constructClause
         0
     }
 
-    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
 

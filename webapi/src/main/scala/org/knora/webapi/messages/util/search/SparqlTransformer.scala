@@ -41,7 +41,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
@@ -63,7 +63,8 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(patterns)
+            val luceneFirst = moveLuceneToBeginning(patterns)
+            moveIsDeletedToEnd(luceneFirst)
         }
 
         override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
@@ -84,7 +85,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
@@ -106,7 +107,8 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(patterns)
+            val luceneFirst: Seq[QueryPattern] = moveLuceneToBeginning(patterns)
+            moveIsDeletedToEnd(luceneFirst)
         }
 
         override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
@@ -200,6 +202,21 @@ object SparqlTransformer {
         }
 
         otherPatterns ++ isDeletedPatterns
+    }
+
+    /**
+     * Optimises queries by moving Lucene query patterns to the beginning of a block.
+     *
+     * @param patterns the block of patterns to be optimised.
+     * @return the result of the optimisation.
+     */
+    def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val (luceneQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case LuceneQueryPattern(_, _, _) => true
+            case _ => false
+        }
+
+        luceneQueryPatterns ++ otherPatterns
     }
 
     /**

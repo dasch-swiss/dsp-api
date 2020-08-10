@@ -22,6 +22,7 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.search.SparqlTransformer.moveLuceneToBeginning
 import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, NonPropertyTypeInfo, PropertyTypeInfo}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -379,7 +380,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
 
-    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
     override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = removeEntitiesInferredFromProperty(patterns)
 }
