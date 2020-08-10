@@ -605,12 +605,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-      * Initialize the Jena Fuseki triplestore. Currently only works for
-      * 'knora-test' and 'knora-test-unit' repository names. To be used, the
-      * API needs to be started with 'KNORA_WEBAPI_TRIPLESTORE_AUTOINIT' set
-      * to 'true' (settings.triplestoreAutoInit). Usage is only recommended for automated testing and not for
-      * production use.
-      */
+     * Initialize the Jena Fuseki triplestore. Currently only works for
+     * 'knora-test' and 'knora-test-unit' repository names. To be used, the
+     * API needs to be started with 'KNORA_WEBAPI_TRIPLESTORE_AUTOINIT' set
+     * to 'true' (settings.triplestoreAutoInit). Usage is only recommended for automated testing and not for
+     * production use.
+     */
     private def initJenaFusekiTriplestore(): Try[CheckTriplestoreResponse] = {
 
         val configFileName = s"webapi/scripts/fuseki-repository-config.ttl.template"
@@ -903,7 +903,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         httpContext.setAuthCache(authCache)
 
         val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
-        
+
         if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
             uriBuilder.setParameter("infer", "false")
         } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {

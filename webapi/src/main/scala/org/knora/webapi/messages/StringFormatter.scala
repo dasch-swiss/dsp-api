@@ -1717,10 +1717,10 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora group IRI.
-      *
-      * @param iri the IRI to be checked.
-      */
+     * Returns `true` if an IRI string looks like a Knora group IRI.
+     *
+     * @param iri the IRI to be checked.
+     */
     def isKnoraGroupIriStr(iri: IRI): Boolean = {
         isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
     }
@@ -2417,11 +2417,11 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the optional project IRI, checks if it is in a valid format.
-      *
-      * @param maybeIri the optional project's IRI to be checked.
-      * @return the same optional IRI.
-      */
+     * Given the optional project IRI, checks if it is in a valid format.
+     *
+     * @param maybeIri the optional project's IRI to be checked.
+     * @return the same optional IRI.
+     */
     def validateOptionalProjectIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
         maybeIri match {
             case Some(iri) => Some(validateProjectIri(iri, errorFun))
@@ -2547,11 +2547,11 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the list IRI, checks if it is in a valid format.
-      *
-      * @param iri the list's IRI.
-      * @return the IRI of the list.
-      */
+     * Given the list IRI, checks if it is in a valid format.
+     *
+     * @param iri the list's IRI.
+     * @return the IRI of the list.
+     */
     def validateListIri(iri: IRI, errorFun: => Nothing): IRI = {
         if (isKnoraListIriStr(iri)) {
             iri
@@ -2561,11 +2561,11 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the optional list IRI, checks if it is in a valid format.
-      *
-      * @param maybeIri the optional list's IRI to be checked.
-      * @return the same optional IRI.
-      */
+     * Given the optional list IRI, checks if it is in a valid format.
+     *
+     * @param maybeIri the optional list's IRI to be checked.
+     * @return the same optional IRI.
+     */
     def validateOptionalListIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
         maybeIri match {
             case Some(iri) => Some(validateListIri(iri, errorFun))
@@ -2574,11 +2574,11 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the group IRI, checks if it is in a valid format.
-      *
-      * @param iri the group's IRI.
-      * @return the IRI of the list.
-      */
+     * Given the group IRI, checks if it is in a valid format.
+     *
+     * @param iri the group's IRI.
+     * @return the IRI of the list.
+     */
     def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = {
         if (isKnoraGroupIriStr(iri)) {
             iri
@@ -2588,11 +2588,11 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the optional group IRI, checks if it is in a valid format.
-      *
-      * @param maybeIri the optional group's IRI to be checked.
-      * @return the same optional IRI.
-      */
+     * Given the optional group IRI, checks if it is in a valid format.
+     *
+     * @param maybeIri the optional group's IRI to be checked.
+     * @return the same optional IRI.
+     */
     def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
         maybeIri match {
             case Some(iri) => Some(validateGroupIri(iri, errorFun))
@@ -2617,11 +2617,11 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-      * Given the optional user IRI, checks if it is in a valid format.
-      *
-      * @param maybeIri the optional user's IRI to be checked.
-      * @return the same optional IRI.
-      */
+     * Given the optional user IRI, checks if it is in a valid format.
+     *
+     * @param maybeIri the optional user's IRI to be checked.
+     * @return the same optional IRI.
+     */
     def validateOptionalUserIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
         maybeIri match {
             case Some(iri) => Some(validateUserIri(iri, errorFun))

@@ -52,7 +52,7 @@ trait LiveManagers extends Managers {
      */
     lazy val storeManager: ActorRef = context.actorOf(
         Props(new StoreManager(self) with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = StoreManagerActorName
     )
 
@@ -61,7 +61,7 @@ trait LiveManagers extends Managers {
      */
     lazy val responderManager: ActorRef = context.actorOf(
         Props(new ResponderManager(self) with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+            .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
         name = RESPONDER_MANAGER_ACTOR_NAME
     )
 }
@@ -400,35 +400,35 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                 CorsDirectives.cors(CorsSettings(system)) {
                     handleErrors {
                         new HealthRoute(routeData).knoraApiPath ~
-                          new VersionRoute(routeData).knoraApiPath ~
-                          new RejectingRoute(routeData).knoraApiPath ~
-                          new ClientApiRoute(routeData).knoraApiPath ~
-                          new ResourcesRouteV1(routeData).knoraApiPath ~
-                          new ValuesRouteV1(routeData).knoraApiPath ~
-                          new StandoffRouteV1(routeData).knoraApiPath ~
-                          new ListsRouteV1(routeData).knoraApiPath ~
-                          new ResourceTypesRouteV1(routeData).knoraApiPath ~
-                          new SearchRouteV1(routeData).knoraApiPath ~
-                          new AuthenticationRouteV1(routeData).knoraApiPath ~
-                          new AssetsRouteV1(routeData).knoraApiPath ~
-                          new CkanRouteV1(routeData).knoraApiPath ~
-                          new UsersRouteV1(routeData).knoraApiPath ~
-                          new ProjectsRouteV1(routeData).knoraApiPath ~
-                          new OntologiesRouteV2(routeData).knoraApiPath ~
-                          new SearchRouteV2(routeData).knoraApiPath ~
-                          new ResourcesRouteV2(routeData).knoraApiPath ~
-                          new ValuesRouteV2(routeData).knoraApiPath ~
-                          new StandoffRouteV2(routeData).knoraApiPath ~
-                          new ListsRouteV2(routeData).knoraApiPath ~
-                          new AuthenticationRouteV2(routeData).knoraApiPath ~
-                          new GroupsRouteADM(routeData).knoraApiPath ~
-                          new ListsRouteADM(routeData).knoraApiPath ~
-                          new PermissionsRouteADM(routeData).knoraApiPath ~
-                          new ProjectsRouteADM(routeData).knoraApiPath ~
-                          new StoreRouteADM(routeData).knoraApiPath ~
-                          new UsersRouteADM(routeData).knoraApiPath ~
-                          new SipiRouteADM(routeData).knoraApiPath ~
-                          new SwaggerApiDocsRoute(routeData).knoraApiPath
+                            new VersionRoute(routeData).knoraApiPath ~
+                            new RejectingRoute(routeData).knoraApiPath ~
+                            new ClientApiRoute(routeData).knoraApiPath ~
+                            new ResourcesRouteV1(routeData).knoraApiPath ~
+                            new ValuesRouteV1(routeData).knoraApiPath ~
+                            new StandoffRouteV1(routeData).knoraApiPath ~
+                            new ListsRouteV1(routeData).knoraApiPath ~
+                            new ResourceTypesRouteV1(routeData).knoraApiPath ~
+                            new SearchRouteV1(routeData).knoraApiPath ~
+                            new AuthenticationRouteV1(routeData).knoraApiPath ~
+                            new AssetsRouteV1(routeData).knoraApiPath ~
+                            new CkanRouteV1(routeData).knoraApiPath ~
+                            new UsersRouteV1(routeData).knoraApiPath ~
+                            new ProjectsRouteV1(routeData).knoraApiPath ~
+                            new OntologiesRouteV2(routeData).knoraApiPath ~
+                            new SearchRouteV2(routeData).knoraApiPath ~
+                            new ResourcesRouteV2(routeData).knoraApiPath ~
+                            new ValuesRouteV2(routeData).knoraApiPath ~
+                            new StandoffRouteV2(routeData).knoraApiPath ~
+                            new ListsRouteV2(routeData).knoraApiPath ~
+                            new AuthenticationRouteV2(routeData).knoraApiPath ~
+                            new GroupsRouteADM(routeData).knoraApiPath ~
+                            new ListsRouteADM(routeData).knoraApiPath ~
+                            new PermissionsRouteADM(routeData).knoraApiPath ~
+                            new ProjectsRouteADM(routeData).knoraApiPath ~
+                            new StoreRouteADM(routeData).knoraApiPath ~
+                            new UsersRouteADM(routeData).knoraApiPath ~
+                            new SipiRouteADM(routeData).knoraApiPath ~
+                            new SwaggerApiDocsRoute(routeData).knoraApiPath
                     }
                 }
             }
@@ -445,11 +445,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http()
-          .bindAndHandle(
-              Route.handlerFlow(apiRoutes),
-              knoraSettings.internalKnoraApiHost,
-              knoraSettings.internalKnoraApiPort
-          )
+            .bindAndHandle(
+                Route.handlerFlow(apiRoutes),
+                knoraSettings.internalKnoraApiHost,
+                knoraSettings.internalKnoraApiPort
+            )
 
         bindingFuture onComplete {
             case Success(_) =>

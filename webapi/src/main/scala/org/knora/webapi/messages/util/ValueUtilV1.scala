@@ -39,19 +39,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
-  * Converts data from SPARQL query results into [[ApiValueV1]] objects.
-  */
+ * Converts data from SPARQL query results into [[ApiValueV1]] objects.
+ */
 class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
     private val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
-      *
-      * @param valueProps a [[GroupedProps.ValueProps]] resulting from querying the `Value`, in which the keys are RDF predicates,
-      *                   and the values are lists of the objects of each predicate.
-      * @return a [[ApiValueV1]] representing the `Value`.
-      */
+     * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
+     *
+     * @param valueProps a [[GroupedProps.ValueProps]] resulting from querying the `Value`, in which the keys are RDF predicates,
+     *                   and the values are lists of the objects of each predicate.
+     * @return a [[ApiValueV1]] representing the `Value`.
+     */
     def makeValueV1(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
@@ -79,22 +79,22 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Creates a IIIF URL for accessing an image file via Sipi.
-      *
-      * @param imageFileValueV1 the image file value representing the image.
-      * @return a Sipi IIIF URL.
-      */
+     * Creates a IIIF URL for accessing an image file via Sipi.
+     *
+     * @param imageFileValueV1 the image file value representing the image.
+     * @return a Sipi IIIF URL.
+     */
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
         s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
     }
 
     /**
-      * Creates a URL for accessing a text file via Sipi.
-      *
-      * @param textFileValue the text file value representing the text file.
-      * @param external      a flag denoting the type of URL that should be generated.
-      * @return a Sipi URL.
-      */
+     * Creates a URL for accessing a text file via Sipi.
+     *
+     * @param textFileValue the text file value representing the text file.
+     * @param external      a flag denoting the type of URL that should be generated.
+     * @return a Sipi URL.
+     */
     def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1, external: Boolean = true): String = {
 
         if (external) {
@@ -105,7 +105,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
-    private val mimeType2V1Format = new ErrorHandlingMap(Map(// TODO: add mime types for text files that are supported by Sipi
+    private val mimeType2V1Format = new ErrorHandlingMap(Map( // TODO: add mime types for text files that are supported by Sipi
         "application/octet-stream" -> "BINARY-UNKNOWN",
         "image/jpeg" -> "JPEG",
         "image/jp2" -> "JPEG2000",
@@ -129,12 +129,12 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
 
     /**
-      * Converts a [[FileValueV1]] (which is used internally by the Knora API server) to a [[LocationV1]] (which is
-      * used in certain API responses).
-      *
-      * @param fileValueV1 a [[FileValueV1]].
-      * @return a [[LocationV1]].
-      */
+     * Converts a [[FileValueV1]] (which is used internally by the Knora API server) to a [[LocationV1]] (which is
+     * used in certain API responses).
+     *
+     * @param fileValueV1 a [[FileValueV1]].
+     * @return a [[LocationV1]].
+     */
     def fileValueV12LocationV1(fileValueV1: FileValueV1): LocationV1 = {
         fileValueV1 match {
             case stillImageFileValueV1: StillImageFileValueV1 =>
@@ -156,16 +156,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Creates a URL pointing to the given resource class icon. From the resource class IRI it gets the ontology specific path, i.e. the ontology name.
-      * If the resource class IRI is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
-      * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
-      * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
-      *
-      * This method requires the IRI segment before the last slash to be a unique identifier for all the ontologies used with Knora..
-      *
-      * @param resourceClassIri the IRI of the resource class in question.
-      * @param iconsSrc         the name of the icon file.
-      */
+     * Creates a URL pointing to the given resource class icon. From the resource class IRI it gets the ontology specific path, i.e. the ontology name.
+     * If the resource class IRI is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
+     * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
+     * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
+     *
+     * This method requires the IRI segment before the last slash to be a unique identifier for all the ontologies used with Knora..
+     *
+     * @param resourceClassIri the IRI of the resource class in question.
+     * @param iconsSrc         the name of the icon file.
+     */
     def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
         // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
         // add +1 to ignore the slash
@@ -176,26 +176,26 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Creates [[ValueProps]] from a List of [[VariableResultsRow]] representing a value object
-      * (the triples where the given value object is the subject in).
-      *
-      * A [[VariableResultsRow]] is expected to have the following members (SPARQL variable names):
-      *
-      * - objPred: the object predicate (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
-      * - objObj: The string representation of the value assigned to objPred.
-      *
-      * In one given row, objPred **must** indicate the type of the given value object using rdfs:type (e.g. http://www.knora.org/ontology/knora-base#TextValue)
-      *
-      * In case the given value object contains standoff (objPred is http://www.knora.org/ontology/knora-base#valueHasStandoff),
-      * it has the following additional members compared those mentioned above:
-      *
-      * - predStandoff: the standoff predicate (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart)
-      * - objStandoff: the string representation of the value assigned to predStandoff
-      *
-      * @param valueIri the IRI of the value that was queried.
-      * @param objRows  SPARQL results.
-      * @return a [[ValueProps]] representing the SPARQL results.
-      */
+     * Creates [[ValueProps]] from a List of [[VariableResultsRow]] representing a value object
+     * (the triples where the given value object is the subject in).
+     *
+     * A [[VariableResultsRow]] is expected to have the following members (SPARQL variable names):
+     *
+     * - objPred: the object predicate (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
+     * - objObj: The string representation of the value assigned to objPred.
+     *
+     * In one given row, objPred **must** indicate the type of the given value object using rdfs:type (e.g. http://www.knora.org/ontology/knora-base#TextValue)
+     *
+     * In case the given value object contains standoff (objPred is http://www.knora.org/ontology/knora-base#valueHasStandoff),
+     * it has the following additional members compared those mentioned above:
+     *
+     * - predStandoff: the standoff predicate (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart)
+     * - objStandoff: the string representation of the value assigned to predStandoff
+     *
+     * @param valueIri the IRI of the value that was queried.
+     * @param objRows  SPARQL results.
+     * @return a [[ValueProps]] representing the SPARQL results.
+     */
     def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
 
         val groupedValueObject = groupKnoraValueObjectPredicateRows(objRows.map(_.rowMap))
@@ -204,22 +204,22 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts three lists of SPARQL query results representing all the properties of a resource into a [[GroupedPropertiesByType]].
-      *
-      * Each [[VariableResultsRow]] is expected to have the following SPARQL variables:
-      *
-      * - prop: the IRI of the resource property (e.g. http://www.knora.org/ontology/knora-base#hasComment)
-      * - obj: the IRI of the object that the property points to, which may be either a value object (an ordinary value or a reification) or another resource
-      * - objPred: the IRI of each predicate of `obj` (e.g. for its literal contents, or for its permissions)
-      * - objObj: the object of each `objPred`
-      *
-      * The remaining members are identical to those documented in [[createValueProps]].
-      *
-      * @param rowsWithOrdinaryValues SPARQL result rows describing properties that point to ordinary values (not link values).
-      * @param rowsWithLinkValues     SPARQL result rows describing properties that point link values (reifications of links to resources).
-      * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
-      * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
-      */
+     * Converts three lists of SPARQL query results representing all the properties of a resource into a [[GroupedPropertiesByType]].
+     *
+     * Each [[VariableResultsRow]] is expected to have the following SPARQL variables:
+     *
+     * - prop: the IRI of the resource property (e.g. http://www.knora.org/ontology/knora-base#hasComment)
+     * - obj: the IRI of the object that the property points to, which may be either a value object (an ordinary value or a reification) or another resource
+     * - objPred: the IRI of each predicate of `obj` (e.g. for its literal contents, or for its permissions)
+     * - objObj: the object of each `objPred`
+     *
+     * The remaining members are identical to those documented in [[createValueProps]].
+     *
+     * @param rowsWithOrdinaryValues SPARQL result rows describing properties that point to ordinary values (not link values).
+     * @param rowsWithLinkValues     SPARQL result rows describing properties that point link values (reifications of links to resources).
+     * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
+     * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
+     */
     def createGroupedPropsByType(rowsWithOrdinaryValues: Seq[VariableResultsRow],
                                  rowsWithLinkValues: Seq[VariableResultsRow],
                                  rowsWithLinks: Seq[VariableResultsRow]): GroupedPropertiesByType = {
@@ -231,14 +231,14 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
-      *
-      * @param propertyIri                   the IRI of the property.
-      * @param valueType                     the IRI of the value type.
-      * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
-      * @param responderManager              a reference to the Knora API Server responder manager.
-      * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
-      */
+     * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
+     *
+     * @param propertyIri                   the IRI of the property.
+     * @param valueType                     the IRI of the value type.
+     * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
+     * @param responderManager              a reference to the Knora API Server responder manager.
+     * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
+     */
     def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,
                                                        valueType: IRI,
                                                        propertyObjectClassConstraint: IRI,
@@ -263,16 +263,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
-      * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
-      * added to a new resource.
-      *
-      * @param resourceIri   the IRI of the created resource.
-      * @param creatorIri    the creator of the resource.
-      * @param propertyIri   the property the valueResponse belongs to.
-      * @param valueResponse the value that has been attached to the resource.
-      * @return a [[ResourceCreateValueResponseV1]] representing the created value.
-      */
+     * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
+     * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
+     * added to a new resource.
+     *
+     * @param resourceIri   the IRI of the created resource.
+     * @param creatorIri    the creator of the resource.
+     * @param propertyIri   the property the valueResponse belongs to.
+     * @param valueResponse the value that has been attached to the resource.
+     * @return a [[ResourceCreateValueResponseV1]] representing the created value.
+     */
     def convertCreateValueResponseV1ToResourceCreateValueResponseV1(resourceIri: IRI,
                                                                     creatorIri: IRI,
                                                                     propertyIri: IRI,
@@ -346,13 +346,13 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Creates a tuple that can be turned into a [[ValueProps]] representing both literal values and standoff.
-      *
-      * It expects the members documented in [[createValueProps]].
-      *
-      * @param objRows a value object's predicates.
-      * @return a [[GroupedValueObject]] containing the values (literal or linking) and standoff nodes if given.
-      */
+     * Creates a tuple that can be turned into a [[ValueProps]] representing both literal values and standoff.
+     *
+     * It expects the members documented in [[createValueProps]].
+     *
+     * @param objRows a value object's predicates.
+     * @return a [[GroupedValueObject]] containing the values (literal or linking) and standoff nodes if given.
+     */
     private def groupKnoraValueObjectPredicateRows(objRows: Seq[Map[String, String]]): GroupedValueObject = {
 
 
@@ -406,29 +406,29 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      *
-      * Given a list of result rows from the `get-resource-properties-and-values` SPARQL query, groups the rows first by property,
-      * then by property object, and finally by property object predicate. In case the results contain standoff information, the standoff nodes are grouped
-      * according to their blank node IRI. If the first row of results has a `linkValue` column, this is taken to mean that the property
-      * is a link property and that the value of `linkValue` is the IRI of the corresponding `knora-base:LinkValue`; that IRI is then
-      * added to the literals in the results, with the key [[OntologyConstants.KnoraBase.LinkValue]].
-      *
-      * For example, suppose we have the following rows for a property that points to Knora values.
-      *
-      * {{{
-      * prop                obj                                                     objPred                            objObj
-      * ---------------------------------------------------------------------------------------------------------------------------------------------------
-      * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:valueHasString          a1r, Titelblatt
-      * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:KnownUser
-      * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:UnknownUser
-      * }}}
-      *
-      * The result will be a [[GroupedProperties]] containing a [[ValueProps]] with two keys, `valueHasString` and `hasPermission`.
-      *
-      * @param rows the SPARQL query result rows to group, which are expected to contain the columns given in the description of the `createGroupedPropsByType`
-      *             method.
-      * @return a [[GroupedProperties]] representing the SPARQL results.
-      */
+     *
+     * Given a list of result rows from the `get-resource-properties-and-values` SPARQL query, groups the rows first by property,
+     * then by property object, and finally by property object predicate. In case the results contain standoff information, the standoff nodes are grouped
+     * according to their blank node IRI. If the first row of results has a `linkValue` column, this is taken to mean that the property
+     * is a link property and that the value of `linkValue` is the IRI of the corresponding `knora-base:LinkValue`; that IRI is then
+     * added to the literals in the results, with the key [[OntologyConstants.KnoraBase.LinkValue]].
+     *
+     * For example, suppose we have the following rows for a property that points to Knora values.
+     *
+     * {{{
+     * prop                obj                                                     objPred                            objObj
+     * ---------------------------------------------------------------------------------------------------------------------------------------------------
+     * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:valueHasString          a1r, Titelblatt
+     * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:KnownUser
+     * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:UnknownUser
+     * }}}
+     *
+     * The result will be a [[GroupedProperties]] containing a [[ValueProps]] with two keys, `valueHasString` and `hasPermission`.
+     *
+     * @param rows the SPARQL query result rows to group, which are expected to contain the columns given in the description of the `createGroupedPropsByType`
+     *             method.
+     * @return a [[GroupedProperties]] representing the SPARQL results.
+     */
     private def groupKnoraPropertyRows(rows: Seq[VariableResultsRow]): GroupedProperties = {
         val gp: Map[String, ValueObjects] = rows.groupBy(_.rowMap("prop")).map {
             // grouped by resource property (e.g. hasComment)
@@ -454,11 +454,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into an [[IntegerValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return an [[IntegerValueV1]].
-      */
+     * Converts a [[ValueProps]] into an [[IntegerValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return an [[IntegerValueV1]].
+     */
     private def makeIntValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -466,11 +466,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[DecimalValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[DecimalValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[DecimalValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[DecimalValueV1]].
+     */
     private def makeDecimalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -478,11 +478,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[BooleanValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[BooleanValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[BooleanValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[BooleanValueV1]].
+     */
     private def makeBooleanValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -490,11 +490,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[UriValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[UriValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[UriValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[UriValueV1]].
+     */
     private def makeUriValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -502,11 +502,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[DateValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[DateValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[DateValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[DateValueV1]].
+     */
     private def makeDateValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -522,11 +522,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into an [[IntervalValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return an [[IntervalValueV1]].
-      */
+     * Converts a [[ValueProps]] into an [[IntervalValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return an [[IntervalValueV1]].
+     */
     private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -552,14 +552,14 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Creates a [[TextValueWithStandoffV1]] from the given string and the standoff nodes.
-      *
-      * @param utf8str          the string representation.
-      * @param valueProps       the properties of the TextValue with standoff.
-      * @param responderManager the responder manager.
-      * @param userProfile      the client that is making the request.
-      * @return a [[TextValueWithStandoffV1]].
-      */
+     * Creates a [[TextValueWithStandoffV1]] from the given string and the standoff nodes.
+     *
+     * @param utf8str          the string representation.
+     * @param valueProps       the properties of the TextValue with standoff.
+     * @param responderManager the responder manager.
+     * @param userProfile      the client that is making the request.
+     * @return a [[TextValueWithStandoffV1]].
+     */
     private def makeTextValueWithStandoff(utf8str: String, language: Option[String] = None, valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
 
         // get the IRI of the mapping
@@ -589,11 +589,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Creates a [[TextValueSimpleV1]] from the given string.
-      *
-      * @param utf8str the string representation of the TextValue.
-      * @return a [[TextValueSimpleV1]].
-      */
+     * Creates a [[TextValueSimpleV1]] from the given string.
+     *
+     * @param utf8str the string representation of the TextValue.
+     * @return a [[TextValueSimpleV1]].
+     */
     private def makeTextValueSimple(utf8str: String, language: Option[String] = None)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueSimpleV1] = {
         Future(TextValueSimpleV1(
             utf8str = utf8str, language = language
@@ -601,11 +601,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[TextValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[TextValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[TextValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[TextValueV1]].
+     */
     private def makeTextValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
 
@@ -624,11 +624,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[ColorValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[ColorValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[ColorValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[ColorValueV1]].
+     */
     private def makeColorValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -636,11 +636,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[GeomValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[GeomValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[GeomValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[GeomValueV1]].
+     */
     private def makeGeomValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -648,11 +648,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[HierarchicalListValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[HierarchicalListValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[HierarchicalListValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[HierarchicalListValueV1]].
+     */
     private def makeListValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -660,11 +660,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[StillImageFileValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[StillImageFileValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[StillImageFileValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[StillImageFileValueV1]].
+     */
     private def makeStillImageValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -679,11 +679,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[TextFileValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[TextFileValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[TextFileValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[TextFileValueV1]].
+     */
     private def makeTextFileValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -696,11 +696,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[LinkValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[LinkValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[LinkValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[LinkValueV1]].
+     */
     private def makeLinkValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -713,11 +713,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[GeonameValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[GeonameValueV1]].
-      */
+     * Converts a [[ValueProps]] into a [[GeonameValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[GeonameValueV1]].
+     */
     private def makeGeonameValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
@@ -725,22 +725,22 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.
-      * Example: if "http://www.knora.org/ontology/0803/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/0803/incunabula#book".
-      *
-      * @param resourceClass the resource class.
-      * @return an attribute string to be included in the attributes for the GUI
-      */
+     * Example: if "http://www.knora.org/ontology/0803/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/0803/incunabula#book".
+     *
+     * @param resourceClass the resource class.
+     * @return an attribute string to be included in the attributes for the GUI
+     */
     def makeAttributeRestype(resourceClass: IRI): String = {
         "restypeid=" + resourceClass
     }
 
     /**
-      * Given a set of attribute segments representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
-      * combines the attributes into a string for use in an API v1 response.
-      *
-      * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
-      * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
-      */
+     * Given a set of attribute segments representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
+     * combines the attributes into a string for use in an API v1 response.
+     *
+     * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
+     * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
+     */
     def makeAttributeString(attributes: Set[String]): Option[String] = {
         if (attributes.isEmpty) {
             None
@@ -752,55 +752,55 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 }
 
 /**
-  * Represents SPARQL results to be converted into [[ApiValueV1]] objects.
-  */
+ * Represents SPARQL results to be converted into [[ApiValueV1]] objects.
+ */
 object GroupedProps {
 
     /**
-      * Contains the three types of [[GroupedProperties]] returned by a SPARQL query.
-      *
-      * @param groupedOrdinaryValueProperties properties pointing to ordinary Knora values (i.e. not link values).
-      * @param groupedLinkValueProperties     properties pointing to link value objects (reifications of links to resources).
-      * @param groupedLinkProperties          properties pointing to resources.
-      */
+     * Contains the three types of [[GroupedProperties]] returned by a SPARQL query.
+     *
+     * @param groupedOrdinaryValueProperties properties pointing to ordinary Knora values (i.e. not link values).
+     * @param groupedLinkValueProperties     properties pointing to link value objects (reifications of links to resources).
+     * @param groupedLinkProperties          properties pointing to resources.
+     */
     case class GroupedPropertiesByType(groupedOrdinaryValueProperties: GroupedProperties, groupedLinkValueProperties: GroupedProperties, groupedLinkProperties: GroupedProperties)
 
     /**
-      * Represents the grouped properties of one of the three types.
-      *
-      * @param groupedProperties The grouped properties: The Map's keys (IRI) consist of resource properties (e.g. http://www.knora.org/ontology/knora-base#hasComment).
-      */
+     * Represents the grouped properties of one of the three types.
+     *
+     * @param groupedProperties The grouped properties: The Map's keys (IRI) consist of resource properties (e.g. http://www.knora.org/ontology/knora-base#hasComment).
+     */
     case class GroupedProperties(groupedProperties: Map[IRI, ValueObjects])
 
     /**
-      * Represents the value objects belonging to a resource property
-      *
-      * @param valueObjects The value objects: The Map's keys consist of value object Iris.
-      */
+     * Represents the value objects belonging to a resource property
+     *
+     * @param valueObjects The value objects: The Map's keys consist of value object Iris.
+     */
     case class ValueObjects(valueObjects: Map[IRI, ValueProps])
 
     /**
-      * Represents the grouped values of a value object.
-      *
-      * @param valuesLiterals the values (literal or linking).
-      * @param standoff       standoff nodes, if any.
-      */
+     * Represents the grouped values of a value object.
+     *
+     * @param valuesLiterals the values (literal or linking).
+     * @param standoff       standoff nodes, if any.
+     */
     case class GroupedValueObject(valuesLiterals: Map[String, ValueLiterals], standoff: Map[IRI, Map[IRI, String]])
 
     /**
-      * Represents the object properties belonging to a value object
-      *
-      * @param valueIri    the IRI of the value object.
-      * @param literalData the value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#String).
-      * @param standoff    the keys of the first Map are the standoff node Iris, the second Map contains all the predicates and objects related to one standoff node.
-      */
+     * Represents the object properties belonging to a value object
+     *
+     * @param valueIri    the IRI of the value object.
+     * @param literalData the value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#String).
+     * @param standoff    the keys of the first Map are the standoff node Iris, the second Map contains all the predicates and objects related to one standoff node.
+     */
     case class ValueProps(valueIri: IRI, literalData: Map[IRI, ValueLiterals], standoff: Map[IRI, Map[IRI, String]] = Map.empty[IRI, Map[IRI, String]])
 
     /**
-      * Represents the literal values of a property (e.g. a number or a string)
-      *
-      * @param literals the literal values of a property.
-      */
+     * Represents the literal values of a property (e.g. a number or a string)
+     *
+     * @param literals the literal values of a property.
+     */
     case class ValueLiterals(literals: Seq[String])
 
 }

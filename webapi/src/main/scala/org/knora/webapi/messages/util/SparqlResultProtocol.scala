@@ -23,14 +23,14 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse
 import spray.json.{DefaultJsonProtocol, JsArray, JsString, JsValue, JsonFormat}
 
 /**
-  * A spray-json protocol that parses JSON returned by a SPARQL endpoint. Empty values and empty rows are
-  * ignored.
-  */
+ * A spray-json protocol that parses JSON returned by a SPARQL endpoint. Empty values and empty rows are
+ * ignored.
+ */
 object SparqlResultProtocol extends DefaultJsonProtocol {
 
     /**
-      * Converts a [[JsValue]] to a [[VariableResultsRow]].
-      */
+     * Converts a [[JsValue]] to a [[VariableResultsRow]].
+     */
     implicit object VariableResultsJsonFormat extends JsonFormat[VariableResultsRow] {
         def read(jsonVal: JsValue): VariableResultsRow = {
 
@@ -52,8 +52,8 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
     }
 
     /**
-      * Converts a [[JsValue]] to a [[SparqlSelectResponseBody]].
-      */
+     * Converts a [[JsValue]] to a [[SparqlSelectResponseBody]].
+     */
     implicit object SparqlSelectResponseBodyFormat extends JsonFormat[SparqlSelectResponseBody] {
         def read(jsonVal: JsValue): SparqlSelectResponseBody = {
             jsonVal.asJsObject.fields.get("bindings") match {

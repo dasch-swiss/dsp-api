@@ -42,20 +42,20 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
-  * under http://data.humanities.ch
-  */
+ * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
+ * under http://data.humanities.ch
+ */
 class CkanResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
 
     /**
-      * A user representing the Knora API server, used in those cases where a user is required.
-      */
+     * A user representing the Knora API server, used in those cases where a user is required.
+     */
     private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     /**
-      * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: CkanResponderRequestV1) = msg match {
         case CkanRequestV1(projects, limit, info, userProfile) => getCkanResponseV1(projects, limit, info, userProfile)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -100,13 +100,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Dokubib specific Ckan export stuff
-      *
-      * @param pinfo
-      * @param limit
-      * @param userProfile
-      * @return
-      */
+     * Dokubib specific Ckan export stuff
+     *
+     * @param pinfo
+     * @param limit
+     * @param userProfile
+     * @return
+     */
     private def getDokubibCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfile: UserADM): Future[CkanProjectV1] = {
 
         /*
@@ -160,12 +160,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all Bilder IRIs for Dokubib
-      *
-      * @param projectIri
-      * @param limit
-      * @return
-      */
+     * Get all Bilder IRIs for Dokubib
+     *
+     * @param projectIri
+     * @param limit
+     * @return
+     */
     private def getDokubibBilderIRIs(projectIri: IRI, limit: Option[Int]): Future[Seq[IRI]] = {
 
         implicit val timeout = Timeout(180.seconds)
@@ -191,13 +191,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Incunabula specific Ckan stuff
-      *
-      * @param pinfo
-      * @param limit
-      * @param userProfile
-      * @return
-      */
+     * Incunabula specific Ckan stuff
+     *
+     * @param pinfo
+     * @param limit
+     * @param userProfile
+     * @return
+     */
     private def getIncunabulaCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfile: UserADM): Future[CkanProjectV1] = {
 
         /*
@@ -269,12 +269,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all book IRIs for Incunabula
-      *
-      * @param projectIri
-      * @param limit
-      * @return
-      */
+     * Get all book IRIs for Incunabula
+     *
+     * @param projectIri
+     * @param limit
+     * @return
+     */
     private def getIncunabulaBooksWithPagesIRIs(projectIri: IRI, limit: Option[Int]): Future[Map[IRI, Seq[IRI]]] = {
 
         for {
@@ -301,12 +301,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Get detailed information about the projects
-      *
-      * @param projectNames
-      * @param userProfile
-      * @return
-      */
+     * Get detailed information about the projects
+     *
+     * @param projectNames
+     * @param userProfile
+     * @return
+     */
     private def getProjectInfos(projectNames: Seq[String], userProfile: UserADM): Future[Seq[(String, ProjectInfoV1)]] = {
         Future.sequence {
             for {
@@ -320,14 +320,14 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get IRIs of a certain type inside a certain project
-      *
-      * @param projectIri
-      * @param resType
-      * @param limit
-      * @param userProfile
-      * @return
-      */
+     * Get IRIs of a certain type inside a certain project
+     *
+     * @param projectIri
+     * @param resType
+     * @param limit
+     * @param userProfile
+     * @return
+     */
     private def getIris(projectIri: IRI, resType: String, limit: Option[Int], userProfile: UserProfileV1): Future[Seq[IRI]] = {
 
         for {
@@ -347,12 +347,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all information there is about these resources
-      *
-      * @param iris
-      * @param userProfile
-      * @return
-      */
+     * Get all information there is about these resources
+     *
+     * @param iris
+     * @param userProfile
+     * @return
+     */
     private def getResources(iris: Seq[IRI], userProfile: UserADM): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] = {
 
         Future.sequence {
@@ -364,12 +364,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all information there is about this one resource
-      *
-      * @param iri
-      * @param userProfile
-      * @return
-      */
+     * Get all information there is about this one resource
+     *
+     * @param iri
+     * @param userProfile
+     * @return
+     */
     private def getResource(iri: IRI, userProfile: UserADM): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
         val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfile)).mapTo[ResourceFullResponseV1]

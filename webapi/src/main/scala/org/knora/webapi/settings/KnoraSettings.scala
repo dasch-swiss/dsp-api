@@ -32,8 +32,8 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 /**
-  * Reads application settings that come from `application.conf`.
-  */
+ * Reads application settings that come from `application.conf`.
+ */
 class KnoraSettingsImpl(config: Config) extends Extension {
 
     // print config
@@ -130,7 +130,6 @@ class KnoraSettingsImpl(config: Config) extends Extension {
     }.toVector
 
 
-
     val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
 
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
@@ -215,7 +214,7 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x
-        case _                 ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
+        case _ ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
     }
 
     val prometheusEndpoint: Boolean = config.getBoolean("app.monitoring.prometheus-endpoint")
@@ -236,7 +235,7 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
         new KnoraSettingsImpl(system.settings.config)
 
     /**
-      * Java API: retrieve the Settings extension for the given system.
-      */
+     * Java API: retrieve the Settings extension for the given system.
+     */
     override def get(system: ActorSystem): KnoraSettingsImpl = super.get(system)
 }

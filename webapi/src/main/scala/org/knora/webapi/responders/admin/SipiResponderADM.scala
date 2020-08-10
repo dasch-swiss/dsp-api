@@ -35,16 +35,16 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import scala.concurrent.Future
 
 /**
-  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
-  * ADM format.
-  */
+ * Responds to requests for information about binary representations of resources, and returns responses in Knora API
+ * ADM format.
+ */
 class SipiResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
     /**
-      * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
-      */
+     * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or
+     * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
+     * method first returns `Failure` to the sender, then throws an exception.
+     */
     def receive(msg: SipiResponderRequestADM) = msg match {
         case sipiFileInfoGetRequestADM: SipiFileInfoGetRequestADM => getFileInfoForSipiADM(sipiFileInfoGetRequestADM)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -54,11 +54,11 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
     // Methods for generating complete responses.
 
     /**
-      * Returns a [[SipiFileInfoGetResponseADM]] containing the permissions and path for a file.
-      *
-      * @param request the request.
-      * @return a [[SipiFileInfoGetResponseADM]].
-      */
+     * Returns a [[SipiFileInfoGetResponseADM]] containing the permissions and path for a file.
+     *
+     * @param request the request.
+     * @return a [[SipiFileInfoGetResponseADM]].
+     */
     private def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Future[SipiFileInfoGetResponseADM] = {
 
         log.debug(s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}")

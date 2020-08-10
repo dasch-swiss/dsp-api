@@ -638,8 +638,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             getProjectAdminMembersResponse <- getProjectAdminMembersTestResponse
             getProjectRestrictedViewSettingsResponse <- getProjectRestrictedViewSettingsTestResponse
         } yield createProjectRequest + getProjectsResponse + getProjectResponse + updateProjectRequest +
-                getKeywordsResponse + getProjectKeywordsResponse + getProjectMembersResponse +
-                getProjectAdminMembersResponse + getProjectRestrictedViewSettingsResponse
+            getKeywordsResponse + getProjectKeywordsResponse + getProjectMembersResponse +
+            getProjectAdminMembersResponse + getProjectRestrictedViewSettingsResponse
 
     }
 }

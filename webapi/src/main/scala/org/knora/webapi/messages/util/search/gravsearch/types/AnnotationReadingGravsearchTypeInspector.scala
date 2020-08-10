@@ -30,33 +30,33 @@ import org.knora.webapi.messages.{OntologyConstants}
 import scala.concurrent.Future
 
 /**
-  * A [[GravsearchTypeInspector]] that relies on Gravsearch type annotations. There are two kinds of type annotations:
-  *
-  * 1. For a variable or IRI representing a resource or value, a type annotation is a triple whose subject is the variable
-  * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
-  * such as `knora-api:date`, or an XSD type such as `xsd:integer`.
-  * 2. For a variable or IRI representing a property, a type annotation is a triple whose subject is the variable or
-  * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
-  * of object that is required by the property.
-  */
+ * A [[GravsearchTypeInspector]] that relies on Gravsearch type annotations. There are two kinds of type annotations:
+ *
+ * 1. For a variable or IRI representing a resource or value, a type annotation is a triple whose subject is the variable
+ * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
+ * such as `knora-api:date`, or an XSD type such as `xsd:integer`.
+ * 2. For a variable or IRI representing a property, a type annotation is a triple whose subject is the variable or
+ * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
+ * of object that is required by the property.
+ */
 class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector],
                                                responderData: ResponderData) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
 
     /**
-      * Represents a Gravsearch type annotation.
-      *
-      * @param typeableEntity the entity whose type was annotated.
-      * @param annotationProp the annotation property.
-      * @param typeIri        the type IRI that was given in the annotation.
-      * @param isResource     the given type IRI is that of a resource.
-      * @param isValue        the given type IRI is that of a value.
-      */
+     * Represents a Gravsearch type annotation.
+     *
+     * @param typeableEntity the entity whose type was annotated.
+     * @param annotationProp the annotation property.
+     * @param typeIri        the type IRI that was given in the annotation.
+     * @param isResource     the given type IRI is that of a resource.
+     * @param isValue        the given type IRI is that of a value.
+     */
     private case class GravsearchTypeAnnotation(
-                                                 typeableEntity: TypeableEntity,
-                                                 annotationProp: TypeAnnotationProperty,
-                                                 typeIri: SmartIri,
-                                                 isResource: Boolean = false,
-                                                 isValue : Boolean = false
+                                                   typeableEntity: TypeableEntity,
+                                                   annotationProp: TypeAnnotationProperty,
+                                                   typeIri: SmartIri,
+                                                   isResource: Boolean = false,
+                                                   isValue: Boolean = false
                                                )
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
@@ -99,8 +99,8 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
     }
 
     /**
-      * A [[WhereVisitor]] that collects type annotations.
-      */
+     * A [[WhereVisitor]] that collects type annotations.
+     */
     private class AnnotationCollectingWhereVisitor(querySchema: ApiV2Schema) extends WhereVisitor[Vector[GravsearchTypeAnnotation]] {
         override def visitStatementInWhere(statementPattern: StatementPattern,
                                            acc: Vector[GravsearchTypeAnnotation]): Vector[GravsearchTypeAnnotation] = {
@@ -116,12 +116,12 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
     }
 
     /**
-      * Given a statement pattern that is known to represent a Gravsearch type annotation, converts it to
-      * a [[GravsearchTypeAnnotation]].
-      *
-      * @param statementPattern the statement pattern.
-      * @return an [[GravsearchTypeAnnotation]].
-      */
+     * Given a statement pattern that is known to represent a Gravsearch type annotation, converts it to
+     * a [[GravsearchTypeAnnotation]].
+     *
+     * @param statementPattern the statement pattern.
+     * @return an [[GravsearchTypeAnnotation]].
+     */
     private def annotationStatementToAnnotation(statementPattern: StatementPattern, querySchema: ApiV2Schema): GravsearchTypeAnnotation = {
         val typeableEntity: TypeableEntity = GravsearchTypeInspectionUtil.toTypeableEntity(statementPattern.subj)
 

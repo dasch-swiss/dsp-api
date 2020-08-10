@@ -173,7 +173,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
             Seq(
                 StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-                )
+            )
         } else {
             // inputEntity is target of a value property
             // properties are handled by `convertStatementForPropertyType`, no processing needed here
@@ -283,7 +283,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case Some(NonPropertyTypeInfo(subjectTypeIri, isResourceType, _)) => (Some(subjectTypeIri), isResourceType)
             case _ => (None, false)
         }
-        val maybeSubjectTypeIri : Option[SmartIri] = maybeSubjectType._1
+        val maybeSubjectTypeIri: Option[SmartIri] = maybeSubjectType._1
         val subjectIsResource: Boolean = maybeSubjectType._2
 
         // Is the subject of the statement a resource?
@@ -1513,7 +1513,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
         typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-            case Some(NonPropertyTypeInfo(typeIri, _ , _)) if typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
+            case Some(NonPropertyTypeInfo(typeIri, _, _)) if typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
             case _ => throw GravsearchException(s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
         }
 
@@ -1686,17 +1686,17 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     }
 
-    protected def removeEntitiesInferredFromProperty (patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+    protected def removeEntitiesInferredFromProperty(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
         val optionalEntities = patterns.filter {
             case OptionalPattern(_) => true
             case _ => false
         }.flatMap {
             case optionalPattern: OptionalPattern =>
-                optionalPattern.patterns.flatMap{
-                case pattern:StatementPattern =>
-                    GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.obj)
-                  case _ => None
+                optionalPattern.patterns.flatMap {
+                    case pattern: StatementPattern =>
+                        GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.obj)
+                    case _ => None
                 }
             case _ => None
         }
@@ -1711,7 +1711,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                             case Some(typeableEntity) =>
                                 !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
                                     && !optionalEntities.contains(typeableEntity))
-                            case _=> true
+                            case _ => true
                         }
 
                     case _ => true

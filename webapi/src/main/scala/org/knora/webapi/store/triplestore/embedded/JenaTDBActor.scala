@@ -44,8 +44,8 @@ import scala.concurrent.Future
 
 
 /**
-  * Performs SPARQL queries and updates using an embedded Jena TDB triplestore.
-  */
+ * Performs SPARQL queries and updates using an embedded Jena TDB triplestore.
+ */
 class JenaTDBActor extends Actor with ActorLogging {
 
     private val system = context.system
@@ -79,9 +79,9 @@ class JenaTDBActor extends Actor with ActorLogging {
     var initialized: Boolean = false
 
     /**
-      * The actor waits with processing messages until preStart is finished, so that the loading of data can finish
-      * before any requests are processed.
-      */
+     * The actor waits with processing messages until preStart is finished, so that the loading of data can finish
+     * before any requests are processed.
+     */
     override def preStart(): Unit = {
         if (persist) {
             if (reloadDataOnStart || !loadExistingData) {
@@ -114,10 +114,10 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Receives a message requesting a SPARQL query or update, and returns an appropriate response message or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
-      */
+     * Receives a message requesting a SPARQL query or update, and returns an appropriate response message or
+     * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
+     * method first returns `Failure` to the sender, then throws an exception.
+     */
     def receive = {
         case SparqlSelectRequest(sparqlSelectString) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
         case SparqlUpdateRequest(sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(sparqlUpdateString), log)
@@ -129,11 +129,11 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResponse]].
-      *
-      * @param queryString the SPARQL request to be submitted.
-      * @return [[SparqlSelectResponse]].
-      */
+     * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResponse]].
+     *
+     * @param queryString the SPARQL request to be submitted.
+     * @return [[SparqlSelectResponse]].
+     */
     private def executeSparqlSelectQuery(queryString: String): Future[SparqlSelectResponse] = {
 
         // Start read transaction
@@ -212,12 +212,12 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Submits a SPARQL update request to the embedded Jena TDB store, and returns a [[SparqlUpdateResponse]] if the
-      * operation completed successfully.
-      *
-      * @param updateString the SPARQL update to be submitted.
-      * @return a [[SparqlUpdateResponse]].
-      */
+     * Submits a SPARQL update request to the embedded Jena TDB store, and returns a [[SparqlUpdateResponse]] if the
+     * operation completed successfully.
+     *
+     * @param updateString the SPARQL update to be submitted.
+     * @return a [[SparqlUpdateResponse]].
+     */
     private def executeSparqlUpdateQuery(updateString: String): Future[SparqlUpdateResponse] = {
         // println("=============================")
         // println(updateString)
@@ -254,11 +254,11 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Reloads the contents of the triplestore from RDF data files.
-      *
-      * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
-      * @return an [[ResetRepositoryContentACK]] indicating that the operation completed successfully.
-      */
+     * Reloads the contents of the triplestore from RDF data files.
+     *
+     * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
+     * @return an [[ResetRepositoryContentACK]] indicating that the operation completed successfully.
+     */
     private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Future[ResetRepositoryContentACK] = {
 
         val resetTriplestoreResult = for {
@@ -280,10 +280,10 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Drops all content from the triplestore.
-      *
-      * @return a [[DropAllRepositoryContentACK]]
-      */
+     * Drops all content from the triplestore.
+     *
+     * @return a [[DropAllRepositoryContentACK]]
+     */
     private def dropAllTriplestoreContent(): DropAllRepositoryContentACK = {
 
         // log.debug("ResetTripleStoreContent ...")
@@ -321,11 +321,11 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Inserts the data referenced in each [[RdfDataObject]]
-      *
-      * @param rdfDataObjects a sequence holding [[RdfDataObject]]
-      * @return a [[InsertTriplestoreContentACK]]
-      */
+     * Inserts the data referenced in each [[RdfDataObject]]
+     *
+     * @param rdfDataObjects a sequence holding [[RdfDataObject]]
+     * @return a [[InsertTriplestoreContentACK]]
+     */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): InsertTriplestoreContentACK = {
 
         // log.debug("ResetTripleStoreContent ...")
@@ -369,10 +369,10 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Used to manually refresh the Lucene index after changing data in the triplestore.
-      *
-      * @return a [[Boolean]] denoting if the update was successful
-      */
+     * Used to manually refresh the Lucene index after changing data in the triplestore.
+     *
+     * @return a [[Boolean]] denoting if the update was successful
+     */
     private def updateIndex(): Boolean = {
 
         this.dataset.begin(ReadWrite.WRITE)
@@ -414,11 +414,11 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Creates the dataset with a Lucene index attached. The triplestore dataset is either disk-backed or in-memory,
-      * depending on the settings. The Lucene index is always in-memory.
-      *
-      * @return a [[Dataset]]
-      */
+     * Creates the dataset with a Lucene index attached. The triplestore dataset is either disk-backed or in-memory,
+     * depending on the settings. The Lucene index is always in-memory.
+     *
+     * @return a [[Dataset]]
+     */
     private def getDataset: Dataset = {
 
         // Define which fields should be indexed by lucene

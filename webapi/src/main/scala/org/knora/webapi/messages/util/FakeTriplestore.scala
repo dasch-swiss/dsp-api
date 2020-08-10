@@ -26,8 +26,8 @@ import org.apache.commons.io.FileUtils
 import org.knora.webapi.util.FileUtil
 
 /**
-  * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
-  */
+ * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
+ */
 object FakeTriplestore {
 
     private var fakeTriplestoreDir: Option[File] = None

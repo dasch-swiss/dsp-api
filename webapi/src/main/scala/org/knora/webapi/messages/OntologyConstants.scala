@@ -1137,4 +1137,5 @@ object OntologyConstants {
         val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
         val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
     }
+
 }

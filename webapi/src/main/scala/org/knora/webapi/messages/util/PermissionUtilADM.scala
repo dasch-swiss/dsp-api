@@ -38,20 +38,20 @@ import GroupedProps.{ValueLiterals, ValueProps}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
-  */
+ * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
+ */
 object PermissionUtilADM extends LazyLogging {
 
     // TODO: unify EntityPermission with PermissionADM.
 
     /**
-      * Represents a permission granted to a group on an entity. The `toString` method of an `EntityPermission`
-      * returns one of the codes in [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]].
-      */
+     * Represents a permission granted to a group on an entity. The `toString` method of an `EntityPermission`
+     * returns one of the codes in [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]].
+     */
     sealed trait EntityPermission extends Ordered[EntityPermission] {
         /**
-          * Represents this [[EntityPermission]] as an integer, as required by Knora API v1.
-          */
+         * Represents this [[EntityPermission]] as an integer, as required by Knora API v1.
+         */
         def toInt: Int
 
         override def compare(that: EntityPermission): Int = this.toInt - that.toInt
@@ -62,8 +62,8 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Represents restricted view permission on an entity.
-      */
+     * Represents restricted view permission on an entity.
+     */
     case object RestrictedViewPermission extends EntityPermission {
         override def toInt: Int = 1
 
@@ -77,8 +77,8 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Represents unrestricted view permission on an entity.
-      */
+     * Represents unrestricted view permission on an entity.
+     */
     case object ViewPermission extends EntityPermission {
         override def toInt: Int = 2
 
@@ -92,8 +92,8 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Represents modify permission on an entity.
-      */
+     * Represents modify permission on an entity.
+     */
     case object ModifyPermission extends EntityPermission {
         override def toInt: Int = 6
 
@@ -107,8 +107,8 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Represents delete permission on an entity.
-      */
+     * Represents delete permission on an entity.
+     */
     case object DeletePermission extends EntityPermission {
         override def toInt: Int = 7
 
@@ -122,8 +122,8 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Represents permission to change the permissions on an entity.
-      */
+     * Represents permission to change the permissions on an entity.
+     */
     case object ChangeRightsPermission extends EntityPermission {
         override def toInt: Int = 8
 
@@ -137,8 +137,8 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * The highest permission, i.e. the one that is least restrictive.
-      */
+     * The highest permission, i.e. the one that is least restrictive.
+     */
     private val MaxPermissionLevel: EntityPermission = ChangeRightsPermission
 
     private val permissionStringsToPermissionLevels: Map[String, EntityPermission] = Set(
@@ -152,8 +152,8 @@ object PermissionUtilADM extends LazyLogging {
     }.toMap
 
     /**
-      * A set of assertions that are relevant for calculating permissions.
-      */
+     * A set of assertions that are relevant for calculating permissions.
+     */
     private val permissionRelevantAssertions = Set(
         OntologyConstants.KnoraBase.AttachedToUser,
         OntologyConstants.KnoraBase.AttachedToProject,
@@ -161,24 +161,24 @@ object PermissionUtilADM extends LazyLogging {
     )
 
     /**
-      * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
-      * is the case if the property is [[OntologyConstants.KnoraBase.AttachedToUser]],
-      * [[OntologyConstants.KnoraBase.AttachedToProject]], or
-      * or [[OntologyConstants.KnoraBase.HasPermissions]].
-      *
-      * @param p the IRI of the property.
-      * @return `true` if the property is relevant to calculating permissions.
-      */
+     * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
+     * is the case if the property is [[OntologyConstants.KnoraBase.AttachedToUser]],
+     * [[OntologyConstants.KnoraBase.AttachedToProject]], or
+     * or [[OntologyConstants.KnoraBase.HasPermissions]].
+     *
+     * @param p the IRI of the property.
+     * @return `true` if the property is relevant to calculating permissions.
+     */
     def isPermissionRelevant(p: IRI): Boolean = permissionRelevantAssertions.contains(p)
 
     /**
-      * Given a list of predicates and objects pertaining to a entity, returns only the ones that are relevant to
-      * permissions (i.e. the permissions themselves, plus the creator and project).
-      *
-      * @param assertions a list containing the permission-relevant predicates and objects
-      *                   pertaining to the entity. Other predicates will be filtered out.
-      * @return a list of permission-relevant predicates and objects.
-      */
+     * Given a list of predicates and objects pertaining to a entity, returns only the ones that are relevant to
+     * permissions (i.e. the permissions themselves, plus the creator and project).
+     *
+     * @param assertions a list containing the permission-relevant predicates and objects
+     *                   pertaining to the entity. Other predicates will be filtered out.
+     * @return a list of permission-relevant predicates and objects.
+     */
     def filterPermissionRelevantAssertions(assertions: Seq[(IRI, IRI)]): Vector[(IRI, IRI)] = {
         assertions.filter {
             case (p, o) => isPermissionRelevant(p)
@@ -186,12 +186,12 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Given a [[ValueProps]] describing a `knora-base:Value`, returns the permission-relevant assertions contained
-      * in the [[ValueProps]] (i.e. permission assertion, plus assertions about the entity's creator and project).
-      *
-      * @param valueProps a [[ValueProps]] describing a `knora-base:Value`.
-      * @return a list of permission-relevant predicates and objects.
-      */
+     * Given a [[ValueProps]] describing a `knora-base:Value`, returns the permission-relevant assertions contained
+     * in the [[ValueProps]] (i.e. permission assertion, plus assertions about the entity's creator and project).
+     *
+     * @param valueProps a [[ValueProps]] describing a `knora-base:Value`.
+     * @return a list of permission-relevant predicates and objects.
+     */
     def filterPermissionRelevantAssertionsFromValueProps(valueProps: ValueProps): Vector[(IRI, IRI)] = {
         valueProps.literalData.foldLeft(Vector.empty[(IRI, IRI)]) {
             case (acc, (predicate: IRI, ValueLiterals(literals))) =>
@@ -204,13 +204,13 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Calculates the highest permission level a user can be granted on a entity.
-      *
-      * @param entityPermissions a map of permissions on a entity to the groups they are granted to.
-      * @param userGroups        the groups that the user belongs to.
-      * @return the code of the highest permission the user has on the entity, or `None` if the user has no permissions
-      *         on the entity.
-      */
+     * Calculates the highest permission level a user can be granted on a entity.
+     *
+     * @param entityPermissions a map of permissions on a entity to the groups they are granted to.
+     * @param userGroups        the groups that the user belongs to.
+     * @return the code of the highest permission the user has on the entity, or `None` if the user has no permissions
+     *         on the entity.
+     */
     private def calculateHighestGrantedPermissionLevel(entityPermissions: Map[EntityPermission, Set[IRI]], userGroups: Set[IRI]): Option[EntityPermission] = {
         // Make a set of all the permissions the user can obtain for this entity.
         val permissionLevels: Set[EntityPermission] = entityPermissions.foldLeft(Set.empty[EntityPermission]) {
@@ -232,15 +232,15 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
-      *
-      * @param entityCreator           the IRI of the user that created the entity.
-      * @param entityProject           the IRI of the entity's project.
-      * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
-      * @param requestingUser          the user making the request.
-      * @return an [[EntityPermission]] representing the user's permission level for the entity, or `None` if the user
-      *         has no permissions on the entity.
-      */
+     * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
+     *
+     * @param entityCreator           the IRI of the user that created the entity.
+     * @param entityProject           the IRI of the entity's project.
+     * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
+     * @param requestingUser          the user making the request.
+     * @return an [[EntityPermission]] representing the user's permission level for the entity, or `None` if the user
+     *         has no permissions on the entity.
+     */
     def getUserPermissionADM(entityCreator: IRI,
                              entityProject: IRI,
                              entityPermissionLiteral: String,
@@ -290,40 +290,40 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * A trait representing a result returned by [[comparePermissionsADM]].
-      */
+     * A trait representing a result returned by [[comparePermissionsADM]].
+     */
     sealed trait PermissionComparisonResult
 
     /**
-      * Indicates that the user would have a lower permission with permission string A.
-      */
+     * Indicates that the user would have a lower permission with permission string A.
+     */
     case object ALessThanB extends PermissionComparisonResult
 
     /**
-      * Indicates that permission strings A and B would give the user the same permission.
-      */
+     * Indicates that permission strings A and B would give the user the same permission.
+     */
     case object AEqualToB extends PermissionComparisonResult
 
     /**
-      * Indicates that the user would have a higher permission with permission string A.
-      */
+     * Indicates that the user would have a higher permission with permission string A.
+     */
     case object AGreaterThanB extends PermissionComparisonResult
 
     /**
-      * Calculates the permissions that the specified user would have on an entity with two permission strings,
-      * and returns:
-      *
-      * - [[ALessThanB]] if the user would have a lower permission with `permissionLiteralA`.
-      * - [[AEqualToB]] if `permissionLiteralA` and `permissionLiteralB` would give the user the same permission.
-      * - [[AGreaterThanB]] if the user would have a higher permission with `permissionLiteralA`.
-      *
-      * @param entityCreator      the IRI of the user that created the entity.
-      * @param entityProject      the IRI of the entity's project.
-      * @param permissionLiteralA the first permission string.
-      * @param permissionLiteralB the second permission string.
-      * @param requestingUser     the user making the request.
-      * @return a [[PermissionComparisonResult]].
-      */
+     * Calculates the permissions that the specified user would have on an entity with two permission strings,
+     * and returns:
+     *
+     * - [[ALessThanB]] if the user would have a lower permission with `permissionLiteralA`.
+     * - [[AEqualToB]] if `permissionLiteralA` and `permissionLiteralB` would give the user the same permission.
+     * - [[AGreaterThanB]] if the user would have a higher permission with `permissionLiteralA`.
+     *
+     * @param entityCreator      the IRI of the user that created the entity.
+     * @param entityProject      the IRI of the entity's project.
+     * @param permissionLiteralA the first permission string.
+     * @param permissionLiteralB the second permission string.
+     * @param requestingUser     the user making the request.
+     * @return a [[PermissionComparisonResult]].
+     */
     def comparePermissionsADM(entityCreator: IRI,
                               entityProject: IRI,
                               permissionLiteralA: String,
@@ -360,20 +360,20 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Given data from a [[SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,
-      * and returns an [[EntityPermission]].
-      *
-      * @param entityIri      the IRI of the entity.
-      * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
-      *                       pertaining to the entity. The predicates must include
-      *                       [[OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                       [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                       [[OntologyConstants.KnoraBase.HasPermissions]].
-      *                       Other predicates may be included, but they will be ignored, so there is no need to filter
-      *                       them before passing them to this function.
-      * @param requestingUser the profile of the user making the request.
-      * @return a code representing the user's permission level for the entity.
-      */
+     * Given data from a [[SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,
+     * and returns an [[EntityPermission]].
+     *
+     * @param entityIri      the IRI of the entity.
+     * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
+     *                       pertaining to the entity. The predicates must include
+     *                       [[OntologyConstants.KnoraBase.AttachedToUser]] and
+     *                       [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
+     *                       [[OntologyConstants.KnoraBase.HasPermissions]].
+     *                       Other predicates may be included, but they will be ignored, so there is no need to filter
+     *                       them before passing them to this function.
+     * @param requestingUser the profile of the user making the request.
+     * @return a code representing the user's permission level for the entity.
+     */
     def getUserPermissionFromConstructAssertionsADM(entityIri: IRI,
                                                     assertions: ConstructPredicateObjects,
                                                     requestingUser: UserADM): Option[EntityPermission] = {
@@ -392,19 +392,19 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
-      *
-      * @param entityIri      the IRI of the entity.
-      * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
-      *                       pertaining to the entity. The predicates must include
-      *                       [[OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                       [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                       [[OntologyConstants.KnoraBase.HasPermissions]].
-      *                       Other predicates may be included, but they will be ignored, so there is no need to filter
-      *                       them before passing them to this function.
-      * @param requestingUser the profile of the user making the request.
-      * @return a code representing the user's permission level for the entity.
-      */
+     * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
+     *
+     * @param entityIri      the IRI of the entity.
+     * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
+     *                       pertaining to the entity. The predicates must include
+     *                       [[OntologyConstants.KnoraBase.AttachedToUser]] and
+     *                       [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
+     *                       [[OntologyConstants.KnoraBase.HasPermissions]].
+     *                       Other predicates may be included, but they will be ignored, so there is no need to filter
+     *                       them before passing them to this function.
+     * @param requestingUser the profile of the user making the request.
+     * @return a code representing the user's permission level for the entity.
+     */
     def getUserPermissionFromAssertionsADM(entityIri: IRI,
                                            assertions: Seq[(IRI, String)],
                                            requestingUser: UserADM): Option[EntityPermission] = {
@@ -425,13 +425,13 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Parses the literal object of the predicate `knora-base:hasPermissions`.
-      *
-      * @param permissionLiteral the literal to parse.
-      * @return a [[Map]] in which the keys are permission abbreviations in
-      *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
-      *         user group IRIs.
-      */
+     * Parses the literal object of the predicate `knora-base:hasPermissions`.
+     *
+     * @param permissionLiteral the literal to parse.
+     * @return a [[Map]] in which the keys are permission abbreviations in
+     *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
+     *         user group IRIs.
+     */
     def parsePermissions(permissionLiteral: String, errorFun: String => Nothing = { permissionLiteral: String => throw InconsistentTriplestoreDataException(s"invalid permission literal: $permissionLiteral") }): Map[EntityPermission, Set[IRI]] = {
         val permissions: Seq[String] = permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
 
@@ -456,13 +456,13 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Parses the literal object of the predicate `knora-base:hasPermissions`.
-      *
-      * @param maybePermissionListStr the literal to parse.
-      * @return a [[Map]] in which the keys are permission abbreviations in
-      *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
-      *         user group IRIs.
-      */
+     * Parses the literal object of the predicate `knora-base:hasPermissions`.
+     *
+     * @param maybePermissionListStr the literal to parse.
+     * @return a [[Map]] in which the keys are permission abbreviations in
+     *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
+     *         user group IRIs.
+     */
     def parsePermissionsWithType(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionADM] = {
         maybePermissionListStr match {
             case Some(permissionListStr) => {
@@ -503,12 +503,12 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Helper method used to convert the permission string stored inside the triplestore to a permission object.
-      *
-      * @param name the name of the permission.
-      * @param iris the optional set of additional information (e.g., group IRIs, resource class IRIs).
-      * @return a sequence of permission objects.
-      */
+     * Helper method used to convert the permission string stored inside the triplestore to a permission object.
+     *
+     * @param name the name of the permission.
+     * @param iris the optional set of additional information (e.g., group IRIs, resource class IRIs).
+     * @return a sequence of permission objects.
+     */
     def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionADM] = {
         name match {
             case OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission => Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -573,11 +573,11 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Helper method used to remove remove duplicate permissions.
-      *
-      * @param permissions the sequence of permissions with possible duplicates.
-      * @return a set containing only unique permission.
-      */
+     * Helper method used to remove remove duplicate permissions.
+     *
+     * @param permissions the sequence of permissions with possible duplicates.
+     * @return a set containing only unique permission.
+     */
     def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] = {
 
         val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (k, v) => v.head }.toSet
@@ -586,13 +586,13 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Helper method used to remove lesser permissions, i.e. permissions which are already given by
-      * the highest permission.
-      *
-      * @param permissions    a set of permissions possibly containing lesser permissions.
-      * @param permissionType the type of permissions.
-      * @return a set of permissions without possible lesser permissions.
-      */
+     * Helper method used to remove lesser permissions, i.e. permissions which are already given by
+     * the highest permission.
+     *
+     * @param permissions    a set of permissions possibly containing lesser permissions.
+     * @param permissionType the type of permissions.
+     * @return a set of permissions without possible lesser permissions.
+     */
     def removeLesserPermissions(permissions: Set[PermissionADM], permissionType: PermissionType): Set[PermissionADM] = {
         permissionType match {
             case PermissionType.OAP =>
@@ -611,13 +611,13 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Helper method used to transform a set of permissions into a permissions string ready to be written into the
-      * triplestore as the value for the 'knora-base:hasPermissions' property.
-      *
-      * @param permissions    the permissions to be formatted.
-      * @param permissionType a [[PermissionType]] indicating the type of permissions to be formatted.
-      * @return
-      */
+     * Helper method used to transform a set of permissions into a permissions string ready to be written into the
+     * triplestore as the value for the 'knora-base:hasPermissions' property.
+     *
+     * @param permissions    the permissions to be formatted.
+     * @param permissionType a [[PermissionType]] indicating the type of permissions to be formatted.
+     * @return
+     */
     def formatPermissionADMs(permissions: Set[PermissionADM], permissionType: PermissionType): String = {
         permissionType match {
             case PermissionType.OAP =>
@@ -656,14 +656,14 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Given a permission literal, checks that it refers to valid permissions and groups.
-      *
-      * @param permissionLiteral the permission literal.
-      * @param responderManager  a reference to the responder manager.
-      * @param timeout           a timeout for `ask` messages.
-      * @param executionContext  an execution context for futures.
-      * @return the validated permission literal, normalised and reformatted.
-      */
+     * Given a permission literal, checks that it refers to valid permissions and groups.
+     *
+     * @param permissionLiteral the permission literal.
+     * @param responderManager  a reference to the responder manager.
+     * @param timeout           a timeout for `ask` messages.
+     * @param executionContext  an execution context for futures.
+     * @return the validated permission literal, normalised and reformatted.
+     */
     def validatePermissions(permissionLiteral: String,
                             responderManager: ActorRef)
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
@@ -695,19 +695,19 @@ object PermissionUtilADM extends LazyLogging {
     // API v1 methods
 
     /**
-      * Determines the permissions that a user has on a entity, and returns an integer permissions code.
-      *
-      * @param entityIri   the IRI of the entity.
-      * @param assertions  a [[Seq]] containing all the permission-relevant predicates and objects
-      *                    pertaining to the entity. The predicates must include
-      *                    [[OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                    [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                    [[OntologyConstants.KnoraBase.HasPermissions]].
-      *                    Other predicates may be included, but they will be ignored, so there is no need to filter
-      *                    them before passing them to this function.
-      * @param userProfile the profile of the user making the request.
-      * @return a code representing the user's permission level for the entity.
-      */
+     * Determines the permissions that a user has on a entity, and returns an integer permissions code.
+     *
+     * @param entityIri   the IRI of the entity.
+     * @param assertions  a [[Seq]] containing all the permission-relevant predicates and objects
+     *                    pertaining to the entity. The predicates must include
+     *                    [[OntologyConstants.KnoraBase.AttachedToUser]] and
+     *                    [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
+     *                    [[OntologyConstants.KnoraBase.HasPermissions]].
+     *                    Other predicates may be included, but they will be ignored, so there is no need to filter
+     *                    them before passing them to this function.
+     * @param userProfile the profile of the user making the request.
+     * @return a code representing the user's permission level for the entity.
+     */
     def getUserPermissionFromAssertionsV1(entityIri: IRI,
                                           assertions: Seq[(IRI, String)],
                                           userProfile: UserProfileV1): Option[Int] = {
@@ -723,13 +723,13 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Checks whether an integer permission code implies a particular permission property.
-      *
-      * @param userHasPermissionCode the integer permission code that the user has, or [[None]] if the user has no permissions
-      *                              (in which case this method returns `false`).
-      * @param userNeedsPermission   the abbreviation of the permission that the user needs.
-      * @return `true` if the user has the needed permission.
-      */
+     * Checks whether an integer permission code implies a particular permission property.
+     *
+     * @param userHasPermissionCode the integer permission code that the user has, or [[None]] if the user has no permissions
+     *                              (in which case this method returns `false`).
+     * @param userNeedsPermission   the abbreviation of the permission that the user needs.
+     * @return `true` if the user has the needed permission.
+     */
     def impliesPermissionCodeV1(userHasPermissionCode: Option[Int], userNeedsPermission: String): Boolean = {
         userHasPermissionCode match {
             case Some(permissionCode) => permissionCode >= permissionStringsToPermissionLevels(userNeedsPermission).toInt
@@ -738,21 +738,21 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Determines the permissions that a user has on a `knora-base:Value`, and returns an integer permission code.
-      *
-      * @param valueIri      the IRI of the `knora-base:Value`.
-      * @param valueProps    a [[ValueProps]] containing the permission-relevant predicates and objects
-      *                      pertaining to the value, grouped by predicate. The predicates must include
-      *                      [[OntologyConstants.KnoraBase.AttachedToUser]], and should include
-      *                      [[OntologyConstants.KnoraBase.AttachedToProject]]
-      *                      and [[OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
-      *                      included, but they will be ignored, so there is no need to filter them before passing them to
-      *                      this function.
-      * @param entityProject if provided, the `knora-base:attachedToProject` of the resource containing the value. Otherwise,
-      *                      this predicate must be in `valueProps`.
-      * @param userProfile   the profile of the user making the request.
-      * @return a code representing the user's permission level on the value.
-      */
+     * Determines the permissions that a user has on a `knora-base:Value`, and returns an integer permission code.
+     *
+     * @param valueIri      the IRI of the `knora-base:Value`.
+     * @param valueProps    a [[ValueProps]] containing the permission-relevant predicates and objects
+     *                      pertaining to the value, grouped by predicate. The predicates must include
+     *                      [[OntologyConstants.KnoraBase.AttachedToUser]], and should include
+     *                      [[OntologyConstants.KnoraBase.AttachedToProject]]
+     *                      and [[OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
+     *                      included, but they will be ignored, so there is no need to filter them before passing them to
+     *                      this function.
+     * @param entityProject if provided, the `knora-base:attachedToProject` of the resource containing the value. Otherwise,
+     *                      this predicate must be in `valueProps`.
+     * @param userProfile   the profile of the user making the request.
+     * @return a code representing the user's permission level on the value.
+     */
     def getUserPermissionWithValuePropsV1(valueIri: IRI,
                                           valueProps: ValueProps,
                                           entityProject: Option[IRI],
@@ -783,15 +783,15 @@ object PermissionUtilADM extends LazyLogging {
     }
 
     /**
-      * Determines the permissions that a user has on a entity, and returns an integer permission code.
-      *
-      * @param entityIri               the IRI of the entity.
-      * @param entityCreator           the IRI of the user that created the entity.
-      * @param entityProject           the IRI of the entity's project.
-      * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
-      * @param userProfile             the profile of the user making the request.
-      * @return a code representing the user's permission level for the entity.
-      */
+     * Determines the permissions that a user has on a entity, and returns an integer permission code.
+     *
+     * @param entityIri               the IRI of the entity.
+     * @param entityCreator           the IRI of the user that created the entity.
+     * @param entityProject           the IRI of the entity's project.
+     * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
+     * @param userProfile             the profile of the user making the request.
+     * @return a code representing the user's permission level for the entity.
+     */
     def getUserPermissionV1(entityIri: IRI,
                             entityCreator: IRI,
                             entityProject: IRI,

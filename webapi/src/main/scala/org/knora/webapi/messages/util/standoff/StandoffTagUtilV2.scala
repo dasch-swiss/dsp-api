@@ -59,13 +59,13 @@ object StandoffTagUtilV2 {
     private val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
     /**
-      * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
-      *
-      * @param xmlToStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
-      * @param dataType             the expected data type of the given standoff node.
-      * @param standoffNodeFromXML  the given standoff node.
-      * @return the value of the attribute.
-      */
+     * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
+     *
+     * @param xmlToStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
+     * @param dataType             the expected data type of the given standoff node.
+     * @param standoffNodeFromXML  the given standoff node.
+     * @return the value of the attribute.
+     */
     private def getDataTypeAttribute(xmlToStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
 
         if (xmlToStandoffMapping.dataType.isEmpty || xmlToStandoffMapping.dataType.get.standoffDataTypeClass != dataType) {
@@ -85,14 +85,14 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Creates a sequence of [[StandoffTagAttributeV2]] for the given standoff node.
-      *
-      * @param xmlToStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
-      * @param classSpecificProps       the properties that may or have to be created (cardinalities) for the given standoff node.
-      * @param standoffNodeFromXML      the given standoff node.
-      * @param standoffPropertyEntities the ontology information about the standoff properties.
-      * @return a sequence of [[StandoffTagAttributeV2]]
-      */
+     * Creates a sequence of [[StandoffTagAttributeV2]] for the given standoff node.
+     *
+     * @param xmlToStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
+     * @param classSpecificProps       the properties that may or have to be created (cardinalities) for the given standoff node.
+     * @param standoffNodeFromXML      the given standoff node.
+     * @param standoffPropertyEntities the ontology information about the standoff properties.
+     * @return a sequence of [[StandoffTagAttributeV2]]
+     */
     private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[SmartIri, KnoraCardinalityInfo], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[SmartIri, ReadPropertyInfoV2]): Seq[StandoffTagAttributeV2] = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -136,7 +136,7 @@ object StandoffTagUtilV2 {
                             case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                                 StandoffTagBooleanAttributeV2(standoffPropertyIri = standoffTagPropIri, value = stringFormatter.validateBoolean(attr.value, throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")))
 
-                            case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime)))  =>
+                            case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) =>
                                 StandoffTagTimeAttributeV2(standoffPropertyIri = standoffTagPropIri, value = stringFormatter.xsdDateTimeStampToInstant(attr.value, throw BadRequestException(s"Invalid timestamp attribute: '${attr.value}'")))
 
                             case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $standoffTagPropIri")
@@ -205,24 +205,24 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Represents a text with standoff markup including the mapping.
-      *
-      * @param text          the text as a mere sequence of characters.
-      * @param language      the language of the text, if known.
-      * @param standoffTagV2 the text's standoff markup.
-      */
+     * Represents a text with standoff markup including the mapping.
+     *
+     * @param text          the text as a mere sequence of characters.
+     * @param language      the language of the text, if known.
+     * @param standoffTagV2 the text's standoff markup.
+     */
     case class TextWithStandoffTagsV2(text: String, language: Option[String] = None, standoffTagV2: Seq[StandoffTagV2], mapping: GetMappingResponseV2)
 
     /**
-      * Converts XML to a [[TextWithStandoffTagsV2]].
-      *
-      * @param xml                            the XML representing text with markup.
-      * @param mapping                        the mapping used to convert XML to standoff.
-      * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
-      *                                       resources. In a bulk import, this allows standoff links to resources
-      *                                       that are to be created by the import.
-      * @return a [[TextWithStandoffTagsV2]].
-      */
+     * Converts XML to a [[TextWithStandoffTagsV2]].
+     *
+     * @param xml                            the XML representing text with markup.
+     * @param mapping                        the mapping used to convert XML to standoff.
+     * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
+     *                                       resources. In a bulk import, this allows standoff links to resources
+     *                                       that are to be created by the import.
+     * @return a [[TextWithStandoffTagsV2]].
+     */
     def convertXMLtoStandoffTagV2(xml: String, mapping: GetMappingResponseV2, acceptStandoffLinksToClientIDs: Boolean, log: LoggingAdapter): TextWithStandoffTagsV2 = {
 
         // collect all the `XMLTag` from the given mapping that require a separator
@@ -279,18 +279,18 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      *
-      * Turns a sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV2]].
-      * This method handles the creation of data type specific properties (e.g. for a date value) on the basis of the provided mapping.
-      *
-      * @param textWithStandoff               sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]].
-      * @param mappingXMLtoStandoff           the mapping to be used.
-      * @param standoffEntities               the standoff entities (classes and properties) to be used.
-      * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
-      *                                       resources. In a bulk import, this allows standoff links to resources
-      *                                       that are to be created by the import.
-      * @return a sequence of [[StandoffTagV2]].
-      */
+     *
+     * Turns a sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV2]].
+     * This method handles the creation of data type specific properties (e.g. for a date value) on the basis of the provided mapping.
+     *
+     * @param textWithStandoff               sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]].
+     * @param mappingXMLtoStandoff           the mapping to be used.
+     * @param standoffEntities               the standoff entities (classes and properties) to be used.
+     * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
+     *                                       resources. In a bulk import, this allows standoff links to resources
+     *                                       that are to be created by the import.
+     * @return a sequence of [[StandoffTagV2]].
+     */
     private def convertXMLStandoffTagToStandoffTagV2(textWithStandoff: TextWithStandoff,
                                                      mappingXMLtoStandoff: MappingXMLtoStandoff,
                                                      standoffEntities: StandoffEntityInfoGetResponseV2,
@@ -668,14 +668,14 @@ object StandoffTagUtilV2 {
     case class XMLAttrItem(namespace: String, attrname: String)
 
     /**
-      * Inverts a [[MappingXMLtoStandoff]] and makes standoff class Iris keys.
-      * This is makes it easier to map standoff classes back to XML tags (recreating XML from standoff).
-      *
-      * This method also checks for duplicate usage of standoff classes and properties in the attribute mapping of a tag.
-      *
-      * @param mappingXMLtoStandoff mapping from XML to standoff.
-      * @return a Map standoff class Iris to [[XMLTagItem]].
-      */
+     * Inverts a [[MappingXMLtoStandoff]] and makes standoff class Iris keys.
+     * This is makes it easier to map standoff classes back to XML tags (recreating XML from standoff).
+     *
+     * This method also checks for duplicate usage of standoff classes and properties in the attribute mapping of a tag.
+     *
+     * @param mappingXMLtoStandoff mapping from XML to standoff.
+     * @return a Map standoff class Iris to [[XMLTagItem]].
+     */
     def invertXMLToStandoffMapping(mappingXMLtoStandoff: MappingXMLtoStandoff): Map[IRI, XMLTagItem] = {
 
         // check for duplicate standoff class Iris
@@ -732,11 +732,11 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
-      *
-      * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
-      * @return a sequence of [[StandoffTagV2]] objects.
-      */
+     * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
+     *
+     * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
+     * @return a sequence of [[StandoffTagV2]] objects.
+     */
     def createStandoffTagsV2FromConstructResults(standoffAssertions: Map[IRI, Map[SmartIri, LiteralV2]],
                                                  responderManager: ActorRef,
                                                  requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
@@ -755,11 +755,11 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL SELECT query.
-      *
-      * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
-      * @return a sequence of [[StandoffTagV2]] objects.
-      */
+     * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL SELECT query.
+     *
+     * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
+     * @return a sequence of [[StandoffTagV2]] objects.
+     */
     def createStandoffTagsV2FromSelectResults(standoffAssertions: Map[IRI, Map[IRI, String]],
                                               responderManager: ActorRef,
                                               requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
@@ -881,12 +881,12 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Converts a sequence of [[StandoffTagAttributeV2]] to a sequence of [[StandoffTagAttribute]].
-      *
-      * @param mapping    the mapping used to convert standoff property IRIs to XML attribute names.
-      * @param attributes the standoff properties to be converted to XML attributes.
-      * @return a sequence of [[StandoffTagAttribute]].
-      */
+     * Converts a sequence of [[StandoffTagAttributeV2]] to a sequence of [[StandoffTagAttribute]].
+     *
+     * @param mapping    the mapping used to convert standoff property IRIs to XML attribute names.
+     * @param attributes the standoff properties to be converted to XML attributes.
+     * @return a sequence of [[StandoffTagAttribute]].
+     */
     private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV2]): Seq[StandoffTagAttribute] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -906,13 +906,13 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Converts a text value with standoff to an XML String.
-      *
-      * @param utf8str              the string representation of the text value (`valueHasString`).
-      * @param standoff             the standoff representing the markup.
-      * @param mappingXMLtoStandoff the mapping used to convert standoff to XML markup.
-      * @return a String representing an XML document.
-      */
+     * Converts a text value with standoff to an XML String.
+     *
+     * @param utf8str              the string representation of the text value (`valueHasString`).
+     * @param standoff             the standoff representing the markup.
+     * @param mappingXMLtoStandoff the mapping used to convert standoff to XML markup.
+     * @return a String representing an XML document.
+     */
     def convertStandoffTagV2ToXML(utf8str: String, standoff: Seq[StandoffTagV2], mappingXMLtoStandoff: MappingXMLtoStandoff): String = {
 
         // inverts the mapping and makes standoff class Iris keys (for tags)
@@ -1091,13 +1091,13 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Given a sequence of standoff tags from a text value, makes a collection that can be compared with standoff from
-      * another text value.
-      *
-      * @param standoff the standoff that needs to be compared.
-      * @return a sequence of sets of tags that have the same start index, ordered by start index. All tags have their
-      *         UUIDs replaced with empty strings.
-      */
+     * Given a sequence of standoff tags from a text value, makes a collection that can be compared with standoff from
+     * another text value.
+     *
+     * @param standoff the standoff that needs to be compared.
+     * @return a sequence of sets of tags that have the same start index, ordered by start index. All tags have their
+     *         UUIDs replaced with empty strings.
+     */
     def makeComparableStandoffCollection(standoff: Seq[StandoffTagV2]): Vector[Set[StandoffTagV2]] = {
         // Since multiple tags could have the same index (e.g. if the standoff editor that
         // generated them doesn't use indexes), we first group them into sets of tags that have the same index,
@@ -1124,14 +1124,14 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * If standoff is supposed to be queried with text values, returns the minimum and maximum start indexes
-      * for the first page of standoff in a text value. Otherwise, returns `(None, None)`.
-      *
-      * @param queryStandoff `true` if standoff should be queried.
-      * @param settings      the application settings.
-      * @return a tuple containing the minimum start index and maximum start index, or `(None, None)` if standoff
-      *         is not being queried with text values.
-      */
+     * If standoff is supposed to be queried with text values, returns the minimum and maximum start indexes
+     * for the first page of standoff in a text value. Otherwise, returns `(None, None)`.
+     *
+     * @param queryStandoff `true` if standoff should be queried.
+     * @param settings      the application settings.
+     * @return a tuple containing the minimum start index and maximum start index, or `(None, None)` if standoff
+     *         is not being queried with text values.
+     */
     def getStandoffMinAndMaxStartIndexesForTextValueQuery(queryStandoff: Boolean, settings: KnoraSettingsImpl): (Option[Int], Option[Int]) = {
         if (queryStandoff) {
             // Yes. Get the first page of standoff with each text value.

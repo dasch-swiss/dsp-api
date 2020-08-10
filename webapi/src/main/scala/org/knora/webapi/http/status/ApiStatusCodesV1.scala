@@ -23,9 +23,9 @@ import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import org.knora.webapi.exceptions._
 
 /**
-  * The possible values for the status code that is returned as part of each Knora API v1 response.
-  * Based on `salsah/api/ApiErrors.php`.
-  */
+ * The possible values for the status code that is returned as part of each Knora API v1 response.
+ * Based on `salsah/api/ApiErrors.php`.
+ */
 object ApiStatusCodesV1 extends Enumeration {
     val OK = Value(0)
     val INVALID_REQUEST_METHOD = Value(1)
@@ -38,8 +38,8 @@ object ApiStatusCodesV1 extends Enumeration {
     val UNKNOWN_VOCABULARY = Value(8)
 
     /**
-      * The requested item was not found. This was called NO_NODES_FOUND in SALSAH; its meaning has been broadened here.
-      */
+     * The requested item was not found. This was called NO_NODES_FOUND in SALSAH; its meaning has been broadened here.
+     */
     val NOT_FOUND = Value(9)
 
     val API_ENDPOINT_NOT_FOUND = Value(10)
@@ -64,28 +64,28 @@ object ApiStatusCodesV1 extends Enumeration {
     val GEONAMES_GEONAME_ID_EXISTING = Value(26)
 
     /**
-      * The requested update was not performed, perhaps because it was based on outdated information (e.g. because of an edit conflict). (New in Knora.)
-      */
+     * The requested update was not performed, perhaps because it was based on outdated information (e.g. because of an edit conflict). (New in Knora.)
+     */
     val UPDATE_NOT_PERFORMED = Value(27)
 
     /**
-      * The requested update was not performed, because it would have created a duplicate value. (New in Knora.)
-      */
+     * The requested update was not performed, because it would have created a duplicate value. (New in Knora.)
+     */
     val DUPLICATE_VALUE = Value(28)
 
     /**
-      * The requested update was not performed, because it would have violated an ontology constraint. (New in Knora.)
-      */
+     * The requested update was not performed, because it would have violated an ontology constraint. (New in Knora.)
+     */
     val ONTOLOGY_CONSTRAINT = Value(29)
 
     val UNSPECIFIED_ERROR = Value(999)
 
     /**
-      * Converts an exception to a similar API status code.
-      *
-      * @param ex an exception.
-      * @return an API status code.
-      */
+     * Converts an exception to a similar API status code.
+     *
+     * @param ex an exception.
+     * @return an API status code.
+     */
     def fromException(ex: Throwable): Value = {
         ex match {
             // Subclasses of RequestRejectedException (which must be last in this group)
@@ -105,11 +105,11 @@ object ApiStatusCodesV1 extends Enumeration {
     }
 
     /**
-      * Converts an API status code to a similar HTTP status code.
-      *
-      * @param apiStatus an API status code.
-      * @return an HTTP status code.
-      */
+     * Converts an API status code to a similar HTTP status code.
+     *
+     * @param apiStatus an API status code.
+     * @return an HTTP status code.
+     */
     def toHttpStatus(apiStatus: Value): StatusCode = {
         apiStatus match {
             case OK => StatusCodes.OK

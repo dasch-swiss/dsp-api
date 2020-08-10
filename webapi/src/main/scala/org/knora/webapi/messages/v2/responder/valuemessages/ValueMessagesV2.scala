@@ -785,14 +785,14 @@ case class ReadOtherValueV2(valueIri: IRI,
 /**
  * Represents a Knora value to be created in an existing resource.
  *
- * @param resourceIri              the resource the new value should be attached to.
- * @param resourceClassIri         the resource class that the client believes the resource belongs to.
- * @param propertyIri              the property of the new value. If the client wants to create a link, this must be a link value property.
- * @param valueContent             the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
- * @param customValueIri           the optional custom IRI supplied for the value.
- * @param customValueUUID          the optional custom UUID supplied for the value.
- * @param customValueCreationDate  the optional custom creation date supplied for the value.
- * @param permissions              the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ * @param resourceIri             the resource the new value should be attached to.
+ * @param resourceClassIri        the resource class that the client believes the resource belongs to.
+ * @param propertyIri             the property of the new value. If the client wants to create a link, this must be a link value property.
+ * @param valueContent            the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param customValueIri          the optional custom IRI supplied for the value.
+ * @param customValueUUID         the optional custom UUID supplied for the value.
+ * @param customValueCreationDate the optional custom creation date supplied for the value.
+ * @param permissions             the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
                          resourceClassIri: SmartIri,

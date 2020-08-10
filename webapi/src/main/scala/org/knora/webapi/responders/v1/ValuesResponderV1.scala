@@ -48,15 +48,15 @@ import scala.collection.breakOut
 import scala.concurrent.Future
 
 /**
-  * Updates Knora values.
-  */
+ * Updates Knora values.
+ */
 class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: ValuesResponderRequestV1) = msg match {
         case ValueGetRequestV1(valueIri, userProfile) => getValueResponseV1(valueIri, userProfile)
         case LinkValueGetRequestV1(subjectIri, predicateIri, objectIri, userProfile) => getLinkValue(subjectIri, predicateIri, objectIri, userProfile)
@@ -75,12 +75,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     // Methods for generating complete API responses.
 
     /**
-      * Queries a `knora-base:Value` and returns a [[ValueGetResponseV1]] describing it.
-      *
-      * @param valueIri    the IRI of the value to be queried.
-      * @param userProfile the profile of the user making the request.
-      * @return a [[ValueGetResponseV1]].
-      */
+     * Queries a `knora-base:Value` and returns a [[ValueGetResponseV1]] describing it.
+     *
+     * @param valueIri    the IRI of the value to be queried.
+     * @param userProfile the profile of the user making the request.
+     * @return a [[ValueGetResponseV1]].
+     */
     private def getValueResponseV1(valueIri: IRI, userProfile: UserADM): Future[ValueGetResponseV1] = {
         for {
             maybeValueQueryResult <- findValue(valueIri, userProfile)
@@ -110,19 +110,19 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Creates a new value of a resource property (as opposed to a new version of an existing value).
-      *
-      * @param createValueRequest the request message.
-      * @return a [[CreateValueResponseV1]] if the update was successful.
-      */
+     * Creates a new value of a resource property (as opposed to a new version of an existing value).
+     *
+     * @param createValueRequest the request message.
+     * @return a [[CreateValueResponseV1]] if the update was successful.
+     */
     private def createValueV1(createValueRequest: CreateValueRequestV1): Future[CreateValueResponseV1] = {
         /**
-          * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[IriLocker]] once it has acquired an update lock on the resource.
-          *
-          * @param userIri the IRI of the user making the request.
-          * @return a [[Future]] that does pre-update checks and performs the update.
-          */
+         * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
+         * called by [[IriLocker]] once it has acquired an update lock on the resource.
+         *
+         * @param userIri the IRI of the user making the request.
+         * @return a [[Future]] that does pre-update checks and performs the update.
+         */
         def makeTaskFuture(userIri: IRI): Future[CreateValueResponseV1] = for {
             // Check that the submitted value has the correct type for the property.
 
@@ -256,48 +256,48 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Generates SPARQL for creating multiple values in a new, empty resource, using an existing transaction.
-      * The resource ''must'' be a new, empty resource, i.e. it must have no values. All pre-update checks must already
-      * have been performed. Specifically, this method assumes that:
-      *
-      * - The requesting user has permission to add values to the resource.
-      * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
-      * - The resource has a suitable cardinality for each submitted value.
-      * - All required values are provided.
-      *
-      * @param createMultipleValuesRequest the request message.
-      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]].
-      */
+     * Generates SPARQL for creating multiple values in a new, empty resource, using an existing transaction.
+     * The resource ''must'' be a new, empty resource, i.e. it must have no values. All pre-update checks must already
+     * have been performed. Specifically, this method assumes that:
+     *
+     * - The requesting user has permission to add values to the resource.
+     * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
+     * - The resource has a suitable cardinality for each submitted value.
+     * - All required values are provided.
+     *
+     * @param createMultipleValuesRequest the request message.
+     * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]].
+     */
     private def createMultipleValuesV1(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         /**
-          * Creates a [[Future]] that performs the update. This function will be called by [[IriLocker]] once it
-          * has acquired an update lock on the resource.
-          *
-          * @param userIri the IRI of the user making the request.
-          * @return a [[Future]] that does pre-update checks and performs the update.
-          */
+         * Creates a [[Future]] that performs the update. This function will be called by [[IriLocker]] once it
+         * has acquired an update lock on the resource.
+         *
+         * @param userIri the IRI of the user making the request.
+         * @return a [[Future]] that does pre-update checks and performs the update.
+         */
         def makeTaskFuture(userIri: IRI): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
             /**
-              * Assists in the numbering of values to be created.
-              *
-              * @param createValueV1WithComment the value to be created.
-              * @param valueIndex               the index of the value in the sequence of all values to be created. This will be used
-              *                                 to generate unique SPARQL variable names.
-              * @param valueHasOrder            the index of the value in the sequence of values to be created for a particular property.
-              *                                 This will be used to generate `knora-base:valueHasOrder`.
-              */
+             * Assists in the numbering of values to be created.
+             *
+             * @param createValueV1WithComment the value to be created.
+             * @param valueIndex               the index of the value in the sequence of all values to be created. This will be used
+             *                                 to generate unique SPARQL variable names.
+             * @param valueHasOrder            the index of the value in the sequence of values to be created for a particular property.
+             *                                 This will be used to generate `knora-base:valueHasOrder`.
+             */
             case class NumberedValueToCreate(createValueV1WithComment: CreateValueV1WithComment,
                                              valueIndex: Int,
                                              valueHasOrder: Int)
 
             /**
-              * Assists in collecting generated SPARQL as well as other information about values to be created for
-              * a particular property.
-              *
-              * @param insertSparql   statements to be included in the SPARQL INSERT clause.
-              * @param valuesToVerify information about each value to be created.
-              * @param valueIndexes   the value index of each value described by this object (so they can be sorted).
-              */
+             * Assists in collecting generated SPARQL as well as other information about values to be created for
+             * a particular property.
+             *
+             * @param insertSparql   statements to be included in the SPARQL INSERT clause.
+             * @param valuesToVerify information about each value to be created.
+             * @param valueIndexes   the value index of each value described by this object (so they can be sorted).
+             */
             case class SparqlGenerationResultForProperty(insertSparql: Vector[String] = Vector.empty[String],
                                                          valuesToVerify: Vector[UnverifiedValueV1] = Vector.empty[UnverifiedValueV1],
                                                          valueIndexes: Vector[Int] = Vector.empty[Int])
@@ -566,12 +566,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Verifies the creation of multiple values.
-      *
-      * @param verifyRequest a [[VerifyMultipleValueCreationRequestV1]].
-      * @return a [[VerifyMultipleValueCreationResponseV1]] if all values were created successfully, or a failed
-      *         future if any values were not created.
-      */
+     * Verifies the creation of multiple values.
+     *
+     * @param verifyRequest a [[VerifyMultipleValueCreationRequestV1]].
+     * @return a [[VerifyMultipleValueCreationResponseV1]] if all values were created successfully, or a failed
+     *         future if any values were not created.
+     */
     private def verifyMultipleValueCreation(verifyRequest: VerifyMultipleValueCreationRequestV1): Future[VerifyMultipleValueCreationResponseV1] = {
         // We have a Map of property IRIs to sequences of UnverifiedCreateValueResponseV1s. Query each value and
         // build a Map with the same structure, except that instead of UnverifiedCreateValueResponseV1s, it contains Futures
@@ -598,20 +598,20 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Adds a new version of an existing file value.
-      *
-      * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
-      * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
-      */
+     * Adds a new version of an existing file value.
+     *
+     * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+     * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
+     */
     private def changeFileValueV1(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
         /**
-          * Temporary structure to represent existing file values of a resource.
-          *
-          * @param property       the property IRI (e.g., hasStillImageFileValueRepresentation)
-          * @param valueObjectIri the IRI of the value object.
-          * @param quality        the quality of the file value
-          */
+         * Temporary structure to represent existing file values of a resource.
+         *
+         * @param property       the property IRI (e.g., hasStillImageFileValueRepresentation)
+         * @param valueObjectIri the IRI of the value object.
+         * @param quality        the quality of the file value
+         */
         case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
 
         def changeFileValue(oldFileValue: CurrentFileValue, newFileValue: FileValueV1): Future[ChangeValueResponseV1] = {
@@ -624,12 +624,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         }
 
         /**
-          * Preprocesses a file value change request by calling the Sipi responder to create a new file
-          * and calls [[changeValueV1]] to actually change the file value in Knora.
-          *
-          * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
-          * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
-          */
+         * Preprocesses a file value change request by calling the Sipi responder to create a new file
+         * and calls [[changeValueV1]] to actually change the file value in Knora.
+         *
+         * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+         * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
+         */
         def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
             // get the Iris of the current file value(s)
@@ -728,21 +728,21 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Adds a new version of an existing value.
-      *
-      * @param changeValueRequest the request message.
-      * @return an [[ChangeValueResponseV1]] if the update was successful.
-      */
+     * Adds a new version of an existing value.
+     *
+     * @param changeValueRequest the request message.
+     * @return an [[ChangeValueResponseV1]] if the update was successful.
+     */
     private def changeValueV1(changeValueRequest: ChangeValueRequestV1): Future[ChangeValueResponseV1] = {
         /**
-          * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[IriLocker]] once it has acquired an update lock on the resource.
-          *
-          * @param userIri                     the IRI of the user making the request.
-          * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
-          *                                    to be updated.
-          * @return a [[Future]] that does pre-update checks and performs the update.
-          */
+         * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
+         * called by [[IriLocker]] once it has acquired an update lock on the resource.
+         *
+         * @param userIri                     the IRI of the user making the request.
+         * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
+         *                                    to be updated.
+         * @return a [[Future]] that does pre-update checks and performs the update.
+         */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[ChangeValueResponseV1] = {
             // If we're updating a link, findResourceWithValueResult will contain the IRI of the property that points to the
             // knora-base:LinkValue, but we'll need the IRI of the corresponding link property.
@@ -942,12 +942,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
     private def changeCommentV1(changeCommentRequest: ChangeCommentRequestV1): Future[ChangeValueResponseV1] = {
         /**
-          * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[IriLocker]] once it has acquired an update lock on the resource.
-          *
-          * @param userIri the IRI of the user making the request.
-          * @return a [[Future]] that does pre-update checks and performs the update.
-          */
+         * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
+         * called by [[IriLocker]] once it has acquired an update lock on the resource.
+         *
+         * @param userIri the IRI of the user making the request.
+         * @return a [[Future]] that does pre-update checks and performs the update.
+         */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[ChangeValueResponseV1] = {
             for {
                 // Ensure that the user has permission to modify the value.
@@ -1038,21 +1038,21 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Marks a value as deleted.
-      *
-      * @param deleteValueRequest the request message.
-      * @return a [[DeleteValueResponseV1]].
-      */
+     * Marks a value as deleted.
+     *
+     * @param deleteValueRequest the request message.
+     * @return a [[DeleteValueResponseV1]].
+     */
     private def deleteValueV1(deleteValueRequest: DeleteValueRequestV1): Future[DeleteValueResponseV1] = {
         /**
-          * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[IriLocker]] once it has acquired an update lock on the resource.
-          *
-          * @param userIri                     the IRI of the user making the request.
-          * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
-          *                                    to be updated.
-          * @return a [[Future]] that does pre-update checks and performs the update.
-          */
+         * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
+         * called by [[IriLocker]] once it has acquired an update lock on the resource.
+         *
+         * @param userIri                     the IRI of the user making the request.
+         * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
+         *                                    to be updated.
+         * @return a [[Future]] that does pre-update checks and performs the update.
+         */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[DeleteValueResponseV1] = for {
             // Ensure that the user has permission to mark the value as deleted.
             maybeCurrentValueQueryResult <- findValue(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
@@ -1208,23 +1208,23 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Gets the version history of a value.
-      *
-      * @param versionHistoryRequest a [[ValueVersionHistoryGetRequestV1]].
-      * @return a [[ValueVersionHistoryGetResponseV1]].
-      */
+     * Gets the version history of a value.
+     *
+     * @param versionHistoryRequest a [[ValueVersionHistoryGetRequestV1]].
+     * @return a [[ValueVersionHistoryGetResponseV1]].
+     */
     private def getValueVersionHistoryResponseV1(versionHistoryRequest: ValueVersionHistoryGetRequestV1): Future[ValueVersionHistoryGetResponseV1] = {
         val userProfileV1 = versionHistoryRequest.userProfile.asUserProfileV1
 
         /**
-          * Recursively converts a [[Map]] of value version SPARQL query result rows into a [[Vector]] representing the value's version history,
-          * ordered from most recent to oldest.
-          *
-          * @param versionMap        a [[Map]] of value version IRIs to the contents of SPARQL query result rows.
-          * @param startAtVersion    the IRI of the version to start at.
-          * @param versionRowsVector a [[Vector]] containing the results of the previous recursive call, or an empty vector if this is the first call.
-          * @return a [[Vector]] in which the elements are SPARQL query result rows representing versions, ordered from most recent to oldest.
-          */
+         * Recursively converts a [[Map]] of value version SPARQL query result rows into a [[Vector]] representing the value's version history,
+         * ordered from most recent to oldest.
+         *
+         * @param versionMap        a [[Map]] of value version IRIs to the contents of SPARQL query result rows.
+         * @param startAtVersion    the IRI of the version to start at.
+         * @param versionRowsVector a [[Vector]] containing the results of the previous recursive call, or an empty vector if this is the first call.
+         * @return a [[Vector]] in which the elements are SPARQL query result rows representing versions, ordered from most recent to oldest.
+         */
         @tailrec
         def versionMap2Vector(versionMap: Map[IRI, Map[String, String]], startAtVersion: IRI, versionRowsVector: Vector[Map[String, String]]): Vector[Map[String, String]] = {
             val startValue = versionMap(startAtVersion)
@@ -1315,16 +1315,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Looks for a direct link connecting two resources, finds the corresponding `knora-base:LinkValue`, and returns
-      * a [[ValueGetResponseV1]] containing a [[LinkValueV1]] describing the `LinkValue`. Throws [[NotFoundException]]
-      * if no such `LinkValue` is found.
-      *
-      * @param subjectIri   the IRI of the resource that is the source of the link.
-      * @param predicateIri the IRI of the property that links the two resources.
-      * @param objectIri    the IRI of the resource that is the target of the link.
-      * @param userProfile  the profile of the user making the request.
-      * @return a [[ValueGetResponseV1]] containing a [[LinkValueV1]].
-      */
+     * Looks for a direct link connecting two resources, finds the corresponding `knora-base:LinkValue`, and returns
+     * a [[ValueGetResponseV1]] containing a [[LinkValueV1]] describing the `LinkValue`. Throws [[NotFoundException]]
+     * if no such `LinkValue` is found.
+     *
+     * @param subjectIri   the IRI of the resource that is the source of the link.
+     * @param predicateIri the IRI of the property that links the two resources.
+     * @param objectIri    the IRI of the resource that is the target of the link.
+     * @param userProfile  the profile of the user making the request.
+     * @return a [[ValueGetResponseV1]] containing a [[LinkValueV1]].
+     */
     @throws(classOf[NotFoundException])
     private def getLinkValue(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM): Future[ValueGetResponseV1] = {
         for {
@@ -1363,49 +1363,49 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     // Helper methods and types.
 
     /**
-      * Represents the result of querying a value.
-      */
+     * Represents the result of querying a value.
+     */
     trait ValueQueryResult {
         /**
-          * The value that was found.
-          */
+         * The value that was found.
+         */
         def value: ApiValueV1
 
         /**
-          * The IRI Of the user that created the value.
-          */
+         * The IRI Of the user that created the value.
+         */
         def creatorIri: IRI
 
         /**
-          * The date when the value was created, represented as a string.
-          */
+         * The date when the value was created, represented as a string.
+         */
         def creationDate: String
 
         /**
-          * The IRI of the project that the value belongs to.
-          */
+         * The IRI of the project that the value belongs to.
+         */
         def projectIri: IRI
 
         /**
-          * An optional comment describing the value.
-          */
+         * An optional comment describing the value.
+         */
         def comment: Option[String]
 
         /**
-          * A list of the permission-relevant assertions declared on the value.
-          */
+         * A list of the permission-relevant assertions declared on the value.
+         */
         def permissionRelevantAssertions: Seq[(IRI, IRI)]
 
         /**
-          * An integer permission code representing the user's permissions on the value.
-          */
+         * An integer permission code representing the user's permissions on the value.
+         */
         def permissionCode: Int
     }
 
     /**
-      * Represents basic information resulting from querying a value. This is sufficient if the value is an ordinary
-      * value (not a link).
-      */
+     * Represents basic information resulting from querying a value. This is sufficient if the value is an ordinary
+     * value (not a link).
+     */
     case class BasicValueQueryResult(value: ApiValueV1,
                                      creatorIri: IRI,
                                      creationDate: String,
@@ -1415,11 +1415,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                      permissionCode: Int) extends ValueQueryResult
 
     /**
-      * Represents the result of querying a link.
-      *
-      * @param directLinkExists    `true` if a direct link exists between the two resources.
-      * @param targetResourceClass if a direct link exists, contains the OWL class of the target resource.
-      */
+     * Represents the result of querying a link.
+     *
+     * @param directLinkExists    `true` if a direct link exists between the two resources.
+     * @param targetResourceClass if a direct link exists, contains the OWL class of the target resource.
+     */
     case class LinkValueQueryResult(value: LinkValueV1,
                                     linkValueIri: IRI,
                                     creatorIri: IRI,
@@ -1432,12 +1432,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                     permissionCode: Int) extends ValueQueryResult
 
     /**
-      * Queries a `knora-base:Value` and returns a [[ValueQueryResult]] describing it.
-      *
-      * @param valueIri    the IRI of the value to be queried.
-      * @param userProfile the profile of the user making the request.
-      * @return a [[ValueQueryResult]], or `None` if the value is not found.
-      */
+     * Queries a `knora-base:Value` and returns a [[ValueQueryResult]] describing it.
+     *
+     * @param valueIri    the IRI of the value to be queried.
+     * @param userProfile the profile of the user making the request.
+     * @return a [[ValueQueryResult]], or `None` if the value is not found.
+     */
     private def findValue(valueIri: IRI, userProfile: UserADM): Future[Option[ValueQueryResult]] = {
         for {
             sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getValue(
@@ -1465,12 +1465,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Checks that the user has permission to see the source and target resources of a link value.
-      *
-      * @param linkValueIri the IRI of the link value.
-      * @param userProfile  the profile of the user making the request.
-      * @return () if the user has the required permission, or an exception otherwise.
-      */
+     * Checks that the user has permission to see the source and target resources of a link value.
+     *
+     * @param linkValueIri the IRI of the link value.
+     * @param userProfile  the profile of the user making the request.
+     * @return () if the user has the required permission, or an exception otherwise.
+     */
     private def checkLinkValueSubjectAndObjectPermissions(linkValueIri: IRI, userProfile: UserADM): Future[Unit] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
@@ -1512,16 +1512,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Looks for `knora-base:LinkValue` given its IRI, and returns a [[ValueGetResponseV1]] containing a
-      * [[LinkValueV1]] describing the `LinkValue`, or `None` if no such `LinkValue` is found.
-      *
-      * @param subjectIri   the IRI of the resource that is the source of the link.
-      * @param predicateIri the IRI of the property that links the two resources.
-      * @param objectIri    if provided, the IRI of the target resource.
-      * @param linkValueIri the IRI of the `LinkValue`.
-      * @param userProfile  the profile of the user making the request.
-      * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
-      */
+     * Looks for `knora-base:LinkValue` given its IRI, and returns a [[ValueGetResponseV1]] containing a
+     * [[LinkValueV1]] describing the `LinkValue`, or `None` if no such `LinkValue` is found.
+     *
+     * @param subjectIri   the IRI of the resource that is the source of the link.
+     * @param predicateIri the IRI of the property that links the two resources.
+     * @param objectIri    if provided, the IRI of the target resource.
+     * @param linkValueIri the IRI of the `LinkValue`.
+     * @param userProfile  the profile of the user making the request.
+     * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
+     */
     private def findLinkValueByIri(subjectIri: IRI, predicateIri: IRI, objectIri: Option[IRI], linkValueIri: IRI, userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
@@ -1546,16 +1546,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Looks for `knora-base:LinkValue` describing a link between two resources, and returns
-      * a [[ValueGetResponseV1]] containing a [[LinkValueV1]] describing the `LinkValue`, or `None` if no such
-      * `LinkValue` is found.
-      *
-      * @param subjectIri   the IRI of the resource that is the source of the link.
-      * @param predicateIri the IRI of the property that links the two resources.
-      * @param objectIri    the IRI of the target resource.
-      * @param userProfile  the profile of the user making the request.
-      * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
-      */
+     * Looks for `knora-base:LinkValue` describing a link between two resources, and returns
+     * a [[ValueGetResponseV1]] containing a [[LinkValueV1]] describing the `LinkValue`, or `None` if no such
+     * `LinkValue` is found.
+     *
+     * @param subjectIri   the IRI of the resource that is the source of the link.
+     * @param predicateIri the IRI of the property that links the two resources.
+     * @param objectIri    the IRI of the target resource.
+     * @param userProfile  the profile of the user making the request.
+     * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
+     */
     private def findLinkValueByLinkTriple(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
@@ -1580,15 +1580,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Converts SPARQL query results into a [[ValueQueryResult]]. Checks that the user has permission to view the value object.
-      * If the value is a link value, the caller of this method is responsible for ensuring that the user has permission to
-      * view the source and target resources.
-      *
-      * @param valueIri    the IRI of the value that was queried.
-      * @param rows        the query result rows.
-      * @param userProfile the profile of the user making the request.
-      * @return a [[ValueQueryResult]].
-      */
+     * Converts SPARQL query results into a [[ValueQueryResult]]. Checks that the user has permission to view the value object.
+     * If the value is a link value, the caller of this method is responsible for ensuring that the user has permission to
+     * view the source and target resources.
+     *
+     * @param valueIri    the IRI of the value that was queried.
+     * @param rows        the query result rows.
+     * @param userProfile the profile of the user making the request.
+     * @return a [[ValueQueryResult]].
+     */
     @throws(classOf[ForbiddenException])
     private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserADM): Future[Option[BasicValueQueryResult]] = {
         val userProfileV1 = userProfile.asUserProfileV1
@@ -1671,12 +1671,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Converts SPARQL query results about a `knora-base:LinkValue` into a [[LinkValueQueryResult]].
-      *
-      * @param rows        SPARQL query results about a `knora-base:LinkValue`.
-      * @param userProfile the profile of the user making the request.
-      * @return a [[LinkValueQueryResult]].
-      */
+     * Converts SPARQL query results about a `knora-base:LinkValue` into a [[LinkValueQueryResult]].
+     *
+     * @param rows        SPARQL query results about a `knora-base:LinkValue`.
+     * @param userProfile the profile of the user making the request.
+     * @return a [[LinkValueQueryResult]].
+     */
     private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
@@ -1750,15 +1750,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Verifies that a value was created.
-      *
-      * @param resourceIri     the IRI of the resource in which the value should have been created.
-      * @param propertyIri     the IRI of the property that should point from the resource to the value.
-      * @param unverifiedValue the value that should have been created.
-      * @param userProfile     the profile of the user making the request.
-      * @return a [[CreateValueResponseV1]], or a failed [[Future]] if the value could not be found in
-      *         the resource's version history.
-      */
+     * Verifies that a value was created.
+     *
+     * @param resourceIri     the IRI of the resource in which the value should have been created.
+     * @param propertyIri     the IRI of the property that should point from the resource to the value.
+     * @param unverifiedValue the value that should have been created.
+     * @param userProfile     the profile of the user making the request.
+     * @return a [[CreateValueResponseV1]], or a failed [[Future]] if the value could not be found in
+     *         the resource's version history.
+     */
     private def verifyValueCreation(resourceIri: IRI,
                                     propertyIri: IRI,
                                     unverifiedValue: UnverifiedValueV1,
@@ -1804,15 +1804,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Given the IRI of a value that should have been created, looks for the value in the resource's version history,
-      * and returns details about it. If the value is not found, throws [[UpdateNotPerformedException]].
-      *
-      * @param resourceIri    the IRI of the resource that may have the value.
-      * @param propertyIri    the IRI of the property that may have have the value.
-      * @param searchValueIri the IRI of the value.
-      * @param userProfile    the profile of the user making the request.
-      * @return a [[ValueQueryResult]].
-      */
+     * Given the IRI of a value that should have been created, looks for the value in the resource's version history,
+     * and returns details about it. If the value is not found, throws [[UpdateNotPerformedException]].
+     *
+     * @param resourceIri    the IRI of the resource that may have the value.
+     * @param propertyIri    the IRI of the property that may have have the value.
+     * @param searchValueIri the IRI of the value.
+     * @param userProfile    the profile of the user making the request.
+     * @return a [[ValueQueryResult]].
+     */
     @throws(classOf[UpdateNotPerformedException])
     @throws(classOf[ForbiddenException])
     private def verifyOrdinaryValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserADM): Future[ValueQueryResult] = {
@@ -1840,16 +1840,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Given information about a link that should have been created, verifies that the link exists, and returns
-      * details about it. If the link has not been created, throws [[UpdateNotPerformedException]].
-      *
-      * @param linkSourceIri   the IRI of the resource that should be the source of the link.
-      * @param linkPropertyIri the IRI of the link property.
-      * @param linkTargetIri   the IRI of the resource that should be the target of the link.
-      * @param linkValueIri    the IRI of the `knora-base:LinkValue` that should have been created.
-      * @param userProfile     the profile of the user making the request.
-      * @return a [[LinkValueQueryResult]].
-      */
+     * Given information about a link that should have been created, verifies that the link exists, and returns
+     * details about it. If the link has not been created, throws [[UpdateNotPerformedException]].
+     *
+     * @param linkSourceIri   the IRI of the resource that should be the source of the link.
+     * @param linkPropertyIri the IRI of the link property.
+     * @param linkTargetIri   the IRI of the resource that should be the target of the link.
+     * @param linkValueIri    the IRI of the `knora-base:LinkValue` that should have been created.
+     * @param userProfile     the profile of the user making the request.
+     * @return a [[LinkValueQueryResult]].
+     */
     @throws(classOf[UpdateNotPerformedException])
     @throws(classOf[ForbiddenException])
     private def verifyLinkUpdate(linkSourceIri: IRI, linkPropertyIri: IRI, linkTargetIri: IRI, linkValueIri: IRI, userProfile: UserADM): Future[LinkValueQueryResult] = {
@@ -1877,31 +1877,31 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Finds the object of the specified predicate in SPARQL query results describing a value.
-      *
-      * @param predicateIri the IRI of the predicate.
-      * @param rows         the SPARQL query results that describe the value.
-      * @return the predicate's object.
-      */
+     * Finds the object of the specified predicate in SPARQL query results describing a value.
+     *
+     * @param predicateIri the IRI of the predicate.
+     * @param rows         the SPARQL query results that describe the value.
+     * @return the predicate's object.
+     */
     private def getValuePredicateObject(predicateIri: IRI, rows: Seq[VariableResultsRow]): Option[IRI] = {
         rows.find(_.rowMap("objPred") == predicateIri).map(_.rowMap("objObj"))
     }
 
     /**
-      * The result of calling the `findResourceWithValue` method.
-      *
-      * @param resourceIri the IRI of the resource containing the value.
-      * @param projectIri  the IRI of the resource's project.
-      * @param propertyIri the IRI of the property pointing to the value.
-      */
+     * The result of calling the `findResourceWithValue` method.
+     *
+     * @param resourceIri the IRI of the resource containing the value.
+     * @param projectIri  the IRI of the resource's project.
+     * @param propertyIri the IRI of the property pointing to the value.
+     */
     case class FindResourceWithValueResult(resourceIri: IRI, projectIri: IRI, propertyIri: IRI)
 
     /**
-      * Given a value IRI, finds the value's resource and property.
-      *
-      * @param valueIri the IRI of the value.
-      * @return a [[FindResourceWithValueResult]].
-      */
+     * Given a value IRI, finds the value's resource and property.
+     *
+     * @param valueIri the IRI of the value.
+     * @return a [[FindResourceWithValueResult]].
+     */
     private def findResourceWithValue(valueIri: IRI): Future[FindResourceWithValueResult] = {
         for {
             findResourceSparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findResourceWithValue(
@@ -1927,19 +1927,19 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
-      * pre-update checks have already been done.
-      *
-      * @param dataNamedGraph   the named graph in which the value is to be created.
-      * @param projectIri       the IRI of the project in which to create the value.
-      * @param resourceIri      the IRI of the resource in which to create the value.
-      * @param propertyIri      the IRI of the property that will point from the resource to the value.
-      * @param value            the value to create.
-      * @param valueCreator     the IRI of the new value's owner.
-      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-      * @param userProfile      the profile of the user making the request.
-      * @return an [[UnverifiedValueV1]].
-      */
+     * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
+     * pre-update checks have already been done.
+     *
+     * @param dataNamedGraph   the named graph in which the value is to be created.
+     * @param projectIri       the IRI of the project in which to create the value.
+     * @param resourceIri      the IRI of the resource in which to create the value.
+     * @param propertyIri      the IRI of the property that will point from the resource to the value.
+     * @param value            the value to create.
+     * @param valueCreator     the IRI of the new value's owner.
+     * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+     * @param userProfile      the profile of the user making the request.
+     * @return an [[UnverifiedValueV1]].
+     */
     private def createValueV1AfterChecks(dataNamedGraph: IRI,
                                          projectIri: IRI,
                                          resourceIri: IRI,
@@ -1977,17 +1977,17 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
-      *
-      * @param dataNamedGraph   the named graph in which the link is to be created.
-      * @param resourceIri      the resource in which the link is to be created.
-      * @param propertyIri      the link property.
-      * @param linkUpdateV1     a [[LinkUpdateV1]] specifying the target resource.
-      * @param valueCreator     the IRI of the new link value's owner.
-      * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-      * @param userProfile      the profile of the user making the request.
-      * @return an [[UnverifiedValueV1]].
-      */
+     * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
+     *
+     * @param dataNamedGraph   the named graph in which the link is to be created.
+     * @param resourceIri      the resource in which the link is to be created.
+     * @param propertyIri      the link property.
+     * @param linkUpdateV1     a [[LinkUpdateV1]] specifying the target resource.
+     * @param valueCreator     the IRI of the new link value's owner.
+     * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param userProfile      the profile of the user making the request.
+     * @return an [[UnverifiedValueV1]].
+     */
     private def createLinkValueV1AfterChecks(dataNamedGraph: IRI,
                                              resourceIri: IRI,
                                              propertyIri: IRI,
@@ -2034,16 +2034,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
-      *
-      * @param resourceIri      the resource in which the value is to be created.
-      * @param propertyIri      the property that should point to the value.
-      * @param value            an [[UpdateValueV1]] describing the value.
-      * @param valueCreator     the IRI of the new value's owner.
-      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-      * @param userProfile      the profile of the user making the request.
-      * @return an [[UnverifiedValueV1]].
-      */
+     * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
+     *
+     * @param resourceIri      the resource in which the value is to be created.
+     * @param propertyIri      the property that should point to the value.
+     * @param value            an [[UpdateValueV1]] describing the value.
+     * @param valueCreator     the IRI of the new value's owner.
+     * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+     * @param userProfile      the profile of the user making the request.
+     * @return an [[UnverifiedValueV1]].
+     */
     private def createOrdinaryValueV1AfterChecks(dataNamedGraph: IRI,
                                                  resourceIri: IRI,
                                                  propertyIri: IRI,
@@ -2114,20 +2114,20 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Changes a link, assuming that pre-update checks have already been done.
-      *
-      * @param dataNamedGraph     the IRI of the named graph containing the link.
-      * @param projectIri         the IRI of the project containing the link.
-      * @param resourceIri        the IRI of the resource containing the link.
-      * @param propertyIri        the IRI of the link property.
-      * @param currentLinkValueV1 a [[LinkValueV1]] representing the `knora-base:LinkValue` for the existing link.
-      * @param linkUpdateV1       a [[LinkUpdateV1]] indicating the new target resource.
-      * @param comment            an optional comment on the new link value.
-      * @param valueCreator       the IRI of the new link value's owner.
-      * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-      * @param userProfile        the profile of the user making the request.
-      * @return a [[ChangeValueResponseV1]].
-      */
+     * Changes a link, assuming that pre-update checks have already been done.
+     *
+     * @param dataNamedGraph     the IRI of the named graph containing the link.
+     * @param projectIri         the IRI of the project containing the link.
+     * @param resourceIri        the IRI of the resource containing the link.
+     * @param propertyIri        the IRI of the link property.
+     * @param currentLinkValueV1 a [[LinkValueV1]] representing the `knora-base:LinkValue` for the existing link.
+     * @param linkUpdateV1       a [[LinkUpdateV1]] indicating the new target resource.
+     * @param comment            an optional comment on the new link value.
+     * @param valueCreator       the IRI of the new link value's owner.
+     * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param userProfile        the profile of the user making the request.
+     * @return a [[ChangeValueResponseV1]].
+     */
     private def changeLinkValueV1AfterChecks(dataNamedGraph: IRI,
                                              projectIri: IRI,
                                              resourceIri: IRI,
@@ -2220,21 +2220,21 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
-      *
-      * @param projectIri       the IRI of the project containing the value.
-      * @param resourceIri      the IRI of the resource containing the value.
-      * @param propertyIri      the IRI of the property that points to the value.
-      * @param currentValueIri  the IRI of the existing value.
-      * @param currentValueV1   an [[ApiValueV1]] representing the existing value.
-      * @param newValueIri      the IRI of the new value.
-      * @param updateValueV1    an [[UpdateValueV1]] representing the new value.
-      * @param comment          an optional comment on the new value.
-      * @param valueCreator     the IRI of the new value's owner.
-      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-      * @param userProfile      the profile of the user making the request.
-      * @return a [[ChangeValueResponseV1]].
-      */
+     * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
+     *
+     * @param projectIri       the IRI of the project containing the value.
+     * @param resourceIri      the IRI of the resource containing the value.
+     * @param propertyIri      the IRI of the property that points to the value.
+     * @param currentValueIri  the IRI of the existing value.
+     * @param currentValueV1   an [[ApiValueV1]] representing the existing value.
+     * @param newValueIri      the IRI of the new value.
+     * @param updateValueV1    an [[UpdateValueV1]] representing the new value.
+     * @param comment          an optional comment on the new value.
+     * @param valueCreator     the IRI of the new value's owner.
+     * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+     * @param userProfile      the profile of the user making the request.
+     * @return a [[ChangeValueResponseV1]].
+     */
     private def changeOrdinaryValueV1AfterChecks(projectIri: IRI,
                                                  resourceIri: IRI,
                                                  propertyIri: IRI,
@@ -2366,27 +2366,27 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to create a `LinkValue` or to
-      * increment the reference count of an existing `LinkValue`. This happens in two cases:
-      *
-      *  - When the user creates a link. In this case, neither the link nor the `LinkValue` exist yet. The
-      * [[SparqlTemplateLinkUpdate]] will specify that the link should be created, and that the `LinkValue` should be
-      * created with a reference count of 1.
-      *  - When a text value is updated so that its standoff markup refers to a resource that it did not previously
-      * refer to. Here there are two possibilities:
-      *    - If there is currently a `knora-base:hasStandoffLinkTo` link between the source and target resources, with a
-      * corresponding `LinkValue`, a new version of the `LinkValue` will be made, with an incremented reference count.
-      *    - If that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
-      * a reference count of 1.
-      *
-      * @param sourceResourceIri the IRI of the source resource.
-      * @param linkPropertyIri   the IRI of the property that links the source resource to the target resource.
-      * @param targetResourceIri the IRI of the target resource.
-      * @param valueCreator      the IRI of the new link value's owner.
-      * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-      * @param userProfile       the profile of the user making the request.
-      * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
-      */
+     * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to create a `LinkValue` or to
+     * increment the reference count of an existing `LinkValue`. This happens in two cases:
+     *
+     *  - When the user creates a link. In this case, neither the link nor the `LinkValue` exist yet. The
+     * [[SparqlTemplateLinkUpdate]] will specify that the link should be created, and that the `LinkValue` should be
+     * created with a reference count of 1.
+     *  - When a text value is updated so that its standoff markup refers to a resource that it did not previously
+     * refer to. Here there are two possibilities:
+     *    - If there is currently a `knora-base:hasStandoffLinkTo` link between the source and target resources, with a
+     * corresponding `LinkValue`, a new version of the `LinkValue` will be made, with an incremented reference count.
+     *    - If that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
+     * a reference count of 1.
+     *
+     * @param sourceResourceIri the IRI of the source resource.
+     * @param linkPropertyIri   the IRI of the property that links the source resource to the target resource.
+     * @param targetResourceIri the IRI of the target resource.
+     * @param valueCreator      the IRI of the new link value's owner.
+     * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param userProfile       the profile of the user making the request.
+     * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
+     */
     private def incrementLinkValue(sourceResourceIri: IRI,
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
@@ -2453,25 +2453,25 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to decrement the reference count
-      * of a `LinkValue`. This happens in two cases:
-      *
-      *  - When the user deletes (or changes) a user-created link. In this case, the current reference count will be 1.
-      * The existing link will be removed. A new version of the `LinkValue` be made with a reference count of 0, and
-      * will be marked as deleted.
-      *  - When a resource reference is removed from standoff markup on a text value, so that the text value no longer
-      * contains any references to that target resource. In this case, a new version of the `LinkValue` will be
-      * made, with a decremented reference count. If the new reference count is 0, the link will be removed and the
-      * `LinkValue` will be marked as deleted.
-      *
-      * @param sourceResourceIri the IRI of the source resource.
-      * @param linkPropertyIri   the IRI of the property that links the source resource to the target resource.
-      * @param targetResourceIri the IRI of the target resource.
-      * @param valueCreator      the IRI of the new link value's owner.
-      * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-      * @param userProfile       the profile of the user making the request.
-      * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
-      */
+     * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to decrement the reference count
+     * of a `LinkValue`. This happens in two cases:
+     *
+     *  - When the user deletes (or changes) a user-created link. In this case, the current reference count will be 1.
+     * The existing link will be removed. A new version of the `LinkValue` be made with a reference count of 0, and
+     * will be marked as deleted.
+     *  - When a resource reference is removed from standoff markup on a text value, so that the text value no longer
+     * contains any references to that target resource. In this case, a new version of the `LinkValue` will be
+     * made, with a decremented reference count. If the new reference count is 0, the link will be removed and the
+     * `LinkValue` will be marked as deleted.
+     *
+     * @param sourceResourceIri the IRI of the source resource.
+     * @param linkPropertyIri   the IRI of the property that links the source resource to the target resource.
+     * @param targetResourceIri the IRI of the target resource.
+     * @param valueCreator      the IRI of the new link value's owner.
+     * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param userProfile       the profile of the user making the request.
+     * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
+     */
     private def decrementLinkValue(sourceResourceIri: IRI,
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
@@ -2526,11 +2526,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffTagV2]] objects match
-      * the list of resource IRIs in its `resource_reference` member variable.
-      *
-      * @param textValue the [[TextValueV1]] to be checked.
-      */
+     * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffTagV2]] objects match
+     * the list of resource IRIs in its `resource_reference` member variable.
+     *
+     * @param textValue the [[TextValueV1]] to be checked.
+     */
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueWithStandoffV1): Unit = {
 
@@ -2555,13 +2555,13 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Given a set of IRIs of standoff resource reference targets, checks that each one actually refers to a `knora-base:Resource`.
-      *
-      * @param targetIris  the IRIs to check.
-      * @param userProfile the profile of the user making the request.
-      * @return a `Future[Unit]` on success, otherwise a `Future` containing an exception ([[NotFoundException]] if the target resource is not found,
-      *         or [[BadRequestException]] if the target IRI isn't a `knora-base:Resource`).
-      */
+     * Given a set of IRIs of standoff resource reference targets, checks that each one actually refers to a `knora-base:Resource`.
+     *
+     * @param targetIris  the IRIs to check.
+     * @param userProfile the profile of the user making the request.
+     * @return a `Future[Unit]` on success, otherwise a `Future` containing an exception ([[NotFoundException]] if the target resource is not found,
+     *         or [[BadRequestException]] if the target IRI isn't a `knora-base:Resource`).
+     */
     private def checkStandoffResourceReferenceTargets(targetIris: Set[IRI], userProfile: UserADM): Future[Unit] = {
         if (targetIris.isEmpty) {
             Future(())
@@ -2586,15 +2586,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
-      * the property that is supposed to point to it.
-      *
-      * @param propertyIri                   the IRI of the property.
-      * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-      * @param updateValueV1                 the value to be updated.
-      * @param userProfile                   the profile of the user making the request.
-      * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
-      */
+     * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
+     * the property that is supposed to point to it.
+     *
+     * @param propertyIri                   the IRI of the property.
+     * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
+     * @param updateValueV1                 the value to be updated.
+     * @param userProfile                   the profile of the user making the request.
+     * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
+     */
     private def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserADM): Future[Unit] = {
         for {
             result <- updateValueV1 match {
@@ -2625,8 +2625,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
-      */
+     * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
+     */
     lazy val standoffLinkValuePermissions: String = {
         val permissions: Set[PermissionADM] = Set(
             PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),

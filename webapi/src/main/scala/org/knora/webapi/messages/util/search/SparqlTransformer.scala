@@ -28,6 +28,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
  * Methods and classes for Sparql transformation.
  */
 object SparqlTransformer {
+
     /**
      * Transforms a non-triplestore-specific SELECT query for GraphDB.
      */
@@ -211,7 +212,7 @@ object SparqlTransformer {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         statementPattern.pred match {
-            case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor  =>
+            case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
                 Seq(
                     statementPattern.copy(
                         pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))

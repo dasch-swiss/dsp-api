@@ -203,8 +203,8 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
  * A virtual query pattern representing a Lucene full-text index search. Will be replaced by a triplestore-specific
  * [[StatementPattern]] during Gravsearch processing.
  *
- * @param subj a variable representing the subject to be found.
- * @param obj  a variable representing the literal that is indexed.
+ * @param subj        a variable representing the subject to be found.
+ * @param obj         a variable representing the literal that is indexed.
  * @param queryString the Lucene query string to be matched.
  */
 case class LuceneQueryPattern(subj: QueryVariable, obj: QueryVariable, queryString: LuceneQueryString) extends QueryPattern {
