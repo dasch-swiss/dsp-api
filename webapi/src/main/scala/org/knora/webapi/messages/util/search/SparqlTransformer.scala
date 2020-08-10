@@ -41,9 +41,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
-
-        override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -62,12 +60,10 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             val luceneFirst = moveLuceneToBeginning(patterns)
             moveIsDeletedToEnd(luceneFirst)
         }
-
-        override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)
@@ -85,9 +81,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
-
-        override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -106,12 +100,10 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             val luceneFirst: Seq[QueryPattern] = moveLuceneToBeginning(patterns)
             moveIsDeletedToEnd(luceneFirst)
         }
-
-        override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)

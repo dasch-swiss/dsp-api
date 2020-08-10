@@ -380,7 +380,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
 
-    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
-
-    override def optimiseEntityTypeStatements(patterns: Seq[QueryPattern]): Seq[QueryPattern] = removeEntitiesInferredFromProperty(patterns)
+    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val noTypePatterns = removeEntitiesInferredFromProperty(patterns)
+        moveLuceneToBeginning(noTypePatterns)
+    }
 }
