@@ -123,20 +123,26 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                         maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID
 
                         // Get the value's creation date.
+                        // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
                         maybeCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
+                            key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                            validationFun = stringFormatter.xsdDateTimeStampToInstant
+                        ).orElse(jsonLDObject.maybeDatatypeValueInObject(
                             key = OntologyConstants.KnoraApiV2Complex.CreationDate,
                             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                             validationFun = stringFormatter.xsdDateTimeStampToInstant
-                        )
+                        ))
+
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
                         resourceClassIri = resourceClassIri,
                         propertyIri = propertyIri,
                         valueContent = valueContent,
-                        customValueIri = maybeCustomValueIri,
-                        customValueUUID = maybeCustomUUID,
-                        customValueCreationDate = maybeCreationDate,
+                        valueIri = maybeCustomValueIri,
+                        valueUUID = maybeCustomUUID,
+                        valueCreationDate = maybeCreationDate,
                         permissions = maybePermissions
                     )
             }
@@ -244,6 +250,13 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     val valueIri: IRI = jsonLDObject.requireIDAsKnoraDataIri.toString
 
+                    // Get the custom value creation date, if provided.
+                    val maybeValueCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
+                        key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                        validationFun = stringFormatter.xsdDateTimeStampToInstant
+                    )
+
                     // Does the value object just contain knora-api:hasPermissions?
 
                     val valuePredicatesMinusIDAndType: Set[IRI] = jsonLDObject.value.keySet - JsonLDConstants.ID - JsonLDConstants.TYPE
@@ -261,7 +274,8 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                 propertyIri = propertyIri,
                                 valueIri = valueIri,
                                 valueType = valueType,
-                                permissions = permissions
+                                permissions = permissions,
+                                valueCreationDate = maybeValueCreationDate
                             )
                         )
                     } else {
@@ -284,9 +298,9 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                             propertyIri = propertyIri,
                             valueIri = valueIri,
                             valueContent = valueContent,
-                            permissions = maybePermissions
+                            permissions = maybePermissions,
+                            valueCreationDate = maybeValueCreationDate
                         )
-
                     }
             }
         } yield UpdateValueRequestV2(
@@ -342,6 +356,7 @@ case class UpdateValueResponseV2(valueIri: IRI,
  * @param valueIri         the IRI of the value to be marked as deleted.
  * @param valueTypeIri     the IRI of the value class.
  * @param deleteComment    an optional comment explaining why the value is being marked as deleted.
+ * @param deleteDate       an optional timestamp indicating when the value was deleted.
  * @param requestingUser   the user making the request.
  * @param apiRequestID     the API request ID.
  */
@@ -351,6 +366,7 @@ case class DeleteValueRequestV2(resourceIri: IRI,
                                 valueIri: IRI,
                                 valueTypeIri: SmartIri,
                                 deleteComment: Option[String] = None,
+                                deleteDate: Option[Instant] = None,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
@@ -413,6 +429,12 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
 
                 val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
+                val deleteDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 DeleteValueRequestV2(
                     resourceIri = resourceIri.toString,
                     resourceClassIri = resourceClassIri,
@@ -420,6 +442,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
                     valueIri = valueIri.toString,
                     valueTypeIri = valueTypeIri,
                     deleteComment = deleteComment,
+                    deleteDate = deleteDate,
                     requestingUser = requestingUser,
                     apiRequestID = apiRequestID
                 )
@@ -785,22 +808,22 @@ case class ReadOtherValueV2(valueIri: IRI,
 /**
  * Represents a Knora value to be created in an existing resource.
  *
- * @param resourceIri              the resource the new value should be attached to.
- * @param resourceClassIri         the resource class that the client believes the resource belongs to.
- * @param propertyIri              the property of the new value. If the client wants to create a link, this must be a link value property.
- * @param valueContent             the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
- * @param customValueIri           the optional custom IRI supplied for the value.
- * @param customValueUUID          the optional custom UUID supplied for the value.
- * @param customValueCreationDate  the optional custom creation date supplied for the value.
- * @param permissions              the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ * @param resourceIri       the resource the new value should be attached to.
+ * @param resourceClassIri  the resource class that the client believes the resource belongs to.
+ * @param propertyIri       the property of the new value. If the client wants to create a link, this must be a link value property.
+ * @param valueContent      the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param valueIri          the optional custom IRI supplied for the value.
+ * @param valueUUID         the optional custom UUID supplied for the value.
+ * @param valueCreationDate the optional custom creation date supplied for the value.
+ * @param permissions       the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
                          resourceClassIri: SmartIri,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
-                         customValueIri: Option[SmartIri] = None,
-                         customValueUUID: Option[UUID] = None,
-                         customValueCreationDate: Option[Instant] = None,
+                         valueIri: Option[SmartIri] = None,
+                         valueUUID: Option[UUID] = None,
+                         valueCreationDate: Option[Instant] = None,
                          permissions: Option[String] = None) extends IOValueV2
 
 
@@ -827,43 +850,52 @@ trait UpdateValueV2 {
      * The value IRI.
      */
     val valueIri: IRI
+
+    /**
+     * A custom value creation date.
+     */
+    val valueCreationDate: Option[Instant]
 }
 
 /**
  * A new version of a value of a Knora property to be created.
  *
- * @param resourceIri      the resource that the current value version is attached to.
- * @param resourceClassIri the resource class that the client believes the resource belongs to.
- * @param propertyIri      the property that the client believes points to the value. If the value is a link value,
- *                         this must be a link value property.
- * @param valueIri         the IRI of the value to be updated.
- * @param valueContent     the content of the new version of the value.
- * @param permissions      the permissions to be attached to the new value version.
+ * @param resourceIri       the resource that the current value version is attached to.
+ * @param resourceClassIri  the resource class that the client believes the resource belongs to.
+ * @param propertyIri       the property that the client believes points to the value. If the value is a link value,
+ *                          this must be a link value property.
+ * @param valueIri          the IRI of the value to be updated.
+ * @param valueContent      the content of the new version of the value.
+ * @param permissions       the permissions to be attached to the new value version.
+ * @param valueCreationDate the creation date to be attached to the new value version.
  */
 case class UpdateValueContentV2(resourceIri: IRI,
                                 resourceClassIri: SmartIri,
                                 propertyIri: SmartIri,
                                 valueIri: IRI,
                                 valueContent: ValueContentV2,
-                                permissions: Option[String] = None) extends IOValueV2 with UpdateValueV2
+                                permissions: Option[String] = None,
+                                valueCreationDate: Option[Instant] = None) extends IOValueV2 with UpdateValueV2
 
 /**
  * New permissions for a value.
  *
- * @param resourceIri      the resource that the current value version is attached to.
- * @param resourceClassIri the resource class that the client believes the resource belongs to.
- * @param propertyIri      the property that the client believes points to the value. If the value is a link value,
- *                         this must be a link value property.
- * @param valueIri         the IRI of the value to be updated.
- * @param valueType        the IRI of the value type.
- * @param permissions      the permissions to be attached to the new value version.
+ * @param resourceIri       the resource that the current value version is attached to.
+ * @param resourceClassIri  the resource class that the client believes the resource belongs to.
+ * @param propertyIri       the property that the client believes points to the value. If the value is a link value,
+ *                          this must be a link value property.
+ * @param valueIri          the IRI of the value to be updated.
+ * @param valueType         the IRI of the value type.
+ * @param permissions       the permissions to be attached to the new value version.
+ * @param valueCreationDate the creation date to be attached to the new value version.
  */
 case class UpdateValuePermissionsV2(resourceIri: IRI,
                                     resourceClassIri: SmartIri,
                                     propertyIri: SmartIri,
                                     valueIri: IRI,
                                     valueType: SmartIri,
-                                    permissions: String) extends UpdateValueV2
+                                    permissions: String,
+                                    valueCreationDate: Option[Instant] = None) extends UpdateValueV2
 
 /**
  * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
