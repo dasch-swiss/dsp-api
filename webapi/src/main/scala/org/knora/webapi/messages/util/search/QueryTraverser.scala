@@ -50,7 +50,9 @@ trait WhereVisitor[Acc] {
  */
 trait WhereTransformer {
     /**
-     * Optimises the entity type statments and order of query patterns. Does not recurse.
+     * Optimises the entity type statments and order of query patterns. Does not recurse. It
+     * has to be called before transformStatementInWhere, because optimisation might remove statements that
+     * would otherwise be expanded by transformStatementInWhere
      *
      * @param patterns the query patterns to be optimised.
      * @return the optimised query patterns.
@@ -185,6 +187,8 @@ object QueryTraverser {
                                inputOrderBy: Seq[OrderCriterion],
                                whereTransformer: WhereTransformer): Seq[QueryPattern] = {
 
+        // Optimization has to be called before WhereTransformer.transformStatementInWhere, because optimisation might
+        // remove statements that would otherwise be expanded by transformStatementInWhere
         val optimisedPatterns = whereTransformer.optimiseQueryPatterns(patterns)
 
          optimisedPatterns.flatMap {
