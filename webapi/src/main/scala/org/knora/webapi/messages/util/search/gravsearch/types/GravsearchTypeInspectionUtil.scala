@@ -106,7 +106,7 @@ object GravsearchTypeInspectionUtil {
     /**
      * The IRIs of non-property types that Gravsearch type inspectors return.
      */
-    val GravsearchTypeIris: Set[IRI] = GravsearchValueTypeIris ++ Set(
+    val GravsearchAnnotationTypeIris: Set[IRI] = GravsearchValueTypeIris ++ Set(
         OntologyConstants.KnoraApiV2Simple.Resource,
         OntologyConstants.KnoraApiV2Complex.Resource,
         OntologyConstants.KnoraApiV2Complex.StandoffTag,
@@ -116,7 +116,7 @@ object GravsearchTypeInspectionUtil {
     /**
      * IRIs that do not need to be annotated to specify their types.
      */
-    val ApiV2NonTypeableIris: Set[IRI] = GravsearchTypeIris ++ TypeAnnotationProperties.allTypeAnnotationIris
+    val ApiV2NonTypeableIris: Set[IRI] = GravsearchAnnotationTypeIris ++ TypeAnnotationProperties.allTypeAnnotationIris
 
     /**
      * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].
@@ -205,7 +205,7 @@ object GravsearchTypeInspectionUtil {
          */
         def isValidTypeInAnnotation(entity: Entity): Boolean = {
             entity match {
-                case IriRef(objIri, _) if GravsearchTypeIris.contains(objIri.toString) => true
+                case IriRef(objIri, _) if GravsearchAnnotationTypeIris.contains(objIri.toString) => true
                 case _ => false
             }
         }

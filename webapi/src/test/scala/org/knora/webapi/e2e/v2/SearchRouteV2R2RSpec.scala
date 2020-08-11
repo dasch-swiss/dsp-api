@@ -4186,7 +4186,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-        // a correct type cannot be inferred here because in the ontology Representation is not subclass of book or vice versa
+
         "get incoming links pointing to an incunbaula:book, excluding isPartOf (with type inference)" in {
             var gravsearchQuery =
                 """
@@ -6324,7 +6324,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-        // Same here.
+
         "get incoming links pointing to an incunbaula:book, excluding isPartOf (submitting the complex schema)" in {
             var gravsearchQuery =
                 """

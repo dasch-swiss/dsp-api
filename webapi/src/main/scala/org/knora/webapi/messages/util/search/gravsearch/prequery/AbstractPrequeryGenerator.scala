@@ -279,12 +279,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         }
 
-        val maybeSubjectType: (Option[SmartIri], Boolean) = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
+        val (maybeSubjectTypeIri: Option[SmartIri], subjectIsResource: Boolean) = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
             case Some(NonPropertyTypeInfo(subjectTypeIri, isResourceType, _)) => (Some(subjectTypeIri), isResourceType)
             case _ => (None, false)
         }
-        val maybeSubjectTypeIri: Option[SmartIri] = maybeSubjectType._1
-        val subjectIsResource: Boolean = maybeSubjectType._2
 
         // Is the subject of the statement a resource?
         if (subjectIsResource) {
@@ -1513,7 +1511,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
         typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-            case Some(NonPropertyTypeInfo(typeIri, _, _)) if typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
+            case Some(nonPropertyTypeInfo : NonPropertyTypeInfo) if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
             case _ => throw GravsearchException(s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
         }
 
