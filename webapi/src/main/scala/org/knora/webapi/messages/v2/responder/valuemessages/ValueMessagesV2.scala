@@ -356,7 +356,8 @@ case class UpdateValueResponseV2(valueIri: IRI,
  * @param valueIri         the IRI of the value to be marked as deleted.
  * @param valueTypeIri     the IRI of the value class.
  * @param deleteComment    an optional comment explaining why the value is being marked as deleted.
- * @param deleteDate       an optional timestamp indicating when the value was deleted.
+ * @param deleteDate       an optional timestamp indicating when the value was deleted. If not supplied,
+ *                         the current time will be used.
  * @param requestingUser   the user making the request.
  * @param apiRequestID     the API request ID.
  */
@@ -814,7 +815,8 @@ case class ReadOtherValueV2(valueIri: IRI,
  * @param valueContent      the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
  * @param valueIri          the optional custom IRI supplied for the value.
  * @param valueUUID         the optional custom UUID supplied for the value.
- * @param valueCreationDate the optional custom creation date supplied for the value.
+ * @param valueCreationDate the optional custom creation date supplied for the value. If not supplied,
+ *                          the current time will be used.
  * @param permissions       the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(resourceIri: IRI,
@@ -867,7 +869,8 @@ trait UpdateValueV2 {
  * @param valueIri          the IRI of the value to be updated.
  * @param valueContent      the content of the new version of the value.
  * @param permissions       the permissions to be attached to the new value version.
- * @param valueCreationDate the creation date to be attached to the new value version.
+ * @param valueCreationDate an optional custom creation date to be attached to the new value version. If not supplied,
+ *                          the current time will be used.
  */
 case class UpdateValueContentV2(resourceIri: IRI,
                                 resourceClassIri: SmartIri,
@@ -887,7 +890,8 @@ case class UpdateValueContentV2(resourceIri: IRI,
  * @param valueIri          the IRI of the value to be updated.
  * @param valueType         the IRI of the value type.
  * @param permissions       the permissions to be attached to the new value version.
- * @param valueCreationDate the creation date to be attached to the new value version.
+ * @param valueCreationDate an optional custom creation date to be attached to the new value version. If not supplied,
+ *                          the current time will be used.
  */
 case class UpdateValuePermissionsV2(resourceIri: IRI,
                                     resourceClassIri: SmartIri,

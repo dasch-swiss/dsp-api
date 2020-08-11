@@ -751,12 +751,15 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
  * @param resourceIri               the IRI of the resource.
  * @param resourceClassIri          the IRI of the resource class.
  * @param maybeDeleteComment        a comment explaining why the resource is being marked as deleted.
+ * @param maybeDeleteDate           a timestamp indicating when the resource was marked as deleted. If not supplied,
+ *                                  the current time will be used.
  * @param maybeLastModificationDate the resource's last modification date, if any.
  * @param erase                     if `true`, the resource will be erased from the triplestore, otherwise it will be marked as deleted.
  */
 case class DeleteOrEraseResourceRequestV2(resourceIri: IRI,
                                           resourceClassIri: SmartIri,
                                           maybeDeleteComment: Option[String] = None,
+                                          maybeDeleteDate: Option[Instant] = None,
                                           maybeLastModificationDate: Option[Instant] = None,
                                           erase: Boolean = false,
                                           requestingUser: UserADM,
@@ -812,10 +815,17 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 
         val maybeDeleteComment: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
+        val maybeDeleteDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
         DeleteOrEraseResourceRequestV2(
             resourceIri = resourceIri.toString,
             resourceClassIri = resourceClassIri,
             maybeDeleteComment = maybeDeleteComment,
+            maybeDeleteDate = maybeDeleteDate,
             maybeLastModificationDate = maybeLastModificationDate,
             requestingUser = requestingUser,
             apiRequestID = apiRequestID
