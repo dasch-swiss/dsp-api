@@ -695,7 +695,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             )
 
             //sanitize the inconsistent resource types inferred for an entity
-            sanitizedResults: IntermediateTypeInspectionResult = sanitizeInconsistentResourceTypes(refinedIntermediateResult, usageIndex.querySchema)
+            sanitizedResults: IntermediateTypeInspectionResult = sanitizeInconsistentResourceTypes(
+                refinedIntermediateResult,
+                usageIndex.querySchema,
+                entityInfo = allEntityInfo
+            )
 
             // Pass the intermediate result to the next type inspector in the pipeline.
             lastResult: IntermediateTypeInspectionResult <- runNextInspector(
@@ -830,6 +834,19 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         )
     }
 
+    /**
+     * Gets the iri of the type information.
+     *
+     * @param typeInfo    a GravsearchEntityTypeInfo.
+     * @return the IRI of the typeInfo as a [[SmartIri]].
+     **/
+    def iriOfGravsearchTypeInfo(typeInfo: GravsearchEntityTypeInfo): SmartIri = {
+        typeInfo match {
+            case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectTypeIri
+            case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.typeIri
+            case _ => throw GravsearchException(s"There is an invalid type")
+        }
+    }
 
     /**
      * Sanitize determined results, if there were multiple resource types, replace with rdfs:type
@@ -837,7 +854,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
      * @param lastResults this type inspection results.
      * @param querySchema the ontology schema that the query is written in.
      **/
-    def sanitizeInconsistentResourceTypes(lastResults: IntermediateTypeInspectionResult, querySchema: ApiV2Schema): IntermediateTypeInspectionResult = {
+    def sanitizeInconsistentResourceTypes(lastResults: IntermediateTypeInspectionResult, querySchema: ApiV2Schema, entityInfo: EntityInfoGetResponseV2): IntermediateTypeInspectionResult = {
 
         //This method gets the isResourceType flag of GravsearchEntityTypeInfo
         def getIsResourceFlags(typeInfo: GravsearchEntityTypeInfo): Boolean = {
@@ -897,15 +914,6 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         classDef.allBaseClasses.contains(currTypeIri)
                     case _ => false
                 })
-        }
-
-        // This method gets the iri of the type
-        def iriOfGravsearchTypeInfo(typeInfo: GravsearchEntityTypeInfo): SmartIri = {
-            typeInfo match {
-                case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectTypeIri
-                case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.typeIri
-                case _ => throw GravsearchException(s"There is an invalid type")
-            }
         }
 
         // iterate over all typeableEntities, refine determind types for it by keeping only the specific types.

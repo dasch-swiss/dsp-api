@@ -12,6 +12,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeIns
 import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
@@ -1319,7 +1320,213 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         useDistinct = true
     )
 
+    val queryWithOptional: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?document knora-api:isMainResource true .
+          |} WHERE {
+          |    ?document rdf:type beol:writtenSource .
+          |
+          |    OPTIONAL {
+          |    ?document beol:hasRecipient ?recipient .
+          |
+          |    ?recipient beol:hasFamilyName ?familyName .
+          |
+          |    FILTER knora-api:matchText(?familyName, "Bernoulli")
+          |}
+          |}
+                """.stripMargin
+
+    val TransformedQueryWithOptional: SelectQuery = SelectQuery(
+        variables = List(QueryVariable(variableName = "document")),
+        offset = 0,
+        groupBy = Vector(QueryVariable(variableName = "document")),
+        orderBy = Vector(OrderCriterion(
+            queryVariable = QueryVariable(variableName = "document"),
+            isAscending = true
+        )),
+        whereClause = WhereClause(
+            patterns = ArrayBuffer(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "document"),
+                    pred = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = XsdLiteral(
+                        value = "false",
+                        datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                    ),
+                    namedGraph = Some(IriRef(
+                        iri = "http://www.knora.org/explicit".toSmartIri,
+                        propertyPathOperator = None
+                    ))
+                ),
+                // This statement must not be removed by AbstractPrequeryGenerator.removeEntitiesInferredFromProperty
+                // because the property from which its type can be inferred is in an optional. Without this statement,
+                // the type beol:basicLetter (inferred from property beol:hasRecipient) would be considered for ?document.
+                StatementPattern(
+                    subj = QueryVariable(variableName = "document"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/0801/beol#writtenSource".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                OptionalPattern(patterns = ArrayBuffer(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "document"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/0801/beol#hasRecipient".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "recipient"),
+                        namedGraph = None
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "document"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/0801/beol#hasRecipientValue".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue"),
+                        namedGraph = None
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue"),
+                        pred = IriRef(
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = XsdLiteral(
+                            value = "false",
+                            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                        ),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue"),
+                        pred = IriRef(
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "document"),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue"),
+                        pred = IriRef(
+                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "recipient"),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "recipient"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = XsdLiteral(
+                            value = "false",
+                            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                        ),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "recipient"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/0801/beol#hasFamilyName".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "familyName"),
+                        namedGraph = None
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "familyName"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = XsdLiteral(
+                            value = "false",
+                            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                        ),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "familyName"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "familyName__valueHasString"),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    LuceneQueryPattern(
+                        subj = QueryVariable(variableName = "familyName"),
+                        obj = QueryVariable(variableName = "familyName__valueHasString"),
+                        queryString = LuceneQueryString("Bernoulli")
+                    )
+                )
+            )),
+            positiveEntities = Set(),
+            querySchema = None
+        ),
+        limit = Some(25),
+        useDistinct = true
+    )
+
+
     "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
+
+        "transform an input query with an optional property criterion without removing the rdf:type statement" in {
+
+            val transformedQuery = QueryHandler.transformQuery(queryWithOptional, responderData, settings)
+            assert(transformedQuery === TransformedQueryWithOptional)
+        }
 
         "transform an input query with a date as a non optional sort criterion" in {
 
