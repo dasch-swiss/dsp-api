@@ -839,10 +839,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
      **/
     def sanitizeInconsistentResourceTypes(lastResults: IntermediateTypeInspectionResult, querySchema: ApiV2Schema): IntermediateTypeInspectionResult = {
 
+        //This method gets the isResourceType flag of GravsearchEntityTypeInfo
         def getIsResourceFlags(typeInfo: GravsearchEntityTypeInfo): Boolean = {
             typeInfo match {
-                case PropertyTypeInfo(_, objectIsResourceType, _) => objectIsResourceType
-                case NonPropertyTypeInfo(_, isResourceType, _) => isResourceType
+                case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectIsResourceType
+                case nonPropertyTypeInfo: NonPropertyTypeInfo=> nonPropertyTypeInfo.isResourceType
                 case _ => throw GravsearchException(s"There is an invalid type")
             }
         }
@@ -887,6 +888,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                               entityInfo: EntityInfoGetResponseV2
                              ): IntermediateTypeInspectionResult = {
 
+        // This method checks if a type is a base class of other types.
         def typeInBaseClasses(currType: GravsearchEntityTypeInfo, allTypes: Set[GravsearchEntityTypeInfo]): Boolean = {
             val currTypeIri = iriOfGravsearchTypeInfo(currType)
             allTypes.exists(aType =>
@@ -897,21 +899,24 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 })
         }
 
+        // This method gets the iri of the type
         def iriOfGravsearchTypeInfo(typeInfo: GravsearchEntityTypeInfo): SmartIri = {
             typeInfo match {
-                case PropertyTypeInfo(objectTypeIri, _, _) => objectTypeIri
-                case NonPropertyTypeInfo(typeIri, _, _) => typeIri
+                case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectTypeIri
+                case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.typeIri
                 case _ => throw GravsearchException(s"There is an invalid type")
             }
         }
 
-        // iterate over all typeableEntities
+        // iterate over all typeableEntities, refine determind types for it by keeping only the specific types.
         intermediateResult.entities.keySet.foldLeft(intermediateResult) {
             (acc, typedEntity) =>
                 val types = intermediateResult.entities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
                 types.foldLeft(acc) {
                     (refinedResults, currType) =>
+                        // Is the type a base class of any other type?
                         if (typeInBaseClasses(currType, types - currType)) {
+                            // Yes. Remove it.
                             refinedResults.removeType(typedEntity, currType)
                         } else refinedResults
                 }

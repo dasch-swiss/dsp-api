@@ -1684,8 +1684,16 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     }
 
+    /**
+     * Removes the type statements for entities whose types can be inferred from properties unless the property statement
+     * is in an optional block.
+     *
+     * @param patterns     the query patterns.
+     * @return a set of [[QueryPattern]].
+     */
     protected def removeEntitiesInferredFromProperty(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
+        // Collect all entities which are used as subject or object of an OptionalPattern.
         val optionalEntities = patterns.filter {
             case OptionalPattern(_) => true
             case _ => false
@@ -1699,7 +1707,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case _ => None
         }
 
-        // remove statements whose predicate is rdf:type and type of subject is inferred from a property
+        // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
         val optimisedPatterns = patterns.filter {
             case stamentPattern: StatementPattern =>
                 stamentPattern.pred match {
