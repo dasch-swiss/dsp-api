@@ -77,6 +77,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val firstIntValueVersionIri = new MutableTestIri
     private val intValueIri = new MutableTestIri
     private val intValueIriWithCustomPermissions = new MutableTestIri
+    private val intValueIriWithCustomUuidAndTimestamp = new MutableTestIri
     private val zeitglöckleinCommentWithoutStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithCommentIri = new MutableTestIri
@@ -445,7 +446,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case updateValueResponse: UpdateValueResponseV2 =>
                     intValueIri.set(updateValueResponse.valueIri)
                     assert(updateValueResponse.valueUUID == integerValueUUID)
-                    integerValueUUID = updateValueResponse.valueUUID
             }
 
             // Read the value back to check that it was added correctly.
@@ -806,6 +806,146 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+            }
+        }
+
+        "create an integer value with custom UUID and creation date" in {
+            // Add the value.
+
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 987
+            val valueUUID = UUID.randomUUID
+            val valueCreationDate = Instant.now
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueUUID = Some(valueUUID),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => intValueIriWithCustomUuidAndTimestamp.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    valueFromTriplestore.valueHasUUID should ===(valueUUID)
+                    valueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update an integer value with a custom creation date that is earlier than the date of the current version" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 989
+            val valueCreationDate = Instant.parse("2019-11-29T10:00:00Z")
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+            }
+        }
+
+        "update an integer value with a custom creation date" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Get the value before update.
+            val previousValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
+
+            // Update the value.
+
+            val intValue = 988
+            val valueCreationDate = Instant.now
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueIriWithCustomUuidAndTimestamp.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
             }
         }
 

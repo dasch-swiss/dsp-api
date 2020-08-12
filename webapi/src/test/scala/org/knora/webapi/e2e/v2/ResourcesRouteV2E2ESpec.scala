@@ -675,7 +675,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         "create a resource with random resource Iri and custom value UUIDs" in {
 
             val customValueUUID = SharedTestDataADM.customValueUUID
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(customValueUUID = customValueUUID)
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(valueUUID = customValueUUID)
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -728,10 +728,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
             val customValueUUID = SharedTestDataADM.customValueUUID
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
-                customResourceIRI = customResourceIRI,
-                customCreationDate = customCreationDate,
-                customValueIRI = customValueIRI,
-                customValueUUID = customValueUUID)
+                resourceIRI = customResourceIRI,
+                creationDate = customCreationDate,
+                valueIRI = customValueIRI,
+                valueUUID = customValueUUID)
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)

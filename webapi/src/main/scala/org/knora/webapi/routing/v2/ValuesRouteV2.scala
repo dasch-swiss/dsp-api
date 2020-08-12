@@ -210,7 +210,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     text = SharedTestDataADM.createIntValueWithCustomPermissionsRequest(
                         resourceIri = SharedTestDataADM.AThing.iri,
                         intValue = 4,
-                        customPermissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+                        permissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
                     )
                 ),
                 TestDataFileContent(
@@ -385,9 +385,9 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                   text = SharedTestDataADM.createLinkValueWithCustomIriRequest(
                     resourceIri = SharedTestDataADM.AThing.iri,
                     targetResourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
-                    customValueIri = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI",
-                    customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
-                    customValueCreationDate = Instant.parse("2020-06-04T11:36:54.502951Z")
+                    valueIri = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI",
+                    valueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
+                    valueCreationDate = Instant.parse("2020-06-04T11:36:54.502951Z")
                   )
                 )
             )
@@ -468,7 +468,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,
                         intValue = 6,
-                        customPermissions = "CR http://rdfh.ch/groups/0001/thing-searcher"
+                        permissions = "CR http://rdfh.ch/groups/0001/thing-searcher"
                     )
                 ),
                 TestDataFileContent(
@@ -476,7 +476,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     text = SharedTestDataADM.updateIntValuePermissionsOnlyRequest(
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,
-                        customPermissions = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
+                        permissions = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
                     )
                 ),
                 TestDataFileContent(
