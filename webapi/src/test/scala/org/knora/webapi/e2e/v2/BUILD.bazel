@@ -89,9 +89,9 @@ scala_test(
 )
 
 ##
-## //webapi/src/test/scala/org/knora/webapi/e2e/v2:RessourcesRouteV2E2ESpec
+## //webapi/src/test/scala/org/knora/webapi/e2e/v2:ResourcesRouteV2E2ESpec
 scala_test(
-    name = "RessourcesRouteV2E2ESpec",
+    name = "ResourcesRouteV2E2ESpec",
     size = "medium",  # 300s
     srcs = [
         "ResourcesRouteV2E2ESpec.scala",

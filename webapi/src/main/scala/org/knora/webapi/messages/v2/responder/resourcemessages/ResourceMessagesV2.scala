@@ -609,12 +609,18 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                 maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
                                 maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID
 
-                                // Get the values's creation date.
+                                // Get the value's creation date.
+                                // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
                                 maybeCustomValueCreationDate: Option[Instant] = valueJsonLDObject.maybeDatatypeValueInObject(
+                                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                                ).orElse(valueJsonLDObject.maybeDatatypeValueInObject(
                                     key = OntologyConstants.KnoraApiV2Complex.CreationDate,
                                     expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                                     validationFun = stringFormatter.xsdDateTimeStampToInstant
-                                )
+                                ))
+
                                 maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueInNewResourceV2(
                                 valueContent = valueContent,
