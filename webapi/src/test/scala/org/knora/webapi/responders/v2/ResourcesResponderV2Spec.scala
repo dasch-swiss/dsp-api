@@ -20,6 +20,7 @@
 package org.knora.webapi.responders.v2
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
@@ -522,6 +523,25 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 sparqlSelectResponse.results.bindings.map {
                     row => row.rowMap("standoffTag")
                 }.toSet
+        }
+    }
+
+    private def getDeleteDate(resourceIri: IRI): Instant = {
+        val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getDeleteDate(
+            triplestore = settings.triplestoreType,
+            entityIri = resourceIri
+        ).toString()
+
+        storeManager ! SparqlSelectRequest(sparqlQuery)
+
+        expectMsgPF(timeout) {
+            case sparqlSelectResponse: SparqlSelectResponse =>
+                val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
+
+                stringFormatter.xsdDateTimeStampToInstant(
+                    savedDeleteDateStr,
+                    throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
+                )
         }
     }
 
@@ -1740,6 +1760,26 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             aThingLastModificationDate = updatedLastModificationDate
         }
 
+        "not mark a resource as deleted with a custom delete date that is earlier than the resource's last modification date" in {
+            val deleteDate: Instant = aThingLastModificationDate.minus(1, ChronoUnit.DAYS)
+
+            val deleteRequest = DeleteOrEraseResourceRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeDeleteDate = Some(deleteDate),
+                maybeLastModificationDate = Some(aThingLastModificationDate),
+                requestingUser = SharedTestDataADM.anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! deleteRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "mark a resource as deleted" in {
             val deleteRequest = DeleteOrEraseResourceRequestV2(
                 resourceIri = aThingIri,
@@ -1761,6 +1801,36 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
+        }
+
+        "mark a resource as deleted, supplying a custom delete date" in {
+            val resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val deleteDate: Instant = Instant.now
+
+            val deleteRequest = DeleteOrEraseResourceRequestV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeDeleteDate = Some(deleteDate),
+                maybeLastModificationDate = None,
+                requestingUser = SharedTestDataADM.superUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! deleteRequest
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            // We should now be unable to request the resource.
+
+            responderManager ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), targetSchema = ApiV2Complex, requestingUser = SharedTestDataADM.anythingUser1)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            val savedDeleteDate: Instant = getDeleteDate(resourceIri)
+            assert(savedDeleteDate == deleteDate)
         }
 
         "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default" in {
