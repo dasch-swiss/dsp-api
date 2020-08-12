@@ -204,6 +204,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                                     propertyIriForGravsearch: SmartIri,
                                     propertyIriInResult: SmartIri,
                                     valueIri: IRI,
+                                    customDeleteDate: Option[Instant] = None,
                                     requestingUser: UserADM): Unit = {
         val resource = getResourceWithValues(
             resourceIri = resourceIri,
@@ -221,6 +222,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         propertyValues.find(_.valueIri == valueIri) match {
             case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
+            case None => ()
+        }
+
+        // If a custom delete date was used, check that it was saved correctly.
+        customDeleteDate match {
+            case Some(deleteDate) =>
+                val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getDeleteDate(
+                    triplestore = settings.triplestoreType,
+                    entityIri = valueIri
+                ).toString()
+
+                storeManager ! SparqlSelectRequest(sparqlQuery)
+
+                expectMsgPF(timeout) {
+                    case sparqlSelectResponse: SparqlSelectResponse =>
+                        val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
+
+                        val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
+                            savedDeleteDateStr,
+                            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
+                        )
+
+                        assert(savedDeleteDate == deleteDate)
+                }
+
             case None => ()
         }
     }
@@ -4129,6 +4155,37 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = anythingUser1)
         }
 
+        "delete an integer value, specifying a custom delete date" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+            val deleteDate: Instant = Instant.now
+
+            responderManager ! DeleteValueRequestV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                propertyIri = propertyIri,
+                valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                deleteComment = Some("this value was incorrect"),
+                deleteDate = Some(deleteDate),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            checkValueIsDeleted(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                customDeleteDate = Some(deleteDate),
+                requestingUser = anythingUser1
+            )
+        }
+
         "not delete a standoff link directly" in {
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
@@ -4162,12 +4219,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgType[SuccessResponseV2](timeout)
 
-            checkValueIsDeleted(resourceIri = zeitglöckleinIri,
+            checkValueIsDeleted(
+                resourceIri = zeitglöckleinIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 valueIri = zeitglöckleinCommentWithStandoffIri.get,
-                requestingUser = incunabulaUser)
+                requestingUser = incunabulaUser
+            )
 
             // There should be no standoff link values left in the resource.
 
@@ -4198,12 +4257,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgType[SuccessResponseV2](timeout)
 
-            checkValueIsDeleted(resourceIri = resourceIri,
+            checkValueIsDeleted(
+                resourceIri = resourceIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = linkPropertyIri,
                 propertyIriInResult = linkValuePropertyIri,
                 valueIri = linkValueIri.get,
-                requestingUser = anythingUser1)
+                requestingUser = anythingUser1
+            )
         }
 
         "not delete a value if the property's cardinality doesn't allow it" in {

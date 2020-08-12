@@ -584,13 +584,12 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                     OntologyConstants.KnoraApiV2Complex.CreationDate
                 )
 
-            valueFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
+            propertyValueFuturesMap: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
                 propertyIriStr =>
                     val propertyIri: SmartIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-
                     val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
 
-                    val propertyValues = valuesArray.value.map {
+                    val valueFuturesSeq: Seq[Future[CreateValueInNewResourceV2]] = valuesArray.value.map {
                         valueJsonLD =>
                             val valueJsonLDObject = valueJsonLD match {
                                 case jsonLDObject: JsonLDObject => jsonLDObject
@@ -606,6 +605,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                     settings = settings,
                                     log = log
                                 )
+
                                 maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
                                 maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID
 
@@ -631,23 +631,22 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             )
                     }
 
-                    propertyIri -> propertyValues
+                    propertyIri -> valueFuturesSeq
             }.toMap
 
-            values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(valueFutures)
+            propertyValuesMap: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValueFuturesMap)
 
             // Get information about the project that the resource should be created in.
             projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
                 ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
-
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = maybeCustomResourceIri,
                 resourceClassIri = resourceClassIri,
                 label = label,
-                values = values,
+                values = propertyValuesMap,
                 projectADM = projectInfoResponse.project,
                 permissions = permissions,
                 creationDate = creationDate
