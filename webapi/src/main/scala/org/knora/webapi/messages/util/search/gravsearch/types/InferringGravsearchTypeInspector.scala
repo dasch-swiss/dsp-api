@@ -865,30 +865,67 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             }
         }
 
+        // This method finds the common base class.
+        def findCommonBaseClass(typesToBeChecked: Set[GravsearchEntityTypeInfo]): SmartIri = {
+            val baseClassesOfFirstType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(typesToBeChecked.head)) match {
+                case Some(classDef: ReadClassInfoV2) =>
+                    classDef.allBaseClasses
+                case _ => Set.empty[SmartIri]
+            }
+            if (baseClassesOfFirstType.nonEmpty) {
+                val commonBaseClasses: Set[SmartIri] = typesToBeChecked.tail.flatMap {
+                    aType =>
+                        //get class info of the type Iri
+                        val baseClassesOfType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
+                            case Some(classDef: ReadClassInfoV2) =>
+                                classDef.allBaseClasses
+                            case _ => Set.empty[SmartIri]
+                        }
+                        //find the common base classes
+                        baseClassesOfType.intersect(baseClassesOfFirstType)
+                }
+                if (commonBaseClasses.nonEmpty) {
+                    // since the base classes are sorted, first one would be the most specific one.
+                    commonBaseClasses.head
+                } else {
+                    InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
+                }
+
+            } else {
+                InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
+            }
+        }
+
+        // This method replaces the inconsistent types with a common base class
+        def replaceInconsistentTypes(acc: IntermediateTypeInspectionResult, typedEntity: TypeableEntity, typesToBeChecked: Set[GravsearchEntityTypeInfo], newType: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
+            val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
+                (sanitizeResults, currType) => sanitizeResults.removeType(typedEntity, currType)
+            }
+            withoutInconsistentTypes.addTypes(typedEntity, Set(newType))
+        }
+
         // get inconsistentTypes
         val inconsistentEntities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = lastResults.entitiesWithInconsistentTypes
 
-        // check if inconsistent types are of resources, then replace them with rdfs:type otherwise throw error
+        //Try replacing the inconsistent types
         inconsistentEntities.keySet.foldLeft(lastResults) {
             (acc, typedEntity) =>
                 // all inconsistent types
-                val typesToBeChecked = inconsistentEntities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
+                val typesToBeChecked: Set[GravsearchEntityTypeInfo] = inconsistentEntities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
+                val commonBaseClassIri: SmartIri = findCommonBaseClass(typesToBeChecked)
+                // Are all inconsistent types NonPropertyTypeInfo and resourceType?
                 if (typesToBeChecked.count(elem => elem.isInstanceOf[NonPropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
-                    // all elements are of type NonPropertyType and resource types
-                    val newType = NonPropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(querySchema), isResourceType = true)
-                    val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
-                        (sanitizeResults, currType) => sanitizeResults.removeType(typedEntity, currType)
-                    }
-                    withoutInconsistentTypes.addTypes(typedEntity, Set(newType))
+                    // Yes. Remove inconsistent types and replace with a NonPropertyTypeInfo of main Knora-base:Resource
+                    val newResourceType = NonPropertyTypeInfo(commonBaseClassIri, isResourceType = true)
+                    replaceInconsistentTypes(acc, typedEntity, typesToBeChecked, newResourceType)
+                    //No. Are they PropertyTypeInfo types with a object of a resource type?
                 } else if (typesToBeChecked.count(elem => elem.isInstanceOf[PropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
-                    // all elements are of type PropertyType and resource types
-                    val newType = PropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(querySchema), objectIsResourceType = true)
-                    val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
-                        (sanitizeResults, currType) => sanitizeResults.removeType(typedEntity, currType)
-                    }
-                    withoutInconsistentTypes.addTypes(typedEntity, Set(newType))
+                    // Yes. Remove inconsistent types and replace with a PropertyTypeInfo of main Knora-base:Resource
+                    val newObjectType = PropertyTypeInfo(commonBaseClassIri, objectIsResourceType = true)
+                    replaceInconsistentTypes(acc, typedEntity, typesToBeChecked, newObjectType)
+                    //No. Don't touch the determined inconsistent types, this will result in an error.
                 } else {
                     acc
                 }
