@@ -1368,7 +1368,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         TransformedFilterPattern(
             expression = None, // The expression has been replaced by additional patterns.
-            additionalPatterns = luceneQueryPattern ++ markedUpPatternsToAdd ++ regexFilters
+            additionalPatterns = valueHasStringStatement ++ luceneQueryPattern ++ markedUpPatternsToAdd ++ regexFilters
         )
     }
 
