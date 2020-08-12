@@ -247,6 +247,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
 
+            // for standoff links it is necessary to refine the determined types first.
+            val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(intermediateResult, entityInfo)
             // Has this entity been used as the object of one or more statements?
             val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.objectIndex.get(entityToType) match {
                 case Some(statements) =>
@@ -258,7 +260,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
                                 case Some(typeablePred: TypeableEntity) =>
                                     // Yes. Do we have its types?
-                                    intermediateResult.entities.get(typeablePred) match {
+                                    updatedIntermediateResult.entities.get(typeablePred) match {
                                         case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
                                             // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
                                             entityTypes.flatMap {
@@ -287,7 +289,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
+                intermediateResult = updatedIntermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -366,6 +368,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
 
+            // for standoff links it is necessary to refine the types first.
+            val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(intermediateResult, entityInfo)
             // Has this entity been used as a predicate?
             val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.predicateIndex.get(entityToType) match {
                 case Some(statements) =>
@@ -376,7 +380,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.obj) match {
                                 case Some(typeableObj: TypeableEntity) =>
                                     // Yes. Do we have its types?
-                                    intermediateResult.entities.get(typeableObj) match {
+                                    updatedIntermediateResult.entities.get(typeableObj) match {
                                         case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
                                             // Yes. Use those types.
                                             entityTypes.flatMap {
@@ -406,7 +410,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
+                intermediateResult = updatedIntermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
