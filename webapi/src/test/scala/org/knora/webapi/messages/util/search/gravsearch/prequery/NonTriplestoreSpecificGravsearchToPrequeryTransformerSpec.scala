@@ -1493,22 +1493,24 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                             propertyPathOperator = None
                         ))
                     ),
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "familyName"),
-                        pred = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = QueryVariable(variableName = "familyName__valueHasString"),
-                        namedGraph = Some(IriRef(
-                            iri = "http://www.knora.org/explicit".toSmartIri,
-                            propertyPathOperator = None
-                        ))
-                    ),
                     LuceneQueryPattern(
                         subj = QueryVariable(variableName = "familyName"),
                         obj = QueryVariable(variableName = "familyName__valueHasString"),
-                        queryString = LuceneQueryString("Bernoulli")
+                        queryString = LuceneQueryString("Bernoulli"),
+                        valueHasStringStatement = Seq(
+                            StatementPattern(
+                                subj = QueryVariable(variableName = "familyName"),
+                                pred = IriRef(
+                                    iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
+                                    propertyPathOperator = None
+                                ),
+                                obj = QueryVariable(variableName = "familyName__valueHasString"),
+                                namedGraph = Some(IriRef(
+                                    iri = "http://www.knora.org/explicit".toSmartIri,
+                                    propertyPathOperator = None
+                                ))
+                            ),
+                        )
                     )
                 )
             )),

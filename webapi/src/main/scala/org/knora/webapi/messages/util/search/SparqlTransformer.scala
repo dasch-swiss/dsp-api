@@ -204,7 +204,7 @@ object SparqlTransformer {
      */
     def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         val (luceneQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-            case LuceneQueryPattern(_, _, _) => true
+            case luceneQueryPattern: LuceneQueryPattern => true
             case _ => false
         }
 
@@ -339,7 +339,7 @@ object SparqlTransformer {
     private def transformLuceneQueryPatternForGraphDB(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        Seq(
+         Seq(
             StatementPattern(
                 subj = luceneQueryPattern.obj, // In GraphDB, an index entry is associated with a literal.
                 pred = IriRef("http://www.ontotext.com/owlim/lucene#fullTextSearchIndex".toSmartIri),
@@ -348,7 +348,7 @@ object SparqlTransformer {
                     datatype = OntologyConstants.Xsd.String.toSmartIri
                 )
             )
-        )
+        ) ++ luceneQueryPattern.valueHasStringStatement
     }
 
     /**

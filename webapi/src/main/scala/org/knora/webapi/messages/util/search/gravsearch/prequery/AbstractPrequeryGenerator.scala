@@ -1175,11 +1175,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         // Replace the filter with a LuceneQueryPattern.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
-            valueHasStringStatement :+ LuceneQueryPattern(
+            Seq(LuceneQueryPattern(
                 subj = textValueVar,
                 obj = textValHasString,
-                queryString = searchTerms
-            )
+                queryString = searchTerms,
+                valueHasStringStatement = valueHasStringStatement
+            ))
         )
     }
 
@@ -1241,11 +1242,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         // Replace the filter with a LuceneQueryPattern.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
-            valueHasStringStatement :+ LuceneQueryPattern(
+            Seq(LuceneQueryPattern(
                 subj = textValueVar,
                 obj = textValHasString,
-                queryString = searchTerms
-            )
+                queryString = searchTerms,
+                valueHasStringStatement = valueHasStringStatement
+            ))
         )
     }
 
@@ -1308,11 +1310,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         // Generate a LuceneQueryPattern to search the full-text search index, to assert that text value contains
         // the search terms.
-        val luceneQueryPattern: LuceneQueryPattern = LuceneQueryPattern(
+        val luceneQueryPattern: Seq[LuceneQueryPattern] = Seq(LuceneQueryPattern(
             subj = textValueVar,
             obj = textValHasString,
-            queryString = searchTerms
-        )
+            queryString = searchTerms,
+            valueHasStringStatement = valueHasStringStatement
+        ))
 
         // Generate query patterns to assign the text in the standoff tag to a variable, if we
         // haven't done so already.
@@ -1365,7 +1368,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         TransformedFilterPattern(
             expression = None, // The expression has been replaced by additional patterns.
-            additionalPatterns = (valueHasStringStatement :+ luceneQueryPattern) ++ markedUpPatternsToAdd ++ regexFilters
+            additionalPatterns = luceneQueryPattern ++ markedUpPatternsToAdd ++ regexFilters
         )
     }
 

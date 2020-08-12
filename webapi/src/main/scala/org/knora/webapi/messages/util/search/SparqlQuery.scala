@@ -207,7 +207,7 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
  * @param obj         a variable representing the literal that is indexed.
  * @param queryString the Lucene query string to be matched.
  */
-case class LuceneQueryPattern(subj: QueryVariable, obj: QueryVariable, queryString: LuceneQueryString) extends QueryPattern {
+case class LuceneQueryPattern(subj: QueryVariable, obj: QueryVariable, queryString: LuceneQueryString, valueHasStringStatement: Seq[StatementPattern] = Seq.empty[StatementPattern]) extends QueryPattern {
     override def toSparql: String = throw AssertionException("LuceneQueryPattern should have been transformed into a StatementPattern")
 }
 
