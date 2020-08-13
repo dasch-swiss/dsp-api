@@ -725,10 +725,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                 val refinedIntermediateResults = typeInspectionRunner.refineDeterminedTypes(
                     intermediateResult = inconsistentTypes,
                     entityInfo = entityInfo)
+
                 val sanitizedResults = typeInspectionRunner.sanitizeInconsistentResourceTypes(
                     lastResults = refinedIntermediateResults,
                     usageIndex.querySchema,
                     entityInfo = entityInfo)
+
                 val expectedResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
                     TypeableVariable(variableName = "letter") -> Set(
                         NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, isResourceType = true)

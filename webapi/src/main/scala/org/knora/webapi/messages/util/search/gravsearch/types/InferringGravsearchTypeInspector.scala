@@ -246,9 +246,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                            intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
-
             // for standoff links it is necessary to refine the determined types first.
-            val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(intermediateResult, entityInfo)
+            val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
+                intermediateResult = intermediateResult,
+                entityInfo = entityInfo
+            )
+
             // Has this entity been used as the object of one or more statements?
             val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.objectIndex.get(entityToType) match {
                 case Some(statements) =>
@@ -367,9 +370,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                            intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
-
             // for standoff links it is necessary to refine the types first.
-            val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(intermediateResult, entityInfo)
+            val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
+                intermediateResult = intermediateResult,
+                entityInfo = entityInfo
+            )
+
             // Has this entity been used as a predicate?
             val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.predicateIndex.get(entityToType) match {
                 case Some(statements) =>
@@ -677,7 +683,6 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         log.debug("========== Starting type inference ==========")
 
         for {
-
             // get index of entity usage in the query and ontology information about all the Knora class and property IRIs mentioned in the query
             (usageIndex, allEntityInfo) <- getUsageIndexAndEntityInfos(whereClause, requestingUser)
 
@@ -689,13 +694,13 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 usageIndex = usageIndex
             )
 
-            //refine the determined types before sending to the next inspector
+            // refine the determined types before sending to the next inspector
             refinedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
                 intermediateResult = intermediateResult,
                 entityInfo = allEntityInfo
             )
 
-            //sanitize the inconsistent resource types inferred for an entity
+            // sanitize the inconsistent resource types inferred for an entity
             sanitizedResults: IntermediateTypeInspectionResult = sanitizeInconsistentResourceTypes(
                 refinedIntermediateResult,
                 usageIndex.querySchema,
@@ -838,10 +843,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     /**
      * Gets the iri of the type information.
      *
-     * @param typeInfo    a GravsearchEntityTypeInfo.
+     * @param typeInfo a GravsearchEntityTypeInfo.
      * @return the IRI of the typeInfo as a [[SmartIri]].
-     **/
-    def iriOfGravsearchTypeInfo(typeInfo: GravsearchEntityTypeInfo): SmartIri = {
+     */
+    private def iriOfGravsearchTypeInfo(typeInfo: GravsearchEntityTypeInfo): SmartIri = {
         typeInfo match {
             case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectTypeIri
             case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.typeIri
@@ -856,35 +861,44 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
      * @param querySchema the ontology schema that the query is written in.
      **/
     def sanitizeInconsistentResourceTypes(lastResults: IntermediateTypeInspectionResult, querySchema: ApiV2Schema, entityInfo: EntityInfoGetResponseV2): IntermediateTypeInspectionResult = {
-
-        //This method gets the isResourceType flag of GravsearchEntityTypeInfo
+        /**
+         * Returns `true` if the specified [[GravsearchEntityTypeInfo]] refers to a resource type.
+         */
         def getIsResourceFlags(typeInfo: GravsearchEntityTypeInfo): Boolean = {
             typeInfo match {
                 case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectIsResourceType
-                case nonPropertyTypeInfo: NonPropertyTypeInfo=> nonPropertyTypeInfo.isResourceType
+                case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.isResourceType
                 case _ => throw GravsearchException(s"There is an invalid type")
             }
         }
 
-        // This method finds the common base class.
+        /**
+         * Given a set of resource classes, this method finds a common base class.
+         *
+         * @param typesToBeChecked a set of resource classes.
+         * @return the IRI of a common base class.
+         */
         def findCommonBaseResourceClass(typesToBeChecked: Set[GravsearchEntityTypeInfo]): SmartIri = {
             val baseClassesOfFirstType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(typesToBeChecked.head)) match {
                 case Some(classDef: ReadClassInfoV2) =>
                     classDef.allBaseClasses
                 case _ => Set.empty[SmartIri]
             }
+
             if (baseClassesOfFirstType.nonEmpty) {
                 val commonBaseClasses: Set[SmartIri] = typesToBeChecked.tail.foldLeft(baseClassesOfFirstType) {
                     (acc, aType) =>
-                        //get class info of the type Iri
+                        // get class info of the type Iri
                         val baseClassesOfType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
                             case Some(classDef: ReadClassInfoV2) =>
                                 classDef.allBaseClasses
                             case _ => Set.empty[SmartIri]
                         }
-                        //find the common base classes
+
+                        // find the common base classes
                         baseClassesOfType.intersect(acc)
                 }
+
                 if (commonBaseClasses.nonEmpty) {
                     // return any available base class. TODO: the most specific one should be returned.
                     commonBaseClasses.head
@@ -897,36 +911,44 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             }
         }
 
-        // This method replaces the inconsistent types with a common base class
-        def replaceInconsistentTypes(acc: IntermediateTypeInspectionResult, typedEntity: TypeableEntity, typesToBeChecked: Set[GravsearchEntityTypeInfo], newType: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
+        /**
+         * Replaces inconsistent resource types with a common base class.
+         */
+        def replaceInconsistentResourceTypes(acc: IntermediateTypeInspectionResult, typedEntity: TypeableEntity, typesToBeChecked: Set[GravsearchEntityTypeInfo], newType: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
             val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
                 (sanitizeResults, currType) => sanitizeResults.removeType(typedEntity, currType)
             }
+
             withoutInconsistentTypes.addTypes(typedEntity, Set(newType))
         }
 
-        // get inconsistentTypes
+        // get inconsistent types
         val inconsistentEntities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = lastResults.entitiesWithInconsistentTypes
 
-        //Try replacing the inconsistent types
+        // Try replacing the inconsistent types
         inconsistentEntities.keySet.foldLeft(lastResults) {
             (acc, typedEntity) =>
                 // all inconsistent types
                 val typesToBeChecked: Set[GravsearchEntityTypeInfo] = inconsistentEntities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
                 val commonBaseClassIri: SmartIri = findCommonBaseResourceClass(typesToBeChecked)
+
                 // Are all inconsistent types NonPropertyTypeInfo and resourceType?
                 if (typesToBeChecked.count(elem => elem.isInstanceOf[NonPropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
+
                     // Yes. Remove inconsistent types and replace with a common base class.
                     val newResourceType = NonPropertyTypeInfo(commonBaseClassIri, isResourceType = true)
-                    replaceInconsistentTypes(acc, typedEntity, typesToBeChecked, newResourceType)
-                    //No. Are they PropertyTypeInfo types with a object of a resource type?
+                    replaceInconsistentResourceTypes(acc, typedEntity, typesToBeChecked, newResourceType)
+
+                    // No. Are they PropertyTypeInfo types with a object of a resource type?
                 } else if (typesToBeChecked.count(elem => elem.isInstanceOf[PropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
+
                     // Yes. Remove inconsistent types and replace with a common base class
                     val newObjectType = PropertyTypeInfo(commonBaseClassIri, objectIsResourceType = true)
-                    replaceInconsistentTypes(acc, typedEntity, typesToBeChecked, newObjectType)
-                    //No. Don't touch the determined inconsistent types, later an error is returned for this.
+                    replaceInconsistentResourceTypes(acc, typedEntity, typesToBeChecked, newObjectType)
+
+                    // No. Don't touch the determined inconsistent types, later an error is returned for this.
                 } else {
                     acc
                 }
@@ -934,7 +956,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-     * Make sure that the most specific type is stored for each typeableEntity.
+     * Make sure that the most specific type is stored for each typeable entity.
      *
      * @param intermediateResult this rule's intermediate result.
      * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
@@ -942,33 +964,36 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     def refineDeterminedTypes(intermediateResult: IntermediateTypeInspectionResult,
                               entityInfo: EntityInfoGetResponseV2
                              ): IntermediateTypeInspectionResult = {
-
-        // This method checks if a type is a base class of other types.
+        /**
+         * Returns `true` if the specified type is a base class of any of the other types in a set.
+         */
         def typeInBaseClasses(currType: GravsearchEntityTypeInfo, allTypes: Set[GravsearchEntityTypeInfo]): Boolean = {
             val currTypeIri = iriOfGravsearchTypeInfo(currType)
-            allTypes.exists(aType =>
-                entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
-                    case Some(classDef: ReadClassInfoV2) =>
-                        classDef.allBaseClasses.contains(currTypeIri)
-                    case _ => false
-                })
+
+            allTypes.exists(
+                aType =>
+                    entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
+                        case Some(classDef: ReadClassInfoV2) => classDef.allBaseClasses.contains(currTypeIri)
+                        case _ => false
+                    }
+            )
         }
 
-        // iterate over all typeableEntities, refine determind types for it by keeping only the specific types.
+        // iterate over all typeable entities, refine determined types for it by keeping only the specific types.
         intermediateResult.entities.keySet.foldLeft(intermediateResult) {
-            (acc, typedEntity) =>
-                val types = intermediateResult.entities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
+            (acc: IntermediateTypeInspectionResult, typedEntity: TypeableEntity) =>
+                val types: Set[GravsearchEntityTypeInfo] = intermediateResult.entities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
+
                 types.foldLeft(acc) {
-                    (refinedResults, currType) =>
+                    (refinedResults: IntermediateTypeInspectionResult, currType: GravsearchEntityTypeInfo) =>
                         // Is the type a base class of any other type?
-                        if (typeInBaseClasses(currType, types - currType)) {
+                        if (typeInBaseClasses(currType = currType, allTypes = types - currType)) {
                             // Yes. Remove it.
-                            refinedResults.removeType(typedEntity, currType)
+                            refinedResults.removeType(entity = typedEntity, typeToRemove = currType)
                         } else refinedResults
                 }
         }
     }
-
 
     /**
      * Runs all the inference rules repeatedly until no new type information can be found.
@@ -1015,7 +1040,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         } else {
             doIterations(
                 iterationNumber = iterationNumber + 1,
-                intermediateResult = refineDeterminedTypes(iterationResult, entityInfo),
+                intermediateResult = refineDeterminedTypes(intermediateResult = iterationResult, entityInfo = entityInfo),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )

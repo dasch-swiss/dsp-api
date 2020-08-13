@@ -1497,7 +1497,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                         subj = QueryVariable(variableName = "familyName"),
                         obj = QueryVariable(variableName = "familyName__valueHasString"),
                         queryString = LuceneQueryString("Bernoulli"),
-                        valueHasStringStatement = Seq(
+                        literalStatement = Some(
                             StatementPattern(
                                 subj = QueryVariable(variableName = "familyName"),
                                 pred = IriRef(

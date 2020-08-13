@@ -348,7 +348,7 @@ object SparqlTransformer {
                     datatype = OntologyConstants.Xsd.String.toSmartIri
                 )
             )
-        ) ++ luceneQueryPattern.valueHasStringStatement
+        ) ++ luceneQueryPattern.literalStatement
     }
 
     /**
