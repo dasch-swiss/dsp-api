@@ -696,11 +696,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
         "sanitize inconsistent resource types that only have knora-base:Resource as base class in common" in {
                 val typeInspectionRunner = new InferringGravsearchTypeInspector(nextInspector = None, responderData = responderData)
-                val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
+                val parsedQuery = GravsearchParser.parseQuery(queryWithInconsistentTypes)
                 val  (usageIndex , entityInfo) = Await.result(typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser), timeout)
                 val inconsistentTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
                     TypeableVariable(variableName = "letter") -> Set(
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true),
+                        NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#manuscript".toSmartIri, isResourceType = true),
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true)
                         ),
                     TypeableVariable(variableName = "linkingProp1") -> Set(

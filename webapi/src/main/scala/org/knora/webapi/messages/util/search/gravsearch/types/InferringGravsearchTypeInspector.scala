@@ -850,7 +850,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-     * Sanitize determined results, if there were multiple resource types, replace with rdfs:type
+     * Sanitize determined results. If there were multiple resource types, replace with common base class
      *
      * @param lastResults this type inspection results.
      * @param querySchema the ontology schema that the query is written in.
@@ -874,8 +874,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 case _ => Set.empty[SmartIri]
             }
             if (baseClassesOfFirstType.nonEmpty) {
-                val commonBaseClasses: Set[SmartIri] = typesToBeChecked.tail.flatMap {
-                    aType =>
+                val commonBaseClasses: Set[SmartIri] = typesToBeChecked.tail.foldLeft(baseClassesOfFirstType) {
+                    (acc, aType) =>
                         //get class info of the type Iri
                         val baseClassesOfType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
                             case Some(classDef: ReadClassInfoV2) =>
@@ -883,7 +883,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             case _ => Set.empty[SmartIri]
                         }
                         //find the common base classes
-                        baseClassesOfType.intersect(baseClassesOfFirstType)
+                        baseClassesOfType.intersect(acc)
                 }
                 if (commonBaseClasses.nonEmpty) {
                     // since the base classes are sorted, first one would be the most specific one.
