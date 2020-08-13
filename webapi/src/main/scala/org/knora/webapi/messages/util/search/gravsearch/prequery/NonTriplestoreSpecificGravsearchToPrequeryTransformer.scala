@@ -21,7 +21,6 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.search.SparqlTransformer.moveLuceneToBeginning
 import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, NonPropertyTypeInfo, PropertyTypeInfo}
 import org.knora.webapi.messages.util.search._

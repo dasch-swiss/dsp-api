@@ -66,14 +66,16 @@ Each type inspector adds whatever types it finds for each entity.
 At the end of the pipeline, each entity should
 have exactly one type. Therefore, to only keep the most specific type for an entity, 
 the method `refineDeterminedTypes` refines the determined types by removing those that are base classes of others. However,
- it can be that inconsistent types are determined for entities. For example, in cases where multiple resource class types 
- are determined, but one is not a base class of the others. From the following statement 
+it can be that inconsistent types are determined for entities. For example, in cases where multiple resource class types 
+are determined, but one is not a base class of the others. From the following statement 
+
 ```
 { ?document a beol:manuscript . } UNION { ?document a beol:letter .}
 ```
+
 two inconsistent types can be inferred for `?document`: `beol:letter` and `beol:manuscript`.
- In these cases, a sanitizer `sanitizeInconsistentResourceTypes` replaces the inconsistent resource types by 
- their common base resource class (in the above example, it would be `beol:writtenSource`). 
+In these cases, a sanitizer `sanitizeInconsistentResourceTypes` replaces the inconsistent resource types by 
+their common base resource class (in the above example, it would be `beol:writtenSource`). 
 
 Lastly, an error is returned if
 
@@ -101,7 +103,7 @@ Next, the inspector runs inference rules (which extend `InferenceRule`) on each 
 takes as input a `TypeableEntity`, the usage index, the ontology information, and the `IntermediateTypeInspectionResult`,
 and returns a new `IntermediateTypeInspectionResult`. For example, `TypeOfObjectFromPropertyRule` infers an entity's type
 if the entity is used as the object of a statement and the predicate's `knora-api:objectType` is known. For each `TypeableEntity`, 
-if a type is inferred from a property, the entity and the inferred type is added to 
+if a type is inferred from a property, the entity and the inferred type are added to 
 `IntermediateTypeInspectionResult.entitiesInferredFromProperty`.
 
 The inference rules are run repeatedly, because the output of one rule may allow another rule to infer additional
@@ -127,9 +129,11 @@ The Gravsearch query is passed to `QueryTraverser` along with a query transforme
 that implement traits supported by `QueryTraverser`:
 
 - `WhereTransformer`: instructions how to convert statements in the WHERE clause of a SPARQL query (to generate the prequery's Where clause).
-To increase the query performance, this trait defines the method `optimiseQueryPatterns` whose implementation can call 
-private methods for the necessary optimisations. For example, before transformation of statements in WHERE clause, query 
-pattern orders must be optimised by moving `LuceneQueryPatterns` to the beginning and `isDeleted` statament patterns to the end of the WHERE clause. 
+
+To improve query performance, this trait defines the method `optimiseQueryPatterns` whose implementation can call 
+private methods to optimise the generated SPARQL. For example, before transformation of statements in WHERE clause, query 
+pattern orders must be optimised by moving `LuceneQueryPatterns` to the beginning and `isDeleted` statement patterns to the end of the WHERE clause. 
+
 - `ConstructToSelectTransformer` (extends `WhereTransformer`): instructions how to turn a Construct query into a Select query (converts a Gravsearch query into a prequery)
 - `SelectToSelectTransformer` (extends `WhereTransformer`): instructions how to turn a triplestore independent Select query into a triplestore dependent Select query (implementation of inference).    
 - `ConstructToConstructTransformer` (extends `WhereTransformer`): instructions how to turn a triplestore independent Construct query into a triplestore dependent Construct query (implementation of inference).
@@ -149,11 +153,10 @@ The classes involved in generating prequeries can be found in `org.knora.webapi.
 If the client submits a count query, the prequery returns the overall number of hits, but not the results themselves.
 
 In a first step, before transforming the WHERE clause, query patterns must be further optimised by removing
- the `rdfs:type` statement for entities whose type could be inferred from a property since there would be no need 
- for explicit `rdfs:type` statements for them (unless the property from which the type of an entity must be inferred from 
- is wrapped in an `OPTIONAL` block). This optimisation has to happen in advance, because 
+the `rdfs:type` statement for entities whose type could be inferred from a property since there would be no need 
+for explicit `rdfs:type` statements for them (unless the property from which the type of an entity must be inferred from 
+is wrapped in an `OPTIONAL` block). This optimisation has to happen in advance, because 
 otherwise `transformStatementInWhere` would expand the redundant `rdfs:type` statements.
-
 
 Next, the Gravsearch query's WHERE clause is transformed and the prequery (SELECT and WHERE clause) is generated from this result.
 The transformation of the Gravsearch query's WHERE clause relies on the implementation of the abstract class `AbstractPrequeryGenerator`.
@@ -161,7 +164,7 @@ The transformation of the Gravsearch query's WHERE clause relies on the implemen
 `AbstractPrequeryGenerator` contains members whose state is changed during the iteration over the statements of the input query.
 They can then by used to create the converted query.
 
--  `mainResourceVariable: Option[QueryVariable]`: SPARQL variable representing the main resource of the input query. Present in the prequery's SELECT clause.
+- `mainResourceVariable: Option[QueryVariable]`: SPARQL variable representing the main resource of the input query. Present in the prequery's SELECT clause.
 - `dependentResourceVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing dependent resources in the input query. Used in an aggregation function in the prequery's SELECT clause (see below).
 - `dependentResourceVariablesGroupConcat: Set[QueryVariable]`: a set of SPARQL variables representing an aggregation of dependent resources. Present in the prequery's SELECT clause.
 - `valueObjectVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing value objects. Used in an aggregation function in the prequery's SELECT clause (see below).
