@@ -701,7 +701,6 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                 val inconsistentTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(entities = Map(
                     TypeableVariable(variableName = "letter") -> Set(
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true),
-                        NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#manuscript".toSmartIri, isResourceType = true),
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, isResourceType = true)
                         ),
                     TypeableVariable(variableName = "linkingProp1") -> Set(

@@ -917,16 +917,16 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 // Are all inconsistent types NonPropertyTypeInfo and resourceType?
                 if (typesToBeChecked.count(elem => elem.isInstanceOf[NonPropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
-                    // Yes. Remove inconsistent types and replace with a NonPropertyTypeInfo of main Knora-base:Resource
+                    // Yes. Remove inconsistent types and replace with a common base class.
                     val newResourceType = NonPropertyTypeInfo(commonBaseClassIri, isResourceType = true)
                     replaceInconsistentTypes(acc, typedEntity, typesToBeChecked, newResourceType)
                     //No. Are they PropertyTypeInfo types with a object of a resource type?
                 } else if (typesToBeChecked.count(elem => elem.isInstanceOf[PropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
-                    // Yes. Remove inconsistent types and replace with a PropertyTypeInfo of main Knora-base:Resource
+                    // Yes. Remove inconsistent types and replace with a common base class
                     val newObjectType = PropertyTypeInfo(commonBaseClassIri, objectIsResourceType = true)
                     replaceInconsistentTypes(acc, typedEntity, typesToBeChecked, newObjectType)
-                    //No. Don't touch the determined inconsistent types, this will result in an error.
+                    //No. Don't touch the determined inconsistent types, later an error is returned for this.
                 } else {
                     acc
                 }

@@ -45,7 +45,8 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
         val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
 
         val newEntitiesInferredFromProperties = if (inferredFromProperty && entityTypes.nonEmpty) {
-            entitiesInferredFromProperties + (entity -> entityTypes)
+            val newTypesInferredFromProperty = entitiesInferredFromProperties.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
+            entitiesInferredFromProperties + (entity -> newTypesInferredFromProperty)
         } else {
             entitiesInferredFromProperties
         }
@@ -66,7 +67,7 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
     def removeType(entity: TypeableEntity, typeToRemove: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
         val remainingTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) - typeToRemove
 
-        val updatedEntitiesInferredFromProperties = if (entitiesInferredFromProperties.exists(aType => aType._1 == entity && aType._2 == Set(typeToRemove))) {
+        val updatedEntitiesInferredFromProperties = if (entitiesInferredFromProperties.exists(aType => aType._1 == entity && aType._2.contains(typeToRemove))) {
             entitiesInferredFromProperties - entity
         } else {
             entitiesInferredFromProperties
