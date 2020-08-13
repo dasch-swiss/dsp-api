@@ -867,7 +867,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         }
 
         // This method finds the common base class.
-        def findCommonBaseClass(typesToBeChecked: Set[GravsearchEntityTypeInfo]): SmartIri = {
+        def findCommonBaseResourceClass(typesToBeChecked: Set[GravsearchEntityTypeInfo]): SmartIri = {
             val baseClassesOfFirstType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(typesToBeChecked.head)) match {
                 case Some(classDef: ReadClassInfoV2) =>
                     classDef.allBaseClasses
@@ -913,7 +913,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             (acc, typedEntity) =>
                 // all inconsistent types
                 val typesToBeChecked: Set[GravsearchEntityTypeInfo] = inconsistentEntities.getOrElse(typedEntity, Set.empty[GravsearchEntityTypeInfo])
-                val commonBaseClassIri: SmartIri = findCommonBaseClass(typesToBeChecked)
+                val commonBaseClassIri: SmartIri = findCommonBaseResourceClass(typesToBeChecked)
                 // Are all inconsistent types NonPropertyTypeInfo and resourceType?
                 if (typesToBeChecked.count(elem => elem.isInstanceOf[NonPropertyTypeInfo]) == typesToBeChecked.size &&
                     typesToBeChecked.count(elem => getIsResourceFlags(elem)) == typesToBeChecked.size) {
