@@ -66,8 +66,8 @@ Each type inspector adds whatever types it finds for each entity.
 At the end of the pipeline, each entity should
 have exactly one type. Therefore, to only keep the most specific type for an entity, 
 the method `refineDeterminedTypes` refines the determined types by removing those that are base classes of others. However,
- it can be the case that inconsistent types are determined for entities. For example, two resource class types are determined, 
- but none is a base class of the other. From the following statement 
+ it can be that inconsistent types are determined for entities. For example, in cases where multiple resource class types 
+ are determined, but one is not a base class of the others. From the following statement 
 ```
 { ?document a beol:manuscript . } UNION { ?document a beol:letter .}
 ```
@@ -149,7 +149,7 @@ The classes involved in generating prequeries can be found in `org.knora.webapi.
 If the client submits a count query, the prequery returns the overall number of hits, but not the results themselves.
 
 In a first step, before transforming the WHERE clause, query patterns must be further optimised by removing
- the `rdfs:type` statement for entities whose type could be inferred from a property. Since there would be no need 
+ the `rdfs:type` statement for entities whose type could be inferred from a property since there would be no need 
  for explicit `rdfs:type` statements for them (unless the property from which the type of an entity must be inferred from 
  is wrapped in an `OPTIONAL` block). This optimisation has to happen in advance, because 
 otherwise `transformStatementInWhere` would expand the redundant `rdfs:type` statements.
@@ -307,7 +307,7 @@ When the triplestore-specific version of the query is generated:
 - If the triplestore is GraphDB, `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` changes statements
   with the virtual graph `<http://www.knora.org/explicit>` so that they are marked with the GraphDB-specific graph
   `<http://www.ontotext.com/explicit>`, and leaves other statements unchanged. 
-  `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` also adds the `valueHasString` statements which it needs 
+  `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` also adds the `valueHasString` statements which GraphDB needs 
   for text searches.
 
 - If Knora is not using the triplestore's inference (e.g. with Fuseki),
