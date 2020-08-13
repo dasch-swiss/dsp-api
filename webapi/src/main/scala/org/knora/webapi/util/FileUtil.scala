@@ -32,25 +32,25 @@ import resource._
 import scala.io.{BufferedSource, Codec, Source}
 
 /**
-  * Functions for reading and writing files.
-  */
+ * Functions for reading and writing files.
+ */
 object FileUtil {
     /**
-      * Writes a string to a file.
-      *
-      * @param file    the destination file.
-      * @param content the string to write.
-      */
+     * Writes a string to a file.
+     *
+     * @param file    the destination file.
+     * @param content the string to write.
+     */
     def writeTextFile(file: File, content: String): Unit = {
         writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
     }
 
     /**
-      * Reads a text file into a string.
-      *
-      * @param file the source file.
-      * @return the contents of the file.
-      */
+     * Reads a text file into a string.
+     *
+     * @param file the source file.
+     * @return the contents of the file.
+     */
     def readTextFile(file: File): String = {
         // TODO: provide apt error handling
 
@@ -64,11 +64,11 @@ object FileUtil {
     }
 
     /**
-      * Reads a file from the classpath into a string.
-      *
-      * @param filename the name of the file.
-      * @return the contents of the file.
-      */
+     * Reads a file from the classpath into a string.
+     *
+     * @param filename the name of the file.
+     * @return the contents of the file.
+     */
     def readTextResource(filename: String): String = {
         // https://alvinalexander.com/scala/scala-exception-handling-try-catch-finally#toc_0
 
@@ -94,22 +94,22 @@ object FileUtil {
     }
 
     /**
-      * Writes a byte array to a file.
-      *
-      * @param file    the destination file.
-      * @param content the binary data to write.
-      */
+     * Writes a byte array to a file.
+     *
+     * @param file    the destination file.
+     * @param content the binary data to write.
+     */
     def writeBinaryFile(file: File, content: Array[Byte]): Unit = {
         Files.write(Paths.get(file.getCanonicalPath), content)
     }
 
     /**
-      * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
-      * generated in memory only; no disk access is performed.
-      *
-      * @param contents a map of file names to byte arrays representing file contents.
-      * @return a byte array containing the Zip file data.
-      */
+     * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
+     * generated in memory only; no disk access is performed.
+     *
+     * @param contents a map of file names to byte arrays representing file contents.
+     * @return a byte array containing the Zip file data.
+     */
     def createZipFileBytes(contents: Map[String, Array[Byte]]): Array[Byte] = {
         val managedBytes: ExtractableManagedResource[Array[Byte]] = managed(new ByteArrayOutputStream()).map {
             byteArrayOutputStream =>
@@ -131,12 +131,12 @@ object FileUtil {
 
 
     /**
-      * Saves data to a temporary file.
-      *
-      * @param settings   Knora application settings.
-      * @param binaryData the binary file data to be saved.
-      * @return the location where the file has been written to.
-      */
+     * Saves data to a temporary file.
+     *
+     * @param settings   Knora application settings.
+     * @param binaryData the binary file data to be saved.
+     * @return the location where the file has been written to.
+     */
     def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): File = {
 
         val fileName = createTempFile(settings)
@@ -147,12 +147,12 @@ object FileUtil {
     }
 
     /**
-      * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
-      *
-      * @param settings Knora's application settings.
-      * @param fileExtension the extension to be used for the temporary file name, if any,
-      * @return the location where the file has been written to.
-      */
+     * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
+     *
+     * @param settings      Knora's application settings.
+     * @param fileExtension the extension to be used for the temporary file name, if any,
+     * @return the location where the file has been written to.
+     */
     def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): File = {
 
         // check if the location for writing temporary files exists
@@ -176,12 +176,12 @@ object FileUtil {
     }
 
     /**
-      * Deletes a temporary file.
-      *
-      * @param fileName the file to be deleted.
-      * @param log a logging adapter.
-      * @return `true` if the file was deleted by this method.
-      */
+     * Deletes a temporary file.
+     *
+     * @param fileName the file to be deleted.
+     * @param log      a logging adapter.
+     * @return `true` if the file was deleted by this method.
+     */
     def deleteFileFromTmpLocation(fileName: File, log: Logger): Boolean = {
 
         val path = fileName.toPath

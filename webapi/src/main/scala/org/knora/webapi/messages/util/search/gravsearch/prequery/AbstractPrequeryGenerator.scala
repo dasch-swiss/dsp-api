@@ -172,7 +172,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             // create additional statements in order to query permissions and other information for a resource
 
             Seq(
-                StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
                 StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
             )
         } else {
@@ -280,12 +279,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         }
 
-        val maybeSubjectTypeIri: Option[SmartIri] = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-            case Some(NonPropertyTypeInfo(subjectTypeIri)) => Some(subjectTypeIri)
-            case _ => None
+        val (maybeSubjectTypeIri: Option[SmartIri], subjectIsResource: Boolean) = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
+            case Some(NonPropertyTypeInfo(subjectTypeIri, isResourceType, _)) => (Some(subjectTypeIri), isResourceType)
+            case _ => (None, false)
         }
-
-        val subjectIsResource: Boolean = maybeSubjectTypeIri.exists(iri => OntologyConstants.KnoraApi.isKnoraApiV2Resource(iri))
 
         // Is the subject of the statement a resource?
         if (subjectIsResource) {
@@ -1163,12 +1160,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
-        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // Generate an optional statement to assign the literal to a variable, which we can pass to LuceneQueryPattern,
         // if that statement hasn't been added already.
         val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
-            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+            Some(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
         } else {
-            Seq.empty[StatementPattern]
+            None
         }
 
         val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
@@ -1178,11 +1175,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         // Replace the filter with a LuceneQueryPattern.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
-            valueHasStringStatement :+ LuceneQueryPattern(
+            Seq(LuceneQueryPattern(
                 subj = textValueVar,
                 obj = textValHasString,
-                queryString = searchTerms
-            )
+                queryString = searchTerms,
+                literalStatement = valueHasStringStatement
+            ))
         )
     }
 
@@ -1229,12 +1227,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
-        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // Generate an optional statement to assign the literal to a variable, which we can pass to LuceneQueryPattern,
         // if that statement hasn't been added already.
         val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
-            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+            Some(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
         } else {
-            Seq.empty[StatementPattern]
+            None
         }
 
         val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
@@ -1244,11 +1242,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         // Replace the filter with a LuceneQueryPattern.
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
-            valueHasStringStatement :+ LuceneQueryPattern(
+            Seq(LuceneQueryPattern(
                 subj = textValueVar,
                 obj = textValHasString,
-                queryString = searchTerms
-            )
+                queryString = searchTerms,
+                literalStatement = valueHasStringStatement
+            ))
         )
     }
 
@@ -1296,12 +1295,11 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
-        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
-        // if that statement hasn't been added already.
+        // Generate a statement to assign the literal to a variable, if that statement hasn't been added already.
         val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
-            Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+            Some(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
         } else {
-            Seq.empty[StatementPattern]
+            None
         }
 
         // A string literal representing the search terms.
@@ -1311,11 +1309,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         // Generate a LuceneQueryPattern to search the full-text search index, to assert that text value contains
         // the search terms.
-        val luceneQueryPattern: LuceneQueryPattern = LuceneQueryPattern(
+        val luceneQueryPattern: Seq[LuceneQueryPattern] = Seq(LuceneQueryPattern(
             subj = textValueVar,
             obj = textValHasString,
-            queryString = searchTerms
-        )
+            queryString = searchTerms,
+            literalStatement = None // We have to add this statement ourselves, so LuceneQueryPattern doesn't need to.
+        ))
 
         // Generate query patterns to assign the text in the standoff tag to a variable, if we
         // haven't done so already.
@@ -1368,7 +1367,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         TransformedFilterPattern(
             expression = None, // The expression has been replaced by additional patterns.
-            additionalPatterns = (valueHasStringStatement :+ luceneQueryPattern) ++ markedUpPatternsToAdd ++ regexFilters
+            additionalPatterns = valueHasStringStatement.toSeq ++ luceneQueryPattern ++ markedUpPatternsToAdd ++ regexFilters
         )
     }
 
@@ -1443,19 +1442,19 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val resourceVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
 
         typeInspectionResult.getTypeOfEntity(resourceVar) match {
-            case Some(nonPropInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropInfo.typeIri) => ()
+            case Some(nonPropInfo: NonPropertyTypeInfo) if nonPropInfo.isResourceType => ()
             case _ => throw GravsearchException(s"${resourceVar.toSparql} must be a knora-api:Resource")
         }
 
-        // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+        // Add an optional statement to assign the literal to a variable, which we can pass to LuceneQueryPattern,
         // if that statement hasn't been added already.
 
         val rdfsLabelVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = resourceVar, propertyIri = OntologyConstants.Rdfs.Label)
 
         val rdfsLabelStatement = if (addGeneratedVariableForValueLiteral(resourceVar, rdfsLabelVar)) {
-            Seq(StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar))
+            Some(StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar))
         } else {
-            Seq.empty[StatementPattern]
+            None
         }
 
         val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
@@ -1464,11 +1463,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         // Replace the filter with a LuceneQueryPattern.
         TransformedFilterPattern(
             None, // The FILTER has been replaced by statements.
-            rdfsLabelStatement :+ LuceneQueryPattern(
+            Seq(LuceneQueryPattern(
                 subj = resourceVar,
                 obj = rdfsLabelVar,
-                queryString = luceneQueryString
-            )
+                queryString = luceneQueryString,
+                literalStatement = rdfsLabelStatement
+            ))
         )
     }
 
@@ -1514,7 +1514,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
         typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-            case Some(NonPropertyTypeInfo(typeIri)) if typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
+            case Some(nonPropertyTypeInfo : NonPropertyTypeInfo) if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
             case _ => throw GravsearchException(s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
         }
 
@@ -1685,6 +1685,49 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case other => throw NotImplementedException(s"$other not supported as FilterExpression")
         }
 
+    }
+
+    /**
+     * Removes the type statements for entities whose types can be inferred from properties unless the property statement
+     * is in an optional block.
+     *
+     * @param patterns     the query patterns.
+     * @return a set of [[QueryPattern]].
+     */
+    protected def removeEntitiesInferredFromProperty(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+
+        // Collect all entities which are used as subject or object of an OptionalPattern.
+        val optionalEntities = patterns.filter {
+            case OptionalPattern(_) => true
+            case _ => false
+        }.flatMap {
+            case optionalPattern: OptionalPattern =>
+                optionalPattern.patterns.flatMap {
+                    case pattern: StatementPattern =>
+                        GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.obj)
+                    case _ => None
+                }
+            case _ => None
+        }
+
+        // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
+        val optimisedPatterns = patterns.filter {
+            case stamentPattern: StatementPattern =>
+                stamentPattern.pred match {
+                    case iriRef: IriRef =>
+                        val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(stamentPattern.subj)
+                        subject match {
+                            case Some(typeableEntity) =>
+                                !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
+                                    && !optionalEntities.contains(typeableEntity))
+                            case _ => true
+                        }
+
+                    case _ => true
+                }
+            case _ => true
+        }
+        optimisedPatterns
     }
 
 }

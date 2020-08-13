@@ -26,26 +26,26 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString}
 
 /**
-  *
-  * A trait for Knora API V2 response messages. Any response can be converted into JSON-LD.
-  *
-  */
+ *
+ * A trait for Knora API V2 response messages. Any response can be converted into JSON-LD.
+ *
+ */
 trait KnoraResponseV2 {
 
     /**
-      * Converts the response to a data structure that can be used to generate JSON-LD.
-      *
-      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-      * @return a [[JsonLDDocument]] representing the response.
-      */
+     * Converts the response to a data structure that can be used to generate JSON-LD.
+     *
+     * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+     * @return a [[JsonLDDocument]] representing the response.
+     */
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument
 }
 
 /**
-  * Provides a message indicating that the result of an operation was successful.
-  *
-  * @param message the message to be returned.
-  */
+ * Provides a message indicating that the result of an operation was successful.
+ *
+ * @param message the message to be returned.
+ */
 case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         val (ontologyPrefixExpansion, resultProp) = targetSchema match {
@@ -65,20 +65,20 @@ case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
 }
 
 /**
-  * A trait for content classes that can convert themselves between internal and internal schemas.
-  *
-  * @tparam C the type of the content class that extends this trait.
-  */
+ * A trait for content classes that can convert themselves between internal and internal schemas.
+ *
+ * @tparam C the type of the content class that extends this trait.
+ */
 trait KnoraContentV2[C <: KnoraContentV2[C]] {
     this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
 
 /**
-  * A trait for read wrappers that can convert themselves to external schemas.
-  *
-  * @tparam C the type of the read wrapper that extends this trait.
-  */
+ * A trait for read wrappers that can convert themselves to external schemas.
+ *
+ * @tparam C the type of the read wrapper that extends this trait.
+ */
 trait KnoraReadV2[C <: KnoraReadV2[C]] {
     this: C =>
     def toOntologySchema(targetSchema: ApiV2Schema): C
@@ -86,11 +86,11 @@ trait KnoraReadV2[C <: KnoraReadV2[C]] {
 
 
 /**
-  * Allows the successful result of an update operation to indicate which project was updated.
-  */
+ * Allows the successful result of an update operation to indicate which project was updated.
+ */
 trait UpdateResultInProject {
     /**
-      * The project that was updated.
-      */
+     * The project that was updated.
+     */
     def projectADM: ProjectADM
 }

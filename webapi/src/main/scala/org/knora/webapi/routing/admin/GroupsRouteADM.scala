@@ -347,6 +347,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             changeGroupStatusRequest <- changeGroupStatusTestRequest
             getGroupMembersResponse <- getGroupMembersTestResponse
         } yield createGroupRequest + getGroupsResponse + getGroupByIriResponse + updateGroupRequest +
-                changeGroupStatusRequest + getGroupMembersResponse
-        }
+            changeGroupStatusRequest + getGroupMembersResponse
+    }
 }

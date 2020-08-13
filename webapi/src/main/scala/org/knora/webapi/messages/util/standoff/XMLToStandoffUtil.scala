@@ -36,59 +36,59 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import scala.xml._
 
 /**
-  * Represents an attribute of a standoff tag.
-  *
-  * @param key          the name of the attribute.
-  * @param xmlNamespace the XML namespace that is used for the attribute when the tag is represented as XML.
-  * @param value        the value of the attribute.
-  */
+ * Represents an attribute of a standoff tag.
+ *
+ * @param key          the name of the attribute.
+ * @param xmlNamespace the XML namespace that is used for the attribute when the tag is represented as XML.
+ * @param value        the value of the attribute.
+ */
 case class StandoffTagAttribute(key: String, xmlNamespace: Option[IRI], value: String)
 
 /**
-  * Represents markup on a range of characters in a text.
-  */
+ * Represents markup on a range of characters in a text.
+ */
 sealed trait StandoffTag {
     /**
-      * The document-specific ID of this tag, if any.
-      */
+     * The document-specific ID of this tag, if any.
+     */
     def originalID: Option[String]
 
     /**
-      * A [[UUID]] representing this tag and any other tags that point to semantically equivalent
-      * content in other versions of the same text.
-      */
+     * A [[UUID]] representing this tag and any other tags that point to semantically equivalent
+     * content in other versions of the same text.
+     */
     def uuid: UUID
 
     /**
-      * The name of the tag.
-      */
+     * The name of the tag.
+     */
     def tagName: String
 
     /**
-      * The namespace used when this tag is represented as XML.
-      */
+     * The namespace used when this tag is represented as XML.
+     */
     def xmlNamespace: Option[IRI]
 
     /**
-      * The start position of the text range.
-      */
+     * The start position of the text range.
+     */
     def startPosition: Int
 
     /**
-      * The end position of the text range.
-      */
+     * The end position of the text range.
+     */
     def endPosition: Int
 
     /**
-      * The attributes attached to this tag.
-      */
+     * The attributes attached to this tag.
+     */
     def attributes: Set[StandoffTagAttribute]
 }
 
 /**
-  * Represents a [[StandoffTag]] that has a single index indicating its position in a sequence of standoff tags,
-  * and optionally the index of the tag that contains it.
-  */
+ * Represents a [[StandoffTag]] that has a single index indicating its position in a sequence of standoff tags,
+ * and optionally the index of the tag that contains it.
+ */
 sealed trait IndexedStandoffTag extends StandoffTag {
     def index: Int
 
@@ -96,22 +96,22 @@ sealed trait IndexedStandoffTag extends StandoffTag {
 }
 
 /**
-  * Represents a standoff tag that requires a hierarchical document structure. When serialised to XML, it is represented
-  * as a single element.
-  *
-  * @param originalID    a client-specific ID for the tag.
-  * @param uuid          a [[UUID]] representing this tag and any other tags that
-  *                      point to semantically equivalent content in other versions of the same text.
-  * @param tagName       the name of this tag.
-  * @param xmlNamespace  the namespace used when this tag is represented as XML.
-  * @param attributes    the attributes attached to this tag.
-  * @param startPosition the start position of the range of characters marked up with this tag.
-  * @param endPosition   the end position of the range of characters marked up with this tag.
-  * @param index         the index of this tag. Indexes are numbered from 0 within the context of a particular text,
-  *                      and make it possible to order tags that share the same position.
-  * @param parentIndex   the index of the [[HierarchicalStandoffTag]] that contains this tag. If a tag has no
-  *                      parent, it is the root of the tree.
-  */
+ * Represents a standoff tag that requires a hierarchical document structure. When serialised to XML, it is represented
+ * as a single element.
+ *
+ * @param originalID    a client-specific ID for the tag.
+ * @param uuid          a [[UUID]] representing this tag and any other tags that
+ *                      point to semantically equivalent content in other versions of the same text.
+ * @param tagName       the name of this tag.
+ * @param xmlNamespace  the namespace used when this tag is represented as XML.
+ * @param attributes    the attributes attached to this tag.
+ * @param startPosition the start position of the range of characters marked up with this tag.
+ * @param endPosition   the end position of the range of characters marked up with this tag.
+ * @param index         the index of this tag. Indexes are numbered from 0 within the context of a particular text,
+ *                      and make it possible to order tags that share the same position.
+ * @param parentIndex   the index of the [[HierarchicalStandoffTag]] that contains this tag. If a tag has no
+ *                      parent, it is the root of the tree.
+ */
 case class HierarchicalStandoffTag(originalID: Option[String],
                                    uuid: UUID,
                                    tagName: String,
@@ -123,24 +123,24 @@ case class HierarchicalStandoffTag(originalID: Option[String],
                                    parentIndex: Option[Int] = None) extends IndexedStandoffTag
 
 /**
-  * Represents a standoff tag that does not require a hierarchical document structure, although it can be used within
-  * such a structure. Its XML representation is a pair of empty elements in
-  * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format.
-  *
-  * @param originalID       a client-specific ID for the tag.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param tagName          the name of the tag.
-  * @param xmlNamespace     the namespace used when this tag is represented as XML.
-  * @param attributes       the attributes attached to this tag.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of the start position. Indexes are numbered from 0 within the context of a
-  *                         particular text, and make it possible to order tags that share the same position.
-  * @param startParentIndex the index of the [[HierarchicalStandoffTag]], if any, that contains the start position.
-  * @param endIndex         the index of the end position.
-  * @param endParentIndex   the index of the [[HierarchicalStandoffTag]], if any, that contains the end position.
-  */
+ * Represents a standoff tag that does not require a hierarchical document structure, although it can be used within
+ * such a structure. Its XML representation is a pair of empty elements in
+ * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format.
+ *
+ * @param originalID       a client-specific ID for the tag.
+ * @param uuid             a [[UUID]] representing this tag and any other tags that
+ *                         point to semantically equivalent content in other versions of the same text.
+ * @param tagName          the name of the tag.
+ * @param xmlNamespace     the namespace used when this tag is represented as XML.
+ * @param attributes       the attributes attached to this tag.
+ * @param startPosition    the start position of the range of characters marked up with this tag.
+ * @param endPosition      the end position of the range of characters marked up with this tag.
+ * @param startIndex       the index of the start position. Indexes are numbered from 0 within the context of a
+ *                         particular text, and make it possible to order tags that share the same position.
+ * @param startParentIndex the index of the [[HierarchicalStandoffTag]], if any, that contains the start position.
+ * @param endIndex         the index of the end position.
+ * @param endParentIndex   the index of the [[HierarchicalStandoffTag]], if any, that contains the end position.
+ */
 case class FreeStandoffTag(originalID: Option[String],
                            uuid: UUID,
                            tagName: String,
@@ -154,73 +154,73 @@ case class FreeStandoffTag(originalID: Option[String],
                            endParentIndex: Option[Int] = None) extends StandoffTag
 
 /**
-  * Represents a text and its standoff markup.
-  *
-  * @param text     the text that has been marked up with standoff.
-  * @param standoff the standoff markup.
-  */
+ * Represents a text and its standoff markup.
+ *
+ * @param text     the text that has been marked up with standoff.
+ * @param standoff the standoff markup.
+ */
 case class TextWithStandoff(text: String, standoff: Seq[StandoffTag])
 
 /**
-  * Represents a difference between two texts, a base text and a derived text.
-  */
+ * Represents a difference between two texts, a base text and a derived text.
+ */
 trait StandoffDiff {
     /**
-      * The position in the base text where the difference starts.
-      */
+     * The position in the base text where the difference starts.
+     */
     def baseStartPosition: Int
 
     /**
-      * The position in the derived text where the difference starts.
-      */
+     * The position in the derived text where the difference starts.
+     */
     def derivedStartPosition: Int
 }
 
 /**
-  * Represents a string that is in both the base text and the derived text.
-  *
-  * @param baseStartPosition    the start position of the string in the base text.
-  * @param baseEndPosition      the end position of the string in the base text.
-  * @param derivedStartPosition the start position of the string in the derived text.
-  * @param derivedEndPosition   the end position of the string in the derived text.
-  */
+ * Represents a string that is in both the base text and the derived text.
+ *
+ * @param baseStartPosition    the start position of the string in the base text.
+ * @param baseEndPosition      the end position of the string in the base text.
+ * @param derivedStartPosition the start position of the string in the derived text.
+ * @param derivedEndPosition   the end position of the string in the derived text.
+ */
 case class StandoffDiffEqual(baseStartPosition: Int,
                              baseEndPosition: Int,
                              derivedStartPosition: Int,
                              derivedEndPosition: Int) extends StandoffDiff
 
 /**
-  * Represents a string that is present in the derived text but not in the base text.
-  *
-  * @param baseStartPosition    the position in the base text where the string would have to be inserted to match
-  *                             the derived text.
-  * @param derivedStartPosition the start position of the inserted string in the derived text.
-  * @param derivedEndPosition   the end position of the inserted string in the derived text.
-  */
+ * Represents a string that is present in the derived text but not in the base text.
+ *
+ * @param baseStartPosition    the position in the base text where the string would have to be inserted to match
+ *                             the derived text.
+ * @param derivedStartPosition the start position of the inserted string in the derived text.
+ * @param derivedEndPosition   the end position of the inserted string in the derived text.
+ */
 case class StandoffDiffInsert(baseStartPosition: Int,
                               derivedStartPosition: Int,
                               derivedEndPosition: Int) extends StandoffDiff
 
 /**
-  * Represents a string that is present in the base text but not in the derived text.
-  *
-  * @param baseStartPosition    the start position of the deleted string in the base text.
-  * @param baseEndPosition      the end position of the deleted string in the base text.
-  * @param derivedStartPosition the position in the derived text where the string would have to be inserted to
-  *                             match the base text.
-  */
+ * Represents a string that is present in the base text but not in the derived text.
+ *
+ * @param baseStartPosition    the start position of the deleted string in the base text.
+ * @param baseEndPosition      the end position of the deleted string in the base text.
+ * @param derivedStartPosition the position in the derived text where the string would have to be inserted to
+ *                             match the base text.
+ */
 case class StandoffDiffDelete(baseStartPosition: Int,
                               baseEndPosition: Int,
                               derivedStartPosition: Int) extends StandoffDiff
 
 /**
-  * Represents an XML element that requires a separator to be inserted at its end.
-  * This is necessary because the markup is going to be represented in standoff (separated from the text).
-  *
-  * @param maybeNamespace the namespace the element belongs to, if any.
-  * @param tagname        the name of the element.
-  * @param maybeClassname the class of the element, if any.
-  */
+ * Represents an XML element that requires a separator to be inserted at its end.
+ * This is necessary because the markup is going to be represented in standoff (separated from the text).
+ *
+ * @param maybeNamespace the namespace the element belongs to, if any.
+ * @param tagname        the name of the element.
+ * @param maybeClassname the class of the element, if any.
+ */
 case class XMLTagSeparatorRequired(maybeNamespace: Option[String], tagname: String, maybeClassname: Option[String]) {
 
     // generate an XPath expression to match this element
@@ -242,8 +242,8 @@ case class XMLTagSeparatorRequired(maybeNamespace: Option[String], tagname: Stri
 }
 
 /**
-  * Standoff-related constants.
-  */
+ * Standoff-related constants.
+ */
 object XMLToStandoffUtil {
     // The header written at the start of every XML document.
     private val XmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -262,47 +262,47 @@ object XMLToStandoffUtil {
 }
 
 /**
-  * Converts XML documents to standoff markup and back again. Supports
-  * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format
-  * for overlapping tags.
-  *
-  * Every standoff tag has a [[UUID]]. These can be represented in XML in different ways:
-  *
-  * - In canonical form as a 36-character string.
-  * - As a 22-character Base64-encoded string.
-  * - As a document-specific ID that can be mapped to a UUID.
-  *
-  * These IDs are represented using the following XML attributes:
-  *
-  * - `sID` for CLIX start milestones.
-  * - `eID` for CLIX end milestones.
-  * - `id` for all other elements.
-  *
-  * IDs are required on CLIX milestones, and optional on other elements.
-  *
-  * When converting from XML:
-  *
-  * - If a document-specific ID is provided and can be mapped to a UUID, that UUID is used.
-  * - If a UUID is provided in canonical form or Base64 encoding, that UUID is used.
-  * - Otherwise (if no ID is provided, or if an ID is provided but cannot be parsed as a UUID or mapped to one),
-  * a random UUID is generated.
-  *
-  * When converting to XML:
-  *
-  * - If `writeAllIds` is set to `true` (the default), the ID of every element is written; otherwise, only the IDs of
-  * CLIX milestones are included.
-  * - If a UUID can be mapped to a document-specific ID, the document-specific ID is used, otherwise the UUID is used.
-  * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
-  *
-  * @param xmlNamespaces       A map of prefixes to XML namespaces, to be used when converting standoff to XML.
-  * @param writeUuidsToXml     If `true` (the default), adds the ID of every standoff tag as an attribute when writing
-  *                            XML. Otherwise, only the IDs of CLIX milestones and elements that originally had an id in XML are included.
-  * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
-  * @param documentSpecificIDs An optional mapping between document-specific IDs and UUIDs. When reading XML,
-  *                            each document-specific ID will be converted to the corresponding UUID. Elements that
-  *                            don't specify an ID will be assigned a random UUID. When writing XML, each UUID will
-  *                            be converted to the corresponding document-specific ID if available.
-  */
+ * Converts XML documents to standoff markup and back again. Supports
+ * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format
+ * for overlapping tags.
+ *
+ * Every standoff tag has a [[UUID]]. These can be represented in XML in different ways:
+ *
+ * - In canonical form as a 36-character string.
+ * - As a 22-character Base64-encoded string.
+ * - As a document-specific ID that can be mapped to a UUID.
+ *
+ * These IDs are represented using the following XML attributes:
+ *
+ * - `sID` for CLIX start milestones.
+ * - `eID` for CLIX end milestones.
+ * - `id` for all other elements.
+ *
+ * IDs are required on CLIX milestones, and optional on other elements.
+ *
+ * When converting from XML:
+ *
+ * - If a document-specific ID is provided and can be mapped to a UUID, that UUID is used.
+ * - If a UUID is provided in canonical form or Base64 encoding, that UUID is used.
+ * - Otherwise (if no ID is provided, or if an ID is provided but cannot be parsed as a UUID or mapped to one),
+ * a random UUID is generated.
+ *
+ * When converting to XML:
+ *
+ * - If `writeAllIds` is set to `true` (the default), the ID of every element is written; otherwise, only the IDs of
+ * CLIX milestones are included.
+ * - If a UUID can be mapped to a document-specific ID, the document-specific ID is used, otherwise the UUID is used.
+ * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
+ *
+ * @param xmlNamespaces       A map of prefixes to XML namespaces, to be used when converting standoff to XML.
+ * @param writeUuidsToXml     If `true` (the default), adds the ID of every standoff tag as an attribute when writing
+ *                            XML. Otherwise, only the IDs of CLIX milestones and elements that originally had an id in XML are included.
+ * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
+ * @param documentSpecificIDs An optional mapping between document-specific IDs and UUIDs. When reading XML,
+ *                            each document-specific ID will be converted to the corresponding UUID. Elements that
+ *                            don't specify an ID will be assigned a random UUID. When writing XML, each UUID will
+ *                            be converted to the corresponding document-specific ID if available.
+ */
 class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                         defaultXmlNamespace: Option[IRI] = None,
                         writeUuidsToXml: Boolean = true,
@@ -330,10 +330,10 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     )
 
     /**
-      * An empty standoff tag representing a CLIX milestone, to facilitate conversion to and from XML.
-      *
-      * @param isStartTag if `true`, this tag represents the start element, otherwise it represents the end element.
-      */
+     * An empty standoff tag representing a CLIX milestone, to facilitate conversion to and from XML.
+     *
+     * @param isStartTag if `true`, this tag represents the start element, otherwise it represents the end element.
+     */
     private case class ClixMilestoneTag(originalID: Option[String],
                                         uuid: UUID,
                                         tagName: String,
@@ -346,12 +346,12 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                                         isStartTag: Boolean) extends IndexedStandoffTag
 
     /**
-      * Creates XSLT that inserts a separator after each element matching the XPath expression.
-      *
-      * @param xpath     the XPath expression used to match elements.
-      * @param separator the separator to be inserted.
-      * @return an XSLT stylesheet as a [[String]].
-      */
+     * Creates XSLT that inserts a separator after each element matching the XPath expression.
+     *
+     * @param xpath     the XPath expression used to match elements.
+     * @param separator the separator to be inserted.
+     * @return an XSLT stylesheet as a [[String]].
+     */
     private def insertSeparatorsXSLT(xpath: String, separator: Char) =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |
@@ -382,13 +382,13 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     // Public methods
 
     /**
-      * Converts an XML document to an equivalent [[TextWithStandoff]].
-      *
-      * @param xmlStr            the XML document to be converted.
-      * @param tagsWithSeparator a Seq with the tags that require a separator
-      *                          in the string representation (`valueHasString`) once markup is converted to standoff.
-      * @return a [[TextWithStandoff]].
-      */
+     * Converts an XML document to an equivalent [[TextWithStandoff]].
+     *
+     * @param xmlStr            the XML document to be converted.
+     * @param tagsWithSeparator a Seq with the tags that require a separator
+     *                          in the string representation (`valueHasString`) once markup is converted to standoff.
+     * @return a [[TextWithStandoff]].
+     */
     def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired], log: LoggingAdapter): TextWithStandoff = {
 
         // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But
@@ -461,11 +461,11 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     }
 
     /**
-      * Converts a [[TextWithStandoff]] to an equivalent XML document.
-      *
-      * @param textWithStandoff the [[TextWithStandoff]] to be converted.
-      * @return an XML document.
-      */
+     * Converts a [[TextWithStandoff]] to an equivalent XML document.
+     *
+     * @param textWithStandoff the [[TextWithStandoff]] to be converted.
+     * @return an XML document.
+     */
     def textWithStandoff2Xml(textWithStandoff: TextWithStandoff): String = {
         val tags = textWithStandoff.standoff.foldLeft(Vector.empty[IndexedStandoffTag]) {
             // Split each free tag into a pair of CLIX milestones.
@@ -545,12 +545,12 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     }
 
     /**
-      * Computes the differences between a base text and a derived text.
-      *
-      * @param baseText    the base text.
-      * @param derivedText the derived text.
-      * @return the differences between the two texts.
-      */
+     * Computes the differences between a base text and a derived text.
+     *
+     * @param baseText    the base text.
+     * @param derivedText the derived text.
+     * @return the differences between the two texts.
+     */
     def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
         import scala.collection.JavaConverters._
 
@@ -611,14 +611,14 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     }
 
     /**
-      * Converts standoff diffs to XML. The resulting XML has a root element called `<diff>` containing the base
-      * text, along with `<del>` tags representing deletions and `<ins>` tags representing insertions.
-      *
-      * @param baseText      the base text that was used to calculate the diffs.
-      * @param derivedText   the derived text that was used to calculate the diffs.
-      * @param standoffDiffs the standoff diffs.
-      * @return an XML representation of the diffs.
-      */
+     * Converts standoff diffs to XML. The resulting XML has a root element called `<diff>` containing the base
+     * text, along with `<del>` tags representing deletions and `<ins>` tags representing insertions.
+     *
+     * @param baseText      the base text that was used to calculate the diffs.
+     * @param derivedText   the derived text that was used to calculate the diffs.
+     * @param standoffDiffs the standoff diffs.
+     * @return an XML representation of the diffs.
+     */
     def standoffDiffs2Xml(baseText: String, derivedText: String, standoffDiffs: Seq[StandoffDiff]): String = {
         val stringBuilder = new StringBuilder(XmlHeader).append("<diffs>")
 
@@ -640,13 +640,13 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     }
 
     /**
-      * Given a set of standoff tags referring to an old version of a text and a set of standoff tags referring to a newer
-      * version of the text, finds the standoff tags that have been added or removed.
-      *
-      * @param oldStandoff the standoff tags referring to the old version of the text.
-      * @param newStandoff the standoff tags referring to the new version of the text.
-      * @return a tuple containing the added standoff tags and the removed standoff tags.
-      */
+     * Given a set of standoff tags referring to an old version of a text and a set of standoff tags referring to a newer
+     * version of the text, finds the standoff tags that have been added or removed.
+     *
+     * @param oldStandoff the standoff tags referring to the old version of the text.
+     * @param newStandoff the standoff tags referring to the new version of the text.
+     * @return a tuple containing the added standoff tags and the removed standoff tags.
+     */
     def findChangedStandoffTags(oldStandoff: Seq[StandoffTag], newStandoff: Seq[StandoffTag]): (Set[StandoffTag], Set[StandoffTag]) = {
         def makeStandoffTagUuidMap(standoff: Seq[StandoffTag]): Map[UUID, StandoffTag] = standoff.map {
             tag => tag.uuid -> tag
@@ -671,16 +671,16 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     // Private methods
 
     /**
-      * Represents the state of the conversion of XML text to standoff.
-      *
-      * @param currentPos          the current position in the text.
-      * @param parentId            the ID of the parent [[HierarchicalStandoffTag]], or [[None]] if the root element is
-      *                            being generated.
-      * @param nextIndex           the next available standoff tag index.
-      * @param standoffTags        the standoff tags generated so far.
-      * @param clixStartMilestones a map of element IDs to CLIX start milestones for which end milestones have not yet
-      *                            been encountered.
-      */
+     * Represents the state of the conversion of XML text to standoff.
+     *
+     * @param currentPos          the current position in the text.
+     * @param parentId            the ID of the parent [[HierarchicalStandoffTag]], or [[None]] if the root element is
+     *                            being generated.
+     * @param nextIndex           the next available standoff tag index.
+     * @param standoffTags        the standoff tags generated so far.
+     * @param clixStartMilestones a map of element IDs to CLIX start milestones for which end milestones have not yet
+     *                            been encountered.
+     */
     private case class Xml2StandoffState(currentPos: Int = 0,
                                          parentId: Option[Int] = None,
                                          nextIndex: Int = 0,
@@ -688,19 +688,19 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                                          clixStartMilestones: Map[String, ClixMilestoneTag] = Map.empty[String, ClixMilestoneTag])
 
     /**
-      * Recursively converts XML nodes to standoff.
-      *
-      * @param nodes      a sequence of sibling XML nodes to be converted.
-      * @param startState the current state of the conversion.
-      * @return the resulting conversion state.
-      */
+     * Recursively converts XML nodes to standoff.
+     *
+     * @param nodes      a sequence of sibling XML nodes to be converted.
+     * @param startState the current state of the conversion.
+     * @return the resulting conversion state.
+     */
     private def xmlNodes2Standoff(nodes: NodeSeq, startState: Xml2StandoffState): Xml2StandoffState = {
         /**
-          * Converts an XML element ID to a UUID.
-          *
-          * @param id the ID to be converted.
-          * @return the corresponding UUID.
-          */
+         * Converts an XML element ID to a UUID.
+         *
+         * @param id the ID to be converted.
+         * @return the corresponding UUID.
+         */
         def id2Uuid(id: String): UUID = {
             // If the ID was listed as a document-specific ID corresponding to an existing UUID, use that UUID.
             documentSpecificIDs.get(id) match {
@@ -717,11 +717,11 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         }
 
         /**
-          * Converts XML attributes to standoff tag attributes, ignoring ID attributes.
-          *
-          * @param element the XML element containing the attributes.
-          * @return the corresponding standoff tag attributes.
-          */
+         * Converts XML attributes to standoff tag attributes, ignoring ID attributes.
+         *
+         * @param element the XML element containing the attributes.
+         * @return the corresponding standoff tag attributes.
+         */
         def xmlAttrs2StandoffAttrs(element: Elem): Set[StandoffTagAttribute] = {
             element.attributes.foldLeft(Set.empty[StandoffTagAttribute]) {
                 case (acc, xmlAttr: MetaData) if !XmlIdAttrNames.contains(xmlAttr.key) => acc + StandoffTagAttribute(
@@ -845,17 +845,17 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     }
 
     /**
-      * Recursively generates XML text representing [[IndexedStandoffTag]] objects.
-      *
-      * @param text              the text that has been marked up.
-      * @param groupedTags       a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by
-      *                          parent tag index.
-      * @param posBeforeSiblings the last position that was processed before this method was called. If there is
-      *                          any text before `siblings`, this position will be less than the position of the
-      *                          first sibling..
-      * @param siblings          a sequence of tags having the same parent.
-      * @param xmlString         the resulting XML text.
-      */
+     * Recursively generates XML text representing [[IndexedStandoffTag]] objects.
+     *
+     * @param text              the text that has been marked up.
+     * @param groupedTags       a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by
+     *                          parent tag index.
+     * @param posBeforeSiblings the last position that was processed before this method was called. If there is
+     *                          any text before `siblings`, this position will be less than the position of the
+     *                          first sibling..
+     * @param siblings          a sequence of tags having the same parent.
+     * @param xmlString         the resulting XML text.
+     */
     private def standoffTags2XmlString(text: String,
                                        groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]],
                                        posBeforeSiblings: Int,
@@ -863,12 +863,12 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                                        writeNamespaces: Boolean = false,
                                        xmlString: StringBuilder): Int = {
         /**
-          * Adds an optional XML namespace prefix to the name of an XML element or attribute.
-          *
-          * @param unprefixedName the unprefixed name of the element or attribute.
-          * @param xmlNamespace   the XML namespace.
-          * @return the prefixed name.
-          */
+         * Adds an optional XML namespace prefix to the name of an XML element or attribute.
+         *
+         * @param unprefixedName the unprefixed name of the element or attribute.
+         * @param xmlNamespace   the XML namespace.
+         * @return the prefixed name.
+         */
         def makePrefixedXmlName(unprefixedName: String, xmlNamespace: Option[IRI]): String = {
             (xmlNamespace, defaultXmlNamespace) match {
                 case (Some(namespace), Some(defaultNamespace)) if namespace != defaultNamespace =>
@@ -882,11 +882,11 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         }
 
         /**
-          * Writes key-value pairs representing the default XML namespaces, prefixes for other XML namespaces,
-          * and the attributes of an XML element.
-          *
-          * @param tag the tag being converted to XML.
-          */
+         * Writes key-value pairs representing the default XML namespaces, prefixes for other XML namespaces,
+         * and the attributes of an XML element.
+         *
+         * @param tag the tag being converted to XML.
+         */
         def attributesAndNamespaces2Xml(tag: IndexedStandoffTag): Unit = {
             // If we were asked to write definitions of the default namespace and of namespace prefixes
             // (because we're writing the root element of the XML document), add them first.

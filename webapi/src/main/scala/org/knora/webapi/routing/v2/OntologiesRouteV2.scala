@@ -596,8 +596,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             case (filename, classIri) =>
                 val encodedClassIri = URLEncoder.encode(classIri, "UTF-8")
                 val segment = if (filename.endsWith("-with-allLanguages-response"))
-                        encodedClassIri + "?allLanguages=true"
-                        else  encodedClassIri
+                    encodedClassIri + "?allLanguages=true"
+                else encodedClassIri
                 for {
 
                     responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/classes/$segment"))
@@ -983,7 +983,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             createOntologyResponse: TestDataFileContent <- createOntologyTestResponse
             updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
             createClassRequest: Set[TestDataFileContent] <- createClassTestRequest
-            createClassResponse: TestDataFileContent<- createClassTestResponse
+            createClassResponse: TestDataFileContent <- createClassTestResponse
             addCardinalitiesRequest: TestDataFileContent <- addCardinalitiesTestRequest
             createPropertyRequest: TestDataFileContent <- createPropertyTestRequest
             updateClassRequest: Set[TestDataFileContent] <- updateClassTestRequest

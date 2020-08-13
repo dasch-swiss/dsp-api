@@ -409,7 +409,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             createChildNodeRequest <- createChildNodeTestRequest
             getListInfoTestResponse <- getListInfoTestResponse
             getListNodeInfoTestResponse <- getListNodeInfoTestResponse
-        } yield  createListRequest + getListsResponse + getListResponse + updateListInfoRequest +
-                 createChildNodeRequest + getListInfoTestResponse + getListNodeInfoTestResponse
+        } yield createListRequest + getListsResponse + getListResponse + updateListInfoRequest +
+            createChildNodeRequest + getListInfoTestResponse + getListNodeInfoTestResponse
     }
 }

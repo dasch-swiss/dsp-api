@@ -34,16 +34,16 @@ import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, SECONDS}
 
 /**
-  * Provides an HTML view of a resource.
-  */
+ * Provides an HTML view of a resource.
+ */
 object ResourceHtmlView {
 
     private implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger("org.knora.webapi.viewhandlers.ResourceHtmlView"))
 
     /**
-      * A user representing the Knora API server, used in those cases where a user is required.
-      */
+     * A user representing the Knora API server, used in those cases where a user is required.
+     */
     private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorRef): String = {

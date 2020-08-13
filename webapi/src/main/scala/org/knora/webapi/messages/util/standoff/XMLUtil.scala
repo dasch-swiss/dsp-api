@@ -28,12 +28,12 @@ import org.knora.webapi.exceptions.StandoffConversionException
 object XMLUtil {
 
     /**
-      * Applies an XSL transformation to the given XML and returns the result.
-      *
-      * @param xml the xml to be transformed.
-      * @param xslt the XSL transformation to be applied.
-      * @return the transformation's result.
-      */
+     * Applies an XSL transformation to the given XML and returns the result.
+     *
+     * @param xml  the xml to be transformed.
+     * @param xslt the XSL transformation to be applied.
+     * @return the transformation's result.
+     */
     def applyXSLTransformation(xml: String, xslt: String): String = {
 
         // apply the XSL transformation to xml

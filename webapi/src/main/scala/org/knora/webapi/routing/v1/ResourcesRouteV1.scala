@@ -274,7 +274,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 projectIri = projectIri,
                 values = valuesToBeCreated.toMap,
                 file = if (multipartConversionRequest.nonEmpty) // either multipartConversionRequest or paramConversionRequest might be given, but never both
-                    multipartConversionRequest // Non GUI-case
+                multipartConversionRequest // Non GUI-case
                 else if (paramConversionRequest.nonEmpty)
                     paramConversionRequest // GUI-case
                 else None, // no file given

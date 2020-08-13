@@ -735,7 +735,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             updateUserSystemAdminMembershipRequest <- updateUserSystemAdminMembershipTestRequest
             getUserProjectMembershipsResponse <- getUserProjectMembershipsTestResponse
         } yield createUserRequest + updateUserRequest +
-                updateUserPasswordRequest + updateUserStatusRequest + updateUserSystemAdminMembershipRequest +
-                getUserProjectMembershipsResponse + getUsersResponse + getUserResponse + getUserGroupMembershipsResponse
+            updateUserPasswordRequest + updateUserStatusRequest + updateUserSystemAdminMembershipRequest +
+            getUserProjectMembershipsResponse + getUsersResponse + getUserResponse + getUserGroupMembershipsResponse
     }
 }

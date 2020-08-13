@@ -34,29 +34,31 @@ import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EmptyKey(message: String) extends RedisException(message)
+
 case class EmptyValue(message: String) extends RedisException(message)
+
 case class UnsupportedValueType(message: String) extends RedisException(message)
 
 class CacheServiceManager extends Actor with ActorLogging with LazyLogging with InstrumentationSupport {
 
     /**
-      * The Knora Akka actor system.
-      */
+     * The Knora Akka actor system.
+     */
     protected implicit val _system: ActorSystem = context.system
 
     /**
-      * The Akka actor system's execution context for futures.
-      */
+     * The Akka actor system's execution context for futures.
+     */
     protected implicit val ec: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     /**
-      * The Knora settings.
-      */
+     * The Knora settings.
+     */
     protected val s: KnoraSettingsImpl = KnoraSettings(context.system)
 
     /**
-      * The Redis Client Pool
-      */
+     * The Redis Client Pool
+     */
     val pool: JedisPool = new JedisPool(new JedisPoolConfig(), s.redisHost, s.redisPort, 20999)
 
     // this is needed for time measurements using 'org.knora.webapi.Timing'
@@ -79,19 +81,19 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
         case CacheServiceRemoveValues(keys) => future2Message(sender(), removeValues(keys), log)
         case CacheServiceFlushDB(requestingUser) => future2Message(sender(), flushDB(requestingUser), log)
         case CacheServiceGetStatus => future2Message(sender(), ping(), log)
-        case other =>  sender ! Status.Failure(UnexpectedMessageException(s"RedisManager received an unexpected message: $other"))
+        case other => sender ! Status.Failure(UnexpectedMessageException(s"RedisManager received an unexpected message: $other"))
     }
 
     /**
-      * Stores the user under the IRI and additionally the IRI under the keys of
-      * USERNAME and EMAIL:
-      *
-      * IRI -> byte array
-      * username -> IRI
-      * email -> IRI
-      *
-      * @param value the stored value
-      */
+     * Stores the user under the IRI and additionally the IRI under the keys of
+     * USERNAME and EMAIL:
+     *
+     * IRI -> byte array
+     * username -> IRI
+     * email -> IRI
+     *
+     * @param value the stored value
+     */
     private def redisPutUserADM(value: UserADM): Future[Boolean] = tracedFuture("redis-write-user") {
 
         val resultFuture = for {
@@ -102,7 +104,7 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
             _ = writeStringValue(value.email, value.id)
         } yield result
 
-        val recoverableResultFuture = resultFuture.recover{
+        val recoverableResultFuture = resultFuture.recover {
             case e: Exception =>
                 logger.warn("Aborting writing 'UserADM' to Redis - {}", e.getMessage)
                 false
@@ -112,11 +114,11 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Retrieves the user stored under the identifier (either iri, username,
-      * or email).
-      *
-      * @param identifier the project identifier.
-      */
+     * Retrieves the user stored under the identifier (either iri, username,
+     * or email).
+     *
+     * @param identifier the project identifier.
+     */
     private def redisGetUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] = tracedFuture("redis-read-user") {
 
         // The data is stored under the IRI key.
@@ -163,15 +165,15 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
 
 
     /**
-      * Stores the project under the IRI and additionally the IRI under the keys
-      * of SHORTCODE and SHORTNAME:
-      *
-      * IRI -> byte array
-      * shortname -> IRI
-      * shortcode -> IRI
-      *
-      * @param value the stored value
-      */
+     * Stores the project under the IRI and additionally the IRI under the keys
+     * of SHORTCODE and SHORTNAME:
+     *
+     * IRI -> byte array
+     * shortname -> IRI
+     * shortcode -> IRI
+     *
+     * @param value the stored value
+     */
     private def redisPutProjectADM(value: ProjectADM): Future[Boolean] = tracedFuture("redis-write-project") {
 
         val resultFuture = for {
@@ -191,10 +193,10 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
-      *
-      * @param identifier the project identifier.
-      */
+     * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
+     *
+     * @param identifier the project identifier.
+     */
     private def redisGetProjectADM(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = tracedFuture("redis-read-project") {
 
         // The data is stored under the IRI key.
@@ -238,10 +240,11 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Get value stored under the key as a byte array. If no value is found
-      * under the key, then a [[None]] is returned..
-      * @param maybeKey the key.
-      */
+     * Get value stored under the key as a byte array. If no value is found
+     * under the key, then a [[None]] is returned..
+     *
+     * @param maybeKey the key.
+     */
     private def getBytesValue(maybeKey: Option[String]): Future[Option[Array[Byte]]] = {
 
         val operationFuture: Future[Option[Array[Byte]]] = maybeKey match {
@@ -269,11 +272,11 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Store string or byte array value under key.
-      *
-      * @param key the key.
-      * @param value the value.
-      */
+     * Store string or byte array value under key.
+     *
+     * @param key   the key.
+     * @param value the value.
+     */
     private def writeBytesValue(key: String, value: Array[Byte]): Future[Boolean] = {
 
         if (key.isEmpty)
@@ -303,9 +306,10 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Get value stored under the key as a string.
-      * @param maybeKey the key.
-      */
+     * Get value stored under the key as a string.
+     *
+     * @param maybeKey the key.
+     */
     private def getStringValue(maybeKey: Option[String]): Future[Option[String]] = {
 
         val operationFuture: Future[Option[String]] = maybeKey match {
@@ -333,11 +337,11 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Store string or byte array value under key.
-      *
-      * @param key the key.
-      * @param value the value.
-      */
+     * Store string or byte array value under key.
+     *
+     * @param key   the key.
+     * @param value the value.
+     */
     private def writeStringValue(key: String, value: String): Future[Boolean] = {
 
         if (key.isEmpty)
@@ -369,10 +373,10 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Removes values for the provided keys. Any invalid keys are ignored.
-      *
-      * @param keys the keys.
-      */
+     * Removes values for the provided keys. Any invalid keys are ignored.
+     *
+     * @param keys the keys.
+     */
     private def removeValues(keys: Set[String]): Future[Boolean] = tracedFuture("redis-remove-values") {
 
         logger.debug("removeValues - {}", keys)
@@ -399,8 +403,8 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Flushes (removes) all stored content from the Redis store.
-      */
+     * Flushes (removes) all stored content from the Redis store.
+     */
     private def flushDB(requestingUser: UserADM): Future[CacheServiceFlushDBACK] = tracedFuture("redis-flush-db") {
 
         if (!requestingUser.isSystemUser) {
@@ -429,8 +433,8 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     /**
-      * Pings the Redis store to see if it is available.
-      */
+     * Pings the Redis store to see if it is available.
+     */
     private def ping(): Future[CacheServiceStatusResponse] = {
         val operationFuture: Future[CacheServiceStatusResponse] = Future {
 

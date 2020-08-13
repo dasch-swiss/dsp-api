@@ -13,6 +13,7 @@ import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, Gravs
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -121,19 +122,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
             groupBy = Nil,
             orderBy = Nil,
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(
@@ -250,19 +239,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
             groupBy = Nil,
             orderBy = Nil,
             whereClause = WhereClause(
-                patterns = Vector(
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "thing"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = IriRef(
-                            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        namedGraph = None
-                    ),
+                patterns = ArrayBuffer(
                     StatementPattern(
                         subj = QueryVariable(variableName = "thing"),
                         pred = IriRef(

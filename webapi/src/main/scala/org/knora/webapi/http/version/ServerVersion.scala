@@ -25,13 +25,16 @@ import akka.http.scaladsl.server.Directives.respondWithHeader
 import akka.http.scaladsl.server.Route
 
 /**
-  * This object provides methods that can be used to add the [[Server]] header to an [[HttpResponse]].
-  */
+ * This object provides methods that can be used to add the [[Server]] header to an [[HttpResponse]].
+ */
 object ServerVersion {
 
     private val ServerVersionString = s"${VersionInfo.name}/${VersionInfo.version}" + " " + s"akka-http/${VersionInfo.akkaHttpVersion}"
     private val ServerVersionHeader = `Server`(ServerVersionString)
 
-    def addServerHeader(route: Route):Route = respondWithHeader(ServerVersionHeader) {route}
+    def addServerHeader(route: Route): Route = respondWithHeader(ServerVersionHeader) {
+        route
+    }
+
     def getServerVersionHeader() = ServerVersionHeader
 }

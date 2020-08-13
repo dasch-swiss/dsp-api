@@ -31,34 +31,34 @@ import org.knora.webapi.{messages, _}
 
 
 /**
-  * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
-  */
+ * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
+ */
 sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 
 /**
-  * Requests a list. A successful response will be a [[ListGetResponseV2]]
-  *
-  * @param listIri        the IRI of the list (Iri of the list's root node).
-  * @param requestingUser the user making the request.
-  */
+ * Requests a list. A successful response will be a [[ListGetResponseV2]]
+ *
+ * @param listIri        the IRI of the list (Iri of the list's root node).
+ * @param requestingUser the user making the request.
+ */
 case class ListGetRequestV2(listIri: IRI,
                             requestingUser: UserADM) extends ListsResponderRequestV2
 
 
 /**
-  * An abstract trait providing a convenience method for language handling.
-  */
+ * An abstract trait providing a convenience method for language handling.
+ */
 trait ListResponderResponseV2 {
 
     /**
-      * Given an Iri and a [[StringLiteralSequenceV2]], gets he string value in the user's preferred language.
-      *
-      * @param iri        the Iri pointing to the string value.
-      * @param stringVals the string values to choose from.
-      * @param userLang   the user's preferred language.
-      * @param fallbackLang the fallback language if the preferred language is not available.
-      * @return a [[Map[IRI, JsonLDString]] (empty in case no string value is available).
-      */
+     * Given an Iri and a [[StringLiteralSequenceV2]], gets he string value in the user's preferred language.
+     *
+     * @param iri          the Iri pointing to the string value.
+     * @param stringVals   the string values to choose from.
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang the fallback language if the preferred language is not available.
+     * @return a [[Map[IRI, JsonLDString]] (empty in case no string value is available).
+     */
     def makeMapIriToJSONLDString(iri: IRI, stringVals: StringLiteralSequenceV2, userLang: String, fallbackLang: String): Map[IRI, JsonLDString] = {
         Map(
             iri -> stringVals.getPreferredLanguage(userLang, fallbackLang)
@@ -70,12 +70,12 @@ trait ListResponderResponseV2 {
 }
 
 /**
-  * Represents a response to a [[ListGetRequestV2]].
-  *
-  * @param list     the list to be returned.
-  * @param userLang the user's preferred language.
-  * @param fallbackLang the fallback language if the preferred language is not available.
-  */
+ * Represents a response to a [[ListGetRequestV2]].
+ *
+ * @param list         the list to be returned.
+ * @param userLang     the user's preferred language.
+ * @param fallbackLang the fallback language if the preferred language is not available.
+ */
 case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
@@ -83,11 +83,11 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         /**
-          * Given a [[ListNodeADM]], constructs a [[JsonLDObject]].
-          *
-          * @param node the node to be turned into JSON-LD.
-          * @return a [[JsonLDObject]] representing the node.
-          */
+         * Given a [[ListNodeADM]], constructs a [[JsonLDObject]].
+         *
+         * @param node the node to be turned into JSON-LD.
+         * @return a [[JsonLDObject]] representing the node.
+         */
         def makeNode(node: ListChildNodeADM): JsonLDObject = {
 
             val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
@@ -158,20 +158,20 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 }
 
 /**
-  * Requests a list node. A successful response will be a [[NodeGetResponseV2]]
-  *
-  * @param nodeIri the IRI of the node to retrieve.
-  */
+ * Requests a list node. A successful response will be a [[NodeGetResponseV2]]
+ *
+ * @param nodeIri the IRI of the node to retrieve.
+ */
 case class NodeGetRequestV2(nodeIri: IRI,
                             requestingUser: UserADM) extends ListsResponderRequestV2
 
 /**
-  * Represents a response to a [[NodeGetRequestV2]].
-  *
-  * @param node the node to be returned.
-  * @param userLang the user's preferred language.
-  * @param fallbackLang the fallback language if the preferred language is not available.
-  */
+ * Represents a response to a [[NodeGetRequestV2]].
+ *
+ * @param node         the node to be returned.
+ * @param userLang     the user's preferred language.
+ * @param fallbackLang the fallback language if the preferred language is not available.
+ */
 case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
