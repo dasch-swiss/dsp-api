@@ -48,7 +48,7 @@ There are two possibilities to do so:
     when doing a HTTP request to the API When using Python's module
     `requests`, the credentials (email / password) can simply be submitted as a tuple
     with each request using the param `auth` ([python
-    requests](http://docs.python-requests.org/en/master/user/authentication/#basic-authentication)).
+    requests](https://2.python-requests.org/en/v2.8.1/user/authentication/#basic-authentication)).
 
 An alternative way for accessing all routes is to simply supply the
 *email* and *password* credentials on each request either as URL
