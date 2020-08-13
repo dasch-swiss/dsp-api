@@ -465,7 +465,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
      *
      * @return an optional validated decoded UUID.
      */
-    def maybeUUID(key: String)(implicit stringFormatter: StringFormatter): Option[UUID] = {
+    def maybeUUID(key: String): Option[UUID] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
     }
 
@@ -673,6 +674,11 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
      * A convenience function that calls `body.requireResourcePropertyApiV2ComplexValue`.
      */
     def requireResourcePropertyValue: (SmartIri, JsonLDObject) = body.requireResourcePropertyApiV2ComplexValue
+
+    /**
+     * A convenience function that calls `body.maybeUUID`.
+     */
+    def maybeUUID(key: String): Option[UUID] = body.maybeUUID(key: String)
 
     /**
      * Converts this JSON-LD object to its compacted Java representation.
