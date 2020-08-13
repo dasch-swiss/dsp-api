@@ -330,6 +330,11 @@ The request body is a JSON-LD object containing the following information about 
 The optional property `knora-api:deleteComment` specifies a comment to be attached to the
 resource, explaining why it has been marked as deleted.
 
+The optional property `knora-api:deleteDate`
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp))
+indicates when the resource was marked as deleted; if not given, the current
+time is used.
+
 The response is a JSON-LD document containing the predicate `knora-api:result`
 with a confirmation message.
 
