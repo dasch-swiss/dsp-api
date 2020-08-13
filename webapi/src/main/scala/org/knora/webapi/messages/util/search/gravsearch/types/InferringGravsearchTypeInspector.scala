@@ -886,7 +886,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         baseClassesOfType.intersect(acc)
                 }
                 if (commonBaseClasses.nonEmpty) {
-                    // since the base classes are sorted, first one would be the most specific one.
+                    // return any available base class. TODO: the most specific one should be returned.
                     commonBaseClasses.head
                 } else {
                     InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
