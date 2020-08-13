@@ -96,9 +96,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             for {
                 //check if resourceIri already exists holding a lock on the IRI
                 result <- stringFormatter.checkIriExists(resourceIri, storeManager)
-                
+
                 _ = if (result) {
-                  throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+                    throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
                 }
 
                 // Convert the resource to the internal ontology schema.

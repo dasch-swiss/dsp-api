@@ -31,8 +31,8 @@ import spray.json.{JsArray, JsNull, JsNumber, JsObject, JsString, JsValue, JsonP
 import scala.io.Source
 
 /**
-  * Generates the file Contributors.md, using the GitHub API.
-  */
+ * Generates the file Contributors.md, using the GitHub API.
+ */
 object GenerateContributorsFile extends App {
 
     // Configuration
@@ -89,11 +89,11 @@ object GenerateContributorsFile extends App {
     FileUtil.writeTextFile(outputFile, contributorsText)
 
     /**
-      * Makes an HTTP GET connection to the GitHub API.
-      *
-      * @param url a GitHub API URL.
-      * @return the response, parsed as JSON.
-      */
+     * Makes an HTTP GET connection to the GitHub API.
+     *
+     * @param url a GitHub API URL.
+     * @return the response, parsed as JSON.
+     */
     private def getFromGitHubApi(url: String): JsValue = {
         val connection: URLConnection = new URL(url).openConnection
 
@@ -112,8 +112,8 @@ object GenerateContributorsFile extends App {
     }
 
     /**
-      * Parses command-line arguments.
-      */
+     * Parses command-line arguments.
+     */
     private class GenerateContributorsFileConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         banner(
             s"""

@@ -45,24 +45,24 @@ import scala.collection.immutable
 import scala.concurrent.Future
 
 /**
-  * Responds to requests dealing with ontologies.
-  *
-  * The API v2 ontology responder reads ontologies from two sources:
-  *
-  * - The triplestore.
-  * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraBaseToApiV2SimpleTransformationRules]] and [[KnoraBaseToApiV2ComplexTransformationRules]].
-  *
-  * It maintains an in-memory cache of all ontology data. This cache can be refreshed by sending a [[LoadOntologiesRequestV2]].
-  *
-  * Read requests to the ontology responder may contain internal or external IRIs as needed. Response messages from the
-  * ontology responder will contain internal IRIs and definitions, unless a constant API v2 ontology was requested,
-  * in which case the response will be in the requested API v2 schema.
-  *
-  * In API v2, the ontology responder can also create and update ontologies. Update requests must contain
-  * [[ApiV2Complex]] IRIs and definitions.
-  *
-  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
-  */
+ * Responds to requests dealing with ontologies.
+ *
+ * The API v2 ontology responder reads ontologies from two sources:
+ *
+ * - The triplestore.
+ * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraBaseToApiV2SimpleTransformationRules]] and [[KnoraBaseToApiV2ComplexTransformationRules]].
+ *
+ * It maintains an in-memory cache of all ontology data. This cache can be refreshed by sending a [[LoadOntologiesRequestV2]].
+ *
+ * Read requests to the ontology responder may contain internal or external IRIs as needed. Response messages from the
+ * ontology responder will contain internal IRIs and definitions, unless a constant API v2 ontology was requested,
+ * in which case the response will be in the requested API v2 schema.
+ *
+ * In API v2, the ontology responder can also create and update ontologies. Update requests must contain
+ * [[ApiV2Complex]] IRIs and definitions.
+ *
+ * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
+ */
 class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
     // The name of the ontology cache.
@@ -79,12 +79,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     /**
      * The in-memory cache of ontologies.
      *
-     * @param ontologies a map of ontology IRIs to ontologies.
-     * @param subClassOfRelations a map of subclasses to their base classes.
-     * @param superClassOfRelations a map of base classes to their subclasses.
-     * @param subPropertyOfRelations a map of subproperties to their base proeprties.
+     * @param ontologies              a map of ontology IRIs to ontologies.
+     * @param subClassOfRelations     a map of subclasses to their base classes.
+     * @param superClassOfRelations   a map of base classes to their subclasses.
+     * @param subPropertyOfRelations  a map of subproperties to their base proeprties.
      * @param guiAttributeDefinitions a map of salsah-gui:Guielement individuals to their GUI attribute definitions.
-     * @param standoffProperties a set of standoff properties.
+     * @param standoffProperties      a set of standoff properties.
      */
     private case class OntologyCacheData(ontologies: Map[SmartIri, ReadOntologyV2],
                                          subClassOfRelations: Map[SmartIri, Set[SmartIri]],
@@ -94,8 +94,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                          standoffProperties: Set[SmartIri])
 
     /**
-      * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
+     */
     def receive(msg: OntologiesResponderRequestV2) = msg match {
         case LoadOntologiesRequestV2(requestingUser) => loadOntologies(requestingUser)
         case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
@@ -125,19 +125,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Represents the contents of a named graph representing an ontology.
-      *
-      * @param ontologyIri       the ontology IRI, which is also the IRI of the named graph.
-      * @param constructResponse the triplestore's response to a CONSTRUCT query that gets the contents of the named graph.
-      */
+     * Represents the contents of a named graph representing an ontology.
+     *
+     * @param ontologyIri       the ontology IRI, which is also the IRI of the named graph.
+     * @param constructResponse the triplestore's response to a CONSTRUCT query that gets the contents of the named graph.
+     */
     private case class OntologyGraph(ontologyIri: SmartIri, constructResponse: SparqlExtendedConstructResponse)
 
     /**
-      * Loads and caches all ontology information.
-      *
-      * @param requestingUser the user making the request.
-      * @return a [[SuccessResponseV2]].
-      */
+     * Loads and caches all ontology information.
+     *
+     * @param requestingUser the user making the request.
+     * @return a [[SuccessResponseV2]].
+     */
     private def loadOntologies(requestingUser: UserADM): Future[SuccessResponseV2] = {
         for {
             _ <- Future {
@@ -179,11 +179,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given ontology metdata and ontology graphs read from the triplestore, constructs the ontology cache.
-      *
-      * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
-      * @param ontologyGraphs      a list of ontology graphs.
-      */
+     * Given ontology metdata and ontology graphs read from the triplestore, constructs the ontology cache.
+     *
+     * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
+     * @param ontologyGraphs      a list of ontology graphs.
+     */
     private def makeOntologyCache(allOntologyMetadata: Map[SmartIri, OntologyMetadataV2], ontologyGraphs: Iterable[OntologyGraph]): Unit = {
         // Get the IRIs of all the entities in each ontology.
 
@@ -464,14 +464,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks a reference between an ontology entity and another ontology entity to see if the target
-      * is in a non-shared ontology in another project.
-      *
-      * @param ontologyCacheData the ontology cache data.
-      * @param sourceEntityIri   the entity whose definition contains the reference.
-      * @param targetEntityIri   the entity that's the target of the reference.
-      * @param errorFun          a function that throws an exception with the specified message if the reference is invalid.
-      */
+     * Checks a reference between an ontology entity and another ontology entity to see if the target
+     * is in a non-shared ontology in another project.
+     *
+     * @param ontologyCacheData the ontology cache data.
+     * @param sourceEntityIri   the entity whose definition contains the reference.
+     * @param targetEntityIri   the entity that's the target of the reference.
+     * @param errorFun          a function that throws an exception with the specified message if the reference is invalid.
+     */
     private def checkOntologyReferenceInEntity(ontologyCacheData: OntologyCacheData, sourceEntityIri: SmartIri, targetEntityIri: SmartIri, errorFun: String => Nothing): Unit = {
         if (targetEntityIri.isKnoraDefinitionIri) {
             val sourceOntologyIri = sourceEntityIri.getOntologyFromEntity
@@ -489,12 +489,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks a property definition to ensure that it doesn't refer to any other non-shared ontologies.
-      *
-      * @param ontologyCacheData the ontology cache data.
-      * @param propertyDef       the property definition.
-      * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
-      */
+     * Checks a property definition to ensure that it doesn't refer to any other non-shared ontologies.
+     *
+     * @param ontologyCacheData the ontology cache data.
+     * @param propertyDef       the property definition.
+     * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
+     */
     private def checkOntologyReferencesInPropertyDef(ontologyCacheData: OntologyCacheData, propertyDef: PropertyInfoContentV2, errorFun: String => Nothing): Unit = {
         // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
 
@@ -535,12 +535,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
-      *
-      * @param ontologyCacheData the ontology cache data.
-      * @param classDef          the class definition.
-      * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
-      */
+     * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
+     *
+     * @param ontologyCacheData the ontology cache data.
+     * @param classDef          the class definition.
+     * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
+     */
     private def checkOntologyReferencesInClassDef(ontologyCacheData: OntologyCacheData, classDef: ClassInfoContentV2, errorFun: String => Nothing): Unit = {
         for (subClassOf <- classDef.subClassOf) {
             checkOntologyReferenceInEntity(
@@ -562,10 +562,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks references between ontologies to ensure that they do not refer to non-shared ontologies in other projects.
-      *
-      * @param ontologyCacheData the ontology cache data.
-      */
+     * Checks references between ontologies to ensure that they do not refer to non-shared ontologies in other projects.
+     *
+     * @param ontologyCacheData the ontology cache data.
+     */
     private def checkReferencesBetweenOntologies(ontologyCacheData: OntologyCacheData): Unit = {
         for (ontology <- ontologyCacheData.ontologies.values) {
             for (propertyInfo <- ontology.properties.values) {
@@ -587,12 +587,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a list of ontology graphs, finds the IRIs of all subjects whose `rdf:type` is contained in a given set of types.
-      *
-      * @param ontologyGraphs a list of ontology graphs.
-      * @param entityTypes    the types of entities to be found.
-      * @return a map of ontology IRIs to sets of the IRIs of entities with matching types in each ontology.
-      */
+     * Given a list of ontology graphs, finds the IRIs of all subjects whose `rdf:type` is contained in a given set of types.
+     *
+     * @param ontologyGraphs a list of ontology graphs.
+     * @param entityTypes    the types of entities to be found.
+     * @return a map of ontology IRIs to sets of the IRIs of entities with matching types in each ontology.
+     */
     private def getEntityIrisFromOntologyGraphs(ontologyGraphs: Iterable[OntologyGraph], entityTypes: Set[IRI]): Map[SmartIri, Set[SmartIri]] = {
         val entityTypesAsIriLiterals = entityTypes.map(entityType => IriLiteralV2(entityType))
 
@@ -618,12 +618,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given the triplestore's response to `getAllOntologyMetadata.scala.txt`, constructs a map of ontology IRIs
-      * to ontology metadata for the ontology cache.
-      *
-      * @param allOntologyMetadataResponse the triplestore's response to the SPARQL query `getAllOntologyMetadata.scala.txt`.
-      * @return a map of ontology IRIs to ontology metadata.
-      */
+     * Given the triplestore's response to `getAllOntologyMetadata.scala.txt`, constructs a map of ontology IRIs
+     * to ontology metadata for the ontology cache.
+     *
+     * @param allOntologyMetadataResponse the triplestore's response to the SPARQL query `getAllOntologyMetadata.scala.txt`.
+     * @return a map of ontology IRIs to ontology metadata.
+     */
     private def buildOntologyMetadata(allOntologyMetadataResponse: SparqlSelectResponse): Map[SmartIri, OntologyMetadataV2] = {
         allOntologyMetadataResponse.results.bindings.groupBy(_.rowMap("ontologyGraph")).map {
             case (ontologyGraph: IRI, rows: Seq[VariableResultsRow]) =>
@@ -662,25 +662,25 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Constructs a map of class IRIs to [[ReadClassInfoV2]] instances, based on class definitions loaded from the
-      * triplestore.
-      *
-      * @param classDefs                         a map of class IRIs to class definitions.
-      * @param directClassCardinalities          a map of the cardinalities defined directly on each class. Each resource class
-      *                                          IRI points to a map of property IRIs to [[OwlCardinalityInfo]] objects.
-      * @param classCardinalitiesWithInheritance a map of the cardinalities defined directly on each class or inherited from
-      *                                          base classes. Each class IRI points to a map of property IRIs to
-      *                                          [[OwlCardinalityInfo]] objects.
-      * @param directSubClassOfRelations         a map of class IRIs to their immediate base classes.
-      * @param allSubClassOfRelations            a map of class IRIs to all their base classes.
-      * @param allSubPropertyOfRelations         a map of property IRIs to all their base properties.
-      * @param allPropertyDefs                   a map of property IRIs to property definitions.
-      * @param allKnoraResourceProps             a set of the IRIs of all Knora resource properties.
-      * @param allLinkProps                      a set of the IRIs of all link properties.
-      * @param allLinkValueProps                 a set of the IRIs of link value properties.
-      * @param allFileValueProps                 a set of the IRIs of all file value properties.
-      * @return a map of resource class IRIs to their definitions.
-      */
+     * Constructs a map of class IRIs to [[ReadClassInfoV2]] instances, based on class definitions loaded from the
+     * triplestore.
+     *
+     * @param classDefs                         a map of class IRIs to class definitions.
+     * @param directClassCardinalities          a map of the cardinalities defined directly on each class. Each resource class
+     *                                          IRI points to a map of property IRIs to [[OwlCardinalityInfo]] objects.
+     * @param classCardinalitiesWithInheritance a map of the cardinalities defined directly on each class or inherited from
+     *                                          base classes. Each class IRI points to a map of property IRIs to
+     *                                          [[OwlCardinalityInfo]] objects.
+     * @param directSubClassOfRelations         a map of class IRIs to their immediate base classes.
+     * @param allSubClassOfRelations            a map of class IRIs to all their base classes.
+     * @param allSubPropertyOfRelations         a map of property IRIs to all their base properties.
+     * @param allPropertyDefs                   a map of property IRIs to property definitions.
+     * @param allKnoraResourceProps             a set of the IRIs of all Knora resource properties.
+     * @param allLinkProps                      a set of the IRIs of all link properties.
+     * @param allLinkValueProps                 a set of the IRIs of link value properties.
+     * @param allFileValueProps                 a set of the IRIs of all file value properties.
+     * @return a map of resource class IRIs to their definitions.
+     */
     private def makeReadClassInfos(classDefs: Map[SmartIri, ClassInfoContentV2],
                                    directClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
                                    classCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
@@ -897,20 +897,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Constructs a map of property IRIs to [[ReadPropertyInfoV2]] instances, based on property definitions loaded from the
-      * triplestore.
-      *
-      * @param propertyDefs                 a map of property IRIs to property definitions.
-      * @param directSubPropertyOfRelations a map of property IRIs to their immediate base properties.
-      * @param allSubPropertyOfRelations    a map of property IRIs to all their base properties.
-      * @param allSubClassOfRelations       a map of class IRIs to all their base classes.
-      * @param allGuiAttributeDefinitions   a map of `Guielement` IRIs to sets of [[SalsahGuiAttributeDefinition]].
-      * @param allKnoraResourceProps        a set of the IRIs of all Knora resource properties.
-      * @param allLinkProps                 a set of the IRIs of all link properties.
-      * @param allLinkValueProps            a set of the IRIs of link value properties.
-      * @param allFileValueProps            a set of the IRIs of all file value properties.
-      * @return a map of property IRIs to [[ReadPropertyInfoV2]] instances.
-      */
+     * Constructs a map of property IRIs to [[ReadPropertyInfoV2]] instances, based on property definitions loaded from the
+     * triplestore.
+     *
+     * @param propertyDefs                 a map of property IRIs to property definitions.
+     * @param directSubPropertyOfRelations a map of property IRIs to their immediate base properties.
+     * @param allSubPropertyOfRelations    a map of property IRIs to all their base properties.
+     * @param allSubClassOfRelations       a map of class IRIs to all their base classes.
+     * @param allGuiAttributeDefinitions   a map of `Guielement` IRIs to sets of [[SalsahGuiAttributeDefinition]].
+     * @param allKnoraResourceProps        a set of the IRIs of all Knora resource properties.
+     * @param allLinkProps                 a set of the IRIs of all link properties.
+     * @param allLinkValueProps            a set of the IRIs of link value properties.
+     * @param allFileValueProps            a set of the IRIs of all file value properties.
+     * @return a map of property IRIs to [[ReadPropertyInfoV2]] instances.
+     */
     private def makeReadPropertyInfos(propertyDefs: Map[SmartIri, PropertyInfoContentV2],
                                       directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                       allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
@@ -987,11 +987,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Constructs a map of OWL named individual IRIs to [[ReadIndividualInfoV2]] instances.
-      *
-      * @param individualDefs a map of OWL named individual IRIs to named individuals.
-      * @return a map of individual IRIs to [[ReadIndividualInfoV2]] instances.
-      */
+     * Constructs a map of OWL named individual IRIs to [[ReadIndividualInfoV2]] instances.
+     *
+     * @param individualDefs a map of OWL named individual IRIs to named individuals.
+     * @return a map of individual IRIs to [[ReadIndividualInfoV2]] instances.
+     */
     private def makeReadIndividualInfos(individualDefs: Map[SmartIri, IndividualInfoContentV2]): Map[SmartIri, ReadIndividualInfoV2] = {
         individualDefs.map {
             case (individualIri, individual) =>
@@ -1000,12 +1000,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given all the OWL named individuals available, constructs a map of `salsah-gui:Guielement` individuals to
-      * their GUI attribute definitions.
-      *
-      * @param allIndividuals all the OWL named individuals available.
-      * @return a map of `salsah-gui:Guielement` individuals to their GUI attribute definitions.
-      */
+     * Given all the OWL named individuals available, constructs a map of `salsah-gui:Guielement` individuals to
+     * their GUI attribute definitions.
+     *
+     * @param allIndividuals all the OWL named individuals available.
+     * @return a map of `salsah-gui:Guielement` individuals to their GUI attribute definitions.
+     */
     private def makeGuiAttributeDefinitions(allIndividuals: Map[SmartIri, IndividualInfoContentV2]): Map[SmartIri, Set[SalsahGuiAttributeDefinition]] = {
         val guiElementIndividuals: Map[SmartIri, IndividualInfoContentV2] = allIndividuals.filter {
             case (_, individual) => individual.getRdfType.toString == OntologyConstants.SalsahGui.GuiElementClass
@@ -1034,12 +1034,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Validates the GUI attributes of a resource class property.
-      *
-      * @param propertyInfoContent        the property definition.
-      * @param allGuiAttributeDefinitions the GUI attribute definitions for each GUI element.
-      * @param errorFun                   a function that throws an exception. It will be passed the message to be included in the exception.
-      */
+     * Validates the GUI attributes of a resource class property.
+     *
+     * @param propertyInfoContent        the property definition.
+     * @param allGuiAttributeDefinitions the GUI attribute definitions for each GUI element.
+     * @param errorFun                   a function that throws an exception. It will be passed the message to be included in the exception.
+     */
     private def validateGuiAttributes(propertyInfoContent: PropertyInfoContentV2, allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]], errorFun: String => Nothing): Unit = {
         val propertyIri = propertyInfoContent.propertyIri
         val predicates = propertyInfoContent.predicates
@@ -1092,19 +1092,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Updates the ontology cache.
-      *
-      * @param cacheData the updated data to be cached.
-      */
+     * Updates the ontology cache.
+     *
+     * @param cacheData the updated data to be cached.
+     */
     private def storeCacheData(cacheData: OntologyCacheData): Unit = {
         CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
     }
 
     /**
-      * Gets the ontology data from the cache.
-      *
-      * @return an [[OntologyCacheData]]
-      */
+     * Gets the ontology data from the cache.
+     *
+     * @return an [[OntologyCacheData]]
+     */
     private def getCacheData: Future[OntologyCacheData] = {
         Future {
             CacheUtil.get[OntologyCacheData](cacheName = OntologyCacheName, key = OntologyCacheKey) match {
@@ -1115,13 +1115,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
-      *
-      * @param classIris      the IRIs of the resource entities to be queried.
-      * @param propertyIris   the IRIs of the property entities to be queried.
-      * @param requestingUser the user making the request.
-      * @return an [[EntityInfoGetResponseV2]].
-      */
+     * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
+     *
+     * @param classIris      the IRIs of the resource entities to be queried.
+     * @param propertyIris   the IRIs of the property entities to be queried.
+     * @param requestingUser the user making the request.
+     * @return an [[EntityInfoGetResponseV2]].
+     */
     private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
@@ -1273,13 +1273,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
-      *
-      * @param standoffClassIris    the IRIs of the resource entities to be queried.
-      * @param standoffPropertyIris the IRIs of the property entities to be queried.
-      * @param requestingUser       the user making the request.
-      * @return a [[StandoffEntityInfoGetResponseV2]].
-      */
+     * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
+     *
+     * @param standoffClassIris    the IRIs of the resource entities to be queried.
+     * @param standoffPropertyIris the IRIs of the property entities to be queried.
+     * @param requestingUser       the user making the request.
+     * @return a [[StandoffEntityInfoGetResponseV2]].
+     */
     private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
@@ -1329,11 +1329,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets information about all standoff classes that are a subclass of a data type standoff class.
-      *
-      * @param requestingUser the user making the request.
-      * @return a [[StandoffClassesWithDataTypeGetResponseV2]]
-      */
+     * Gets information about all standoff classes that are a subclass of a data type standoff class.
+     *
+     * @param requestingUser the user making the request.
+     * @return a [[StandoffClassesWithDataTypeGetResponseV2]]
+     */
     private def getStandoffStandoffClassesWithDataTypeV2(requestingUser: UserADM): Future[StandoffClassesWithDataTypeGetResponseV2] = {
         for {
             cacheData <- getCacheData
@@ -1348,11 +1348,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets all standoff property entities.
-      *
-      * @param requestingUser the user making the request.
-      * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
-      */
+     * Gets all standoff property entities.
+     *
+     * @param requestingUser the user making the request.
+     * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
+     */
     private def getAllStandoffPropertyEntitiesV2(requestingUser: UserADM): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
         for {
             cacheData <- getCacheData
@@ -1364,12 +1364,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks whether a certain Knora resource or value class is a subclass of another class.
-      *
-      * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
-      * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
-      * @return a [[CheckSubClassResponseV2]].
-      */
+     * Checks whether a certain Knora resource or value class is a subclass of another class.
+     *
+     * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
+     * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
+     * @return a [[CheckSubClassResponseV2]].
+     */
     private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Future[CheckSubClassResponseV2] = {
         for {
             cacheData <- getCacheData
@@ -1384,11 +1384,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the IRIs of the subclasses of a class.
-      *
-      * @param classIri the IRI of the class whose subclasses should be returned.
-      * @return a [[SubClassesGetResponseV2]].
-      */
+     * Gets the IRIs of the subclasses of a class.
+     *
+     * @param classIri the IRI of the class whose subclasses should be returned.
+     * @return a [[SubClassesGetResponseV2]].
+     */
     private def getSubClassesV2(classIri: SmartIri, requestingUser: UserADM): Future[SubClassesGetResponseV2] = {
         for {
             cacheData <- getCacheData
@@ -1413,12 +1413,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
-      *
-      * @param ontologyIri    the IRI of the ontology to query
-      * @param requestingUser the user making the request.
-      * @return an [[OntologyKnoraEntitiesIriInfoV2]].
-      */
+     * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
+     *
+     * @param ontologyIri    the IRI of the ontology to query
+     * @param requestingUser the user making the request.
+     * @return an [[OntologyKnoraEntitiesIriInfoV2]].
+     */
     private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri, requestingUser: UserADM): Future[OntologyKnoraEntitiesIriInfoV2] = {
         for {
             cacheData <- getCacheData
@@ -1439,12 +1439,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
-      *
-      * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
-      * @param requestingUser the user making the request.
-      * @return a [[ReadOntologyMetadataV2]].
-      */
+     * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
+     *
+     * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
+     * @param requestingUser the user making the request.
+     * @return a [[ReadOntologyMetadataV2]].
+     */
     private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
@@ -1465,12 +1465,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the metadata describing the specified ontologies, or all ontologies.
-      *
-      * @param ontologyIris   the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
-      * @param requestingUser the user making the request.
-      * @return a [[ReadOntologyMetadataV2]].
-      */
+     * Gets the metadata describing the specified ontologies, or all ontologies.
+     *
+     * @param ontologyIris   the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
+     * @param requestingUser the user making the request.
+     * @return a [[ReadOntologyMetadataV2]].
+     */
     private def getOntologyMetadataByIriV2(ontologyIris: Set[SmartIri], requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
@@ -1496,12 +1496,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Requests the entities defined in the given ontology.
-      *
-      * @param ontologyIri    the IRI (internal or external) of the ontology to be queried.
-      * @param requestingUser the user making the request.
-      * @return a [[ReadOntologyV2]].
-      */
+     * Requests the entities defined in the given ontology.
+     *
+     * @param ontologyIri    the IRI (internal or external) of the ontology to be queried.
+     * @param requestingUser the user making the request.
+     * @return a [[ReadOntologyV2]].
+     */
     private def getOntologyEntitiesV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
@@ -1529,12 +1529,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Requests information about OWL classes in a single ontology.
-      *
-      * @param classIris      the IRIs (internal or external) of the classes to query for.
-      * @param requestingUser the user making the request.
-      * @return a [[ReadOntologyV2]].
-      */
+     * Requests information about OWL classes in a single ontology.
+     *
+     * @param classIris      the IRIs (internal or external) of the classes to query for.
+     * @param requestingUser the user making the request.
+     * @return a [[ReadOntologyV2]].
+     */
     private def getClassDefinitionsFromOntologyV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
@@ -1564,12 +1564,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Requests information about properties in a single ontology.
-      *
-      * @param propertyIris   the IRIs (internal or external) of the properties to query for.
-      * @param requestingUser the user making the request.
-      * @return a [[ReadOntologyV2]].
-      */
+     * Requests information about properties in a single ontology.
+     *
+     * @param propertyIris   the IRIs (internal or external) of the properties to query for.
+     * @param requestingUser the user making the request.
+     * @return a [[ReadOntologyV2]].
+     */
     private def getPropertyDefinitionsFromOntologyV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
@@ -1599,11 +1599,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Reads an ontology's metadata.
-      *
-      * @param internalOntologyIri the ontology's internal IRI.
-      * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
-      */
+     * Reads an ontology's metadata.
+     *
+     * @param internalOntologyIri the ontology's internal IRI.
+     * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
+     */
     private def loadOntologyMetadata(internalOntologyIri: SmartIri): Future[Option[OntologyMetadataV2]] = {
         for {
             _ <- Future {
@@ -1684,11 +1684,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Creates a new, empty ontology.
-      *
-      * @param createOntologyRequest the request message.
-      * @return a [[SuccessResponseV2]].
-      */
+     * Creates a new, empty ontology.
+     *
+     * @param createOntologyRequest the request message.
+     * @return a [[SuccessResponseV2]].
+     */
     private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadOntologyMetadataV2] = {
         def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
             for {
@@ -1786,11 +1786,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Changes ontology metadata.
-      *
-      * @param changeOntologyMetadataRequest the request to change the metadata.
-      * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
-      */
+     * Changes ontology metadata.
+     *
+     * @param changeOntologyMetadataRequest the request to change the metadata.
+     * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
+     */
     def changeOntologyMetadata(changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2): Future[ReadOntologyMetadataV2] = {
         def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
             for {
@@ -1863,11 +1863,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Creates a class in an existing ontology.
-      *
-      * @param createClassRequest the request to create the class.
-      * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new class.
-      */
+     * Creates a class in an existing ontology.
+     *
+     * @param createClassRequest the request to create the class.
+     * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new class.
+     */
     private def createClass(createClassRequest: CreateClassRequestV2): Future[ReadOntologyV2] = {
         def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
@@ -2045,17 +2045,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Before creating a new class or adding cardinalities to an existing class, checks the validity of the
-      * cardinalities directly defined on the class. Adds link value properties for the corresponding
-      * link properties.
-      *
-      * @param internalClassDef        the internal definition of the class.
-      * @param allBaseClassIris        the IRIs of all the class's base classes, including the class itself.
-      * @param cacheData               the ontology cache.
-      * @param existingLinkPropsToKeep the link properties that are already defined on the class and that
-      *                                will be kept after the update.
-      * @return the updated class definition, and the cardinalities resulting from inheritance.
-      */
+     * Before creating a new class or adding cardinalities to an existing class, checks the validity of the
+     * cardinalities directly defined on the class. Adds link value properties for the corresponding
+     * link properties.
+     *
+     * @param internalClassDef        the internal definition of the class.
+     * @param allBaseClassIris        the IRIs of all the class's base classes, including the class itself.
+     * @param cacheData               the ontology cache.
+     * @param existingLinkPropsToKeep the link properties that are already defined on the class and that
+     *                                will be kept after the update.
+     * @return the updated class definition, and the cardinalities resulting from inheritance.
+     */
     private def checkCardinalitiesBeforeAdding(internalClassDef: ClassInfoContentV2,
                                                allBaseClassIris: Set[SmartIri],
                                                cacheData: OntologyCacheData,
@@ -2165,12 +2165,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a set of property IRIs, determines whether the set contains a property P and a subproperty of P.
-      *
-      * @param propertyIris           the set of property IRIs.
-      * @param subPropertyOfRelations all the subproperty relations in the triplestore.
-      * @return a property and its subproperty, if found.
-      */
+     * Given a set of property IRIs, determines whether the set contains a property P and a subproperty of P.
+     *
+     * @param propertyIris           the set of property IRIs.
+     * @param subPropertyOfRelations all the subproperty relations in the triplestore.
+     * @return a property and its subproperty, if found.
+     */
     private def findPropertyAndSubproperty(propertyIris: Set[SmartIri], subPropertyOfRelations: Map[SmartIri, Set[SmartIri]]): Option[(SmartIri, SmartIri)] = {
         propertyIris.flatMap {
             propertyIri =>
@@ -2188,15 +2188,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks that a class is a subclass of all the classes that are subject class constraints of the Knora resource properties in its cardinalities.
-      *
-      * @param internalClassDef                     the class definition.
-      * @param allBaseClassIris                     the IRIs of all the class's base classes.
-      * @param allClassCardinalityKnoraPropertyDefs the definitions of all the Knora resource properties on which the class has cardinalities (whether directly defined
-      *                                             or inherited).
-      * @param errorSchema                          the ontology schema to be used in error messages.
-      * @param errorFun                             a function that throws an exception. It will be called with an error message argument if the cardinalities are invalid.
-      */
+     * Checks that a class is a subclass of all the classes that are subject class constraints of the Knora resource properties in its cardinalities.
+     *
+     * @param internalClassDef                     the class definition.
+     * @param allBaseClassIris                     the IRIs of all the class's base classes.
+     * @param allClassCardinalityKnoraPropertyDefs the definitions of all the Knora resource properties on which the class has cardinalities (whether directly defined
+     *                                             or inherited).
+     * @param errorSchema                          the ontology schema to be used in error messages.
+     * @param errorFun                             a function that throws an exception. It will be called with an error message argument if the cardinalities are invalid.
+     */
     private def checkSubjectClassConstraintsViaCardinalities(internalClassDef: ClassInfoContentV2,
                                                              allBaseClassIris: Set[SmartIri],
                                                              allClassCardinalityKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
@@ -2224,11 +2224,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Adds cardinalities to an existing class definition.
-      *
-      * @param addCardinalitiesRequest the request to add the cardinalities.
-      * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
-      */
+     * Adds cardinalities to an existing class definition.
+     *
+     * @param addCardinalitiesRequest the request to add the cardinalities.
+     * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
+     */
     private def addCardinalitiesToClass(addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Future[ReadOntologyV2] = {
         def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
@@ -2405,11 +2405,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Replaces a class's cardinalities with new ones.
-      *
-      * @param changeCardinalitiesRequest the request to add the cardinalities.
-      * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
-      */
+     * Replaces a class's cardinalities with new ones.
+     *
+     * @param changeCardinalitiesRequest the request to add the cardinalities.
+     * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
+     */
     private def changeClassCardinalities(changeCardinalitiesRequest: ChangeCardinalitiesRequestV2): Future[ReadOntologyV2] = {
         def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
@@ -2570,11 +2570,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Deletes a class.
-      *
-      * @param deleteClassRequest the request to delete the class.
-      * @return a [[SuccessResponseV2]].
-      */
+     * Deletes a class.
+     *
+     * @param deleteClassRequest the request to delete the class.
+     * @return a [[SuccessResponseV2]].
+     */
     private def deleteClass(deleteClassRequest: DeleteClassRequestV2): Future[ReadOntologyMetadataV2] = {
         def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
             for {
@@ -2671,11 +2671,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Deletes a property. If the property is a link property, the corresponding link value property is also deleted.
-      *
-      * @param deletePropertyRequest the request to delete the property.
-      * @return a [[ReadOntologyMetadataV2]].
-      */
+     * Deletes a property. If the property is a link property, the corresponding link value property is also deleted.
+     *
+     * @param deletePropertyRequest the request to delete the property.
+     * @return a [[ReadOntologyMetadataV2]].
+     */
     private def deleteProperty(deletePropertyRequest: DeletePropertyRequestV2): Future[ReadOntologyMetadataV2] = {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
             for {
@@ -2889,11 +2889,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Creates a property in an existing ontology.
-      *
-      * @param createPropertyRequest the request to create the property.
-      * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
-      */
+     * Creates a property in an existing ontology.
+     *
+     * @param createPropertyRequest the request to create the property.
+     * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
+     */
     private def createProperty(createPropertyRequest: CreatePropertyRequestV2): Future[ReadOntologyV2] = {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
@@ -3165,11 +3165,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Changes the values of `rdfs:label` or `rdfs:comment` in a property definition.
-      *
-      * @param changePropertyLabelsOrCommentsRequest the request to change the property's labels or comments.
-      * @return a [[ReadOntologyV2]] containing the modified property definition.
-      */
+     * Changes the values of `rdfs:label` or `rdfs:comment` in a property definition.
+     *
+     * @param changePropertyLabelsOrCommentsRequest the request to change the property's labels or comments.
+     * @return a [[ReadOntologyV2]] containing the modified property definition.
+     */
     private def changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2): Future[ReadOntologyV2] = {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
@@ -3327,11 +3327,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
 
     /**
-      * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
-      *
-      * @param changeClassLabelsOrCommentsRequest the request to change the class's labels or comments.
-      * @return a [[ReadOntologyV2]] containing the modified class definition.
-      */
+     * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
+     *
+     * @param changeClassLabelsOrCommentsRequest the request to change the class's labels or comments.
+     * @return a [[ReadOntologyV2]] containing the modified class definition.
+     */
     private def changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2): Future[ReadOntologyV2] = {
         def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
@@ -3448,13 +3448,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
-      * are valid, and checks that the user has permission to update the ontology.
-      *
-      * @param externalOntologyIri the external IRI of the ontology.
-      * @param externalEntityIri   the external IRI of the entity.
-      * @param requestingUser      the user making the request.
-      */
+     * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
+     * are valid, and checks that the user has permission to update the ontology.
+     *
+     * @param externalOntologyIri the external IRI of the ontology.
+     * @param externalEntityIri   the external IRI of the entity.
+     * @param requestingUser      the user making the request.
+     */
     private def checkOntologyAndEntityIrisForUpdate(externalOntologyIri: SmartIri,
                                                     externalEntityIri: SmartIri,
                                                     requestingUser: UserADM): Future[Unit] = {
@@ -3469,11 +3469,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
-      *
-      * @param propertyIri the IRI of the property to be loaded.
-      * @return a [[PropertyInfoContentV2]] representing the property definition.
-      */
+     * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
+     *
+     * @param propertyIri the IRI of the property to be loaded.
+     * @return a [[PropertyInfoContentV2]] representing the property definition.
+     */
     private def loadPropertyDefinition(propertyIri: SmartIri): Future[PropertyInfoContentV2] = {
         for {
             sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getPropertyDefinition(
@@ -3489,12 +3489,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a map of predicate IRIs to predicate objects describing an entity, returns a map of smart IRIs to [[PredicateInfoV2]]
-      * objects that can be used to construct an [[EntityInfoContentV2]].
-      *
-      * @param entityDefMap a map of predicate IRIs to predicate objects.
-      * @return a map of smart IRIs to [[PredicateInfoV2]] objects.
-      */
+     * Given a map of predicate IRIs to predicate objects describing an entity, returns a map of smart IRIs to [[PredicateInfoV2]]
+     * objects that can be used to construct an [[EntityInfoContentV2]].
+     *
+     * @param entityDefMap a map of predicate IRIs to predicate objects.
+     * @return a map of smart IRIs to [[PredicateInfoV2]] objects.
+     */
     private def getEntityPredicatesFromConstructResponse(entityDefMap: Map[SmartIri, Seq[LiteralV2]]): Map[SmartIri, PredicateInfoV2] = {
         entityDefMap.map {
             case (predicateIri: SmartIri, predObjs: Seq[LiteralV2]) =>
@@ -3521,12 +3521,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Extracts property definitions from a SPARQL CONSTRUCT response.
-      *
-      * @param propertyIris      the IRIs of the properties to be read.
-      * @param constructResponse the SPARQL construct response to be read.
-      * @return a map of property IRIs to property definitions.
-      */
+     * Extracts property definitions from a SPARQL CONSTRUCT response.
+     *
+     * @param propertyIris      the IRIs of the properties to be read.
+     * @param constructResponse the SPARQL construct response to be read.
+     * @return a map of property IRIs to property definitions.
+     */
     private def constructResponseToPropertyDefinitions(propertyIris: Set[SmartIri], constructResponse: SparqlExtendedConstructResponse): Map[SmartIri, PropertyInfoContentV2] = {
         propertyIris.map {
             propertyIri =>
@@ -3538,12 +3538,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Converts a SPARQL CONSTRUCT response to a [[PropertyInfoContentV2]].
-      *
-      * @param propertyIri       the IRI of the property to be read.
-      * @param constructResponse the SPARQL CONSTRUCT response to be read.
-      * @return a [[PropertyInfoContentV2]] representing a property definition.
-      */
+     * Converts a SPARQL CONSTRUCT response to a [[PropertyInfoContentV2]].
+     *
+     * @param propertyIri       the IRI of the property to be read.
+     * @param constructResponse the SPARQL CONSTRUCT response to be read.
+     * @return a [[PropertyInfoContentV2]] representing a property definition.
+     */
     private def constructResponseToPropertyDefinition(propertyIri: SmartIri, constructResponse: SparqlExtendedConstructResponse): PropertyInfoContentV2 = {
         // All properties defined in the triplestore must be in Knora ontologies.
 
@@ -3590,12 +3590,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Reads OWL named individuals from a SPARQL CONSTRUCT response.
-      *
-      * @param individualIris    the IRIs of the named individuals to be read.
-      * @param constructResponse the SPARQL CONSTRUCT response.
-      * @return a map of individual IRIs to named individuals.
-      */
+     * Reads OWL named individuals from a SPARQL CONSTRUCT response.
+     *
+     * @param individualIris    the IRIs of the named individuals to be read.
+     * @param constructResponse the SPARQL CONSTRUCT response.
+     * @return a map of individual IRIs to named individuals.
+     */
     private def constructResponseToIndividuals(individualIris: Set[SmartIri], constructResponse: SparqlExtendedConstructResponse): Map[SmartIri, IndividualInfoContentV2] = {
         individualIris.map {
             individualIri =>
@@ -3607,12 +3607,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Reads an OWL named individual from a SPARQL CONSTRUCT response.
-      *
-      * @param individualIri     the IRI of the individual to be read.
-      * @param constructResponse the SPARQL CONSTRUCT response.
-      * @return an [[IndividualInfoContentV2]] representing the named individual.
-      */
+     * Reads an OWL named individual from a SPARQL CONSTRUCT response.
+     *
+     * @param individualIri     the IRI of the individual to be read.
+     * @param constructResponse the SPARQL CONSTRUCT response.
+     * @return an [[IndividualInfoContentV2]] representing the named individual.
+     */
     private def constructResponseToIndividual(individualIri: SmartIri, constructResponse: SparqlExtendedConstructResponse): IndividualInfoContentV2 = {
         val statements = constructResponse.statements
 
@@ -3629,11 +3629,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
-      *
-      * @param classIri the IRI of the class to be loaded.
-      * @return a [[ClassInfoContentV2]] representing the class definition.
-      */
+     * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
+     *
+     * @param classIri the IRI of the class to be loaded.
+     * @return a [[ClassInfoContentV2]] representing the class definition.
+     */
     private def loadClassDefinition(classIri: SmartIri): Future[ClassInfoContentV2] = {
         for {
             sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getClassDefinition(
@@ -3649,12 +3649,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Extracts class definitions from a SPARQL CONSTRUCT response.
-      *
-      * @param classIris         the IRIs of the classes to be read.
-      * @param constructResponse the SPARQL CONSTRUCT response to be read.
-      * @return a map of class IRIs to class definitions.
-      */
+     * Extracts class definitions from a SPARQL CONSTRUCT response.
+     *
+     * @param classIris         the IRIs of the classes to be read.
+     * @param constructResponse the SPARQL CONSTRUCT response to be read.
+     * @return a map of class IRIs to class definitions.
+     */
     private def constructResponseToClassDefinitions(classIris: Set[SmartIri], constructResponse: SparqlExtendedConstructResponse): Map[SmartIri, ClassInfoContentV2] = {
         classIris.map {
             classIri =>
@@ -3666,12 +3666,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Converts a SPARQL CONSTRUCT response to a [[ClassInfoContentV2]].
-      *
-      * @param classIri          the IRI of the class to be read.
-      * @param constructResponse the SPARQL CONSTRUCT response to be read.
-      * @return a [[ClassInfoContentV2]] representing a class definition.
-      */
+     * Converts a SPARQL CONSTRUCT response to a [[ClassInfoContentV2]].
+     *
+     * @param classIri          the IRI of the class to be read.
+     * @param constructResponse the SPARQL CONSTRUCT response to be read.
+     * @return a [[ClassInfoContentV2]] representing a class definition.
+     */
     private def constructResponseToClassDefinition(classIri: SmartIri, constructResponse: SparqlExtendedConstructResponse): ClassInfoContentV2 = {
         // All classes defined in the triplestore must be in Knora ontologies.
 
@@ -3773,16 +3773,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks that a property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint` is compatible with (i.e. a subclass of)
-      * the ones in all its base properties.
-      *
-      * @param internalPropertyIri        the internal IRI of the property to be checked.
-      * @param constraintPredicateIri     the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
-      * @param constraintValueToBeChecked the constraint value to be checked.
-      * @param allSuperPropertyIris       the IRIs of all the base properties of the property, including indirect base properties and the property itself.
-      * @param errorSchema                the ontology schema to be used for error messages.
-      * @param errorFun                   a function that throws an exception. It will be called with an error message argument if the property constraint is invalid.
-      */
+     * Checks that a property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint` is compatible with (i.e. a subclass of)
+     * the ones in all its base properties.
+     *
+     * @param internalPropertyIri        the internal IRI of the property to be checked.
+     * @param constraintPredicateIri     the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
+     * @param constraintValueToBeChecked the constraint value to be checked.
+     * @param allSuperPropertyIris       the IRIs of all the base properties of the property, including indirect base properties and the property itself.
+     * @param errorSchema                the ontology schema to be used for error messages.
+     * @param errorFun                   a function that throws an exception. It will be called with an error message argument if the property constraint is invalid.
+     */
     private def checkPropertyConstraint(cacheData: OntologyCacheData,
                                         internalPropertyIri: SmartIri,
                                         constraintPredicateIri: SmartIri,
@@ -3835,12 +3835,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks the last modification date of an ontology before an update.
-      *
-      * @param internalOntologyIri          the internal IRI of the ontology.
-      * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-      * @return a failed Future if the expected last modification date is not found.
-      */
+     * Checks the last modification date of an ontology before an update.
+     *
+     * @param internalOntologyIri          the internal IRI of the ontology.
+     * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+     * @return a failed Future if the expected last modification date is not found.
+     */
     private def checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant): Future[Unit] = {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
@@ -3850,12 +3850,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks the last modification date of an ontology after an update.
-      *
-      * @param internalOntologyIri          the internal IRI of the ontology.
-      * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-      * @return a failed Future if the expected last modification date is not found.
-      */
+     * Checks the last modification date of an ontology after an update.
+     *
+     * @param internalOntologyIri          the internal IRI of the ontology.
+     * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+     * @return a failed Future if the expected last modification date is not found.
+     */
     private def checkOntologyLastModificationDateAfterUpdate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant): Future[Unit] = {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
@@ -3865,13 +3865,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks the last modification date of an ontology.
-      *
-      * @param internalOntologyIri          the internal IRI of the ontology.
-      * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
-      * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
-      * @return a failed Future if the expected last modification date is not found.
-      */
+     * Checks the last modification date of an ontology.
+     *
+     * @param internalOntologyIri          the internal IRI of the ontology.
+     * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
+     * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
+     * @return a failed Future if the expected last modification date is not found.
+     */
     private def checkOntologyLastModificationDate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant, errorFun: => Nothing): Future[Unit] = {
         for {
             existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
@@ -3893,12 +3893,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks whether the user has permission to update an ontology.
-      *
-      * @param internalOntologyIri the internal IRI of the ontology.
-      * @param requestingUser      the user making the request.
-      * @return the project IRI.
-      */
+     * Checks whether the user has permission to update an ontology.
+     *
+     * @param internalOntologyIri the internal IRI of the ontology.
+     * @param requestingUser      the user making the request.
+     * @return the project IRI.
+     */
     private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: UserADM): Future[SmartIri] = {
         for {
             cacheData <- getCacheData
@@ -3918,11 +3918,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
 
     /**
-      * Checks whether an ontology IRI is valid for an update.
-      *
-      * @param externalOntologyIri the external IRI of the ontology.
-      * @return a failed Future if the IRI is not valid for an update.
-      */
+     * Checks whether an ontology IRI is valid for an update.
+     *
+     * @param externalOntologyIri the external IRI of the ontology.
+     * @return a failed Future if the IRI is not valid for an update.
+     */
     private def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Future[Unit] = {
         if (!externalOntologyIri.isKnoraOntologyIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
@@ -3936,11 +3936,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks whether an entity IRI is valid for an update.
-      *
-      * @param externalEntityIri the external IRI of the entity.
-      * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
-      */
+     * Checks whether an entity IRI is valid for an update.
+     *
+     * @param externalEntityIri the external IRI of the entity.
+     * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
+     */
     private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri): Future[Unit] = {
         if (!externalEntityIri.isKnoraApiV2EntityIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
@@ -3952,11 +3952,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given the definition of a link property, returns the definition of the corresponding link value property.
-      *
-      * @param internalPropertyDef the definition of the the link property, in the internal schema.
-      * @return the definition of the corresponding link value property.
-      */
+     * Given the definition of a link property, returns the definition of the corresponding link value property.
+     *
+     * @param internalPropertyDef the definition of the the link property, in the internal schema.
+     * @return the definition of the corresponding link value property.
+     */
     private def linkPropertyDefToLinkValuePropertyDef(internalPropertyDef: PropertyInfoContentV2): PropertyInfoContentV2 = {
         val linkValuePropIri = internalPropertyDef.propertyIri.fromLinkPropToLinkValueProp
 
@@ -3974,20 +3974,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given the cardinalities directly defined on a given class, and the cardinalities that it could inherit (directly
-      * or indirectly) from its base classes, combines the two, filtering out the base class cardinalities ones that are overridden
-      * by cardinalities defined directly on the given class. Checks that if a directly defined cardinality overrides an inheritable one,
-      * the directly defined one is at least as restrictive as the inheritable one.
-      *
-      * @param classIri                  the class IRI.
-      * @param thisClassCardinalities    the cardinalities directly defined on a given resource class.
-      * @param inheritableCardinalities  the cardinalities that the given resource class could inherit from its base classes.
-      * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
-      * @param errorSchema               the ontology schema to be used in error messages.
-      * @param errorFun                  a function that throws an exception. It will be called with an error message argument if the cardinalities are invalid.
-      * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
-      *         from its base classes), and each value is the cardinality on the property.
-      */
+     * Given the cardinalities directly defined on a given class, and the cardinalities that it could inherit (directly
+     * or indirectly) from its base classes, combines the two, filtering out the base class cardinalities ones that are overridden
+     * by cardinalities defined directly on the given class. Checks that if a directly defined cardinality overrides an inheritable one,
+     * the directly defined one is at least as restrictive as the inheritable one.
+     *
+     * @param classIri                  the class IRI.
+     * @param thisClassCardinalities    the cardinalities directly defined on a given resource class.
+     * @param inheritableCardinalities  the cardinalities that the given resource class could inherit from its base classes.
+     * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
+     * @param errorSchema               the ontology schema to be used in error messages.
+     * @param errorFun                  a function that throws an exception. It will be called with an error message argument if the cardinalities are invalid.
+     * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
+     *         from its base classes), and each value is the cardinality on the property.
+     */
     private def overrideCardinalities(classIri: SmartIri,
                                       thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo],
                                       inheritableCardinalities: Map[SmartIri, OwlCardinalityInfo],
@@ -4079,11 +4079,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given all the `rdfs:subClassOf` relations between classes, calculates all the inverse relations.
-      *
-      * @param allSubClassOfRelations all the `rdfs:subClassOf` relations between classes.
-      * @return a map of IRIs of resource classes to sets of the IRIs of their subclasses.
-      */
+     * Given all the `rdfs:subClassOf` relations between classes, calculates all the inverse relations.
+     *
+     * @param allSubClassOfRelations all the `rdfs:subClassOf` relations between classes.
+     * @return a map of IRIs of resource classes to sets of the IRIs of their subclasses.
+     */
     private def calculateSuperClassOfRelations(allSubClassOfRelations: Map[SmartIri, Set[SmartIri]]) = {
         allSubClassOfRelations.toVector.flatMap {
             case (subClass: SmartIri, baseClasses: Set[SmartIri]) =>
@@ -4097,17 +4097,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a class loaded from the triplestore, recursively adds its inherited cardinalities to the cardinalities it defines
-      * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in
-      * a base class.
-      *
-      * @param classIri                  the IRI of the class whose properties are to be computed.
-      * @param directSubClassOfRelations a map of the direct `rdfs:subClassOf` relations defined on each class.
-      * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
-      * @param directClassCardinalities  a map of the cardinalities defined directly on each class.
-      * @return a map in which each key is the IRI of a property that has a cardinality in the class (or that it inherits
-      *         from its base classes), and each value is the cardinality on the property.
-      */
+     * Given a class loaded from the triplestore, recursively adds its inherited cardinalities to the cardinalities it defines
+     * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in
+     * a base class.
+     *
+     * @param classIri                  the IRI of the class whose properties are to be computed.
+     * @param directSubClassOfRelations a map of the direct `rdfs:subClassOf` relations defined on each class.
+     * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
+     * @param directClassCardinalities  a map of the cardinalities defined directly on each class.
+     * @return a map in which each key is the IRI of a property that has a cardinality in the class (or that it inherits
+     *         from its base classes), and each value is the cardinality on the property.
+     */
     private def inheritCardinalitiesInLoadedClass(classIri: SmartIri,
                                                   directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                                   allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
@@ -4141,60 +4141,60 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks whether a class IRI refers to a Knora internal resource class.
-      *
-      * @param classIri the class IRI.
-      * @return `true` if the class IRI refers to a Knora resource class, or `false` if the class
-      *         does not exist or is not a Knora internal resource class.
-      */
+     * Checks whether a class IRI refers to a Knora internal resource class.
+     *
+     * @param classIri the class IRI.
+     * @return `true` if the class IRI refers to a Knora resource class, or `false` if the class
+     *         does not exist or is not a Knora internal resource class.
+     */
     private def isKnoraInternalResourceClass(classIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         classIri.isKnoraInternalEntityIri &&
             cacheData.ontologies(classIri.getOntologyFromEntity).classes.get(classIri).exists(_.isResourceClass)
     }
 
     /**
-      * Checks whether a property is a subproperty of `knora-base:resourceProperty`.
-      *
-      * @param propertyIri the property IRI.
-      * @param cacheData   the ontology cache.
-      * @return `true` if the property is a subproperty of `knora-base:resourceProperty`.
-      */
+     * Checks whether a property is a subproperty of `knora-base:resourceProperty`.
+     *
+     * @param propertyIri the property IRI.
+     * @param cacheData   the ontology cache.
+     * @return `true` if the property is a subproperty of `knora-base:resourceProperty`.
+     */
     private def isKnoraResourceProperty(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         propertyIri.isKnoraEntityIri &&
             cacheData.ontologies(propertyIri.getOntologyFromEntity).properties.get(propertyIri).exists(_.isResourceProp)
     }
 
     /**
-      * Checks whether a property is a subproperty of `knora-base:hasLinkTo`.
-      *
-      * @param propertyIri the property IRI.
-      * @param cacheData   the ontology cache.
-      * @return `true` if the property is a subproperty of `knora-base:hasLinkTo`.
-      */
+     * Checks whether a property is a subproperty of `knora-base:hasLinkTo`.
+     *
+     * @param propertyIri the property IRI.
+     * @param cacheData   the ontology cache.
+     * @return `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+     */
     private def isLinkProp(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         propertyIri.isKnoraEntityIri &&
             cacheData.ontologies(propertyIri.getOntologyFromEntity).properties.get(propertyIri).exists(_.isLinkProp)
     }
 
     /**
-      * Checks whether a property is a subproperty of `knora-base:hasLinkToValue`.
-      *
-      * @param propertyIri the property IRI.
-      * @param cacheData   the ontology cache.
-      * @return `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
-      */
+     * Checks whether a property is a subproperty of `knora-base:hasLinkToValue`.
+     *
+     * @param propertyIri the property IRI.
+     * @param cacheData   the ontology cache.
+     * @return `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+     */
     private def isLinkValueProp(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         propertyIri.isKnoraEntityIri &&
             cacheData.ontologies(propertyIri.getOntologyFromEntity).properties.get(propertyIri).exists(_.isLinkValueProp)
     }
 
     /**
-      * Checks whether a property is a subproperty of `knora-base:hasFileValue`.
-      *
-      * @param propertyIri the property IRI.
-      * @param cacheData   the ontology cache.
-      * @return `true` if the property is a subproperty of `knora-base:hasFileValue`.
-      */
+     * Checks whether a property is a subproperty of `knora-base:hasFileValue`.
+     *
+     * @param propertyIri the property IRI.
+     * @param cacheData   the ontology cache.
+     * @return `true` if the property is a subproperty of `knora-base:hasFileValue`.
+     */
     private def isFileValueProp(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         propertyIri.isKnoraEntityIri &&
             cacheData.ontologies(propertyIri.getOntologyFromEntity).properties.get(propertyIri).exists(_.isFileValueProp)

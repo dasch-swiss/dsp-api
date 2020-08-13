@@ -27,10 +27,10 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 object FullTextMainQueryGenerator {
 
     /**
-      * Constants for fulltext query.
-      *
-      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
-      */
+     * Constants for fulltext query.
+     *
+     * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
+     */
     object FullTextSearchConstants {
 
         // SPARQL variable representing the concatenated IRIs of value objects matching the search criteria
@@ -71,14 +71,14 @@ object FullTextMainQueryGenerator {
     }
 
     /**
-      * Creates a CONSTRUCT query for the given resource and value object IRIs.
-      *
-      * @param resourceIris    the IRIs of the resources to be queried.
-      * @param valueObjectIris the IRIs of the value objects to be queried.
-      * @param targetSchema the target API schema.
-      * @param schemaOptions   the schema options submitted with the request.
-      * @return a [[ConstructQuery]].
-      */
+     * Creates a CONSTRUCT query for the given resource and value object IRIs.
+     *
+     * @param resourceIris    the IRIs of the resources to be queried.
+     * @param valueObjectIris the IRIs of the value objects to be queried.
+     * @param targetSchema    the target API schema.
+     * @param schemaOptions   the schema options submitted with the request.
+     * @return a [[ConstructQuery]].
+     */
     def createMainQuery(resourceIris: Set[IRI], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: KnoraSettingsImpl): ConstructQuery = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

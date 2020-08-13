@@ -54,7 +54,6 @@ object Responder {
 }
 
 
-
 /**
  * An abstract class providing values that are commonly used in Knora responders.
  */

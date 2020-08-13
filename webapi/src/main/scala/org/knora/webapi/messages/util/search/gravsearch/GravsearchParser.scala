@@ -32,26 +32,26 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import scala.collection.JavaConverters._
 
 /**
-  * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
-  *
-  * - The query must be a CONSTRUCT query.
-  * - It must use no internal ontologies.
-  * - The CONSTRUCT clause may contain only quad patterns.
-  * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
-  * - A UNION may not contain a nested UNION or OPTIONAL.
-  * - The value assigned in a BIND must be a Knora data IRI.
-  */
+ * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
+ *
+ * - The query must be a CONSTRUCT query.
+ * - It must use no internal ontologies.
+ * - The CONSTRUCT clause may contain only quad patterns.
+ * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
+ * - A UNION may not contain a nested UNION or OPTIONAL.
+ * - The value assigned in a BIND must be a Knora data IRI.
+ */
 object GravsearchParser {
     // This implementation uses the RDF4J SPARQL parser.
     private val sparqlParserFactory = new SPARQLParserFactory()
     private val sparqlParser: QueryParser = sparqlParserFactory.getParser
 
     /**
-      * Given a string representation of a Gravsearch query, returns a [[ConstructQuery]].
-      *
-      * @param query the Gravsearch string to be parsed.
-      * @return a [[ConstructQuery]].
-      */
+     * Given a string representation of a Gravsearch query, returns a [[ConstructQuery]].
+     *
+     * @param query the Gravsearch string to be parsed.
+     * @return a [[ConstructQuery]].
+     */
     def parseQuery(query: String): ConstructQuery = {
         val visitor = new ConstructQueryModelVisitor
 
@@ -66,10 +66,10 @@ object GravsearchParser {
     }
 
     /**
-      * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
-      *
-      * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
-      */
+     * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
+     *
+     * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
+     */
     class ConstructQueryModelVisitor(isInNegation: Boolean = false) extends algebra.QueryModelVisitor[GravsearchException] {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -99,21 +99,21 @@ object GravsearchParser {
         private val allIris: collection.mutable.Set[SmartIri] = collection.mutable.Set.empty[SmartIri]
 
         /**
-          * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
-          * the query that was parsed.
-          *
-          * @return a [[ConstructQuery]].
-          */
+         * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
+         * the query that was parsed.
+         *
+         * @return a [[ConstructQuery]].
+         */
         def makeConstructQuery: ConstructQuery = {
             /**
-              * Given a source name used in an [[algebra.ProjectionElem]], checks whether it's the name of a constant whose
-              * literal value was saved when the [[algebra.ExtensionElem]] nodes were processed. If so, returns a [[algebra.Var]] representing
-              * the literal value. Otherwise, returns an [[algebra.Var]] representing the name itself. The resulting [[algebra.Var]] can be
-              * passed to `makeStatementPatternSubject`, `makeStatementPatternPredicate`, or `makeStatementPatternObject`.
-              *
-              * @param sourceName the source name.
-              * @return an [[algebra.Var]] representing the name or its literal value.
-              */
+             * Given a source name used in an [[algebra.ProjectionElem]], checks whether it's the name of a constant whose
+             * literal value was saved when the [[algebra.ExtensionElem]] nodes were processed. If so, returns a [[algebra.Var]] representing
+             * the literal value. Otherwise, returns an [[algebra.Var]] representing the name itself. The resulting [[algebra.Var]] can be
+             * passed to `makeStatementPatternSubject`, `makeStatementPatternPredicate`, or `makeStatementPatternObject`.
+             *
+             * @param sourceName the source name.
+             * @return an [[algebra.Var]] representing the name or its literal value.
+             */
             def nameToVar(sourceName: String): algebra.Var = {
                 val sparqlVar = new algebra.Var
                 sparqlVar.setName(sourceName)
@@ -157,8 +157,8 @@ object GravsearchParser {
         }
 
         /**
-          * Returns the WHERE patterns found in the query.
-          */
+         * Returns the WHERE patterns found in the query.
+         */
         private def getWherePatterns: Seq[QueryPattern] = {
             wherePatterns
         }
@@ -207,11 +207,11 @@ object GravsearchParser {
         }
 
         /**
-          * Converts an RDF4J [[algebra.Var]] into an [[Entity]].
-          *
-          * @param objVar the [[algebra.Var]] to be converted.
-          * @return a [[Entity]].
-          */
+         * Converts an RDF4J [[algebra.Var]] into an [[Entity]].
+         *
+         * @param objVar the [[algebra.Var]] to be converted.
+         * @return a [[Entity]].
+         */
         private def makeEntityFromVar(objVar: algebra.Var): Entity = {
             if (objVar.isAnonymous || objVar.isConstant) {
                 makeEntityFromValue(objVar.getValue)
@@ -221,11 +221,11 @@ object GravsearchParser {
         }
 
         /**
-          * Converts an [[rdf4j.model.Value]] into an [[Entity]].
-          *
-          * @param value the value to be converted.
-          * @return a [[Entity]].
-          */
+         * Converts an [[rdf4j.model.Value]] into an [[Entity]].
+         *
+         * @param value the value to be converted.
+         * @return a [[Entity]].
+         */
         private def makeEntityFromValue(value: rdf4j.model.Value): Entity = {
             value match {
                 case iri: rdf4j.model.IRI => makeIri(iri)
@@ -274,11 +274,11 @@ object GravsearchParser {
         }
 
         /**
-          * Checks the contents of a block patterns to prevent nested blocks.
-          *
-          * @param patterns the patterns inside the block.
-          * @return the same patterns.
-          */
+         * Checks the contents of a block patterns to prevent nested blocks.
+         *
+         * @param patterns the patterns inside the block.
+         * @return the same patterns.
+         */
         private def checkBlockPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             for (pattern <- patterns) {
                 pattern match {

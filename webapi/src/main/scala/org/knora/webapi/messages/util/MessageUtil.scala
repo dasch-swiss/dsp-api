@@ -29,22 +29,22 @@ import org.knora.webapi.messages.SmartIri
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * Utility functions for working with Akka messages.
-  */
+ * Utility functions for working with Akka messages.
+ */
 object MessageUtil {
 
     // Set of case class field names to skip.
     private val fieldsToSkip = Set("stringFormatter", "base64Decoder", "knoraIdUtil", "standoffLinkTagTargetResourceIris")
 
     /**
-      * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
-      * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
-      * and [[Map]]), [[Option]], enumerations (as long as the enumeration value's `toString` representation is the same
-      * as its identifier), and primitive types. It doesn't work with classes defined inside methods.
-      *
-      * @param obj the object to convert.
-      * @return a string that can be pasted into Scala source code to construct the object.
-      */
+     * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
+     * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
+     * and [[Map]]), [[Option]], enumerations (as long as the enumeration value's `toString` representation is the same
+     * as its identifier), and primitive types. It doesn't work with classes defined inside methods.
+     *
+     * @param obj the object to convert.
+     * @return a string that can be pasted into Scala source code to construct the object.
+     */
     def toSource(obj: Any): String = {
         def maybeMakeNewLine(elemCount: Int): String = if (elemCount > 1) "\n" else ""
 

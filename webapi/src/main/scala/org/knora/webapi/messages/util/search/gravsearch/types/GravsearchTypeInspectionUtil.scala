@@ -25,28 +25,28 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 
 /**
-  * Utilities for Gravsearch type inspection.
-  */
+ * Utilities for Gravsearch type inspection.
+ */
 object GravsearchTypeInspectionUtil {
 
     /**
-      * A trait for case objects representing type annotation properties.
-      */
+     * A trait for case objects representing type annotation properties.
+     */
     sealed trait TypeAnnotationProperty
 
     /**
-      * Contains instances of [[TypeAnnotationProperty]].
-      */
+     * Contains instances of [[TypeAnnotationProperty]].
+     */
     object TypeAnnotationProperties {
 
         /**
-          * Represents a type annotation that uses `rdf:type`.
-          */
+         * Represents a type annotation that uses `rdf:type`.
+         */
         case object RdfType extends TypeAnnotationProperty
 
         /**
-          * Represents a type annotation that uses `knora-api:objectType` (in the simple or complex schema).
-          */
+         * Represents a type annotation that uses `knora-api:objectType` (in the simple or complex schema).
+         */
         case object ObjectType extends TypeAnnotationProperty
 
         private val valueMap = Map(
@@ -56,12 +56,12 @@ object GravsearchTypeInspectionUtil {
         )
 
         /**
-          * Converts an IRI to a [[TypeAnnotationProperty]].
-          *
-          * @param iri the IRI to be converted.
-          * @return a [[TypeAnnotationProperty]], or `None` if the IRI does not correspond to a type
-          *         annotation property.
-          */
+         * Converts an IRI to a [[TypeAnnotationProperty]].
+         *
+         * @param iri the IRI to be converted.
+         * @return a [[TypeAnnotationProperty]], or `None` if the IRI does not correspond to a type
+         *         annotation property.
+         */
         def fromIri(iri: SmartIri): Option[TypeAnnotationProperty] = {
             valueMap.get(iri.toString)
         }
@@ -103,9 +103,9 @@ object GravsearchTypeInspectionUtil {
     )
 
     /**
-      * The IRIs of non-property types that Gravsearch type inspectors return.
-      */
-    val GravsearchTypeIris: Set[IRI] = GravsearchValueTypeIris ++ Set(
+     * The IRIs of non-property types that Gravsearch type inspectors return.
+     */
+    val GravsearchAnnotationTypeIris: Set[IRI] = GravsearchValueTypeIris ++ Set(
         OntologyConstants.KnoraApiV2Simple.Resource,
         OntologyConstants.KnoraApiV2Complex.Resource,
         OntologyConstants.KnoraApiV2Complex.StandoffTag,
@@ -113,16 +113,16 @@ object GravsearchTypeInspectionUtil {
     )
 
     /**
-      * IRIs that do not need to be annotated to specify their types.
-      */
-    val ApiV2NonTypeableIris: Set[IRI] = GravsearchTypeIris ++ TypeAnnotationProperties.allTypeAnnotationIris
+     * IRIs that do not need to be annotated to specify their types.
+     */
+    val ApiV2NonTypeableIris: Set[IRI] = GravsearchAnnotationTypeIris ++ TypeAnnotationProperties.allTypeAnnotationIris
 
     /**
-      * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].
-      *
-      * @param entity a Gravsearch entity that is known to need type information.
-      * @return a [[TypeableEntity]].
-      */
+     * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].
+     *
+     * @param entity a Gravsearch entity that is known to need type information.
+     * @return a [[TypeableEntity]].
+     */
     def toTypeableEntity(entity: Entity): TypeableEntity = {
         maybeTypeableEntity(entity) match {
             case Some(typeableEntity) => typeableEntity
@@ -131,11 +131,11 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * Given a Gravsearch entity, converts it to a [[TypeableEntity]] if possible.
-      *
-      * @param entity the entity to be converted.
-      * @return a [[TypeableEntity]], or `None` if the entity does not need type information.
-      */
+     * Given a Gravsearch entity, converts it to a [[TypeableEntity]] if possible.
+     *
+     * @param entity the entity to be converted.
+     * @return a [[TypeableEntity]], or `None` if the entity does not need type information.
+     */
     def maybeTypeableEntity(entity: Entity): Option[TypeableEntity] = {
         entity match {
             case QueryVariable(variableName) => Some(TypeableVariable(variableName))
@@ -145,19 +145,19 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * Given a sequence of entities, finds the ones that need type information and returns them as
-      * [[TypeableEntity]] objects.
-      *
-      * @param entities the entities to be checked.
-      * @return a sequence of typeable entities.
-      */
+     * Given a sequence of entities, finds the ones that need type information and returns them as
+     * [[TypeableEntity]] objects.
+     *
+     * @param entities the entities to be checked.
+     * @return a sequence of typeable entities.
+     */
     def toTypeableEntities(entities: Seq[Entity]): Set[TypeableEntity] = {
         entities.flatMap(entity => maybeTypeableEntity(entity)).toSet
     }
 
     /**
-      * A [[WhereTransformer]] for removing Gravsearch type annotations from a WHERE clause.
-      */
+     * A [[WhereTransformer]] for removing Gravsearch type annotations from a WHERE clause.
+     */
     private class AnnotationRemovingWhereTransformer extends WhereTransformer {
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
             if (!isAnnotationStatement(statementPattern)) {
@@ -169,17 +169,17 @@ object GravsearchTypeInspectionUtil {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = Seq(luceneQueryPattern)
     }
 
     /**
-      * Removes Gravsearch type annotations from a WHERE clause.
-      *
-      * @param whereClause the WHERE clause.
-      * @return the same WHERE clause, minus any type annotations.
-      */
+     * Removes Gravsearch type annotations from a WHERE clause.
+     *
+     * @param whereClause the WHERE clause.
+     * @return the same WHERE clause, minus any type annotations.
+     */
     def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
         whereClause.copy(
             patterns = QueryTraverser.transformWherePatterns(
@@ -191,20 +191,20 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * Determines whether a statement pattern represents a Gravsearch type annotation.
-      *
-      * @param statementPattern the statement pattern.
-      * @return `true` if the statement pattern represents a type annotation.
-      */
+     * Determines whether a statement pattern represents a Gravsearch type annotation.
+     *
+     * @param statementPattern the statement pattern.
+     * @return `true` if the statement pattern represents a type annotation.
+     */
     def isAnnotationStatement(statementPattern: StatementPattern): Boolean = {
         /**
-          * Returns `true` if an entity is an IRI representing a type that is valid for use in a type annotation.
-          *
-          * @param entity the entity to be checked.
-          */
+         * Returns `true` if an entity is an IRI representing a type that is valid for use in a type annotation.
+         *
+         * @param entity the entity to be checked.
+         */
         def isValidTypeInAnnotation(entity: Entity): Boolean = {
             entity match {
-                case IriRef(objIri, _) if GravsearchTypeIris.contains(objIri.toString) => true
+                case IriRef(objIri, _) if GravsearchAnnotationTypeIris.contains(objIri.toString) => true
                 case _ => false
             }
         }

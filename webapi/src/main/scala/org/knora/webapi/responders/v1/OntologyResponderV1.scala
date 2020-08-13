@@ -38,18 +38,18 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import scala.concurrent.Future
 
 /**
-  * Handles requests for information about ontology entities.
-  *
-  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
-  * the application.
-  */
+ * Handles requests for information about ontology entities.
+ *
+ * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
+ * the application.
+ */
 class OntologyResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: OntologyResponderRequestV1) = msg match {
         case LoadOntologiesRequest(userProfile) => loadOntologies(userProfile)
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => getEntityInfoResponseV1(resourceIris, propertyIris, userProfile)
@@ -68,11 +68,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Loads and caches all ontology information.
-      *
-      * @param userProfile the profile of the user making the request.
-      * @return a [[LoadOntologiesResponse]].
-      */
+     * Loads and caches all ontology information.
+     *
+     * @param userProfile the profile of the user making the request.
+     * @return a [[LoadOntologiesResponse]].
+     */
     private def loadOntologies(userProfile: UserADM): Future[LoadOntologiesResponse] = {
 
         for {
@@ -83,13 +83,13 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
-      *
-      * @param resourceClassIris the IRIs of the resource entities to be queried.
-      * @param propertyIris      the IRIs of the property entities to be queried.
-      * @param userProfile       the profile of the user making the request.
-      * @return an [[EntityInfoGetResponseV1]].
-      */
+     * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
+     *
+     * @param resourceClassIris the IRIs of the resource entities to be queried.
+     * @param propertyIris      the IRIs of the property entities to be queried.
+     * @param userProfile       the profile of the user making the request.
+     * @return an [[EntityInfoGetResponseV1]].
+     */
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM): Future[EntityInfoGetResponseV1] = {
         for {
             response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris.map(_.toSmartIri), propertyIris.map(_.toSmartIri), userProfile)).mapTo[EntityInfoGetResponseV2]
@@ -98,13 +98,13 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
 
 
     /**
-      * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV1]] describing both resource and property entities.
-      *
-      * @param standoffClassIris    the IRIs of the resource entities to be queried.
-      * @param standoffPropertyIris the IRIs of the property entities to be queried.
-      * @param userProfile          the profile of the user making the request.
-      * @return an [[EntityInfoGetResponseV1]].
-      */
+     * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV1]] describing both resource and property entities.
+     *
+     * @param standoffClassIris    the IRIs of the resource entities to be queried.
+     * @param standoffPropertyIris the IRIs of the property entities to be queried.
+     * @param userProfile          the profile of the user making the request.
+     * @return an [[EntityInfoGetResponseV1]].
+     */
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
         for {
             response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris.map(_.toSmartIri), standoffPropertyIris.map(_.toSmartIri), userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
@@ -114,11 +114,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets information about all standoff classes that are a subclass of a data type standoff class.
-      *
-      * @param userProfile the profile of the user making the request.
-      * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
-      */
+     * Gets information about all standoff classes that are a subclass of a data type standoff class.
+     *
+     * @param userProfile the profile of the user making the request.
+     * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
+     */
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserADM): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
             response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV2]
@@ -126,11 +126,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets all standoff property entities.
-      *
-      * @param userProfile the profile of the user making the request.
-      * @return a [[StandoffAllPropertiesGetResponseV1]].
-      */
+     * Gets all standoff property entities.
+     *
+     * @param userProfile the profile of the user making the request.
+     * @return a [[StandoffAllPropertiesGetResponseV1]].
+     */
     private def getAllStandoffPropertyEntities(userProfile: UserADM): Future[StandoffAllPropertiesGetResponseV1] = {
         for {
             response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
@@ -138,13 +138,13 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given the IRI of a resource type, returns a [[ResourceTypeResponseV1]] describing the resource type and its possible
-      * properties.
-      *
-      * @param resourceTypeIri the IRI of the resource type to be queried.
-      * @param userProfile     the profile of the user making the request.
-      * @return a [[ResourceTypeResponseV1]].
-      */
+     * Given the IRI of a resource type, returns a [[ResourceTypeResponseV1]] describing the resource type and its possible
+     * properties.
+     *
+     * @param resourceTypeIri the IRI of the resource type to be queried.
+     * @param userProfile     the profile of the user making the request.
+     * @return a [[ResourceTypeResponseV1]].
+     */
     private def getResourceTypeResponseV1(resourceTypeIri: String, userProfile: UserADM): Future[ResourceTypeResponseV1] = {
 
         for {
@@ -217,11 +217,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks whether a certain Knora resource or value class is a subclass of another class.
-      *
-      * @param checkSubClassRequest a [[CheckSubClassRequestV1]]
-      * @return a [[CheckSubClassResponseV1]].
-      */
+     * Checks whether a certain Knora resource or value class is a subclass of another class.
+     *
+     * @param checkSubClassRequest a [[CheckSubClassRequestV1]]
+     * @return a [[CheckSubClassResponseV1]].
+     */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
         for {
             response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri.toSmartIri, superClassIri = checkSubClassRequest.superClassIri.toSmartIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV2]
@@ -230,31 +230,32 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the IRIs of the subclasses of a resource class.
-      *
-      * @param getSubClassesRequest a [[SubClassesGetRequestV1]].
-      * @return a [[SubClassesGetResponseV1]].
-      */
+     * Gets the IRIs of the subclasses of a resource class.
+     *
+     * @param getSubClassesRequest a [[SubClassesGetRequestV1]].
+     * @return a [[SubClassesGetResponseV1]].
+     */
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
             response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri.toSmartIri, getSubClassesRequest.userADM)).mapTo[SubClassesGetResponseV2]
 
             subClasses = response.subClasses.map {
-                subClassInfoV2 => SubClassInfoV1(
-                    id = subClassInfoV2.id.toString,
-                    label = subClassInfoV2.label
-                )
+                subClassInfoV2 =>
+                    SubClassInfoV1(
+                        id = subClassInfoV2.id.toString,
+                        label = subClassInfoV2.label
+                    )
             }
 
         } yield SubClassesGetResponseV1(subClasses)
     }
 
     /**
-      * Returns all the existing named graphs as a [[NamedGraphsResponseV1]].
-      *
-      * @param userProfile the profile of the user making the request.
-      * @return a [[NamedGraphsResponseV1]].
-      */
+     * Returns all the existing named graphs as a [[NamedGraphsResponseV1]].
+     *
+     * @param userProfile the profile of the user making the request.
+     * @return a [[NamedGraphsResponseV1]].
+     */
     private def getNamedGraphs(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM): Future[NamedGraphsResponseV1] = {
 
         for {
@@ -292,12 +293,12 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the [[NamedGraphEntityInfoV1]] for a named graph
-      *
-      * @param namedGraphIri the IRI of the named graph to query
-      * @param userProfile   the profile of the user making the request.
-      * @return a [[NamedGraphEntityInfoV1]].
-      */
+     * Gets the [[NamedGraphEntityInfoV1]] for a named graph
+     *
+     * @param namedGraphIri the IRI of the named graph to query
+     * @param userProfile   the profile of the user making the request.
+     * @return a [[NamedGraphEntityInfoV1]].
+     */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserADM): Future[NamedGraphEntityInfoV1] = {
         for {
             response: OntologyKnoraEntitiesIriInfoV2 <- (responderManager ? OntologyKnoraEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[OntologyKnoraEntitiesIriInfoV2]
@@ -313,12 +314,12 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets all the resource classes and their properties for a named graph.
-      *
-      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
-      * @param userProfile         the profile of the user making the request.
-      * @return [[ResourceTypesForNamedGraphResponseV1]].
-      */
+     * Gets all the resource classes and their properties for a named graph.
+     *
+     * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
+     * @param userProfile         the profile of the user making the request.
+     * @return [[ResourceTypesForNamedGraphResponseV1]].
+     */
     private def getResourceTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserADM): Future[ResourceTypesForNamedGraphResponseV1] = {
 
         // get the resource types for a named graph
@@ -378,12 +379,12 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
-      *
-      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
-      * @param userProfile         the profile of the user making the request.
-      * @return a [[PropertyTypesForNamedGraphResponseV1]].
-      */
+     * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
+     *
+     * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
+     * @param userProfile         the profile of the user making the request.
+     * @return a [[PropertyTypesForNamedGraphResponseV1]].
+     */
     private def getPropertyTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserADM): Future[PropertyTypesForNamedGraphResponseV1] = {
 
         def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserADM): Future[Seq[PropertyDefinitionInNamedGraphV1]] = {
@@ -451,12 +452,12 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the property types defined for the given resource class.
-      *
-      * @param resourceClassIri the IRI of the resource class to query for.
-      * @param userProfile      the profile of the user making the request.
-      * @return a [[PropertyTypesForResourceTypeResponseV1]].
-      */
+     * Gets the property types defined for the given resource class.
+     *
+     * @param resourceClassIri the IRI of the resource class to query for.
+     * @param userProfile      the profile of the user making the request.
+     * @return a [[PropertyTypesForResourceTypeResponseV1]].
+     */
     private def getPropertyTypesForResourceType(resourceClassIri: IRI, userProfile: UserADM): Future[PropertyTypesForResourceTypeResponseV1] = {
         for {
             resInfo: ResourceTypeResponseV1 <- getResourceTypeResponseV1(resourceClassIri, userProfile)
