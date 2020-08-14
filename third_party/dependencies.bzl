@@ -140,6 +140,7 @@ def dependencies():
             "https://repo1.maven.org/maven2",
             "https://central.maven.org/maven2",
         ],
+        fetch_sources = True,
     )
 
 ALL_WEBAPI_MAIN_DEPENDENCIES = [

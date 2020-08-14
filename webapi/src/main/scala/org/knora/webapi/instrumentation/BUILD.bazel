@@ -9,7 +9,6 @@ scala_library(
     deps = [
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        "@maven//:commons_io_commons_io",
         "@maven//:org_scala_lang_scala_library",
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:io_kamon_kamon_core_2_12",
