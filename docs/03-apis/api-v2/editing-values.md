@@ -83,8 +83,9 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
   }
 }
 ```
+
 Each value can have an optional custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) specified by the `@id` attribute, a custom creation date specified by adding 
-`knora-api:creationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
+`knora-api:valueCreationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
 given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding.
 For example: 
 
@@ -97,7 +98,7 @@ For example:
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 21,
     "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
-    "knora-api:creationDate" : {
+    "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2020-06-04T12:58:54.502951Z"
       }
@@ -108,6 +109,7 @@ For example:
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 ```
+
 The format of the object of `knora-api:hasPermissions` is described in
 [Permissions](../../02-knora-ontologies/knora-base.md#permissions).
 
@@ -386,6 +388,9 @@ To update only the permissions on a value, submit it with the new permissions an
 To update a link, the user must have **modify permission** on the containing resource as
 well as on the value.
 
+To update a value and give it a custom timestamp, add
+`knora-api:valueCreationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
+
 The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
 and type of the new value version.
 
@@ -431,7 +436,10 @@ the resource to the value, and the value's ID and type. For example:
 ```
 
 The optional property `knora-api:deleteComment` specifies a comment to be attached to the
-value, explaining why it has been marked as deleted.
+value, explaining why it has been marked as deleted
+
+The optional property `knora-api:deleteDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp))
+specifies a custom timestamp indicating when the value was deleted. If not specified, the current time is used.
 
 The response is a JSON-LD document containing the predicate `knora-api:result`
 with a confirmation message.

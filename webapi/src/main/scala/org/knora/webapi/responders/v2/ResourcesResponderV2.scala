@@ -78,7 +78,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
-        case deleteResourceRequestV2: DeleteOrEraseResourceRequestV2 => deleteOrEraseResourceV2(deleteResourceRequestV2)
+        case deleteOrEraseResourceRequestV2: DeleteOrEraseResourceRequestV2 => deleteOrEraseResourceV2(deleteOrEraseResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
         case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -419,6 +419,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
                 }
 
+                // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
+                _ = if (deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate)))) {
+                    throw BadRequestException(s"A custom delete date must be later than the date when the resource was created or last modified")
+                }
+
                 // Check that the user has permission to mark the resource as deleted.
                 _ = ResourceUtilV2.checkResourcePermission(
                     resourceInfo = resource,
@@ -435,7 +440,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     dataNamedGraph = dataNamedGraph,
                     resourceIri = deleteResourceV2.resourceIri,
                     maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
-                    currentTime = Instant.now,
+                    currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
                     requestingUser = deleteResourceV2.requestingUser.id
                 ).toString()
 
