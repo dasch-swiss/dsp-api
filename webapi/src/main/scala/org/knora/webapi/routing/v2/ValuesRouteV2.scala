@@ -452,6 +452,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * Returns JSON-LD requests for updating values in tests of generated client code.
      */
     private def updateValueTestRequests: Future[Set[TestDataFileContent]] = {
+        val customValueCreationDate = Instant.parse("2020-08-14T10:00:00Z")
+
         FastFuture.successful(
             Set(
                 TestDataFileContent(
@@ -460,6 +462,15 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,
                         intValue = 5
+                    )
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("update-int-value-request-with-custom-creation-date"),
+                    text = SharedTestDataADM.updateIntValueWithCustomCreationDateRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.intValueIri,
+                        intValue = 5,
+                        valueCreationDate = customValueCreationDate
                     )
                 ),
                 TestDataFileContent(
@@ -697,10 +708,20 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * Returns JSON-LD requests for deleting values in tests of generated client code.
      */
     private def deleteValueTestRequests: Future[Set[TestDataFileContent]] = {
+        val deleteDate = Instant.parse("2020-08-14T10:00:00Z")
+
         FastFuture.successful(
             Set(
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("delete-int-value-request"),
+                    text = SharedTestDataADM.deleteIntValueRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.intValueIri,
+                        maybeDeleteComment = Some("this value was incorrect")
+                    )
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("delete-int-value-request-with-custom-delete-date"),
                     text = SharedTestDataADM.deleteIntValueRequest(
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,

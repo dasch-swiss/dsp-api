@@ -1743,6 +1743,28 @@ object SharedTestDataADM {
         }
     }
 
+    def deleteIntValueRequestWithCustomDeleteDate(resourceIri: IRI,
+                                                  valueIri: IRI,
+                                                  deleteDate: Instant): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:deleteDate" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$deleteDate"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
     def deleteLinkValueRequest(resourceIri: IRI,
                                valueIri: IRI): String = {
         s"""{
@@ -2160,6 +2182,26 @@ object SharedTestDataADM {
             |    "@value" : "$lastModificationDate"
             |  },
             |  "knora-api:deleteComment" : "This resource is too boring.",
+            |  "@context" : {
+            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+            |  }
+            |}""".stripMargin
+    }
+
+    def deleteResourceWithCustomDeleteDate(resourceIri: IRI,
+                                           deleteDate: Instant): String = {
+        s"""|{
+            |  "@id" : "$resourceIri",
+            |  "@type" : "anything:Thing",
+            |  "knora-api:deleteComment" : "This resource is too boring.",
+            |  "knora-api:deleteDate" : {
+            |    "@type" : "xsd:dateTimeStamp",
+            |    "@value" : "$deleteDate"
+            |  },
             |  "@context" : {
             |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",

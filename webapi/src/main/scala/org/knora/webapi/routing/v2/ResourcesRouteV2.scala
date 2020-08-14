@@ -553,9 +553,10 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def deleteResourceTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
+    private def deleteResourceTestRequestsAndResponses: Future[Set[TestDataFileContent]] = {
         val resourceIri = "http://rdfh.ch/0001/a-thing"
         val lastModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
+        val deleteDate = Instant.parse("2020-08-14T10:00:00Z")
 
         FastFuture.successful(
             Set(
@@ -564,6 +565,13 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     text = SharedTestDataADM.deleteResource(
                         resourceIri = resourceIri,
                         lastModificationDate = lastModificationDate
+                    )
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("delete-resource-with-custom-delete-date-request"),
+                    text = SharedTestDataADM.deleteResourceWithCustomDeleteDate(
+                        resourceIri = resourceIri,
+                        deleteDate = deleteDate
                     )
                 ),
                 TestDataFileContent(
@@ -630,7 +638,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             previewResponse <- getResourcesPreviewTestResponse
             graphResponse <- getResourceGraphTestResponse
             metadataRequestsAndResponse <- updateResourceMetadataTestRequestsAndResponse
-            deleteRequestAndResponse <- deleteResourceTestRequestAndResponse
+            deleteRequestAndResponse <- deleteResourceTestRequestsAndResponses
             eraseRequest <- eraseResourceTestRequest
         } yield getResponses ++ createRequests ++ metadataRequestsAndResponse ++ deleteRequestAndResponse +
             previewResponse + graphResponse + eraseRequest

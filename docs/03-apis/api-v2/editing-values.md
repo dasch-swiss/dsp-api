@@ -439,7 +439,7 @@ The optional property `knora-api:deleteComment` specifies a comment to be attach
 value, explaining why it has been marked as deleted
 
 The optional property `knora-api:deleteDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp))
-specifies a custom timestamp indicating when the value was deleted. If not specified, the current time is used.å
+specifies a custom timestamp indicating when the value was deleted. If not specified, the current time is used.
 
 The response is a JSON-LD document containing the predicate `knora-api:result`
 with a confirmation message.

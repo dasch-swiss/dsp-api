@@ -54,6 +54,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private val password = "test"
 
     private val intValueIri = new MutableTestIri
+    private val intValueIriWithCustomCreationDate = new MutableTestIri
     private val textValueWithoutStandoffIri = new MutableTestIri
     private val textValueWithStandoffIri = new MutableTestIri
     private val textValueWithEscapeIri = new MutableTestIri
@@ -330,11 +331,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            intValueIriWithCustomCreationDate.set(valueIri)
+
             val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
                 key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                 validationFun = stringFormatter.xsdDateTimeStampToInstant
             )
+
             assert(savedCreationDate == customCreationDate)
         }
 
@@ -1989,7 +1994,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
         }
 
-        "create a link between two resources with a custom link value Iri, UUID, creationDate" in {
+        "create a link between two resources with a custom link value IRI, UUID, creationDate" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
             val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI"
@@ -3159,6 +3164,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 resourceIri = SharedTestDataADM.AThing.iri,
                 valueIri = intValueIri.get,
                 maybeDeleteComment = Some("this value was incorrect")
+            )
+
+            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+        }
+
+        "delete an integer value, supplying a custom delete date" in {
+            val deleteDate = Instant.now
+
+            val jsonLdEntity = SharedTestDataADM.deleteIntValueRequestWithCustomDeleteDate(
+                resourceIri = SharedTestDataADM.AThing.iri,
+                valueIri = intValueIriWithCustomCreationDate.get,
+                deleteDate = deleteDate
             )
 
             val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
