@@ -4,10 +4,10 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 
 scala_library(
     name = "version",
-    srcs = glob(["*.scala"]) + ["//tools/buildstamp:version_info_src"],
+    srcs = glob(["*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
-        #"//tools/buildstamp:version_info_jar",
+        "//tools/version_info",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
