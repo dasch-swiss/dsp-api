@@ -4,7 +4,7 @@ content during the analysis phase.
 """
 
 # Label of the template file to use.
-_TEMPLATE = "//tools/buildstamp:VersionInfoTemplate.scala"
+_TEMPLATE = "//tools/version_info:VersionInfoTemplate.scala"
 
 def _gen_version_info_impl(ctx):
     ctx.actions.expand_template(

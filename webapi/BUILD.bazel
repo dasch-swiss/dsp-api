@@ -39,7 +39,7 @@ scala_library(
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
-        "//tools/buildstamp:version_info_jar",
+        "//tools/version_info",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",

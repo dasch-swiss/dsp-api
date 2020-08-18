@@ -19,13 +19,13 @@
 
 package org.knora.webapi.http.version
 
-import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.Server
 import akka.http.scaladsl.server.Directives.respondWithHeader
 import akka.http.scaladsl.server.Route
 
 /**
- * This object provides methods that can be used to add the [[Server]] header to an [[HttpResponse]].
+ * This object provides methods that can be used to add the [[Server]] header
+ * to an [[akka.http.scaladsl.model.HttpResponse]].
  */
 object ServerVersion {
 
@@ -36,5 +36,5 @@ object ServerVersion {
         route
     }
 
-    def getServerVersionHeader() = ServerVersionHeader
+    def getServerVersionHeader(): Server = ServerVersionHeader
 }
