@@ -26,8 +26,11 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{DuplicateValueException, UnexpectedMessageException}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -50,14 +53,6 @@ object Responder {
     }
 }
 
-/**
- * Data needed to be passed to each responder.
- *
- * @param system   the actor system.
- * @param appActor the main application actor.
- */
-case class ResponderData(system: ActorSystem,
-                         appActor: ActorRef)
 
 /**
  * An abstract class providing values that are commonly used in Knora responders.
@@ -122,9 +117,9 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                                errorFun: => Nothing,
                                ignoreKnoraConstraints: Boolean = false,
                                ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
-        // #sparql-select
+
         for {
-            isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
+            isEntityUsedSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
                 entityIri = entityIri,
                 ignoreKnoraConstraints = ignoreKnoraConstraints,
@@ -132,7 +127,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
             ).toString())
 
             isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
-            // #sparql-select
 
             _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
                 errorFun

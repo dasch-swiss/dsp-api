@@ -30,11 +30,14 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{ClientEndpoint, SmartIri, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -356,6 +359,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         )
     }
 
+    private def createClassTestResponse: Future[TestDataFileContent] = {
+        FastFuture.successful(
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("create-class-without-cardinalities-response"),
+                text = SharedTestDataADM.createClassWithoutCardinalitiesResponse
+            )
+        )
+    }
+
     private def updateClass: Route = path(OntologiesBasePath / "classes") {
         put {
             // Change the labels or comments of a class.
@@ -570,7 +582,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     // Classes to return in test data.
     private val testClasses: Map[String, IRI] = Map(
-        "get-class-anything-thing-response" -> SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
+        "get-class-anything-thing-with-allLanguages-response" -> SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost,
         "get-class-image-bild-response" -> SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost,
         "get-class-incunabula-book-response" -> SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost,
         "get-class-incunabula-page-response" -> SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost
@@ -583,9 +595,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         val responseFutures: Iterable[Future[TestDataFileContent]] = testClasses.map {
             case (filename, classIri) =>
                 val encodedClassIri = URLEncoder.encode(classIri, "UTF-8")
-
+                val segment = if (filename.endsWith("-with-allLanguages-response"))
+                    encodedClassIri + "?allLanguages=true"
+                else encodedClassIri
                 for {
-                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/classes/$encodedClassIri"))
+
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$OntologiesBasePathString/classes/$segment"))
+
                 } yield TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath(filename),
                     text = responseStr
@@ -967,6 +983,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             createOntologyResponse: TestDataFileContent <- createOntologyTestResponse
             updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
             createClassRequest: Set[TestDataFileContent] <- createClassTestRequest
+            createClassResponse: TestDataFileContent <- createClassTestResponse
             addCardinalitiesRequest: TestDataFileContent <- addCardinalitiesTestRequest
             createPropertyRequest: TestDataFileContent <- createPropertyTestRequest
             updateClassRequest: Set[TestDataFileContent] <- updateClassTestRequest
@@ -975,7 +992,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             deleteOntologyResponse: TestDataFileContent <- deleteOntologyTestResponse
         } yield ontologyResponses + ontologyMetadataResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++
             ontologyPropertyResponses + createOntologyRequest + createOntologyResponse + updateOntologyMetadataRequest ++
-            createClassRequest + addCardinalitiesRequest + createPropertyRequest ++
+            createClassRequest + createClassResponse + addCardinalitiesRequest + createPropertyRequest ++
             updateClassRequest ++ replaceCardinalitiesRequest ++ updatePropertyRequest + deleteOntologyResponse
     }
 }

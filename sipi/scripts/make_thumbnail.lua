@@ -164,7 +164,6 @@ for imgindex, imgparam in pairs(server.uploads) do
         return
     end
 
-    -- #snip_marker
     server.log("make_thumbnail - external_protocol: " .. get_external_protocol(), server.loglevel.LOG_DEBUG)
 
     server.log("make_thumbnail - external_hostname: " .. get_external_hostname(), server.loglevel.LOG_DEBUG)
@@ -181,7 +180,6 @@ for imgindex, imgparam in pairs(server.uploads) do
         original_filename = filename,
         file_type = 'IMAGE'
     }
-    -- #snip_marker
 
 end
 

@@ -19,10 +19,17 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          version: 3.3.0
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -60,10 +67,17 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          version: 3.3.0
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -105,10 +119,20 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          version: 3.3.0
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -150,10 +174,17 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          version: 3.3.0
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -195,10 +226,17 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          version: 3.3.0
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -228,33 +266,32 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: cache maven artifacts
-        uses: actions/cache@v1
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
         with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
+          sudo apt-get install graphviz
       - name: Disk Free
         run: |
           df -h
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: run docs build test
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/docs/target
-          chmod 777 $GITHUB_WORKSPACE/docs/target
-          make docs-build
+      - name: run docs build
+        run: make docs-build
       - name: Disk Free After
         run: |
           df -h
@@ -262,7 +299,7 @@ jobs:
 
   # publish only on release
   publish:
-    name: Publish to Dockerhub (on release only)
+    name: Publish (on release only)
     needs: [
       api-unit-tests,
       api-e2e-tests,
@@ -282,10 +319,21 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Setup Bazel
-        uses: abhinavsingh/setup-bazel@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          version: 3.3.0
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
+          sudo apt-get install graphviz
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -309,6 +357,12 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
+      - name: run docs build
+        run: make docs-build
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Disk Free After
         run: |
           df -h

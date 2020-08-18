@@ -30,12 +30,15 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{ClientEndpoint, SmartIri, StringFormatter, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -345,7 +348,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser = requestingUser
                 )
 
-                // #use-requested-schema
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
@@ -355,7 +357,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     targetSchema = targetSchema,
                     schemaOptions = schemaOptions
                 )
-                // #use-requested-schema
             }
         }
     }
@@ -552,9 +553,10 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def deleteResourceTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
+    private def deleteResourceTestRequestsAndResponses: Future[Set[TestDataFileContent]] = {
         val resourceIri = "http://rdfh.ch/0001/a-thing"
         val lastModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
+        val deleteDate = Instant.parse("2020-08-14T10:00:00Z")
 
         FastFuture.successful(
             Set(
@@ -563,6 +565,13 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     text = SharedTestDataADM.deleteResource(
                         resourceIri = resourceIri,
                         lastModificationDate = lastModificationDate
+                    )
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("delete-resource-with-custom-delete-date-request"),
+                    text = SharedTestDataADM.deleteResourceWithCustomDeleteDate(
+                        resourceIri = resourceIri,
+                        deleteDate = deleteDate
                     )
                 ),
                 TestDataFileContent(
@@ -629,7 +638,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             previewResponse <- getResourcesPreviewTestResponse
             graphResponse <- getResourceGraphTestResponse
             metadataRequestsAndResponse <- updateResourceMetadataTestRequestsAndResponse
-            deleteRequestAndResponse <- deleteResourceTestRequestAndResponse
+            deleteRequestAndResponse <- deleteResourceTestRequestsAndResponses
             eraseRequest <- eraseResourceTestRequest
         } yield getResponses ++ createRequests ++ metadataRequestsAndResponse ++ deleteRequestAndResponse +
             previewResponse + graphResponse + eraseRequest

@@ -35,7 +35,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM}
+import org.knora.webapi.{E2ESpec, IRI}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -140,29 +141,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             }
 
-            "return 'BadRequest' if the supplied project IRI is not a valid IRI" in {
-                val params =
-                    s"""{
-                       |    "id": "invalid-project-IRI",
-                       |    "shortname": "newprojectWithInvalidIri",
-                       |    "shortcode": "2222",
-                       |    "longname": "new project with a custom invalid IRI",
-                       |    "description": [{"value": "a project created with an invalid custom IRI", "language": "en"}],
-                       |    "keywords": ["projectInvalidIRI"],
-                       |    "logo": "/fu/bar/baz.jpg",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}""".stripMargin
-
-
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains("Invalid project IRI")
-                invalidIri should be(true)
-            }
-
             "return 'BadRequest' if the supplied project IRI is not unique" in {
                 val params =
                     s"""{
@@ -210,8 +188,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.selfjoin should be (false)
 
                 newProjectIri.set(result.id)
-                // log.debug("newProjectIri: {}", newProjectIri.get)
-
             }
 
             "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
@@ -219,7 +195,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                     s"""
                        |{
                        |    "shortname": "newproject",
-                       |    "shortcode"; "1112",
+                       |    "shortcode": "1112",
                        |    "longname": "project longname",
                        |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
@@ -232,7 +208,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
+
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -240,7 +216,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val params =
                     s"""
                        |{
-                       |    "shortcode"; "1112",
+                       |    "shortcode": "1112",
                        |    "longname": "project longname",
                        |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
@@ -250,10 +226,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -261,7 +235,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val params =
                     s"""
                        |{
-                       |    "shortname"; "newproject2",
+                       |    "shortname": "newproject2",
                        |    "longname": "project longname",
                        |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
@@ -271,10 +245,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -282,8 +254,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val params =
                     s"""
                        |{
-                       |    "shortcode"; "1114",
-                       |    "shortname"; "newproject5",
+                       |    "shortcode": "1114",
+                       |    "shortname": "newproject5",
                        |    "longname": "project longname",
                        |    "description": [],
                        |    "keywords": ["keywords"],
@@ -293,10 +265,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -305,7 +275,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
                 val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.updateProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]

@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
-load("//third_party:dependencies.bzl", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
 filegroup(
     name = "srcs",
@@ -27,7 +27,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
@@ -45,121 +45,10 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
         "@maven//:commons_validator_commons_validator",
-    ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-    name = "CacheUtilSpec",
-    size = "small",
-    srcs = [
-        "CacheUtilSpec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-    name = "ConstructResponseUtilV2Spec",
-    size = "small",
-    srcs = [
-        "ConstructResponseUtilV2Spec.scala",
-        "ConstructResponseUtilV2SpecFullData.scala",
-        "//webapi/src/test/scala/org/knora/webapi/responders/v2:ResourcesResponderV2SpecFullData.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-    name = "DateUtilV1Spec",
-    size = "small",
-    srcs = [
-        "DateUtilV1Spec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:org_scalactic_scalactic_2_12",
-    ],
-)
-
-scala_test(
-    name = "GenerateContributorsFileSpec",
-    size = "small",
-    srcs = [
-        "GenerateContributorsFileSpec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-    name = "PermissionUtilADMSpec",
-    size = "small",
-    srcs = [
-        "PermissionUtilADMSpec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
-)
-
-scala_test(
-    name = "StringFormatterSpec",
-    size = "small",
-    srcs = [
-        "StringFormatterSpec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:main_library",
-        "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
 )
 
@@ -175,7 +64,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
-    deps = [
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,

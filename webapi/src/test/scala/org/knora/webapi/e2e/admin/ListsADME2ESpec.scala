@@ -32,7 +32,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Strin
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -169,27 +170,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
                 labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
-            }
-
-            "return a BadRequestException during list creation when an invalid list IRI is given" in {
-
-                // invalid list IRI
-                val params =
-                    s"""
-                       |{
-                       |    "id": "invalid-list-IRI",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "New List", "language": "en"}],
-                       |    "comments": []
-                       |}
-                """.stripMargin
-
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.BadRequest)
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains("Invalid list IRI")
-                invalidIri should be(true)
             }
 
             "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {

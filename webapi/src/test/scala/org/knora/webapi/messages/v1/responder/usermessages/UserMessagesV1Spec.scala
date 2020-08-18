@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1.responder.usermessages
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder

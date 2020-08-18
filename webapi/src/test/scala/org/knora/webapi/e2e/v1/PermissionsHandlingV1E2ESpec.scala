@@ -24,6 +24,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 object PermissionsHandlingV1E2ESpec {
     val config = ConfigFactory.parseString(

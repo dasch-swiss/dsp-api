@@ -23,7 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.Materializer
-import org.knora.webapi.ClientApiGenerationException
+import org.knora.webapi.exceptions.ClientApiGenerationException
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

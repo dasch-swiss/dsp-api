@@ -29,7 +29,7 @@ import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.eclipse.rdf4j.sail.memory.MemoryStore
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
-import org.knora.webapi.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

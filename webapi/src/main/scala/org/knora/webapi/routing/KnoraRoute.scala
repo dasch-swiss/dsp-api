@@ -24,8 +24,8 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.util.Timeout
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
 import scala.concurrent.ExecutionContext
 
@@ -33,8 +33,8 @@ import scala.concurrent.ExecutionContext
 /**
  * Data needed to be passed to each route.
  *
- * @param system           the actor system.
- * @param appActor         the main application actor.
+ * @param system   the actor system.
+ * @param appActor the main application actor.
  */
 case class KnoraRouteData(system: ActorSystem,
                           appActor: ActorRef)

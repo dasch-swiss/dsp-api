@@ -1,0 +1,38 @@
+package(default_visibility = ["//visibility:public"])
+
+# bring our version constants in
+load("//third_party:versions.bzl", "SCALA_VERSION", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION", "FUSEKI_VERSION")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+
+filegroup(
+    name = "srcs",
+    srcs = glob(["**"]),
+)
+
+# Generates a scala source file that includes version information
+# The generated intermediate file is missing the BUILD_TAG, which is
+# add by the version_info genrule
+load("//tools/version_info:gen_version_info.bzl", "gen_version_info")
+gen_version_info(
+    name = "version_info_without_build_tag",
+    scala_version = SCALA_VERSION,
+    akka_version = AKKA_VERSION,
+    akka_http_version = AKKA_HTTP_VERSION,
+    sipi_version = SIPI_VERSION,
+    fuseki_version = FUSEKI_VERSION,
+)
+
+# Adds the missing build tag and emits the final scala object
+genrule(
+    name = "version_info_with_build_tag",
+    srcs = [":version_info_without_build_tag"],
+    outs = ["version_info.scala"],
+    local = 1,
+    tools = [":add_build_tag.sh"],
+    cmd = '$(location add_build_tag.sh) bazel-out/volatile-status.txt "$<" > "$@"',
+)
+
+scala_library(
+    name = "version_info",
+    srcs = [":version_info_with_build_tag"],
+)

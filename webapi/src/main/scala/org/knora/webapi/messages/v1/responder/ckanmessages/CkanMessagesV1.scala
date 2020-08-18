@@ -1,20 +1,20 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.messages.v1.responder.ckanmessages
@@ -28,28 +28,28 @@ import spray.json._
 // API requests
 
 /**
-  * An abstract trait representing a request message that can be sent to `CkanResponderV1`.
-  */
+ * An abstract trait representing a request message that can be sent to `CkanResponderV1`.
+ */
 sealed trait CkanResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * Represents an API request payload that asks the Knora API server to return Ckan data
-  *
-  * @param projects
-  * @param limit
-  * @param info
-  * @param userProfile
-  */
+ * Represents an API request payload that asks the Knora API server to return Ckan data
+ *
+ * @param projects
+ * @param limit
+ * @param info
+ * @param userProfile
+ */
 case class CkanRequestV1(projects: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserADM) extends CkanResponderRequestV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API response
 
 /**
-  * Represents an API response with the Ckan data
-  *
-  * @param projects
-  */
+ * Represents an API response with the Ckan data
+ *
+ * @param projects
+ */
 case class CkanResponseV1(projects: Seq[CkanProjectV1]) extends KnoraResponseV1 {
     def toJsValue = CkanV1JsonProtocol.ckanResponseV1Format.write(this)
 }
@@ -59,10 +59,10 @@ case class CkanResponseV1(projects: Seq[CkanProjectV1]) extends KnoraResponseV1 
 // Components of messages
 
 /**
-  *
-  * @param project_info
-  * @param project_datasets
-  */
+ *
+ * @param project_info
+ * @param project_datasets
+ */
 case class CkanProjectV1(project_info: CkanProjectInfoV1, project_datasets: Option[Seq[CkanProjectDatasetV1]] = None)
 
 case class CkanProjectInfoV1(shortname: String, longname: String, ckan_tags: Seq[String], ckan_license_id: String)
@@ -183,8 +183,8 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
 // JSON formatting
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON for Ckan.
-  */
+ * A spray-json protocol for generating Knora API v1 JSON for Ckan.
+ */
 object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
     implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(CkanProjectDatasetFileV1)

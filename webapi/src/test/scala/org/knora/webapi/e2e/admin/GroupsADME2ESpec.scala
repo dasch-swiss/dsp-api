@@ -28,7 +28,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedTestDataADM}
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -86,25 +87,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
                 //check that the custom IRI is correctly assigned
                 result.id should be ("http://rdfh.ch/groups/00FF/group-with-customIri")
-            }
-
-            "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
-                val params =
-                    s"""{   "id": "invalid-group-IRI",
-                       |    "name": "NewGroupWithInvalidCustomIri",
-                       |    "description": "A new group with an invalid custom Iri",
-                       |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}""".stripMargin
-
-
-                val request = Post(baseApiUrl + s"/admin/groups", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"Invalid group IRI")
-                invalidIri should be(true)
             }
 
             "return 'BadRequest' if the supplied IRI for the group is not unique" in {

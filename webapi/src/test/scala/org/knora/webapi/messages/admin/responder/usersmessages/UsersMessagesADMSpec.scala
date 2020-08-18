@@ -21,10 +21,12 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
-import org.knora.webapi.util.StringFormatter
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object UsersMessagesADMSpec {
     val config = ConfigFactory.parseString(
@@ -193,6 +195,25 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
                 )
             )
         }
+
+        "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
+
+            val caught = intercept[BadRequestException](
+                CreateUserApiRequestADM(
+                    id = Some("invalid-user-IRI"),
+                    username = "userWithInvalidCustomIri",
+                    email = "userWithInvalidCustomIri@example.org",
+                    givenName = "a user",
+                    familyName = "with an invalid custom Iri",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+            assert(caught.getMessage === "Invalid user IRI")
+        }
+
     }
 
     "The UserIdentifierADM case class" should {

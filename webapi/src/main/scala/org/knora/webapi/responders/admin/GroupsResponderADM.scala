@@ -24,30 +24,32 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserGroupMembershipRemoveRequestADM, UserIdentifierADM, UserInformationTypeADM, UserOperationResponseADM}
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.responders.{IriLocker, Responder}
 
 import scala.concurrent.Future
 
 
 /**
-  * Returns information about Knora projects.
-  */
-class GroupsResponderADM(responderData: ResponderData) extends Responder(responderData) with GroupsADMJsonProtocol  {
+ * Returns information about Knora projects.
+ */
+class GroupsResponderADM(responderData: ResponderData) extends Responder(responderData) with GroupsADMJsonProtocol {
 
     // Global lock IRI used for group creation and updating
     private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
 
     /**
-      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
-      */
+     * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
+     */
     def receive(msg: GroupsResponderRequestADM) = msg match {
         case GroupsGetADM(requestingUser) => groupsGetADM(requestingUser)
         case GroupsGetRequestADM(requestingUser) => groupsGetRequestADM(requestingUser)
@@ -62,17 +64,17 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
-      *
-      * @param requestingUser the user making the request.
-      * @return all the groups as a sequence of [[GroupADM]].
-      */
+     * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
+     *
+     * @param requestingUser the user making the request.
+     * @return all the groups as a sequence of [[GroupADM]].
+     */
     private def groupsGetADM(requestingUser: UserADM): Future[Seq[GroupADM]] = {
 
         log.debug("groupsGetADM")
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getGroups(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getGroups(
                 triplestore = settings.triplestoreType,
                 maybeIri = None
             ).toString())
@@ -108,11 +110,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
-      *
-      * @param requestingUser the user initiating the request.
-      * @return all the groups as a [[GroupsGetResponseADM]].
-      */
+     * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
+     *
+     * @param requestingUser the user initiating the request.
+     * @return all the groups as a [[GroupsGetResponseADM]].
+     */
     private def groupsGetRequestADM(requestingUser: UserADM): Future[GroupsGetResponseADM] = {
         for {
             maybeGroupsListToReturn <- groupsGetADM(requestingUser)
@@ -125,16 +127,16 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
 
     /**
-      * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
-      *
-      * @param groupIri    the IRI of the group requested.
-      * @param requestingUser the user initiating the request.
-      * @return information about the group as a [[GroupADM]]
-      */
+     * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
+     *
+     * @param groupIri       the IRI of the group requested.
+     * @param requestingUser the user initiating the request.
+     * @return information about the group as a [[GroupADM]]
+     */
     private def groupGetADM(groupIri: IRI, requestingUser: UserADM): Future[Option[GroupADM]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getGroups(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getGroups(
                 triplestore = settings.triplestoreType,
                 maybeIri = Some(groupIri)
 
@@ -157,12 +159,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
-      *
-      * @param groupIri    the IRI of the group requested.
-      * @param requestingUser the user initiating the request.
-      * @return information about the group as a [[GroupGetResponseADM]].
-      */
+     * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
+     *
+     * @param groupIri       the IRI of the group requested.
+     * @param requestingUser the user initiating the request.
+     * @return information about the group as a [[GroupGetResponseADM]].
+     */
     private def groupGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupGetResponseADM] = {
 
         for {
@@ -175,12 +177,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
-      *
-      * @param groupIris the IRIs of the groups being requested.
-      * @param requestingUser the user initiating the request.
-      * @return information about the group as a set of [[GroupGetResponseADM]] objects.
-      */
+     * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
+     *
+     * @param groupIris      the IRIs of the groups being requested.
+     * @param requestingUser the user initiating the request.
+     * @return information about the group as a set of [[GroupGetResponseADM]] objects.
+     */
     private def multipleGroupsGetRequestADM(groupIris: Set[IRI], requestingUser: UserADM): Future[Set[GroupGetResponseADM]] = {
         val groupResponseFutures: Set[Future[GroupGetResponseADM]] = groupIris.map {
             groupIri => groupGetRequestADM(groupIri = groupIri, requestingUser = requestingUser)
@@ -190,12 +192,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
-      *
-      * @param groupIri the IRI of the group.
-      * @param requestingUser the user initiating the request.
-      * @return A sequence of [[UserADM]]
-      */
+     * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
+     *
+     * @param groupIri       the IRI of the group.
+     * @param requestingUser the user initiating the request.
+     * @return A sequence of [[UserADM]]
+     */
     private def groupMembersGetADM(groupIri: IRI, requestingUser: UserADM): Future[Seq[UserADM]] = {
 
         log.debug("groupMembersGetADM - groupIri: {}", groupIri)
@@ -214,7 +216,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                     throw NotFoundException(s"Group <$groupIri> not found")
             }
 
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getGroupMembersByIri(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getGroupMembersByIri(
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri
             ).toString())
@@ -244,13 +246,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
-      * Only project and system admins are allowed to access this information.
-      *
-      * @param groupIri the IRI of the group.
-      * @param requestingUser the user initiating the request.
-      * @return A [[GroupMembersGetResponseADM]]
-      */
+     * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
+     * Only project and system admins are allowed to access this information.
+     *
+     * @param groupIri       the IRI of the group.
+     * @param requestingUser the user initiating the request.
+     * @return A [[GroupMembersGetResponseADM]]
+     */
     private def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
 
         log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
@@ -265,13 +267,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Create a new group.
-      *
-      * @param createRequest the create request information.
-      * @param requestingUser   the user making the request.
-      * @param apiRequestID  the unique request ID.
-      * @return a [[GroupOperationResponseADM]]
-      */
+     * Create a new group.
+     *
+     * @param createRequest  the create request information.
+     * @param requestingUser the user making the request.
+     * @param apiRequestID   the unique request ID.
+     * @return a [[GroupOperationResponseADM]]
+     */
     private def createGroupADM(createRequest: CreateGroupApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
 
         log.debug("createGroupADM - createRequest: {}", createRequest)
@@ -305,7 +307,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
 
             /* create the group */
-            createNewGroupSparqlString = queries.sparql.admin.txt.createNewGroup(
+            createNewGroupSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewGroup(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri,
@@ -338,19 +340,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
 
     /**
-      * Change group's basic information.
-      *
-      * @param groupIri           the IRI of the group we want to change.
-      * @param changeGroupRequest the change request.
-      * @param requestingUser     the user making the request.
-      * @param apiRequestID       the unique request ID.
-      * @return a [[GroupOperationResponseADM]].
-      */
+     * Change group's basic information.
+     *
+     * @param groupIri           the IRI of the group we want to change.
+     * @param changeGroupRequest the change request.
+     * @param requestingUser     the user making the request.
+     * @param apiRequestID       the unique request ID.
+     * @return a [[GroupOperationResponseADM]].
+     */
     private def changeGroupBasicInformationRequestADM(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
 
         /**
-          * The actual change group task run with an IRI lock.
-          */
+         * The actual change group task run with an IRI lock.
+         */
         def changeGroupTask(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM): Future[GroupOperationResponseADM] = for {
 
             _ <- Future(
@@ -392,19 +394,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Change group's basic information.
-      *
-      * @param groupIri           the IRI of the group we want to change.
-      * @param changeGroupRequest the change request.
-      * @param requestingUser     the user making the request.
-      * @param apiRequestID       the unique request ID.
-      * @return a [[GroupOperationResponseADM]].
-      */
+     * Change group's basic information.
+     *
+     * @param groupIri           the IRI of the group we want to change.
+     * @param changeGroupRequest the change request.
+     * @param requestingUser     the user making the request.
+     * @param apiRequestID       the unique request ID.
+     * @return a [[GroupOperationResponseADM]].
+     */
     private def changeGroupStatusRequestADM(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
 
         /**
-          * The actual change group task run with an IRI lock.
-          */
+         * The actual change group task run with an IRI lock.
+         */
         def changeGroupStatusTask(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM): Future[GroupOperationResponseADM] = for {
 
             _ <- Future(
@@ -447,13 +449,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Main group update method.
-      *
-      * @param groupIri           the IRI of the group we are updating.
-      * @param groupUpdatePayload the payload holding the information which we want to update.
-      * @param requestingUser        the profile of the user making the request.
-      * @return a [[GroupOperationResponseADM]]
-      */
+     * Main group update method.
+     *
+     * @param groupIri           the IRI of the group we are updating.
+     * @param groupUpdatePayload the payload holding the information which we want to update.
+     * @param requestingUser     the profile of the user making the request.
+     * @return a [[GroupOperationResponseADM]]
+     */
     private def updateGroupADM(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadADM, requestingUser: UserADM): Future[GroupOperationResponseADM] = {
 
         log.debug("updateGroupADM - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
@@ -487,7 +489,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
 
             /* Update group */
-            updateProjectSparqlString <- Future(queries.sparql.admin.txt.updateGroup(
+            updateProjectSparqlString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateGroup(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri,
@@ -538,12 +540,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     ////////////////////
 
     /**
-      * Helper method that turns SPARQL result rows into a [[GroupADM]].
-      *
-      * @param statements results from the SPARQL query representing information about the group.
-      * @param requestingUser the user that is making the request.
-      * @return a [[GroupADM]] representing information about the group.
-      */
+     * Helper method that turns SPARQL result rows into a [[GroupADM]].
+     *
+     * @param statements     results from the SPARQL query representing information about the group.
+     * @param requestingUser the user that is making the request.
+     * @return a [[GroupADM]] representing information about the group.
+     */
     private def statements2GroupADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[GroupADM]] = {
 
         log.debug("statements2GroupADM - statements: {}", statements)
@@ -580,14 +582,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Helper method for checking if a group identified by IRI exists.
-      *
-      * @param groupIri the IRI of the group.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a group identified by IRI exists.
+     *
+     * @param groupIri the IRI of the group.
+     * @return a [[Boolean]].
+     */
     private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             //_ = log.debug("groupExists - query: {}", askString)
 
             checkGroupExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -597,16 +599,16 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Helper method for checking if a group identified by name / project IRI exists.
-      *
-      * @param name       the name of the group.
-      * @param projectIri the IRI of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a group identified by name / project IRI exists.
+     *
+     * @param name       the name of the group.
+     * @param projectIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
     private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
 
         for {
-            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)
             //_ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -618,13 +620,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * In the case that the group was deactivated (status = false), the
-      * group members need to be removed from the group.
-      *
-      * @param changedGroup     the group with the new status.
-      * @param apiRequestID     the unique request ID.
-      * @return a [[GroupOperationResponseADM]]
-      */
+     * In the case that the group was deactivated (status = false), the
+     * group members need to be removed from the group.
+     *
+     * @param changedGroup the group with the new status.
+     * @param apiRequestID the unique request ID.
+     * @return a [[GroupOperationResponseADM]]
+     */
     private def removeGroupMembersIfNecessary(changedGroup: GroupADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
 
         if (changedGroup.status) {

@@ -6,10 +6,10 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 container_image(
     name = "image",
     base = "@openjdk11//image",
-    cmd = ["java", "-jar", "webapi_deploy.jar"],
+    cmd = ["java", "-jar", "app_cli_deploy.jar"],
     # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     files = [
-        "//webapi:webapi_deploy.jar"
+        "//webapi/src/main/scala/org/knora/webapi/app:app_cli_deploy.jar",
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
