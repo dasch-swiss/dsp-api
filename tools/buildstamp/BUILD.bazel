@@ -15,20 +15,3 @@ filegroup(
     name = "srcs",
     srcs = glob(["**"]),
 )
-
-# Generates a scala source file that includes version information
-load("//tools/buildstamp:gen_version_info.bzl", "gen_version_info")
-gen_version_info(
-    name = "version_info",
-    build_tag = "{bla_bla}",
-    scala_version = SCALA_VERSION,
-    akka_version = AKKA_VERSION,
-    akka_http_version = AKKA_HTTP_VERSION,
-    sipi_version = SIPI_VERSION,
-    fuseki_version = FUSEKI_VERSION,
-)
-
-scala_library(
-    name = "version_info_jar",
-    srcs = [":version_info"],
-)

@@ -48,8 +48,8 @@ class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
             response.headers should contain (ServerVersion.getServerVersionHeader())
             response.headers.find(_.name == "Server") match {
                 case Some(serverHeader: HttpHeader) =>
-                    serverHeader.value() should contain ("webapi/")
-                    serverHeader.value() should contain ("akka-http/")
+                    serverHeader.value() should include ("webapi/")
+                    serverHeader.value() should include ("akka-http/")
                 case None => fail("no server header found")
             }
             response.status should be(StatusCodes.OK)
