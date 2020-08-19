@@ -46,7 +46,8 @@ import scala.concurrent.Future
  * Provides information about permissions to other responders.
  */
 class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData) {
-
+    
+    private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
     /* Entity types used to more clearly distinguish what kind of entity is meant */
     private val ResourceEntityType = "resource"
     private val PropertyEntityType = "property"
