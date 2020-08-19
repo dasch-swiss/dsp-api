@@ -20,6 +20,7 @@
 package org.knora.webapi.routing.admin
 
 import java.net.URLEncoder
+import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding.Get
@@ -28,7 +29,7 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.Materializer
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.OntologyConstants
@@ -43,7 +44,8 @@ object PermissionsRouteADM {
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with PermissionsADMJsonProtocol with
+    Authenticator with ClientEndpoint {
 
     import PermissionsRouteADM._
 
@@ -58,7 +60,13 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getAdministrativePermission
+    override def knoraApiPath: Route =
+        getAdministrativePermission ~
+        getPermissionsForProject ~
+        getPermission ~
+        deletePermission ~
+        createAdministrativePermission ~
+        createDefaultObjectAccessPermission
 
     private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
         get {
@@ -90,12 +98,117 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         )
     }
 
+
+    /**
+     * Get all permissions for a project.
+     */
+    private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) { projectIri =>
+        get {
+            requestContext =>
+                val requestMessage = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield PermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    //todo: add test data for get all permissions for a project
+
+    /**
+     * Get permission by IRI
+     */
+    private def getPermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
+        get {
+            requestContext =>
+                val requestMessage = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield PermissionForIriGetRequestADM(
+                    permissionIri = permissionIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+    // todo add test data for get permissions with iri
+
+    /**
+     * Create a new administrative permission
+     */
+    private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
+
+        post {
+            entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[AdministrativePermissionCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield AdministrativePermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+    //todo: add test data createAdministrativePermission
+
+    /**
+     * Create default object access permission
+     */
+    private def createDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap") {
+        post {
+            entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield DefaultObjectAccessPermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+    //todo add test data for createDefaultObjectAccessPermission
+
     /**
      * Returns test data for this endpoint.
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
+    override def getTestData(implicit executionContext: ExecutionContext,
+                             actorSystem: ActorSystem, materializer: Materializer
+                            ): Future[Set[TestDataFileContent]] = {
         Future.sequence {
             Set(
                 getAdministrativePermissionTestResponse
