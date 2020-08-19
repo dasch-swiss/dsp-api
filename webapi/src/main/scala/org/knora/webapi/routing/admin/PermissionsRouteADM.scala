@@ -62,9 +62,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
      */
     override def knoraApiPath: Route =
         getAdministrativePermission ~
-        getPermissionsForProject ~
-        getPermission ~
-        deletePermission ~
         createAdministrativePermission ~
         createDefaultObjectAccessPermission
 
@@ -97,54 +94,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             text = responseStr
         )
     }
-
-
-    /**
-     * Get all permissions for a project.
-     */
-    private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) { projectIri =>
-        get {
-            requestContext =>
-                val requestMessage = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield PermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
-        }
-    }
-
-    //todo: add test data for get all permissions for a project
-
-    /**
-     * Get permission by IRI
-     */
-    private def getPermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
-        get {
-            requestContext =>
-                val requestMessage = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield PermissionForIriGetRequestADM(
-                    permissionIri = permissionIri,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
-        }
-    }
-    // todo add test data for get permissions with iri
 
     /**
      * Create a new administrative permission
