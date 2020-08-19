@@ -26,5 +26,7 @@ scala_test(
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/util",
     ] + BASE_TEST_DEPENDENCIES,
 )

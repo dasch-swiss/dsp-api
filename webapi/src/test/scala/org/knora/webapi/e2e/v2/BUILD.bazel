@@ -1,15 +1,24 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
-filegroup(
-    name = "srcs",
+scala_library(
+    name = "v2",
     srcs = [
         "MarkupHeader.scala",
         "ProjectHeader.scala",
         "ResponseCheckerV2.scala",
         "SchemaHeader.scala",
+    ],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        # "@maven//:junit_junit",
     ],
 )
 
@@ -105,6 +114,8 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/e2e",
+        "//webapi/src/test/scala/org/knora/webapi/e2e/v2",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_xmlunit_xmlunit_core",
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
@@ -173,7 +184,7 @@ scala_test(
     name = "ValuesRouteV2E2ESpec",
     size = "medium",
     srcs = [
-        "ValuesRouteV2E2ESpec.scala"
+        "ValuesRouteV2E2ESpec.scala",
     ],
     data = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//knora-ontologies",

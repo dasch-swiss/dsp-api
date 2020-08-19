@@ -38,6 +38,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2",
     ] + BASE_TEST_DEPENDENCIES,
 )
 

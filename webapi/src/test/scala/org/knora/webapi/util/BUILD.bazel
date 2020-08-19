@@ -1,10 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
-filegroup(
-    name = "srcs",
+scala_library(
+    name = "util",
     srcs = [
         "AkkaHttpUtils.scala",
         "MutableTestIri.scala",
@@ -12,6 +13,24 @@ filegroup(
         "MutableUserADM.scala",
         "StartupUtils.scala",
         "TestExtractorMethods.scala",
+    ],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:com_github_jsonld_java_jsonld_java",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:io_spray_spray_json_2_12",
+        # "@maven//:junit_junit",
     ],
 )
 

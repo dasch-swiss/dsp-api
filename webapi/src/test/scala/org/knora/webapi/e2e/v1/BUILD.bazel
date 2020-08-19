@@ -149,6 +149,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/store/iiif",
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 

@@ -1,9 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
-filegroup(
-    name = "srcs",
+scala_library(
+    name = "webapi",
     srcs = [
         "CoreSpec.scala",
         "E2ESimSpec.scala",
@@ -12,11 +12,43 @@ filegroup(
         "R2RSpec.scala",
         "TestContainers.scala",
         "TestProbeMaker.scala",
-        "//webapi/src/test/scala/org/knora/webapi/e2e:srcs",
-        "//webapi/src/test/scala/org/knora/webapi/responders:srcs",
-        "//webapi/src/test/scala/org/knora/webapi/sharedtestdata:srcs",
-        "//webapi/src/test/scala/org/knora/webapi/store:srcs",
-        "//webapi/src/test/scala/org/knora/webapi/util:srcs",
-
+        # "//webapi/src/test/scala/org/knora/webapi/util:srcs",
+    ],
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
+    deps = [
+        "//webapi/src/test/scala/org/knora/webapi/responders",
+        "//webapi/src/test/scala/org/knora/webapi/store",
+        "//webapi/src/test/scala/org/knora/webapi/store/iiif",
+        "//webapi/src/test/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/app",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/http/handler",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+        # Test Libs
+        "@maven//:com_typesafe_akka_akka_testkit_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_jsuereth_scala_arm_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        # "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_testcontainers_testcontainers",
+        # "@maven//:junit_junit",
     ],
 )

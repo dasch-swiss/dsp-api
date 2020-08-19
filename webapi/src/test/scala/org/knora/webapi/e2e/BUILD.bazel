@@ -1,13 +1,22 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
-filegroup(
-    name = "srcs",
+scala_library(
+    name = "e2e",
     srcs = [
-        "//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs",
-        "InstanceChecker.scala"
+        "InstanceChecker.scala",
+    ],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+        # "@maven//:junit_junit",
     ],
 )
 

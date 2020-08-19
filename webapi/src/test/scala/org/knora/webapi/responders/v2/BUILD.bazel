@@ -1,12 +1,18 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES")
 
-filegroup(
-    name = "srcs",
+scala_library(
+    name = "v2",
     srcs = [
         "ResourcesResponseCheckerV2.scala",
+    ],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        # "@maven//:junit_junit",
     ],
 )
 
@@ -63,6 +69,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2",
         "@maven//:com_typesafe_play_twirl_api_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
     ] + BASE_TEST_DEPENDENCIES,
@@ -85,6 +92,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2",
     ] + BASE_TEST_DEPENDENCIES,
 )
 
@@ -104,6 +112,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2",
     ] + BASE_TEST_DEPENDENCIES,
 )
 
@@ -122,6 +131,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "//webapi/src/test/scala/org/knora/webapi/store/iiif",
         # Templates
         "@maven//:com_typesafe_play_twirl_api_2_12",
     ] + BASE_TEST_DEPENDENCIES,

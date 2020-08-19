@@ -1,4 +1,8 @@
-build --strategy=Scalac=worker
+build --strategy=Scalac=worker \
+      --strategy=ScalaCheckDeps=worker \
+      --strategy=ScalaCompile=worker \
+      --worker_extra_flag=ScalaCompile=--persistence_dir=.bazel-zinc \
+      --worker_extra_flag=ScalaCompile=--extracted_file_cache=.bazel-zinc-outputs
 build --worker_sandboxing
 build --workspace_status_command=tools/buildstamp/get_workspace_status --stamp=yes
 build --record_rule_instantiation_callstack

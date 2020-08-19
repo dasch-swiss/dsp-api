@@ -1,11 +1,19 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-filegroup(
-    name = "srcs",
+scala_library(
+    name = "store",
     srcs = [
-        "//webapi/src/test/scala/org/knora/webapi/store/iiif:srcs",
         "MockableStoreManager.scala",
+    ],
+    deps = [
+        "//webapi/src/test/scala/org/knora/webapi/store/iiif",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        # "@maven//:junit_junit",
     ],
 )
