@@ -1726,6 +1726,16 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+     * Returns `true` if an IRI string looks like a Knora permission IRI.
+     *
+     * @param iri the IRI to be checked.
+     */
+    def isKnoraPermissionIriStr(iri: IRI): Boolean = {
+        isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
+    }
+
+
+    /**
      * Checks that a string represents a valid resource identifier in a standoff link.
      *
      * @param s               the string to be checked.
@@ -2596,6 +2606,33 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
         maybeIri match {
             case Some(iri) => Some(validateGroupIri(iri, errorFun))
+            case None => None
+        }
+    }
+
+    /**
+     * Given the permission IRI, checks if it is in a valid format.
+     *
+     * @param iri the permission's IRI.
+     * @return the IRI of the list.
+     */
+    def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraPermissionIriStr(iri)) {
+            iri
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+     * Given the optional permission IRI, checks if it is in a valid format.
+     *
+     * @param maybeIri the optional permission's IRI to be checked.
+     * @return the same optional IRI.
+     */
+    def validateOptionalPermissionIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
+        maybeIri match {
+            case Some(iri) => Some(validatePermissionIri(iri, errorFun))
             case None => None
         }
     }

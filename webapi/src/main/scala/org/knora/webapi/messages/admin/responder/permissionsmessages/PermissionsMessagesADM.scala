@@ -23,7 +23,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
@@ -53,7 +53,7 @@ case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
     stringFormatter.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI"))
-    
+
     if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 }
 
@@ -72,14 +72,12 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
                                                             forResourceClass: Option[IRI],
                                                             forProperty: Option[IRI],
                                                             hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol {
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
 
     if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
-
 }
 
 /**
@@ -100,7 +98,12 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
                                 isInProjectAdminGroups: Seq[IRI],
                                 isInSystemAdminGroup: Boolean,
                                 requestingUser: UserADM
-                               ) extends PermissionsResponderRequestADM
+                               ) extends PermissionsResponderRequestADM {
+    if (projectIris.isEmpty) throw ("No project IRI is given.")
+    if (groupIris.isEmpty) throw ("No group IRI is given.")
+    if (isInProjectAdminGroups.isEmpty) throw ("No project admin group is specified.")
+    if (!requestingUser.isSystemUser) throw ForbiddenException("Request only allowed for SystemUser."))
+}
 
 // Administrative Permissions
 
@@ -115,7 +118,19 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
 case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
                                                             requestingUser: UserADM,
                                                             apiRequestID: UUID
-                                                           ) extends PermissionsResponderRequestADM
+                                                           ) extends PermissionsResponderRequestADM {
+    // Check user's permission for the operation
+    if (!requestingUser.isSystemAdmin
+                && !requestingUser.permissions.isProjectAdminInAnyProject()
+                && !requestingUser.isSystemUser
+        ) {
+            // not a system admin
+            throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+        }
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+}
 
 /**
  * A message that requests an administrative permission object identified through his IRI.
@@ -123,12 +138,24 @@ case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
  *
  * @param administrativePermissionIri the iri of the administrative permission object.
  * @param requestingUser              the user initiating the request.
- * @param apiRequestID   the API request ID.
+ * @param apiRequestID                the API request ID.
  */
 case class AdministrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI,
                                                        requestingUser: UserADM,
                                                        apiRequestID: UUID
-                                                      ) extends PermissionsResponderRequestADM
+                                                      ) extends PermissionsResponderRequestADM {
+    // Check user's permission for the operation
+    if (!requestingUser.isSystemAdmin
+        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+    }
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    stringFormatter.validatePermissionIri(administrativePermissionIri, throw BadRequestException(s"Invalid permission IRI"))
+}
 
 /**
  * A message that requests an administrative permission object identified by project and group.
@@ -141,7 +168,20 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
 case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI,
                                                          groupIri: IRI,
                                                          requestingUser: UserADM
-                                                        ) extends PermissionsResponderRequestADM
+                                                        ) extends PermissionsResponderRequestADM {
+    // Check user's permission for the operation
+    if (!requestingUser.isSystemAdmin
+        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+    }
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+    stringFormatter.validateGroupIri(groupIri, throw BadRequestException(s"Invalid group IRI"))
+}
 
 /**
  * A message that requests an administrative permission object identified by project and group.
@@ -154,7 +194,20 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI,
 case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
                                                                 groupIri: IRI,
                                                                 requestingUser: UserADM
-                                                               ) extends PermissionsResponderRequestADM
+                                                               ) extends PermissionsResponderRequestADM {
+    // Check user's permission for the operation
+    if (!requestingUser.isSystemAdmin
+        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+    }
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+    stringFormatter.validateGroupIri(groupIri, throw BadRequestException(s"Invalid group IRI"))
+}
 
 /**
  * Create a single [[AdministrativePermissionADM]] (internal use).
@@ -166,7 +219,18 @@ case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
 case class AdministrativePermissionCreateADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
                                              requestingUser: UserADM,
                                              apiRequestID: UUID
-                                            ) extends PermissionsResponderRequestADM
+                                            ) extends PermissionsResponderRequestADM {
+    // check if the requesting user is allowed to add the administrative permission
+    // Allowed are SystemAdmin, ProjectAdmin and SystemUser
+    _ = if (
+        !requestingUser.isSystemAdmin
+            && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
+            && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("A new administrative permission can only be added by a system admin.")
+    }
+}
 
 /**
  * Create a single [[AdministrativePermissionADM]].
@@ -180,7 +244,6 @@ case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdminis
                                                     apiRequestID: UUID
                                                    ) extends PermissionsResponderRequestADM
 
-//TODO: add AdministrativePermissionChangeRequestADM here
 
 // Object Access Permissions
 
@@ -308,7 +371,6 @@ case class DefaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDe
                                                          apiRequestID: UUID
                                                         ) extends PermissionsResponderRequestADM
 
-//TODO: add DefaultObjectAccessPermissionChangeRequestADM here
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
