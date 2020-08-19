@@ -493,6 +493,12 @@ object OntologyConstants {
 
         /* Permissions */
         val Permission: IRI = KnoraAdminPrefixExpansion + "Permission"
+        val AdministrativePermission: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
+        val DefaultObjectAccessPermission: IRI = KnoraAdminPrefixExpansion + "DefaultObjectAccessPermission"
+        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
+        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
+        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
+        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
 
         val ProjectResourceCreateAllPermission: String = "ProjectResourceCreateAllPermission"
         val ProjectResourceCreateRestrictedPermission: String = "ProjectResourceCreateRestrictedPermission"
@@ -523,13 +529,6 @@ object OntologyConstants {
             HasDefaultDeletePermission,
             HasDefaultChangeRightsPermission
         )
-
-        val AdministrativePermission: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
-        val DefaultObjectAccessPermission: IRI = KnoraAdminPrefixExpansion + "DefaultObjectAccessPermission"
-        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
-        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
-        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
-        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
 
         val SystemProject: IRI = KnoraAdminPrefixExpansion + "SystemProject"
         val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
@@ -1136,6 +1135,7 @@ object OntologyConstants {
         val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
         val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
         val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
+        val PermissionsNamedGraph: IRI = "http://www.knora.org/data/permissions"
     }
 
 }

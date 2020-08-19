@@ -46,7 +46,7 @@ import scala.concurrent.Future
  * Provides information about permissions to other responders.
  */
 class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData) {
-    
+
     private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
     /* Entity types used to more clearly distinguish what kind of entity is meant */
     private val ResourceEntityType = "resource"
@@ -70,7 +70,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
-        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => createDefaultObjectAccessPermissionADM(createRequest, requestingUser, apiRequestID)
+//        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => createDefaultObjectAccessPermissionADM(createRequest, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -544,7 +544,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             // FIXME: Need to finish implementation
             // Create the administrative permission.
-            createAdministrativePermissionSparqlString = queries.sparql.admin.txt.createNewAdministrativePermission(
+            createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewAdministrativePermission(
                 permissionsNamedGraphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph,
                 triplestore = settings.triplestoreType,
                 permissionClassIri = OntologyConstants.KnoraAdmin.Permission,
@@ -1243,9 +1243,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
     
-    private def createDefaultObjectAccessPermissionADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
-        // FIXME: Needs implementation
-    }
+//    private def createDefaultObjectAccessPermissionADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
+//        // FIXME: Needs implementation
+//    }
 
 }
 

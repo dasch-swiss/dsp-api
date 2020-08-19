@@ -99,10 +99,10 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
                                 isInSystemAdminGroup: Boolean,
                                 requestingUser: UserADM
                                ) extends PermissionsResponderRequestADM {
-    if (projectIris.isEmpty) throw ("No project IRI is given.")
-    if (groupIris.isEmpty) throw ("No group IRI is given.")
-    if (isInProjectAdminGroups.isEmpty) throw ("No project admin group is specified.")
-    if (!requestingUser.isSystemUser) throw ForbiddenException("Request only allowed for SystemUser."))
+    if (projectIris.isEmpty) throw BadRequestException("No project IRI is given.")
+    if (groupIris.isEmpty) throw BadRequestException("No group IRI is given.")
+    if (isInProjectAdminGroups.isEmpty) throw BadRequestException("No project admin group is specified.")
+    if (!requestingUser.isSystemUser) throw ForbiddenException("Request only allowed for SystemUser.")
 }
 
 // Administrative Permissions
@@ -222,7 +222,7 @@ case class AdministrativePermissionCreateADM(createRequest: CreateAdministrative
                                             ) extends PermissionsResponderRequestADM {
     // check if the requesting user is allowed to add the administrative permission
     // Allowed are SystemAdmin, ProjectAdmin and SystemUser
-    _ = if (
+    if (
         !requestingUser.isSystemAdmin
             && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
             && !requestingUser.isSystemUser
@@ -374,14 +374,6 @@ case class DefaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDe
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
-
-/**
- * Represents an answer to [[PermissionDeleteRequestADM]].
- */
-case class PermissionDeleteResponseADM(result: String = "permission deleted"
-                                      ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
-    def toJsValue = permissionDeleteResponseADMFormat.write(this)
-}
 
 // Administrative Permissions
 
