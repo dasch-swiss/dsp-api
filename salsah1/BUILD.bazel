@@ -1,8 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library")
-
+load("@rules_scala_annex//rules:scala.bzl", "scala_binary", "scala_library")
 
 filegroup(
     name = "main_scala",
@@ -20,31 +19,28 @@ filegroup(
 
 pkg_tar(
     name = "public_folder_tar",
-    strip_prefix = './public', # means don't flatten directory structure!
-    package_dir = "public",
     srcs = [
-        ":public_folder"
+        ":public_folder",
     ],
+    package_dir = "public",
+    strip_prefix = "./public",  # means don't flatten directory structure!
 )
 
 scala_binary(
     name = "salsah1",
-    main_class = "org.knora.salsah.Main",
     data = [
         ":public_folder",
     ],
-    deps = [
-        ":main_library"
-    ],
+    main_class = "org.knora.salsah.Main",
 )
 
 scala_library(
     name = "main_library",
     srcs = [
-        ":main_scala"
+        ":main_scala",
     ],
     resources = [
-        "//salsah1/src/main/resources"
+        "//salsah1/src/main/resources",
     ],
     # unused_dependency_checker_mode = "warn",
     runtime_deps = [
@@ -57,11 +53,8 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:org_scala_lang_scala_library",
-        "@maven//:org_scala_lang_scala_reflect",
     ],
 )
 
@@ -72,7 +65,7 @@ scala_library(
         "//salsah1/src/test/scala/org/knora/salsah:test_srcs",
     ],
     resources = [
-        "//sipi/config"
+        "//sipi/config",
     ],
     # unused_dependency_checker_mode = "warn",
     runtime_deps = [
@@ -95,6 +88,5 @@ scala_library(
         "@maven//:org_seleniumhq_selenium_selenium_support",
         "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
         "@maven//:org_testcontainers_testcontainers",
-        "@maven//:junit_junit",
     ],
 )

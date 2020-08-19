@@ -1,11 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "store",
     srcs = glob(["**/*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",
@@ -19,24 +18,17 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:commons_cli_commons_cli",
-        "@maven//:commons_codec_commons_codec",
         "@maven//:commons_io_commons_io",
         "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_apache_commons_commons_csv",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_apache_commons_commons_pool2",
         "@maven//:org_apache_httpcomponents_httpclient",
-        "@maven//:org_apache_httpcomponents_httpclient_cache",
         "@maven//:org_apache_httpcomponents_httpcore",
         "@maven//:org_apache_jena_apache_jena_libs",
         "@maven//:org_apache_jena_jena_arq",
-        "@maven//:org_apache_jena_jena_base",
         "@maven//:org_apache_jena_jena_core",
         "@maven//:org_apache_jena_jena_tdb",
         "@maven//:org_apache_jena_jena_text",

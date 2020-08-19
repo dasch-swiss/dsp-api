@@ -1,11 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "responders",
     srcs = glob(["**/*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
@@ -17,13 +16,10 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_play_twirl_api_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_slf4j_slf4j_api",

@@ -1,10 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 # //webapi/src/main/scala/org/knora/webapi/annotation
 scala_library(
     name = "annotation",
     srcs = glob(["*.scala"]),
-    unused_dependency_checker_mode = "warn",
 )

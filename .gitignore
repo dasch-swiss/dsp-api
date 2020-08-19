@@ -54,3 +54,5 @@ bazel-*
 dump.rdb
 /site/
 dependencies.txt
+/graph.in
+/graph.png

@@ -1,11 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "routing",
     srcs = glob(["**/*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
         "//tools/version_info",
         "//webapi/src/main/scala/org/knora/webapi",
@@ -20,21 +19,17 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",
         "@maven//:com_pauldijou_jwt_core_2_12",
-        "@maven//:com_pauldijou_jwt_json_common_2_12",
         "@maven//:com_pauldijou_jwt_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
         "@maven//:com_typesafe_play_twirl_api_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:commons_validator_commons_validator",
         "@maven//:io_spray_spray_json_2_12",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:io_swagger_swagger_jaxrs",
         "@maven//:io_swagger_swagger_models",
         "@maven//:javax_ws_rs_jsr311_api",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",

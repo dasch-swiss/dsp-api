@@ -1,37 +1,28 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_repl")
+load("@rules_scala_annex//rules:scala.bzl", "scala_binary", "scala_library", "scala_repl")
 
 scala_library(
     name = "app",
     srcs = glob(["*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/http/handler",
         "//webapi/src/main/scala/org/knora/webapi/http/version",
-        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/responders",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store",
-        "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:io_kamon_kamon_core_2_12",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:redis_clients_jedis",
     ],

@@ -1,11 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "cache",
     srcs = glob(["*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",

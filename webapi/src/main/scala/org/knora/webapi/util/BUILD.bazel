@@ -1,11 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "util",
     srcs = glob(["**/*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/settings",
@@ -16,8 +15,6 @@ scala_library(
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:commons_validator_commons_validator",
         "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_scala_library",
-        "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )

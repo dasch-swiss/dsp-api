@@ -1,18 +1,17 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "instrumentation",
     srcs = glob(["*.scala"]),
-    unused_dependency_checker_mode = "warn",
     deps = [
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        "@maven//:org_scala_lang_scala_library",
-        "@maven//:org_scala_lang_scala_reflect",
-        "@maven//:io_kamon_kamon_core_2_12",
-        "@maven//:io_kamon_kamon_instrumentation_common_2_12",
+        # "@maven//:org_scala_lang_scala_library",
+        # "@maven//:org_scala_lang_scala_reflect",
+        # "@maven//:io_kamon_kamon_core_2_12",
+        # "@maven//:io_kamon_kamon_instrumentation_common_2_12",
         # "@maven//:io_kamon_kamon_logback_2_12",
         # "@maven//:io_kamon_kamon_prometheus_2_12",
         "@maven//:io_kamon_kamon_scala_future_2_12",

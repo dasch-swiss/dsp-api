@@ -1,14 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "http",
     srcs = glob(["*.scala"]),
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi/src/main/scala/org/knora/webapi/http/handler",
-        "//webapi/src/main/scala/org/knora/webapi/http/status",
-        "//webapi/src/main/scala/org/knora/webapi/http/version",
-    ],
 )
