@@ -6,20 +6,21 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 container_image(
     name = "image",
     base = "@openjdk11//image",
-    cmd = ["java", "-jar", "/salsah1/salsah1_deploy.jar"],
+    cmd = [
+        "java",
+        "-jar",
+        "/salsah1/salsah1_deploy.jar",
+    ],
+    directory = "salsah1",
     # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     env = {
         "LANG": "en_US.UTF-8",
         "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8 -Dconfig.file=salsah.conf",
         "KNORA_SALSAH1_DEPLOYED": "true",
-        "KNORA_SALSAH1_WORKDIR": "/salsah1"
+        "KNORA_SALSAH1_WORKDIR": "/salsah1",
     },
-    directory = "salsah1",
     files = [
         "//salsah1:salsah1_deploy.jar",
-    ],
-    tars = [
-        "//salsah1:public_folder_tar"
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
@@ -27,16 +28,19 @@ container_image(
     ports = [
         "3335/tcp",
     ],
+    tars = [
+        "//salsah1:public_folder_tar",
+    ],
 )
 
 # push to dockerhub
 container_push(
-   name = "push",
-   image = ":image",
-   format = "Docker",
-   registry = "index.docker.io",
-   repository = "daschswiss/knora-salsah1",
-   tag = "{BUILD_SCM_TAG}"
+    name = "push",
+    format = "Docker",
+    image = ":image",
+    registry = "index.docker.io",
+    repository = "daschswiss/knora-salsah1",
+    tag = "{BUILD_SCM_TAG}",
 )
 
 # use in targets needing an up-to-date docker image locally

@@ -76,6 +76,8 @@ To install, follow these steps:
 
 ```
 $ npm install -g @bazel/bazelisk
+$ npm install -g @bazel/buildozer
+$ npm install -g @bazel/buildifier
 ```
 
 This will install [bazelisk](https://github.com/bazelbuild/bazelisk) which is

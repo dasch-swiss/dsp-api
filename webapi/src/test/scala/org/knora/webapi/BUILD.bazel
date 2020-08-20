@@ -4,6 +4,7 @@ load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 scala_library(
     name = "webapi",
+    testonly = True,
     srcs = [
         "CoreSpec.scala",
         "E2ESimSpec.scala",
@@ -14,7 +15,6 @@ scala_library(
         "TestProbeMaker.scala",
         # "//webapi/src/test/scala/org/knora/webapi/util:srcs",
     ],
-    testonly = True,
     resources = [
         "//sipi/config",
         "//webapi/src/test/resources",

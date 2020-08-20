@@ -1,4 +1,5 @@
 package(default_visibility = ["//visibility:public"])
+
 load("@io_bazel_rules_webtesting//web:scala.bzl", "scala_web_test_suite")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
@@ -96,9 +97,9 @@ scala_web_test_suite(
     name = "SearchAndEditSpec",
     size = "medium",
     srcs = [
-        "SearchAndEditSpec.scala",
         "SalsahPage.scala",
         "SalsahSpec.scala",
+        "SearchAndEditSpec.scala",
     ],
     browsers = [
         "@io_bazel_rules_webtesting//browsers:chromium-local",

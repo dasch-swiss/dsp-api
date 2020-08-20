@@ -6,7 +6,11 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 container_image(
     name = "image",
     base = "@openjdk11//image",
-    cmd = ["java", "-jar", "app_cli_deploy.jar"],
+    cmd = [
+        "java",
+        "-jar",
+        "app_cli_deploy.jar",
+    ],
     # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     files = [
         "//webapi/src/main/scala/org/knora/webapi/app:app_cli_deploy.jar",
@@ -21,12 +25,12 @@ container_image(
 
 # push to dockerhub
 container_push(
-   name = "push",
-   image = ":image",
-   format = "Docker",
-   registry = "index.docker.io",
-   repository = "daschswiss/knora-api",
-   tag = "{BUILD_SCM_TAG}"
+    name = "push",
+    format = "Docker",
+    image = ":image",
+    registry = "index.docker.io",
+    repository = "daschswiss/knora-api",
+    tag = "{BUILD_SCM_TAG}",
 )
 
 # use in targets needing an up-to-date docker image locally

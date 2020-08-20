@@ -1,7 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
-load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON")
+load("@rules_scala_annex//rules:scala.bzl", "scala_test")
 
 scala_test(
     name = "GroupsADME2ESpec",
@@ -15,11 +14,24 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/util",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )
 
 scala_test(
@@ -34,11 +46,23 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/test/scala/org/knora/webapi/util",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+    ],
 )
 
 scala_test(
@@ -52,11 +76,19 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/sharedtestdata",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )
 
 scala_test(
@@ -71,12 +103,25 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/util",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )
 
 scala_test(
@@ -91,11 +136,22 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/sharedtestdata",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+    ],
 )
 
 scala_test(
@@ -109,11 +165,20 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )
 
 scala_test(
@@ -128,9 +193,23 @@ scala_test(
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/test/scala/org/knora/webapi",
+        "//webapi/src/test/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/test/scala/org/knora/webapi/util",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )

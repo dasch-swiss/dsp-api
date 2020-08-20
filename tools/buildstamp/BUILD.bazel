@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 # bring our version constants in
-load("//third_party:versions.bzl", "SCALA_VERSION", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION", "FUSEKI_VERSION")
+load("//third_party:versions.bzl", "AKKA_HTTP_VERSION", "AKKA_VERSION", "FUSEKI_VERSION", "SCALA_VERSION", "SIPI_VERSION")
 
 filegroup(
     name = "all",

@@ -5,6 +5,11 @@ load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
 twirl_templates(
     name = "twirl_sources",
+    srcs = glob(["**/*.scala.txt"]) + glob([
+        "**/*.scala.html",
+    ]) + glob([
+        "**/*.scala.xml",
+    ]),
     additional_imports = [
         "play.twirl.api.TwirlFeatureImports._",
         "play.twirl.api.TwirlHelperImports._",
@@ -14,11 +19,6 @@ twirl_templates(
         "play.twirl.api.Xml",
     ],
     source_directory = ".",
-    srcs = glob(["**/*.scala.txt"])
-        + glob(["**/*.scala.html"])
-        + glob(["**/*.scala.xml"]),
-
-
 )
 
 genrule(
@@ -27,7 +27,7 @@ genrule(
         ":twirl_sources",
     ],
     outs = [
-        "twirl.srcjar"
+        "twirl.srcjar",
     ],
     cmd = "jar -cf \"$@\" $(locations :twirl_sources)",
     # tools = ["jar"],

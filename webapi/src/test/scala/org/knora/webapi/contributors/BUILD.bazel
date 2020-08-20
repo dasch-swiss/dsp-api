@@ -1,7 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
-load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+load("@rules_scala_annex//rules:scala.bzl", "scala_test")
 
 scala_test(
     name = "GenerateContributorsFileSpec",
@@ -9,24 +8,22 @@ scala_test(
     srcs = [
         "GenerateContributorsFileSpec.scala",
     ],
-    resources = [
-        "//webapi/src/main/resources",
-        "//webapi/scripts:fuseki_repository_config_ttl_template",
-        "//knora-ontologies",
-    ],
     data = [
         "//knora-ontologies",
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    resources = [
+        "//knora-ontologies",
+        "//webapi/scripts:fuseki_repository_config_ttl_template",
+        "//webapi/src/main/resources",
+    ],
     # unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi/contributors",
-        "//webapi/src/main/scala/org/knora/webapi/core",
         "//webapi/src/main/scala/org/knora/webapi/util",
-        "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi:test_library",
         "//webapi/src/test/scala/org/knora/webapi",
-        "//webapi/src/test/scala/org/knora/webapi/util",
-    ] + BASE_TEST_DEPENDENCIES,
+        "@maven//:org_scalactic_scalactic_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+    ],
 )

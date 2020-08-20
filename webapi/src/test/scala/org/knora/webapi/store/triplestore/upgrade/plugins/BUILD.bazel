@@ -8,7 +8,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1307Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//test_data/upgrade",
@@ -21,7 +21,7 @@ scala_test(
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
-        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory",
     ],
 )
 
@@ -30,7 +30,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1322Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//test_data/upgrade",
@@ -43,7 +43,7 @@ scala_test(
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
-        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory",
     ],
 )
 
@@ -52,7 +52,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1367Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//test_data/upgrade",
@@ -65,7 +65,7 @@ scala_test(
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
-        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory",
     ],
 )
 
@@ -74,7 +74,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1372Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//test_data/upgrade",
@@ -87,7 +87,7 @@ scala_test(
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
-        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory",
     ],
 )
 
@@ -96,7 +96,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1615Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//test_data/upgrade",
@@ -109,6 +109,6 @@ scala_test(
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
-        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory",
     ],
 )

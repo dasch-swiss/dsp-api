@@ -9,6 +9,6 @@ filegroup(
         "sipi.knora-docker-config.lua",
         "sipi.knora-docker-no-auth-config.lua",
         "sipi.knora-docker-test-config.lua",
-        "sipi.knora-local-config.lua"
+        "sipi.knora-local-config.lua",
     ],
 )
