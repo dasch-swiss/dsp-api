@@ -19,6 +19,8 @@
 
 package org.knora.webapi.responders.admin
 
+import java.util.UUID
+
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
@@ -175,7 +177,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return all AdministrativePermissions for project " in {
                 responderManager ! AdministrativePermissionsForProjectGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
-                    requestingUser = rootUser
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseADM(
                     Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
@@ -194,7 +197,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return AdministrativePermission for IRI " in {
                 responderManager ! AdministrativePermissionForIriGetRequestADM(
                     administrativePermissionIri = perm002_a1.iri,
-                    requestingUser = rootUser
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
                 expectMsg(AdministrativePermissionForIriGetResponseADM(perm002_a1.p))
             }
@@ -202,7 +206,6 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         }
 
         "asked to create an administrative permission" should {
-
             "fail and return a 'BadRequestException' when project does not exist" ignore {}
 
             "fail and return a 'BadRequestException' when group does not exist" ignore {}
@@ -210,16 +213,14 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
 
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-                val iri = stringFormatter.makeRandomPermissionIri(imagesProject.shortcode)
                 responderManager ! AdministrativePermissionCreateRequestADM(
-                    newAdministrativePermission = NewAdministrativePermissionADM(
-                        iri = iri,
+                    createRequest = CreateAdministrativePermissionAPIRequestADM(
                         forProject = IMAGES_PROJECT_IRI,
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-                        hasOldPermissions = Set.empty[PermissionADM],
-                        hasNewPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+                        hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
                     ),
-                    requestingUser = rootUser
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
             }
@@ -230,12 +231,18 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         "queried about object access permissions " should {
 
             "return object access permissions for a resource" in {
-                responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = perm003_o1.iri, requestingUser = rootUser)
+                responderManager ! ObjectAccessPermissionsForResourceGetADM(
+                    resourceIri = perm003_o1.iri,
+                    requestingUser = rootUser
+                )
                 expectMsg(Some(perm003_o1.p))
             }
 
             "return object access permissions for a value" in {
-                responderManager ! ObjectAccessPermissionsForValueGetADM(valueIri = perm003_o2.iri, requestingUser = rootUser)
+                responderManager ! ObjectAccessPermissionsForValueGetADM(
+                    valueIri = perm003_o2.iri,
+                    requestingUser = rootUser
+                )
                 expectMsg(Some(perm003_o2.p))
             }
 
@@ -246,7 +253,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return all DefaultObjectAccessPermissions for project" in {
                 responderManager ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
-                    requestingUser = rootUser
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
 
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseADM(
@@ -257,7 +265,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return DefaultObjectAccessPermission for IRI" in {
                 responderManager ! DefaultObjectAccessPermissionForIriGetRequestADM(
                     defaultObjectAccessPermissionIri = perm002_d1.iri,
-                    requestingUser = rootUser
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
                 expectMsg(DefaultObjectAccessPermissionForIriGetResponseADM(
                     defaultObjectAccessPermission = perm002_d1.p
@@ -350,24 +359,6 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "delete a default object access permission " ignore {}
         }
-        /*
-        "asked to create permissions from a template " should {
-            "create and return all permissions defined inside the template " ignore {
-                /* the default behaviour is to delete all permissions inside a project prior to applying a template */
-                actorUnderTest ! TemplatePermissionsCreateRequestV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    permissionsTemplate = PermissionsTemplate.OPEN,
-                    rootEmailEnc
-                )
-                expectMsg(TemplatePermissionsCreateResponseV1(
-                    success = true,
-                    msg = "ok",
-                    administrativePermissions = List(perm001.p, perm003.p),
-                    defaultObjectAccessPermissions = List(perm002.p)
-                ))
-            }
-        }
-        */
 
         "asked for default object access permissions 'string'" should {
 

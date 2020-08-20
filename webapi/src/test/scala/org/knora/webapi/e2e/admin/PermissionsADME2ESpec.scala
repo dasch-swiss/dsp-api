@@ -20,11 +20,11 @@
 package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -46,11 +46,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
     "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {
 
         "return administrative permissions" in {
-            val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
-            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
-
-            val request = Get(baseApiUrl + s"/admin/permissions/$projectIri/$groupIri")
-            val response = singleAwaitingRequest(request, 1.seconds)
+            val projectIri = java.net.URLEncoder.encode(SharedTestDataADM.IMAGES_PROJECT_IRI, "utf-8")
+            val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(BasicHttpCredentials(
+                SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+            val response = singleAwaitingRequest(request, 3.seconds)
             logger.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
