@@ -19,15 +19,24 @@
 
 package org.knora.webapi.e2e.v1
 
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 
+
+object KnoraSipiPermissionsV1ITSpec {
+    val config: Config = ConfigFactory.parseString(
+        """
+          |akka.loglevel = "DEBUG"
+          |akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 
 /**
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
   * `sipi.knora-docker-it-config.lua`.
   */
-class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
+class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec(KnoraSipiPermissionsV1ITSpec.config) with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

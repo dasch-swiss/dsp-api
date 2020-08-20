@@ -1,0 +1,22 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@rules_scala_annex//rules:scala.bzl", "scala_library")
+
+scala_library(
+    name = "util",
+    testonly = True,
+    srcs = [
+        "MutableTestIri.scala",
+        "StartupUtils.scala",
+    ],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        # "@maven//:junit_junit",
+    ],
+)
