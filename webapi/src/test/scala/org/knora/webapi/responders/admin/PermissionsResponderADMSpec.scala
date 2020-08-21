@@ -275,10 +275,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return DefaultObjectAccessPermission for project and group" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
-                    groupIRI = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                    resourceClassIRI = None,
-                    propertyIRI = None,
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                    resourceClassIri = None,
+                    propertyIri = None,
                     requestingUser = rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
@@ -288,10 +288,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
-                    groupIRI = None,
-                    resourceClassIRI = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
-                    propertyIRI = None,
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    groupIri = None,
+                    resourceClassIri = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
+                    propertyIri = None,
                     requestingUser = rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
@@ -301,10 +301,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
-                    groupIRI = None,
-                    resourceClassIRI = None,
-                    propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    groupIri = None,
+                    resourceClassIri = None,
+                    propertyIri = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                     requestingUser = rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
@@ -314,10 +314,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "cache DefaultObjectAccessPermission" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
-                    groupIRI = None,
-                    resourceClassIRI = None,
-                    propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    groupIri = None,
+                    resourceClassIri = None,
+                    propertyIri = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                     requestingUser = rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
