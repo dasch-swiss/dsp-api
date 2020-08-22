@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 load("@rules_scala_annex//rules:scala.bzl", "scala_library", "scala_test")
 
+# needs to be added to every IT spec as it provides settings for
+# deps, runtime_deps needed for running the tests
 scala_library(
     name = "webapi",
     testonly = True,
@@ -11,6 +13,7 @@ scala_library(
         "KnoraFakeCore.scala",
         "TestContainers.scala",
     ],
+    javacopts = ["--add-modules java.sql"],
     resources = [
         "//sipi/config",
         "//webapi/src/it/resources",
@@ -20,6 +23,8 @@ scala_library(
         "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:org_slf4j_log4j_over_slf4j",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:org_testcontainers_testcontainers",
     ],
     deps = [
         "@maven//:org_scalactic_scalactic_2_12",

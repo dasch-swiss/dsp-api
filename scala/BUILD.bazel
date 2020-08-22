@@ -1,0 +1,44 @@
+load("@rules_scala_annex//rules:scala.bzl", "configure_bootstrap_scala", "configure_zinc_scala")
+load("//third_party:versions.bzl", "SCALA_VERSION")
+
+compiler_classpath = [
+    "@maven//:org_scala_lang_scala_compiler",
+    "@maven//:org_scala_lang_scala_library",
+    "@maven//:org_scala_lang_scala_reflect",
+]
+
+runtime_classpath = [
+    "@maven//:org_scala_lang_scala_library",
+]
+
+# This creates a basic ScalaConfiguration that relies on the scalac compiler
+configure_bootstrap_scala(
+    name = "bootstrap",
+    compiler_classpath = compiler_classpath,
+    runtime_classpath = runtime_classpath,
+    version = SCALA_VERSION,
+    visibility = ["//visibility:public"],
+)
+
+# This augments the configuration to configure the zinc compiler
+configure_zinc_scala(
+    name = "zinc",
+    compiler_bridge = "@maven//:org_scala_sbt_compiler_bridge_2_12",
+    compiler_classpath = compiler_classpath,
+    runtime_classpath = runtime_classpath,
+    version = SCALA_VERSION,
+    global_scalacopts = [
+        "-Ywarn-unused",
+        "-feature",
+        "-unchecked",
+        "-deprecation",
+        "-Yresolve-term-conflict:package",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "default_scala",
+    actual = ":zinc",
+    visibility = ["//visibility:public"],
+)

@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 load("@rules_scala_annex//rules:scala.bzl", "scala_library")
 
+# needs to be added to every TEST spec as it provides settings for
+# deps, runtime_deps needed for running the tests
 scala_library(
     name = "webapi",
     testonly = True,
@@ -13,7 +15,6 @@ scala_library(
         "R2RSpec.scala",
         "TestContainers.scala",
         "TestProbeMaker.scala",
-        # "//webapi/src/test/scala/org/knora/webapi/util:srcs",
     ],
     resources = [
         "//sipi/config",

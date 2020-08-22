@@ -3,7 +3,7 @@
 # docs for rules_jvm_external: https://github.com/bazelbuild/rules_jvm_external
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
-load("//third_party:versions.bzl", "AKKA_HTTP_VERSION", "AKKA_VERSION", "JENA_VERSION")
+load("//third_party:versions.bzl", "AKKA_HTTP_VERSION", "AKKA_VERSION", "JENA_VERSION", "SCALA_VERSION")
 
 def dependencies():
     #
@@ -15,6 +15,16 @@ def dependencies():
     #
     maven_install(
         artifacts = [
+            # scala
+            "org.scala-sbt:compiler-interface:1.2.1",
+            "org.scala-sbt:util-interface:1.2.0",
+            "org.scala-lang:scala-compiler:%s" % (SCALA_VERSION),
+            "org.scala-lang:scala-library:%s" % (SCALA_VERSION),
+            "org.scala-lang:scala-reflect:%s" % (SCALA_VERSION),
+            "org.scala-sbt:compiler-bridge_2.12:1.3.4",
+            "org.scala-lang.modules:scala-java8-compat_2.12:0.8.0",
+            "org.scala-lang.modules:scala-xml_2.12:1.2.0",
+
             # akka
             "com.typesafe.akka:akka-actor_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream_2.12:%s" % (AKKA_VERSION),
@@ -88,9 +98,7 @@ def dependencies():
             "org.rogach:scallop_2.12:3.2.0",
             "com.google.gwt:gwt-servlet:2.8.0",
             "net.sf.saxon:Saxon-HE:9.9.0-2",
-            "org.scala-lang.modules:scala-xml_2.12:1.1.1",
             "com.jsuereth:scala-arm_2.12:2.0",
-            "org.scala-lang.modules:scala-java8-compat_2.12:0.8.0",
 
             # provides akka jackson (json) support
             "de.heikoseeberger:akka-http-circe_2.12:1.21.0",
@@ -109,15 +117,12 @@ def dependencies():
             # Twirl templates
             "com.typesafe.play:twirl-api_2.12:1.3.13",
 
-            # scala stuff
-            "org.scala-lang.modules:scala-xml_2.12:1.2.0",
-
             # testing
             "com.typesafe.akka:akka-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
             "org.scalatest:scalatest_2.12:3.1.2",
-            "org.testcontainers:testcontainers:1.14.3",
+            "org.testcontainers:testcontainers:1.15.0-rc1",
             "junit:junit:4.13",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",

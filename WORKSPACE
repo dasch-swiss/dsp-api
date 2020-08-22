@@ -123,9 +123,9 @@ pinned_maven_install()
 #
 # Load rules_scala_annex, required by rules_twirl
 #
-rules_scala_annex_version = "2503b72a166610c14170b117c51033b42a32e48b"  # 29.06.2020
+rules_scala_annex_version = "ff423d8bdd0e5383f8f2c048ffd7704bb51a91bf"  # 17.07.2020
 
-rules_scala_annex_sha256 = "52d677dc8205db25a49824aade45984e3ef1b79c3bf761efede35d921033c3a4"
+rules_scala_annex_sha256 = "ae53e9ed5fecadc7baf4637b88109471602be73dda4e5ff6b4bf1767932703c0"
 
 http_archive(
     name = "rules_scala_annex",
@@ -164,10 +164,10 @@ annex_proto_pinned_maven_install()
 
 scala_proto_register_toolchains()
 
-# Specify the scala compiler we wish to use; in this case, we'll use the default one specified in rules_scala_annex
+# Specify the scala compiler we wish to use; in this case, we use our own definition
 bind(
     name = "default_scala",
-    actual = "@rules_scala_annex//src/main/scala:zinc_2_12_10",
+    actual = "//scala:default_scala",
 )
 
 #
