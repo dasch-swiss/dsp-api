@@ -2851,6 +2851,38 @@ object SharedTestDataADM {
           """.stripMargin
     }
 
+    def addCommentToPropertyThatHasNoComment(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""{
+          |    "@id": "$anythingOntologyIri",
+          |    "@type": "owl:Ontology",
+          |    "knora-api:lastModificationDate": {
+          |        "@type": "xsd:dateTimeStamp",
+          |        "@value": "$anythingLastModDate"
+          |    },
+          |    "@graph": [
+          |        {
+          |            "@id": "anything:hasBlueThing",
+          |            "@type": "owl:ObjectProperty",
+          |            "rdfs:comment": [
+          |                {
+          |                    "@language": "en",
+          |                    "@value": "asdas asd as dasdasdas"
+          |                }
+          |            ]
+          |        }
+          |    ],
+          |    "@context": {
+          |        "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+          |        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          |        "owl": "http://www.w3.org/2002/07/owl#",
+          |        "xsd": "http://www.w3.org/2001/XMLSchema#",
+          |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+          |        "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#"
+          |    }
+          |}""".stripMargin
+    }
+
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")

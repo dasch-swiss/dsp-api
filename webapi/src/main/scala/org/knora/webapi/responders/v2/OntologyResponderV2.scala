@@ -3251,7 +3251,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 maybeUnescapedNewLinkValuePropertyDef: Option[PropertyInfoContentV2] = maybeLoadedLinkValuePropertyDef.map {
                     loadedLinkValuePropertyDef =>
                         val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
-                            predicates = currentReadPropertyInfo.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
+                            predicates = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
                         )
 
                         if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
