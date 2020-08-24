@@ -409,9 +409,9 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri
             throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
     }
 
-    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
-        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
-    }
+//    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
+//        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
+//    }
 }
 
 /**
