@@ -1712,10 +1712,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
         val optimisedPatterns = patterns.filter {
-            case stamentPattern: StatementPattern =>
-                stamentPattern.pred match {
+            case statementPattern: StatementPattern =>
+                statementPattern.pred match {
                     case iriRef: IriRef =>
-                        val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(stamentPattern.subj)
+                        val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
                         subject match {
                             case Some(typeableEntity) =>
                                 !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)
