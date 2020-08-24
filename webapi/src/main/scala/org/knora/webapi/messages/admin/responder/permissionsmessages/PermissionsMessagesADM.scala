@@ -99,10 +99,7 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
                                 isInSystemAdminGroup: Boolean,
                                 requestingUser: UserADM
                                ) extends PermissionsResponderRequestADM {
-    if (projectIris.isEmpty) throw BadRequestException("No project IRI is given.")
-    if (groupIris.isEmpty) throw BadRequestException("No group IRI is given.")
-    if (isInProjectAdminGroups.isEmpty) throw BadRequestException("No project admin group is specified.")
-    if (!requestingUser.isSystemUser) throw ForbiddenException("Request only allowed for SystemUser.")
+    if (!requestingUser.isSystemUser) throw ForbiddenException("Permission data can only by queried by a SystemUser.")
 }
 
 // Administrative Permissions
