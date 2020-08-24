@@ -45,14 +45,12 @@ trait WhereVisitor[Acc] {
 }
 
 /**
- * A trait for classes that transform statements and filters in WHERE clauses. Such a class will probably need
- * to refer to a [[GravsearchTypeInspectionResult]].
+ * A trait for classes that transform statements and filters in WHERE clauses.
  */
 trait WhereTransformer {
     /**
-     * Optimises the entity type statments and order of query patterns. Does not recurse. It
-     * has to be called before transformStatementInWhere, because optimisation might remove statements that
-     * would otherwise be expanded by transformStatementInWhere
+     * Optimises query patterns. Does not recurse. Must be called before `transformStatementInWhere`,
+     * because optimisation might remove statements that would otherwise be expanded by `transformStatementInWhere`.
      *
      * @param patterns the query patterns to be optimised.
      * @return the optimised query patterns.
