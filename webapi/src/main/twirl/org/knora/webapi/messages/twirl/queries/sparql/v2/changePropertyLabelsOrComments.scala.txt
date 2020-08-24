@@ -100,8 +100,9 @@ DELETE {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
+    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
+
     GRAPH ?ontologyNamedGraph {
-        BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
         BIND(IRI("@ontologyIri") AS ?ontology)
         BIND(IRI("@propertyIri") AS ?property)
 
