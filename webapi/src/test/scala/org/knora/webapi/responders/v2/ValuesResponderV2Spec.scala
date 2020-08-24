@@ -77,6 +77,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val firstIntValueVersionIri = new MutableTestIri
     private val intValueIri = new MutableTestIri
     private val intValueIriWithCustomPermissions = new MutableTestIri
+    private val intValueIriWithCustomUuidAndTimestamp = new MutableTestIri
     private val zeitglöckleinCommentWithoutStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithCommentIri = new MutableTestIri
@@ -203,6 +204,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                                     propertyIriForGravsearch: SmartIri,
                                     propertyIriInResult: SmartIri,
                                     valueIri: IRI,
+                                    customDeleteDate: Option[Instant] = None,
                                     requestingUser: UserADM): Unit = {
         val resource = getResourceWithValues(
             resourceIri = resourceIri,
@@ -220,6 +222,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         propertyValues.find(_.valueIri == valueIri) match {
             case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
+            case None => ()
+        }
+
+        // If a custom delete date was used, check that it was saved correctly.
+        customDeleteDate match {
+            case Some(deleteDate) =>
+                val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getDeleteDate(
+                    triplestore = settings.triplestoreType,
+                    entityIri = valueIri
+                ).toString()
+
+                storeManager ! SparqlSelectRequest(sparqlQuery)
+
+                expectMsgPF(timeout) {
+                    case sparqlSelectResponse: SparqlSelectResponse =>
+                        val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
+
+                        val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
+                            savedDeleteDateStr,
+                            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
+                        )
+
+                        assert(savedDeleteDate == deleteDate)
+                }
+
             case None => ()
         }
     }
@@ -445,7 +472,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case updateValueResponse: UpdateValueResponseV2 =>
                     intValueIri.set(updateValueResponse.valueIri)
                     assert(updateValueResponse.valueUUID == integerValueUUID)
-                    integerValueUUID = updateValueResponse.valueUUID
             }
 
             // Read the value back to check that it was added correctly.
@@ -806,6 +832,146 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+            }
+        }
+
+        "create an integer value with custom UUID and creation date" in {
+            // Add the value.
+
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 987
+            val valueUUID = UUID.randomUUID
+            val valueCreationDate = Instant.now
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueUUID = Some(valueUUID),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => intValueIriWithCustomUuidAndTimestamp.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    valueFromTriplestore.valueHasUUID should ===(valueUUID)
+                    valueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update an integer value with a custom creation date that is earlier than the date of the current version" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 989
+            val valueCreationDate = Instant.parse("2019-11-29T10:00:00Z")
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+            }
+        }
+
+        "update an integer value with a custom creation date" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Get the value before update.
+            val previousValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
+
+            // Update the value.
+
+            val intValue = 988
+            val valueCreationDate = Instant.now
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueIriWithCustomUuidAndTimestamp.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
             }
         }
 
@@ -3989,6 +4155,37 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = anythingUser1)
         }
 
+        "delete an integer value, specifying a custom delete date" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+            val deleteDate: Instant = Instant.now
+
+            responderManager ! DeleteValueRequestV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                propertyIri = propertyIri,
+                valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                deleteComment = Some("this value was incorrect"),
+                deleteDate = Some(deleteDate),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            checkValueIsDeleted(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                customDeleteDate = Some(deleteDate),
+                requestingUser = anythingUser1
+            )
+        }
+
         "not delete a standoff link directly" in {
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
@@ -4022,12 +4219,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgType[SuccessResponseV2](timeout)
 
-            checkValueIsDeleted(resourceIri = zeitglöckleinIri,
+            checkValueIsDeleted(
+                resourceIri = zeitglöckleinIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 valueIri = zeitglöckleinCommentWithStandoffIri.get,
-                requestingUser = incunabulaUser)
+                requestingUser = incunabulaUser
+            )
 
             // There should be no standoff link values left in the resource.
 
@@ -4058,12 +4257,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgType[SuccessResponseV2](timeout)
 
-            checkValueIsDeleted(resourceIri = resourceIri,
+            checkValueIsDeleted(
+                resourceIri = resourceIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = linkPropertyIri,
                 propertyIriInResult = linkValuePropertyIri,
                 valueIri = linkValueIri.get,
-                requestingUser = anythingUser1)
+                requestingUser = anythingUser1
+            )
         }
 
         "not delete a value if the property's cardinality doesn't allow it" in {

@@ -23,16 +23,16 @@ import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
 import org.knora.webapi.messages.SmartIri
 
 /**
-  * Utility functions for working with ontology entities.
-  */
+ * Utility functions for working with ontology entities.
+ */
 object OntologyUtil {
     /**
-      * Recursively walks up an entity hierarchy read from the triplestore, collecting the IRIs of all base entities.
-      *
-      * @param iri             the IRI of an entity.
-      * @param directRelations a map of entities to their direct base entities.
-      * @return all the base entities of the specified entity.
-      */
+     * Recursively walks up an entity hierarchy read from the triplestore, collecting the IRIs of all base entities.
+     *
+     * @param iri             the IRI of an entity.
+     * @param directRelations a map of entities to their direct base entities.
+     * @return all the base entities of the specified entity.
+     */
     def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Set[SmartIri] = {
         def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Set[SmartIri] = {
             directRelations.get(currentIri) match {

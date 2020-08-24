@@ -38,9 +38,9 @@ import scala.concurrent.Future
 
 
 /**
-  * Responds to requests for user search queries and returns responses in Knora API
-  * v1 format.
-  */
+ * Responds to requests for user search queries and returns responses in Knora API
+ * v1 format.
+ */
 class SearchResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Valid combinations of value types and comparison operators, for determining whether a requested search
@@ -115,14 +115,14 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     )
 
     /**
-      * Represents a matching value in a search result.
-      *
-      * @param valueTypeIri        the type of the value that matched.
-      * @param propertyIri         the IRI of the property that points to the value.
-      * @param propertyLabel       the label of the property that points to the value.
-      * @param literal             the literal that matched.
-      * @param valuePermissionCode the user's permission code on the value.
-      */
+     * Represents a matching value in a search result.
+     *
+     * @param valueTypeIri        the type of the value that matched.
+     * @param propertyIri         the IRI of the property that points to the value.
+     * @param propertyLabel       the label of the property that points to the value.
+     * @param literal             the literal that matched.
+     * @param valuePermissionCode the user's permission code on the value.
+     */
     private case class MatchingValue(valueTypeIri: IRI,
                                      propertyIri: IRI,
                                      propertyLabel: String,
@@ -132,8 +132,8 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message of type [[SearchResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[SearchResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: SearchResponderRequestV1) = msg match {
         case searchGetRequest: FulltextSearchGetRequestV1 => fulltextSearchV1(searchGetRequest)
         case searchGetRequest: ExtendedSearchGetRequestV1 => extendedSearchV1(searchGetRequest)
@@ -141,11 +141,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Performs a fulltext search (simple search) and returns a [[SearchGetResponseV1]] in Knora API v1 format.
-      *
-      * @param searchGetRequest the user search request.
-      * @return a [[SearchGetResponseV1]] containing the search results.
-      */
+     * Performs a fulltext search (simple search) and returns a [[SearchGetResponseV1]] in Knora API v1 format.
+     *
+     * @param searchGetRequest the user search request.
+     * @return a [[SearchGetResponseV1]] containing the search results.
+     */
     private def fulltextSearchV1(searchGetRequest: FulltextSearchGetRequestV1): Future[SearchGetResponseV1] = {
 
         val userProfileV1 = searchGetRequest.userProfile.asUserProfileV1
@@ -320,11 +320,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Performs an extended search (structured search) and returns a [[SearchGetResponseV1]] in Knora API v1 format.
-      *
-      * @param searchGetRequest the user search request
-      * @return a [[SearchGetResponseV1]] containing the search results.
-      */
+     * Performs an extended search (structured search) and returns a [[SearchGetResponseV1]] in Knora API v1 format.
+     *
+     * @param searchGetRequest the user search request
+     * @return a [[SearchGetResponseV1]] containing the search results.
+     */
     private def extendedSearchV1(searchGetRequest: ExtendedSearchGetRequestV1): Future[SearchGetResponseV1] = {
         import org.knora.webapi.messages.StringFormatter
 
@@ -692,13 +692,13 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Creates a list of available search result pages.
-      *
-      * @param offset      the requested result offset.
-      * @param limit       the maximum number of results per page.
-      * @param resultCount the total number of results found.
-      * @return a list of [[SearchResultPage]] objects.
-      */
+     * Creates a list of available search result pages.
+     *
+     * @param offset      the requested result offset.
+     * @param limit       the maximum number of results per page.
+     * @param resultCount the total number of results found.
+     * @return a list of [[SearchResultPage]] objects.
+     */
     private def makePaging(offset: Int, limit: Int, resultCount: Int): Seq[SearchResultPage] = {
         val pageRemainder = resultCount % limit
         val numPages = (resultCount / limit) + (if (pageRemainder > 0) 1 else 0)
@@ -720,10 +720,10 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Checks the requested search result limit to ensure it's within acceptable bounds.
-      *
-      * @return the corrected search result limit.
-      */
+     * Checks the requested search result limit to ensure it's within acceptable bounds.
+     *
+     * @return the corrected search result limit.
+     */
     private def checkLimit(limit: Int): Int = {
         if (limit <= 0) {
             throw BadRequestException("Search limit must be greater than 0")
@@ -733,11 +733,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Given a list of search results, finds the maximum X and Y dimensions of their preview images.
-      *
-      * @param subjects a list of search results.
-      * @return the maximum X and Y dimensions of the preview images of the search results.
-      */
+     * Given a list of search results, finds the maximum X and Y dimensions of their preview images.
+     *
+     * @param subjects a list of search results.
+     * @return the maximum X and Y dimensions of the preview images of the search results.
+     */
     private def findMaxPreviewDimensions(subjects: Seq[SearchResultRowV1]): (Int, Int) = {
         subjects.foldLeft((0, 0)) {
             case ((accX, accY), searchResultRow) =>

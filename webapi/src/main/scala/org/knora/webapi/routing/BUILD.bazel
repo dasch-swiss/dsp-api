@@ -7,7 +7,7 @@ scala_library(
     srcs = glob(["**/*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//tools/buildstamp:version_info_jar",
+        "//tools/version_info",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",

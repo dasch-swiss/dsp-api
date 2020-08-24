@@ -18,6 +18,7 @@
  */
 
 package org.knora.webapi.store.cacheservice
+
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 import com.twitter.chill.MeatLocker
@@ -32,13 +33,14 @@ object CacheSerialization extends InstrumentationSupport {
 
 
     /**
-      * Serialize objects by using plain java serialization. Java serialization is not
-      * capable to serialize all our objects (e.g., UserADM) and that is why we use the
-      * [[MeatLocker]], which does some magic and allows our case classes to be
-      * serializable.
-      * @param value the value we want to serialize as a array of bytes.
-      * @tparam T the type parameter of our value.
-      */
+     * Serialize objects by using plain java serialization. Java serialization is not
+     * capable to serialize all our objects (e.g., UserADM) and that is why we use the
+     * [[MeatLocker]], which does some magic and allows our case classes to be
+     * serializable.
+     *
+     * @param value the value we want to serialize as a array of bytes.
+     * @tparam T the type parameter of our value.
+     */
     def serialize[T](value: T)(implicit ec: ExecutionContext): Future[Array[Byte]] = tracedFuture("redis-serialize") {
 
         Future {
@@ -52,13 +54,14 @@ object CacheSerialization extends InstrumentationSupport {
     }
 
     /**
-      * Deserialize objects by using plain java serialization. Java serialization is not
-      * capable to serialize all our objects (e.g., UserADM) and that is why we use the
-      * [[MeatLocker]], which does some magic and allows our case classes to be
-      * serializable.
-      * @tparam T the type parameter of our value.
-      */
-    def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[Option[T]] =  tracedFuture("redis-deserialize"){
+     * Deserialize objects by using plain java serialization. Java serialization is not
+     * capable to serialize all our objects (e.g., UserADM) and that is why we use the
+     * [[MeatLocker]], which does some magic and allows our case classes to be
+     * serializable.
+     *
+     * @tparam T the type parameter of our value.
+     */
+    def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[Option[T]] = tracedFuture("redis-deserialize") {
 
         Future {
             if (bytes.isEmpty) {

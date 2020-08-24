@@ -26,23 +26,23 @@ import org.knora.webapi.exceptions.ApplicationCacheException
 import org.slf4j.LoggerFactory
 
 /**
-  * Maintains in-memory caches, and caches values, using Ehcache (http://ehcache.org/). Each cache is accessible
-  * by name from any function running in the same JVM.
-  */
+ * Maintains in-memory caches, and caches values, using Ehcache (http://ehcache.org/). Each cache is accessible
+ * by name from any function running in the same JVM.
+ */
 object CacheUtil {
 
     val log: Logger = Logger(LoggerFactory.getLogger("org.knora.webapi.util.cache"))
 
     /**
-      * Represents the configuration of a Knora application cache.
-      *
-      * @param cacheName           the name of the cache.
-      * @param maxElementsInMemory the maximum number of elements in memory, before they are evicted (0 == no limit).
-      * @param overflowToDisk      whether to use the disk store.
-      * @param eternal             whether the elements in the cache are eternal, i.e. never expire.
-      * @param timeToLiveSeconds   the default amount of time to live for an element from its creation date.
-      * @param timeToIdleSeconds   the default amount of time to live for an element from its last accessed or modified date.
-      */
+     * Represents the configuration of a Knora application cache.
+     *
+     * @param cacheName           the name of the cache.
+     * @param maxElementsInMemory the maximum number of elements in memory, before they are evicted (0 == no limit).
+     * @param overflowToDisk      whether to use the disk store.
+     * @param eternal             whether the elements in the cache are eternal, i.e. never expire.
+     * @param timeToLiveSeconds   the default amount of time to live for an element from its creation date.
+     * @param timeToIdleSeconds   the default amount of time to live for an element from its last accessed or modified date.
+     */
     case class KnoraCacheConfig(cacheName: String,
                                 maxElementsInMemory: Int,
                                 overflowToDisk: Boolean,
@@ -51,12 +51,12 @@ object CacheUtil {
                                 timeToIdleSeconds: Int)
 
     /**
-      * Creates application caches.
-      *
-      * @param cacheConfigs Maps containing the keys `cacheName`, `maxElementsInMemory`,
-      *                     `overflowToDisk`, `eternal`, `timeToLiveSeconds`,  and `timeToIdleSeconds`,
-      *                     representing configuration options for Ehcache caches.
-      */
+     * Creates application caches.
+     *
+     * @param cacheConfigs Maps containing the keys `cacheName`, `maxElementsInMemory`,
+     *                     `overflowToDisk`, `eternal`, `timeToLiveSeconds`,  and `timeToIdleSeconds`,
+     *                     representing configuration options for Ehcache caches.
+     */
     def createCaches(cacheConfigs: Seq[KnoraCacheConfig]): Unit = {
         val cacheManager = CacheManager.getInstance()
         cacheConfigs.foreach {
@@ -74,8 +74,8 @@ object CacheUtil {
     }
 
     /**
-      * Removes all caches.
-      */
+     * Removes all caches.
+     */
     def removeAllCaches(): Unit = {
         val cacheManager = CacheManager.getInstance()
         cacheManager.removeAllCaches()
@@ -83,10 +83,10 @@ object CacheUtil {
     }
 
     /**
-      * Clears a cache.
-      *
-      * @param cacheName the name of the cache to be cleared.
-      */
+     * Clears a cache.
+     *
+     * @param cacheName the name of the cache to be cleared.
+     */
     def clearCache(cacheName: String): Unit = {
         val cacheManager = CacheManager.getInstance()
         Option(cacheManager.getCache(cacheName)) match {
@@ -99,13 +99,13 @@ object CacheUtil {
     }
 
     /**
-      * Adds a value to a cache.
-      *
-      * @param cacheName the name of the cache.
-      * @param key       the cache key as a [[String]].
-      * @param value     the value we want to cache.
-      * @tparam V the type of the value we want to cache.
-      */
+     * Adds a value to a cache.
+     *
+     * @param cacheName the name of the cache.
+     * @param key       the cache key as a [[String]].
+     * @param value     the value we want to cache.
+     * @tparam V the type of the value we want to cache.
+     */
     def put[V](cacheName: String, key: String, value: V): Unit = {
         val cacheManager = CacheManager.getInstance()
         val cacheOption = Option(cacheManager.getCache(cacheName))
@@ -119,13 +119,13 @@ object CacheUtil {
     }
 
     /**
-      * Tries to ge a value from a cache.
-      *
-      * @param cacheName the name of the cache.
-      * @param key       the cache key as a [[String]].
-      * @tparam V the type of the item we try to get from the cache.
-      * @return an [[Option[V]]].
-      */
+     * Tries to ge a value from a cache.
+     *
+     * @param cacheName the name of the cache.
+     * @param key       the cache key as a [[String]].
+     * @tparam V the type of the item we try to get from the cache.
+     * @return an [[Option[V]]].
+     */
     def get[V](cacheName: String, key: String): Option[V] = {
         val cacheManager = CacheManager.getInstance()
         val cacheOption = Option(cacheManager.getCache(cacheName))
@@ -147,11 +147,11 @@ object CacheUtil {
     }
 
     /**
-      * Tries to remove a value from a cache.
-      *
-      * @param cacheName the name of the cache.
-      * @param key       the cache key as a [[String]]
-      */
+     * Tries to remove a value from a cache.
+     *
+     * @param cacheName the name of the cache.
+     * @param key       the cache key as a [[String]]
+     */
     def remove(cacheName: String, key: String) {
         val cacheManager = CacheManager.getInstance()
         val cacheOption = Option(cacheManager.getCache(cacheName))

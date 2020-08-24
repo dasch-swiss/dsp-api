@@ -116,6 +116,7 @@
 
     <!-- http -->
     <logger name="org.knora.webapi.e2e.CORSSupportE2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="DEBUG"/>
 
     <!-- V1 -->
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>

@@ -26,16 +26,16 @@ object SharedOntologyTestDataADM {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
 
     // anything
-    val ANYTHING_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/anything"
-    val ANYTHING_ONTOLOGY_IRI_LocalHost: IRI =  LocalHost_Ontology + "/0001/anything/v2"
+    val ANYTHING_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/anything"
+    val ANYTHING_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0001/anything/v2"
     val ANYTHING_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0001/anything"
     val ANYTHING_THING_RESOURCE_CLASS_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "Thing"
     val ANYTHING_HasListItem_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasListItem"
     val ANYTHING_HasDate_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasDate"
 
     // minimal
-    val MINIMAL_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/minimal"
-    val MINIMAL_ONTOLOGY_IRI_LocalHost: IRI =  LocalHost_Ontology + "/0001/minimal/v2"
+    val MINIMAL_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/minimal"
+    val MINIMAL_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0001/minimal/v2"
 
 
     // images
@@ -59,8 +59,8 @@ object SharedOntologyTestDataADM {
     val BIBLIO_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0801/biblio"
 
     // incunabula
-    val INCUNABULA_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "/0803/incunabula"
-    val INCUNABULA_ONTOLOGY_IRI_LocalHost: IRI =  LocalHost_Ontology + "/0803/incunabula/v2"
+    val INCUNABULA_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0803/incunabula"
+    val INCUNABULA_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0803/incunabula/v2"
     val INCUNABULA_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0803/incunabula"
     val INCUNABULA_BOOK_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
     val INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "book"

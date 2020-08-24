@@ -31,30 +31,30 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * A tagging trait for messages that can be sent to Knora API v2 responders.
-  */
+ * A tagging trait for messages that can be sent to Knora API v2 responders.
+ */
 trait KnoraRequestV2
 
 /**
-  * A trait for objects that can generate case class instances based on JSON-LD input.
-  *
-  * @tparam C the type of the case class that can be generated.
-  */
+ * A trait for objects that can generate case class instances based on JSON-LD input.
+ *
+ * @tparam C the type of the case class that can be generated.
+ */
 trait KnoraJsonLDRequestReaderV2[C] {
     /**
-      * Converts JSON-LD input into a case class instance.
-      *
-      * @param jsonLDDocument   the JSON-LD input.
-      * @param apiRequestID     the UUID of the API request.
-      * @param requestingUser   the user making the request.
-      * @param responderManager a reference to the responder manager.
-      * @param storeManager     a reference to the store manager.
-      * @param settings         the application settings.
-      * @param log              a logging adapter.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a case class instance representing the input.
-      */
+     * Converts JSON-LD input into a case class instance.
+     *
+     * @param jsonLDDocument   the JSON-LD input.
+     * @param apiRequestID     the UUID of the API request.
+     * @param requestingUser   the user making the request.
+     * @param responderManager a reference to the responder manager.
+     * @param storeManager     a reference to the store manager.
+     * @param settings         the application settings.
+     * @param log              a logging adapter.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a case class instance representing the input.
+     */
     def fromJsonLD(jsonLDDocument: JsonLDDocument,
                    apiRequestID: UUID,
                    requestingUser: UserADM,

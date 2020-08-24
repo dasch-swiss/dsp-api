@@ -23,8 +23,8 @@ import com.typesafe.config.Config
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 /**
-  *
-  */
+ *
+ */
 object RdfDataObjectFactory {
     def apply(conf: Config): RdfDataObject = {
         val path = conf.getString("path")

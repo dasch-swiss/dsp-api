@@ -31,9 +31,9 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
 /**
-  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
-  * into HttpResponses. It is brought implicitly into scope at the top level [[KnoraLiveService]].
-  */
+ * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
+ * into HttpResponses. It is brought implicitly into scope at the top level [[KnoraLiveService]].
+ */
 object KnoraExceptionHandler extends LazyLogging {
 
     // A generic error message that we return to clients when an internal server error occurs.
@@ -100,11 +100,11 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Converts an exception to an HTTP response in JSON format specific to `V1`.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in JSON format.
-      */
+     * Converts an exception to an HTTP response in JSON format specific to `V1`.
+     *
+     * @param ex the exception to be converted.
+     * @return an [[HttpResponse]] in JSON format.
+     */
     private def exceptionToJsonHttpResponseV1(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
         // Get the API status code that corresponds to the exception.
         val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
@@ -133,11 +133,11 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Converts an exception to an HTTP response in JSON format specific to `V2`.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in JSON format.
-      */
+     * Converts an exception to an HTTP response in JSON format specific to `V2`.
+     *
+     * @param ex the exception to be converted.
+     * @return an [[HttpResponse]] in JSON format.
+     */
     private def exceptionToJsonHttpResponseV2(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
@@ -161,11 +161,11 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Converts an exception to an HTTP response in JSON format specific to `ADM`.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in JSON format.
-      */
+     * Converts an exception to an HTTP response in JSON format specific to `ADM`.
+     *
+     * @param ex the exception to be converted.
+     * @return an [[HttpResponse]] in JSON format.
+     */
     private def exceptionToJsonHttpResponseADM(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
 
         // Get the HTTP status code that corresponds to the exception.
@@ -184,11 +184,11 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Converts an exception to an HTTP response in HTML format specific to `V1`.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in HTML format.
-      */
+     * Converts an exception to an HTTP response in HTML format specific to `V1`.
+     *
+     * @param ex the exception to be converted.
+     * @return an [[HttpResponse]] in HTML format.
+     */
     private def exceptionToHtmlHttpResponseV1(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
         // Get the API status code that corresponds to the exception.
         val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
@@ -225,11 +225,11 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Converts an exception to an HTTP response in HTML format specific to `V2`.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in HTML format.
-      */
+     * Converts an exception to an HTTP response in HTML format specific to `V2`.
+     *
+     * @param ex the exception to be converted.
+     * @return an [[HttpResponse]] in HTML format.
+     */
     private def exceptionToHtmlHttpResponseV2(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
 
         // Get the HTTP status code that corresponds to the exception.
@@ -258,11 +258,11 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Converts an exception to an HTTP response in HTML format specific to `ADM`.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in HTML format.
-      */
+     * Converts an exception to an HTTP response in HTML format specific to `ADM`.
+     *
+     * @param ex the exception to be converted.
+     * @return an [[HttpResponse]] in HTML format.
+     */
     private def exceptionToHtmlHttpResponseADM(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
 
         // Get the HTTP status code that corresponds to the exception.
@@ -291,12 +291,12 @@ object KnoraExceptionHandler extends LazyLogging {
     }
 
     /**
-      * Given an exception, returns an error message suitable for clients.
-      *
-      * @param ex       the exception.
-      * @param settings the application settings.
-      * @return an error message suitable for clients.
-      */
+     * Given an exception, returns an error message suitable for clients.
+     *
+     * @param ex       the exception.
+     * @param settings the application settings.
+     * @return an error message suitable for clients.
+     */
     private def makeClientErrorMessage(ex: Throwable, settings: KnoraSettingsImpl): String = {
         ex match {
             case rre: RequestRejectedException => rre.toString

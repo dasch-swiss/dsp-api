@@ -31,13 +31,13 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import scala.concurrent.Future
 
 /**
-  * Responds to requests relating to lists and nodes.
-  */
+ * Responds to requests relating to lists and nodes.
+ */
 class ListsResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
     /**
-      * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.
-      */
+     * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.
+     */
     def receive(msg: ListsResponderRequestV2) = msg match {
         case ListGetRequestV2(listIri, requestingUser) => getList(listIri, requestingUser)
         case NodeGetRequestV2(nodeIri, requestingUser) => getNode(nodeIri, requestingUser)
@@ -45,12 +45,12 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
     }
 
     /**
-      * Gets a list from the triplestore.
-      *
-      * @param listIri the Iri of the list's root node.
-      * @param requestingUser the user making the request.
-      * @return a [[ListGetResponseV2]].
-      */
+     * Gets a list from the triplestore.
+     *
+     * @param listIri        the Iri of the list's root node.
+     * @param requestingUser the user making the request.
+     * @return a [[ListGetResponseV2]].
+     */
     private def getList(listIri: IRI, requestingUser: UserADM): Future[ListGetResponseV2] = {
 
         for {
@@ -60,12 +60,12 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
     }
 
     /**
-      * Gets a single list node from the triplestore.
-      *
-      * @param nodeIri the Iri of the list node.
-      * @param requestingUser the user making the request.
-      * @return a  [[NodeGetResponseV2]].
-      */
+     * Gets a single list node from the triplestore.
+     *
+     * @param nodeIri        the Iri of the list node.
+     * @param requestingUser the user making the request.
+     * @return a  [[NodeGetResponseV2]].
+     */
     private def getNode(nodeIri: IRI, requestingUser: UserADM): Future[NodeGetResponseV2] = {
 
         for {

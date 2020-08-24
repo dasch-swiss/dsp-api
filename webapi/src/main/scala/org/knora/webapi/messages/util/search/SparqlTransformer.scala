@@ -28,6 +28,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
  * Methods and classes for Sparql transformation.
  */
 object SparqlTransformer {
+
     /**
      * Transforms a non-triplestore-specific SELECT query for GraphDB.
      */
@@ -40,7 +41,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -59,8 +60,9 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(patterns)
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            val luceneFirst = moveLuceneToBeginning(patterns)
+            moveIsDeletedToEnd(luceneFirst)
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -79,7 +81,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -98,8 +100,9 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(patterns)
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            val luceneFirst: Seq[QueryPattern] = moveLuceneToBeginning(patterns)
+            moveIsDeletedToEnd(luceneFirst)
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -194,6 +197,21 @@ object SparqlTransformer {
     }
 
     /**
+     * Optimises queries by moving Lucene query patterns to the beginning of a block.
+     *
+     * @param patterns the block of patterns to be optimised.
+     * @return the result of the optimisation.
+     */
+    def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val (luceneQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case luceneQueryPattern: LuceneQueryPattern => true
+            case _ => false
+        }
+
+        luceneQueryPatterns ++ otherPatterns
+    }
+
+    /**
      * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
      *
      * @param statementPattern the statement pattern.
@@ -203,7 +221,7 @@ object SparqlTransformer {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         statementPattern.pred match {
-            case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor  =>
+            case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
                 Seq(
                     statementPattern.copy(
                         pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
@@ -321,7 +339,7 @@ object SparqlTransformer {
     private def transformLuceneQueryPatternForGraphDB(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        Seq(
+         Seq(
             StatementPattern(
                 subj = luceneQueryPattern.obj, // In GraphDB, an index entry is associated with a literal.
                 pred = IriRef("http://www.ontotext.com/owlim/lucene#fullTextSearchIndex".toSmartIri),
@@ -330,7 +348,7 @@ object SparqlTransformer {
                     datatype = OntologyConstants.Xsd.String.toSmartIri
                 )
             )
-        )
+        ) ++ luceneQueryPattern.literalStatement
     }
 
     /**

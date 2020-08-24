@@ -40,16 +40,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 /**
-  * Utility functions for working with Knora resources and their values.
-  */
+ * Utility functions for working with Knora resources and their values.
+ */
 object ResourceUtilV2 {
 
     /**
-      * Checks that a user has the specified permission on a resource.
-      *
-      * @param resourceInfo   the resource to be updated.
-      * @param requestingUser the requesting user.
-      */
+     * Checks that a user has the specified permission on a resource.
+     *
+     * @param resourceInfo   the resource to be updated.
+     * @param requestingUser the requesting user.
+     */
     def checkResourcePermission(resourceInfo: ReadResourceV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
         val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
             entityCreator = resourceInfo.attachedToUser,
@@ -69,12 +69,12 @@ object ResourceUtilV2 {
     }
 
     /**
-      * Checks that a user has the specified permission on a value.
-      *
-      * @param resourceInfo   the resource containing the value.
-      * @param valueInfo      the value to be updated.
-      * @param requestingUser the requesting user.
-      */
+     * Checks that a user has the specified permission on a value.
+     *
+     * @param resourceInfo   the resource containing the value.
+     * @param valueInfo      the value to be updated.
+     * @param requestingUser the requesting user.
+     */
     def checkValuePermission(resourceInfo: ReadResourceV2, valueInfo: ReadValueV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
         val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
             entityCreator = valueInfo.attachedToUser,
@@ -94,14 +94,14 @@ object ResourceUtilV2 {
     }
 
     /**
-      * Gets the default permissions for a new value.
-      *
-      * @param projectIri       the IRI of the project of the containing resource.
-      * @param resourceClassIri the internal IRI of the resource class.
-      * @param propertyIri      the internal IRI of the property that points to the value.
-      * @param requestingUser   the user that is creating the value.
-      * @return a permission string.
-      */
+     * Gets the default permissions for a new value.
+     *
+     * @param projectIri       the IRI of the project of the containing resource.
+     * @param resourceClassIri the internal IRI of the resource class.
+     * @param propertyIri      the internal IRI of the property that points to the value.
+     * @param requestingUser   the user that is creating the value.
+     * @return a permission string.
+     */
     def getDefaultValuePermissions(projectIri: IRI,
                                    resourceClassIri: SmartIri,
                                    propertyIri: SmartIri,
@@ -121,10 +121,10 @@ object ResourceUtilV2 {
     }
 
     /**
-      * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
-      *
-      * @param listNodeIri the IRI of the list node.
-      */
+     * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
+     *
+     * @param listNodeIri the IRI of the list node.
+     */
     def checkListNodeExists(listNodeIri: IRI,
                             storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
         for {
@@ -139,15 +139,15 @@ object ResourceUtilV2 {
     }
 
     /**
-      * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
-      * the updated value was a file value. If not, this method returns the same future. If it was a file value, this
-      * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
-      * If not, it asks Sipi to delete the temporary file.
-      *
-      * @param updateFuture   the future that should have updated the triplestore.
-      * @param valueContent   the value that should have been created or updated.
-      * @param requestingUser the user making the request.
-      */
+     * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
+     * the updated value was a file value. If not, this method returns the same future. If it was a file value, this
+     * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
+     * If not, it asks Sipi to delete the temporary file.
+     *
+     * @param updateFuture   the future that should have updated the triplestore.
+     * @param valueContent   the value that should have been created or updated.
+     * @param requestingUser the user making the request.
+     */
     def doSipiPostUpdate[T <: UpdateResultInProject](updateFuture: Future[T],
                                                      valueContent: ValueContentV2,
                                                      requestingUser: UserADM,
@@ -187,7 +187,7 @@ object ResourceUtilV2 {
 
                             case Failure(sipiException) =>
                                 // No. Log Sipi's error, and return the future we were given.
-                                log.error( "Sipi error", sipiException)
+                                log.error("Sipi error", sipiException)
                                 updateFuture
                         }
                 }

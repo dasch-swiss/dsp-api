@@ -26,9 +26,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 /**
-  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Complex]] schema.
-  * See also [[OntologyConstants.CorrespondingIris]].
-  */
+ * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Complex]] schema.
+ * See also [[OntologyConstants.CorrespondingIris]].
+ */
 object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -1657,9 +1657,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
 
     /**
-      * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
-      * See also [[OntologyConstants.CorrespondingIris]].
-      */
+     * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
+     * See also [[OntologyConstants.CorrespondingIris]].
+     */
     override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.Rdf.Subject,
         OntologyConstants.Rdf.Predicate,
@@ -1727,8 +1727,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     ).map(_.toSmartIri)
 
     /**
-      * Classes to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
-      */
+     * Classes to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
+     */
     override val internalClassesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.MappingElement,
         OntologyConstants.KnoraBase.MappingComponent,
@@ -1740,9 +1740,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     ).map(_.toSmartIri)
 
     /**
-      * After `knora-base` has been converted to the [[ApiV2Complex]] schema, these cardinalities must be
-      * added to the specified classes to obtain `knora-api`.
-      */
+     * After `knora-base` has been converted to the [[ApiV2Complex]] schema, these cardinalities must be
+     * added to the specified classes to obtain `knora-api`.
+     */
     override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
         OntologyConstants.KnoraApiV2Complex.Resource -> ResourceCardinalities,
         OntologyConstants.KnoraApiV2Complex.DateBase -> DateBaseCardinalities,
@@ -1773,14 +1773,14 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     }
 
     /**
-      * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
-      */
+     * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
+     */
     override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2]
 
     /**
-      * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
-      * See also [[OntologyConstants.CorrespondingIris]].
-      */
+     * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
+     * See also [[OntologyConstants.CorrespondingIris]].
+     */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Label,
         Result,
@@ -1861,13 +1861,13 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     // Convenience functions for building ontology entities, to make the code above more concise.
 
     /**
-      * Makes a [[PredicateInfoV2]].
-      *
-      * @param predicateIri    the IRI of the predicate.
-      * @param objects         the non-language-specific objects of the predicate.
-      * @param objectsWithLang the language-specific objects of the predicate.
-      * @return a [[PredicateInfoV2]].
-      */
+     * Makes a [[PredicateInfoV2]].
+     *
+     * @param predicateIri    the IRI of the predicate.
+     * @param objects         the non-language-specific objects of the predicate.
+     * @param objectsWithLang the language-specific objects of the predicate.
+     * @return a [[PredicateInfoV2]].
+     */
     private def makePredicate(predicateIri: IRI,
                               objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2],
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
@@ -1880,19 +1880,19 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     }
 
     /**
-      * Makes a [[ReadPropertyInfoV2]].
-      *
-      * @param propertyIri     the IRI of the property.
-      * @param propertyType    the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
-      * @param isResourceProp  true if this is a subproperty of `knora-api:hasValue` or `knora-api:hasLinkTo`.
-      * @param subPropertyOf   the set of direct superproperties of this property.
-      * @param isEditable      true if this is a Knora resource property that can be edited via the Knora API.
-      * @param isLinkValueProp true if the property points to a link value (reification).
-      * @param predicates      the property's predicates.
-      * @param subjectType     the required type of the property's subject.
-      * @param objectType      the required type of the property's object.
-      * @return a [[ReadPropertyInfoV2]].
-      */
+     * Makes a [[ReadPropertyInfoV2]].
+     *
+     * @param propertyIri     the IRI of the property.
+     * @param propertyType    the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
+     * @param isResourceProp  true if this is a subproperty of `knora-api:hasValue` or `knora-api:hasLinkTo`.
+     * @param subPropertyOf   the set of direct superproperties of this property.
+     * @param isEditable      true if this is a Knora resource property that can be edited via the Knora API.
+     * @param isLinkValueProp true if the property points to a link value (reification).
+     * @param predicates      the property's predicates.
+     * @param subjectType     the required type of the property's subject.
+     * @param objectType      the required type of the property's object.
+     * @return a [[ReadPropertyInfoV2]].
+     */
     private def makeProperty(propertyIri: IRI,
                              propertyType: IRI,
                              isResourceProp: Boolean = false,

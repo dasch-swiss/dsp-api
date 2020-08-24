@@ -210,7 +210,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     text = SharedTestDataADM.createIntValueWithCustomPermissionsRequest(
                         resourceIri = SharedTestDataADM.AThing.iri,
                         intValue = 4,
-                        customPermissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+                        permissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
                     )
                 ),
                 TestDataFileContent(
@@ -347,12 +347,12 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 TestDataFileContent(
-                  filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-Iri-request"),
-                  text = SharedTestDataADM.createIntValueWithCustomValueIriRequest(
-                    resourceIri = SharedTestDataADM.AThing.iri,
-                    intValue = 30,
-                    valueIri = "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI"
-                  )
+                    filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createIntValueWithCustomValueIriRequest(
+                        resourceIri = SharedTestDataADM.AThing.iri,
+                        intValue = 30,
+                        valueIri = "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI"
+                    )
                 ),
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-UUID-request"),
@@ -371,23 +371,23 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 TestDataFileContent(
-                  filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-Iri-UUID-CreationDate-request"),
-                  text = SharedTestDataADM.createIntValueWithCustomIRIRequest(
-                    resourceIri = SharedTestDataADM.AThing.iri,
-                    intValue = 10,
-                    valueIri = "http://rdfh.ch/0001/a-thing/values/int-with-IRI",
-                    valueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
-                    valueCreationDate = Instant.parse("2020-06-04T12:58:54.502951Z")
-                  )
+                    filePath = TestDataFilePath.makeJsonPath("create-int-value-with-custom-Iri-UUID-CreationDate-request"),
+                    text = SharedTestDataADM.createIntValueWithCustomIRIRequest(
+                        resourceIri = SharedTestDataADM.AThing.iri,
+                        intValue = 10,
+                        valueIri = "http://rdfh.ch/0001/a-thing/values/int-with-IRI",
+                        valueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
+                        valueCreationDate = Instant.parse("2020-06-04T12:58:54.502951Z")
+                    )
                 ),
                 TestDataFileContent(
                   filePath = TestDataFilePath.makeJsonPath("create-link-value-with-custom-Iri-UUID-CreationDate-request"),
                   text = SharedTestDataADM.createLinkValueWithCustomIriRequest(
                     resourceIri = SharedTestDataADM.AThing.iri,
                     targetResourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
-                    customValueIri = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI",
-                    customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
-                    customValueCreationDate = Instant.parse("2020-06-04T11:36:54.502951Z")
+                    valueIri = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI",
+                    valueUUID = "IN4R19yYR0ygi3K2VEHpUQ",
+                    valueCreationDate = Instant.parse("2020-06-04T11:36:54.502951Z")
                   )
                 )
             )
@@ -452,6 +452,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * Returns JSON-LD requests for updating values in tests of generated client code.
      */
     private def updateValueTestRequests: Future[Set[TestDataFileContent]] = {
+        val customValueCreationDate = Instant.parse("2020-08-14T10:00:00Z")
+
         FastFuture.successful(
             Set(
                 TestDataFileContent(
@@ -463,12 +465,21 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("update-int-value-request-with-custom-creation-date"),
+                    text = SharedTestDataADM.updateIntValueWithCustomCreationDateRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.intValueIri,
+                        intValue = 5,
+                        valueCreationDate = customValueCreationDate
+                    )
+                ),
+                TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("update-int-value-with-custom-permissions-request"),
                     text = SharedTestDataADM.updateIntValueWithCustomPermissionsRequest(
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,
                         intValue = 6,
-                        customPermissions = "CR http://rdfh.ch/groups/0001/thing-searcher"
+                        permissions = "CR http://rdfh.ch/groups/0001/thing-searcher"
                     )
                 ),
                 TestDataFileContent(
@@ -476,7 +487,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     text = SharedTestDataADM.updateIntValuePermissionsOnlyRequest(
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,
-                        customPermissions = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
+                        permissions = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
                     )
                 ),
                 TestDataFileContent(
@@ -697,10 +708,20 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * Returns JSON-LD requests for deleting values in tests of generated client code.
      */
     private def deleteValueTestRequests: Future[Set[TestDataFileContent]] = {
+        val deleteDate = Instant.parse("2020-08-14T10:00:00Z")
+
         FastFuture.successful(
             Set(
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("delete-int-value-request"),
+                    text = SharedTestDataADM.deleteIntValueRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.intValueIri,
+                        maybeDeleteComment = Some("this value was incorrect")
+                    )
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("delete-int-value-request-with-custom-delete-date"),
                     text = SharedTestDataADM.deleteIntValueRequest(
                         resourceIri = SharedTestDataADM.TestDing.iri,
                         valueIri = SharedTestDataADM.TestDing.intValueIri,

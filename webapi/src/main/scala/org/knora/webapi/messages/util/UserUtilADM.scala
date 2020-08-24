@@ -31,20 +31,20 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Utility functions for working with users.
-  */
+ * Utility functions for working with users.
+ */
 object UserUtilADM {
     /**
-      * Allows a system admin or project admin to perform an operation as another user in a specified project.
-      * Checks whether the requesting user is a system admin or a project admin in the project, and if so,
-      * returns a [[UserADM]] representing the requested user. Otherwise, returns a failed future containing
-      * [[ForbiddenException]].
-      *
-      * @param requestingUser   the requesting user.
-      * @param requestedUserIri the IRI of the requested user.
-      * @param projectIri       the IRI of the project.
-      * @return a [[UserADM]] representing the requested user.
-      */
+     * Allows a system admin or project admin to perform an operation as another user in a specified project.
+     * Checks whether the requesting user is a system admin or a project admin in the project, and if so,
+     * returns a [[UserADM]] representing the requested user. Otherwise, returns a failed future containing
+     * [[ForbiddenException]].
+     *
+     * @param requestingUser   the requesting user.
+     * @param requestedUserIri the IRI of the requested user.
+     * @param projectIri       the IRI of the project.
+     * @return a [[UserADM]] representing the requested user.
+     */
     def switchToUser(requestingUser: UserADM,
                      requestedUserIri: IRI,
                      projectIri: IRI,
