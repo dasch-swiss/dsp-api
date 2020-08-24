@@ -52,7 +52,6 @@ case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
-    stringFormatter.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI"))
 
     if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 }
@@ -177,7 +176,6 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
-    stringFormatter.validateGroupIri(groupIri, throw BadRequestException(s"Invalid group IRI"))
 }
 
 /**
@@ -192,18 +190,17 @@ case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
                                                                 groupIri: IRI,
                                                                 requestingUser: UserADM
                                                                ) extends PermissionsResponderRequestADM
-
 /**
- * Create a single [[AdministrativePermissionADM]] (internal use).
+ * Create a single [[AdministrativePermissionADM]].
  *
  * @param createRequest  the API create request payload.
  * @param requestingUser the requesting user.
  * @param apiRequestID   the API request ID.
  */
-case class AdministrativePermissionCreateADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
-                                             requestingUser: UserADM,
-                                             apiRequestID: UUID
-                                            ) extends PermissionsResponderRequestADM {
+case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID
+                                                   ) extends PermissionsResponderRequestADM {
     // check if the requesting user is allowed to add the administrative permission
     // Allowed are SystemAdmin, ProjectAdmin and SystemUser
     if (
@@ -215,18 +212,6 @@ case class AdministrativePermissionCreateADM(createRequest: CreateAdministrative
         throw ForbiddenException("A new administrative permission can only be added by a system admin.")
     }
 }
-
-/**
- * Create a single [[AdministrativePermissionADM]].
- *
- * @param createRequest  the API create request payload.
- * @param requestingUser the requesting user.
- * @param apiRequestID   the API request ID.
- */
-case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID
-                                                   ) extends PermissionsResponderRequestADM
 
 
 // Object Access Permissions
@@ -322,7 +307,6 @@ case class DefaultObjectAccessPermissionGetADM(projectIri: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
-    stringFormatter.validateOptionalGroupIri(groupIri, throw BadRequestException(s"Invalid group IRI"))
     resourceClassIri match {
         case Some(iri) => if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid resource class IRI: $iri")

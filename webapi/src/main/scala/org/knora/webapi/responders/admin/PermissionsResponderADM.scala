@@ -61,8 +61,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID)
         case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-        case AdministrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
         case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
@@ -495,13 +494,13 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     private def administrativePermissionCreateADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
                                                   requestingUser: UserADM,
                                                   apiRequestID: UUID
-                                                 ): Future[Option[AdministrativePermissionADM]] = {
+                                                 ): Future[AdministrativePermissionCreateResponseADM] = {
         //log.debug("administrativePermissionCreateRequestADM")
 
         /**
          * The actual change project task run with an IRI lock.
          */
-        def createPermissionTask(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM): Future[Option[AdministrativePermissionADM]] =
+        def createPermissionTask(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM): Future[AdministrativePermissionCreateResponseADM] =
             for {
 
                 // does the permission already exist
@@ -558,13 +557,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 createPermissionResponse <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
 
                 // try to retrieve the newly created permission
-                response <- administrativePermissionForProjectGroupGetADM(
+                maybePermission <- administrativePermissionForProjectGroupGetADM(
                     createRequest.forProject,
                     createRequest.forGroup,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
-            } yield response
-
+                newAdminPermission: AdministrativePermissionADM = maybePermission.getOrElse(throw UpdateNotPerformedException(s"Permission was not created. Please report this as a possible bug."))
+            } yield AdministrativePermissionCreateResponseADM(
+                administrativePermission = newAdminPermission)
 
         for {
             // run the task with an IRI lock
@@ -574,31 +574,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 () => createPermissionTask(createRequest, requestingUser)
             )
         } yield taskResult
-    }
-
-    /**
-     * Adds a new administrative permission.
-     *
-     * @param createRequest     the administrative permission to add.
-     * @param requestingUser    the requesting user.
-     * @param apiRequestID      the API request ID.
-     * @return an [[AdministrativePermissionCreateResponseADM]]
-     */
-    private def administrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
-                                                         requestingUser: UserADM,
-                                                         apiRequestID: UUID
-                                                        ): Future[AdministrativePermissionCreateResponseADM] = {
-
-        for {
-            maybePermission: Option[AdministrativePermissionADM] <- administrativePermissionCreateADM(createRequest, requestingUser, apiRequestID)
-            permission = maybePermission match {
-                case Some(p) => p
-                case None => throw NotFoundException(s"Permission not found")
-            }
-        } yield AdministrativePermissionCreateResponseADM(
-            administrativePermission = permission
-        )
-
     }
 
     ///////////////////////////////////////////////////////////////////////////
