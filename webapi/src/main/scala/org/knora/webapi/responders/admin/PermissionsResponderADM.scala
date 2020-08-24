@@ -501,70 +501,69 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         /**
          * The actual change project task run with an IRI lock.
          */
-        def createPermissionTask(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM): Future[Option[AdministrativePermissionADM]] = for {
+        def createPermissionTask(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM): Future[Option[AdministrativePermissionADM]] =
+            for {
 
-            // does the permission already exist
-            checkResult <- administrativePermissionForProjectGroupGetADM(
-                createRequest.forProject,
-                createRequest.forGroup,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-            )
+                // does the permission already exist
+                checkResult <- administrativePermissionForProjectGroupGetADM(
+                    createRequest.forProject,
+                    createRequest.forGroup,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
 
-            _ = checkResult match {
-                case Some(ap) => throw DuplicateValueException(s"Permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists.")
-                case None => ()
-            }
+                _ = checkResult match {
+                    case Some(ap) => throw DuplicateValueException(s"Permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists.")
+                    case None => ()
+                }
 
-            // get project
-            projectIri = createRequest.forProject
-            maybeProjectF: Future[Option[ProjectADM]] = (responderManager ? ProjectGetADM(
-                ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                KnoraSystemInstances.Users.SystemUser
-            )).mapTo[Option[ProjectADM]]
+                // get project
+                projectIri = createRequest.forProject
+                maybeProjectF: Future[Option[ProjectADM]] = (responderManager ? ProjectGetADM(
+                    ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                    KnoraSystemInstances.Users.SystemUser
+                )).mapTo[Option[ProjectADM]]
 
-            maybeProject: Option[ProjectADM] <- maybeProjectF
+                maybeProject: Option[ProjectADM] <- maybeProjectF
 
-            // if it doesnt exist then throw an error
-            project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting request."))
+                // if it doesnt exist then throw an error
+                project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting request."))
 
-            // get group
-            groupIri = createRequest.forGroup
-            maybeGroupF = (responderManager ? GroupGetADM(
-                groupIri,
-                KnoraSystemInstances.Users.SystemUser
-            )).mapTo[Option[GroupADM]]
+                // get group
+                groupIri = createRequest.forGroup
+                maybeGroupF = (responderManager ? GroupGetADM(
+                    groupIri,
+                    KnoraSystemInstances.Users.SystemUser
+                )).mapTo[Option[GroupADM]]
 
-            maybeGroup: Option[GroupADM] <- maybeGroupF
+                maybeGroup: Option[GroupADM] <- maybeGroupF
 
-            // if it does not exist then throw an error
-            group: GroupADM = maybeGroup.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting request."))
+                // if it does not exist then throw an error
+                group: GroupADM = maybeGroup.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting request."))
 
 
-            newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
+                newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
 
-            // FIXME: Need to finish implementation
-            // Create the administrative permission.
-            createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewAdministrativePermission(
-                permissionsNamedGraphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph,
-                triplestore = settings.triplestoreType,
-                permissionClassIri = OntologyConstants.KnoraAdmin.Permission,
-                permissionIri = newPermissionIri,
-                forProject = project.id,
-                forGroup = group.id,
-                permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
-            ).toString
-            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
+                // Create the administrative permission.
+                createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewAdministrativePermission(
+                    permissionsNamedGraphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph,
+                    triplestore = settings.triplestoreType,
+                    permissionClassIri = OntologyConstants.KnoraAdmin.Permission,
+                    permissionIri = newPermissionIri,
+                    forProject = project.id,
+                    forGroup = group.id,
+                    permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
+                ).toString
+                // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
-            createPermissionResponse <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
+                createPermissionResponse <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
 
-            // try to retrieve the newly created permission
-            response <- administrativePermissionForProjectGroupGetADM(
-                createRequest.forProject,
-                createRequest.forGroup,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-            )
-
-        } yield response
+                // try to retrieve the newly created permission
+                response <- administrativePermissionForProjectGroupGetADM(
+                    createRequest.forProject,
+                    createRequest.forGroup,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+            } yield response
 
 
         for {

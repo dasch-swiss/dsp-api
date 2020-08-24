@@ -68,13 +68,9 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
         get {
             requestContext =>
-                val params = requestContext.request.uri.query().toMap
-                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield permissionType match {
-                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-                }
+                } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,

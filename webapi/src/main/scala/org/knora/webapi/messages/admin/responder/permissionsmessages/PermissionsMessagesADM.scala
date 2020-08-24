@@ -451,9 +451,9 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI
         throw BadRequestException(s"Invalid property IRI: $propertyIri")
     }
 
-    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
-        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
-    }
+//    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
+//        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
+//    }
 }
 
 /**
