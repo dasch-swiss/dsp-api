@@ -505,6 +505,15 @@ object SharedTestDataADM {
         selfjoin = false
     )
 
+    /* represents the full GroupInfoV1 of the Thing searcher group */
+    def thingSearcherGroup: GroupADM = GroupADM(
+        id = "http://rdfh.ch/groups/0001/thing-searcher",
+        name = "Thing searcher",
+        description = "A group for thing searchers.",
+        project = anythingProject,
+        status = true,
+        selfjoin = true
+    )
 
     /** **********************************/
     /** BEOL                           **/

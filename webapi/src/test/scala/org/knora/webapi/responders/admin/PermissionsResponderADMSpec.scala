@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Status.Failure
+import akka.actor.Status.{Failure, Success}
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
@@ -32,7 +32,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.{ANYTHING_PROJECT_IRI, _}
 import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.cache.CacheUtil
 import org.scalatest.PrivateMethodTester
@@ -206,12 +206,6 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         }
 
         "asked to create an administrative permission" should {
-            "fail and return a 'BadRequestException' when project does not exist" ignore {}
-
-            "fail and return a 'BadRequestException' when group does not exist" ignore {}
-
-            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
-
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
                 responderManager ! AdministrativePermissionCreateRequestADM(
                     createRequest = CreateAdministrativePermissionAPIRequestADM(
@@ -225,7 +219,20 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
             }
 
-            "create and return an administrative permission " ignore {}
+            "create and return an administrative permission" in {
+                responderManager ! AdministrativePermissionCreateRequestADM(
+                    createRequest = CreateAdministrativePermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forGroup = SharedTestDataADM.thingSearcherGroup.id,
+                        hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: AdministrativePermissionCreateResponseADM = expectMsgType[AdministrativePermissionCreateResponseADM]
+                assert(received.administrativePermission.forProject == ANYTHING_PROJECT_IRI)
+                assert(received.administrativePermission.forGroup == SharedTestDataADM.thingSearcherGroup.id)
+            }
         }
 
         "queried about object access permissions " should {

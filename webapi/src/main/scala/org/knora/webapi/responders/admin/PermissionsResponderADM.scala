@@ -495,7 +495,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                   requestingUser: UserADM,
                                                   apiRequestID: UUID
                                                  ): Future[AdministrativePermissionCreateResponseADM] = {
-        //log.debug("administrativePermissionCreateRequestADM")
+        log.debug("administrativePermissionCreateRequestADM")
 
         /**
          * The actual change project task run with an IRI lock.
@@ -516,53 +516,45 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }
 
                 // get project
-                projectIri = createRequest.forProject
-                maybeProjectF: Future[Option[ProjectADM]] = (responderManager ? ProjectGetADM(
-                    ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                    KnoraSystemInstances.Users.SystemUser
-                )).mapTo[Option[ProjectADM]]
-
-                maybeProject: Option[ProjectADM] <- maybeProjectF
+                maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                    requestingUser = KnoraSystemInstances.Users.SystemUser)
+                    ).mapTo[Option[ProjectADM]]
 
                 // if it doesnt exist then throw an error
-                project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting request."))
+                project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
                 // get group
-                groupIri = createRequest.forGroup
-                maybeGroupF = (responderManager ? GroupGetADM(
-                    groupIri,
+                maybeGroup <- (responderManager ? GroupGetADM(
+                    createRequest.forGroup,
                     KnoraSystemInstances.Users.SystemUser
                 )).mapTo[Option[GroupADM]]
 
-                maybeGroup: Option[GroupADM] <- maybeGroupF
-
                 // if it does not exist then throw an error
-                group: GroupADM = maybeGroup.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting request."))
-
+                group: GroupADM = maybeGroup.getOrElse(throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
 
                 newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
 
                 // Create the administrative permission.
                 createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewAdministrativePermission(
-                    permissionsNamedGraphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph,
+                    adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                     triplestore = settings.triplestoreType,
-                    permissionClassIri = OntologyConstants.KnoraAdmin.Permission,
+                    permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
                     permissionIri = newPermissionIri,
-                    forProject = project.id,
-                    forGroup = group.id,
+                    projectIri = project.id,
+                    groupIri = group.id,
                     permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
                 ).toString
+
                 // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
-                createPermissionResponse <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
+                _ <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
 
                 // try to retrieve the newly created permission
-                maybePermission <- administrativePermissionForProjectGroupGetADM(
-                    createRequest.forProject,
-                    createRequest.forGroup,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-                newAdminPermission: AdministrativePermissionADM = maybePermission.getOrElse(throw UpdateNotPerformedException(s"Permission was not created. Please report this as a possible bug."))
+                maybePermission <- administrativePermissionForIriGetRequestADM( administrativePermissionIri = newPermissionIri,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser,
+                    apiRequestID = apiRequestID)
+                newAdminPermission: AdministrativePermissionADM = maybePermission.administrativePermission
             } yield AdministrativePermissionCreateResponseADM(
                 administrativePermission = newAdminPermission)
 
