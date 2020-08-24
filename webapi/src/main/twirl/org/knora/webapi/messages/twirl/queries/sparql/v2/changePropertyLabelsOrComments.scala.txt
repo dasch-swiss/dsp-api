@@ -101,10 +101,11 @@ DELETE {
 }
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
-    BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@propertyIri") AS ?property)
 
     GRAPH ?ontologyNamedGraph {
+        BIND(IRI("@ontologyIri") AS ?ontology)
+        BIND(IRI("@propertyIri") AS ?property)
+
         ?ontology rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
