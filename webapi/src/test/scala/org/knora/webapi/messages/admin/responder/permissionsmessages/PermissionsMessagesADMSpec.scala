@@ -414,6 +414,84 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
         }
     }
 
+    "Default Object Access Permission Create Requests" should {
+        "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = "invalid-project-IRI",
+                        forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Invalid project IRI")
+        }
+        "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                        forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+                        hasPermissions = Set.empty[PermissionADM]
+                    ),
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Permissions needs to be supplied.")
+        }
+
+        "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not SystemAdmin" in {
+            val caught = intercept[ForbiddenException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                        forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+                        hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
+                    ),
+                    requestingUser = SharedTestDataADM.anythingUser2,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "A new default object access permission can only be added by a system admin.")
+        }
+
+        "return 'BadRequest' if the both group and resource class are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                        forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "If a group is defined, a resource class or a property cannot also be specified.")
+        }
+
+        "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                        forProperty = Some(ANYTHING_HasListItem_PROPERTY_LocalHost),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "If a group is defined, a resource class or a property cannot also be specified.")
+        }
+    }
+
     "querying the user's 'PermissionsDataADM' with 'hasPermissionFor'" should {
         "return true if the user is allowed to create a resource (root user)" in {
 

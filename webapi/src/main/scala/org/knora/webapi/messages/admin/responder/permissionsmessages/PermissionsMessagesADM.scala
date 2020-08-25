@@ -67,15 +67,21 @@ case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
  * @param hasPermissions   the permissions
  */
 case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
-                                                            forGroup: Option[IRI],
-                                                            forResourceClass: Option[IRI],
-                                                            forProperty: Option[IRI],
+                                                            forGroup: Option[IRI] = None,
+                                                            forResourceClass: Option[IRI] = None,
+                                                            forProperty: Option[IRI] = None,
                                                             hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol {
     def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
-
+    forGroup match {
+        case Some(iri:IRI) =>
+            if(forResourceClass.isDefined || forProperty.isDefined)
+                throw BadRequestException("If a group is defined, a resource class or a property cannot also be specified.")
+            else Some(iri)
+        case None => None
+    }
     if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 }
 
@@ -450,7 +456,18 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI
 case class DefaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
                                                          requestingUser: UserADM,
                                                          apiRequestID: UUID
-                                                        ) extends PermissionsResponderRequestADM
+                                                        ) extends PermissionsResponderRequestADM {
+    // check if the requesting user is allowed to add the default object access permission
+    // Allowed are SystemAdmin, ProjectAdmin and SystemUser
+    if (
+        !requestingUser.isSystemAdmin
+            && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
+            && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("A new default object access permission can only be added by a system admin.")
+    }
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
