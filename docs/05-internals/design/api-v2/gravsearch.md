@@ -155,8 +155,9 @@ If the client submits a count query, the prequery returns the overall number of 
 In a first step, before transforming the WHERE clause, query patterns must be further optimised by removing
 the `rdfs:type` statement for entities whose type could be inferred from a property since there would be no need 
 for explicit `rdfs:type` statements for them (unless the property from which the type of an entity must be inferred from 
-is wrapped in an `OPTIONAL` block). This optimisation has to happen in advance, because 
-otherwise `transformStatementInWhere` would expand the redundant `rdfs:type` statements.
+is wrapped in an `OPTIONAL` block). This optimisation takes the Gravsearch query as input (rather than the generated SPARQL),
+because it uses type information that refers to entities in the Gravsearch query, and the generated SPARQL might
+have different entities.
 
 Next, the Gravsearch query's WHERE clause is transformed and the prequery (SELECT and WHERE clause) is generated from this result.
 The transformation of the Gravsearch query's WHERE clause relies on the implementation of the abstract class `AbstractPrequeryGenerator`.
@@ -325,3 +326,9 @@ efficient. If Knora is not using the triplestore's inference,
 
 `SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor`
 with `knora-base:standoffTagHasStartParent*`.
+
+# Optimisation of generated SPARQL
+
+The triplestore-specific transformers in `SparqlTransformer.scala` can run optimisations on the generated SPARQL, in
+the method `optimiseQueryPatterns` inherited from `WhereTransformer`. For example, `moveLuceneToBeginning` moves
+Lucene queries to the beginning of the block in which they occur.

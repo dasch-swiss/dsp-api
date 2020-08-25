@@ -25,7 +25,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 /**
- * Methods and classes for Sparql transformation.
+ * Methods and classes for transforming generated SPARQL.
  */
 object SparqlTransformer {
 
@@ -61,8 +61,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            val luceneFirst = moveLuceneToBeginning(patterns)
-            moveIsDeletedToEnd(luceneFirst)
+            moveIsDeletedToEnd(moveLuceneToBeginning(patterns))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -101,8 +100,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            val luceneFirst: Seq[QueryPattern] = moveLuceneToBeginning(patterns)
-            moveIsDeletedToEnd(luceneFirst)
+            moveIsDeletedToEnd(moveLuceneToBeginning(patterns))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -204,7 +202,7 @@ object SparqlTransformer {
      */
     def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         val (luceneQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-            case luceneQueryPattern: LuceneQueryPattern => true
+            case _: LuceneQueryPattern => true
             case _ => false
         }
 
