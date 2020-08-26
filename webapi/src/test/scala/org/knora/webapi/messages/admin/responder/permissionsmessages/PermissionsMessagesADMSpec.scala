@@ -225,8 +225,6 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                 DefaultObjectAccessPermissionGetADM(
                     projectIri = "invalid-project-IRI",
                     groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                    resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-                    propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
             )
@@ -251,9 +249,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionGetADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                    groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     resourceClassIri = Some(SharedTestDataADM.customResourceIRI),
-                    propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
             )
@@ -265,14 +261,46 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionGetADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                    groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                    resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                     propertyIri = Some(SharedTestDataADM.customValueIRI),
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
             )
             // a value IRI is given instead of a property IRI, exception should be thrown.
             assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
+        }
+
+        "return 'BadRequest' if both group and resource class are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionGetADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                    resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
+            )
+            assert(caught.getMessage === s"Not allowed to supply groupIri and resourceClassIri together.")
+        }
+
+        "return 'BadRequest' if both group and property are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionGetADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                    propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost),
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
+            )
+            assert(caught.getMessage === s"Not allowed to supply groupIri and propertyIri together.")
+        }
+
+        "return 'BadRequest' if no group, resourceClassIri or propertyIri are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionGetADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
+            )
+            assert(caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.")
         }
 
         "return 'BadRequest' if the supplied permission IRI for DefaultObjectAccessPermissionForIriGetRequestADM is not valid" in {
@@ -501,7 +529,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                     apiRequestID = UUID.randomUUID()
                 )
             )
-            assert(caught.getMessage === "If a group is defined, a resource class or a property cannot also be specified.")
+            assert(caught.getMessage === "Not allowed to supply groupIri and resourceClassIri together.")
         }
 
         "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -510,14 +538,58 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                     createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
                         forProject = ANYTHING_PROJECT_IRI,
                         forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                        forProperty = Some(ANYTHING_HasListItem_PROPERTY_LocalHost),
+                        forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
             )
-            assert(caught.getMessage === "If a group is defined, a resource class or a property cannot also be specified.")
+            assert(caught.getMessage === "Not allowed to supply groupIri and propertyIri together.")
+        }
+
+        "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forProperty = Some(SharedTestDataADM.customValueIRI),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
+        }
+
+        "return 'BadRequest' if resourceClassIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forResourceClass = Some(SharedTestDataADM.customResourceIRI),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
+        }
+
+        "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Either a group, a resource class, a property, or a combination of resource class and property must be given.")
         }
     }
 

@@ -345,19 +345,6 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "create a DefaultObjectAccessPermission for project and property" ignore {}
 
-            "fail and return a 'BadRequestException' when project does not exist" ignore {}
-
-            "fail and return a  'BadRequestException' when resource class does not exist" ignore {}
-
-            "fail and return a  'BadRequestException' when property does not exist" ignore {}
-
-            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {
-
-                /* defining project level default object access permissions, so I need to be at least a member of the 'ProjectAdmin' group */
-
-                /* defining system level default object access permissions, so I need to be at least a member of the 'SystemAdmin' group */
-            }
-
             "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" ignore {}
         }
         "asked to delete a permission object " should {

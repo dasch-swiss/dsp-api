@@ -779,20 +779,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 // not found permission in the cache
 
                 for {
-                    // check if necessary field are not empty.
-                    _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
 
-                    /* check supplied parameters */
-                    _ = if (groupIri.isDefined && resourceClassIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together")
-                    _ = if (groupIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and propertyIri together")
-
-                    sparqlQueryString = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermission(
+                    sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermission(
                         triplestore = settings.triplestoreType,
                         projectIri = projectIri,
                         maybeGroupIri = groupIri,
                         maybeResourceClassIri = resourceClassIri,
                         maybePropertyIri = propertyIri
-                    ).toString()
+                    ).toString())
 
                     // _ = logger.debug(s"defaultObjectAccessPermissionGetADM - query: $sparqlQueryString")
 
@@ -1200,10 +1194,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             _ = logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result")
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
-//
+
 //    private def defaultObjectAccessPermissionCreateADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
-//
-//
+
 //    }
 
 }

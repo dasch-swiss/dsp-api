@@ -75,11 +75,31 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
+
     forGroup match {
         case Some(iri:IRI) =>
-            if(forResourceClass.isDefined || forProperty.isDefined)
-                throw BadRequestException("If a group is defined, a resource class or a property cannot also be specified.")
+            if(forResourceClass.isDefined)
+                throw throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
+            else if (forProperty.isDefined)
+                throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
             else Some(iri)
+        case None =>
+            if(forResourceClass.isEmpty && forProperty.isEmpty) {
+                throw BadRequestException("Either a group, a resource class, a property, or a combination of resource class and property must be given.")
+            } else None
+    }
+
+    forResourceClass match {
+        case Some(iri) => if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
+            throw BadRequestException(s"Invalid resource class IRI: $iri")
+        }
+        case None => None
+    }
+
+    forProperty match {
+        case Some(iri) => if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
+            throw BadRequestException(s"Invalid property IRI: $iri")
+        }
         case None => None
     }
     if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
@@ -298,9 +318,9 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI
  * @param propertyIri      the property.
  */
 case class DefaultObjectAccessPermissionGetADM(projectIri: IRI,
-                                               groupIri: Option[IRI],
-                                               resourceClassIri: Option[IRI],
-                                               propertyIri: Option[IRI],
+                                               groupIri: Option[IRI] = None,
+                                               resourceClassIri: Option[IRI] = None,
+                                               propertyIri: Option[IRI] = None,
                                                requestingUser: UserADM) extends PermissionsResponderRequestADM {
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
@@ -313,19 +333,33 @@ case class DefaultObjectAccessPermissionGetADM(projectIri: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
+    groupIri match {
+        case Some(iri:IRI) =>
+            if(resourceClassIri.isDefined)
+                throw throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
+            else if (propertyIri.isDefined)
+                throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
+            else Some(iri)
+        case None =>
+            if(resourceClassIri.isEmpty && propertyIri.isEmpty) {
+                throw BadRequestException("Either a group, a resource class, a property, or a combination of resource class and property must be given.")
+            } else None
+    }
+
     resourceClassIri match {
         case Some(iri) => if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid resource class IRI: $iri")
         }
         case None => None
     }
+
     propertyIri match {
         case Some(iri) => if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid property IRI: $iri")
         }
         case None => None
     }
-
 }
 
 /**
