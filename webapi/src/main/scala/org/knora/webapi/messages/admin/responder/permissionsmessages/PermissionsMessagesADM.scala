@@ -764,8 +764,8 @@ case class AdministrativePermissionADM(iri: IRI,
  * @param forValue       the IRI of the value.
  * @param hasPermissions the permissions.
  */
-case class ObjectAccessPermissionADM(forResource: Option[IRI],
-                                     forValue: Option[IRI],
+case class ObjectAccessPermissionADM(forResource: Option[IRI] = None,
+                                     forValue: Option[IRI] = None,
                                      hasPermissions: Set[PermissionADM]
                                     ) extends Jsonable with PermissionsADMJsonProtocol {
 
@@ -784,9 +784,9 @@ case class ObjectAccessPermissionADM(forResource: Option[IRI],
  */
 case class DefaultObjectAccessPermissionADM(iri: IRI,
                                             forProject: IRI,
-                                            forGroup: Option[IRI],
-                                            forResourceClass: Option[IRI],
-                                            forProperty: Option[IRI],
+                                            forGroup: Option[IRI] = None,
+                                            forResourceClass: Option[IRI] = None,
+                                            forProperty: Option[IRI] = None,
                                             hasPermissions: Set[PermissionADM]) {
 
     /**

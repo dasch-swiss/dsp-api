@@ -33,7 +33,7 @@ import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.{ANYTHING_PROJECT_IRI, _}
-import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.cache.CacheUtil
 import org.scalatest.PrivateMethodTester
 
@@ -339,13 +339,67 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
         "asked to create a default object access permission" should {
 
-            "create a DefaultObjectAccessPermission for project and group" ignore {}
+            "create a DefaultObjectAccessPermission for project and group" in {
+                responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+                        hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionCreateResponseADM = expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
+                assert(received.defaultObjectAccessPermission.forProject == ANYTHING_PROJECT_IRI)
+                assert(received.defaultObjectAccessPermission.forGroup.contains(SharedTestDataADM.thingSearcherGroup.id))
+                assert(received.defaultObjectAccessPermission.hasPermissions.contains(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)))
+            }
 
-            "create a DefaultObjectAccessPermission for project and resource class" ignore {}
+            "create a DefaultObjectAccessPermission for project and resource class" in {
+                responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = IMAGES_PROJECT_IRI,
+                        forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
+                        hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionCreateResponseADM = expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
+                assert(received.defaultObjectAccessPermission.forProject == IMAGES_PROJECT_IRI)
+                assert(received.defaultObjectAccessPermission.forResourceClass.contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS))
+                assert(received.defaultObjectAccessPermission.hasPermissions.contains(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)))
 
-            "create a DefaultObjectAccessPermission for project and property" ignore {}
+            }
 
-            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" ignore {}
+            "create a DefaultObjectAccessPermission for project and property" in {
+                responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = IMAGES_PROJECT_IRI,
+                        forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionCreateResponseADM = expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
+                assert(received.defaultObjectAccessPermission.forProject == IMAGES_PROJECT_IRI)
+                assert(received.defaultObjectAccessPermission.forProperty.contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY))
+                assert(received.defaultObjectAccessPermission.hasPermissions.contains(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)))
+            }
+
+            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" in {
+                responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                        forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                expectMsg(Failure(DuplicateValueException(s"Default object access permission already exists.")))
+            }
         }
         "asked to delete a permission object " should {
 
@@ -410,7 +464,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     projectIri = ANYTHING_PROJECT_IRI,
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     propertyIri = "http://www.knora.org/ontology/0001/anything#hasInterval",
-                    targetUser = SharedTestDataADM.anythingUser1,
+                    targetUser = SharedTestDataADM.anythingUser2,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"))
@@ -420,7 +474,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                     projectIri = ANYTHING_PROJECT_IRI,
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
-                    targetUser = SharedTestDataADM.anythingUser1,
+                    targetUser = SharedTestDataADM.anythingUser2,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"))
@@ -442,7 +496,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     projectIri = ANYTHING_PROJECT_IRI,
                     resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
                     propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
-                    targetUser = SharedTestDataADM.anythingUser1,
+                    targetUser = SharedTestDataADM.anythingUser2,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"))
@@ -468,7 +522,6 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 val result: Set[PermissionADM] = Await.result(f, 1.seconds)
                 result should equal(expected)
             }
-
         }
     }
 }

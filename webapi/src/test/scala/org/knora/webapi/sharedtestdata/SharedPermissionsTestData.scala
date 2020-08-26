@@ -41,7 +41,7 @@ object SharedPermissionsTestData {
     val perm001_d1: doap =
         doap(
             iri = "http://rdfh.ch/permissions/0000/001-d1",
-            p = DefaultObjectAccessPermissionADM(iri = "http://rdfh.ch/permissions/0000/001-d1", forProject = OntologyConstants.KnoraAdmin.SystemProject, forGroup = None, forResourceClass = Some(OntologyConstants.KnoraBase.LinkObj), forProperty = None, hasPermissions = Set(
+            p = DefaultObjectAccessPermissionADM(iri = "http://rdfh.ch/permissions/0000/001-d1", forProject = OntologyConstants.KnoraAdmin.SystemProject, forResourceClass = Some(OntologyConstants.KnoraBase.LinkObj), hasPermissions = Set(
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
                                 PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
                                 PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
@@ -51,7 +51,7 @@ object SharedPermissionsTestData {
     val perm001_d2: doap =
         doap(
             iri = "http://rdfh.ch/permissions/0000/001-d2",
-            p = DefaultObjectAccessPermissionADM(iri = "http://rdfh.ch/permissions/0000/001-d2", forProject = OntologyConstants.KnoraAdmin.SystemProject, forGroup = None, forResourceClass = Some(OntologyConstants.KnoraBase.Region), forProperty = None, hasPermissions = Set(
+            p = DefaultObjectAccessPermissionADM(iri = "http://rdfh.ch/permissions/0000/001-d2", forProject = OntologyConstants.KnoraAdmin.SystemProject, forResourceClass = Some(OntologyConstants.KnoraBase.Region), hasPermissions = Set(
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
                                 PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
                                 PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
@@ -61,7 +61,7 @@ object SharedPermissionsTestData {
     val perm001_d3: doap =
         doap(
             iri = "http://rdfh.ch/permissions/0000/001-d3",
-            p = DefaultObjectAccessPermissionADM(iri = "http://rdfh.ch/permissions/0000/001-d3", forProject = OntologyConstants.KnoraAdmin.SystemProject, forGroup = None, forResourceClass = None, forProperty = Some(OntologyConstants.KnoraBase.HasStillImageFileValue), hasPermissions = Set(
+            p = DefaultObjectAccessPermissionADM(iri = "http://rdfh.ch/permissions/0000/001-d3", forProject = OntologyConstants.KnoraAdmin.SystemProject, forProperty = Some(OntologyConstants.KnoraBase.HasStillImageFileValue), hasPermissions = Set(
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.Creator),
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
                                 PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
@@ -121,8 +121,6 @@ object SharedPermissionsTestData {
             iri = "http://rdfh.ch/permissions/00FF/a4",
             forProject = IMAGES_PROJECT_IRI,
             forGroup = Some("http://rdfh.ch/groups/00FF/images-reviewer"),
-            forResourceClass = None,
-            forProperty = None,
             hasPermissions = Set(PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.Creator))
         )
     )
@@ -134,8 +132,6 @@ object SharedPermissionsTestData {
                 iri = "http://rdfh.ch/permissions/00FF/d1",
                 forProject = IMAGES_PROJECT_IRI,
                 forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                forResourceClass = None,
-                forProperty = None,
                 hasPermissions = Set(
                                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -151,7 +147,6 @@ object SharedPermissionsTestData {
                 iri = "http://rdfh.ch/permissions/00FF/d2",
                 forProject = IMAGES_PROJECT_IRI,
                 forGroup = Some(OntologyConstants.KnoraAdmin.KnownUser),
-                forResourceClass = None, forProperty = None,
                 hasPermissions = Set(
                     PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                     PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -193,7 +188,6 @@ object SharedPermissionsTestData {
             iri = "http://rdfh.ch/0803/00014b43f902", // incunabula:page
             p = ObjectAccessPermissionADM(
                 forResource = Some("http://rdfh.ch/0803/00014b43f902"),
-                forValue = None,
                 hasPermissions = Set(
                                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -207,7 +201,6 @@ object SharedPermissionsTestData {
         oap(
             iri = "http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b", // knora-base:TextValue
             p = ObjectAccessPermissionADM(
-                forResource = None,
                 forValue = Some("http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b"),
                 hasPermissions = Set(
                                     PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser),
@@ -225,8 +218,6 @@ object SharedPermissionsTestData {
                 iri = "http://rdfh.ch/permissions/0803/003-d1",
                 forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                forResourceClass = None,
-                forProperty = None,
                 hasPermissions = Set(
                     PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                     PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -241,9 +232,7 @@ object SharedPermissionsTestData {
             p = DefaultObjectAccessPermissionADM(
                 iri = "http://rdfh.ch/permissions/0803/003-d2",
                 forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                forGroup = None,
                 forResourceClass = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
-                forProperty = None,
                 hasPermissions = Set(
                     PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                     PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -258,9 +247,7 @@ object SharedPermissionsTestData {
             p = DefaultObjectAccessPermissionADM(
                 iri = "http://rdfh.ch/permissions/0803/003-d3",
                 forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                forGroup = None,
                 forResourceClass = Some(INCUNABULA_PAGE_RESOURCE_CLASS),
-                forProperty = None,
                 hasPermissions = Set(
                     PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                     PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -303,8 +290,6 @@ object SharedPermissionsTestData {
                 iri = "http://rdfh.ch/permissions/0001/005-d1",
                 forProject = SharedTestDataV1.ANYTHING_PROJECT_IRI,
                 forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                forResourceClass = None,
-                forProperty = None,
                 hasPermissions = Set(
                                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
                                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),

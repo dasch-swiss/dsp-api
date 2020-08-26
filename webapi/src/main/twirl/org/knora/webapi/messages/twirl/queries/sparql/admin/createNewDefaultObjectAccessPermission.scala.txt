@@ -20,15 +20,17 @@
 @import org.knora.webapi.IRI
 
 @*
- * Creates a new administrative permission.
+ * Creates a new default object access permission.
  * @param adminNamedGraphIri the name of the graph into which the new project will be created.
  * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
                       results from the WHERE clause of the update.
  * @param permissionIri the Iri of the new administrative permission.
  * @param permissionClassIri the IRI of the OWL class that the new administrative permission should belong to.
  * @param projectIri the project.
- * @param groupIri the group.
- * @param permission the permission.
+ * @param maybeGroupIri the group's IRI.
+ * @param maybeResourceClassIri the resource's class IRI.
+ * @param maybePropertyIri the property's IRI.
+ * @param permissions the permission.
  *
  *@
 @(adminNamedGraphIri: IRI,
@@ -36,7 +38,9 @@
   permissionIri: IRI,
   permissionClassIri: IRI,
   projectIri: IRI,
-  groupIri: IRI,
+  maybeGroupIri: Option[IRI],
+  maybeResourceClassIri: Option[IRI],
+  maybePropertyIri: Option[IRI],
   permissions: String)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -51,9 +55,15 @@ INSERT {
         ?permissionIri rdf:type ?permissionClassIri .
 
         ?permissionIri knora-admin:forProject ?projectIri .
-
-        ?permissionIri knora-admin:forGroup ?groupIri .
-
+        @if(maybeGroupIri.nonEmpty) {
+            ?permissionIri knora-admin:forGroup <@maybeGroupIri.get> .
+        }
+        @if(maybeResourceClassIri.nonEmpty) {
+            ?permissionIri knora-admin:forResourceClass <@maybeResourceClassIri.get> .
+        }
+        @if(maybePropertyIri.nonEmpty) {
+            ?permissionIri knora-admin:forProperty <@maybePropertyIri.get> .
+        }
         ?permissionIri knora-base:hasPermissions "@permissions"^^xsd:string .
     }
 }
@@ -76,5 +86,4 @@ WHERE {
     BIND(IRI("@permissionIri") AS ?permissionIri)
     BIND(IRI("@permissionClassIri") AS ?permissionClassIri)
     BIND(IRI("@projectIri") AS ?projectIri)
-    BIND(IRI("@groupIri") AS ?groupIri)
 }

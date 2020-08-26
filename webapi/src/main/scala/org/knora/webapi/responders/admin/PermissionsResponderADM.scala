@@ -69,7 +69,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
-//        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateADM(createRequest, requestingUser, apiRequestID)
+        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateADM(createRequest, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -845,8 +845,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                            requestingUser: UserADM
                                                           ): Future[DefaultObjectAccessPermissionGetResponseADM] = {
 
-        // FIXME: Check user's permission for operation (issue #370)
-
         defaultObjectAccessPermissionGetADM(projectIri, groupIri, resourceClassIri, propertyIri)
             .mapTo[Option[DefaultObjectAccessPermissionADM]]
             .flatMap {
@@ -1195,9 +1193,72 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
 
-//    private def defaultObjectAccessPermissionCreateADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
+    private def defaultObjectAccessPermissionCreateADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
 
-//    }
+            /**
+             * The actual change project task run with an IRI lock.
+             */
+            def createPermissionTask(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
+                                     requestingUser: UserADM): Future[DefaultObjectAccessPermissionCreateResponseADM] =
+                for {
+                    checkResult <- defaultObjectAccessPermissionGetADM(
+                        createRequest.forProject,
+                        createRequest.forGroup,
+                        createRequest.forResourceClass,
+                        createRequest.forProperty)
+
+                    _ = checkResult match {
+                        case Some(doap) => throw DuplicateValueException(s"Default object access permission already exists.")
+                        case None => ()
+                    }
+
+                    // get project
+                    maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
+                        identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                        requestingUser = KnoraSystemInstances.Users.SystemUser)
+                        ).mapTo[Option[ProjectADM]]
+
+                    // if it doesnt exist then throw an error
+                    project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
+
+                    newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
+
+                    // Create the administrative permission.
+                    createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewDefaultObjectAccessPermission(
+                        adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                        triplestore = settings.triplestoreType,
+                        permissionIri = newPermissionIri,
+                        permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
+                        projectIri = project.id,
+                        maybeGroupIri = createRequest.forGroup,
+                        maybeResourceClassIri = createRequest.forResourceClass,
+                        maybePropertyIri = createRequest.forProperty,
+                        permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.OAP)
+                    ).toString
+
+                    _ <- (storeManager ? SparqlUpdateRequest(createNewDefaultObjectAccessPermissionSparqlString)).mapTo[SparqlUpdateResponse]
+
+                    // try to retrieve the newly created permission
+                    maybePermission <- defaultObjectAccessPermissionGetADM(
+                        createRequest.forProject,
+                        createRequest.forGroup,
+                        createRequest.forResourceClass,
+                        createRequest.forProperty)
+
+                    newDefaultObjectAcessPermission: DefaultObjectAccessPermissionADM = maybePermission.getOrElse(throw
+                        BadRequestException("Requested default object access permission could not be created, report this as a possible bug."))
+
+                } yield DefaultObjectAccessPermissionCreateResponseADM(
+                    defaultObjectAccessPermission = newDefaultObjectAcessPermission)
+            for {
+                // run the task with an IRI lock
+                taskResult <- IriLocker.runWithIriLock(
+                    apiRequestID,
+                    PERMISSIONS_GLOBAL_LOCK_IRI,
+                    () => createPermissionTask(createRequest, requestingUser)
+                )
+            } yield taskResult
+    }
 
 }
 

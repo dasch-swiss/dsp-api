@@ -568,14 +568,14 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                 DefaultObjectAccessPermissionCreateRequestADM(
                     createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
                         forProject = ANYTHING_PROJECT_IRI,
-                        forResourceClass = Some(SharedTestDataADM.customResourceIRI),
+                        forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
             )
-            assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
+            assert(caught.getMessage === s"Invalid resource class IRI: ${ANYTHING_THING_RESOURCE_CLASS_LocalHost}")
         }
 
         "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM" in {

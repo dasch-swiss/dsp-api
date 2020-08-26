@@ -24,9 +24,9 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param projectIri the project's IRI.
- * @param groupIri the group's IRI.
- * @param resourceClassIri the resource's class IRI.
- * @param propertyIri the property's IRI.
+ * @param maybeGroupIri the group's IRI.
+ * @param maybeResourceClassIri the resource's class IRI.
+ * @param maybePropertyIri the property's IRI.
  *@
 @(triplestore: String,
   projectIri: IRI,
