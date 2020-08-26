@@ -69,7 +69,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
-//        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => createDefaultObjectAccessPermissionADM(createRequest, requestingUser, apiRequestID)
+//        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateADM(createRequest, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -997,16 +997,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                                    ): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
         // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetADM (input) - projectIRI: $projectIri, resourceClassIRI: $resourceClassIri, propertyIRI: $propertyIri, entityType: $entityType, targetUser: $targetUser")
         for {
-            // check if necessary field are defined.
-            _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
-            _ = if (entityType == PropertyEntityType && propertyIri.isEmpty) {
-                throw BadRequestException("PropertyTypeIri needs to be supplied")
-            }
-            _ = if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
-
-
             /* Get the groups the user is member of. */
-            userGroupsOption: Option[Seq[IRI]] = targetUser.permissions.groupsPerProject.get(projectIri)
+            userGroupsOption: Option[Seq[IRI]] <- Future(targetUser.permissions.groupsPerProject.get(projectIri))
             userGroups: Seq[IRI] = userGroupsOption match {
                 case Some(groups) => groups
                 case None => Seq.empty[IRI]
@@ -1208,9 +1200,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             _ = logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result")
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
-    
-//    private def createDefaultObjectAccessPermissionADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
-//        // FIXME: Needs implementation
+//
+//    private def defaultObjectAccessPermissionCreateADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
+//
+//
 //    }
 
 }

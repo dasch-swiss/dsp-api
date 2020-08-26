@@ -395,9 +395,12 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
-   if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraEntityIri) {
+
+    if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
     }
+
+    if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
 
 //    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
 //        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
@@ -441,7 +444,10 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI
         throw BadRequestException(s"Invalid property IRI: $propertyIri")
     }
 
-//    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
+    if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
+
+
+    //    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
 //        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
 //    }
 }

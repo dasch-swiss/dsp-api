@@ -345,6 +345,30 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
 //            )
 //            assert(caught.getMessage === "Target user is not a member of the same project as the requesting user.")
 //        }
+        "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForResourceClassGetADM is an Anonymous user" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
+                    targetUser = SharedTestDataADM.anonymousUser,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
+            )
+            assert(caught.getMessage === s"Anonymous Users are not allowed.")
+        }
+
+        "return 'BadRequest' if the supplied project IRI DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionsStringForPropertyGetADM(
+                    projectIri = "",
+                    resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
+                    propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
+                    targetUser = SharedTestDataADM.imagesUser02,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
+            )
+            assert(caught.getMessage === "Invalid project IRI")
+        }
 
         "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
             val caught = intercept[BadRequestException](
@@ -360,6 +384,20 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
         }
 
+        "return 'BadRequest' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not in the same project as the target user" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionsStringForPropertyGetADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
+                    propertyIri = SharedTestDataADM.customValueIRI,
+                    targetUser = SharedTestDataADM.imagesReviewerUser,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
+            )
+            // a value IRI is given instead of a property IRI, exception should be thrown.
+            assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
+        }
+
         "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not SystemAdmin" in {
             val caught = intercept[ForbiddenException](
                 DefaultObjectAccessPermissionsStringForPropertyGetADM(
@@ -373,18 +411,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
         }
 
-        "return 'BadRequest' if the supplied project IRI DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
-            val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = "invalid-project-IRI",
-                    resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-                    propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
-                    targetUser = SharedTestDataADM.imagesUser02,
-                    requestingUser = SharedTestDataADM.imagesUser01
-                )
-            )
-            assert(caught.getMessage === "Invalid project IRI")
-        }
+
 
 //        "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not in the same project as the target user" in {
 //            val caught = intercept[ForbiddenException](
@@ -399,19 +426,21 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
 //            assert(caught.getMessage === "Target user is not a member of the same project as the requesting user.")
 //        }
 
-        "return 'BadRequest' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not in the same project as the target user" in {
+
+
+        "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForPropertyGetADM is an Anonymous user" in {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
                     resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-                    propertyIri = SharedTestDataADM.customValueIRI,
-                    targetUser = SharedTestDataADM.imagesReviewerUser,
+                    propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
+                    targetUser = SharedTestDataADM.anonymousUser,
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
             )
-            // a value IRI is given instead of a property IRI, exception should be thrown.
-            assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
+            assert(caught.getMessage === s"Anonymous Users are not allowed.")
         }
+
     }
 
     "Default Object Access Permission Create Requests" should {
