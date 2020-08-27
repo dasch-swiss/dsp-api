@@ -219,9 +219,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
             }
 
-            "create and return an administrative permission" in {
+            "create and return an administrative permission with a custom IRI" in {
                 responderManager ! AdministrativePermissionCreateRequestADM(
                     createRequest = CreateAdministrativePermissionAPIRequestADM(
+                        id = Some("http://rdfh.ch/permissions/0001/AP-with-customIri"),
                         forProject = ANYTHING_PROJECT_IRI,
                         forGroup = SharedTestDataADM.thingSearcherGroup.id,
                         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -230,6 +231,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     apiRequestID = UUID.randomUUID()
                 )
                 val received: AdministrativePermissionCreateResponseADM = expectMsgType[AdministrativePermissionCreateResponseADM]
+                assert(received.administrativePermission.iri == "http://rdfh.ch/permissions/0001/AP-with-customIri")
                 assert(received.administrativePermission.forProject == ANYTHING_PROJECT_IRI)
                 assert(received.administrativePermission.forGroup == SharedTestDataADM.thingSearcherGroup.id)
             }
@@ -353,6 +355,24 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 assert(received.defaultObjectAccessPermission.forProject == ANYTHING_PROJECT_IRI)
                 assert(received.defaultObjectAccessPermission.forGroup.contains(SharedTestDataADM.thingSearcherGroup.id))
                 assert(received.defaultObjectAccessPermission.hasPermissions.contains(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)))
+            }
+
+            "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
+                responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        id = Some("http://rdfh.ch/permissions/0001/DOAP-with-customIri"),
+                        forProject = ANYTHING_PROJECT_IRI,
+                        forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
+                        hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionCreateResponseADM = expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
+                assert(received.defaultObjectAccessPermission.iri == "http://rdfh.ch/permissions/0001/DOAP-with-customIri")
+                assert(received.defaultObjectAccessPermission.forProject == ANYTHING_PROJECT_IRI)
+                assert(received.defaultObjectAccessPermission.forGroup.contains(OntologyConstants.KnoraAdmin.UnknownUser))
+                assert(received.defaultObjectAccessPermission.hasPermissions.contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)))
             }
 
             "create a DefaultObjectAccessPermission for project and resource class" in {

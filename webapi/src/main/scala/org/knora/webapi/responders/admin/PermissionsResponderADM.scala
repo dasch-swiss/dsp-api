@@ -25,7 +25,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
@@ -36,6 +36,7 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, 
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.messages.IriConversions._
 
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
@@ -533,7 +534,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 // if it does not exist then throw an error
                 group: GroupADM = maybeGroup.getOrElse(throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
 
-                newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
+                customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+                newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri, stringFormatter.makeRandomPermissionIri(project.shortcode))
 
                 // Create the administrative permission.
                 createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewAdministrativePermission(
@@ -1221,9 +1223,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     // if it doesnt exist then throw an error
                     project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
-                    newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
+                    customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+                    newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri, stringFormatter.makeRandomPermissionIri(project.shortcode))
 
-                    // Create the administrative permission.
+                    // Create the default object access permission.
                     createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewDefaultObjectAccessPermission(
                         adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                         triplestore = settings.triplestoreType,

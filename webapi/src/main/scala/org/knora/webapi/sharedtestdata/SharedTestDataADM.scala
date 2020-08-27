@@ -723,6 +723,24 @@ object SharedTestDataADM {
            |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
            |}""".stripMargin
 
+    val createAdministrativePermissionWithCustomIriRequest: String =
+        s"""{
+           |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+           |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+           |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+           |}""".stripMargin
+
+    val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
+        s"""{
+           |    "id": "http://rdfh.ch/permissions/0001/DOAP-with-customIri",
+           |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+           |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "forProperty":null,
+           |    "forResourceClass":null,
+           |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+           |}""".stripMargin
+
     def updateListInfoRequest(listIri: IRI): String = {
         s"""{
            |    "listIri": "$listIri",

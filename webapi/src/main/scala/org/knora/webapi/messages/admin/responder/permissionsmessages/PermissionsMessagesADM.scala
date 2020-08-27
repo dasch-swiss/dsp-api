@@ -45,7 +45,8 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
  * @param forGroup       the group for which this permission is created.
  * @param hasPermissions the set of permissions.
  */
-case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
+case class CreateAdministrativePermissionAPIRequestADM(id: Option[IRI] = None,
+                                                       forProject: IRI,
                                                        forGroup: IRI,
                                                        hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol{
 
@@ -53,7 +54,7 @@ case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
-
+    stringFormatter.validateOptionalPermissionIri(id, throw BadRequestException(s"Invalid permission IRI"))
     if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 }
 
@@ -67,7 +68,8 @@ case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
  * @param forProperty      the property
  * @param hasPermissions   the permissions
  */
-case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
+case class CreateDefaultObjectAccessPermissionAPIRequestADM(id: Option[IRI] = None,
+                                                            forProject: IRI,
                                                             forGroup: Option[IRI] = None,
                                                             forResourceClass: Option[IRI] = None,
                                                             forProperty: Option[IRI] = None,
@@ -76,7 +78,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
-
+    stringFormatter.validateOptionalPermissionIri(id, throw BadRequestException(s"Invalid permission IRI"))
     forGroup match {
         case Some(iri:IRI) =>
             if(forResourceClass.isDefined)
@@ -992,9 +994,9 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
         }
     }
 
-    implicit val createAdministrativePermissionAPIRequestADMFormat: RootJsonFormat[CreateAdministrativePermissionAPIRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateAdministrativePermissionAPIRequestADM, "forProject", "forGroup", "hasPermissions")))
+    implicit val createAdministrativePermissionAPIRequestADMFormat: RootJsonFormat[CreateAdministrativePermissionAPIRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateAdministrativePermissionAPIRequestADM, "id", "forProject", "forGroup", "hasPermissions")))
 //    implicit val changeAdministrativePermissionAPIRequestADMFormat: RootJsonFormat[ChangeAdministrativePermissionAPIRequestADM] = jsonFormat(ChangeAdministrativePermissionAPIRequestADM, "iri", "forProject", "forGroup","hasOldPermissions", "hasNewPermissions")
-    implicit val createDefaultObjectAccessPermissionAPIRequestADMFormat: RootJsonFormat[CreateDefaultObjectAccessPermissionAPIRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateDefaultObjectAccessPermissionAPIRequestADM, "forProject", "forGroup", "forResourceClass", "forProperty", "hasPermissions")))
+    implicit val createDefaultObjectAccessPermissionAPIRequestADMFormat: RootJsonFormat[CreateDefaultObjectAccessPermissionAPIRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateDefaultObjectAccessPermissionAPIRequestADM, "id", "forProject", "forGroup", "forResourceClass", "forProperty", "hasPermissions")))
 //    implicit val changeDefaultObjectAccessPermissionAPIRequestADMFormat: RootJsonFormat[ChangeDefaultObjectAccessPermissionAPIRequestADM] = jsonFormat(ChangeDefaultObjectAccessPermissionAPIRequestADM, "iri", "forProject", "forGroup", "forResourceClass", "forProperty", "hasPermissions")
     implicit val permissionADMFormat: JsonFormat[PermissionADM] = jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
     // apply needed because we have an companion object of a case class

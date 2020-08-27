@@ -91,17 +91,6 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === "Invalid project IRI")
         }
 
-//        "return 'BadRequest' if the supplied group IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
-//            val caught = intercept[BadRequestException](
-//                AdministrativePermissionForProjectGroupGetADM(
-//                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-//                    groupIri = "invalid-group-iri",
-//                    requestingUser = SharedTestDataADM.imagesUser01
-//                )
-//            )
-//            assert(caught.getMessage === "Invalid group IRI")
-//        }
-
         "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not SystemAdmin" in {
             val caught = intercept[ForbiddenException](
                 AdministrativePermissionForProjectGroupGetADM(
@@ -130,20 +119,21 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === "Invalid project IRI")
         }
 
-//        "return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid" in {
-//            val caught = intercept[BadRequestException](
-//                AdministrativePermissionCreateRequestADM(
-//                    createRequest = CreateAdministrativePermissionAPIRequestADM(
-//                        forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
-//                        forGroup = "invalid-group-IRI",
-//                        hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-//                    ),
-//                    requestingUser = SharedTestDataADM.imagesUser01,
-//                    apiRequestID = UUID.randomUUID()
-//                )
-//            )
-//            assert(caught.getMessage === "Invalid group IRI")
-//        }
+        "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionCreateRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                AdministrativePermissionCreateRequestADM(
+                    createRequest = CreateAdministrativePermissionAPIRequestADM(
+                        id = Some("invalid-permission-IRI"),
+                        forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+                        hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Invalid permission IRI")
+        }
 
         "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
             val caught = intercept[BadRequestException](
@@ -230,20 +220,6 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             )
             assert(caught.getMessage === "Invalid project IRI")
         }
-
-//        "return 'BadRequest' if the supplied optional group IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
-//            val caught = intercept[BadRequestException](
-//                DefaultObjectAccessPermissionGetADM(
-//                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-//                    groupIri = Some(SharedTestDataADM.imagesUser01.id),
-//                    resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-//                    propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-//                    requestingUser = SharedTestDataADM.imagesUser01
-//                )
-//            )
-//            // user IRI is given instead of group IRI, exception should be thrown.
-//            assert(caught.getMessage === "Invalid group IRI")
-//        }
 
         "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
@@ -362,17 +338,6 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === "Invalid project IRI")
         }
 
-//        "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForResourceClassGetADM is not in the same project as the target user" in {
-//            val caught = intercept[ForbiddenException](
-//                DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-//                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-//                    resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-//                    targetUser = SharedTestDataADM.anythingUser1,
-//                    requestingUser = SharedTestDataADM.imagesUser01
-//                )
-//            )
-//            assert(caught.getMessage === "Target user is not a member of the same project as the requesting user.")
-//        }
         "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForResourceClassGetADM is an Anonymous user" in {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionsStringForResourceClassGetADM(
@@ -439,23 +404,6 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
         }
 
-
-
-//        "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not in the same project as the target user" in {
-//            val caught = intercept[ForbiddenException](
-//                DefaultObjectAccessPermissionsStringForPropertyGetADM(
-//                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-//                    resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-//                    propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
-//                    targetUser = SharedTestDataADM.anythingUser1,
-//                    requestingUser = SharedTestDataADM.imagesUser01
-//                )
-//            )
-//            assert(caught.getMessage === "Target user is not a member of the same project as the requesting user.")
-//        }
-
-
-
         "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForPropertyGetADM is an Anonymous user" in {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionsStringForPropertyGetADM(
@@ -486,6 +434,23 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             )
             assert(caught.getMessage === "Invalid project IRI")
         }
+
+        "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionCreateRequestADM(
+                    createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        id = Some("invalid-permission-IRI"),
+                        forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                        forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                        hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Invalid permission IRI")
+        }
+
         "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionCreateRequestADM(
