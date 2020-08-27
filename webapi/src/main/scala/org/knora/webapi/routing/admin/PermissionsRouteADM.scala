@@ -26,6 +26,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
@@ -118,7 +119,17 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 }
         }
     }
-    //todo: add test data createAdministrativePermission
+
+    private def createAdminPermissionTestRequest: Future[Set[TestDataFileContent]] = {
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-request"),
+                    text = SharedTestDataADM.createAdministrativePermissionRequest
+                )
+            )
+        )
+    }
 
     /**
      * Create default object access permission
@@ -146,7 +157,17 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             }
         }
     }
-    //todo add test data for createDefaultObjectAccessPermission
+    private def createDOAPermissionTestRequest: Future[Set[TestDataFileContent]] = {
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-request"),
+                    text = SharedTestDataADM.createDefaultObjectAccessPermissionRequest
+                )
+            )
+        )
+    }
+
 
     /**
      * Returns test data for this endpoint.
@@ -155,11 +176,12 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
      */
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem, materializer: Materializer
-                            ): Future[Set[TestDataFileContent]] = {
-        Future.sequence {
-            Set(
-                getAdministrativePermissionTestResponse
-            )
-        }
+                            ): Future[Set[TestDataFileContent]] =  {
+        for {
+                getAdminPermissions <- getAdministrativePermissionTestResponse
+                createAPrequest <- createAdminPermissionTestRequest
+                createDOAPrequest <- createDOAPermissionTestRequest
+
+        } yield createAPrequest ++ createDOAPrequest + getAdminPermissions
     }
 }
