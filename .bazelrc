@@ -1,13 +1,33 @@
+# Define the build strategy using workers. The werkers are started once and reused
+# which speeds up compilation times.
 build --strategy=Scalac=worker \
       --strategy=ScalaCheckDeps=worker \
-      --strategy=ScalaCompile=worker \
-      --worker_extra_flag=ScalaCompile=--persistence_dir=.bazel-zinc \
+      --strategy=ScalaCompile=worker
+
+# The rules_jvm_annex zinc specific flags, allowing to store additional state
+# between compilation runs, which speed up compilation
+build --worker_extra_flag=ScalaCompile=--persistence_dir=.bazel-zinc \
       --worker_extra_flag=ScalaCompile=--extracted_file_cache=.bazel-zinc-outputs
+
+# Activates sandboxing
 build --worker_sandboxing
+
+# Turns build stamping on creating bazel-out/stable-status.txt and bazel-out/volatile-status.txt
 build --workspace_status_command=tools/buildstamp/get_workspace_status --stamp=yes
+
+# Allows to print out more information when rules are failing
 build --record_rule_instantiation_callstack
-build --java_toolchain=@bazel_tools//tools/jdk:toolchain_java11 --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11
-build --jvmopt="-server --add-modules java.sql"
+
+# Configures the java toolchain used for building and running
+build --host_javabase=@bazel_tools//tools/jdk:remote_jdk11 \
+      --javabase=@bazel_tools//tools/jdk:remote_jdk11 \
+      --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11 \
+      --java_toolchain=@bazel_tools//tools/jdk:toolchain_java11 \
+      --jvmopt="-server --add-modules java.sql"
+
+# Necessary to prevent some kind of error. TODO: test if it is still needed.
 startup --host_jvm_args=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts \
         --host_jvm_args=-Djavax.net.ssl.trustStorePassword=changeit
+
+# Configures how tests are run. Currently, we don't support concurrent running of tests.
 test --test_output=errors --local_test_jobs=1 --runs_per_test 1
