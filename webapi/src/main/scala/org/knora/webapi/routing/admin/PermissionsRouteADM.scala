@@ -23,11 +23,11 @@ import java.net.URLEncoder
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.Get
+import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.Materializer
-import io.swagger.annotations.Api
+import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
@@ -37,15 +37,16 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
 object PermissionsRouteADM {
     val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
     val PermissionsBasePathString: String = "/admin/permissions"
 }
 
+
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with PermissionsADMJsonProtocol with
-    Authenticator with ClientEndpoint {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with PermissionsADMJsonProtocol with ClientEndpoint {
 
     import PermissionsRouteADM._
 
@@ -95,26 +96,26 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
      * Create a new administrative permission
      */
     private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
-
         post {
-            entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
-                requestContext =>
-                    val requestMessage: Future[AdministrativePermissionCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield AdministrativePermissionCreateRequestADM(
-                        createRequest = apiRequest,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
+            /* create a new administrative permission */
+                entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield AdministrativePermissionCreateRequestADM(
+                            createRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
         }
     }
     //todo: add test data createAdministrativePermission
@@ -124,6 +125,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
      */
     private def createDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap") {
         post {
+            /* create a new default object access permission */
             entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
