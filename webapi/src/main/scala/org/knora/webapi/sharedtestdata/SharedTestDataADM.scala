@@ -733,11 +733,11 @@ object SharedTestDataADM {
 
     val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
         s"""{
-           |    "id": "http://rdfh.ch/permissions/0001/DOAP-with-customIri",
-           |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-           |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+           |    "forGroup":null,
+           |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
            |    "forProperty":null,
-           |    "forResourceClass":null,
+           |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
            |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
            |}""".stripMargin
 

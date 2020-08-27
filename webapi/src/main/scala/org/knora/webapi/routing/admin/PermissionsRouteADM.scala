@@ -126,6 +126,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-request"),
                     text = SharedTestDataADM.createAdministrativePermissionRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-withCustomIRI-request"),
+                    text = SharedTestDataADM.createAdministrativePermissionWithCustomIriRequest
                 )
             )
         )
@@ -163,6 +167,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 TestDataFileContent(
                     filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-request"),
                     text = SharedTestDataADM.createDefaultObjectAccessPermissionRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-withCustomIRI-request"),
+                    text = SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriRequest
                 )
             )
         )

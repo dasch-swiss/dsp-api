@@ -25,7 +25,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.AkkaHttpUtils
 import spray.json._
 
@@ -91,5 +91,25 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
             assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
         }
+
+        "create a default object access permission with a custom IRI" in {
+
+            val request = Post(baseApiUrl + s"/admin/permissions/doap", HttpEntity(ContentTypes.`application/json`,
+                SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriRequest)) ~> addCredentials(BasicHttpCredentials(
+                SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status === StatusCodes.OK)
+
+            val result = AkkaHttpUtils.httpResponseToJson(response).fields("defaultObjectAccessPermission").asJsObject.fields
+            val permissionIri = result.getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing.")).convertTo[String]
+            assert(permissionIri == "http://rdfh.ch/permissions/00FF/DOAP-with-customIri")
+            val forResourceClassIRI = result.getOrElse("forResourceClass", throw DeserializationException("The expected field 'forResourceClass' is missing.")).convertTo[String]
+            assert(forResourceClassIRI == SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
+            val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
+            assert(projectIri == "http://rdfh.ch/projects/00FF")
+            val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
+            assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+        }
+
     }
 }
