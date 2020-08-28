@@ -13,7 +13,6 @@ scala_library(
         "KnoraFakeCore.scala",
         "TestContainers.scala",
     ],
-    javacopts = ["--add-modules java.sql"],
     resources = [
         "//sipi/config",
         "//webapi/src/it/resources",
