@@ -50,7 +50,7 @@ object SparqlTransformer {
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
 
-        def getFromClause: Option[FromClause] = {
+        override def getFromClause: Option[FromClause] = {
             if (useInference) {
                 None
             } else {
@@ -82,7 +82,7 @@ object SparqlTransformer {
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 
-        def getFromClause: Option[FromClause] = None
+        override def getFromClause: Option[FromClause] = None
     }
 
     /**
@@ -103,8 +103,6 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
-
-        def addFromClause: Option[FromClause] = None
     }
 
     /**
@@ -126,8 +124,6 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)
-
-        def addFromClause: Option[FromClause] = None
     }
 
     /**
