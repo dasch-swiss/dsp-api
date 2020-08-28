@@ -31,12 +31,16 @@ object SparqlTransformer {
 
     /**
      * Transforms a non-triplestore-specific SELECT query for GraphDB.
+     *
+     * @param useInference `true` if the triplestore's inference should be used.
      */
-    class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
+    class GraphDBSelectToSelectTransformer(useInference: Boolean) extends SelectToSelectTransformer {
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            transformKnoraExplicitToGraphDBExplicit(statementPattern)
+            transformKnoraExplicitToGraphDBExplicit(statement = statementPattern, useInference = useInference)
         }
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -45,18 +49,29 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
+
+        def getFromClause: Option[FromClause] = {
+            if (useInference) {
+                None
+            } else {
+                // To turn off inference, add FROM <http://www.ontotext.com/explicit>.
+                Some(FromClause(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri)))
+            }
+        }
     }
 
     /**
      * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
+     *
+     * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
      */
-    class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
+    class NoInferenceSelectToSelectTransformer(simulateInference: Boolean) extends SelectToSelectTransformer {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] =
-            transformStatementInWhereForNoInference(statementPattern)
+            transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = simulateInference)
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
@@ -66,16 +81,20 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)
+
+        def getFromClause: Option[FromClause] = None
     }
 
     /**
      * Transforms a non-triplestore-specific CONSTRUCT query for GraphDB.
      */
     class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            transformKnoraExplicitToGraphDBExplicit(statementPattern)
+            transformKnoraExplicitToGraphDBExplicit(statement = statementPattern, useInference = true)
         }
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -84,6 +103,8 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
+
+        def addFromClause: Option[FromClause] = None
     }
 
     /**
@@ -95,7 +116,7 @@ object SparqlTransformer {
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] =
-            transformStatementInWhereForNoInference(statementPattern)
+            transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
@@ -105,6 +126,8 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)
+
+        def addFromClause: Option[FromClause] = None
     }
 
     /**
@@ -212,10 +235,11 @@ object SparqlTransformer {
     /**
      * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
      *
-     * @param statementPattern the statement pattern.
+     * @param statementPattern  the statement pattern.
+     * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
      * @return the statement pattern as expanded to work without inference.
      */
-    private def transformStatementInWhereForNoInference(statementPattern: StatementPattern): Seq[StatementPattern] = {
+    private def transformStatementInWhereForNoInference(statementPattern: StatementPattern, simulateInference: Boolean): Seq[StatementPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         statementPattern.pred match {
@@ -226,7 +250,12 @@ object SparqlTransformer {
                     )
                 )
 
-            case _ => expandStatementForNoInference(statementPattern)
+            case _ =>
+                if (simulateInference) {
+                    expandStatementForNoInference(statementPattern)
+                } else {
+                    Seq(statementPattern)
+                }
         }
     }
 
@@ -309,18 +338,26 @@ object SparqlTransformer {
     /**
      * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
      *
-     * @param statement the given statement whose graph name has to be renamed.
+     * @param statement    the given statement whose graph name has to be renamed.
+     * @param useInference `true` if the triplestore's inference should be used.
      * @return the statement with the renamed graph, if given.
      */
-    private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
+    private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern, useInference: Boolean): Seq[StatementPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val transformedPattern = statement.copy(
-            // Replace the deprecated property knora-base:matchesTextIndex with a GraphDB-specific one.
             pred = statement.pred,
             namedGraph = statement.namedGraph match {
-                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
+                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) =>
+                    if (useInference) {
+                        Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
+                    } else {
+                        // Inference will be turned off in a FROM clause, so there's no need to specify a named graph here.
+                        None
+                    }
+
                 case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
+
                 case None => None
             }
         )
@@ -337,7 +374,7 @@ object SparqlTransformer {
     private def transformLuceneQueryPatternForGraphDB(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-         Seq(
+        Seq(
             StatementPattern(
                 subj = luceneQueryPattern.obj, // In GraphDB, an index entry is associated with a literal.
                 pred = IriRef("http://www.ontotext.com/owlim/lucene#fullTextSearchIndex".toSmartIri),

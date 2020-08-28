@@ -574,18 +574,31 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
 }
 
 /**
+ * Represents a FROM clause.
+ *
+ * @param namedGraph the named graph to be used in the query.
+ */
+case class FromClause(namedGraph: IriRef) extends SparqlGenerator {
+    override def toSparql: String = s"FROM ${namedGraph.toSparql}\n"
+}
+
+/**
  * Represents a SPARQL CONSTRUCT query.
  *
  * @param constructClause the CONSTRUCT clause.
+ * @param fromClause      the FROM clause, if any.
  * @param whereClause     the WHERE clause.
  * @param orderBy         the variables that the results should be ordered by.
  * @param offset          if this is a Gravsearch query, represents the OFFSET specified in the query.
  * @param querySchema     if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
  */
-case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
+case class ConstructQuery(constructClause: ConstructClause, fromClause: Option[FromClause] = None, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
     override def toSparql: String = {
         val stringBuilder = new StringBuilder
-        stringBuilder.append(constructClause.toSparql).append(whereClause.toSparql)
+
+        stringBuilder.append(constructClause.toSparql)
+            .append(fromClause.map(_.toSparql).getOrElse(""))
+            .append(whereClause.toSparql)
 
         if (orderBy.nonEmpty) {
             stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
@@ -604,12 +617,13 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
  *
  * @param variables   the variables to be returned by the query.
  * @param useDistinct indicates if DISTINCT should be used.
+ * @param fromClause  the FROM clause, if any.
  * @param whereClause the WHERE clause.
  * @param orderBy     the variables that the results should be ordered by.
  * @param limit       the maximum number of result rows to be returned.
  * @param offset      the offset to be used (limit of the previous query + 1 to do paging).
  */
-case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean = true, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
+case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean = true, fromClause: Option[FromClause] = None, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
     override def toSparql: String = {
         val stringBuilder = new StringBuilder
 
@@ -620,7 +634,9 @@ case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean =
 
         }
 
-        stringBuilder.append(variables.map(_.toSparql).mkString(" ")).append("\n").append(whereClause.toSparql)
+        stringBuilder.append(variables.map(_.toSparql).mkString(" ")).append("\n")
+            .append(fromClause.map(_.toSparql).getOrElse(""))
+            .append(whereClause.toSparql)
 
         if (groupBy.nonEmpty) {
             stringBuilder.append("GROUP BY ").append(groupBy.map(_.toSparql).mkString(" ")).append("\n")

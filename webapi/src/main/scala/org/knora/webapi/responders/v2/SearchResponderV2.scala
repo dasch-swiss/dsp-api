@@ -74,7 +74,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param requestingUser       the the client making the request.
      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
      */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def fulltextSearchCountV2(searchValue: String,
+                                      limitToProject: Option[IRI],
+                                      limitToResourceClass: Option[SmartIri],
+                                      limitToStandoffClass: Option[SmartIri],
+                                      requestingUser: UserADM): Future[ResourceCountV2] = {
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
@@ -298,17 +302,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             )
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
+
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new SparqlTransformer.GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer(
+                        useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 } else {
                     // Other
-                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+                        simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 }
             }
 
-            // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecficPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
@@ -381,10 +389,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new SparqlTransformer.GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer(
+                        useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 } else {
                     // Other
-                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+                        simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 }
             }
 
