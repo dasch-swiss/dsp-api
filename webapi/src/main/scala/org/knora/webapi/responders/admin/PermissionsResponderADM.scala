@@ -62,7 +62,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID)
         case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
         case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
@@ -70,7 +70,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
-        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateADM(createRequest, requestingUser, apiRequestID)
+        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -492,7 +492,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      * @param apiRequestID      the API request ID.
      * @return an optional [[AdministrativePermissionADM]]
      */
-    private def administrativePermissionCreateADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
+    private def administrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
                                                   requestingUser: UserADM,
                                                   apiRequestID: UUID
                                                  ): Future[AdministrativePermissionCreateResponseADM] = {
@@ -1195,7 +1195,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
 
-    private def defaultObjectAccessPermissionCreateADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
+    private def defaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
 
             /**
              * The actual change project task run with an IRI lock.

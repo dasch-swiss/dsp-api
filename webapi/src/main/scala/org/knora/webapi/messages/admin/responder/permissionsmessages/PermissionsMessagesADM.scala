@@ -82,7 +82,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(id: Option[IRI] = No
     forGroup match {
         case Some(iri:IRI) =>
             if(forResourceClass.isDefined)
-                throw throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
+                throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
             else if (forProperty.isDefined)
                 throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
             else Some(iri)
@@ -144,17 +144,18 @@ case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
                                                             requestingUser: UserADM,
                                                             apiRequestID: UUID
                                                            ) extends PermissionsResponderRequestADM {
+
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-                && !requestingUser.permissions.isProjectAdminInAnyProject()
+                && !requestingUser.permissions.isProjectAdmin(projectIri)
                 && !requestingUser.isSystemUser
         ) {
             // not a system admin
             throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
         }
-
-    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
 }
 
 /**
@@ -170,6 +171,7 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
                                                        apiRequestID: UUID
                                                       ) extends PermissionsResponderRequestADM {
     // Check user's permission for the operation
+    //TODO: should get the project the permission is assigned to and check if the requesting user is the project admin
     if (!requestingUser.isSystemAdmin
         && !requestingUser.permissions.isProjectAdminInAnyProject()
         && !requestingUser.isSystemUser
@@ -194,17 +196,18 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI,
                                                          groupIri: IRI,
                                                          requestingUser: UserADM
                                                         ) extends PermissionsResponderRequestADM {
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.permissions.isProjectAdmin(projectIri)
         && !requestingUser.isSystemUser
     ) {
         // not a system admin
         throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
     }
-
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
 }
 
 /**
@@ -254,6 +257,7 @@ case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI,
                                                     requestingUser: UserADM
                                                    ) extends PermissionsResponderRequestADM {
     // Check user's permission for the operation
+    //TODO: should get the project the resource belongs to and check if the requestingUser is the project admin
     if (!requestingUser.isSystemAdmin
         && !requestingUser.permissions.isProjectAdminInAnyProject()
         && !requestingUser.isSystemUser
@@ -280,6 +284,8 @@ case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI,
                                                 ) extends PermissionsResponderRequestADM {
 
     // Check user's permission for the operation
+    //TODO: should get the project the value belongs to and check if the requestingUser is the project admin
+
     if (!requestingUser.isSystemAdmin
         && !requestingUser.permissions.isProjectAdminInAnyProject()
         && !requestingUser.isSystemUser
@@ -309,7 +315,20 @@ case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI,
 case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI,
                                                                  requestingUser: UserADM,
                                                                  apiRequestID: UUID
-                                                                ) extends PermissionsResponderRequestADM
+                                                                ) extends PermissionsResponderRequestADM {
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
+    // Check user's permission for the operation
+    if (!requestingUser.isSystemAdmin
+        && !requestingUser.permissions.isProjectAdmin(projectIri)
+        && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
+    }
+}
 
 /**
  * A message that requests an object access permission identified by project and either group / resource class / property.
@@ -325,22 +344,23 @@ case class DefaultObjectAccessPermissionGetADM(projectIri: IRI,
                                                resourceClassIri: Option[IRI] = None,
                                                propertyIri: Option[IRI] = None,
                                                requestingUser: UserADM) extends PermissionsResponderRequestADM {
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.permissions.isProjectAdmin(projectIri)
         && !requestingUser.isSystemUser
     ) {
         // not a system admin
         throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
     }
 
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
-
     groupIri match {
         case Some(iri:IRI) =>
             if(resourceClassIri.isDefined)
-                throw throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
+                throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
             else if (propertyIri.isDefined)
                 throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
             else Some(iri)
@@ -421,17 +441,18 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri
                                                                       targetUser: UserADM,
                                                                       requestingUser: UserADM
                                                                      ) extends PermissionsResponderRequestADM {
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.permissions.isProjectAdmin(projectIri)
         && !requestingUser.isSystemUser
     ) {
         // not a system admin
         throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
     }
-
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
 
     if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
@@ -461,17 +482,18 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI
                                                                  targetUser: UserADM,
                                                                  requestingUser: UserADM
                                                                 ) extends PermissionsResponderRequestADM {
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdminInAnyProject()
+        && !requestingUser.permissions.isProjectAdmin(projectIri)
         && !requestingUser.isSystemUser
     ) {
         // not a system admin
         throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
     }
-
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
 
     if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraEntityIri) {
         throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")

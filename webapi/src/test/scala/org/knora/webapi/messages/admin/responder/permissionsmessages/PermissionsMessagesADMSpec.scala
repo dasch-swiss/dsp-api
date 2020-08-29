@@ -279,6 +279,28 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.")
         }
 
+        "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionsForProjectGetRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                DefaultObjectAccessPermissionsForProjectGetRequestADM(
+                    projectIri = "invalid-project-IRI",
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Invalid project IRI")
+        }
+
+        "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsForProjectGetRequestADM is not SystemAdmin" in {
+            val caught = intercept[ForbiddenException](
+                DefaultObjectAccessPermissionsForProjectGetRequestADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
+        }
+
         "return 'BadRequest' if the supplied permission IRI for DefaultObjectAccessPermissionForIriGetRequestADM is not valid" in {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionForIriGetRequestADM(
@@ -377,7 +399,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
         }
 
-        "return 'BadRequest' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not in the same project as the target user" in {
+        "return 'BadRequest' if the supplied property IRI for DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
             val caught = intercept[BadRequestException](
                 DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
