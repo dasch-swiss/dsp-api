@@ -20,15 +20,17 @@
 package org.knora.webapi.routing.admin
 
 import java.net.URLEncoder
+import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.Get
+import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
-import io.swagger.annotations.Api
+import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.OntologyConstants
@@ -36,14 +38,16 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
 object PermissionsRouteADM {
     val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
     val PermissionsBasePathString: String = "/admin/permissions"
 }
 
+
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with PermissionsADMJsonProtocol with ClientEndpoint {
 
     import PermissionsRouteADM._
 
@@ -58,18 +62,17 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getAdministrativePermission
+    override def knoraApiPath: Route =
+        getAdministrativePermission ~
+        createAdministrativePermission ~
+        createDefaultObjectAccessPermission
 
     private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
         get {
             requestContext =>
-                val params = requestContext.request.uri.query().toMap
-                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield permissionType match {
-                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-                }
+                } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -91,15 +94,102 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     }
 
     /**
+     * Create a new administrative permission
+     */
+    private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
+        post {
+            /* create a new administrative permission */
+                entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield AdministrativePermissionCreateRequestADM(
+                            createRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+        }
+    }
+
+    private def createAdminPermissionTestRequest: Future[Set[TestDataFileContent]] = {
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-request"),
+                    text = SharedTestDataADM.createAdministrativePermissionRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-withCustomIRI-request"),
+                    text = SharedTestDataADM.createAdministrativePermissionWithCustomIriRequest
+                )
+            )
+        )
+    }
+
+    /**
+     * Create default object access permission
+     */
+    private def createDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap") {
+        post {
+            /* create a new default object access permission */
+            entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield DefaultObjectAccessPermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+    private def createDOAPermissionTestRequest: Future[Set[TestDataFileContent]] = {
+        FastFuture.successful(
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-request"),
+                    text = SharedTestDataADM.createDefaultObjectAccessPermissionRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-withCustomIRI-request"),
+                    text = SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriRequest
+                )
+            )
+        )
+    }
+
+
+    /**
      * Returns test data for this endpoint.
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        Future.sequence {
-            Set(
-                getAdministrativePermissionTestResponse
-            )
-        }
+    override def getTestData(implicit executionContext: ExecutionContext,
+                             actorSystem: ActorSystem, materializer: Materializer
+                            ): Future[Set[TestDataFileContent]] =  {
+        for {
+                getAdminPermissions <- getAdministrativePermissionTestResponse
+                createAPrequest <- createAdminPermissionTestRequest
+                createDOAPrequest <- createDOAPermissionTestRequest
+
+        } yield createAPrequest ++ createDOAPrequest + getAdminPermissions
     }
 }
