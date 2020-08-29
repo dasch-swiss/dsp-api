@@ -46,9 +46,9 @@ object PermissionsADME2ESpec {
   */
 class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with TriplestoreJsonProtocol {
 
-    "The Permissions Route ('admin/permissions/projectIri')" should {
+    "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {
 
-        "return administrative permissions" in {
+        "return group's administrative permissions" in {
 
             val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
             val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
