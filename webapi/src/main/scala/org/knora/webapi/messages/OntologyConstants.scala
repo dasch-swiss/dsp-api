@@ -658,7 +658,7 @@ object OntologyConstants {
         /**
          * The IRIs representing `knora-api:Resource` in Knora API v2, in the simple and complex schemas.
          */
-        val KnoraApiV2ResourceIris: Set[IRI] = Set(
+        lazy val KnoraApiV2ResourceIris: Set[IRI] = Set(
             OntologyConstants.KnoraApiV2Simple.Resource,
             OntologyConstants.KnoraApiV2Complex.Resource
         )
@@ -666,7 +666,7 @@ object OntologyConstants {
         /**
          * The IRIs representing `knora-api:GravsearchOptions` in Knora API v2, in the simple and complex schemas.
          */
-        val GravsearchOptionsIris: Set[IRI] = Set(
+        lazy val GravsearchOptionsIris: Set[IRI] = Set(
             OntologyConstants.KnoraApiV2Simple.GravsearchOptions,
             OntologyConstants.KnoraApiV2Complex.GravsearchOptions
         )
@@ -674,7 +674,7 @@ object OntologyConstants {
         /**
          * The IRIs representing `knora-api:useInference` in Knora API v2, in the simple and complex schemas.
          */
-        val UseInferenceIris: Set[IRI] = Set(
+        lazy val UseInferenceIris: Set[IRI] = Set(
             OntologyConstants.KnoraApiV2Simple.UseInference,
             OntologyConstants.KnoraApiV2Complex.UseInference
         )
