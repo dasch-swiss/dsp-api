@@ -401,14 +401,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             }
 
             // Convert the preprocessed query to a non-triplestore-specific query.
+
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecificPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
+            _ = log.debug(triplestoreSpecificPrequerySparql)
 
-            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql)).mapTo[SparqlSelectResponse]
             pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
             // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
@@ -482,19 +484,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     }
                 }
 
-                val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
+                val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
                     inputQuery = mainQuery,
                     transformer = triplestoreSpecificQueryPatternTransformerConstruct
                 )
 
                 // Convert the result to a SPARQL string and send it to the triplestore.
-                val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
-
-                // println("++++++++")
-                // println(triplestoreSpecificSparql)
+                val triplestoreSpecificMainQuerySparql: String = triplestoreSpecificMainQuery.toSparql
+                log.debug(triplestoreSpecificMainQuerySparql)
 
                 for {
-                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlExtendedConstructResponse]
+                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificMainQuerySparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // Filter out values that the user doesn't have permission to see.
                     queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
