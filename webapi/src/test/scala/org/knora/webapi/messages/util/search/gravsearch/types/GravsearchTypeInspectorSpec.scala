@@ -21,13 +21,12 @@ package org.knora.webapi.util.search.gravsearch.types
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-
 import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.types._
-import org.knora.webapi.messages.util.search._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
@@ -635,6 +634,25 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
             """.stripMargin
 
+    val QueryWithGravsearchOptions: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |     knora-api:GravsearchOptions knora-api:useInference false .
+          |     ?thing a anything:Thing .
+          |}""".stripMargin
+
+    val GravsearchOptionsResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
+        entities = Map(TypeableVariable(variableName = "thing") -> NonPropertyTypeInfo(
+            typeIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            isResourceType = true
+        )),
+        entitiesInferredFromProperties = Map()
+    )
+
     "The type inspection utility" should {
         "remove the type annotations from a WHERE clause" in {
             val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
@@ -989,6 +1007,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
             assert(result.entities == TypeInferenceResult3.entities)
+        }
+
+        "ignore Gravsearch options" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithGravsearchOptions)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result.entities == GravsearchOptionsResult.entities)
         }
 
         "reject a query with inconsistent types inferred from statements" in {
