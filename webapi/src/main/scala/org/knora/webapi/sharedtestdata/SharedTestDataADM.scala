@@ -505,6 +505,15 @@ object SharedTestDataADM {
         selfjoin = false
     )
 
+    /* represents the full GroupInfoV1 of the Thing searcher group */
+    def thingSearcherGroup: GroupADM = GroupADM(
+        id = "http://rdfh.ch/groups/0001/thing-searcher",
+        name = "Thing searcher",
+        description = "A group for thing searchers.",
+        project = anythingProject,
+        status = true,
+        selfjoin = true
+    )
 
     /** **********************************/
     /** BEOL                           **/
@@ -695,6 +704,41 @@ object SharedTestDataADM {
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
            |    "comments": []
+           |}""".stripMargin
+
+
+    val createAdministrativePermissionRequest: String =
+        s"""{
+           |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+           |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+           |}""".stripMargin
+
+    val createDefaultObjectAccessPermissionRequest: String =
+        s"""{
+           |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+           |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "forProperty":null,
+           |    "forResourceClass":null,
+           |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+           |}""".stripMargin
+
+    val createAdministrativePermissionWithCustomIriRequest: String =
+        s"""{
+           |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+           |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+           |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+           |}""".stripMargin
+
+    val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
+        s"""{
+           |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+           |    "forGroup":null,
+           |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "forProperty":null,
+           |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
+           |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
            |}""".stripMargin
 
     def updateListInfoRequest(listIri: IRI): String = {

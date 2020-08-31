@@ -637,18 +637,36 @@ object PermissionUtilADM extends LazyLogging {
                     }
 
                     /* Sort permissions in descending order */
-                    val sortedPermissions = groupedPermissions.toArray.sortWith {
+                    val sortedPermissions: Array[(String, String)] = groupedPermissions.toArray.sortWith {
                         (left, right) => permissionStringsToPermissionLevels(left._1) > permissionStringsToPermissionLevels(right._1)
                     }
 
                     /* create the permissions string */
-                    sortedPermissions.foldLeft("") { (acc, perm) =>
+                    sortedPermissions.foldLeft("") { (acc, perm: (String, String)) =>
                         if (acc.isEmpty) {
                             acc + perm._1 + " " + perm._2
                         } else {
                             acc + OntologyConstants.KnoraBase.PermissionListDelimiter + perm._1 + " " + perm._2
                         }
                     }
+                } else {
+                    throw InconsistentTriplestoreDataException("Permissions cannot be empty")
+                }
+            case PermissionType.AP =>
+
+                if (permissions.nonEmpty) {
+
+                    val permNames: Set[String] = permissions.map(_.name)
+
+                    /* creates the permissions string. something like "ProjectResourceCreateAllPermission|ProjectAdminAllPermission" */
+                    permNames.foldLeft("") { (acc, perm: String) =>
+                        if (acc.isEmpty) {
+                            acc + perm
+                        } else {
+                            acc + OntologyConstants.KnoraBase.PermissionListDelimiter + perm
+                        }
+                    }
+
                 } else {
                     throw InconsistentTriplestoreDataException("Permissions cannot be empty")
                 }
