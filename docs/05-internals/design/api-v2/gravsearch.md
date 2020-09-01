@@ -315,17 +315,15 @@ When the triplestore-specific version of the query is generated:
   for text searches.
 
 - If Knora is not using the triplestore's inference (e.g. with Fuseki),
-  `SparqlTransformer.expandStatementForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
+  `SparqlTransformer.transformStatementInWhereForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
   statements using `rdfs:subClassOf*` and `rdfs:subPropertyOf*`.
 
 Gravsearch also provides some virtual properties, which take advantage of forward-chaining inference
 as an optimisation if the triplestore provides it. For example, the virtual property
 `knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`, but
 with GraphDB it is implemented using a custom inference rule (in `KnoraRules.pie`) and is therefore more
-efficient. If Knora is not using the triplestore's inference,
-
-`SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor`
-with `knora-base:standoffTagHasStartParent*`.
+efficient. If Knora is not using the triplestore's inference, `SparqlTransformer.transformStatementInWhereForNoInference`
+replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 # Optimisation of generated SPARQL
 
