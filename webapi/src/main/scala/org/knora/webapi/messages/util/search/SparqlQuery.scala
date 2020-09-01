@@ -576,10 +576,10 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
 /**
  * Represents a FROM clause.
  *
- * @param namedGraph the named graph to be used in the query.
+ * @param defaultGraph the graph to be used as the default graph in the query.
  */
-case class FromClause(namedGraph: IriRef) extends SparqlGenerator {
-    override def toSparql: String = s"FROM ${namedGraph.toSparql}\n"
+case class FromClause(defaultGraph: IriRef) extends SparqlGenerator {
+    override def toSparql: String = s"FROM ${defaultGraph.toSparql}\n"
 }
 
 /**
