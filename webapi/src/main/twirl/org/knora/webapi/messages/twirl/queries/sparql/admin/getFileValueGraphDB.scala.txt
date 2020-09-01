@@ -24,10 +24,7 @@
  *
  * This template is used only by getFileValue.scala.txt.
  *
- * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
- * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
- * such as knora-base:hasFileValue. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
- * whenever we need to get explicit (non-inferred) statements.
+ * Since the triplestore type is GraphDB, we turn off inference in this query because it is not needed.
  *
  * @param fileValueIri the IRI of the file value.
  *@
