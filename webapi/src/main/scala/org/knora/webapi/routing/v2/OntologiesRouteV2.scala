@@ -95,7 +95,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                 val params: Map[String, String] = requestContext.request.uri.query().toMap
                 val allLanguagesStr = params.get(ALL_LANGUAGES)
-                val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                val allLanguages = stringFormatter.optionStringToBoolean(allLanguagesStr, throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                 val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
                     requestingUser <- getUserADM(requestContext)

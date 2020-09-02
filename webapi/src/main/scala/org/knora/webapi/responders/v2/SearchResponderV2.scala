@@ -74,7 +74,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param requestingUser       the the client making the request.
      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
      */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def fulltextSearchCountV2(searchValue: String,
+                                      limitToProject: Option[IRI],
+                                      limitToResourceClass: Option[SmartIri],
+                                      limitToStandoffClass: Option[SmartIri],
+                                      requestingUser: UserADM): Future[ResourceCountV2] = {
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
@@ -298,17 +302,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             )
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
+
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new SparqlTransformer.GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer(
+                        useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 } else {
                     // Other
-                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+                        simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 }
             }
 
-            // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecficPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
@@ -381,22 +389,28 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new SparqlTransformer.GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer(
+                        useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 } else {
                     // Other
-                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+                        simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 }
             }
 
             // Convert the preprocessed query to a non-triplestore-specific query.
+
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecificPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
+            _ = log.debug(triplestoreSpecificPrequerySparql)
 
-            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql)).mapTo[SparqlSelectResponse]
             pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
             // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
@@ -470,19 +484,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     }
                 }
 
-                val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
+                val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
                     inputQuery = mainQuery,
                     transformer = triplestoreSpecificQueryPatternTransformerConstruct
                 )
 
                 // Convert the result to a SPARQL string and send it to the triplestore.
-                val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
-
-                // println("++++++++")
-                // println(triplestoreSpecificSparql)
+                val triplestoreSpecificMainQuerySparql: String = triplestoreSpecificMainQuery.toSparql
+                log.debug(triplestoreSpecificMainQuerySparql)
 
                 for {
-                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlExtendedConstructResponse]
+                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificMainQuerySparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // Filter out values that the user doesn't have permission to see.
                     queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
