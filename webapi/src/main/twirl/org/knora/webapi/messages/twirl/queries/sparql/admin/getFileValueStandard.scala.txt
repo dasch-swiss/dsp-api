@@ -50,8 +50,6 @@ CONSTRUCT {
         knora-base:attachedToProject ?resourceProject .
 
     ?fileValue ?objPred ?objObj .
-    FILTER(?objPred != knora-base:attachedToProject && ?objPred != knora-base:hasPermissions)
-
     ?currentFileValue knora-base:isDeleted false .
     ?resource knora-base:isDeleted false .
 }
