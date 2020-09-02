@@ -22,11 +22,11 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectIdentifierADM, ProjectRestrictedViewSettingsADM, ProjectRestrictedViewSettingsGetADM}
 import org.knora.webapi.messages.admin.responder.sipimessages.{SipiFileInfoGetRequestADM, SipiFileInfoGetResponseADM, SipiResponderRequestADM}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{IriSubjectV2, LiteralV2, SparqlExtendedConstructRequest, SparqlExtendedConstructResponse}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
 import org.knora.webapi.responders.Responder
@@ -69,30 +69,25 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                 filename = request.filename
             ).toString())
 
-            // _ = println(sparqlQuery)
+            queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            _ = if (queryResponse.statements.isEmpty) throw NotFoundException(s"No file value was found for filename ${request.filename}")
+            _ = if (queryResponse.statements.size > 1) throw InconsistentTriplestoreDataException(s"Filename ${request.filename} is used in more than one file value")
 
-            rows: Seq[VariableResultsRow] = queryResponse.results.bindings
-
-            // check if rows were found for the given filename
-            _ = if (rows.isEmpty) throw NotFoundException(s"No file value was found for filename ${request.filename}")
-
-            // check that only one file value was found (by grouping by file value IRI)
-            groupedByFileValue: Map[String, Seq[VariableResultsRow]] = rows.groupBy {
-                row: VariableResultsRow => row.rowMap("fileValue")
+            fileValueIriSubject: IriSubjectV2 = queryResponse.statements.keys.head match {
+                case iriSubject: IriSubjectV2 => iriSubject
+                case _ => throw InconsistentTriplestoreDataException(s"The subject of the file value with filename ${request.filename} is not an IRI")
             }
 
-            _ = if (groupedByFileValue.size > 1) throw InconsistentTriplestoreDataException(s"Filename ${request.filename} is used in more than one file value")
-
-            fileValueIri: IRI = groupedByFileValue.keys.head
-
-            assertions: Seq[(String, String)] = rows.map {
-                row => (row.rowMap("objPred"), row.rowMap("objObj"))
+            assertions: Seq[(String, String)] = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {
+                case (predicate: SmartIri, values: Seq[LiteralV2]) =>
+                    values.map {
+                        value => predicate.toString -> value.toString
+                    }
             }
 
             maybeEntityPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromAssertionsADM(
-                entityIri = fileValueIri,
+                entityIri = fileValueIriSubject.toString,
                 assertions = assertions,
                 requestingUser = request.requestingUser
             )
@@ -102,15 +97,17 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
             permissionCode: Int = maybeEntityPermission.map(_.toInt).getOrElse(0) // Sipi expects a permission code from 0 to 8
 
             response <- permissionCode match {
-
                 case 1 =>
                     for {
-                        maybeRVSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM(ProjectIdentifierADM(maybeShortcode = Some(request.projectID)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectRestrictedViewSettingsADM]]
-
+                        maybeRVSettings <- (
+                            responderManager ? ProjectRestrictedViewSettingsGetADM(
+                                ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                requestingUser = KnoraSystemInstances.Users.SystemUser)
+                            ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
                     } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
+
                 case _ => FastFuture.successful(SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None))
             }
-
         } yield response
     }
 }
