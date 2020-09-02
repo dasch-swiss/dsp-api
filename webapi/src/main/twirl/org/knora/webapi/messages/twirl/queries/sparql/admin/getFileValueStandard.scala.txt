@@ -50,6 +50,10 @@ CONSTRUCT {
         knora-base:attachedToProject ?resourceProject .
 
     ?fileValue ?objPred ?objObj .
+
+    @* This FILTER is unnecessary, but it makes Jena run the query faster. *@
+    FILTER(?objPred != knora-base:previousValue)
+
     ?currentFileValue knora-base:isDeleted false .
     ?resource knora-base:isDeleted false .
 }
