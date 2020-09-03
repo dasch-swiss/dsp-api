@@ -24,10 +24,7 @@
  *
  * This template is used only by getFileValue.scala.txt.
  *
- * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
- * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
- * such as knora-base:hasFileValue. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
- * whenever we need to get explicit (non-inferred) statements.
+ * Since the triplestore type is GraphDB, we turn off inference in this query because it is not needed.
  *
  * @param fileValueIri the IRI of the file value.
  *@
@@ -38,40 +35,22 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?fileValue ?objPred ?objObj
+CONSTRUCT {
+    ?fileValue ?objPred ?objObj .
+    ?fileValue knora-base:attachedToProject ?resourceProject .
+    ?fileValue knora-base:hasPermissions ?currentFileValuePermissions .
+}
+FROM <http://www.ontotext.com/explicit>
 WHERE {
-
     ?fileValue knora-base:internalFilename "@filename" .
 
     ?currentFileValue knora-base:previousValue* ?fileValue ;
-        knora-base:isDeleted false .
+        knora-base:hasPermissions ?currentFileValuePermissions .
 
-    ?resource knora-base:hasFileValue ?currentFileValue ;
-        knora-base:isDeleted false .
+    ?resource ?prop ?currentFileValue ;
+        knora-base:attachedToProject ?resourceProject .
 
-    {
-        GRAPH <http://www.ontotext.com/explicit> {
-            ?fileValue ?objPred ?objObj .
-        }
-
-        FILTER(?objPred != knora-base:attachedToProject && ?objPred != knora-base:hasPermissions)
-    }
-    UNION
-    {
-        @* Return the permissions of the current version of the value. *@
-
-        ?currentFileValue knora-base:hasPermissions ?currentFileValuePermissions .
-
-        BIND(knora-base:hasPermissions AS ?objPred)
-        BIND(?currentFileValuePermissions AS ?objObj)
-    }
-    UNION
-    {
-        @* Return the project of the resource that contains the value. *@
-
-        ?resource knora-base:attachedToProject ?resourceProject .
-
-        BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(?resourceProject AS ?objObj)
-    }
+    ?fileValue ?objPred ?objObj .
+    ?currentFileValue knora-base:isDeleted false .
+    ?resource knora-base:isDeleted false .
 }

@@ -1094,9 +1094,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 case _ => None
             })
 
-            // If the statement's predicate is a Knora property, and isn't a type annotation predicate, add it to the set of Knora property IRIs.
+            // If the statement's predicate is a Knora property, and isn't a type annotation predicate or a Gravsearch option predicate,
+            // add it to the set of Knora property IRIs.
             val knoraPropertyIris: Set[SmartIri] = acc.knoraPropertyIris ++ (statementPattern.pred match {
-                case IriRef(predIri, _) if predIri.isKnoraEntityIri && !GravsearchTypeInspectionUtil.TypeAnnotationProperties.allTypeAnnotationIris.contains(predIri.toString) =>
+                case IriRef(predIri, _) if predIri.isKnoraEntityIri &&
+                    !(GravsearchTypeInspectionUtil.TypeAnnotationProperties.allTypeAnnotationIris.contains(predIri.toString) ||
+                        GravsearchTypeInspectionUtil.GravsearchOptionIris.contains(predIri.toString)) =>
                     Some(predIri)
 
                 case _ => None

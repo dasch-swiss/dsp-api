@@ -493,6 +493,12 @@ object OntologyConstants {
 
         /* Permissions */
         val Permission: IRI = KnoraAdminPrefixExpansion + "Permission"
+        val AdministrativePermission: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
+        val DefaultObjectAccessPermission: IRI = KnoraAdminPrefixExpansion + "DefaultObjectAccessPermission"
+        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
+        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
+        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
+        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
 
         val ProjectResourceCreateAllPermission: String = "ProjectResourceCreateAllPermission"
         val ProjectResourceCreateRestrictedPermission: String = "ProjectResourceCreateRestrictedPermission"
@@ -523,13 +529,6 @@ object OntologyConstants {
             HasDefaultDeletePermission,
             HasDefaultChangeRightsPermission
         )
-
-        val AdministrativePermission: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
-        val DefaultObjectAccessPermission: IRI = KnoraAdminPrefixExpansion + "DefaultObjectAccessPermission"
-        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
-        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
-        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
-        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
 
         val SystemProject: IRI = KnoraAdminPrefixExpansion + "SystemProject"
         val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
@@ -656,13 +655,28 @@ object OntologyConstants {
         val KnoraApiPrefix: String = KnoraApiOntologyLabel + ":"
 
         /**
-         * Returns `true` if the specified IRI is `knora-api:Resource` in Knora API v2, in the simple
-         * or complex schema.
+         * The IRIs representing `knora-api:Resource` in Knora API v2, in the simple and complex schemas.
          */
-        def isKnoraApiV2Resource(iri: SmartIri): Boolean = {
-            val iriStr = iri.toString
-            iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2Complex.Resource
-        }
+        lazy val KnoraApiV2ResourceIris: Set[IRI] = Set(
+            OntologyConstants.KnoraApiV2Simple.Resource,
+            OntologyConstants.KnoraApiV2Complex.Resource
+        )
+
+        /**
+         * The IRIs representing `knora-api:GravsearchOptions` in Knora API v2, in the simple and complex schemas.
+         */
+        lazy val GravsearchOptionsIris: Set[IRI] = Set(
+            OntologyConstants.KnoraApiV2Simple.GravsearchOptions,
+            OntologyConstants.KnoraApiV2Complex.GravsearchOptions
+        )
+
+        /**
+         * The IRIs representing `knora-api:useInference` in Knora API v2, in the simple and complex schemas.
+         */
+        lazy val UseInferenceIris: Set[IRI] = Set(
+            OntologyConstants.KnoraApiV2Simple.UseInference,
+            OntologyConstants.KnoraApiV2Complex.UseInference
+        )
 
         /**
          * Returns the IRI of `knora-api:subjectType` in the specified schema.
@@ -926,6 +940,9 @@ object OntologyConstants {
         val MatchTextInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchTextInStandoff"
         val MatchLabelFunction: IRI = KnoraApiV2PrefixExpansion + "matchLabel"
         val StandoffLinkFunction: IRI = KnoraApiV2PrefixExpansion + "standoffLink"
+
+        val GravsearchOptions: IRI = KnoraApiV2PrefixExpansion + "GravsearchOptions"
+        val UseInference: IRI = KnoraApiV2PrefixExpansion + "useInference"
     }
 
     object SalsahGuiApiV2WithValueObjects {
@@ -1027,6 +1044,9 @@ object OntologyConstants {
 
         val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
         val VersionArkUrl: IRI = KnoraApiV2PrefixExpansion + "versionArkUrl"
+
+        val GravsearchOptions: IRI = KnoraApiV2PrefixExpansion + "GravsearchOptions"
+        val UseInference: IRI = KnoraApiV2PrefixExpansion + "useInference"
     }
 
     /**

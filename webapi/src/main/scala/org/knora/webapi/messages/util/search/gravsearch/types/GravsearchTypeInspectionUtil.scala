@@ -113,9 +113,21 @@ object GravsearchTypeInspectionUtil {
     )
 
     /**
+     * IRIs that are used to set Gravsearch options.
+     */
+    val GravsearchOptionIris: Set[IRI] = Set(
+        OntologyConstants.KnoraApiV2Simple.GravsearchOptions,
+        OntologyConstants.KnoraApiV2Complex.GravsearchOptions,
+        OntologyConstants.KnoraApiV2Simple.UseInference,
+        OntologyConstants.KnoraApiV2Complex.UseInference
+    )
+
+    /**
      * IRIs that do not need to be annotated to specify their types.
      */
-    val ApiV2NonTypeableIris: Set[IRI] = GravsearchAnnotationTypeIris ++ TypeAnnotationProperties.allTypeAnnotationIris
+    val ApiV2NonTypeableIris: Set[IRI] = GravsearchAnnotationTypeIris ++
+        TypeAnnotationProperties.allTypeAnnotationIris ++
+        GravsearchOptionIris
 
     /**
      * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].

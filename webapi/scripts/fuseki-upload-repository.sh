@@ -50,7 +50,7 @@ if [[ -z "${PASSWORD}" ]]; then
 fi
 
 if [[ -z "${HOST}" ]]; then
-    HOST="localhost:8080"
+    HOST="localhost:3030"
 fi
 
 curl -sS -X POST -H "Content-Type: application/trig" --data-binary "@${FILE}" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/${REPOSITORY}" | tee /dev/null

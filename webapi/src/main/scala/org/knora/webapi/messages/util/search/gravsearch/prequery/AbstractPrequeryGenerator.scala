@@ -72,6 +72,9 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     // variables the represent resource metadata
     private val resourceMetadataVariables = mutable.Set.empty[QueryVariable]
 
+    // The query can set this to false to disable inference.
+    var useInference = true
+
     /**
      * Saves a generated variable representing a value literal, if it hasn't been saved already.
      *
@@ -417,36 +420,63 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
     }
 
+    /**
+     * Processes Gravsearch options.
+     *
+     * @param statementPattern the statement specifying the option to be set.
+     */
+    private def processGravsearchOption(statementPattern: StatementPattern): Unit = {
+        statementPattern.pred match {
+            case iriRef: IriRef if OntologyConstants.KnoraApi.UseInferenceIris.contains(iriRef.iri.toString) =>
+                useInference = statementPattern.obj match {
+                    case xsdLiteral: XsdLiteral if xsdLiteral.datatype.toString == OntologyConstants.Xsd.Boolean =>
+                        xsdLiteral.value.toBoolean
+
+                    case other => throw GravsearchException(s"Invalid object for knora-api:useInference: ${other.toSparql}")
+                }
+
+            case other => throw GravsearchException(s"Invalid predicate for knora-api:GravsearchOptions: ${other.toSparql}")
+        }
+    }
+
     protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
-        // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
-        // transform the originally given statement if necessary when processing the predicate
+        // Does this statement set a Gravsearch option?
+        statementPattern.subj match {
+            case iriRef: IriRef if OntologyConstants.KnoraApi.GravsearchOptionsIris.contains(iriRef.iri.toString) =>
+                // Yes. Process the option.
+                processGravsearchOption(statementPattern)
+                Seq.empty[QueryPattern]
 
-        // check if there exists type information for the given statement's subject
-        val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
-            entity = statementPattern.subj,
-            typeInspectionResult = typeInspectionResult,
-            processedTypeInfo = processedTypeInformationKeysWhereClause,
-            conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
-        )
+            case _ =>
+                // No. look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
+                // transform the originally given statement if necessary when processing the predicate
 
-        // check if there exists type information for the given statement's object
-        val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
-            entity = statementPattern.obj,
-            typeInspectionResult = typeInspectionResult,
-            processedTypeInfo = processedTypeInformationKeysWhereClause,
-            conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
-        )
+                // check if there exists type information for the given statement's subject
+                val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
+                    entity = statementPattern.subj,
+                    typeInspectionResult = typeInspectionResult,
+                    processedTypeInfo = processedTypeInformationKeysWhereClause,
+                    conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+                )
 
-        // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
-        val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(
-            statementPattern = statementPattern,
-            typeInspectionResult = typeInspectionResult,
-            conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
-        )
+                // check if there exists type information for the given statement's object
+                val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
+                    entity = statementPattern.obj,
+                    typeInspectionResult = typeInspectionResult,
+                    processedTypeInfo = processedTypeInformationKeysWhereClause,
+                    conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+                )
 
-        additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
+                // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
+                val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(
+                    statementPattern = statementPattern,
+                    typeInspectionResult = typeInspectionResult,
+                    conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
+                )
 
+                additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
+        }
     }
 
     /**
@@ -579,7 +609,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         // check if the objectTypeIri of propInfo is knora-api:Resource
         // if so, it is a linking property and its link value property must be restricted too
-        if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(propInfo.objectTypeIri)) {
+        if (propInfo.objectIsResourceType) {
             // it is a linking property, restrict the link value property
             val restrictionForLinkValueProp = CompareExpression(
                 leftArg = createLinkValuePropertyVariableFromLinkingPropertyVariable(queryVar), // the same variable was created during statement processing in WHERE clause in `convertStatementForPropertyType`
@@ -1712,10 +1742,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
         val optimisedPatterns = patterns.filter {
-            case stamentPattern: StatementPattern =>
-                stamentPattern.pred match {
+            case statementPattern: StatementPattern =>
+                statementPattern.pred match {
                     case iriRef: IriRef =>
-                        val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(stamentPattern.subj)
+                        val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
                         subject match {
                             case Some(typeableEntity) =>
                                 !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)

@@ -25,18 +25,22 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 /**
- * Methods and classes for Sparql transformation.
+ * Methods and classes for transforming generated SPARQL.
  */
 object SparqlTransformer {
 
     /**
      * Transforms a non-triplestore-specific SELECT query for GraphDB.
+     *
+     * @param useInference `true` if the triplestore's inference should be used.
      */
-    class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
+    class GraphDBSelectToSelectTransformer(useInference: Boolean) extends SelectToSelectTransformer {
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            transformKnoraExplicitToGraphDBExplicit(statementPattern)
+            transformKnoraExplicitToGraphDBExplicit(statement = statementPattern, useInference = useInference)
         }
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -45,38 +49,52 @@ object SparqlTransformer {
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
+
+        override def getFromClause: Option[FromClause] = {
+            if (useInference) {
+                None
+            } else {
+                // To turn off inference, add FROM <http://www.ontotext.com/explicit>.
+                Some(FromClause(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri)))
+            }
+        }
     }
 
     /**
      * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
+     *
+     * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
      */
-    class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
+    class NoInferenceSelectToSelectTransformer(simulateInference: Boolean) extends SelectToSelectTransformer {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] =
-            transformStatementInWhereForNoInference(statementPattern)
+            transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = simulateInference)
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            val luceneFirst = moveLuceneToBeginning(patterns)
-            moveIsDeletedToEnd(luceneFirst)
+            moveIsDeletedToEnd(moveLuceneToBeginning(patterns))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForFuseki(luceneQueryPattern)
+
+        override def getFromClause: Option[FromClause] = None
     }
 
     /**
      * Transforms a non-triplestore-specific CONSTRUCT query for GraphDB.
      */
     class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            transformKnoraExplicitToGraphDBExplicit(statementPattern)
+            transformKnoraExplicitToGraphDBExplicit(statement = statementPattern, useInference = true)
         }
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -96,13 +114,12 @@ object SparqlTransformer {
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] =
-            transformStatementInWhereForNoInference(statementPattern)
+            transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            val luceneFirst: Seq[QueryPattern] = moveLuceneToBeginning(patterns)
-            moveIsDeletedToEnd(luceneFirst)
+            moveIsDeletedToEnd(moveLuceneToBeginning(patterns))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -204,7 +221,7 @@ object SparqlTransformer {
      */
     def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         val (luceneQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-            case luceneQueryPattern: LuceneQueryPattern => true
+            case _: LuceneQueryPattern => true
             case _ => false
         }
 
@@ -214,96 +231,94 @@ object SparqlTransformer {
     /**
      * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
      *
-     * @param statementPattern the statement pattern.
+     * @param statementPattern  the statement pattern.
+     * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
      * @return the statement pattern as expanded to work without inference.
      */
-    private def transformStatementInWhereForNoInference(statementPattern: StatementPattern): Seq[StatementPattern] = {
+    private def transformStatementInWhereForNoInference(statementPattern: StatementPattern, simulateInference: Boolean): Seq[StatementPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         statementPattern.pred match {
             case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
+                // Simulate knora-api:standoffTagHasStartAncestor, using knora-api:standoffTagHasStartParent.
                 Seq(
                     statementPattern.copy(
                         pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
                     )
                 )
 
-            case _ => expandStatementForNoInference(statementPattern)
-        }
-    }
-
-    /**
-     * If inference is not being used, expands non-explicit statements to simulate inference using `rdfs:subClassOf*`
-     * and `rdfs:subPropertyOf*`.
-     *
-     * @param statementPattern the statement to be expanded.
-     * @return the result of the expansion.
-     */
-    private def expandStatementForNoInference(statementPattern: StatementPattern)(implicit stringFormatter: StringFormatter): Seq[StatementPattern] = {
-        // Is the statement in KnoraExplicitNamedGraph?
-        statementPattern.namedGraph match {
-            case Some(graphIri: IriRef) if graphIri.iri.toString == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph =>
-                // Yes. No expansion needed. Just remove KnoraExplicitNamedGraph.
-                Seq(statementPattern.copy(namedGraph = None))
-
             case _ =>
-                // The statement isn't in KnoraExplicitNamedGraph, so it might need to be expanded. Is the predicate a property IRI?
-                statementPattern.pred match {
-                    case iriRef: IriRef =>
-                        // Yes.
-                        val propertyIri = iriRef.iri.toString
-
-                        // Is the property rdf:type?
-                        if (propertyIri == OntologyConstants.Rdf.Type) {
-                            // Yes. Expand using rdfs:subClassOf*.
-
-                            val baseClassIri: IriRef = statementPattern.obj match {
-                                case iriRef: IriRef => iriRef
-                                case other => throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
-                            }
-
-                            val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(base = statementPattern.subj, baseClassIri = baseClassIri)
-
-                            Seq(
-                                StatementPattern(
-                                    subj = rdfTypeVariable,
-                                    pred = IriRef(
-                                        iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
-                                        propertyPathOperator = Some('*')
-                                    ),
-                                    obj = statementPattern.obj
-                                ),
-                                StatementPattern(
-                                    subj = statementPattern.subj,
-                                    pred = statementPattern.pred,
-                                    obj = rdfTypeVariable
-                                )
-                            )
-                        } else {
-                            // No. Expand using rdfs:subPropertyOf*.
-
-                            val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = statementPattern.pred, propertyIri = OntologyConstants.Rdfs.SubPropertyOf)
-
-                            Seq(
-                                StatementPattern(
-                                    subj = propertyVariable,
-                                    pred = IriRef(
-                                        iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
-                                        propertyPathOperator = Some('*')
-                                    ),
-                                    obj = statementPattern.pred
-                                ),
-                                StatementPattern(
-                                    subj = statementPattern.subj,
-                                    pred = propertyVariable,
-                                    obj = statementPattern.obj
-                                )
-                            )
-                        }
+                // Is the statement in KnoraExplicitNamedGraph?
+                statementPattern.namedGraph match {
+                    case Some(graphIri: IriRef) if graphIri.iri.toString == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph =>
+                        // Yes. No expansion needed. Just remove KnoraExplicitNamedGraph.
+                        Seq(statementPattern.copy(namedGraph = None))
 
                     case _ =>
-                        // The predicate isn't a property IRI, so no expansion needed.
-                        Seq(statementPattern)
+                        // Is inference enabled?
+                        if (simulateInference) {
+                            // Yes. The statement might need to be expanded. Is the predicate a property IRI?
+                            statementPattern.pred match {
+                                case iriRef: IriRef =>
+                                    // Yes.
+                                    val propertyIri = iriRef.iri.toString
+
+                                    // Is the property rdf:type?
+                                    if (propertyIri == OntologyConstants.Rdf.Type) {
+                                        // Yes. Expand using rdfs:subClassOf*.
+
+                                        val baseClassIri: IriRef = statementPattern.obj match {
+                                            case iriRef: IriRef => iriRef
+                                            case other => throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
+                                        }
+
+                                        val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(base = statementPattern.subj, baseClassIri = baseClassIri)
+
+                                        Seq(
+                                            StatementPattern(
+                                                subj = rdfTypeVariable,
+                                                pred = IriRef(
+                                                    iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
+                                                    propertyPathOperator = Some('*')
+                                                ),
+                                                obj = statementPattern.obj
+                                            ),
+                                            StatementPattern(
+                                                subj = statementPattern.subj,
+                                                pred = statementPattern.pred,
+                                                obj = rdfTypeVariable
+                                            )
+                                        )
+                                    } else {
+                                        // No. Expand using rdfs:subPropertyOf*.
+
+                                        val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = statementPattern.pred, propertyIri = OntologyConstants.Rdfs.SubPropertyOf)
+
+                                        Seq(
+                                            StatementPattern(
+                                                subj = propertyVariable,
+                                                pred = IriRef(
+                                                    iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
+                                                    propertyPathOperator = Some('*')
+                                                ),
+                                                obj = statementPattern.pred
+                                            ),
+                                            StatementPattern(
+                                                subj = statementPattern.subj,
+                                                pred = propertyVariable,
+                                                obj = statementPattern.obj
+                                            )
+                                        )
+                                    }
+
+                                case _ =>
+                                    // The predicate isn't a property IRI, so no expansion needed.
+                                    Seq(statementPattern)
+                            }
+                        } else {
+                            // Inference is disabled. Just return the statement as is.
+                            Seq(statementPattern)
+                        }
                 }
         }
     }
@@ -311,18 +326,26 @@ object SparqlTransformer {
     /**
      * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
      *
-     * @param statement the given statement whose graph name has to be renamed.
+     * @param statement    the given statement whose graph name has to be renamed.
+     * @param useInference `true` if the triplestore's inference should be used.
      * @return the statement with the renamed graph, if given.
      */
-    private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
+    private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern, useInference: Boolean): Seq[StatementPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val transformedPattern = statement.copy(
-            // Replace the deprecated property knora-base:matchesTextIndex with a GraphDB-specific one.
             pred = statement.pred,
             namedGraph = statement.namedGraph match {
-                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
+                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) =>
+                    if (useInference) {
+                        Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
+                    } else {
+                        // Inference will be turned off in a FROM clause, so there's no need to specify a named graph here.
+                        None
+                    }
+
                 case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
+
                 case None => None
             }
         )
@@ -339,7 +362,7 @@ object SparqlTransformer {
     private def transformLuceneQueryPatternForGraphDB(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-         Seq(
+        Seq(
             StatementPattern(
                 subj = luceneQueryPattern.obj, // In GraphDB, an index entry is associated with a literal.
                 pred = IriRef("http://www.ontotext.com/owlim/lucene#fullTextSearchIndex".toSmartIri),

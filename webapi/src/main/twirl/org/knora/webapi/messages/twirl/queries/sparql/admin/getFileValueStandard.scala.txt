@@ -36,39 +36,24 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?fileValue ?objPred ?objObj
-WHERE {
-
+CONSTRUCT {
+    ?fileValue ?objPred ?objObj .
+    ?fileValue knora-base:attachedToProject ?resourceProject .
+    ?fileValue knora-base:hasPermissions ?currentFileValuePermissions .
+} WHERE {
     ?fileValue knora-base:internalFilename "@filename" .
 
     ?currentFileValue knora-base:previousValue* ?fileValue ;
-        knora-base:isDeleted false .
-
-    ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+        knora-base:hasPermissions ?currentFileValuePermissions .
 
     ?resource ?prop ?currentFileValue ;
-        knora-base:isDeleted false .
+        knora-base:attachedToProject ?resourceProject .
 
-    {
-        ?fileValue ?objPred ?objObj .
-        FILTER(?objPred != knora-base:attachedToProject && ?objPred != knora-base:hasPermissions)
-    }
-    UNION
-    {
-        @* Return the permissions of the current version of the value. *@
+    ?fileValue ?objPred ?objObj .
 
-        ?currentFileValue knora-base:hasPermissions ?currentFileValuePermissions .
+    @* This FILTER is unnecessary, but it makes Jena run the query faster. *@
+    FILTER(?objPred != knora-base:previousValue)
 
-        BIND(knora-base:hasPermissions AS ?objPred)
-        BIND(?currentFileValuePermissions AS ?objObj)
-    }
-    UNION
-    {
-        @* Return the project of the resource that contains the value. *@
-
-        ?resource knora-base:attachedToProject ?resourceProject .
-
-        BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(?resourceProject AS ?objObj)
-    }
+    ?currentFileValue knora-base:isDeleted false .
+    ?resource knora-base:isDeleted false .
 }
