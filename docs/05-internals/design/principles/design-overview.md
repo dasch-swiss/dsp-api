@@ -69,7 +69,7 @@ API v2, but API v2 does not depend on API v1.
 
 ### HTTP Module
 
-- `org.knora.webapi.routing`: Knora's [Akka HTTP](https://akka.io/akka-http/) routes.
+- `org.knora.webapi.routing`: Knora's [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html) routes.
   Each routing class matches URL patterns for requests involving some particular
   type of data in the repository. Routes are API-specific. For example,
   `ResourcesRouteV2` matches URL paths starting with `/v2/resources`, which

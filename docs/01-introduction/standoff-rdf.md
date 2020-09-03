@@ -19,7 +19,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Standoff/RDF Text Markup
 
-[Standoff markup](http://uahost.uantwerpen.be/lse/index.php/lexicon/markup-standoff/)
+[Standoff markup](https://lexiconse.uantwerpen.be/index.php/lexicon/markup-standoff/)
 is text markup that is stored separately from the content it describes. Knora's
 Standoff/RDF markup stores content as a simple Unicode string, and represents markup
 separately as RDF data. This approach has some advantages over commonly used markup systems
