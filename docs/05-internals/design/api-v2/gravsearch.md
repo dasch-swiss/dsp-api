@@ -155,8 +155,9 @@ If the client submits a count query, the prequery returns the overall number of 
 In a first step, before transforming the WHERE clause, query patterns must be further optimised by removing
 the `rdfs:type` statement for entities whose type could be inferred from a property since there would be no need 
 for explicit `rdfs:type` statements for them (unless the property from which the type of an entity must be inferred from 
-is wrapped in an `OPTIONAL` block). This optimisation has to happen in advance, because 
-otherwise `transformStatementInWhere` would expand the redundant `rdfs:type` statements.
+is wrapped in an `OPTIONAL` block). This optimisation takes the Gravsearch query as input (rather than the generated SPARQL),
+because it uses type information that refers to entities in the Gravsearch query, and the generated SPARQL might
+have different entities.
 
 Next, the Gravsearch query's WHERE clause is transformed and the prequery (SELECT and WHERE clause) is generated from this result.
 The transformation of the Gravsearch query's WHERE clause relies on the implementation of the abstract class `AbstractPrequeryGenerator`.
@@ -314,14 +315,18 @@ When the triplestore-specific version of the query is generated:
   for text searches.
 
 - If Knora is not using the triplestore's inference (e.g. with Fuseki),
-  `SparqlTransformer.expandStatementForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
+  `SparqlTransformer.transformStatementInWhereForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
   statements using `rdfs:subClassOf*` and `rdfs:subPropertyOf*`.
 
 Gravsearch also provides some virtual properties, which take advantage of forward-chaining inference
 as an optimisation if the triplestore provides it. For example, the virtual property
 `knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`, but
 with GraphDB it is implemented using a custom inference rule (in `KnoraRules.pie`) and is therefore more
-efficient. If Knora is not using the triplestore's inference,
+efficient. If Knora is not using the triplestore's inference, `SparqlTransformer.transformStatementInWhereForNoInference`
+replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
-`SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor`
-with `knora-base:standoffTagHasStartParent*`.
+# Optimisation of generated SPARQL
+
+The triplestore-specific transformers in `SparqlTransformer.scala` can run optimisations on the generated SPARQL, in
+the method `optimiseQueryPatterns` inherited from `WhereTransformer`. For example, `moveLuceneToBeginning` moves
+Lucene queries to the beginning of the block in which they occur.

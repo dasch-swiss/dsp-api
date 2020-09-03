@@ -72,7 +72,7 @@ property name):
 
 :   The `kb:Institution` that the project belongs to.
 
-Ontologies, resources, and valuesare associated with a project by means of the
+Ontologies and resources are associated with a project by means of the
 `kb:attachedToProject` property, as described in [Ontologies](#ontologies)
 and [Properties of Resource](#properties-of-resource)). Users are associated with a project by
 means of the `kb:isInProject` property, as described in
@@ -317,11 +317,6 @@ created by copying data from a deleted value.
 `attachedToUser` (1)
 
 :   The user who owns the value.
-
-`attachedToProject` (0-1)
-
-:   The project that the value is part of. If not specified, defaults to
-    the project of the containing resource.
 
 `valueHasString` (1)
 

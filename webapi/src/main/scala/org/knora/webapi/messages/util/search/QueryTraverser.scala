@@ -45,14 +45,12 @@ trait WhereVisitor[Acc] {
 }
 
 /**
- * A trait for classes that transform statements and filters in WHERE clauses. Such a class will probably need
- * to refer to a [[GravsearchTypeInspectionResult]].
+ * A trait for classes that transform statements and filters in WHERE clauses.
  */
 trait WhereTransformer {
     /**
-     * Optimises the entity type statments and order of query patterns. Does not recurse. It
-     * has to be called before transformStatementInWhere, because optimisation might remove statements that
-     * would otherwise be expanded by transformStatementInWhere
+     * Optimises query patterns. Does not recurse. Must be called before `transformStatementInWhere`,
+     * because optimisation might remove statements that would otherwise be expanded by `transformStatementInWhere`.
      *
      * @param patterns the query patterns to be optimised.
      * @return the optimised query patterns.
@@ -97,6 +95,13 @@ trait SelectToSelectTransformer extends WhereTransformer {
      * @return the result of the transformation.
      */
     def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern]
+
+    /**
+     * Specifies a FROM clause, if needed.
+     *
+     * @return the FROM clause to be used, if any.
+     */
+    def getFromClause: Option[FromClause]
 }
 
 /**
@@ -191,7 +196,7 @@ object QueryTraverser {
         // remove statements that would otherwise be expanded by transformStatementInWhere
         val optimisedPatterns = whereTransformer.optimiseQueryPatterns(patterns)
 
-         optimisedPatterns.flatMap {
+        optimisedPatterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
                     statementPattern = statementPattern,
@@ -340,6 +345,7 @@ object QueryTraverser {
 
     def transformSelectToSelect(inputQuery: SelectQuery, transformer: SelectToSelectTransformer): SelectQuery = {
         inputQuery.copy(
+            fromClause = transformer.getFromClause,
             whereClause = WhereClause(
                 patterns = transformWherePatterns(
                     patterns = inputQuery.whereClause.patterns,
