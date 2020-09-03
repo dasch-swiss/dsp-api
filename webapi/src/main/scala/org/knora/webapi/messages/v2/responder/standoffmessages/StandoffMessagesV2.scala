@@ -1,20 +1,20 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.messages.v2.responder.standoffmessages
@@ -26,61 +26,63 @@ import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
-  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
-  */
+ * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
+ */
 sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
 
 /**
-  * Requests a page of standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
-  *
-  * @param resourceIri    the IRI of the resource containing the value.
-  * @param valueIri       the IRI of the value.
-  * @param offset         the start index of the first standoff tag to be returned.
-  * @param targetSchema   the schema of the response.
-  * @param requestingUser the user making the request.
-  */
+ * Requests a page of standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
+ *
+ * @param resourceIri    the IRI of the resource containing the value.
+ * @param valueIri       the IRI of the value.
+ * @param offset         the start index of the first standoff tag to be returned.
+ * @param targetSchema   the schema of the response.
+ * @param requestingUser the user making the request.
+ */
 case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, targetSchema: ApiV2Schema, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
-  * Requests all the standoff markup from a text value, except for the first page. A successful response will be a [[GetStandoffResponseV2]].
-  *
-  * @param resourceIri    the IRI of the resource containing the text value.
-  * @param valueIri       the IRI of the text value.
-  * @param requestingUser the user making the request.
-  */
+ * Requests all the standoff markup from a text value, except for the first page. A successful response will be a [[GetStandoffResponseV2]].
+ *
+ * @param resourceIri    the IRI of the resource containing the text value.
+ * @param valueIri       the IRI of the text value.
+ * @param requestingUser the user making the request.
+ */
 case class GetRemainingStandoffFromTextValueRequestV2(resourceIri: IRI, valueIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
-  * A response to a [[GetStandoffPageRequestV2]] or a [[GetRemainingStandoffFromTextValueRequestV2]], representing standoff
-  * tags from a text value.
-  *
-  * @param valueIri   the IRI of the value.
-  * @param standoff   standoff tags from the value.
-  * @param nextOffset the next available offset, if any.
-  */
+ * A response to a [[GetStandoffPageRequestV2]] or a [[GetRemainingStandoffFromTextValueRequestV2]], representing standoff
+ * tags from a text value.
+ *
+ * @param valueIri   the IRI of the value.
+ * @param standoff   standoff tags from the value.
+ * @param nextOffset the next available offset, if any.
+ */
 case class GetStandoffResponseV2(valueIri: IRI,
                                  standoff: Seq[StandoffTagV2],
                                  nextOffset: Option[Int]) extends KnoraResponseV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Converts the response to a data structure that can be used to generate JSON-LD.
-      *
-      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-      * @return a [[JsonLDDocument]] representing the response.
-      */
+     * Converts the response to a data structure that can be used to generate JSON-LD.
+     *
+     * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+     * @return a [[JsonLDDocument]] representing the response.
+     */
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"Standoff is available only in the complex schema")
@@ -116,23 +118,23 @@ case class GetStandoffResponseV2(valueIri: IRI,
 }
 
 /**
-  * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
-  * A successful response will be a [[CreateMappingResponseV2]].
-  *
-  * @param metadata       the metadata describing the mapping.
-  * @param xml            the mapping in XML syntax.
-  * @param requestingUser the the user making the request.
-  * @param apiRequestID   the ID of the API request.
-  */
+ * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
+ * A successful response will be a [[CreateMappingResponseV2]].
+ *
+ * @param metadata       the metadata describing the mapping.
+ * @param xml            the mapping in XML syntax.
+ * @param requestingUser the the user making the request.
+ * @param apiRequestID   the ID of the API request.
+ */
 case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, requestingUser: UserADM, apiRequestID: UUID) extends StandoffResponderRequestV2
 
 /**
-  * Represents the metadata describing the mapping that is to be created.
-  *
-  * @param label       the label describing the mapping.
-  * @param projectIri  the IRI of the project the mapping belongs to.
-  * @param mappingName the name of the mapping to be created.
-  */
+ * Represents the metadata describing the mapping that is to be created.
+ *
+ * @param label       the label describing the mapping.
+ * @param projectIri  the IRI of the project the mapping belongs to.
+ * @param mappingName the name of the mapping to be created.
+ */
 case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, mappingName: String) extends StandoffResponderRequestV2
 
 object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestMetadataV2] {
@@ -175,19 +177,19 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
 }
 
 /**
-  * Represents the mapping as an XML document.
-  *
-  * @param xml the mapping to be created.
-  */
+ * Represents the mapping as an XML document.
+ *
+ * @param xml the mapping to be created.
+ */
 case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderRequestV2
 
 /**
-  * Provides the IRI of the created mapping.
-  *
-  * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
-  * @param label      the label describing the mapping.
-  * @param projectIri the project the mapping belongs to.
-  */
+ * Provides the IRI of the created mapping.
+ *
+ * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
+ * @param label      the label describing the mapping.
+ * @param projectIri the project the mapping belongs to.
+ */
 case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
@@ -213,85 +215,85 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
 }
 
 /**
-  * Represents a request to get a mapping from XML elements and attributes to standoff entities.
-  *
-  * @param mappingIri     the IRI of the mapping.
-  * @param requestingUser the the user making the request.
-  */
+ * Represents a request to get a mapping from XML elements and attributes to standoff entities.
+ *
+ * @param mappingIri     the IRI of the mapping.
+ * @param requestingUser the the user making the request.
+ */
 case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
-  * Represents a response to a [[GetMappingRequestV2]].
-  *
-  * @param mappingIri       the IRI of the requested mapping.
-  * @param mapping          the requested mapping.
-  * @param standoffEntities the standoff entities referred to in the mapping.
-  */
+ * Represents a response to a [[GetMappingRequestV2]].
+ *
+ * @param mappingIri       the IRI of the requested mapping.
+ * @param mapping          the requested mapping.
+ * @param standoffEntities the standoff entities referred to in the mapping.
+ */
 case class GetMappingResponseV2(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV2) // TODO: there should be a route to obtain a mapping
 
 /**
-  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
-  *
-  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
-  * @param requestingUser            the the user making the request.
-  */
+ * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
+ *
+ * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
+ * @param requestingUser            the the user making the request.
+ */
 case class GetXSLTransformationRequestV2(xsltTextRepresentationIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
-  * Represents a response to a [[GetXSLTransformationRequestV2]].
-  *
-  * @param xslt the XSLT to be applied to the XML created from standoff.
-  */
+ * Represents a response to a [[GetXSLTransformationRequestV2]].
+ *
+ * @param xslt the XSLT to be applied to the XML created from standoff.
+ */
 case class GetXSLTransformationResponseV2(xslt: String)
 
 /**
-  * Represents a mapping between XML tags and standoff entities (classes and properties).
-  *
-  * Example:
-  *
-  * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
-  *
-  * The class names allow for the reuse of the same tag name. This is important when using HTML since the tag set is very limited.
-  *
-  * @param namespace                a Map of XML namespaces and a Map of tag names and [[XMLTag]].
-  * @param defaultXSLTransformation the IRI of the default XSL transformation for the resulting XML, if any.
-  */
+ * Represents a mapping between XML tags and standoff entities (classes and properties).
+ *
+ * Example:
+ *
+ * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
+ *
+ * The class names allow for the reuse of the same tag name. This is important when using HTML since the tag set is very limited.
+ *
+ * @param namespace                a Map of XML namespaces and a Map of tag names and [[XMLTag]].
+ * @param defaultXSLTransformation the IRI of the default XSL transformation for the resulting XML, if any.
+ */
 case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, XMLTag]]], defaultXSLTransformation: Option[IRI])
 
 /**
-  * Represents a mapping between an XML tag and standoff entities (classes and properties).
-  *
-  * @param name              the tag name.
-  * @param mapping           the corresponding standoff entities.
-  * @param separatorRequired indicates if the element requires a separator in the text once the markup has been converted to standoff.
-  */
+ * Represents a mapping between an XML tag and standoff entities (classes and properties).
+ *
+ * @param name              the tag name.
+ * @param mapping           the corresponding standoff entities.
+ * @param separatorRequired indicates if the element requires a separator in the text once the markup has been converted to standoff.
+ */
 case class XMLTag(name: String, mapping: XMLTagToStandoffClass, separatorRequired: Boolean)
 
 /**
-  * Represents standoff entities referred to in the mapping.
-  * The attributes are represented as a Map of namespaces and a Map of attribute names and standoff properties.
-  *
-  * Example for attributesToProps:
-  *
-  * attributesToProps = Map("myXMLNamespace" -> Map("myXMLAttributeName" -> "standoffPropertyIri"))
-  *
-  * @param standoffClassIri  the IRI of the standoff class.
-  * @param attributesToProps a mapping between XML namespaces and attribute names and standoff properties.
-  * @param dataType          the data type of the standoff class (e.g., a date).
-  */
+ * Represents standoff entities referred to in the mapping.
+ * The attributes are represented as a Map of namespaces and a Map of attribute names and standoff properties.
+ *
+ * Example for attributesToProps:
+ *
+ * attributesToProps = Map("myXMLNamespace" -> Map("myXMLAttributeName" -> "standoffPropertyIri"))
+ *
+ * @param standoffClassIri  the IRI of the standoff class.
+ * @param attributesToProps a mapping between XML namespaces and attribute names and standoff properties.
+ * @param dataType          the data type of the standoff class (e.g., a date).
+ */
 case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[XMLStandoffDataTypeClass])
 
 /**
-  * Represents a data type standoff class in mapping for an XML element.
-  *
-  * @param standoffDataTypeClass the data type of the standoff class (e.g., a date).
-  * @param dataTypeXMLAttribute  the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
-  */
+ * Represents a data type standoff class in mapping for an XML element.
+ *
+ * @param standoffDataTypeClass the data type of the standoff class (e.g., a date).
+ * @param dataTypeXMLAttribute  the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
+ */
 case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClasses.Value, dataTypeXMLAttribute: String)
 
 /**
-  * Represents the data types of standoff classes.
-  */
+ * Represents the data types of standoff classes.
+ */
 object StandoffDataTypeClasses extends Enumeration {
 
     val StandoffLinkTag: Value = Value(OntologyConstants.KnoraBase.StandoffLinkTag)
@@ -317,13 +319,13 @@ object StandoffDataTypeClasses extends Enumeration {
     val valueMap: Map[IRI, Value] = values.toList.map(v => (v.toString, v)).toMap
 
     /**
-      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * exception.
-      *
-      * @param name     the name of the value.
-      * @param errorFun the function to be called in case of an error.
-      * @return the requested value.
-      */
+     * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+     * exception.
+     *
+     * @param name     the name of the value.
+     * @param errorFun the function to be called in case of an error.
+     * @return the requested value.
+     */
     def lookup(name: String, errorFun: => Nothing): Value = {
         valueMap.get(name) match {
             case Some(value) => value
@@ -336,8 +338,8 @@ object StandoffDataTypeClasses extends Enumeration {
 }
 
 /**
-  * Represents collections of standoff properties.
-  */
+ * Represents collections of standoff properties.
+ */
 object StandoffProperties {
 
     // represents the standoff properties defined on the base standoff tag
@@ -402,8 +404,8 @@ object StandoffProperties {
 // Standoff tags and their components.
 
 /**
-  * A trait representing an attribute attached to a standoff tag.
-  */
+ * A trait representing an attribute attached to a standoff tag.
+ */
 trait StandoffTagAttributeV2 extends KnoraContentV2[StandoffTagAttributeV2] {
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -417,13 +419,13 @@ trait StandoffTagAttributeV2 extends KnoraContentV2[StandoffTagAttributeV2] {
 }
 
 /**
-  * Represents a standoff tag attribute of type IRI.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  * @param targetExists        `true` if the specified IRI already exists in the triplestore, `false` if it is
-  *                            being created in the same transaction.
-  */
+ * Represents a standoff tag attribute of type IRI.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ * @param targetExists        `true` if the specified IRI already exists in the triplestore, `false` if it is
+ *                            being created in the same transaction.
+ */
 case class StandoffTagIriAttributeV2(standoffPropertyIri: SmartIri, value: IRI, targetExists: Boolean = true) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value
@@ -440,11 +442,11 @@ case class StandoffTagIriAttributeV2(standoffPropertyIri: SmartIri, value: IRI, 
 }
 
 /**
-  * Represents a standoff tag attribute of type URI.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  */
+ * Represents a standoff tag attribute of type URI.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
 case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: String) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value
@@ -464,11 +466,11 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: Strin
 }
 
 /**
-  * Represents a standoff tag attribute that refers to another standoff node.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  */
+ * Represents a standoff tag attribute that refers to another standoff node.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
 case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: SmartIri, value: IRI) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value.toString
@@ -485,11 +487,11 @@ case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: SmartIri
 }
 
 /**
-  * Represents a standoff tag attribute of type string.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  */
+ * Represents a standoff tag attribute of type string.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
 case class StandoffTagStringAttributeV2(standoffPropertyIri: SmartIri, value: String) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value
@@ -506,11 +508,11 @@ case class StandoffTagStringAttributeV2(standoffPropertyIri: SmartIri, value: St
 }
 
 /**
-  * Represents a standoff tag attribute of type integer.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  */
+ * Represents a standoff tag attribute of type integer.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
 case class StandoffTagIntegerAttributeV2(standoffPropertyIri: SmartIri, value: Int) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value.toString
@@ -527,11 +529,11 @@ case class StandoffTagIntegerAttributeV2(standoffPropertyIri: SmartIri, value: I
 }
 
 /**
-  * Represents a standoff tag attribute of type decimal.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  */
+ * Represents a standoff tag attribute of type decimal.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
 case class StandoffTagDecimalAttributeV2(standoffPropertyIri: SmartIri, value: BigDecimal) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value.toString
@@ -551,11 +553,11 @@ case class StandoffTagDecimalAttributeV2(standoffPropertyIri: SmartIri, value: B
 }
 
 /**
-  * Represents a standoff tag attribute of type boolean.
-  *
-  * @param standoffPropertyIri the IRI of the standoff property
-  * @param value               the value of the standoff property.
-  */
+ * Represents a standoff tag attribute of type boolean.
+ *
+ * @param standoffPropertyIri the IRI of the standoff property
+ * @param value               the value of the standoff property.
+ */
 case class StandoffTagBooleanAttributeV2(standoffPropertyIri: SmartIri, value: Boolean) extends StandoffTagAttributeV2 {
 
     def stringValue: String = value.toString
@@ -596,21 +598,21 @@ case class StandoffTagTimeAttributeV2(standoffPropertyIri: SmartIri, value: Inst
 }
 
 /**
-  * Represents any subclass of a `knora-base:StandoffTag`.
-  *
-  * @param standoffTagClassIri the IRI of the standoff class to be created.
-  * @param dataType            the data type of the standoff class, if any.
-  * @param uuid                a [[UUID]] representing this tag and any other tags that
-  *                            point to semantically equivalent ranges in other versions of the same text.
-  * @param startPosition       the start position of the range of characters marked up with this tag.
-  * @param endPosition         the end position of the range of characters marked up with this tag.
-  * @param startIndex          the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                            and make it possible to order tags that share the same position.
-  * @param endIndex            the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex    the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex      the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes          the attributes attached to this tag.
-  */
+ * Represents any subclass of a `knora-base:StandoffTag`.
+ *
+ * @param standoffTagClassIri the IRI of the standoff class to be created.
+ * @param dataType            the data type of the standoff class, if any.
+ * @param uuid                a [[UUID]] representing this tag and any other tags that
+ *                            point to semantically equivalent ranges in other versions of the same text.
+ * @param startPosition       the start position of the range of characters marked up with this tag.
+ * @param endPosition         the end position of the range of characters marked up with this tag.
+ * @param startIndex          the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
+ *                            and make it possible to order tags that share the same position.
+ * @param endIndex            the index of the end position (only in case of a virtual hierarchy tag).
+ * @param startParentIndex    the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
+ * @param endParentIndex      the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
+ * @param attributes          the attributes attached to this tag.
+ */
 case class StandoffTagV2(standoffTagClassIri: SmartIri,
                          dataType: Option[StandoffDataTypeClasses.Value] = None,
                          uuid: UUID,

@@ -20,6 +20,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.http.version.ServerVersion
 
 
 object ServerVersionE2ESpec {
@@ -42,8 +43,13 @@ class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
         "return the custom 'Server' header with every response" in {
             val request = Get(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
-            // logger.debug(s"response: ${response.toString}")
             response.headers should contain (ServerVersion.getServerVersionHeader())
+            response.headers.find(_.name == "Server") match {
+                case Some(serverHeader: HttpHeader) =>
+                    serverHeader.value() should include ("webapi/")
+                    serverHeader.value() should include ("akka-http/")
+                case None => fail("no server header found")
+            }
             response.status should be(StatusCodes.OK)
         }
     }

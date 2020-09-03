@@ -187,7 +187,7 @@ In addition to the creation date, in the body of the request, it is possible to 
 the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
 will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
-Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding. Each value of the new resource
+Each custom UUID must be [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5), without padding. Each value of the new resource
 can also have a custom creation date specified by adding `knora-api:creationDate` 
 (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
 For example:
@@ -224,7 +224,7 @@ For example:
 ```
  
 The response is a JSON-LD document containing a
-[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
+[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-iri)
 of the resource.
 
 ## Modifying a Resource's Values
@@ -330,8 +330,28 @@ The request body is a JSON-LD object containing the following information about 
 The optional property `knora-api:deleteComment` specifies a comment to be attached to the
 resource, explaining why it has been marked as deleted.
 
+The optional property `knora-api:deleteDate`
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp))
+indicates when the resource was marked as deleted; if not given, the current
+time is used.
+
 The response is a JSON-LD document containing the predicate `knora-api:result`
 with a confirmation message.
+
+### Links to Deleted Resources
+
+If resource `A` has a link to resource `B`, and resource
+`B` is later marked as deleted, `A`'s link will still exist. Knora API
+v2 will still return the link when `A` is queried, but without any information
+about `B` (except for `B`'s IRI). If `A`'s link is necessary to
+meet the requirements of a cardinality, marking `B` as deleted will
+not violate the cardinality.
+
+The reason for this design is that `A` and `B` might be in
+different projects, and each project must retain control of its resources
+and be able to mark them as deleted, even if they are used by another
+project. In future, Knora may be able to notify the owner of `A` in this
+case.
 
 ## Erasing a Resource from the Triplestore
 

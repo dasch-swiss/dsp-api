@@ -25,21 +25,24 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM._
-import org.knora.webapi.util.{ActorUtil, PermissionUtilADM, SmartIri}
+import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.util.ActorUtil
 
 import scala.concurrent.Future
 
@@ -248,9 +251,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     propertyIri = adjustedInternalPropertyIri,
                     value = submittedInternalValueContent,
-                    customValueIri = createValueRequest.createValue.customValueIri,
-                    customValueUUID = createValueRequest.createValue.customValueUUID,
-                    customValueCreationDate = createValueRequest.createValue.customValueCreationDate,
+                    valueIri = createValueRequest.createValue.valueIri,
+                    valueUUID = createValueRequest.createValue.valueUUID,
+                    valueCreationDate = createValueRequest.createValue.valueCreationDate,
                     valueCreator = createValueRequest.requestingUser.id,
                     valuePermissions = newValuePermissionLiteral,
                     requestingUser = createValueRequest.requestingUser
@@ -312,19 +315,19 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
      * pre-update checks have already been done.
      *
-     * @param dataNamedGraph          the named graph in which the value is to be created.
-     * @param projectIri              the IRI of the project in which to create the value.
-     * @param resourceInfo            information about the the resource in which to create the value.
-     * @param propertyIri             the IRI of the property that will point from the resource to the value, or, if
-     *                                the value is a link value, the IRI of the link property.
-     * @param value                   the value to create.
-     * @param customValueIri          the optional custom IRI supplied for the value.
-     * @param customValueUUID         the optional custom UUID supplied for the value.
-     * @param customValueCreationDate the optional custom creation date supplied for the value.
-     * @param valueCreator            the IRI of the new value's owner.
-     * @param valuePermissions        the literal that should be used as the object of the new value's
-     *                                `knora-base:hasPermissions` predicate.
-     * @param requestingUser          the user making the request.
+     * @param dataNamedGraph    the named graph in which the value is to be created.
+     * @param projectIri        the IRI of the project in which to create the value.
+     * @param resourceInfo      information about the the resource in which to create the value.
+     * @param propertyIri       the IRI of the property that will point from the resource to the value, or, if
+     *                          the value is a link value, the IRI of the link property.
+     * @param value             the value to create.
+     * @param valueIri          the optional custom IRI supplied for the value.
+     * @param valueUUID         the optional custom UUID supplied for the value.
+     * @param valueCreationDate the optional custom creation date supplied for the value.
+     * @param valueCreator      the IRI of the new value's owner.
+     * @param valuePermissions  the literal that should be used as the object of the new value's
+     *                          `knora-base:hasPermissions` predicate.
+     * @param requestingUser    the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def createValueV2AfterChecks(dataNamedGraph: IRI,
@@ -332,13 +335,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                          resourceInfo: ReadResourceV2,
                                          propertyIri: SmartIri,
                                          value: ValueContentV2,
-                                         customValueIri: Option[SmartIri],
-                                         customValueUUID: Option[UUID],
-                                         customValueCreationDate: Option[Instant],
+                                         valueIri: Option[SmartIri],
+                                         valueUUID: Option[UUID],
+                                         valueCreationDate: Option[Instant],
                                          valueCreator: IRI,
                                          valuePermissions: String,
                                          requestingUser: UserADM): Future[UnverifiedValueV2] = {
-
         value match {
             case linkValueContent: LinkValueContentV2 =>
                 createLinkValueV2AfterChecks(
@@ -346,9 +348,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     linkPropertyIri = propertyIri,
                     linkValueContent = linkValueContent,
-                    maybeValueIri = customValueIri,
-                    maybeValueUUID = customValueUUID,
-                    maybeCreationDate = customValueCreationDate,
+                    maybeValueIri = valueIri,
+                    maybeValueUUID = valueUUID,
+                    maybeCreationDate = valueCreationDate,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -360,9 +362,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     propertyIri = propertyIri,
                     value = ordinaryValueContent,
-                    maybeValueIri = customValueIri,
-                    maybeValueUUID = customValueUUID,
-                    maybeValueCreationDate = customValueCreationDate,
+                    maybeValueIri = valueIri,
+                    maybeValueUUID = valueUUID,
+                    maybeValueCreationDate = valueCreationDate,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -433,7 +435,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v2.txt.createValue(
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -512,7 +514,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate a SPARQL update string.
-            sparqlUpdate = queries.sparql.v2.txt.createLink(
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -595,12 +597,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Generates SPARQL to create one of multiple values in a new resource.
      *
-     * @param resourceIri           the IRI of the resource.
-     * @param propertyIri           the IRI of the property that will point to the value.
-     * @param valueToCreate         the value to be created.
-     * @param valueHasOrder         the value's `knora-base:valueHasOrder`.
-     * @param resourceCreationDate  the creation date of the resource.
-     * @param requestingUser        the user making the request.
+     * @param resourceIri          the IRI of the resource.
+     * @param propertyIri          the IRI of the property that will point to the value.
+     * @param valueToCreate        the value to be created.
+     * @param valueHasOrder        the value's `knora-base:valueHasOrder`.
+     * @param resourceCreationDate the creation date of the resource.
+     * @param requestingUser       the user making the request.
      * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
      */
     private def generateInsertSparqlWithUnverifiedValue(resourceIri: IRI,
@@ -648,7 +650,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     )
 
                     // Generate SPARQL for the link.
-                    queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
+                    org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
                         resourceIri = resourceIri,
                         linkUpdate = sparqlTemplateLinkUpdate,
                         creationDate = valueCreationDate,
@@ -660,7 +662,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 case otherValueContentV2 =>
                     // We're creating an ordinary value. Generate SPARQL for it.
-                    queries.sparql.v2.txt.generateInsertStatementsForCreateValue(
+                    org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateValue(
                         resourceIri = resourceIri,
                         propertyIri = propertyIri,
                         value = otherValueContentV2,
@@ -745,7 +747,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-            sparqlInsert = queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
+            sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
                 resourceIri = createMultipleValuesRequest.resourceIri,
                 linkUpdates = standoffLinkUpdates,
                 creationDate = createMultipleValuesRequest.creationDate,
@@ -850,6 +852,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ = if (currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema)) {
                     throw BadRequestException(s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>")
                 }
+
+                // If a custom value creation date was submitted, make sure it's later than the date of the current version.
+                _ = if (updateValueRequest.updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate))) {
+                    throw BadRequestException("A custom value creation date must be later than the date of the current version")
+                }
             } yield ResourcePropertyValue(
                 resource = resourceInfo,
                 submittedInternalPropertyIri = submittedInternalPropertyIri,
@@ -904,9 +911,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
                 newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
-                currentTime: Instant = Instant.now
+                currentTime: Instant = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
-                sparqlUpdate = queries.sparql.v2.txt.changeValuePermissions(
+                sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changeValuePermissions(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceInfo.resourceIri,
@@ -1066,6 +1073,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             newLinkValue = newLinkValue,
                             valueCreator = updateValueRequest.requestingUser.id,
                             valuePermissions = newValueVersionPermissionLiteral,
+                            valueCreationDate = updateValueContentV2.valueCreationDate,
                             requestingUser = updateValueRequest.requestingUser
                         )
 
@@ -1078,6 +1086,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             newValueVersion = submittedInternalValueContent,
                             valueCreator = updateValueRequest.requestingUser.id,
                             valuePermissions = newValueVersionPermissionLiteral,
+                            valueCreationDate = updateValueContentV2.valueCreationDate,
                             requestingUser = updateValueRequest.requestingUser
                         )
                 }
@@ -1133,14 +1142,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
      *
-     * @param dataNamedGraph   the IRI of the named graph to be updated.
-     * @param resourceInfo     information about the resource containing the value.
-     * @param propertyIri      the IRI of the property that points to the value.
-     * @param currentValue     a [[ReadValueV2]] representing the existing value version.
-     * @param newValueVersion  a [[ValueContentV2]] representing the new value version, in the internal schema.
-     * @param valueCreator     the IRI of the new value's owner.
-     * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser   the user making the request.
+     * @param dataNamedGraph    the IRI of the named graph to be updated.
+     * @param resourceInfo      information about the resource containing the value.
+     * @param propertyIri       the IRI of the property that points to the value.
+     * @param currentValue      a [[ReadValueV2]] representing the existing value version.
+     * @param newValueVersion   a [[ValueContentV2]] representing the new value version, in the internal schema.
+     * @param valueCreator      the IRI of the new value's owner.
+     * @param valuePermissions  the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+     * @param valueCreationDate a custom value creation date.
+     * @param requestingUser    the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def updateOrdinaryValueV2AfterChecks(dataNamedGraph: IRI,
@@ -1150,6 +1160,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  newValueVersion: ValueContentV2,
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
+                                                 valueCreationDate: Option[Instant],
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
             newValueIri: IRI <- makeUnusedValueIri(resourceInfo.resourceIri)
@@ -1200,11 +1211,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 case _ => FastFuture.successful(Vector.empty[SparqlTemplateLinkUpdate])
             }
 
-            // Make a timestamp to indicate when the value was updated.
-            currentTime: Instant = Instant.now
+            // If no custom value creation date was provided, make a timestamp to indicate when the value
+            // was updated.
+            currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
             // Generate a SPARQL update.
-            sparqlUpdate = queries.sparql.v2.txt.addValueVersion(
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.addValueVersion(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -1243,14 +1255,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Changes a link, assuming that pre-update checks have already been done.
      *
-     * @param dataNamedGraph   the IRI of the named graph to be updated.
-     * @param resourceInfo     information about the resource containing the link.
-     * @param linkPropertyIri  the IRI of the link property.
-     * @param currentLinkValue a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
-     * @param newLinkValue     a [[LinkValueContentV2]] indicating the new target resource.
-     * @param valueCreator     the IRI of the new link value's owner.
-     * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser   the user making the request.
+     * @param dataNamedGraph    the IRI of the named graph to be updated.
+     * @param resourceInfo      information about the resource containing the link.
+     * @param linkPropertyIri   the IRI of the link property.
+     * @param currentLinkValue  a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
+     * @param newLinkValue      a [[LinkValueContentV2]] indicating the new target resource.
+     * @param valueCreator      the IRI of the new link value's owner.
+     * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param valueCreationDate a custom value creation date.
+     * @param requestingUser    the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def updateLinkValueV2AfterChecks(dataNamedGraph: IRI,
@@ -1260,6 +1273,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              newLinkValue: LinkValueContentV2,
                                              valueCreator: IRI,
                                              valuePermissions: String,
+                                             valueCreationDate: Option[Instant],
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
 
         // Are we changing the link target?
@@ -1285,14 +1299,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     requestingUser = requestingUser
                 )
 
-                // Make a timestamp to indicate when the link value was updated.
-                currentTime: Instant = Instant.now
+                // If no custom value creation date was provided, make a timestamp to indicate when the link value
+                // was updated.
+                currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
                 // Make a new UUID for the new link value.
                 newLinkValueUUID = UUID.randomUUID
 
                 // Generate a SPARQL update string.
-                sparqlUpdate <- Future(queries.sparql.v2.txt.changeLinkTarget(
+                sparqlUpdate <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changeLinkTarget(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     linkSourceIri = resourceInfo.resourceIri,
@@ -1335,7 +1350,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // Make a timestamp to indicate when the link value was updated.
                 currentTime: Instant = Instant.now
 
-                sparqlUpdate = queries.sparql.v2.txt.changeLinkMetadata(
+                sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changeLinkMetadata(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     linkSourceIri = resourceInfo.resourceIri,
@@ -1462,6 +1477,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>")
                 }
 
+                // If a custom delete date was submitted, make sure it's later than the date of the current version.
+                _ = if (deleteValueRequest.deleteDate.exists(!_.isAfter(currentValue.valueCreationDate))) {
+                    throw BadRequestException("A custom delete date must be later than the value's creation date")
+                }
+
                 // Get information about the project that the resource is in, so we know which named graph to do the update in.
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
@@ -1472,12 +1492,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceInfo = resourceInfo,
                     propertyIri = adjustedInternalPropertyIri,
                     deleteComment = deleteValueRequest.deleteComment,
+                    deleteDate = deleteValueRequest.deleteDate,
                     currentValue = currentValue,
                     requestingUser = deleteValueRequest.requestingUser
                 )
 
                 // Check whether the update succeeded.
-                sparqlQuery = queries.sparql.v2.txt.checkValueDeletion(
+                sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.checkValueDeletion(
                     triplestore = settings.triplestoreType,
                     valueIri = deletedValueIri
                 ).toString()
@@ -1520,6 +1541,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param propertyIri    the IRI of the property that points from the resource to the value.
      * @param currentValue   the value to be deleted.
      * @param deleteComment  an optional comment explaining why the value is being deleted.
+     * @param deleteDate     an optional timestamp indicating when the value was deleted.
      * @param requestingUser the user making the request.
      * @return the IRI of the value that was marked as deleted.
      */
@@ -1527,6 +1549,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                          resourceInfo: ReadResourceV2,
                                          propertyIri: SmartIri,
                                          deleteComment: Option[String],
+                                         deleteDate: Option[Instant],
                                          currentValue: ReadValueV2,
                                          requestingUser: UserADM): Future[IRI] = {
         currentValue.valueContent match {
@@ -1537,6 +1560,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     propertyIri = propertyIri,
                     currentValue = currentValue,
                     deleteComment = deleteComment,
+                    deleteDate = deleteDate,
                     requestingUser = requestingUser
                 )
 
@@ -1547,6 +1571,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     propertyIri = propertyIri,
                     currentValue = currentValue,
                     deleteComment = deleteComment,
+                    deleteDate = deleteDate,
                     requestingUser = requestingUser
                 )
         }
@@ -1560,6 +1585,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param propertyIri    the IRI of the property that points from the resource to the value.
      * @param currentValue   the value to be deleted.
      * @param deleteComment  an optional comment explaining why the value is being deleted.
+     * @param deleteDate     an optional timestamp indicating when the value was deleted.
      * @param requestingUser the user making the request.
      * @return the IRI of the value that was marked as deleted.
      */
@@ -1568,6 +1594,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              propertyIri: SmartIri,
                                              currentValue: ReadValueV2,
                                              deleteComment: Option[String],
+                                             deleteDate: Option[Instant],
                                              requestingUser: UserADM): Future[IRI] = {
         // Make a new version of of the LinkValue with a reference count of 0, and mark the new
         // version as deleted. Give the new version the same permissions as the previous version.
@@ -1577,8 +1604,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             case _ => throw AssertionException("Unreachable code")
         }
 
-        // Make a timestamp to indicate when the link value was updated.
-        val currentTime: Instant = Instant.now
+        // If no custom delete date was provided, make a timestamp to indicate when the link value was
+        // marked as deleted.
+        val currentTime: Instant = deleteDate.getOrElse(Instant.now)
 
         for {
             // Delete the existing link and decrement its LinkValue's reference count.
@@ -1591,7 +1619,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 requestingUser = requestingUser
             )
 
-            sparqlUpdate = queries.sparql.v2.txt.deleteLink(
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.deleteLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceInfo.resourceIri,
@@ -1613,6 +1641,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param propertyIri    the IRI of the property that points from the resource to the value.
      * @param currentValue   the value to be deleted.
      * @param deleteComment  an optional comment explaining why the value is being deleted.
+     * @param deleteDate     an optional timestamp indicating when the value was deleted.
      * @param requestingUser the user making the request.
      * @return the IRI of the value that was marked as deleted.
      */
@@ -1621,6 +1650,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  propertyIri: SmartIri,
                                                  currentValue: ReadValueV2,
                                                  deleteComment: Option[String],
+                                                 deleteDate: Option[Instant],
                                                  requestingUser: UserADM): Future[IRI] = {
         // Mark the existing version of the value as deleted.
 
@@ -1645,13 +1675,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         val linkUpdateFuture = Future.sequence(linkUpdateFutures)
 
-        // Make a timestamp to indicate when the value was marked as deleted.
-        val currentTime: Instant = Instant.now
+        // If no custom delete date was provided, make a timestamp to indicate when the value was
+        // marked as deleted.
+        val currentTime: Instant = deleteDate.getOrElse(Instant.now)
 
         for {
             linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
 
-            sparqlUpdate = queries.sparql.v2.txt.deleteValue(
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.deleteValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
@@ -1767,7 +1798,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             propertyIrisForGravsearchQuery: Seq[SmartIri] = (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri).map(_.toOntologySchema(ApiV2Complex))
 
             // Make a Gravsearch query from a template.
-            gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+            gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
                 resourceIri = resourceIri,
                 propertyIris = propertyIrisForGravsearchQuery
             ).toString()

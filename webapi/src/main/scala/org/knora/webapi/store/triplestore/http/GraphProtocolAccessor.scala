@@ -30,15 +30,17 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Await, ExecutionContext}
 
 
 /**
-  * The GraphProtocolAccessor object is a basic implementation of the
-  * SPARQL 1.1 Graph Store HTTP Protocol: http://www.w3.org/TR/sparql11-http-rdf-update
-  */
+ * The GraphProtocolAccessor object is a basic implementation of the
+ * SPARQL 1.1 Graph Store HTTP Protocol: http://www.w3.org/TR/sparql11-http-rdf-update
+ */
 object GraphProtocolAccessor {
 
     val HTTP_PUT_METHOD = "PUT"
@@ -47,34 +49,34 @@ object GraphProtocolAccessor {
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
-      *
-      * @param graphName the name of the graph.
-      * @param filepath  a path to the file containing turtle.
-      * @return String
-      */
+     * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
+     *
+     * @param graphName the name of the graph.
+     * @param filepath  a path to the file containing turtle.
+     * @return String
+     */
     def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
     /**
-      * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
-      *
-      * @param graphName the name of the graph.
-      * @param filepath  path to the file containing turtle.
-      * @return String
-      */
+     * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
+     *
+     * @param graphName the name of the graph.
+     * @param filepath  path to the file containing turtle.
+     * @return String
+     */
     def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
     /**
-      * Use the HTTP POST method to send the data. Post is defined as an INSERT.
-      *
-      * @param graphName the name of the graph.
-      * @param filepath  a path to the file containing turtle.
-      * @return String
-      */
+     * Use the HTTP POST method to send the data. Post is defined as an INSERT.
+     *
+     * @param graphName the name of the graph.
+     * @param filepath  a path to the file containing turtle.
+     * @return String
+     */
     def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }

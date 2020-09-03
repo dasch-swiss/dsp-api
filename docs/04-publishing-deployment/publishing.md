@@ -20,7 +20,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 # Publishing
 
 Knora is published as a set of [Docker](https://www.docker.com) images under the
-[DHLab Basel Dockerhub Organization](https://hub.docker.com/u/dhlabbasel).
+[DaSCH Basel Dockerhub Organization](https://hub.docker.com/u/daschswiss).
 
 The following Docker images are published:
 
@@ -45,11 +45,11 @@ using the result of `git describe`. The describe version is built from the
 The images can be published locally by running:
 
 ```bash
-$ make build-all-images
+$ make docker-build
 ```
 
 or to Dockerhub:
 
 ```bash
-$ make publish-all-images
+$ make docker-publish
 ```

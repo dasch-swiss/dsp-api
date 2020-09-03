@@ -21,7 +21,7 @@ package org.knora.webapi.util
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpResponse
-import org.knora.webapi.InvalidApiJsonException
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import spray.json.JsString
 
 import scala.concurrent.ExecutionContext

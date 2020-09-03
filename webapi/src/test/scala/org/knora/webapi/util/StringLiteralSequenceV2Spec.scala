@@ -21,6 +21,7 @@ package org.knora.webapi.util
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
+import org.knora.webapi.messages.StringFormatter
 
 
 /**

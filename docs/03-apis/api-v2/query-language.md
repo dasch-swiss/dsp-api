@@ -212,6 +212,16 @@ also match subproperties of that property, and if a statement specifies that
 a subject has a particular `rdf:type`, the statement will also match subjects
 belonging to subclasses of that type.
 
+If you know that reasoning will not return any additional results for
+your query, you can disable it by adding this line to the `WHERE` clause:
+
+```sparql
+knora-api:GravsearchOptions knora-api:useInference false .
+```
+
+If Knora is implementing reasoning by query expansion, disabling it can
+improve the performance of some queries.
+
 ## Gravsearch Syntax
 
 Every Gravsearch query is a valid SPARQL 1.1

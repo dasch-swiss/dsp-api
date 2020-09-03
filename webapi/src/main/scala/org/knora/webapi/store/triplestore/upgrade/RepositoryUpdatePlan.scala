@@ -69,4 +69,5 @@ object RepositoryUpdatePlan {
      * @param iri      the IRI of the named graph.
      */
     case class BuiltInNamedGraph(filename: String, iri: String)
+
 }

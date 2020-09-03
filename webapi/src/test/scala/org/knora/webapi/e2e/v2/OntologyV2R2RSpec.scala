@@ -10,12 +10,15 @@ import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util._
-import org.knora.webapi.util.jsonld._
 import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
@@ -159,7 +162,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
 
-    private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
     private val uselessIri = new MutableTestIri
@@ -309,7 +311,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "change the labels of a property" in {
+        "change the rdfs:label of a property" in {
             val params = SharedTestDataADM.changePropertyLabel(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
@@ -321,7 +323,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates.head._2.objects)
+                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -330,7 +332,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "change the comments of a property" in {
+        "change the rdfs:comment of a property" in {
             val params = SharedTestDataADM.changePropertyComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
@@ -342,7 +344,28 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates.head._2.objects)
+                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects)
+
+                // Check that the ontology's last modification date was updated.
+                val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "add an rdfs:comment to a link property that has no rdfs:comment" in {
+            val params = SharedTestDataADM.addCommentToPropertyThatHasNoComment(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+
+            // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+            Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get

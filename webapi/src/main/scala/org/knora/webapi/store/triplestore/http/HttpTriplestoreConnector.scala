@@ -45,12 +45,16 @@ import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{NotFoundException, TriplestoreConnectionException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException, UnexpectedMessageException, UnsuportedTriplestoreException}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.FakeTriplestore
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, FileUtil, InstrumentationSupport}
+import org.knora.webapi.messages.util.SparqlResultProtocol._
+import org.knora.webapi.util.FileUtil
 import spray.json._
+import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -601,12 +605,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-      * Initialize the Jena Fuseki triplestore. Currently only works for
-      * 'knora-test' and 'knora-test-unit' repository names. To be used, the
-      * API needs to be started with 'KNORA_WEBAPI_TRIPLESTORE_AUTOINIT' set
-      * to 'true' (settings.triplestoreAutoInit). Usage is only recommended for automated testing and not for
-      * production use.
-      */
+     * Initialize the Jena Fuseki triplestore. Currently only works for
+     * 'knora-test' and 'knora-test-unit' repository names. To be used, the
+     * API needs to be started with 'KNORA_WEBAPI_TRIPLESTORE_AUTOINIT' set
+     * to 'true' (settings.triplestoreAutoInit). Usage is only recommended for automated testing and not for
+     * production use.
+     */
     private def initJenaFusekiTriplestore(): Try[CheckTriplestoreResponse] = {
 
         val configFileName = s"webapi/scripts/fuseki-repository-config.ttl.template"
@@ -899,7 +903,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         httpContext.setAuthCache(authCache)
 
         val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
-        
+
         if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
             uriBuilder.setParameter("infer", "false")
         } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {

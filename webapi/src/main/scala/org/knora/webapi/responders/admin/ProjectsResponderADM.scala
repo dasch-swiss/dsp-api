@@ -29,22 +29,25 @@ import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
+import org.knora.webapi.exceptions._
+import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServicePutProjectADM, CacheServiceRemoveValues}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, ReadOntologyMetadataV2}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
+import org.knora.webapi.responders.{IriLocker, Responder}
 
 import scala.concurrent.Future
 
 /**
-  * Returns information about Knora projects.
-  */
+ * Returns information about Knora projects.
+ */
 class ProjectsResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
 
@@ -55,8 +58,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
 
     /**
-      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: ProjectsResponderRequestADM) = msg match {
         case ProjectsGetADM(requestingUser) => projectsGetADM(requestingUser)
         case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
@@ -75,15 +78,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
-      *
-      * @param requestingUser the user making the request.
-      * @return all the projects as a sequence containing [[ProjectADM]].
-      */
+     * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
+     *
+     * @param requestingUser the user making the request.
+     * @return all the projects as a sequence containing [[ProjectADM]].
+     */
     private def projectsGetADM(requestingUser: UserADM): Future[Seq[ProjectADM]] = {
 
         for {
-            sparqlQueryString <- Future(queries.sparql.admin.txt.getProjects(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjects(
                 triplestore = settings.triplestoreType,
                 maybeIri = None,
                 maybeShortname = None,
@@ -113,12 +116,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Given a set of project IRIs, gets the ontologies that belong to each project.
-      *
-      * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
-      * @param requestingUser the requesting user.
-      * @return a map of project IRIs to sequences of ontology IRIs.
-      */
+     * Given a set of project IRIs, gets the ontologies that belong to each project.
+     *
+     * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
+     * @param requestingUser the requesting user.
+     * @return a map of project IRIs to sequences of ontology IRIs.
+     */
     private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
         for {
             ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = requestingUser)).mapTo[ReadOntologyMetadataV2]
@@ -134,12 +137,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets all the projects and returns them as a [[ProjectsResponseV1]].
-      *
-      * @param requestingUser the user that is making the request.
-      * @return all the projects as a [[ProjectsResponseV1]].
-      * @throws NotFoundException if no projects are found.
-      */
+     * Gets all the projects and returns them as a [[ProjectsResponseV1]].
+     *
+     * @param requestingUser the user that is making the request.
+     * @return all the projects as a [[ProjectsResponseV1]].
+     * @throws NotFoundException if no projects are found.
+     */
     private def projectsGetRequestADM(requestingUser: UserADM): Future[ProjectsGetResponseADM] = {
 
         // log.debug("projectsGetRequestADM")
@@ -162,12 +165,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
 
     /**
-      * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
-      *
-      * @param identifier     the IRI, shortname, or shortcode of the project.
-      * @param requestingUser the user making the request.
-      * @return information about the project as a [[ProjectInfoV1]].
-      */
+     * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
+     *
+     * @param identifier     the IRI, shortname, or shortcode of the project.
+     * @param requestingUser the user making the request.
+     * @return information about the project as a [[ProjectInfoV1]].
+     */
     private def getSingleProjectADM(identifier: ProjectIdentifierADM,
                                     requestingUser: UserADM,
                                     skipCache: Boolean = false
@@ -199,14 +202,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets the project with the given project IRI, shortname, or shortcode and returns the information
-      * as a [[ProjectGetResponseADM]].
-      *
-      * @param identifier     the IRI, shortname, or shortcode of the project.
-      * @param requestingUser the user making the request.
-      * @return information about the project as a [[ProjectInfoResponseV1]].
-      * @throws NotFoundException when no project for the given IRI can be found
-      */
+     * Gets the project with the given project IRI, shortname, or shortcode and returns the information
+     * as a [[ProjectGetResponseADM]].
+     *
+     * @param identifier     the IRI, shortname, or shortcode of the project.
+     * @param requestingUser the user making the request.
+     * @return information about the project as a [[ProjectInfoResponseV1]].
+     * @throws NotFoundException when no project for the given IRI can be found
+     */
     private def getSingleProjectADMRequest(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectGetResponseADM] = {
 
         // log.debug("getSingleProjectADMRequest - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
@@ -223,13 +226,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets the members of a project with the given IRI, shortname, oder shortcode. Returns an empty list
-      * if none are found.
-      *
-      * @param identifier     the IRI, shortname, or shortcode of the project.
-      * @param requestingUser the user making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-      */
+     * Gets the members of a project with the given IRI, shortname, oder shortcode. Returns an empty list
+     * if none are found.
+     *
+     * @param identifier     the IRI, shortname, or shortcode of the project.
+     * @param requestingUser the user making the request.
+     * @return the members of a project as a [[ProjectMembersGetResponseADM]]
+     */
     private def projectMembersGetRequestADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectMembersGetResponseADM] = {
 
         // log.debug("projectMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
@@ -246,7 +249,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 }
             }
 
-            sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectMembers(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjectMembers(
                 triplestore = settings.triplestoreType,
                 maybeIri = identifier.toIriOption,
                 maybeShortname = identifier.toShortnameOption,
@@ -279,13 +282,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets the admin members of a project with the given IRI, shortname, or shortcode. Returns an empty list
-      * if none are found
-      *
-      * @param identifier     the IRI, shortname, or shortcode of the project.
-      * @param requestingUser the user making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-      */
+     * Gets the admin members of a project with the given IRI, shortname, or shortcode. Returns an empty list
+     * if none are found
+     *
+     * @param identifier     the IRI, shortname, or shortcode of the project.
+     * @param requestingUser the user making the request.
+     * @return the members of a project as a [[ProjectMembersGetResponseADM]]
+     */
     private def projectAdminMembersGetRequestADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectAdminMembersGetResponseADM] = {
 
         // log.debug("projectAdminMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
@@ -301,7 +304,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 }
             }
 
-            sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectAdminMembers(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjectAdminMembers(
                 triplestore = settings.triplestoreType,
                 maybeIri = identifier.toIriOption,
                 maybeShortname = identifier.toShortnameOption,
@@ -333,11 +336,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
-      *
-      * @param requestingUser the user making the request.
-      * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
-      */
+     * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
+     *
+     * @param requestingUser the user making the request.
+     * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+     */
     private def projectsKeywordsGetRequestADM(requestingUser: UserADM): Future[ProjectsKeywordsGetResponseADM] = {
 
         for {
@@ -349,12 +352,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
-      *
-      * @param projectIri     the IRI of the project.
-      * @param requestingUser the user making the request.
-      * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
-      */
+     * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
+     *
+     * @param projectIri     the IRI of the project.
+     * @param requestingUser the user making the request.
+     * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+     */
     private def projectKeywordsGetRequestADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectKeywordsGetResponseADM] = {
 
         for {
@@ -370,11 +373,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
     private def projectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
         /**
-          * Represents a named graph to be saved to a TriG file.
-          *
-          * @param graphIri the IRI of the named graph.
-          * @param tempDir  the directory in which the file is to be saved.
-          */
+         * Represents a named graph to be saved to a TriG file.
+         *
+         * @param graphIri the IRI of the named graph.
+         * @param tempDir  the directory in which the file is to be saved.
+         */
         case class NamedGraphTrigFile(graphIri: IRI, tempDir: File) {
             lazy val dataFile: File = {
                 val filename = graphIri.replaceAll(":", "_").
@@ -387,10 +390,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
         /**
-          * An [[RDFHandler]] for combining several named graphs into one.
-          *
-          * @param outputWriter an [[RDFWriter]] for writing the combined result.
-          */
+         * An [[RDFHandler]] for combining several named graphs into one.
+         *
+         * @param outputWriter an [[RDFWriter]] for writing the combined result.
+         */
         class CombiningRdfHandler(outputWriter: RDFWriter) extends RDFHandler {
             private var startedStatements = false
 
@@ -416,11 +419,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
         /**
-          * Combines several TriG files into one.
-          *
-          * @param namedGraphTrigFiles the TriG files to combine.
-          * @param resultFile          the output file.
-          */
+         * Combines several TriG files into one.
+         *
+         * @param namedGraphTrigFiles the TriG files to combine.
+         * @param resultFile          the output file.
+         */
         def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: File): Unit = {
             var maybeBufferedFileWriter: Option[BufferedWriter] = None
 
@@ -493,7 +496,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
 
-            adminDataSparql: String = queries.sparql.admin.txt.getProjectAdminData(
+            adminDataSparql: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjectAdminData(
                 triplestore = settings.triplestoreType,
                 projectIri = project.id
             ).toString()
@@ -508,7 +511,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
 
-            permissionDataSparql: String = queries.sparql.admin.txt.getProjectPermissions(
+            permissionDataSparql: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjectPermissions(
                 triplestore = settings.triplestoreType,
                 projectIri = project.id
             ).toString()
@@ -528,19 +531,19 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Get project's restricted view settings.
-      *
-      * @param identifier     the project's identifier (IRI / shortcode / shortname)
-      * @param requestingUser the user making the request.
-      * @return [[ProjectRestrictedViewSettingsADM]]
-      */
+     * Get project's restricted view settings.
+     *
+     * @param identifier     the project's identifier (IRI / shortcode / shortname)
+     * @param requestingUser the user making the request.
+     * @return [[ProjectRestrictedViewSettingsADM]]
+     */
     @ApiMayChange
     private def projectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[Option[ProjectRestrictedViewSettingsADM]] = {
 
         // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getProjects(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjects(
                 triplestore = settings.triplestoreType,
                 maybeIri = identifier.toIriOption,
                 maybeShortname = identifier.toShortnameOption,
@@ -566,12 +569,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Get project's restricted view settings.
-      *
-      * @param identifier     the project's identifier (IRI / shortcode / shortname)
-      * @param requestingUser the user making the request.
-      * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
-      */
+     * Get project's restricted view settings.
+     *
+     * @param identifier     the project's identifier (IRI / shortcode / shortname)
+     * @param requestingUser the user making the request.
+     * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
+     */
     @ApiMayChange
     private def projectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectRestrictedViewSettingsGetResponseADM] = {
 
@@ -592,22 +595,22 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Changes project's basic information.
-      *
-      * @param projectIri           the IRI of the project.
-      * @param changeProjectRequest the change payload.
-      * @param requestingUser       the user making the request.
-      * @param apiRequestID         the unique api request ID.
-      * @return a [[ProjectOperationResponseADM]].
-      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
-      */
+     * Changes project's basic information.
+     *
+     * @param projectIri           the IRI of the project.
+     * @param changeProjectRequest the change payload.
+     * @param requestingUser       the user making the request.
+     * @param apiRequestID         the unique api request ID.
+     * @return a [[ProjectOperationResponseADM]].
+     * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+     */
     private def changeBasicInformationRequestADM(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
         //log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
         /**
-          * The actual change project task run with an IRI lock.
-          */
+         * The actual change project task run with an IRI lock.
+         */
         def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestADM, requestingUser: UserADM): Future[ProjectOperationResponseADM] = for {
 
             _ <- Future(
@@ -647,15 +650,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Main project update method.
-      *
-      * @param projectIri           the IRI of the project.
-      * @param projectUpdatePayload the data to be updated. Update means exchanging what is in the triplestore with
-      *                             this data. If only some parts of the data need to be changed, then this needs to
-      *                             be prepared in the step before this one.
-      * @return a [[ProjectOperationResponseADM]].
-      * @throws NotFoundException in the case that the project's IRI is not found.
-      */
+     * Main project update method.
+     *
+     * @param projectIri           the IRI of the project.
+     * @param projectUpdatePayload the data to be updated. Update means exchanging what is in the triplestore with
+     *                             this data. If only some parts of the data need to be changed, then this needs to
+     *                             be prepared in the step before this one.
+     * @return a [[ProjectOperationResponseADM]].
+     * @throws NotFoundException in the case that the project's IRI is not found.
+     */
     private def updateProjectADM(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadADM, requestingUser: UserADM): Future[ProjectOperationResponseADM] = {
 
         // log.debug("updateProjectADM - projectIri: {}, projectUpdatePayload: {}", projectIri, projectUpdatePayload)
@@ -681,7 +684,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             _ = invalidateCachedProjectADM(maybeCurrentProject)
 
             /* Update project */
-            updateProjectSparqlString <- Future(queries.sparql.admin.txt.updateProject(
+            updateProjectSparqlString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateProject(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri,
@@ -737,16 +740,16 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Creates a project.
-      *
-      * @param createProjectRequest  the new project's information.
-      * @param requestingUser the user that is making the request.
-      * @param apiRequestID   the unique api request ID.
-      * @return a [[ProjectOperationResponseADM]].
-      * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
-      * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
-      * @throws BadRequestException     in the case when the shortcode is invalid.
-      */
+     * Creates a project.
+     *
+     * @param createProjectRequest the new project's information.
+     * @param requestingUser       the user that is making the request.
+     * @param apiRequestID         the unique api request ID.
+     * @return a [[ProjectOperationResponseADM]].
+     * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
+     * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
+     * @throws BadRequestException     in the case when the shortcode is invalid.
+     */
     private def projectCreateRequestADM(createProjectRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
 
@@ -782,7 +785,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
             newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri(validatedShortcode))
 
-            createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
+            createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 projectIri = newProjectIRI,
@@ -805,7 +808,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             // try to retrieve newly created project (will also add to cache)
             maybeNewProjectADM
-            <- getSingleProjectADM(
+                <- getSingleProjectADM(
                 identifier = ProjectIdentifierADM(maybeIri = Some(newProjectIRI)),
                 requestingUser = KnoraSystemInstances.Users.SystemUser,
                 skipCache = true
@@ -834,32 +837,32 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     ////////////////////
 
     /**
-      * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
-      * If project is not found in cache but in triplestore, then project is written to cache.
-      */
+     * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
+     * If project is not found in cache but in triplestore, then project is written to cache.
+     */
     private def getProjectFromCacheOrTriplestore(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
         if (settings.cacheServiceEnabled) {
             // caching enabled
             getProjectFromCache(identifier)
-              .flatMap {
-                  case None =>
-                      // none found in cache. getting from triplestore.
-                      getProjectFromTriplestore(identifier)
-                        .flatMap {
-                            case None =>
-                                // also none found in triplestore. finally returning none.
-                                log.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
-                                FastFuture.successful(None)
-                            case Some(project) =>
-                                // found a project in the triplestore. need to write to cache.
-                                log.debug("getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache.")
-                                // writing project to cache and afterwards returning the project found in the triplestore
-                                writeProjectADMToCache(project).map(res => Some(project))
-                        }
-                  case Some(user) =>
-                      log.debug("getProjectFromCacheOrTriplestore - found in cache. returning user.")
-                      FastFuture.successful(Some(user))
-              }
+                .flatMap {
+                    case None =>
+                        // none found in cache. getting from triplestore.
+                        getProjectFromTriplestore(identifier)
+                            .flatMap {
+                                case None =>
+                                    // also none found in triplestore. finally returning none.
+                                    log.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
+                                    FastFuture.successful(None)
+                                case Some(project) =>
+                                    // found a project in the triplestore. need to write to cache.
+                                    log.debug("getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache.")
+                                    // writing project to cache and afterwards returning the project found in the triplestore
+                                    writeProjectADMToCache(project).map(res => Some(project))
+                            }
+                    case Some(user) =>
+                        log.debug("getProjectFromCacheOrTriplestore - found in cache. returning user.")
+                        FastFuture.successful(Some(user))
+                }
         } else {
             // caching disabled
             log.debug("getProjectFromCacheOrTriplestore - caching disabled. getting from triplestore.")
@@ -868,11 +871,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Tries to retrieve a [[ProjectADM]] from the triplestore.
-      */
+     * Tries to retrieve a [[ProjectADM]] from the triplestore.
+     */
     private def getProjectFromTriplestore(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = for {
 
-        sparqlQuery <- Future(queries.sparql.admin.txt.getProjects(
+        sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjects(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
             maybeShortname = identifier.toShortnameOption,
@@ -901,12 +904,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     } yield maybeProjectADM
 
     /**
-      * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
-      *
-      * @param statements results from the SPARQL query representing information about the project.
-      * @param ontologies the ontologies in the project.
-      * @return a [[ProjectADM]] representing information about project.
-      */
+     * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
+     *
+     * @param statements results from the SPARQL query representing information about the project.
+     * @param ontologies the ontologies in the project.
+     * @return a [[ProjectADM]] representing information about project.
+     */
     private def statements2ProjectADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]), ontologies: Seq[IRI]): ProjectADM = {
 
         // log.debug("statements2ProjectADM - statements: {}", statements)
@@ -929,13 +932,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Helper method for checking if a project exists.
-      *
-      * @param maybeIri       the IRI of the project.
-      * @param maybeShortname the shortname of the project.
-      * @param maybeShortcode the shortcode of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project exists.
+     *
+     * @param maybeIri       the IRI of the project.
+     * @param maybeShortname the shortname of the project.
+     * @param maybeShortcode the shortcode of the project.
+     * @return a [[Boolean]].
+     */
     private def projectExists(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String]): Future[Boolean] = {
 
         if (maybeIri.nonEmpty) {
@@ -950,14 +953,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Helper method for checking if a project identified by IRI exists.
-      *
-      * @param projectIri the IRI of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by IRI exists.
+     *
+     * @param projectIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
     private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -967,14 +970,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Helper method for checking if a project identified by shortname exists.
-      *
-      * @param shortname the shortname of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by shortname exists.
+     *
+     * @param shortname the shortname of the project.
+     * @return a [[Boolean]].
+     */
     private def projectByShortnameExists(shortname: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -984,14 +987,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Helper method for checking if a project identified by shortcode exists.
-      *
-      * @param shortcode the shortcode of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by shortcode exists.
+     *
+     * @param shortcode the shortcode of the project.
+     * @return a [[Boolean]].
+     */
     private def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1001,8 +1004,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Tries to retrieve a [[ProjectADM]] from the cache.
-      */
+     * Tries to retrieve a [[ProjectADM]] from the cache.
+     */
     private def getProjectFromCache(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
         val result = (storeManager ? CacheServiceGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
         result.map {
@@ -1016,11 +1019,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Writes the project to cache.
-      *
-      * @param project a [[ProjectADM]].
-      * @return true if writing was successful.
-      */
+     * Writes the project to cache.
+     *
+     * @param project a [[ProjectADM]].
+     * @return true if writing was successful.
+     */
     private def writeProjectADMToCache(project: ProjectADM): Future[Boolean] = {
         val result = (storeManager ? CacheServicePutProjectADM(project)).mapTo[Boolean]
         result.map { res =>
@@ -1030,8 +1033,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Removes the project from cache.
-      */
+     * Removes the project from cache.
+     */
     private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] = {
         if (settings.cacheServiceEnabled) {
             val keys: Set[String] = Seq(maybeProject.map(_.id), maybeProject.map(_.shortname), maybeProject.map(_.shortcode)).flatten.toSet

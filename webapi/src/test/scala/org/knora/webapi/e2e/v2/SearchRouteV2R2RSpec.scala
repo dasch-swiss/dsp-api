@@ -29,14 +29,16 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.messages.util.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{FileUtil, MutableTestIri, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json.JsString
@@ -4185,7 +4187,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (with type inference)" in {
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf (with type inference)" in {
             var gravsearchQuery =
                 """
                   |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -4203,9 +4205,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-                  |     }
                   |
                   |     FILTER NOT EXISTS {
                   |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
@@ -6326,7 +6325,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (submitting the complex schema)" in {
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf (submitting the complex schema)" in {
             var gravsearchQuery =
                 """
                   |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -6343,10 +6342,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
                   |
                   |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
-                  |
-                  |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-                  |     }
                   |
                   |     FILTER NOT EXISTS {
                   |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
@@ -6400,6 +6395,29 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
 
+        }
+
+        "search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema), without inference" in {
+            val gravsearchQuery =
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |    knora-api:GravsearchOptions knora-api:useInference false .
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasDecimal ?decimal .
+                  |    ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+            }
         }
 
         "search for an anything:Thing that has a decimal value bigger than 2.0 (submitting the complex schema)" in {

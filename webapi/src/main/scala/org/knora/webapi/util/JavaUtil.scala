@@ -24,36 +24,36 @@ import java.util.function.{BiFunction, Function}
 import scala.language.implicitConversions
 
 /**
-  * Utility functions for working with Java libraries.
-  */
+ * Utility functions for working with Java libraries.
+ */
 object JavaUtil {
 
     /**
-      * Converts a 1-argument Scala function into a Java [[Function]].
-      *
-      * @param f the Scala function.
-      * @return a [[Function]] that calls the Scala function.
-      */
+     * Converts a 1-argument Scala function into a Java [[Function]].
+     *
+     * @param f the Scala function.
+     * @return a [[Function]] that calls the Scala function.
+     */
     def function[A, B](f: A => B): Function[A, B] =
         (a: A) => f(a)
 
     /**
-      * Converts a 2-argument Scala function into a Java [[BiFunction]].
-      *
-      * @param f the Scala function.
-      * @return a [[BiFunction]] that calls the Scala function.
-      */
+     * Converts a 2-argument Scala function into a Java [[BiFunction]].
+     *
+     * @param f the Scala function.
+     * @return a [[BiFunction]] that calls the Scala function.
+     */
     def biFunction[A, B, C](f: (A, B) => C): BiFunction[A, B, C] =
         (a: A, b: B) => f(a, b)
 
     /**
-      * Recursively converts a Java collection into a Scala collection.
-      *
-      * Usage: `val scalaObj = deepScalaToJava(javaObj).asInstanceOf[Map[String, Any]]`
-      *
-      * @param javaObj the Java collection to be converted.
-      * @return an equivalent Scala collection.
-      */
+     * Recursively converts a Java collection into a Scala collection.
+     *
+     * Usage: `val scalaObj = deepScalaToJava(javaObj).asInstanceOf[Map[String, Any]]`
+     *
+     * @param javaObj the Java collection to be converted.
+     * @return an equivalent Scala collection.
+     */
     def deepJavaToScala(javaObj: Any): Any = {
         import collection.JavaConverters._
         javaObj match {
@@ -64,11 +64,11 @@ object JavaUtil {
     }
 
     /**
-      * Recursively converts a Scala collection into a Java collection.
-      *
-      * @param scalaCollection the Scala collection to be converted.
-      * @return an equivalent Java collection.
-      */
+     * Recursively converts a Scala collection into a Java collection.
+     *
+     * @param scalaCollection the Scala collection to be converted.
+     * @return an equivalent Java collection.
+     */
     def deepScalaToJava(scalaCollection: Any): Any = {
         import collection.JavaConverters._
 
@@ -84,16 +84,16 @@ object JavaUtil {
     }
 
     /**
-      * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
-      * [[https://stackoverflow.com/a/18794646]].
-      */
+     * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
+     * [[https://stackoverflow.com/a/18794646]].
+     */
     object Optional {
         def unapply[T](a: T): Some[Option[T]] = if (null == a) Some(None) else Some(Some(a))
     }
 
     /**
-      * Wraps a Java `Optional` and converts it to a Scala [[Option]].
-      */
+     * Wraps a Java `Optional` and converts it to a Scala [[Option]].
+     */
     class JavaOptional[T](opt: java.util.Optional[T]) {
         def toOption: Option[T] = if (opt.isPresent) Some(opt.get()) else None
     }

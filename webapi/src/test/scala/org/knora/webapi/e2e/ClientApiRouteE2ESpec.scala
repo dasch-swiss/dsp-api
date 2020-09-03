@@ -25,7 +25,6 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 

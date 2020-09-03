@@ -21,6 +21,7 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.event.LoggingReceive
+import org.knora.webapi.core.ActorMaker
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -43,11 +44,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.{ActorMaker, KnoraDispatchers}
+import org.knora.webapi.settings.KnoraDispatchers
 
 import scala.concurrent.ExecutionContext
 

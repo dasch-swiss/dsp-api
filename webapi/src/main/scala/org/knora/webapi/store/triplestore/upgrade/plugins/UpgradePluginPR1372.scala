@@ -21,8 +21,8 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{IRI, Model, Resource}
-import org.knora.webapi.OntologyConstants
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import org.knora.webapi.messages.OntologyConstants
 
 import scala.collection.JavaConverters._
 

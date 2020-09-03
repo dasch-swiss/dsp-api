@@ -21,58 +21,81 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Create an IntelliJ Project for Knora
 
-  - Download and install [IntelliJ IDEA](https://www.jetbrains.com/idea/).
+  - Download and install a version of [IntelliJ IDEA](https://www.jetbrains.com/idea/) that [supports Bazel](https://plugins.jetbrains.com/plugin/8609-bazel/versions), eg. version `2019.03.05`.
   - Follow the installation procedure and install the `Scala plugin`
 
 ![screenshot 'Install Scala Plugin'](figures/install-scala-plugin.png)
 
-  - Add Bazel Plugin and Project to IntelliJ
-  - The latest version of the [Bazel plugin](https://plugins.jetbrains.com/plugin/8609-bazel/versions)
-    supports only IntelliJ upto version `2019.03.05`. After you make sure to
-    run this version of IntelliJ, install the plugin from inside IntelliJ.
-  - Click on `File -> Import Bazel Project` and select twice `next`.
+  - Add Bazel Plugin: run InteliJ and install the plugin from inside IntelliJ.
+  - Create a project for Knora: restart InteliJ and create a project for Knora using `Import Bazel Project` option.
+  
+  ![screenshot 'Import Project'](figures/import-bazel-project.png)
+  
+  - Make sure that the Bazel `Workspace` points to the path of Knora and click `next`.
+  
+  ![screenshot 'Workspace'](figures/bazel-workspace.png)
+  
+  - Select the `Generate from BUILD file` option and give the path to the main `BUILD.bazel` file of Knora, click `next`.
+  
+  ![screenshot 'Bazel build'](figures/bazel-buildFile.png)
+  
   - Uncomment the `Scala` language and click `Finish`.
+  
+  ![screenshot 'Bazel Scala'](figures/bazel-UncommentScala.png)
+  
+  At this point a `.ijwb` file is created for Knora project and added to the welcome screen of InteiJ. You can open the project by clicking on it.
 
-  - make sure that the tab size is set correctly to **4 spaces** (so you
+  - Once the project is built and opened in InteliJ, make sure that project in synced with Bazel build files by clicking
+   on Bazel logo `Sync Project with Build Files`. This needs to be repeated every time there is a change in a `BUILD.bazel` file.
+   
+   ![screenshot 'Bazel sync'](figures/bazel-sync.png)
+   
+  - Make sure that the tab size is set correctly to **4 spaces** (so you
     can use automatic code reformatting): `Preferences -> Code Style ->
     Scala`:
 
-![screenshot 'setting tab size'](figures/setting-tab-space.png)
+ ![screenshot 'setting tab size'](figures/setting-tab-space.png)
 
 
+## Use IntelliJ IDEA's Run/Debugger Configuration with Knora
 
-## Use IntelliJ IDEA's Debugger with Knora
+First, you need to create an application configuration to run or debug a code. Here the configuration is explained using a test as an 
+  example, but similarly the application configuration of InteliJ can be used for building the webapi.
+  
+To run a specific test in a command line using Bazel, you would need to give the path of the test relative to its 
+  package as defined in the `BUILD.bazel` of the package. For example, to run the test  `GravsearchTypeInspectorSpec` in the
+   command line, you would need to enter `bazel test //webapi/src/test/scala/org/knora/webapi/messages/util/search:GravsearchTypeInspectorSpec`.
+  Now to run or debug the same test and its underlying code in InteliJ, a new configuration should be
+  set up:
+  
+   - Click on the 'Add Configuration' to create a new application configuration. 
+    
+![screenshot 'new_configuration'](figures/bazel-new-config.png)
 
-  - Create an application configuration:
+   - Click on the `+` and choose `Bazel Command` 
+   
+![screenshot 'new_configuration'](figures/bazel-command-config.png)
 
-![screenshot 'edit application config'](figures/edit-config.png)
+   - Give the type of the command, i.e. `test` and the path parameter, as shown below. Then press `Apply`, and finish 
+   the configuration by pressing `OK`.
 
-![screenshot 'create application configuration'](figures/create-app.png)
+![screenshot 'configuration_setup'](figures/bazel-config-setup.png)
 
-Fill in the configuration details:
+After the configuration is completed, it will appear in a drop-down menu that shows all available configurations. 
 
-![screenshot 'change application configuration'](figures/app-config-setup.png)
+  - To run a configured command, eg. to run the test `GravsearchTypeInspectorSpec`, 
+    1. choose its configuration from the drop-down menu
+    2. click on the `Run` symbol, the results will appear in the a `Run` window. Note that, before running the test, the 
+    docker container of api should be stopped. 
+    
+![screenshot 'configuration_run'](figures/bazel-run-config.png)
 
-  - Click on the debugging symbol to start the application with a debugger attached:
+  - To debug the code for example by executing a test: 
+    1. Click on a line-number to add a breakpoint. 
+    2. Choose the respective configuration from the drop-down menu. 
+    3. Click on the debugging symbol to start the application with a debugger attached, as shown below:
 
-![screenshot 'debug'](figures/debug.png)
-
-  - Click on a line-number to add a breakpoint
-
-![screenshot 'set a breakpoint'](figures/breakpoint.png)
-
-## Use a Remote Debugger with Intellij
-
-- edit configurations (Run -> Edit Configurations...)
-- add a new remote configuration:
-
-![screenshot 'remote configuration'](figures/remote-config.png)
-
-- from the console (in folder `webapi`), run `sbt -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005`
-- start Knora using `reStart`
-- use debugger: choose configuration and click on `Debug [configName]`
-
-![screenshot 'use debugger'](figures/use-debugger.png)
+![screenshot 'debug'](figures/bazel-debug.png)
 
 ## Profile Knora Using VisualVM in IntelliJ
 
@@ -87,7 +110,7 @@ triangle on an orange circle, with the tooltip "Run with VisualVM":
 
 ![screenshot 'Run with VisualVM button'](figures/launch-visualvm.png)
 
-You can use this button to run the class `org.knora.webapi.Main` and
+You can use this button to run the class `org.knora.webapi.app.Main` and
 profile it in VisualVM. The first time you do this, IntelliJ will ask
 you for the path to the VisualVM executable. On macOS this is
 `/Applications/VisualVM.app/Contents/MacOS/visualvm`.

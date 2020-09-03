@@ -1,66 +1,58 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_test", "scala_repl")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_repl", "scala_test")
 
-scala_binary(
+
+# alias added for convenience. To call, use: bazel run //webapi:GenerateContributorsFile
+alias(
     name = "GenerateContributorsFile",
-    main_class = "org.knora.webapi.util.GenerateContributorsFile",
-    deps = [
-        ":main_library",
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_log4j_over_slf4j",
-        "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
-    ],
+    actual = "//webapi/src/main/scala/org/knora/webapi/contributors:GenerateContributorsFile",
 )
 
-scala_binary(
-    name = "webapi",
-    jvm_flags = [
-        "-Dconfig.resource=application.conf",
-        "-Dlogging.config=logback.xml",
-    ],
-    main_class = "org.knora.webapi.Main",
-    resources = [
-        "//webapi/src/main/resources",
-    ],
-    deps = [
-        ":main_library",
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_log4j_over_slf4j",
-        "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
-    ],
+# alias added for convenience. To call, use: bazel run //webapi:app_cli
+alias(
+    name = "app_cli",
+    actual = "//webapi/src/main/scala/org/knora/webapi/app:app_cli",
 )
 
-scala_repl(
-    name = "main_library_repl",
-    deps = [
-        ":main_library",
-    ]
+# alias added for convenience. To call, use: bazel run //webapi:app_repl
+alias(
+    name = "app_repl",
+    actual = "//webapi/src/main/scala/org/knora/webapi/app:app_repl",
 )
 
+# Should be removed, after each scala_test rule is refactored to use direct
+# dependencies to the needed packages.
 scala_library(
     name = "main_library",
-    srcs = [
-        "//webapi/src/main:scala",
-        "//webapi/src/main:twirl-templates",
-
-    ],
+    testonly = True,
     resources = [
-        "//webapi/src/main/resources",
-        "//webapi/scripts:fuseki_repository_config_ttl_template",
         "//knora-ontologies",
+        "//webapi/scripts:fuseki_repository_config_ttl_template",
+        "//webapi/src/main/resources",
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
-        "//tools/buildstamp:build_info_jar",
+        "//tools/version_info",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/http/handler",
+        "//webapi/src/main/scala/org/knora/webapi/http/version",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/util",
+        "//webapi/src/main/scala/org/knora/webapi/util/cache",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_jcl_over_slf4j",
@@ -137,26 +129,39 @@ scala_library(
     ],
 )
 
+# Should be removed, after each scala_test rule is refactored to use direct
+# dependencies to the needed packages.
 scala_library(
     name = "test_library",
     testonly = True,
     srcs = [
-        "//webapi/src/test/scala",
+        "//webapi/src/test/scala/org/knora/webapi:srcs",
     ],
     resources = [
+        "//sipi/config",
         "//webapi/src/test/resources",
-        "//sipi/config"
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_jcl_over_slf4j",
-        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
-        ":main_library",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/app",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/http/handler",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
@@ -180,26 +185,36 @@ scala_library(
     ],
 )
 
+# Should be removed, after each scala_test rule is refactored to use direct
+# dependencies to the needed packages.
 scala_library(
     name = "it_library",
     testonly = True,
     srcs = [
-        "//webapi/src/it/scala",
+        "//webapi/src/it/scala/org/knora/webapi:src",
     ],
     resources = [
+        "//sipi/config",
         "//webapi/src/it/resources",
-        "//sipi/config"
     ],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:org_slf4j_jcl_over_slf4j",
-        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
-        ":main_library",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/app",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/routing",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
+        "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
@@ -220,6 +235,5 @@ scala_library(
         "@maven//:org_testcontainers_testcontainers",
         "@maven//:junit_junit",
         "@maven//:org_xmlunit_xmlunit_core",
-
     ],
 )

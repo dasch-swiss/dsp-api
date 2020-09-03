@@ -2,7 +2,8 @@ package org.knora.webapi.responders
 
 import java.util.UUID
 
-import org.knora.webapi.{ApplicationLockException, IRI}
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.ApplicationLockException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

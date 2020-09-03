@@ -22,27 +22,30 @@ package org.knora.webapi.e2e.v2
 import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
-import java.util.UUID
 
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
+
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
   * Tests the API v2 resources route.
@@ -672,7 +675,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         "create a resource with random resource Iri and custom value UUIDs" in {
 
             val customValueUUID = SharedTestDataADM.customValueUUID
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(customValueUUID = customValueUUID)
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(valueUUID = customValueUUID)
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -725,10 +728,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
             val customValueUUID = SharedTestDataADM.customValueUUID
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
-                customResourceIRI = customResourceIRI,
-                customCreationDate = customCreationDate,
-                customValueIRI = customValueIRI,
-                customValueUUID = customValueUUID)
+                resourceIRI = customResourceIRI,
+                creationDate = customCreationDate,
+                valueIRI = customValueIRI,
+                valueUUID = customValueUUID)
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -883,6 +886,28 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
+
+        "mark a resource as deleted, supplying a custom delete date" in {
+            val resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val deleteDate = Instant.now
+
+            val jsonLDEntity = SharedTestDataADM.deleteResourceWithCustomDeleteDate(
+                resourceIri = resourceIri,
+                deleteDate = deleteDate
+            )
+
+            val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.superUser.email, password))
+            val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
+            val updateResponseAsString: String = responseToString(updateResponse)
+            assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(updateResponseAsString == SharedTestDataADM.successResponse("Resource marked as deleted"))
+
+            val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+            val previewResponseAsString = responseToString(previewResponse)
+            assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+        }
+
 
         "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
             // Create a resource containing the text of Hamlet.

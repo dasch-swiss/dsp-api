@@ -22,23 +22,24 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, GravsearchException, InconsistentTriplestoreDataException}
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
+import org.knora.webapi.messages.util.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToCountPrequeryTransformer, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
+import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap, ResponderData}
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.ResponderData
-import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch._
-import org.knora.webapi.responders.v2.search.gravsearch.prequery._
-import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.ApacheLuceneSupport._
-import org.knora.webapi.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util._
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
 
@@ -73,12 +74,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param requestingUser       the the client making the request.
      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
      */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def fulltextSearchCountV2(searchValue: String,
+                                      limitToProject: Option[IRI],
+                                      limitToResourceClass: Option[SmartIri],
+                                      limitToStandoffClass: Option[SmartIri],
+                                      requestingUser: UserADM): Future[ResourceCountV2] = {
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
-            countSparql <- Future(queries.sparql.v2.txt.searchFulltext(
+            countSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
@@ -124,14 +129,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption],
                                  requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-        import FullTextMainQueryGenerator.FullTextSearchConstants
+        import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
-            searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
+            searchSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
@@ -297,17 +302,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             )
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
+
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new SparqlTransformer.GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer(
+                        useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 } else {
                     // Other
-                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+                        simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 }
             }
 
-            // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecficPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
@@ -341,7 +350,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-        import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
+        import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
@@ -380,22 +389,28 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new SparqlTransformer.GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer(
+                        useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 } else {
                     // Other
-                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+                        simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+                    )
                 }
             }
 
             // Convert the preprocessed query to a non-triplestore-specific query.
+
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecificPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
+            _ = log.debug(triplestoreSpecificPrequerySparql)
 
-            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql)).mapTo[SparqlSelectResponse]
             pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
             // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
@@ -421,7 +436,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
-                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(nonPropTypeInfo.typeIri) =>
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if nonPropTypeInfo.isResourceType =>
                         QueryVariable(queryVar.variableName)
                 }.toSet
 
@@ -469,19 +484,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     }
                 }
 
-                val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
+                val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
                     inputQuery = mainQuery,
                     transformer = triplestoreSpecificQueryPatternTransformerConstruct
                 )
 
                 // Convert the result to a SPARQL string and send it to the triplestore.
-                val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
-
-                // println("++++++++")
-                // println(triplestoreSpecificSparql)
+                val triplestoreSpecificMainQuerySparql: String = triplestoreSpecificMainQuery.toSparql
+                log.debug(triplestoreSpecificMainQuerySparql)
 
                 for {
-                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlExtendedConstructResponse]
+                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificMainQuerySparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // Filter out values that the user doesn't have permission to see.
                     queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
@@ -597,7 +610,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             }
 
             // Do a SELECT prequery to get the IRIs of the requested page of resources.
-            prequery = queries.sparql.v2.txt.getResourcesInProjectPrequery(
+            prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcesInProjectPrequery(
                 triplestore = settings.triplestoreType,
                 projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
                 resourceClassIri = internalClassIri,
@@ -626,7 +639,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 for {
                     // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
                     // at most one page of standoff per text value.
-                    resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                    resourceRequestSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
                         triplestore = settings.triplestoreType,
                         resourceIris = mainResourceIris,
                         preview = false,
@@ -686,7 +699,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
-            countSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
+            countSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
@@ -735,7 +748,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
-            searchResourceByLabelSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
+            searchResourceByLabelSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,

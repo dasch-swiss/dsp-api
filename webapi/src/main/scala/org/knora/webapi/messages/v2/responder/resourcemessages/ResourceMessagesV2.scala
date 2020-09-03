@@ -1,20 +1,20 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
@@ -25,22 +25,24 @@ import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
-import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
-import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.{messages, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -428,7 +430,7 @@ case class ReadResourceV2(resourceIri: IRI,
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 
-        JsonLDObject(
+        messages.util.JsonLDObject(
             Map(
                 JsonLDConstants.ID -> JsonLDString(resourceIri),
                 JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
@@ -582,13 +584,12 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                     OntologyConstants.KnoraApiV2Complex.CreationDate
                 )
 
-            valueFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
+            propertyValueFuturesMap: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
                 propertyIriStr =>
                     val propertyIri: SmartIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-
                     val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
 
-                    val propertyValues = valuesArray.value.map {
+                    val valueFuturesSeq: Seq[Future[CreateValueInNewResourceV2]] = valuesArray.value.map {
                         valueJsonLD =>
                             val valueJsonLDObject = valueJsonLD match {
                                 case jsonLDObject: JsonLDObject => jsonLDObject
@@ -604,15 +605,22 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                     settings = settings,
                                     log = log
                                 )
-                                maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
-                                maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID
 
-                                // Get the values's creation date.
+                                maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
+                                maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+
+                                // Get the value's creation date.
+                                // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
                                 maybeCustomValueCreationDate: Option[Instant] = valueJsonLDObject.maybeDatatypeValueInObject(
+                                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                                ).orElse(valueJsonLDObject.maybeDatatypeValueInObject(
                                     key = OntologyConstants.KnoraApiV2Complex.CreationDate,
                                     expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                                     validationFun = stringFormatter.xsdDateTimeStampToInstant
-                                )
+                                ))
+
                                 maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueInNewResourceV2(
                                 valueContent = valueContent,
@@ -623,23 +631,22 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             )
                     }
 
-                    propertyIri -> propertyValues
+                    propertyIri -> valueFuturesSeq
             }.toMap
 
-            values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(valueFutures)
+            propertyValuesMap: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValueFuturesMap)
 
             // Get information about the project that the resource should be created in.
             projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
                 ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
-
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = maybeCustomResourceIri,
                 resourceClassIri = resourceClassIri,
                 label = label,
-                values = values,
+                values = propertyValuesMap,
                 projectADM = projectInfoResponse.project,
                 permissions = permissions,
                 creationDate = creationDate
@@ -749,12 +756,15 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
  * @param resourceIri               the IRI of the resource.
  * @param resourceClassIri          the IRI of the resource class.
  * @param maybeDeleteComment        a comment explaining why the resource is being marked as deleted.
+ * @param maybeDeleteDate           a timestamp indicating when the resource was marked as deleted. If not supplied,
+ *                                  the current time will be used.
  * @param maybeLastModificationDate the resource's last modification date, if any.
  * @param erase                     if `true`, the resource will be erased from the triplestore, otherwise it will be marked as deleted.
  */
 case class DeleteOrEraseResourceRequestV2(resourceIri: IRI,
                                           resourceClassIri: SmartIri,
                                           maybeDeleteComment: Option[String] = None,
+                                          maybeDeleteDate: Option[Instant] = None,
                                           maybeLastModificationDate: Option[Instant] = None,
                                           erase: Boolean = false,
                                           requestingUser: UserADM,
@@ -810,10 +820,17 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 
         val maybeDeleteComment: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
+        val maybeDeleteDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
         DeleteOrEraseResourceRequestV2(
             resourceIri = resourceIri.toString,
             resourceClassIri = resourceClassIri,
             maybeDeleteComment = maybeDeleteComment,
+            maybeDeleteDate = maybeDeleteDate,
             maybeLastModificationDate = maybeLastModificationDate,
             requestingUser = requestingUser,
             apiRequestID = apiRequestID
@@ -1102,7 +1119,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
                                 propertyIri.toString -> JsonLDArray(sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)))
                         }.toMap
 
-                        JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
+                        messages.util.JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
 
                     case None =>
                         // This node isn't the source of any edges.

@@ -33,7 +33,8 @@ import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.{BadRequestException, SharedTestDataADM}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -346,6 +347,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             changeGroupStatusRequest <- changeGroupStatusTestRequest
             getGroupMembersResponse <- getGroupMembersTestResponse
         } yield createGroupRequest + getGroupsResponse + getGroupByIriResponse + updateGroupRequest +
-                changeGroupStatusRequest + getGroupMembersResponse
-        }
+            changeGroupStatusRequest + getGroupMembersResponse
+    }
 }
