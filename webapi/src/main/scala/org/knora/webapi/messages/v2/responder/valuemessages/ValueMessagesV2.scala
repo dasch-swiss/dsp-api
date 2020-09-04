@@ -248,7 +248,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
             // Get the resource property and the new value version.
             updateValue: UpdateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    val valueIri: IRI = jsonLDObject.requireIDAsKnoraDataIri.toString
+                    val valueIri: SmartIri = jsonLDObject.requireIDAsKnoraDataIri
 
                     // Get the custom value creation date, if provided.
                     val maybeValueCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
@@ -257,11 +257,40 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                         validationFun = stringFormatter.xsdDateTimeStampToInstant
                     )
 
-                    // Does the value object just contain knora-api:hasPermissions?
+                    // Get the custom new value IRI, if provided.
+                    val maybeNewIri: Option[SmartIri] = jsonLDObject.maybeStringWithValidation(
+                        OntologyConstants.KnoraApiV2Complex.NewValueVersionIri,
+                        stringFormatter.toSmartIriWithErr
+                    )
 
-                    val valuePredicatesMinusIDAndType: Set[IRI] = jsonLDObject.value.keySet - JsonLDConstants.ID - JsonLDConstants.TYPE
+                    maybeNewIri match {
+                        case Some(definedNewIri) =>
+                            if (!definedNewIri.isKnoraValueIri) {
+                                throw BadRequestException(s"<$definedNewIri> is not a Knora value IRI")
+                            }
 
-                    if (valuePredicatesMinusIDAndType == Set(OntologyConstants.KnoraApiV2Complex.HasPermissions)) {
+                            if (definedNewIri.getProjectCode != valueIri.getProjectCode) {
+                                throw BadRequestException(s"The provided value IRI does not contain the correct project code")
+                            }
+
+                            if (definedNewIri.getResourceID != valueIri.getResourceID) {
+                                throw BadRequestException(s"The provided value IRI does not contain the correct resource ID")
+                            }
+
+                        case None => ()
+                    }
+
+                    // Aside from the value's ID and type and the optional predicates above, does the value object just
+                    // contain knora-api:hasPermissions?
+
+                    val otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
+                        JsonLDConstants.ID,
+                        JsonLDConstants.TYPE,
+                        OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                        OntologyConstants.KnoraApiV2Complex.NewValueVersionIri
+                    )
+
+                    if (otherValuePredicates == Set(OntologyConstants.KnoraApiV2Complex.HasPermissions)) {
                         // Yes. This is a request to change the value's permissions.
 
                         val valueType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
@@ -272,10 +301,11 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                 resourceIri = resourceIri.toString,
                                 resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
-                                valueIri = valueIri,
+                                valueIri = valueIri.toString,
                                 valueType = valueType,
                                 permissions = permissions,
-                                valueCreationDate = maybeValueCreationDate
+                                valueCreationDate = maybeValueCreationDate,
+                                newValueVersionIri = maybeNewIri
                             )
                         )
                     } else {
@@ -296,10 +326,11 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                             resourceIri = resourceIri.toString,
                             resourceClassIri = resourceClassIri,
                             propertyIri = propertyIri,
-                            valueIri = valueIri,
+                            valueIri = valueIri.toString,
                             valueContent = valueContent,
                             permissions = maybePermissions,
-                            valueCreationDate = maybeValueCreationDate
+                            valueCreationDate = maybeValueCreationDate,
+                            newValueVersionIri = maybeNewIri
                         )
                     }
             }
@@ -862,15 +893,17 @@ trait UpdateValueV2 {
 /**
  * A new version of a value of a Knora property to be created.
  *
- * @param resourceIri       the resource that the current value version is attached to.
- * @param resourceClassIri  the resource class that the client believes the resource belongs to.
- * @param propertyIri       the property that the client believes points to the value. If the value is a link value,
- *                          this must be a link value property.
- * @param valueIri          the IRI of the value to be updated.
- * @param valueContent      the content of the new version of the value.
- * @param permissions       the permissions to be attached to the new value version.
- * @param valueCreationDate an optional custom creation date to be attached to the new value version. If not supplied,
- *                          the current time will be used.
+ * @param resourceIri        the resource that the current value version is attached to.
+ * @param resourceClassIri   the resource class that the client believes the resource belongs to.
+ * @param propertyIri        the property that the client believes points to the value. If the value is a link value,
+ *                           this must be a link value property.
+ * @param valueIri           the IRI of the value to be updated.
+ * @param valueContent       the content of the new version of the value.
+ * @param permissions        the permissions to be attached to the new value version.
+ * @param valueCreationDate  an optional custom creation date to be attached to the new value version. If not provided,
+ *                           the current time will be used.
+ * @param newValueVersionIri an optional IRI to be used for the new value version. If not provided, a random IRI
+ *                           will be generated.
  */
 case class UpdateValueContentV2(resourceIri: IRI,
                                 resourceClassIri: SmartIri,
@@ -878,20 +911,23 @@ case class UpdateValueContentV2(resourceIri: IRI,
                                 valueIri: IRI,
                                 valueContent: ValueContentV2,
                                 permissions: Option[String] = None,
-                                valueCreationDate: Option[Instant] = None) extends IOValueV2 with UpdateValueV2
+                                valueCreationDate: Option[Instant] = None,
+                                newValueVersionIri: Option[SmartIri] = None) extends IOValueV2 with UpdateValueV2
 
 /**
  * New permissions for a value.
  *
- * @param resourceIri       the resource that the current value version is attached to.
- * @param resourceClassIri  the resource class that the client believes the resource belongs to.
- * @param propertyIri       the property that the client believes points to the value. If the value is a link value,
- *                          this must be a link value property.
- * @param valueIri          the IRI of the value to be updated.
- * @param valueType         the IRI of the value type.
- * @param permissions       the permissions to be attached to the new value version.
- * @param valueCreationDate an optional custom creation date to be attached to the new value version. If not supplied,
- *                          the current time will be used.
+ * @param resourceIri        the resource that the current value version is attached to.
+ * @param resourceClassIri   the resource class that the client believes the resource belongs to.
+ * @param propertyIri        the property that the client believes points to the value. If the value is a link value,
+ *                           this must be a link value property.
+ * @param valueIri           the IRI of the value to be updated.
+ * @param valueType          the IRI of the value type.
+ * @param permissions        the permissions to be attached to the new value version.
+ * @param valueCreationDate  an optional custom creation date to be attached to the new value version. If not provided,
+ *                           the current time will be used.
+ * @param newValueVersionIri an optional IRI to be used for the new value version. If not provided, a random IRI
+ *                           will be generated.
  */
 case class UpdateValuePermissionsV2(resourceIri: IRI,
                                     resourceClassIri: SmartIri,
@@ -899,7 +935,8 @@ case class UpdateValuePermissionsV2(resourceIri: IRI,
                                     valueIri: IRI,
                                     valueType: SmartIri,
                                     permissions: String,
-                                    valueCreationDate: Option[Instant] = None) extends UpdateValueV2
+                                    valueCreationDate: Option[Instant] = None,
+                                    newValueVersionIri: Option[SmartIri] = None) extends UpdateValueV2
 
 /**
  * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
