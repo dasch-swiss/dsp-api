@@ -596,37 +596,13 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
      * @return a [[TransformedFilterPattern]].
      */
     private def handlePropertyIriQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, iriRef: IriRef, propInfo: PropertyTypeInfo): TransformedFilterPattern = {
-
         iriRef.iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}"))
-
-        val internalIriRef = iriRef.toOntologySchema(InternalSchema)
 
         // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
         if (comparisonOperator != CompareExpressionOperator.EQUALS)
             throw GravsearchException(s"Comparison operator in a CompareExpression for a property type must be ${CompareExpressionOperator.EQUALS}, but '$comparisonOperator' given (for negations use 'FILTER NOT EXISTS')")
 
-        val userProvidedRestriction = CompareExpression(queryVar, comparisonOperator, internalIriRef)
-
-        // check if the objectTypeIri of propInfo is knora-api:Resource
-        // if so, it is a linking property and its link value property must be restricted too
-        if (propInfo.objectIsResourceType) {
-            // it is a linking property, restrict the link value property
-            val restrictionForLinkValueProp = CompareExpression(
-                leftArg = createLinkValuePropertyVariableFromLinkingPropertyVariable(queryVar), // the same variable was created during statement processing in WHERE clause in `convertStatementForPropertyType`
-                operator = comparisonOperator,
-                rightArg = IriRef(internalIriRef.iri.fromLinkPropToLinkValueProp)) // create link value property from linking property
-
-            TransformedFilterPattern(
-                Some(
-                    AndExpression(
-                        leftArg = userProvidedRestriction,
-                        rightArg = restrictionForLinkValueProp)
-                )
-            )
-        } else {
-            // not a linking property, just return the provided restriction
-            TransformedFilterPattern(Some(userProvidedRestriction))
-        }
+        TransformedFilterPattern(Some(CompareExpression(queryVar, comparisonOperator, iriRef.toOntologySchema(InternalSchema))))
     }
 
     /**
