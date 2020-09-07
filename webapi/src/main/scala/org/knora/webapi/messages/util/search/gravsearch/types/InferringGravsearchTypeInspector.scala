@@ -973,7 +973,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             allTypes.exists(
                 aType =>
                     entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
-                        case Some(classDef: ReadClassInfoV2) => classDef.allBaseClasses.contains(currTypeIri)
+                        case Some(classDef: ReadClassInfoV2) =>
+                            classDef.allBaseClasses.contains(currTypeIri)
                         case _ => false
                     }
             )

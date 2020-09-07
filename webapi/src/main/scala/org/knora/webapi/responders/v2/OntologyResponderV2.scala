@@ -260,7 +260,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // A map in which each class IRI points to the full set of its base classes. A class is also
         // a subclass of itself.
         val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = allClassIris.toSeq.map {
-            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) :+ classIri)
+            classIri =>
+                val baseClasses = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
+                (classIri, classIri +: baseClasses)
         }.toMap
 
         // A map in which each class IRI points to the full set of its subclasses. A class is also

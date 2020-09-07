@@ -75,7 +75,9 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         }
 
         val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = definitions.classDefs.keySet.map {
-            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) :+ classIri)
+            classIri =>
+                val baseClasses = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
+                (classIri, classIri +: baseClasses)
         }.toMap
 
         val definitionsWithSubClassOf = definitions.copy(
