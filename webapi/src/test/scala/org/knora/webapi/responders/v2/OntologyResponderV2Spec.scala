@@ -2103,9 +2103,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ).map(_.toSmartIri)
 
             val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3110,8 +3110,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3389,8 +3389,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {

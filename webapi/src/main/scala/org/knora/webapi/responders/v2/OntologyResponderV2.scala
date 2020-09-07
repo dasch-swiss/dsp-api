@@ -1923,7 +1923,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the class is a subclass of knora-base:Resource.
 
-                allBaseClassIris: Set[SmartIri] = allBaseClassIrisWithoutSelf + internalClassIri
+                allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutSelf.toSeq
 
                 _ = if (!allBaseClassIris.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
                     throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} would not be a subclass of knora-api:Resource")
@@ -1932,7 +1932,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the cardinalities are valid, and add any inherited cardinalities.
                 (internalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = internalClassDef,
-                    allBaseClassIris = allBaseClassIris,
+                    allBaseClassIris = allBaseClassIris.toSet,
                     cacheData = cacheData
                 )
 
@@ -1955,7 +1955,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = unescapedClassDefWithLinkValueProps,
-                    allBaseClasses = allBaseClassIris.toSeq,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -1994,7 +1994,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Update the cache.
 
-                updatedSubClassOfRelations = cacheData.subClassOfRelations + (internalClassIri -> allBaseClassIris.toSeq)
+                updatedSubClassOfRelations = cacheData.subClassOfRelations + (internalClassIri -> allBaseClassIris)
                 updatedSuperClassOfRelations = calculateSuperClassOfRelations(updatedSubClassOfRelations)
 
                 updatedOntology = ontology.copy(
