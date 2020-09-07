@@ -27,11 +27,12 @@ import org.knora.webapi.messages.SmartIri
  */
 object OntologyUtil {
     /**
-     * Recursively walks up an entity hierarchy read from the triplestore, collecting the IRIs of all base entities.
+     * Recursively walks up an entity hierarchy read from the triplestore, collecting the IRIs of all base entities in
+     * an ordered sequence.
      *
      * @param iri             the IRI of an entity.
      * @param directRelations a map of entities to their direct base entities.
-     * @return all the base entities of the specified entity.
+     * @return all the base entities of the specified entity hierarchically ordered.
      */
     def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Seq[SmartIri] = {
         def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Seq[SmartIri] = {
