@@ -116,8 +116,15 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 log = log
                             )
 
-                        // Get the custom value IRI if provided.
-                        maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri
+                        // Get and validate the custom value IRI if provided.
+                        maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri.map {
+                            definedNewIri =>
+                                stringFormatter.validateCustomValueIri(
+                                    customValueIri = definedNewIri,
+                                    projectCode = resourceIri.getProjectCode.get,
+                                    resourceID = resourceIri.getResourceID.get
+                                )
+                        }
 
                         // Get the custom value UUID if provided.
                         maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
@@ -257,27 +264,22 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                         validationFun = stringFormatter.xsdDateTimeStampToInstant
                     )
 
-                    // Get the custom new value IRI, if provided.
+                    // Get and validate the custom new value version IRI, if provided.
+
                     val maybeNewIri: Option[SmartIri] = jsonLDObject.maybeIriInObject(
                         OntologyConstants.KnoraApiV2Complex.NewValueVersionIri,
                         stringFormatter.toSmartIriWithErr
-                    )
-
-                    maybeNewIri match {
-                        case Some(definedNewIri) =>
-                            if (!definedNewIri.isKnoraValueIri) {
-                                throw BadRequestException(s"<$definedNewIri> is not a Knora value IRI")
+                    ).map {
+                        definedNewIri =>
+                            if (definedNewIri == valueIri) {
+                                throw BadRequestException(s"The IRI of a new value version cannot be the same as the IRI of the current version")
                             }
 
-                            if (definedNewIri.getProjectCode != valueIri.getProjectCode) {
-                                throw BadRequestException(s"The provided value IRI does not contain the correct project code")
-                            }
-
-                            if (definedNewIri.getResourceID != valueIri.getResourceID) {
-                                throw BadRequestException(s"The provided value IRI does not contain the correct resource ID")
-                            }
-
-                        case None => ()
+                            stringFormatter.validateCustomValueIri(
+                                customValueIri = definedNewIri,
+                                projectCode = valueIri.getProjectCode.get,
+                                resourceID = valueIri.getResourceID.get
+                            )
                     }
 
                     // Aside from the value's ID and type and the optional predicates above, does the value object just
