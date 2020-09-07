@@ -2290,13 +2290,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
-                allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri]).toSet
-                } + internalClassIri
+                allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap {
+                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri])
+                }
+
+                allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
 
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
-                    allBaseClassIris = allBaseClassIris,
+                    allBaseClassIris = allBaseClassIris.toSet,
                     cacheData = cacheData,
                     existingLinkPropsToKeep = existingReadClassInfo.linkProperties
                 )
@@ -2319,7 +2321,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
-                    allBaseClasses = allBaseClassIris.toSeq,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2456,13 +2458,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
-                allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri]).toSet
-                } + internalClassIri
+                allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap {
+                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri])
+                }
+
+                allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
 
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
-                    allBaseClassIris = allBaseClassIris,
+                    allBaseClassIris = allBaseClassIris.toSet,
                     cacheData = cacheData
                 )
 
@@ -2484,7 +2488,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
-                    allBaseClasses = allBaseClassIris.toSeq,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
