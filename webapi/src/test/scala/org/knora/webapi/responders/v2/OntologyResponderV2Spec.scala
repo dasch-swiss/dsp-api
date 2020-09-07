@@ -2102,7 +2102,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
             ).map(_.toSmartIri)
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
                 "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri
@@ -3109,7 +3109,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri.fromLinkPropToLinkValueProp
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
                 "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
             )
@@ -3388,7 +3388,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 AnythingOntologyIri.makeEntityIri("hasEmptiness")
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
                 "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
             )

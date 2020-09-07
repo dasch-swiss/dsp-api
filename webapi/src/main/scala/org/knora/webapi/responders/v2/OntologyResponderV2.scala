@@ -87,7 +87,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * @param standoffProperties      a set of standoff properties.
      */
     private case class OntologyCacheData(ontologies: Map[SmartIri, ReadOntologyV2],
-                                         subClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                         subClassOfRelations: Map[SmartIri, Seq[SmartIri]],
                                          superClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                          guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
@@ -259,8 +259,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // A map in which each class IRI points to the full set of its base classes. A class is also
         // a subclass of itself.
-        val allSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = allClassIris.map {
-            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) + classIri)
+        val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = allClassIris.toSeq.map {
+            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) :+ classIri)
         }.toMap
 
         // A map in which each class IRI points to the full set of its subclasses. A class is also
@@ -270,7 +270,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Make a map in which each property IRI points to the full set of its base properties. A property is also
         // a subproperty of itself.
         val allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = allPropertyIris.map {
-            propertyIri => (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSubPropertyOfRelations) + propertyIri)
+            propertyIri => (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSubPropertyOfRelations).toSet + propertyIri)
         }.toMap
 
         // A set of all subproperties of knora-base:resourceProperty.
@@ -396,7 +396,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Construct the ontology cache data.
         val ontologyCacheData: OntologyCacheData = OntologyCacheData(
             ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, { key => s"Ontology not found: $key" }),
-            subClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubClassOfRelations, { key => s"Class not found: $key" }),
+            subClassOfRelations = new ErrorHandlingMap[SmartIri, Seq[SmartIri]](allSubClassOfRelations, { key => s"Class not found: $key" }),
             superClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, { key => s"Class not found: $key" }),
             subPropertyOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, { key => s"Property not found: $key" }),
             guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](allGuiAttributeDefinitions, { key => s"salsah-gui:Guielement not found: $key" }),
@@ -685,7 +685,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                    directClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
                                    classCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
                                    directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
-                                   allSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                   allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]],
                                    allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                    allPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
                                    allKnoraResourceProps: Set[SmartIri],
@@ -741,7 +741,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
 
                 val directCardinalityPropertyIris = directCardinalities.keySet
-                val allBaseClasses = allSubClassOfRelations(classIri)
+                val allBaseClasses: Seq[SmartIri] = allSubClassOfRelations(classIri)
                 val isKnoraResourceClass = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
                 val isStandoffClass = allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
                 val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(OntologyConstants.KnoraBase.Value.toSmartIri)
@@ -838,7 +838,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Each class must be a subclass of all the classes that are subject class constraints of the properties in its cardinalities.
                 checkSubjectClassConstraintsViaCardinalities(
                     internalClassDef = classDef,
-                    allBaseClassIris = allBaseClasses,
+                    allBaseClassIris = allBaseClasses.toSet,
                     allClassCardinalityKnoraPropertyDefs = allPropertyDefs.filterKeys(allOwlCardinalitiesForClass.keySet),
                     errorSchema = InternalSchema,
                     errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
@@ -854,7 +854,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Get the class's standoff data type, if any. A standoff class that has a datatype is a subclass of one of the classes
                 // in StandoffDataTypeClasses.
 
-                val standoffDataType: Set[SmartIri] = allSubClassOfRelations(classIri).intersect(StandoffDataTypeClasses.getStandoffClassIris.map(_.toSmartIri))
+                val standoffDataType: Set[SmartIri] = allSubClassOfRelations(classIri).toSet.intersect(StandoffDataTypeClasses.getStandoffClassIris.map(_.toSmartIri))
 
                 if (standoffDataType.size > 1) {
                     throw InconsistentTriplestoreDataException(s"Class $classIri is a subclass of more than one standoff datatype: ${standoffDataType.mkString(", ")}")
@@ -914,7 +914,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     private def makeReadPropertyInfos(propertyDefs: Map[SmartIri, PropertyInfoContentV2],
                                       directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                       allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-                                      allSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                      allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]],
                                       allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
                                       allKnoraResourceProps: Set[SmartIri],
                                       allLinkProps: Set[SmartIri],
@@ -1911,7 +1911,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check for rdfs:subClassOf cycles.
 
                 allBaseClassIrisWithoutSelf: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
+                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri]).toSet
                 }
 
                 _ = if (allBaseClassIrisWithoutSelf.contains(internalClassIri)) {
@@ -1952,7 +1952,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = unescapedClassDefWithLinkValueProps,
-                    allBaseClasses = allBaseClassIris,
+                    allBaseClasses = allBaseClassIris.toSeq,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -1991,7 +1991,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Update the cache.
 
-                updatedSubClassOfRelations = cacheData.subClassOfRelations + (internalClassIri -> allBaseClassIris)
+                updatedSubClassOfRelations = cacheData.subClassOfRelations + (internalClassIri -> allBaseClassIris.toSeq)
                 updatedSuperClassOfRelations = calculateSuperClassOfRelations(updatedSubClassOfRelations)
 
                 updatedOntology = ontology.copy(
@@ -2288,7 +2288,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
                 allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
+                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri]).toSet
                 } + internalClassIri
 
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
@@ -2316,7 +2316,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
-                    allBaseClasses = allBaseClassIris,
+                    allBaseClasses = allBaseClassIris.toSeq,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2454,7 +2454,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
                 allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
+                    baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri]).toSet
                 } + internalClassIri
 
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
@@ -2481,7 +2481,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
-                    allBaseClasses = allBaseClassIris,
+                    allBaseClasses = allBaseClassIris.toSeq,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2630,7 +2630,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 updatedSubClassOfRelations = (cacheData.subClassOfRelations - internalClassIri).map {
-                    case (subClass, baseClasses) => subClass -> (baseClasses - internalClassIri)
+                    case (subClass, baseClasses) => subClass -> (baseClasses.toSet - internalClassIri).toSeq
                 }
 
                 updatedSuperClassOfRelations = calculateSuperClassOfRelations(updatedSubClassOfRelations)
@@ -3799,7 +3799,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 errorFun(s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri.toOntologySchema(errorSchema)} of " +
                     s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}"
                 )
-            )
+            ).toSet
         }
 
         // Get the definitions of all the Knora superproperties of the property.
@@ -4084,9 +4084,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * @param allSubClassOfRelations all the `rdfs:subClassOf` relations between classes.
      * @return a map of IRIs of resource classes to sets of the IRIs of their subclasses.
      */
-    private def calculateSuperClassOfRelations(allSubClassOfRelations: Map[SmartIri, Set[SmartIri]]) = {
+    private def calculateSuperClassOfRelations(allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]]) = {
         allSubClassOfRelations.toVector.flatMap {
-            case (subClass: SmartIri, baseClasses: Set[SmartIri]) =>
+            case (subClass: SmartIri, baseClasses: Seq[SmartIri]) =>
                 baseClasses.toVector.map {
                     baseClass => baseClass -> subClass
                 }
