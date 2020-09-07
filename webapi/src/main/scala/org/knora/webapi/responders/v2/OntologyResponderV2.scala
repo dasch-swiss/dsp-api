@@ -257,11 +257,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val allClassIris = allClassDefs.keySet
         val allPropertyIris = allPropertyDefs.keySet
 
-        // A map in which each class IRI points to the full set of its base classes. A class is also
-        // a subclass of itself.
+        // A map in which each class IRI points to the full sequence of its base classes.
         val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = allClassIris.toSeq.map {
             classIri =>
-                val baseClasses = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
+                // get the hierarchically ordered base classes.
+                val baseClasses: Seq[SmartIri] = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
+                // prepend the classIri to the sequence of base classes because a class is also a subclass of itself.
                 (classIri, classIri +: baseClasses)
         }.toMap
 
