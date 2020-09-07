@@ -258,7 +258,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                     )
 
                     // Get the custom new value IRI, if provided.
-                    val maybeNewIri: Option[SmartIri] = jsonLDObject.maybeStringWithValidation(
+                    val maybeNewIri: Option[SmartIri] = jsonLDObject.maybeIriInObject(
                         OntologyConstants.KnoraApiV2Complex.NewValueVersionIri,
                         stringFormatter.toSmartIriWithErr
                     )
