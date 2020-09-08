@@ -1725,6 +1725,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     projectIri = createOntologyRequest.projectIri,
                     isShared = createOntologyRequest.isShared,
                     ontologyLabel = createOntologyRequest.label,
+                    ontologyComment = createOntologyRequest.comment,
                     currentTime = currentTime
                 ).toString
 
@@ -1736,6 +1737,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     ontologyIri = internalOntologyIri,
                     projectIri = Some(createOntologyRequest.projectIri),
                     label = Some(createOntologyRequest.label),
+                    comment = createOntologyRequest.comment,
                     lastModificationDate = Some(currentTime)
                 ).unescape
 
