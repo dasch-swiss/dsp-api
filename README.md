@@ -225,6 +225,20 @@ as defined by [http://semver.org]:
 Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
 data would be necessary, e.g., any changes to the Knora-Base ontologies which are not backwards compatible.
 
+## Release Notes Generation
+
+Release notes are generated automatically based on the closed PRs. The PRs should be labeled based on the
+following grouping scheme:
+
+| Category | Label |
+|---|---|
+| Breaking changes | breaking/api, breaking/data, breaking |
+| Enhancements  | enhancement |
+| Bug Fixes | bug |
+| Documentation | documentation |
+| Other | chore, refactor |
+
+
 ## Acknowledgments
 
 ![](https://www.yourkit.com/images/yklogo.png)
