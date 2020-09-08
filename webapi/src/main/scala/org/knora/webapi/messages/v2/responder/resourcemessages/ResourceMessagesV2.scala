@@ -542,8 +542,24 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             // Get the resource's rdfs:label.
             label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-            // Get the resource's project.
+            // Get information about the project that the resource should be created in.
             projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToProject, stringFormatter.toSmartIriWithErr)
+
+            projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                requestingUser = requestingUser
+            )).mapTo[ProjectGetResponseADM]
+
+            _ = maybeCustomResourceIri.foreach {
+                definedResourceIri =>
+                    if (!definedResourceIri.isKnoraResourceIri) {
+                        throw BadRequestException(s"<$definedResourceIri> is not a Knora resource IRI")
+                    }
+
+                    if (!definedResourceIri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
+                        throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
+                    }
+            }
 
             // Get the resource's permissions.
             permissions: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
@@ -635,12 +651,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             }.toMap
 
             propertyValuesMap: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValueFuturesMap)
-
-            // Get information about the project that the resource should be created in.
-            projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-                requestingUser = requestingUser
-            )).mapTo[ProjectGetResponseADM]
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = maybeCustomResourceIri,
