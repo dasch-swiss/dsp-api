@@ -74,8 +74,12 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
             case (classIri, classDef) => classIri -> classDef.subClassOf
         }
 
-        val allSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = definitions.classDefs.keySet.map {
-            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) + classIri)
+        val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = definitions.classDefs.keySet.map {
+            classIri =>
+                // get all hierarchically ordered base classes
+                val baseClasses: Seq[SmartIri] = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
+                // prepend the classIri to the sequence of base classes because a class is also a subclass of itself.
+                (classIri, classIri +: baseClasses)
         }.toMap
 
         val definitionsWithSubClassOf = definitions.copy(
@@ -505,7 +509,7 @@ class JsonLDInstanceInspector extends InstanceInspector {
  */
 case class Definitions(classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
                        propertyDefs: Map[SmartIri, PropertyInfoContentV2] = Map.empty,
-                       subClassOf: Map[SmartIri, Set[SmartIri]] = Map.empty) {
+                       subClassOf: Map[SmartIri, Seq[SmartIri]] = Map.empty) {
     def getClassDef(classIri: SmartIri,
                     errorFun: String => Nothing): ClassInfoContentV2 = {
         classDefs.getOrElse(classIri, errorFun(s"No definition for class $classIri"))
@@ -516,7 +520,7 @@ case class Definitions(classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
         propertyDefs.getOrElse(propertyIri, errorFun(s"No definition for property $propertyIri"))
     }
 
-    def getBaseClasses(classIri: SmartIri): Set[SmartIri] = {
-        subClassOf.getOrElse(classIri, Set.empty)
+    def getBaseClasses(classIri: SmartIri): Seq[SmartIri] = {
+        subClassOf.getOrElse(classIri, Seq.empty)
     }
 }
