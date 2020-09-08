@@ -2102,10 +2102,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
             ).map(_.toSmartIri)
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3109,9 +3109,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri.fromLinkPropToLinkValueProp
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3388,9 +3388,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 AnythingOntologyIri.makeEntityIri("hasEmptiness")
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
