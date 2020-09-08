@@ -4091,10 +4091,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * @param allSubClassOfRelations all the `rdfs:subClassOf` relations between classes.
      * @return a map of IRIs of resource classes to sets of the IRIs of their subclasses.
      */
-    private def calculateSuperClassOfRelations(allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]]) = {
+    private def calculateSuperClassOfRelations(allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]]): Map[SmartIri, Set[SmartIri]] = {
         allSubClassOfRelations.toVector.flatMap {
             case (subClass: SmartIri, baseClasses: Seq[SmartIri]) =>
-                baseClasses.toVector.map {
+                baseClasses.map {
                     baseClass => baseClass -> subClass
                 }
         }.groupBy(_._1).map {
