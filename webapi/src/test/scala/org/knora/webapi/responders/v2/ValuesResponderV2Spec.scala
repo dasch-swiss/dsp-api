@@ -77,7 +77,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val firstIntValueVersionIri = new MutableTestIri
     private val intValueIri = new MutableTestIri
     private val intValueIriWithCustomPermissions = new MutableTestIri
-    private val intValueIriWithCustomUuidAndTimestamp = new MutableTestIri
+    private val intValueForRsyncIri = new MutableTestIri
     private val zeitglöckleinCommentWithoutStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithCommentIri = new MutableTestIri
@@ -862,7 +862,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => intValueIriWithCustomUuidAndTimestamp.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => intValueForRsyncIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -872,7 +872,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                expectedValueIri = intValueForRsyncIri.get,
                 requestingUser = anythingUser1
             )
 
@@ -897,7 +897,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
-                    valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                    valueIri = intValueForRsyncIri.get,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
@@ -918,17 +918,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-            // Get the value before update.
-            val previousValueFromTriplestore: ReadValueV2 = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
-                requestingUser = anythingUser1,
-                checkLastModDateChanged = false
-            )
-
             // Update the value.
 
             val intValue = 988
@@ -939,7 +928,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
-                    valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                    valueIri = intValueForRsyncIri.get,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
@@ -952,7 +941,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case updateValueResponse: UpdateValueResponseV2 =>
-                    intValueIriWithCustomUuidAndTimestamp.set(updateValueResponse.valueIri)
+                    intValueForRsyncIri.set(updateValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -962,7 +951,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                expectedValueIri = intValueForRsyncIri.get,
                 requestingUser = anythingUser1
             )
 
@@ -970,6 +959,57 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case savedValue: IntegerValueContentV2 =>
                     savedValue.valueHasInteger should ===(intValue)
                     updatedValueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+            }
+        }
+
+        "update an integer value with a custom new version IRI" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Update the value.
+
+            val intValue = 1000
+            val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueForRsyncIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    newValueVersionIri = Some(newValueVersionIri.toSmartIri)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueForRsyncIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueForRsyncIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.valueIri should ===(newValueVersionIri)
 
                 case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
             }
@@ -4165,7 +4205,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 resourceIri = resourceIri,
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 propertyIri = propertyIri,
-                valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                valueIri = intValueForRsyncIri.get,
                 valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
                 deleteComment = Some("this value was incorrect"),
                 deleteDate = Some(deleteDate),
@@ -4180,7 +4220,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                valueIri = intValueIriWithCustomUuidAndTimestamp.get,
+                valueIri = intValueForRsyncIri.get,
                 customDeleteDate = Some(deleteDate),
                 requestingUser = anythingUser1
             )

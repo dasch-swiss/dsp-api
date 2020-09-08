@@ -184,13 +184,23 @@ project or a system administrator. The specified creator must also
 have permission to create resources of that class in that project.
 
 In addition to the creation date, in the body of the request, it is possible to specify a custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) for a resource through
-the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI. 
+the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI.
+
+A custom resource IRI must be `http://rdfh.ch/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
+is the shortcode of the project that the resource belongs to), plus a custom ID string.
+ 
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
-will be assigned to the values. An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
+will be assigned to the values.
+
+A custom value IRI must be the IRI of the containing resource, followed
+by a `/values/` and a custom ID string.
+
+An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
 Each custom UUID must be [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5), without padding. Each value of the new resource
 can also have a custom creation date specified by adding `knora-api:creationDate` 
 (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
 For example:
+
 ```jsonld
 {
    "@id" : "http://rdfh.ch/0001/a-custom-thing",
@@ -199,7 +209,7 @@ For example:
      "@id" : "http://rdfh.ch/projects/0001"
    },
    "anything:hasInteger" : {
-       "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI",
+       "@id" : "http://rdfh.ch/0001/a-custom-thing/values/int-value-IRI",
        "@type" : "knora-api:IntValue",
        "knora-api:intValueAsInt" : 10,
        "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",

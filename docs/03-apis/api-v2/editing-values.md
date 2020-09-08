@@ -87,14 +87,15 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
 Each value can have an optional custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) specified by the `@id` attribute, a custom creation date specified by adding 
 `knora-api:valueCreationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
 given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding.
-For example: 
+A custom value IRI must be the IRI of the containing resource, followed
+by a `/values/` and a custom ID string. For example: 
 
 
 ```jsonld
   "@id" : "http://rdfh.ch/0001/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-customized-thing/values/int-value-IRI",
+    "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI",
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 21,
     "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
@@ -390,6 +391,31 @@ well as on the value.
 
 To update a value and give it a custom timestamp, add
 `knora-api:valueCreationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
+
+To update a value and give the new version a custom IRI, add
+`knora-api:newValueVersionIri`, like this:
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@type" : "knora-api:IntValue",
+    "knora-api:intValueAsInt" : 21,
+    "knora-api:newValueVersionIri" : {
+      "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI"
+    }
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+A custom value IRI must be the IRI of the containing resource, followed
+by a `/values/` and a custom ID string.
 
 The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
 and type of the new value version.

@@ -607,7 +607,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(savedCreationDate == creationDate)
         }
 
-        "create a resource with a custom Iri" in {
+        "create a resource with a custom IRI" in {
             val customIRI: IRI = SharedTestDataADM.customResourceIRI
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
@@ -616,6 +616,24 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri == customIRI)
+        }
+
+        "not create a resource with an invalid custom IRI" in {
+            val customIRI: IRI = "http://rdfh.ch/invalid-resource-IRI"
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(responseToString(response))
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "not create a resource with a custom IRI containing the wrong project code" in {
+            val customIRI: IRI = "http://rdfh.ch/0803/a-thing-with-IRI"
+            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(responseToString(response))
+            assert(response.status == StatusCodes.BadRequest, response.toString)
         }
 
         "return a DuplicateValueException during resource creation when the supplied resource Iri is not unique" in {
