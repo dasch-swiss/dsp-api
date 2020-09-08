@@ -692,7 +692,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
                 }.toMap + rdfType,
                 ontologySchema = ApiV2Simple
             ),
-            allBaseClasses = Set(datatypeIri.toSmartIri)
+            allBaseClasses = Seq(datatypeIri.toSmartIri)
         )
     }
 }

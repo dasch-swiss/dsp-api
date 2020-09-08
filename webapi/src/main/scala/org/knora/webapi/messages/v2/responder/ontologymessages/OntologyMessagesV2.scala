@@ -2073,7 +2073,7 @@ sealed trait ReadEntityInfoV2 {
  * Represents an OWL class definition as returned in an API response.
  *
  * @param entityInfoContent       a [[ReadClassInfoV2]] providing information about the class.
- * @param allBaseClasses          a set of the IRIs of all the base classes of the class.
+ * @param allBaseClasses          a seq of the IRIs of all the base classes of the class.
  * @param isResourceClass         `true` if this is a subclass of `knora-base:Resource`.
  * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
  * @param isValueClass            `true` if the class is a Knora value class.
@@ -2088,7 +2088,7 @@ sealed trait ReadEntityInfoV2 {
  * @param fileValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `FileValue` objects.
  */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
-                           allBaseClasses: Set[SmartIri],
+                           allBaseClasses: Seq[SmartIri],
                            isResourceClass: Boolean = false,
                            isStandoffClass: Boolean = false,
                            isValueClass: Boolean = false,
@@ -2153,7 +2153,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         // Remove base classes that don't exist in the target schema.
 
-        val allBaseClassesFilteredForTargetSchema = allBaseClasses.diff(transformationRules.internalClassesToRemove)
+        val allBaseClassesFilteredForTargetSchema = allBaseClasses.diff(transformationRules.internalClassesToRemove.toSeq)
 
         // Convert all IRIs to the target schema.
 
