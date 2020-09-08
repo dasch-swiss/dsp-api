@@ -900,12 +900,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 }
 
                 if (commonBaseClasses.nonEmpty) {
-                    // returns the most specific type class.
+                    // returns the most specific common base class.
                     commonBaseClasses.head
                 } else {
                     InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
                 }
-
             } else {
                 InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
             }
