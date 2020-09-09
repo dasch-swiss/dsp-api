@@ -951,6 +951,13 @@ HTTP POST to http://host/v2/ontologies
 The ontology name must follow the rules given in
 [Knora IRIs](knora-iris.md).
 
+The ontology metadata can have an optional comment given in the request 
+body as:
+
+```
+"rdfs:comment": "some comment",
+``` 
+
 If the ontology is to be shared by multiple projects, it must be
 created in the default shared ontologies project,
 `http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject`,

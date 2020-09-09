@@ -2314,7 +2314,23 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
-    val createOntologyResponse: String =
+    def createOntologyWithComment(projectIri: IRI, label: String, comment: String): String = {
+        s"""
+           |{
+           |    "knora-api:ontologyName": "bar",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "$projectIri"
+           |    },
+           |    "rdfs:label": "$label",
+           |    "rdfs:comment": "$comment",
+           |    "@context": {
+           |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+           |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+           |    }
+           |}""".stripMargin
+    }
+
+    val createFooOntologyResponse: String =
         """{
           |  "@id" : "http://0.0.0.0:3333/ontology/00FF/foo/v2",
           |  "@type" : "owl:Ontology",
@@ -2332,6 +2348,27 @@ object SharedTestDataADM {
           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
           |    "owl" : "http://www.w3.org/2002/07/owl#"
           |  }
+          |}""".stripMargin
+
+    val createOntologyWithCommentResponse: String =
+        """{
+          |    "@id": "http://0.0.0.0:3333/ontology/00FF/bar/v2",
+          |    "@type": "owl:Ontology",
+          |    "knora-api:attachedToProject": {
+          |        "@id": "http://rdfh.ch/projects/00FF"
+          |    },
+          |    "knora-api:lastModificationDate": {
+          |        "@type": "xsd:dateTimeStamp",
+          |        "@value": "2020-09-09T09:37:19.137090Z"
+          |    },
+          |    "rdfs:comment": "some comment",
+          |    "rdfs:label": "The bar ontology",
+          |    "@context": {
+          |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+          |        "xsd": "http://www.w3.org/2001/XMLSchema#",
+          |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          |        "owl": "http://www.w3.org/2002/07/owl#"
+          |    }
           |}""".stripMargin
 
     def changeOntologyMetadata(ontologyIri: IRI, newLabel: String, modificationDate: Instant): String = {

@@ -255,6 +255,23 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
+        "create an empty ontology called 'bar' with a comment" in {
+            val label = "The bar ontology"
+            var comment = "some comment"
+
+            val params = SharedTestDataADM.createOntologyWithComment(imagesProjectIri, label, comment)
+
+
+            Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+                val metadata = responseJsonDoc.body
+                val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+                assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/bar/v2")
+                assert(metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(comment))
+            }
+        }
+
         "change the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 

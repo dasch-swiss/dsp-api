@@ -906,21 +906,35 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def createOntologyTestRequest: Future[TestDataFileContent] = {
+    private def createOntologyTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-request"),
-                text = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-request"),
+                    text = SharedTestDataADM.createOntology(SharedTestDataADM.IMAGES_PROJECT_IRI, "The foo ontology")
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-ontology-with-comment-request"),
+                    text = SharedTestDataADM.createOntologyWithComment(SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        "The bar ontology", "some comment")
+                )
             )
         )
     }
 
-    private def createOntologyTestResponse: Future[TestDataFileContent] = {
+    private def createOntologyTestResponse: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-response"),
-                text = SharedTestDataADM.createOntologyResponse
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-empty-foo-ontology-response"),
+                    text = SharedTestDataADM.createFooOntologyResponse
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-ontology-with-comment-response"),
+                    text = SharedTestDataADM.createOntologyWithCommentResponse
+                )
             )
+
         )
     }
 
@@ -979,8 +993,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             projectOntologiesResponses: Set[TestDataFileContent] <- getOntologyMetadataForProjectsTestResponses
             ontologyClassResponses: Set[TestDataFileContent] <- getClassesTestResponses
             ontologyPropertyResponses: Set[TestDataFileContent] <- getPropertiesTestResponses
-            createOntologyRequest: TestDataFileContent <- createOntologyTestRequest
-            createOntologyResponse: TestDataFileContent <- createOntologyTestResponse
+            createOntologyRequest: Set[TestDataFileContent] <- createOntologyTestRequest
+            createOntologyResponse: Set[TestDataFileContent] <- createOntologyTestResponse
             updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
             createClassRequest: Set[TestDataFileContent] <- createClassTestRequest
             createClassResponse: TestDataFileContent <- createClassTestResponse
@@ -991,7 +1005,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             updatePropertyRequest: Set[TestDataFileContent] <- updatePropertyTestRequest
             deleteOntologyResponse: TestDataFileContent <- deleteOntologyTestResponse
         } yield ontologyResponses + ontologyMetadataResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++
-            ontologyPropertyResponses + createOntologyRequest + createOntologyResponse + updateOntologyMetadataRequest ++
+            ontologyPropertyResponses ++ createOntologyRequest ++ createOntologyResponse + updateOntologyMetadataRequest ++
             createClassRequest + createClassResponse + addCardinalitiesRequest + createPropertyRequest ++
             updateClassRequest ++ replaceCardinalitiesRequest ++ updatePropertyRequest + deleteOntologyResponse
     }
