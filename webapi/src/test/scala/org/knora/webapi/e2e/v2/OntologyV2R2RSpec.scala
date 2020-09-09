@@ -257,7 +257,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         "create an empty ontology called 'bar' with a comment" in {
             val label = "The bar ontology"
-            var comment = "Some Comment"
+            var comment = "some comment"
 
             val params = SharedTestDataADM.createOntologyWithComment(imagesProjectIri, label, comment)
 
