@@ -2314,6 +2314,22 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createOntologyWithComment(projectIri: IRI, label: String, comment: String): String = {
+        s"""
+           |{
+           |    "knora-api:ontologyName": "bar",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "$projectIri"
+           |    },
+           |    "rdfs:label": "$label",
+           |    "rdfs:comment": "$comment",
+           |    "@context": {
+           |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+           |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+           |    }
+           |}""".stripMargin
+    }
+
     val createOntologyResponse: String =
         """{
           |  "@id" : "http://0.0.0.0:3333/ontology/00FF/foo/v2",
