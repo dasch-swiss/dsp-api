@@ -1,0 +1,35 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES")
+
+scala_test(
+    name = "MetadataResponderV2Spec",
+    size = "small",
+    srcs = [
+        "MetadataResponderV2Spec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi/responders/v2/metadata",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_typed_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_testkit_typed_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+    ],
+)
