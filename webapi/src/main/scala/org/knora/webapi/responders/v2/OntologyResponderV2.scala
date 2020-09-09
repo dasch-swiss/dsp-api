@@ -1638,6 +1638,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                         val projectIris: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
                         val labels: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String])
+                        val comments: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[String])
                         val lastModDates: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, Seq.empty[String])
 
                         val projectIri = if (projectIris.size > 1) {
@@ -1664,6 +1665,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             labels.head
                         }
 
+                        val comment: Option[String] = if (comments.size > 1) {
+                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one rdfs:comment")
+                        } else comments.headOption
+
                         val lastModificationDate: Option[Instant] = if (lastModDates.size > 1) {
                             throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one ${OntologyConstants.KnoraBase.LastModificationDate}")
                         } else if (lastModDates.isEmpty) {
@@ -1677,6 +1682,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             ontologyIri = internalOntologyIri,
                             projectIri = Some(projectIri),
                             label = Some(label),
+                            comment = comment,
                             lastModificationDate = lastModificationDate
                         ))
 

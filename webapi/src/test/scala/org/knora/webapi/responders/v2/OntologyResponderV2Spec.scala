@@ -117,6 +117,24 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
+        "create an empty ontology called 'bar' with a comment" in {
+            responderManager ! CreateOntologyRequestV2(
+                ontologyName = "bar",
+                projectIri = imagesProjectIri,
+                label = "The bar ontology",
+                comment = Some("some comment"),
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/bar")
+            val returnedComment: String = metadata.comment.getOrElse(throw AssertionException("The bar ontology has no comment!"))
+            assert(returnedComment == "some comment")
+        }
+
         "change the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 
