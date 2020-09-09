@@ -17,6 +17,7 @@ def dependencies():
         artifacts = [
             # akka
             "com.typesafe.akka:akka-actor_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-actor-typed_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-slf4j_2.12:%s" % (AKKA_VERSION),
 
@@ -118,6 +119,7 @@ def dependencies():
 
             # testing
             "com.typesafe.akka:akka-testkit_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-actor-testkit-typed_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
             "org.scalatest:scalatest_2.12:3.1.2",
