@@ -288,6 +288,19 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.selfjoin should be (true)
             }
 
+            "UPDATE a project with multiple description" in {
+
+                val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
+                val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.updateProjectMultipleDescriptionRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.OK)
+
+                val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+                result.description.size should be (2)
+                result.description should contain (StringLiteralV2(value = "Test Project", language = Some("en")))
+                result.description should contain (StringLiteralV2(value = "Test Project", language = Some("se")))
+            }
+
             "DELETE a project" in {
 
                 val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")

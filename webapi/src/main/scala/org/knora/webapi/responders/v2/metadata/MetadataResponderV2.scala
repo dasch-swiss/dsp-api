@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.v2.metadata
 
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import org.knora.webapi.IRI
 
@@ -41,7 +41,7 @@ object MetadataResponderV2 {
     }
 
     private def responder(): Behavior[MetadataProtocolRequest] =
-        Behaviors.receive { (context, message) =>
+        Behaviors.receive { (context: ActorContext[MetadataProtocolRequest], message: MetadataProtocolRequest) =>
             message match {
                 case GetMetadataForProject(projectIri: IRI, replyTo) =>
                     context.log.info(s"Message: $message")

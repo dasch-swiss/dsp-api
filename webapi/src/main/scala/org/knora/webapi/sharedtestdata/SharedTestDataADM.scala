@@ -641,6 +641,14 @@ object SharedTestDataADM {
            |    "selfjoin": true
            |}""".stripMargin
 
+    val updateProjectMultipleDescriptionRequest: String =
+        s"""{
+           |    "description": [
+           |                    {"value": "Test Project", "language": "en"},
+           |                    {"value": "Test Project", "language": "se"}
+           |                    ]
+           |}""".stripMargin
+
     val createUserRequest: String =
         s"""{
            |    "username": "donald.duck",
@@ -747,6 +755,23 @@ object SharedTestDataADM {
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
            |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |}""".stripMargin
+    }
+
+    def updateListInfoWithRepeatedCommentAndLabelValuesRequest(listIri: IRI): String = {
+        s"""{
+           |    "listIri": "$listIri",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |  "labels": [
+           |    {"language": "en", "value": "Test List"},
+           |    {"language": "se", "value": "Test List"}
+           |  ],
+           |  "comments": [
+           |    {"language": "en", "value": "test"},
+           |    {"language": "de", "value": "test"},
+           |    {"language": "fr", "value": "test"},
+           |     {"language": "it", "value": "test"}
+           |  ]
            |}""".stripMargin
     }
 

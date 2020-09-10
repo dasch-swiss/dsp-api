@@ -716,7 +716,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             _ = if (projectUpdatePayload.description.isDefined) {
-                if (updatedProject.description.sorted != projectUpdatePayload.description.get.sorted) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
+                if (updatedProject.description.diff(projectUpdatePayload.description.get).nonEmpty) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.keywords.isDefined) {
