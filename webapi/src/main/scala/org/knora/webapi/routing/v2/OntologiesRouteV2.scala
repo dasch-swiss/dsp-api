@@ -58,6 +58,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
     private val ALL_LANGUAGES = "allLanguages"
     private val LAST_MODIFICATION_DATE = "lastModificationDate"
+    private val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
     /**
      * Returns the route.
@@ -343,8 +344,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def createClassTestRequest: Future[Set[TestDataFileContent]] = {
-        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-
         FastFuture.successful(
             Set(
                 TestDataFileContent(
@@ -403,8 +402,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def updateClassTestRequest: Future[Set[TestDataFileContent]] = {
-        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-
         FastFuture.successful(
             Set(
                 TestDataFileContent(
@@ -455,13 +452,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def addCardinalitiesTestRequest: Future[TestDataFileContent] = {
-        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-
+    private def addCardinalitiesTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing-request"),
-                text = SharedTestDataADM.addCardinality(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing-request"),
+                    text = SharedTestDataADM.addCardinality(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("add-cardinalities-to-class-nothing-response"),
+                    text = SharedTestDataADM.addCardinalityResponse
+                )
             )
         )
     }
@@ -500,9 +501,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def replaceCardinalitiesTestRequest: Future[Set[TestDataFileContent]] = {
-        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-
+    private def replaceCardinalitiesTestRequests: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
             Set(
                 TestDataFileContent(
@@ -685,11 +684,25 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def createPropertyTestRequest: Future[TestDataFileContent] = {
+    private def createPropertyTestRequestsAndResponses: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-property-hasName-request"),
-                text = SharedTestDataADM.createProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-value-property-request"),
+                    text = SharedTestDataADM.createValueProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-value-property-response"),
+                    text = SharedTestDataADM.createValuePropertyResponse
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-link-property-request"),
+                    text = SharedTestDataADM.createLinkProperty(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost, anythingLastModDate)
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-link-property-response"),
+                    text = SharedTestDataADM.createLinkPropertyResponse
+                )
             )
         )
     }
@@ -729,8 +742,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
     private def updatePropertyTestRequest: Future[Set[TestDataFileContent]] = {
-        val anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-
         FastFuture.successful(
             Set(
                 TestDataFileContent(
@@ -998,15 +1009,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             updateOntologyMetadataRequest: TestDataFileContent <- updateOntologyMetadataTestRequest
             createClassRequest: Set[TestDataFileContent] <- createClassTestRequest
             createClassResponse: TestDataFileContent <- createClassTestResponse
-            addCardinalitiesRequest: TestDataFileContent <- addCardinalitiesTestRequest
-            createPropertyRequest: TestDataFileContent <- createPropertyTestRequest
+            addCardinalitiesRequest: Set[TestDataFileContent] <- addCardinalitiesTestRequestAndResponse
+            createPropertyRequest: Set[TestDataFileContent] <- createPropertyTestRequestsAndResponses
             updateClassRequest: Set[TestDataFileContent] <- updateClassTestRequest
-            replaceCardinalitiesRequest: Set[TestDataFileContent] <- replaceCardinalitiesTestRequest
+            replaceCardinalitiesRequest: Set[TestDataFileContent] <- replaceCardinalitiesTestRequests
             updatePropertyRequest: Set[TestDataFileContent] <- updatePropertyTestRequest
             deleteOntologyResponse: TestDataFileContent <- deleteOntologyTestResponse
         } yield ontologyResponses + ontologyMetadataResponses ++ projectOntologiesResponses ++ ontologyClassResponses ++
             ontologyPropertyResponses ++ createOntologyRequest ++ createOntologyResponse + updateOntologyMetadataRequest ++
-            createClassRequest + createClassResponse + addCardinalitiesRequest + createPropertyRequest ++
+            createClassRequest + createClassResponse ++ addCardinalitiesRequest ++ createPropertyRequest ++
             updateClassRequest ++ replaceCardinalitiesRequest ++ updatePropertyRequest + deleteOntologyResponse
     }
 }

@@ -2388,10 +2388,10 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
-    def createClassWithCardinalities(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
+    def createClassWithCardinalities(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
-           |  "@id" : "$anythinOntologyIri",
+           |  "@id" : "$anythingOntologyIri",
            |  "@type" : "owl:Ontology",
            |  "knora-api:lastModificationDate" : {
            |    "@type" : "xsd:dateTimeStamp",
@@ -2436,10 +2436,10 @@ object SharedTestDataADM {
     }
 
 
-    def createClassWithoutCardinalities(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
+    def createClassWithoutCardinalities(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
-           |  "@id" : "$anythinOntologyIri",
+           |  "@id" : "$anythingOntologyIri",
            |  "@type" : "owl:Ontology",
            |  "knora-api:lastModificationDate" : {
            |    "@type" : "xsd:dateTimeStamp",
@@ -2466,7 +2466,7 @@ object SharedTestDataADM {
            |    "owl" : "http://www.w3.org/2002/07/owl#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "$anythinOntologyIri#"
+           |    "anything" : "$anythingOntologyIri#"
            |  }
            |}
             """.stripMargin
@@ -2653,10 +2653,10 @@ object SharedTestDataADM {
           |}""".stripMargin
     }
 
-    def addCardinality(anythinOntologyIri: IRI, anythingLastModDate: Instant): String = {
+    def addCardinality(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
-           |  "@id" : "$anythinOntologyIri",
+           |  "@id" : "$anythingOntologyIri",
            |  "@type" : "owl:Ontology",
            |  "knora-api:lastModificationDate" : {
            |    "@type" : "xsd:dateTimeStamp",
@@ -2679,20 +2679,197 @@ object SharedTestDataADM {
            |    "owl" : "http://www.w3.org/2002/07/owl#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "$anythinOntologyIri#"
+           |    "anything" : "$anythingOntologyIri#"
            |  }
            |}
             """.stripMargin
     }
 
-    def createProperty(anythinOntologyIri: IRI): String = {
+    def addCardinalityResponse: String =
+        """{
+          |  "@graph" : [ {
+          |    "@id" : "anything:Nothing",
+          |    "@type" : "owl:Class",
+          |    "knora-api:canBeInstantiated" : true,
+          |    "knora-api:isResourceClass" : true,
+          |    "rdfs:comment" : [ {
+          |      "@language" : "en",
+          |      "@value" : "Represents nothing"
+          |    }, {
+          |      "@language" : "fr",
+          |      "@value" : "ne représente rien"
+          |    } ],
+          |    "rdfs:label" : [ {
+          |      "@language" : "en",
+          |      "@value" : "nothing"
+          |    }, {
+          |      "@language" : "fr",
+          |      "@value" : "rien"
+          |    } ],
+          |    "rdfs:subClassOf" : [ {
+          |      "@id" : "knora-api:Resource"
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "anything:hasOtherNothing"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "anything:hasOtherNothingValue"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:arkUrl"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:attachedToProject"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:attachedToUser"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:creationDate"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:deleteComment"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:deleteDate"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:deletedBy"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:minCardinality" : 0,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:hasIncomingLinkValue"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:hasPermissions"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:minCardinality" : 0,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:hasStandoffLinkTo"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:minCardinality" : 0,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:hasStandoffLinkToValue"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:isDeleted"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:lastModificationDate"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:userHasPermission"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:versionArkUrl"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:maxCardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "knora-api:versionDate"
+          |      }
+          |    }, {
+          |      "@type" : "owl:Restriction",
+          |      "knora-api:isInherited" : true,
+          |      "owl:cardinality" : 1,
+          |      "owl:onProperty" : {
+          |        "@id" : "rdfs:label"
+          |      }
+          |    } ]
+          |  } ],
+          |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+          |  "@type" : "owl:Ontology",
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "knora-api:lastModificationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "2020-09-10T09:41:17.151318Z"
+          |  },
+          |  "rdfs:label" : "The anything ontology",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |  }
+          |}""".stripMargin
+
+    def createValueProperty(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
            |{
-           |  "@id" : "$anythinOntologyIri",
+           |  "@id" : "$anythingOntologyIri",
            |  "@type" : "owl:Ontology",
            |  "knora-api:lastModificationDate" : {
            |    "@type" : "xsd:dateTimeStamp",
-           |    "@value" : "2017-12-19T15:23:42.166Z"
+           |    "@value" : "$anythingLastModDate"
            |  },
            |  "@graph" : [ {
            |      "@id" : "anything:hasName",
@@ -2734,11 +2911,158 @@ object SharedTestDataADM {
            |    "owl" : "http://www.w3.org/2002/07/owl#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "$anythinOntologyIri#"
+           |    "anything" : "$anythingOntologyIri#"
            |  }
            |}
         """.stripMargin
     }
+
+    val createValuePropertyResponse: String =
+        """{
+          |  "@graph" : [ {
+          |    "@id" : "anything:hasName",
+          |    "@type" : "owl:ObjectProperty",
+          |    "knora-api:isEditable" : true,
+          |    "knora-api:isResourceProperty" : true,
+          |    "knora-api:objectType" : {
+          |      "@id" : "knora-api:TextValue"
+          |    },
+          |    "knora-api:subjectType" : {
+          |      "@id" : "anything:Thing"
+          |    },
+          |    "salsah-gui:guiAttribute" : [ "maxlength=100", "size=80" ],
+          |    "salsah-gui:guiElement" : {
+          |      "@id" : "salsah-gui:SimpleText"
+          |    },
+          |    "rdfs:comment" : [ {
+          |      "@language" : "en",
+          |      "@value" : "The name of a Thing"
+          |    }, {
+          |      "@language" : "de",
+          |      "@value" : "Der Name eines Dinges"
+          |    } ],
+          |    "rdfs:label" : [ {
+          |      "@language" : "en",
+          |      "@value" : "has name"
+          |    }, {
+          |      "@language" : "de",
+          |      "@value" : "hat Namen"
+          |    } ],
+          |    "rdfs:subPropertyOf" : [ {
+          |      "@id" : "knora-api:hasValue"
+          |    }, {
+          |      "@id" : "http://schema.org/name"
+          |    } ]
+          |  } ],
+          |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+          |  "@type" : "owl:Ontology",
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "knora-api:lastModificationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "2020-09-10T09:28:47.884563Z"
+          |  },
+          |  "rdfs:label" : "The anything ontology",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |  }
+          |}""".stripMargin
+
+    def createLinkProperty(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
+        s"""
+           |{
+           |  "@id" : "$anythingOntologyIri",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:hasOtherNothing",
+           |    "@type" : "owl:ObjectProperty",
+           |    "knora-api:subjectType" : {
+           |      "@id" : "anything:Nothing"
+           |    },
+           |    "knora-api:objectType" : {
+           |      "@id" : "anything:Nothing"
+           |    },
+           |    "rdfs:comment" : {
+           |      "@language" : "en",
+           |      "@value" : "Refers to the other Nothing of a Nothing"
+           |    },
+           |    "rdfs:label" : {
+           |      "@language" : "en",
+           |      "@value" : "has nothingness"
+           |    },
+           |    "rdfs:subPropertyOf" : {
+           |      "@id" : "knora-api:hasLinkTo"
+           |    }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "$anythingOntologyIri#"
+           |  }
+           |}
+            """.stripMargin
+    }
+
+    val createLinkPropertyResponse: String =
+        """{
+          |  "@graph" : [ {
+          |    "@id" : "anything:hasOtherNothing",
+          |    "@type" : "owl:ObjectProperty",
+          |    "knora-api:isEditable" : true,
+          |    "knora-api:isLinkProperty" : true,
+          |    "knora-api:isResourceProperty" : true,
+          |    "knora-api:objectType" : {
+          |      "@id" : "anything:Nothing"
+          |    },
+          |    "knora-api:subjectType" : {
+          |      "@id" : "anything:Nothing"
+          |    },
+          |    "rdfs:comment" : {
+          |      "@language" : "en",
+          |      "@value" : "Refers to the other Nothing of a Nothing"
+          |    },
+          |    "rdfs:label" : {
+          |      "@language" : "en",
+          |      "@value" : "has nothingness"
+          |    },
+          |    "rdfs:subPropertyOf" : {
+          |      "@id" : "knora-api:hasLinkTo"
+          |    }
+          |  } ],
+          |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+          |  "@type" : "owl:Ontology",
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "knora-api:lastModificationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "2020-09-10T09:28:51.537917Z"
+          |  },
+          |  "rdfs:label" : "The anything ontology",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |  }
+          |}""".stripMargin
 
     def changeClassLabel(anythingOntologyIri: IRI, anythingLastModDate: Instant): String = {
         s"""
