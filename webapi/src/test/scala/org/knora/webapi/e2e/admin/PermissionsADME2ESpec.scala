@@ -67,7 +67,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status === StatusCodes.OK)
 
-            val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrativePermission").asJsObject.fields
+            val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
             val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
             assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
             val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
@@ -83,7 +83,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status === StatusCodes.OK)
 
-            val result = AkkaHttpUtils.httpResponseToJson(response).fields("defaultObjectAccessPermission").asJsObject.fields
+            val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
             val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
             assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
             val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
@@ -100,7 +100,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status === StatusCodes.OK)
 
-            val result = AkkaHttpUtils.httpResponseToJson(response).fields("defaultObjectAccessPermission").asJsObject.fields
+            val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
             val permissionIri = result.getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing.")).convertTo[String]
             assert(permissionIri == "http://rdfh.ch/permissions/00FF/DOAP-with-customIri")
             val forResourceClassIRI = result.getOrElse("forResourceClass", throw DeserializationException("The expected field 'forResourceClass' is missing.")).convertTo[String]

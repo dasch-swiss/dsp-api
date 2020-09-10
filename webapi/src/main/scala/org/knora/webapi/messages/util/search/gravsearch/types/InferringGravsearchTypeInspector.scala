@@ -879,20 +879,20 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
          * @return the IRI of a common base class.
          */
         def findCommonBaseResourceClass(typesToBeChecked: Set[GravsearchEntityTypeInfo]): SmartIri = {
-            val baseClassesOfFirstType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(typesToBeChecked.head)) match {
+            val baseClassesOfFirstType: Seq[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(typesToBeChecked.head)) match {
                 case Some(classDef: ReadClassInfoV2) =>
                     classDef.allBaseClasses
-                case _ => Set.empty[SmartIri]
+                case _ => Seq.empty[SmartIri]
             }
 
             if (baseClassesOfFirstType.nonEmpty) {
-                val commonBaseClasses: Set[SmartIri] = typesToBeChecked.tail.foldLeft(baseClassesOfFirstType) {
+                val commonBaseClasses: Seq[SmartIri] = typesToBeChecked.tail.foldLeft(baseClassesOfFirstType) {
                     (acc, aType) =>
                         // get class info of the type Iri
-                        val baseClassesOfType: Set[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
+                        val baseClassesOfType: Seq[SmartIri] = entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
                             case Some(classDef: ReadClassInfoV2) =>
                                 classDef.allBaseClasses
-                            case _ => Set.empty[SmartIri]
+                            case _ => Seq.empty[SmartIri]
                         }
 
                         // find the common base classes
@@ -900,12 +900,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 }
 
                 if (commonBaseClasses.nonEmpty) {
-                    // return any available base class. TODO: the most specific one should be returned.
+                    // returns the most specific common base class.
                     commonBaseClasses.head
                 } else {
                     InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
                 }
-
             } else {
                 InferenceRuleUtil.getResourceTypeIriForSchema(querySchema)
             }
@@ -973,7 +972,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             allTypes.exists(
                 aType =>
                     entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(aType)) match {
-                        case Some(classDef: ReadClassInfoV2) => classDef.allBaseClasses.contains(currTypeIri)
+                        case Some(classDef: ReadClassInfoV2) =>
+                            classDef.allBaseClasses.contains(currTypeIri)
                         case _ => false
                     }
             )
