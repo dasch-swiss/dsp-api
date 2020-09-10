@@ -643,16 +643,10 @@ object SharedTestDataADM {
 
     val updateProjectMultipleDescriptionRequest: String =
         s"""{
-           |    "shortname": "newproject",
-           |    "longname": "updated project longname",
            |    "description": [
            |                    {"value": "Test Project", "language": "en"},
            |                    {"value": "Test Project", "language": "se"}
-           |                    ],
-           |    "keywords": ["updated", "keywords"],
-           |    "logo": "/fu/bar/baz-updated.jpg",
-           |    "status": true,
-           |    "selfjoin": true
+           |                    ]
            |}""".stripMargin
 
     val createUserRequest: String =
