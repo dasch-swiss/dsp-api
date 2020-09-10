@@ -725,11 +725,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             _ = if (changeListRequest.labels.nonEmpty) {
-                if (updatedList.listinfo.labels.stringLiterals.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.labels.stringLiterals.diff(changeListRequest.labels).nonEmpty) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
             }
 
             _ = if (changeListRequest.comments.nonEmpty) {
-                if (updatedList.listinfo.comments.stringLiterals.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.comments.stringLiterals.diff(changeListRequest.comments).nonEmpty)
+
+                    throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
 
             // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
