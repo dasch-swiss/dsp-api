@@ -22,6 +22,7 @@ scala_test(
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/responders/v2/metadata",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",

@@ -27,9 +27,9 @@ class MetadataResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpec
     "The Metadata Responder" must {
         "return metadata" in {
             val responder = testKit.spawn(MetadataResponderV2(), "responder")
-            val probe = testKit.createTestProbe[MetadataResponderV2.GetMetadataResponse]()
-            responder ! MetadataResponderV2.GetMetadataRequest(probe.ref)
-            probe.expectMessage(MetadataResponderV2.GetMetadataResponse("blabla"))
+            val probe = testKit.createTestProbe[MetadataResponderV2.MetadataForProject]()
+            responder ! MetadataResponderV2.GetMetadataForProject("iri", probe.ref)
+            probe.expectMessage(MetadataResponderV2.MetadataForProject("blabla"))
         }
     }
 }

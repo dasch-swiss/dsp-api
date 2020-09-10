@@ -21,26 +21,31 @@ package org.knora.webapi.responders.v2.metadata
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
+import org.knora.webapi.IRI
 
 object MetadataResponderV2 {
 
-    sealed trait MetadataProtocol
+    sealed trait MetadataResponderProtocol
 
-    sealed trait MetadataProtocolRequest extends MetadataProtocol
-    final case class GetMetadataRequest(replyTo: ActorRef[GetMetadataResponse]) extends MetadataProtocolRequest
+    sealed trait MetadataProtocolRequest extends MetadataResponderProtocol
+    final case class GetMetadataForProject(projectIri: IRI, replyTo: ActorRef[MetadataForProject]) extends MetadataProtocolRequest
 
-    sealed trait MetadataProtocolResponse
-    final case class GetMetadataResponse(metadata: String) extends MetadataProtocolResponse
+    sealed trait MetadataProtocolResponse extends MetadataResponderProtocol
+    final case class MetadataForProject(metadata: String) extends MetadataProtocolResponse
 
     def apply(): Behavior[MetadataProtocolRequest] =
         responder()
 
+    private def getMetadataforProject(projectIri: IRI): MetadataForProject = {
+        MetadataForProject("blabla")
+    }
+
     private def responder(): Behavior[MetadataProtocolRequest] =
         Behaviors.receive { (context, message) =>
             message match {
-                case GetMetadataRequest(replyTo) =>
+                case GetMetadataForProject(projectIri: IRI, replyTo) =>
                     context.log.info(s"Message: $message")
-                    replyTo ! GetMetadataResponse("blabla")
+                    replyTo ! getMetadataforProject(projectIri)
                     Behaviors.same
             }
         }
