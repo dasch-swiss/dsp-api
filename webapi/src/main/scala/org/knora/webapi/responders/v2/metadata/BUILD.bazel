@@ -8,11 +8,8 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
-        "//webapi/src/main/scala/org/knora/webapi/messages",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_actor_typed_2_12",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )

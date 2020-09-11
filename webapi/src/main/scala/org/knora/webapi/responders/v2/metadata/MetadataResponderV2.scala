@@ -25,28 +25,27 @@ import org.knora.webapi.IRI
 
 object MetadataResponderV2 {
 
-    sealed trait MetadataResponderProtocol
+    sealed trait Command
+    final case class GetMetadataForProject(projectIri: IRI, replyTo: ActorRef[MetadataForProject]) extends Command
+    final case class MetadataForProject(metadata: String)
 
-    sealed trait MetadataProtocolRequest extends MetadataResponderProtocol
-    final case class GetMetadataForProject(projectIri: IRI, replyTo: ActorRef[MetadataForProject]) extends MetadataProtocolRequest
-
-    sealed trait MetadataProtocolResponse extends MetadataResponderProtocol
-    final case class MetadataForProject(metadata: String) extends MetadataProtocolResponse
-
-    def apply(): Behavior[MetadataProtocolRequest] =
+    def apply(): Behavior[MetadataResponderV2.Command] =
         responder()
 
-    private def getMetadataforProject(projectIri: IRI): MetadataForProject = {
-        MetadataForProject("blabla")
-    }
-
-    private def responder(): Behavior[MetadataProtocolRequest] =
-        Behaviors.receive { (context: ActorContext[MetadataProtocolRequest], message: MetadataProtocolRequest) =>
+    private def responder(): Behavior[MetadataResponderV2.Command] =
+        Behaviors.receive { (context: ActorContext[MetadataResponderV2.Command], message: MetadataResponderV2.Command) =>
             message match {
                 case GetMetadataForProject(projectIri: IRI, replyTo) =>
-                    context.log.info(s"Message: $message")
-                    replyTo ! getMetadataforProject(projectIri)
+                    context.log.info(s"${context.self} got GetMetadataForProject($projectIri) from $replyTo")
+                    val metadataForProject: MetadataForProject = getMetadataForProject(projectIri)
+                    replyTo ! metadataForProject
                     Behaviors.same
             }
         }
+
+    private def getMetadataForProject(projectIri: IRI): MetadataForProject = {
+        val metadata = "blabla"
+        val result = MetadataForProject(metadata)
+        result
+    }
 }
