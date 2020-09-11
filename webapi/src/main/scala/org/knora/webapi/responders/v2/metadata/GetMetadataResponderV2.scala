@@ -21,19 +21,37 @@ package org.knora.webapi.responders.v2.metadata
 
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+import akka.{ actor => classic }
+import akka.actor.typed.scaladsl.adapter._
 import org.knora.webapi.IRI
 
-object MetadataResponderV2 {
+object GetMetadataResponderV2 {
 
     sealed trait Command
     final case class GetMetadataForProject(projectIri: IRI, replyTo: ActorRef[MetadataForProject]) extends Command
     final case class MetadataForProject(metadata: String)
 
-    def apply(): Behavior[MetadataResponderV2.Command] =
-        responder()
+    def apply(): Behavior[GetMetadataResponderV2.Command] =
+        start()
 
-    private def responder(): Behavior[MetadataResponderV2.Command] =
-        Behaviors.receive { (context: ActorContext[MetadataResponderV2.Command], message: MetadataResponderV2.Command) =>
+    private def start(): Behavior[GetMetadataResponderV2.Command] =
+        Behaviors.receive { (context: ActorContext[GetMetadataResponderV2.Command], message: GetMetadataResponderV2.Command) =>
+            message match {
+                case GetMetadataForProject(projectIri: IRI, replyTo) =>
+                    context.log.info(s"${context.self} got GetMetadataForProject($projectIri) from $replyTo")
+                    // classic.tell(Typed.Ping(context.self), context.self.toClassic)
+
+
+
+                    val metadataForProject: MetadataForProject = getMetadataForProject(projectIri)
+
+                    replyTo ! metadataForProject
+                    waitingForTriplestoreAnswer(projectIri)
+            }
+        }
+
+    private def waitingForTriplestoreAnswer(projectIri: IRI): Behavior[GetMetadataResponderV2.Command] =
+        Behaviors.receive { (context: ActorContext[GetMetadataResponderV2.Command], message: GetMetadataResponderV2.Command) =>
             message match {
                 case GetMetadataForProject(projectIri: IRI, replyTo) =>
                     context.log.info(s"${context.self} got GetMetadataForProject($projectIri) from $replyTo")

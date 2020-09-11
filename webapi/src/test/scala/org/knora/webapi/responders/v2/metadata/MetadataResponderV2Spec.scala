@@ -24,12 +24,12 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 class MetadataResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
-    "The Metadata Responder" must {
+    "The Get Metadata Responder" must {
         "return metadata" in {
-            val responder = testKit.spawn(MetadataResponderV2(), "responder")
-            val probe = testKit.createTestProbe[MetadataResponderV2.MetadataForProject]()
-            responder ! MetadataResponderV2.GetMetadataForProject("iri", probe.ref)
-            probe.expectMessage(MetadataResponderV2.MetadataForProject("blabla"))
+            val responder = testKit.spawn(GetMetadataResponderV2(), "responder")
+            val probe = testKit.createTestProbe[GetMetadataResponderV2.MetadataForProject]()
+            responder ! GetMetadataResponderV2.GetMetadataForProject("iri", probe.ref)
+            probe.expectMessage(GetMetadataResponderV2.MetadataForProject("blabla"))
         }
     }
 }
