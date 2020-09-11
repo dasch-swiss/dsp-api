@@ -722,6 +722,22 @@ object SharedTestDataADM {
            |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
            |}""".stripMargin
 
+    val createAdministrativePermissionResponse: String =
+        s"""{
+           |    "administrative_permission": {
+           |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+           |        "forProject": "http://rdfh.ch/projects/0001",
+           |        "hasPermissions": [
+           |            {
+           |                "additionalInformation": null,
+           |                "name": "ProjectAdminGroupAllPermission",
+           |                "permissionCode": null
+           |            }
+           |        ],
+           |        "iri": "http://rdfh.ch/permissions/0001/mFlyBEiMQtGzwy_hK0M-Ow"
+           |    }
+           |}""".stripMargin
+
     val createDefaultObjectAccessPermissionRequest: String =
         s"""{
            |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
@@ -729,6 +745,24 @@ object SharedTestDataADM {
            |    "forProperty":null,
            |    "forResourceClass":null,
            |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+           |}""".stripMargin
+
+    val createDefaultObjectAccessPermissionResponse: String =
+        s"""{
+           |    "default_object_access_permission": {
+           |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+           |        "forProject": "http://rdfh.ch/projects/0001",
+           |        "forProperty": null,
+           |        "forResourceClass": null,
+           |        "hasPermissions": [
+           |            {
+           |                "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
+           |                "name": "D",
+           |                "permissionCode": 7
+           |            }
+           |        ],
+           |        "iri": "http://rdfh.ch/permissions/0001/v4uUcwD7S5-rfus1uaq1ZQ"
+           |    }
            |}""".stripMargin
 
     val createAdministrativePermissionWithCustomIriRequest: String =
@@ -739,6 +773,22 @@ object SharedTestDataADM {
            |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
            |}""".stripMargin
 
+    val createAdministrativePermissionWithCustomIriResponse: String =
+        s"""{
+           |    "administrative_permission": {
+           |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+           |        "forProject": "http://rdfh.ch/projects/0001",
+           |        "hasPermissions": [
+           |            {
+           |                "additionalInformation": null,
+           |                "name": "ProjectAdminGroupAllPermission",
+           |                "permissionCode": null
+           |            }
+           |        ],
+           |        "iri": "http://rdfh.ch/permissions/0001/AP-with-customIri"
+           |    }
+           |}""".stripMargin
+
     val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
         s"""{
            |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
@@ -747,6 +797,24 @@ object SharedTestDataADM {
            |    "forProperty":null,
            |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
            |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+           |}""".stripMargin
+
+    val createDefaultObjectAccessPermissionWithCustomIriResponse: String =
+        s"""{
+           |    "default_object_access_permission": {
+           |        "forGroup": null,
+           |        "forProject": "http://rdfh.ch/projects/00FF",
+           |        "forProperty": null,
+           |        "forResourceClass": "http://www.knora.org/ontology/00FF/images#bild",
+           |        "hasPermissions": [
+           |            {
+           |                "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
+           |                "name": "D",
+           |                "permissionCode": 7
+           |            }
+           |        ],
+           |        "iri": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+           |    }
            |}""".stripMargin
 
     def updateListInfoRequest(listIri: IRI): String = {
