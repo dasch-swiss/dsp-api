@@ -75,59 +75,71 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permissions")
                 result.asInstanceOf[JsArray].elements.size should be (3)
             }
+
+            "return a project's default object access permissions" in {
+
+                val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response = singleAwaitingRequest(request, 1.seconds)
+                logger.debug("==>> " + response.toString)
+                assert(response.status === StatusCodes.OK)
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
+                result.asInstanceOf[JsArray].elements.size should be (3)
+            }
         }
 
-//        "creating permissions" should {
-//            "create an administrative access permission" in {
-//
-//                val request = Post(baseApiUrl + s"/admin/permissions/ap", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createAdministrativePermissionRequest)) ~> addCredentials(BasicHttpCredentials(
-//                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-//                val response: HttpResponse = singleAwaitingRequest(request)
-//                assert(response.status === StatusCodes.OK)
-//
-//                val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-//                val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
-//                assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
-//                val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
-//                assert(projectIri == "http://rdfh.ch/projects/0001")
-//                val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
-//                assert(permissions.contains("ProjectAdminGroupAllPermission"))
-//            }
-//
-//            "create a default object access permission" in {
-//
-//                val request = Post(baseApiUrl + s"/admin/permissions/doap", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createDefaultObjectAccessPermissionRequest)) ~> addCredentials(BasicHttpCredentials(
-//                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-//                val response: HttpResponse = singleAwaitingRequest(request)
-//                assert(response.status === StatusCodes.OK)
-//
-//                val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-//                val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
-//                assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
-//                val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
-//                assert(projectIri == "http://rdfh.ch/projects/0001")
-//                val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
-//                assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
-//            }
-//
-//            "create a default object access permission with a custom IRI" in {
-//
-//                val request = Post(baseApiUrl + s"/admin/permissions/doap", HttpEntity(ContentTypes.`application/json`,
-//                    SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriRequest)) ~> addCredentials(BasicHttpCredentials(
-//                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-//                val response: HttpResponse = singleAwaitingRequest(request)
-//                assert(response.status === StatusCodes.OK)
-//
-//                val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-//                val permissionIri = result.getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing.")).convertTo[String]
-//                assert(permissionIri == "http://rdfh.ch/permissions/00FF/DOAP-with-customIri")
-//                val forResourceClassIRI = result.getOrElse("forResourceClass", throw DeserializationException("The expected field 'forResourceClass' is missing.")).convertTo[String]
-//                assert(forResourceClassIRI == SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
-//                val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
-//                assert(projectIri == "http://rdfh.ch/projects/00FF")
-//                val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
-//                assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
-//            }
-//        }
+        "creating permissions" should {
+            "create an administrative access permission" in {
+
+                val request = Post(baseApiUrl + s"/admin/permissions/ap", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createAdministrativePermissionRequest)) ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+                val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
+                assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
+                val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
+                assert(projectIri == "http://rdfh.ch/projects/0001")
+                val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
+                assert(permissions.contains("ProjectAdminGroupAllPermission"))
+            }
+
+            "create a default object access permission" in {
+
+                val request = Post(baseApiUrl + s"/admin/permissions/doap", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createDefaultObjectAccessPermissionRequest)) ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+                val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
+                assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
+                val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
+                assert(projectIri == "http://rdfh.ch/projects/0001")
+                val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
+                assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+            }
+
+            "create a default object access permission with a custom IRI" in {
+
+                val request = Post(baseApiUrl + s"/admin/permissions/doap", HttpEntity(ContentTypes.`application/json`,
+                    SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriRequest)) ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+                val permissionIri = result.getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing.")).convertTo[String]
+                assert(permissionIri == "http://rdfh.ch/permissions/00FF/DOAP-with-customIri")
+                val forResourceClassIRI = result.getOrElse("forResourceClass", throw DeserializationException("The expected field 'forResourceClass' is missing.")).convertTo[String]
+                assert(forResourceClassIRI == SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
+                val projectIri = result.getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing.")).convertTo[String]
+                assert(projectIri == "http://rdfh.ch/projects/00FF")
+                val permissions = result.getOrElse("hasPermissions", throw DeserializationException("The expected field 'hasPermissions' is missing.")).toString()
+                assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+            }
+        }
     }
 }
