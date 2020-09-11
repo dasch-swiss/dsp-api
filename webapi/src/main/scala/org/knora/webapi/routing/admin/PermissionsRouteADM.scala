@@ -65,14 +65,46 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     override def knoraApiPath: Route =
         getAdministrativePermission ~
         createAdministrativePermission ~
-        createDefaultObjectAccessPermission
+        createDefaultObjectAccessPermission ~
+        getAdministrativePermissionsForProject
 
-    private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
+    private def getAdministrativePermission: Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
+        (projectIri, groupIri) =>
+            get {
+                requestContext =>
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+    }
+
+    private def getAdministrativePermissionForProjectGroupTestResponse: Future[TestDataFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/ap/$projectIri/$groupIri"))
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-response"),
+            text = responseStr
+        )
+    }
+
+    private def getAdministrativePermissionsForProject: Route = path(PermissionsBasePath / "ap" / Segment) { projectIri =>
         get {
             requestContext =>
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+                } yield AdministrativePermissionsForProjectGetRequestADM(
+                    projectIri = projectIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -82,15 +114,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     log
                 )
         }
-    }
-
-    private def getAdministrativePermissionTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/$projectIri/$groupIri"))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-response"),
-            text = responseStr
-        )
     }
 
     /**
@@ -186,10 +209,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                              actorSystem: ActorSystem, materializer: Materializer
                             ): Future[Set[TestDataFileContent]] =  {
         for {
-                getAdminPermissions <- getAdministrativePermissionTestResponse
+                getAdminPermissionsForPG <- getAdministrativePermissionForProjectGroupTestResponse
                 createAPrequest <- createAdminPermissionTestRequest
                 createDOAPrequest <- createDOAPermissionTestRequest
 
-        } yield createAPrequest ++ createDOAPrequest + getAdminPermissions
+        } yield createAPrequest ++ createDOAPrequest + getAdminPermissionsForPG
     }
 }
