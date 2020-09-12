@@ -2038,6 +2038,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "change the metadata of the 'anything' ontology" in {
+            val newLabel = "The modified anything ontology"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = AnythingOntologyIri,
+                label = newLabel,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri)
+            assert(metadata.label.contains(newLabel))
+            val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+            anythingLastModDate = newAnythingLastModDate
+        }
+
         "delete the class anything:CardinalityThing" in {
             val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
 
