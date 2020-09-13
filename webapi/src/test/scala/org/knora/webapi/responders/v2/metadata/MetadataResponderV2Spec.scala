@@ -20,7 +20,12 @@
 package org.knora.webapi.responders.v2.metadata
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import akka.actor.typed.scaladsl.Behaviors
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, SubjectV2}
 import org.scalatest.wordspec.AnyWordSpecLike
+import akka.actor.typed.scaladsl.adapter._
+import akka.{actor => classic}
+import org.knora.webapi.responders.v2.metadata.GetMetadataResponderV2.InitWithStore
 
 class MetadataResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
@@ -28,6 +33,17 @@ class MetadataResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpec
         "return metadata" in {
             val responder = testKit.spawn(GetMetadataResponderV2(), "responder")
             val probe = testKit.createTestProbe[GetMetadataResponderV2.MetadataForProject]()
+
+            val mockStore = system.toClassic.actorOf(classic.Props(new classic.Actor {
+                def receive = {
+                    case SparqlExtendedConstructRequest(sparql) =>
+                        SparqlExtendedConstructResponse(
+                            Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects]()
+                        )
+                }
+            }))
+
+            responder ! InitWithStore(store = mockStore)
             responder ! GetMetadataResponderV2.GetMetadataForProject("iri", probe.ref)
             probe.expectMessage(GetMetadataResponderV2.MetadataForProject("blabla"))
         }

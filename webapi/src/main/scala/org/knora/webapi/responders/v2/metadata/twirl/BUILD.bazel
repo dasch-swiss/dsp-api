@@ -1,0 +1,31 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+
+twirl_templates(
+    name = "twirl_sources",
+    additional_imports = [
+        "play.twirl.api.TwirlFeatureImports._",
+        "play.twirl.api.TwirlHelperImports._",
+        "play.twirl.api.Html",
+        "play.twirl.api.JavaScript",
+        "play.twirl.api.Txt",
+        "play.twirl.api.Xml",
+    ],
+    source_directory = ".",
+    srcs = glob(["*.scala.txt"])
+)
+
+scala_library(
+    name = "twirl",
+    srcs = [":twirl_sources"],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_typed_2_12",
+        "@maven//:com_typesafe_play_twirl_api_2_12",
+        "@maven//:org_scala_lang_modules_scala_xml_2_12",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)

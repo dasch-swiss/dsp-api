@@ -21,24 +21,49 @@ package org.knora.webapi.responders.v2.metadata
 
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.{ actor => classic }
+import akka.{actor => classic}
 import akka.actor.typed.scaladsl.adapter._
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.settings.{KnoraSettings, KnoraSettingsImpl}
 
 object GetMetadataResponderV2 {
 
     sealed trait Command
+    final case class InitWithStore(store: classic.ActorRef) extends Command
     final case class GetMetadataForProject(projectIri: IRI, replyTo: ActorRef[MetadataForProject]) extends Command
     final case class MetadataForProject(metadata: String)
 
     def apply(): Behavior[GetMetadataResponderV2.Command] =
-        start()
+        init()
 
-    private def start(): Behavior[GetMetadataResponderV2.Command] =
+    private def init(): Behavior[GetMetadataResponderV2.Command] =
+        Behaviors.receive { (context: ActorContext[GetMetadataResponderV2.Command], message: GetMetadataResponderV2.Command) =>
+            message match {
+                case InitWithStore(store: classic.ActorRef) =>
+                    start(store)
+            }
+        }
+
+    private def start(store: classic.ActorRef): Behavior[GetMetadataResponderV2.Command] =
         Behaviors.receive { (context: ActorContext[GetMetadataResponderV2.Command], message: GetMetadataResponderV2.Command) =>
             message match {
                 case GetMetadataForProject(projectIri: IRI, replyTo) =>
                     context.log.info(s"${context.self} got GetMetadataForProject($projectIri) from $replyTo")
+                    val settings: KnoraSettingsImpl = KnoraSettings(context.system)
+                    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+                    val identifier = ProjectIdentifierADM(Some(projectIri))
+                    val sparqlQuery = (org.knora.webapi.responders.v2.metadata.twirl.txt.getProjects(
+                        triplestore = settings.triplestoreType,
+                        maybeIri = identifier.toIriOption,
+                        maybeShortname = identifier.toShortnameOption,
+                        maybeShortcode = identifier.toShortcodeOption
+                    ).toString())
+
+                    store.tell(SparqlExtendedConstructRequest(sparqlQuery), context.self.toClassic)
+                    // projectResponse <- (storeManager ? ).mapTo[SparqlExtendedConstructResponse]
                     // classic.tell(Typed.Ping(context.self), context.self.toClassic)
 
 
