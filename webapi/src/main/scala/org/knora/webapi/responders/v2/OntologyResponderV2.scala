@@ -1854,7 +1854,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Update the ontology cache with the unescaped metadata.
 
                 _ = storeCacheData(cacheData.copy(
-                    ontologies = cacheData.ontologies + (internalOntologyIri -> ReadOntologyV2(ontologyMetadata = unescapedNewMetadata))
+                    ontologies = cacheData.ontologies + (internalOntologyIri -> cacheData.ontologies(internalOntologyIri).copy(ontologyMetadata = unescapedNewMetadata))
                 ))
 
             } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
