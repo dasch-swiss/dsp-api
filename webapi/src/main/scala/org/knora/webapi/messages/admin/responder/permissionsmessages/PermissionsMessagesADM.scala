@@ -130,6 +130,32 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
     if (!requestingUser.isSystemUser) throw ForbiddenException("Permission data can only by queried by a SystemUser.")
 }
 
+/**
+ * A message that requests all permissions defined inside a project.
+ * A successful response will be a [[PermissionsForProjectGetResponseADM]].
+ *
+ * @param projectIri     the project for which the permissions are queried.
+ * @param requestingUser the user initiation the request.
+ * @param apiRequestID   the API request ID.
+ */
+case class PermissionsForProjectGetRequestADM(projectIri: IRI,
+                                                requestingUser: UserADM,
+                                                apiRequestID: UUID
+                                               ) extends PermissionsResponderRequestADM {
+
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
+
+    // Check user's permission for the operation
+    if (!requestingUser.isSystemAdmin
+        && !requestingUser.permissions.isProjectAdmin(projectIri)
+        && !requestingUser.isSystemUser
+    ) {
+        // not a system admin
+        throw ForbiddenException("Permissions can only be queried by system and project admin.")
+    }
+}
+
 // Administrative Permissions
 
 /**
@@ -537,6 +563,16 @@ case class DefaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDe
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
+// All Permissions
+/**
+ * Represents an answer to [[PermissionsForProjectForProjectGetRequestADM]].
+ *
+ * @param allPermissions the retrieved sequence of [[PermissionInfoADM]]
+ */
+case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInfoADM]
+                                                            ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
+    def toJsValue = permissionsForProjectGetResponseADMFormat.write(this)
+}
 
 // Administrative Permissions
 
@@ -763,6 +799,16 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
     }
 }
 
+/**
+ * Represents 'knora-base:AdministrativePermission'
+ *
+ * @param iri            the IRI of the permission.
+ * @param permissionType           the type of the permission.
+ */
+case class PermissionInfoADM(iri: IRI, permissionType: IRI) extends Jsonable with PermissionsADMJsonProtocol {
+
+    def toJsValue = permissionInfoADMFormat.write(this)
+}
 
 /**
  * Represents 'knora-base:AdministrativePermission'
@@ -1022,6 +1068,7 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
 //    implicit val changeDefaultObjectAccessPermissionAPIRequestADMFormat: RootJsonFormat[ChangeDefaultObjectAccessPermissionAPIRequestADM] = jsonFormat(ChangeDefaultObjectAccessPermissionAPIRequestADM, "iri", "forProject", "forGroup", "forResourceClass", "forProperty", "hasPermissions")
     implicit val permissionADMFormat: JsonFormat[PermissionADM] = jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
     // apply needed because we have an companion object of a case class
+    implicit val permissionInfoADMFormat: JsonFormat[PermissionInfoADM] = lazyFormat(jsonFormat(PermissionInfoADM, "iri", "permissionType"))
     implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] = lazyFormat(jsonFormat(AdministrativePermissionADM, "iri", "forProject", "forGroup", "hasPermissions"))
     implicit val objectAccessPermissionADMFormat: JsonFormat[ObjectAccessPermissionADM] = jsonFormat(ObjectAccessPermissionADM, "forResource", "forValue", "hasPermissions")
     implicit val defaultObjectAccessPermissionADMFormat: JsonFormat[DefaultObjectAccessPermissionADM] = lazyFormat(jsonFormat6(DefaultObjectAccessPermissionADM))
@@ -1034,4 +1081,5 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
     implicit val defaultObjectAccessPermissionForIriGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionForIriGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionForIriGetResponseADM, "default_object_access_permission")
     implicit val defaultObjectAccessPermissionForProjectGroupGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionGetResponseADM, "default_object_access_permission")
     implicit val defaultObjectAccessPermissionCreateResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] = jsonFormat(DefaultObjectAccessPermissionCreateResponseADM, "default_object_access_permission")
+    implicit val permissionsForProjectGetResponseADMFormat: RootJsonFormat[PermissionsForProjectGetResponseADM] = jsonFormat(PermissionsForProjectGetResponseADM, "permissions")
 }
