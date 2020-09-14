@@ -50,19 +50,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
     "The Permissions Route ('admin/permissions')" when {
 
         "getting permissions" should {
-//            "return a group's administrative permissions" in {
-//
-//                val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
-//                val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
-//                val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(BasicHttpCredentials(
-//                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-//                val response = singleAwaitingRequest(request, 1.seconds)
-//                logger.debug("==>> " + response.toString)
-//                assert(response.status === StatusCodes.OK)
-//                val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-//                val iri = result.getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing.")).convertTo[String]
-//                assert(iri == "http://rdfh.ch/permissions/00FF/a1")
-//            }
+            "return a group's administrative permissions" in {
+
+                val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+                val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response = singleAwaitingRequest(request, 1.seconds)
+                logger.debug("==>> " + response.toString)
+                assert(response.status === StatusCodes.OK)
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+                val iri = result.getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing.")).convertTo[String]
+                assert(iri == "http://rdfh.ch/permissions/00FF/a1")
+            }
 
             "return a project's administrative permissions" in {
 
@@ -87,6 +87,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
                 result.asInstanceOf[JsArray].elements.size should be (3)
             }
+
+            "return a project's all permissions" in {
+
+                val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response = singleAwaitingRequest(request, 1.seconds)
+                logger.debug("==>> " + response.toString)
+                assert(response.status === StatusCodes.OK)
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("permissions")
+                result.asInstanceOf[JsArray].elements.size should be (6)
+            }
+
         }
 
         "creating permissions" should {

@@ -67,6 +67,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         getAdministrativePermissionProjectGroup ~
         getAdministrativePermissionsForProject ~
         getDefaultObjectAccessPermissionsForProject ~
+        getPermissionsForProject ~
         createAdministrativePermission ~
         createDefaultObjectAccessPermission
 
@@ -158,6 +159,28 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         )
     }
 
+
+    private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) {
+        (projectIri) =>
+            get {
+                requestContext =>
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield PermissionsForProjectGetRequestADM(
+                        projectIri = projectIri,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+    }
     /**
      * Create a new administrative permission
      */
