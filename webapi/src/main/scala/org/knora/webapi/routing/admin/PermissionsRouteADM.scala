@@ -94,7 +94,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/ap/$projectIri/$groupIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-response"),
+            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-for-project-group-response"),
             text = responseStr
         )
     }
@@ -124,7 +124,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/ap/$projectIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-for-project-response"),
+            filePath = TestDataFilePath.makeJsonPath("get-administrative-permissions-for-project-response"),
             text = responseStr
         )
     }
@@ -154,7 +154,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/doap/$projectIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-defaultObjectAccess-permission-for-project-response"),
+            filePath = TestDataFilePath.makeJsonPath("get-defaultObjectAccess-permissions-for-project-response"),
             text = responseStr
         )
     }
@@ -181,6 +181,16 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     )
             }
     }
+
+    private def getPermissionsForProjectTestResponse: Future[TestDataFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/$projectIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-permissions-for-project-response"),
+            text = responseStr
+        )
+    }
+
     /**
      * Create a new administrative permission
      */
@@ -293,9 +303,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 getAdminPermissionForPG <- getAdministrativePermissionForProjectGroupTestResponse
                 getAdminPermissionsForP <- getAdministrativePermissionsForProjectTestResponse
                 getDOAPermissionsForP <- getDefaultObjectAccessPermissionsForProjectTestResponse
+                getAllPermissionsForP <- getPermissionsForProjectTestResponse
                 createAP <- createAdminPermissionTestRequestAndResponse
                 createDOAP <- createDOAPermissionTestRequestAndResponse
 
-        } yield createAP ++ createDOAP + getAdminPermissionForPG + getAdminPermissionsForP + getDOAPermissionsForP
+        } yield createAP ++ createDOAP + getAdminPermissionForPG + getAdminPermissionsForP + getDOAPermissionsForP + getAllPermissionsForP
     }
 }

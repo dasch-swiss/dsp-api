@@ -1299,32 +1299,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }.toSet
             }
 
-
-
-//            if (permissionsQueryResponseStatements.isEmpty){
-//
-//            } else {
-//                val statementMap: Map[IRI, Seq[String]] = permissionsQueryResponseStatements.groupBy {
-//                    case (pred, _) => pred
-//                }.map {
-//                    case (pred, predStatements) =>
-//                        pred -> predStatements.map {
-//                            case (_, obj) => obj
-//                        }
-//                }
-//                val permissionType: String = statementMap.getOrElse(OntologyConstants.Rdfs.Type, throw InconsistentTriplestoreDataException(s"Type of Permission $permissionIri not known."))
-//
-//            }
-//
-//
-//
-//
-//            permissionsQueryResponseStatements.map {
-//                case (permissionIri: IRI, propsMap: Seq[(IRI, String)]) =>
-//                    /* construct permission object */
-//                    PermissionInfoADM(iri = permissionIri, permissionType = propsMap.getOrElse(OntologyConstants.Rdf.Type, ))
-//            }.toSeq
-
             /* construct response object */
             response = permissionsmessages.PermissionsForProjectGetResponseADM(permissionsInfo)
 
