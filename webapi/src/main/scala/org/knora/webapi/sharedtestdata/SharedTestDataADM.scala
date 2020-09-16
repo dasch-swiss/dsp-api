@@ -2396,11 +2396,12 @@ object SharedTestDataADM {
           |    }
           |}""".stripMargin
 
-    def changeOntologyMetadata(ontologyIri: IRI, newLabel: String, modificationDate: Instant): String = {
+    def changeOntologyMetadata(ontologyIri: IRI, newLabel: String, newComment: String, modificationDate: Instant): String = {
         s"""
            |{
            |  "@id": "$ontologyIri",
            |  "rdfs:label": "$newLabel",
+           |  "rdfs:comment": "$newComment",
            |  "knora-api:lastModificationDate": {
            |    "@type" : "xsd:dateTimeStamp",
            |    "@value" : "$modificationDate"
