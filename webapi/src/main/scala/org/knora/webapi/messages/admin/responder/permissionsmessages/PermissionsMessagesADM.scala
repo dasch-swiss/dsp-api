@@ -148,10 +148,8 @@ case class PermissionsForProjectGetRequestADM(projectIri: IRI,
 
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdmin(projectIri)
-        && !requestingUser.isSystemUser
-    ) {
-        // not a system admin
+        && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+        // not a system or project admin
         throw ForbiddenException("Permissions can only be queried by system and project admin.")
     }
 }
@@ -176,10 +174,8 @@ case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
 
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-                && !requestingUser.permissions.isProjectAdmin(projectIri)
-                && !requestingUser.isSystemUser
-        ) {
-            // not a system admin
+                && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+            // not a system or project admin
             throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
         }
 }
@@ -348,10 +344,8 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI
 
     // Check user's permission for the operation
     if (!requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdmin(projectIri)
-        && !requestingUser.isSystemUser
-    ) {
-        // not a system admin
+        && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+        // not a system or project admin
         throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
     }
 }

@@ -64,7 +64,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
      * Returns the route.
      */
     override def knoraApiPath: Route =
-        getAdministrativePermissionProjectGroup ~
+        getAdministrativePermissionForProjectGroup ~
         getAdministrativePermissionsForProject ~
         getDefaultObjectAccessPermissionsForProject ~
         getPermissionsForProject ~
@@ -72,7 +72,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         createDefaultObjectAccessPermission
 
 
-    private def getAdministrativePermissionProjectGroup: Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
+    private def getAdministrativePermissionForProjectGroup: Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
         (projectIri, groupIri) =>
             get {
                 requestContext =>

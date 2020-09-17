@@ -21,8 +21,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ##Permission Operations:
 
-**Note:** For the following operations, the requesting user must be either a `systemAdmin`, 
-a `projectAdmin` or a `systemUser`.
+**Note:** For the following operations, the requesting user must be either a `systemAdmin`or 
+a `projectAdmin`.
 
 ### Getting Permissions: 
 - `GET: /admin/permissions/<projectIri>` : return all permissions for a project.
