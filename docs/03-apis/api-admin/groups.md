@@ -25,7 +25,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 - `GET: /admin/groups` : return all groups
 - `GET: /admin/groups/<groupIri>` : return single group identified by [IRI]
-- `POST: /admin/groups` : create new group
+- `POST: /admin/groups` : create a new group
 - `PUT: /admin/groups/<groupIri>` : update groups's basic information
 - `PUT: /admin/groups/<groupIri>/status` : update group's status
 - `DELETE: /admin/groups/<groupIri>` : delete group (set status to false)
