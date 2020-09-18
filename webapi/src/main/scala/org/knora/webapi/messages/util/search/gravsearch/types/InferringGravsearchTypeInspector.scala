@@ -252,53 +252,92 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 entityInfo = entityInfo
             )
 
+            /**
+             * Performs the inference for this rule on a set of statements.
+             */
+            def inferFromStatements(statements: Set[StatementPattern]): Set[GravsearchEntityTypeInfo] = {
+                statements.flatMap {
+                    statement =>
+                        // Is the predicate typeable?
+                        GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
+                            case Some(typeablePred: TypeableEntity) =>
+                                // Yes. Do we have its types?
+                                updatedIntermediateResult.entities.get(typeablePred) match {
+                                    case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
+                                        // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
+                                        entityTypes.flatMap {
+                                            case propertyTypeInfo: PropertyTypeInfo =>
+                                                val inferredType: GravsearchEntityTypeInfo = NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri, isResourceType = propertyTypeInfo.objectIsResourceType, isValueType = propertyTypeInfo.objectIsValueType)
+                                                log.debug("InferTypeOfObjectFromPredicate: {} {} .", entityToType, inferredType)
+                                                Some(inferredType)
+                                            case _ =>
+                                                None
+                                        }
+
+                                    case _ =>
+                                        // We don't have the predicate's type.
+                                        Set.empty[GravsearchEntityTypeInfo]
+                                }
+                            case None =>
+                                // The predicate isn't typeable.
+                                Set.empty[GravsearchEntityTypeInfo]
+                        }
+                }
+            }
+
             // Has this entity been used as the object of one or more statements?
-            val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.objectIndex.get(entityToType) match {
-                case Some(statements) =>
+            usageIndex.objectIndex.get(entityToType) match {
+                case Some(statements: Set[StatementPattern]) =>
                     // Yes. Try to infer type information from the predicate of each of those statements.
-                    statements.flatMap {
-                        statement =>
+                    // To keep track of which types are inferred from IRIs representing properties, and which ones
+                    // are inferred from variables representing properties, partition the statements into ones whose
+                    // predicates are IRIs and ones whose predicates are variables.
 
-                            // Is the predicate typeable?
-                            GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
-                                case Some(typeablePred: TypeableEntity) =>
-                                    // Yes. Do we have its types?
-                                    updatedIntermediateResult.entities.get(typeablePred) match {
-                                        case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
-                                            // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
-                                            entityTypes.flatMap {
-                                                case propertyTypeInfo: PropertyTypeInfo =>
-                                                    val inferredType: GravsearchEntityTypeInfo = NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri, isResourceType = propertyTypeInfo.objectIsResourceType, isValueType = propertyTypeInfo.objectIsValueType)
-                                                    log.debug("InferTypeOfObjectFromPredicate: {} {} .", entityToType, inferredType)
-                                                    Some(inferredType)
-                                                case _ =>
-                                                    None
-                                            }
-
-                                        case _ =>
-                                            // We don't have the predicate's type.
-                                            Set.empty[GravsearchEntityTypeInfo]
-                                    }
-                                case None =>
-                                    // The predicate isn't typeable.
-                                    Set.empty[GravsearchEntityTypeInfo]
-                            }
+                    val (statementsWithPropertyIris, statementsWithVariablesAsPredicates) = statements.partition {
+                        statement => statement.pred match {
+                            case _: IriRef => true
+                            case _ => false
+                        }
                     }
+
+                    // Separately infer types from statements whose predicates are IRIs and statements whose
+                    // predicates are variables.
+
+                    val typesInferredFromPropertyIris: Set[GravsearchEntityTypeInfo] = inferFromStatements(statementsWithPropertyIris)
+                    val typesInferredFromVariablesAsPredicates: Set[GravsearchEntityTypeInfo] = inferFromStatements(statementsWithVariablesAsPredicates)
+
+                    // If any types were inferred from statements whose predicates are IRIs, update the
+                    // intermediate type inspection result with that information.
+
+                    val intermediateResultWithTypesInferredFromPropertyIris = if (typesInferredFromPropertyIris.nonEmpty) {
+                        updatedIntermediateResult.addTypes(entityToType, typesInferredFromPropertyIris, inferredFromPropertyIri = true)
+                    } else {
+                        updatedIntermediateResult
+                    }
+
+                    val intermediateResultWithTypesInferredFromVariablesAsPredicates = intermediateResultWithTypesInferredFromPropertyIris.addTypes(
+                        entityToType,
+                        typesInferredFromVariablesAsPredicates
+                    )
+
+                    runNextRule(
+                        entityToType = entityToType,
+                        intermediateResult = intermediateResultWithTypesInferredFromVariablesAsPredicates,
+                        entityInfo = entityInfo,
+                        usageIndex = usageIndex
+                    )
 
                 case None =>
                     // This entity hasn't been used as a statement object, so this rule isn't relevant.
-                    Set.empty[GravsearchEntityTypeInfo]
+                    runNextRule(
+                        entityToType = entityToType,
+                        intermediateResult = updatedIntermediateResult,
+                        entityInfo = entityInfo,
+                        usageIndex = usageIndex
+                    )
             }
-
-            runNextRule(
-                entityToType = entityToType,
-                intermediateResult = updatedIntermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
-                entityInfo = entityInfo,
-                usageIndex = usageIndex
-            )
         }
     }
-
 
     /**
      * Infers an entity's type if the entity is used as the subject of a statement in which the predicate is a
@@ -355,7 +394,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             runNextRule(
                 entityToType = entityToType,
-                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromProperty = true),
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromPropertyIri = true),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -541,7 +580,13 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     usageIndex.variablesComparedInFilters.get(variableToType) match {
                         case Some(comparedVariables: Set[TypeableVariable]) =>
                             // Yes. Get the types that have been inferred for those variables, if any.
-                            comparedVariables.flatMap(comparedVariable => intermediateResult.entities(comparedVariable))
+                            val inferredTypes = comparedVariables.flatMap(comparedVariable => intermediateResult.entities(comparedVariable))
+
+                            if (inferredTypes.nonEmpty) {
+                                log.debug("InferTypeOfVariableFromComparisonWithOtherVariableInFilter: {} {} .", variableToType, inferredTypes)
+                            }
+
+                            inferredTypes
 
                         case None =>
                             // This variable hasn't been compared with other variables in a FILTER.

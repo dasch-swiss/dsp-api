@@ -396,6 +396,106 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
         """.stripMargin
 
+    val QueryComparingResourcesInSimpleSchema: String =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter ?prop ?person2 .
+          |    FILTER(?person1 != ?person2) .
+          |}
+          |OFFSET 0""".stripMargin
+
+    val QueryComparingResourcesInSimpleSchemaResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
+        entities = Map(
+            TypeableVariable(variableName = "person2") -> NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+                isResourceType = true,
+                isValueType = false
+            ),
+            TypeableVariable(variableName = "person1") -> NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+                isResourceType = true,
+                isValueType = false
+            ),
+            TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri,
+                isResourceType = true,
+                isValueType = false
+            ),
+            TypeableVariable(variableName = "prop") -> PropertyTypeInfo(
+                objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+                objectIsResourceType = true,
+                objectIsValueType = false
+            ),
+            TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
+                objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+                objectIsResourceType = true,
+                objectIsValueType = false
+            )
+        ),
+        entitiesInferredFromProperties = Map(TypeableVariable(variableName = "person1") -> Set(NonPropertyTypeInfo(
+            typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+            isResourceType = true,
+            isValueType = false
+        )))
+    )
+
+    val QueryComparingResourcesInComplexSchema: String =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter ?prop ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |    FILTER(?person2 != ?person1) .
+          |}
+          |OFFSET 0""".stripMargin
+
+    val QueryComparingResourcesInComplexSchemaResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
+        entities = Map(
+            TypeableVariable(variableName = "person2") -> NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
+                isResourceType = true,
+                isValueType = false
+            ),
+            TypeableVariable(variableName = "person1") -> NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
+                isResourceType = true,
+                isValueType = false
+            ),
+            TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
+                objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
+                objectIsResourceType = true,
+                objectIsValueType = false
+            ),
+            TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri,
+                isResourceType = true,
+                isValueType = false
+            ),
+            TypeableVariable(variableName = "prop") -> PropertyTypeInfo(
+                objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
+                objectIsResourceType = true,
+                objectIsValueType = false
+            )
+        ),
+        entitiesInferredFromProperties = Map(TypeableVariable(variableName = "person2") -> Set(NonPropertyTypeInfo(
+            typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
+            isResourceType = true,
+            isValueType = false
+        )))
+    )
+
     val PathologicalQuery: String =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -680,7 +780,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true),
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true))
                 ),
-                entitiesInferredFromProperties = Map(TypeableVariable(variableName = "mainRes") -> Set(
+                entitiesInferredFromPropertyIris = Map(TypeableVariable(variableName = "mainRes") -> Set(
                     NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true),
                     NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true))
                 )
@@ -697,7 +797,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             ))
 
             // Is it removed from entitiesInferredFromProperties?
-            intermediateTypesWithoutResource.entitiesInferredFromProperties should contain(TypeableVariable(variableName = "mainRes") -> Set(
+            intermediateTypesWithoutResource.entitiesInferredFromPropertyIris should contain(TypeableVariable(variableName = "mainRes") -> Set(
                 NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)))
         }
 
@@ -713,7 +813,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true)
                     )
                 ),
-                entitiesInferredFromProperties = Map(
+                entitiesInferredFromPropertyIris = Map(
                     TypeableVariable(variableName = "letter") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri, isResourceType = true))
                 )
             )
@@ -726,7 +826,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(refinedIntermediateResults.entities.size == 1)
             refinedIntermediateResults.entities should contain(TypeableVariable(variableName = "letter") -> Set(
                 NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)))
-            assert(refinedIntermediateResults.entitiesInferredFromProperties.isEmpty)
+            assert(refinedIntermediateResults.entitiesInferredFromPropertyIris.isEmpty)
         }
 
         "sanitize inconsistent resource types that only have knora-base:Resource as base class in common" in {
@@ -744,7 +844,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                         PropertyTypeInfo(objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri, objectIsResourceType = true)
                     )
                 ),
-                entitiesInferredFromProperties = Map(TypeableVariable(variableName = "letter") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)))
+                entitiesInferredFromPropertyIris = Map(TypeableVariable(variableName = "letter") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)))
             )
 
             val refinedIntermediateResults = typeInspectionRunner.refineDeterminedTypes(
@@ -761,7 +861,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                     TypeableVariable(variableName = "letter") -> Set(NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, isResourceType = true)),
                     TypeableVariable(variableName = "linkingProp1") -> Set(PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, objectIsResourceType = true))
                 ),
-                entitiesInferredFromProperties = Map(
+                entitiesInferredFromPropertyIris = Map(
                     TypeableVariable(variableName = "letter") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))
                 )
             )
@@ -780,7 +880,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                         NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#manuscript".toSmartIri, isResourceType = true)
                     )
                 ),
-                entitiesInferredFromProperties = Map(TypeableVariable(variableName = "document") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)))
+                entitiesInferredFromPropertyIris = Map(TypeableVariable(variableName = "document") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true)))
             )
 
             val refinedIntermediateResults = typeInspectionRunner.refineDeterminedTypes(
@@ -796,7 +896,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                 entities = Map(
                     TypeableVariable(variableName = "document") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#writtenSource".toSmartIri, isResourceType = true))
                 ),
-                entitiesInferredFromProperties = Map(
+                entitiesInferredFromPropertyIris = Map(
                     TypeableVariable(variableName = "document") -> Set(NonPropertyTypeInfo(typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri, isResourceType = true))
                 )
             )
@@ -990,6 +1090,22 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
             assert(result.entities == RdfsLabelWithVariableResult.entities)
+        }
+
+        "infer the type of a variable when it is compared with another variable in a FILTER (in the simple schema)" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInSimpleSchema)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result.entities == QueryComparingResourcesInSimpleSchemaResult.entities)
+        }
+
+        "infer the type of a variable when it is compared with another variable in a FILTER (in the complex schema)" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInComplexSchema)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result.entities == QueryComparingResourcesInComplexSchemaResult.entities)
         }
 
         "reject a query with a non-Knora property whose type cannot be inferred" in {

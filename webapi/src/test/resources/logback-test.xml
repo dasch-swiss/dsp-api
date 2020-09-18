@@ -88,7 +88,8 @@
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
     <!-- V2 -->
-    <logger name="org.knora.webapi.responders.v2.search.gravsearch" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v2.SearchResponderV2" level="INFO"/>
+    <logger name="org.knora.webapi.messages.util.search.gravsearch.types.InferringGravsearchTypeInspector" level="INFO"/>
 
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
