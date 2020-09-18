@@ -188,12 +188,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         val ontologyIri = SharedOntologyTestDataADM.FOO_ONTOLOGY_IRI_LocalHost
 
         val newLabel = "The modified foo ontology"
+        val newComment = "new comment"
         val newModificationDate = Instant.now
         FastFuture.successful(
             TestDataFileContent(
                 filePath = TestDataFilePath.makeJsonPath("update-ontology-metadata-request"),
                 text = SharedTestDataADM.changeOntologyMetadata(
-                    ontologyIri, newLabel, newModificationDate
+                    ontologyIri, newLabel, newComment, newModificationDate
                 )
             )
         )

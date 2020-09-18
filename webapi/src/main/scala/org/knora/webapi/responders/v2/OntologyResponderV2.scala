@@ -1816,6 +1816,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate)
 
+                // get the metadata of the ontology.
+                oldMetadata: OntologyMetadataV2 = cacheData.ontologies(internalOntologyIri).ontologyMetadata
+                // Was there a comment in the ontology metadata?
+                ontologyHasComment: Boolean = oldMetadata.comment.nonEmpty
+
                 // Update the metadata.
 
                 currentTime: Instant = Instant.now
@@ -1825,6 +1830,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     newLabel = changeOntologyMetadataRequest.label,
+                    hasOldComment = ontologyHasComment,
+                    newComment = changeOntologyMetadataRequest.comment,
                     lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
@@ -1833,10 +1840,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
+                // Is there any new label given?
+                label = if (changeOntologyMetadataRequest.label.isEmpty) {
+                    // No. Consider the old label for checking the update.
+                    oldMetadata.label
+                } else {
+                    // Yes. Consider the new label for checking the update.
+                    changeOntologyMetadataRequest.label
+                }
+
                 unescapedNewMetadata = OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
                     projectIri = Some(projectIri),
-                    label = Some(changeOntologyMetadataRequest.label),
+                    label = label,
+                    comment = changeOntologyMetadataRequest.comment,
                     lastModificationDate = Some(currentTime)
                 ).unescape
 
