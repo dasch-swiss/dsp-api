@@ -1817,8 +1817,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate)
 
                 // get the metadata of the ontology.
-                existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
-                oldMetadata: OntologyMetadataV2 = existingOntologyMetadata.getOrElse(throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} does not exist."))
+                oldMetadata: OntologyMetadataV2 = cacheData.ontologies(internalOntologyIri).ontologyMetadata
                 // Was there a comment in the ontology metadata?
                 ontologyHasComment: Boolean = oldMetadata.comment.nonEmpty
 
@@ -1845,9 +1844,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 label = if (changeOntologyMetadataRequest.label.isEmpty) {
                     // No. Consider the old label for checking the update.
                     oldMetadata.label
-                } else
+                } else {
                     // Yes. Consider the new label for checking the update.
                     changeOntologyMetadataRequest.label
+                }
 
                 unescapedNewMetadata = OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
