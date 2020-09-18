@@ -86,7 +86,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private val credsProvider: BasicCredentialsProvider = new BasicCredentialsProvider
     credsProvider.setCredentials(new AuthScope(targetHost.getHostName, targetHost.getPort), new UsernamePasswordCredentials(settings.triplestoreUsername, settings.triplestorePassword))
 
-    // Reading data should be quick.
+    // Reading data should be quick, except when it is not ;-)
     private val queryTimeoutMillis = settings.triplestoreQueryTimeout.toMillis.toInt
 
     private val queryRequestConfig = RequestConfig.custom()
@@ -921,6 +921,20 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
+
+                val queryTimeoutMillis = settings.triplestoreQueryTimeout.toMillis.toInt * 10
+
+                val queryRequestConfig = RequestConfig.custom()
+                  .setConnectTimeout(queryTimeoutMillis)
+                  .setConnectionRequestTimeout(queryTimeoutMillis)
+                  .setSocketTimeout(queryTimeoutMillis)
+                  .build
+
+                val queryHttpClient: CloseableHttpClient = HttpClients.custom
+                  .setDefaultCredentialsProvider(credsProvider)
+                  .setDefaultRequestConfig(queryRequestConfig)
+                  .build
+
                 maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, httpContext))
 
                 val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
