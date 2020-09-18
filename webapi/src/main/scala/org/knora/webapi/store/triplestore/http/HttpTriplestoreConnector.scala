@@ -775,7 +775,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
 
                 val took = System.currentTimeMillis() - start
-                log.info(s"[$statusCode] GraphDB Query took: ${took}ms")
+                log.info(s"[$statusCode] DB Query took: ${took}ms")
 
                 Option(maybeResponse.get.getEntity) match {
                     case Some(responseEntity: HttpEntity) =>
@@ -946,7 +946,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
 
                 val took = System.currentTimeMillis() - start
-                log.info(s"[$statusCode] GraphDB Query took: ${took}ms")
+                log.info(s"[$statusCode] DB Query took: ${took}ms")
 
                 Option(maybeResponse.get.getEntity) match {
                     case Some(responseEntity: HttpEntity) =>
