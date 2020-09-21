@@ -282,6 +282,11 @@ init-db-test-minimal: stack-db-remove stack-db-only ## initializes the knora-tes
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
+.PHONY: init-db-test-empty
+init-db-test-empty: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
+	@echo $@
+	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
+
 .PHONY: init-db-test-unit
 init-db-test-unit: stack-db-remove stack-db-only ## initializes the knora-test-unit repository
 	@echo $@
