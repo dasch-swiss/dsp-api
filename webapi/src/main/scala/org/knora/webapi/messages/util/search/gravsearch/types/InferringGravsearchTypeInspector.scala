@@ -294,10 +294,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     // predicates are IRIs and ones whose predicates are variables.
 
                     val (statementsWithPropertyIris, statementsWithVariablesAsPredicates) = statements.partition {
-                        statement => statement.pred match {
-                            case _: IriRef => true
-                            case _ => false
-                        }
+                        statement =>
+                            statement.pred match {
+                                case _: IriRef => true
+                                case _ => false
+                            }
                     }
 
                     // Separately infer types from statements whose predicates are IRIs and statements whose
@@ -566,35 +567,27 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-     * Infers the type of a variable that has been compared with another variable in a FILTER expression.
+     * Infers the type of a variable or IRI that has been compared with another variable or IRI in a FILTER expression.
      */
-    private class InferTypeOfVariableFromComparisonWithOtherVariableInFilter(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+    private class InferTypeOfEntityFromComparisonWithOtherEntityInFilter(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
                            intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
-            val typesFromComparisons: Set[GravsearchEntityTypeInfo] = entityToType match {
-                // Is this entity a variable?
-                case variableToType: TypeableVariable =>
-                    // Yes. Has it been compared with one or more other variables in a FILTER?
-                    usageIndex.variablesComparedInFilters.get(variableToType) match {
-                        case Some(comparedVariables: Set[TypeableVariable]) =>
-                            // Yes. Get the types that have been inferred for those variables, if any.
-                            val inferredTypes = comparedVariables.flatMap(comparedVariable => intermediateResult.entities(comparedVariable))
+            // Has this entity been compared with one or more other entities in a FILTER?
+            val typesFromComparisons: Set[GravsearchEntityTypeInfo] = usageIndex.entitiesComparedInFilters.get(entityToType) match {
+                case Some(comparedEntities: Set[TypeableEntity]) =>
+                    // Yes. Get the types that have been inferred for those entities, if any.
+                    val inferredTypes = comparedEntities.flatMap(comparedEntity => intermediateResult.entities(comparedEntity))
 
-                            if (inferredTypes.nonEmpty) {
-                                log.debug("InferTypeOfVariableFromComparisonWithOtherVariableInFilter: {} {} .", variableToType, inferredTypes)
-                            }
-
-                            inferredTypes
-
-                        case None =>
-                            // This variable hasn't been compared with other variables in a FILTER.
-                            Set.empty[GravsearchEntityTypeInfo]
+                    if (inferredTypes.nonEmpty) {
+                        log.debug("InferTypeOfEntityFromComparisonWithOtherEntityInFilter: {} {} .", entityToType, inferredTypes)
                     }
 
-                case _ =>
-                    // The entity isn't a variable.
+                    inferredTypes
+
+                case None =>
+                    // This entity hasn't been compared with other entities in a FILTER.
                     Set.empty[GravsearchEntityTypeInfo]
             }
 
@@ -752,7 +745,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     // information if they are run more than once.
     private val subsequentIterationRulePipeline = new InferTypeOfObjectFromPredicate(
         Some(new InferTypeOfPredicateFromObject(
-            Some(new InferTypeOfVariableFromComparisonWithOtherVariableInFilter(None)))))
+            Some(new InferTypeOfEntityFromComparisonWithOtherEntityInFilter(None)))))
 
     /**
      * An index of entity usage in a Gravsearch query.
@@ -765,7 +758,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
      * @param knoraPropertyVariablesInFilters a map of query variables to Knora property IRIs that they are compared to in
      *                                        FILTER expressions.
      * @param typedEntitiesInFilters          a map of entities to types found for them in FILTER expressions.
-     * @param variablesComparedInFilters      variables that are compared to other variables in FILTER expressions.
+     * @param entitiesComparedInFilters       variables or IRIs that are compared to other variables or IRIs in FILTER expressions.
      */
     case class UsageIndex(knoraClassIris: Set[SmartIri] = Set.empty,
                           knoraPropertyIris: Set[SmartIri] = Set.empty,
@@ -774,7 +767,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                           objectIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty,
                           knoraPropertyVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty,
                           typedEntitiesInFilters: Map[TypeableEntity, Set[SmartIri]] = Map.empty,
-                          variablesComparedInFilters: Map[TypeableVariable, Set[TypeableVariable]] = Map.empty,
+                          entitiesComparedInFilters: Map[TypeableEntity, Set[TypeableEntity]] = Map.empty,
                           querySchema: ApiV2Schema)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
@@ -1153,34 +1146,34 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
          * Collects information for the usage index from statements.
          *
          * @param statementPattern the pattern to be visited.
-         * @param acc              the accumulator.
-         * @return the accumulator.
+         * @param usageIndex       the usage index being constructed.
+         * @return an updated usage index.
          */
-        override def visitStatementInWhere(statementPattern: StatementPattern, acc: UsageIndex): UsageIndex = {
+        override def visitStatementInWhere(statementPattern: StatementPattern, usageIndex: UsageIndex): UsageIndex = {
             // Index the statement by subject.
-            val subjectIndex: Map[TypeableEntity, Set[StatementPattern]] = addIndexEntry(
+            val subjectIndex: Map[TypeableEntity, Set[StatementPattern]] = addStatementIndexEntry(
                 statementEntity = statementPattern.subj,
                 statementPattern = statementPattern,
-                statementIndex = acc.subjectIndex
+                statementIndex = usageIndex.subjectIndex
             )
 
             // Index the statement by predicate.
-            val predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = addIndexEntry(
+            val predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = addStatementIndexEntry(
                 statementEntity = statementPattern.pred,
                 statementPattern = statementPattern,
-                statementIndex = acc.predicateIndex
+                statementIndex = usageIndex.predicateIndex
             )
 
             // Index the statement by object.
-            val objectIndex: Map[TypeableEntity, Set[StatementPattern]] = addIndexEntry(
+            val objectIndex: Map[TypeableEntity, Set[StatementPattern]] = addStatementIndexEntry(
                 statementEntity = statementPattern.obj,
                 statementPattern = statementPattern,
-                statementIndex = acc.objectIndex
+                statementIndex = usageIndex.objectIndex
             )
 
             // If the statement's predicate is rdf:type, and its object is a Knora entity, add it to the
             // set of Knora class IRIs.
-            val knoraClassIris: Set[SmartIri] = acc.knoraClassIris ++ (statementPattern.pred match {
+            val knoraClassIris: Set[SmartIri] = usageIndex.knoraClassIris ++ (statementPattern.pred match {
                 case IriRef(predIri, _) if predIri.toString == OntologyConstants.Rdf.Type =>
                     statementPattern.obj match {
                         case IriRef(objIri, _) if objIri.isKnoraEntityIri =>
@@ -1194,7 +1187,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             // If the statement's predicate is a Knora property, and isn't a type annotation predicate or a Gravsearch option predicate,
             // add it to the set of Knora property IRIs.
-            val knoraPropertyIris: Set[SmartIri] = acc.knoraPropertyIris ++ (statementPattern.pred match {
+            val knoraPropertyIris: Set[SmartIri] = usageIndex.knoraPropertyIris ++ (statementPattern.pred match {
                 case IriRef(predIri, _) if predIri.isKnoraEntityIri &&
                     !(GravsearchTypeInspectionUtil.TypeAnnotationProperties.allTypeAnnotationIris.contains(predIri.toString) ||
                         GravsearchTypeInspectionUtil.GravsearchOptionIris.contains(predIri.toString)) =>
@@ -1203,7 +1196,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 case _ => None
             })
 
-            acc.copy(
+            usageIndex.copy(
                 knoraClassIris = knoraClassIris,
                 knoraPropertyIris = knoraPropertyIris,
                 subjectIndex = subjectIndex,
@@ -1219,11 +1212,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
          * @param statementEntity  the entity (subject, predicate, or object).
          * @param statementPattern the statement pattern.
          * @param statementIndex   an accumulator for a statement index.
-         * @return an updated accumulator.
+         * @return an updated index entry.
          */
-        private def addIndexEntry(statementEntity: Entity,
-                                  statementPattern: StatementPattern,
-                                  statementIndex: Map[TypeableEntity, Set[StatementPattern]]): Map[TypeableEntity, Set[StatementPattern]] = {
+        private def addStatementIndexEntry(statementEntity: Entity,
+                                           statementPattern: StatementPattern,
+                                           statementIndex: Map[TypeableEntity, Set[StatementPattern]]): Map[TypeableEntity, Set[StatementPattern]] = {
             GravsearchTypeInspectionUtil.maybeTypeableEntity(statementEntity) match {
                 case Some(typeableEntity) =>
                     val currentPatterns: Set[StatementPattern] = statementIndex.getOrElse(typeableEntity, Set.empty)
@@ -1237,164 +1230,222 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
          * Collects information for the usage index from filters.
          *
          * @param filterPattern the pattern to be visited.
-         * @param acc           the accumulator.
-         * @return the accumulator.
+         * @param usageIndex    the usage index being constructed.
+         * @return an updated usage index.
          */
-        override def visitFilter(filterPattern: FilterPattern, acc: UsageIndex): UsageIndex = {
-            visitFilterExpression(filterPattern.expression, acc)
+        override def visitFilter(filterPattern: FilterPattern, usageIndex: UsageIndex): UsageIndex = {
+            visitFilterExpression(filterPattern.expression, usageIndex)
+        }
+
+        /**
+         * Indexes two entities that are compared in a FILTER expression.
+         *
+         * @param leftQueryVariable the query variable that is the left argument of the comparison.
+         * @param rightEntity       the query variable or IRI that is the right argument of the comparison.
+         * @param usageIndex        the usage index being constructed.
+         * @return an an updated usage index.
+         */
+        private def addEntityComparisonIndexEntry(leftQueryVariable: QueryVariable, rightEntity: Entity, usageIndex: UsageIndex): UsageIndex = {
+            val leftTypeableVariable = TypeableVariable(leftQueryVariable.variableName)
+
+            val rightTypeableEntity: TypeableEntity = GravsearchTypeInspectionUtil.maybeTypeableEntity(rightEntity) match {
+                case Some(typeableEntity) => typeableEntity
+                case None => throw GravsearchException(s"Entity ${rightEntity.toSparql} is not valid in a comparison expression")
+            }
+
+            val currentComparisonsForLeftVariable: Set[TypeableEntity] = usageIndex.entitiesComparedInFilters.getOrElse(leftTypeableVariable, Set.empty)
+            val currentComparisonsForRightEntity: Set[TypeableEntity] = usageIndex.entitiesComparedInFilters.getOrElse(rightTypeableEntity, Set.empty)
+
+            usageIndex.copy(
+                entitiesComparedInFilters = usageIndex.entitiesComparedInFilters +
+                    (leftTypeableVariable -> (currentComparisonsForLeftVariable + rightTypeableEntity)) +
+                    (rightTypeableEntity -> (currentComparisonsForRightEntity + leftTypeableVariable))
+            )
+        }
+
+        /**
+         * Visits a [[CompareExpression]] in a [[FilterPattern]].
+         *
+         * @param compareExpression the comparison expression to be visited.
+         * @param usageIndex        the usage index being constructed.
+         * @return an updated usage index.
+         */
+        private def visitCompareExpression(compareExpression: CompareExpression, usageIndex: UsageIndex): UsageIndex = {
+            compareExpression match {
+                case CompareExpression(leftQueryVariable: QueryVariable, operator: CompareExpressionOperator.Value, rightEntity: Entity) =>
+                    rightEntity match {
+                        case xsdLiteral: XsdLiteral =>
+                            // A variable is compared to an XSD literal. Index the variable and the literal's type.
+                            val typeableVariable = TypeableVariable(leftQueryVariable.variableName)
+                            val currentVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(typeableVariable, Set.empty)
+
+                            usageIndex.copy(
+                                typedEntitiesInFilters = usageIndex.typedEntitiesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
+                            )
+
+                        case rightIriRef: IriRef if rightIriRef.iri.isKnoraEntityIri =>
+                            // A variable is compared to a Knora ontology entity IRI, which must be a property IRI.
+                            // Index the property IRI in usageIndex.knoraPropertyVariablesInFilters.
+
+                            if (operator != CompareExpressionOperator.EQUALS) {
+                                throw GravsearchException(s"A Knora property IRI can be compared only with the equals operator")
+                            }
+
+                            val typeableVariable = TypeableVariable(leftQueryVariable.variableName)
+                            val currentIris: Set[SmartIri] = usageIndex.knoraPropertyVariablesInFilters.getOrElse(typeableVariable, Set.empty)
+
+                            usageIndex.copy(
+                                knoraPropertyIris = usageIndex.knoraPropertyIris + rightIriRef.iri,
+                                knoraPropertyVariablesInFilters = usageIndex.knoraPropertyVariablesInFilters + (typeableVariable -> (currentIris + rightIriRef.iri))
+                            )
+
+                        case rightQueryVariable: QueryVariable =>
+                            // Two variables are compared. Index them both in usageIndex.entitiesComparedInFilters.
+                            addEntityComparisonIndexEntry(
+                                leftQueryVariable = leftQueryVariable,
+                                rightEntity = rightQueryVariable,
+                                usageIndex = usageIndex
+                            )
+
+                        case rightIriRef: IriRef =>
+                            // A variable is compared with an IRI, which must be a resource IRI.
+                            // Index them both in usageIndex.entitiesComparedInFilters.
+
+                            if (!rightIriRef.iri.isKnoraResourceIri) {
+                                throw GravsearchException(s"IRI ${rightIriRef.toSparql}, used in a comparison, is not a Knora resource IRI")
+                            }
+
+                            addEntityComparisonIndexEntry(
+                                leftQueryVariable = leftQueryVariable,
+                                rightEntity = rightIriRef,
+                                usageIndex = usageIndex
+                            )
+                    }
+
+                case _ =>
+                    val usageIndexFromLeft = visitFilterExpression(compareExpression.leftArg, usageIndex)
+                    visitFilterExpression(compareExpression.rightArg, usageIndexFromLeft)
+            }
+        }
+
+        /**
+         * Visits a [[FunctionCallExpression]] in a [[FilterPattern]].
+         *
+         * @param functionCallExpression the function call to be visited.
+         * @param usageIndex             the usage index being constructed.
+         * @return an updated usage index.
+         */
+        private def visitFunctionCallExpression(functionCallExpression: FunctionCallExpression, usageIndex: UsageIndex): UsageIndex = {
+            functionCallExpression.functionIri.iri.toString match {
+                case OntologyConstants.KnoraApiV2Simple.MatchTextFunction =>
+                    // The first argument is a variable representing a string.
+                    val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                    val currentTextVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
+
+                    usageIndex.copy(
+                        typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+                            (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
+                    )
+
+                case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
+                    // The first argument is a variable representing a text value.
+                    val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                    val currentTextVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
+
+                    usageIndex.copy(
+                        typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+                            (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+                    )
+
+                case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction =>
+                    // The first argument is a variable representing a resource.
+                    val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                    val currentResourceVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
+
+                    usageIndex.copy(
+                        typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+                            (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
+                    )
+
+                case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction =>
+                    // The first argument is a variable representing a resource.
+                    val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                    val currentResourceVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
+
+                    usageIndex.copy(
+                        typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+                            (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri))
+                    )
+
+                case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
+                    // The first argument is a variable representing a text value.
+                    val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                    val currentTextVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
+
+                    // The second argument is a variable representing a standoff tag.
+                    val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+                    val currentStandoffVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty)
+
+                    usageIndex.copy(
+                        typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+                            (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)) +
+                            (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
+                    )
+
+                case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction =>
+                    if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}")
+
+                    // The first and third arguments are variables or IRIs representing resources.
+                    val resourceEntitiesAndTypes: Seq[(TypeableEntity, Set[SmartIri])] = Seq(functionCallExpression.args.head, functionCallExpression.args(2)).flatMap {
+                        entity => GravsearchTypeInspectionUtil.maybeTypeableEntity(entity)
+                    }.map {
+                        typeableEntity =>
+                            val currentVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(typeableEntity, Set.empty)
+                            typeableEntity -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri)
+                    }
+
+                    // The second argument is a variable representing a standoff tag.
+                    val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+                    val currentStandoffVarTypesFromFilters: Set[SmartIri] = usageIndex.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty)
+
+                    usageIndex.copy(
+                        typedEntitiesInFilters = usageIndex.typedEntitiesInFilters ++ resourceEntitiesAndTypes +
+                            (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
+                    )
+
+                case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
+                    // The function knora-api:toSimpleDate can take either a knora-api:DateValue or a knora-api:StandoffTag,
+                    // so we don't infer the type of its argument.
+                    usageIndex
+
+                case _ => throw GravsearchException(s"Unrecognised function: ${functionCallExpression.functionIri.toSparql}")
+            }
         }
 
         /**
          * Collects information for the usage index from filter expressions.
          *
          * @param filterExpression the filter expression to be visited.
-         * @param acc              the accumulator.
-         * @return the accumulator.
+         * @param usageIndex       the usage index being constructed.
+         * @return an updated usage index.
          */
-        private def visitFilterExpression(filterExpression: Expression, acc: UsageIndex): UsageIndex = {
+        private def visitFilterExpression(filterExpression: Expression, usageIndex: UsageIndex): UsageIndex = {
             filterExpression match {
                 case compareExpression: CompareExpression =>
-                    compareExpression match {
-                        case CompareExpression(queryVariable: QueryVariable, operator: CompareExpressionOperator.Value, iriRef: IriRef)
-                            if operator == CompareExpressionOperator.EQUALS && iriRef.iri.isKnoraEntityIri =>
-                            // A variable is compared to a Knora entity IRI, which must be a property IRI.
-                            // Index the property IRI.
-
-                            val typeableVariable = TypeableVariable(queryVariable.variableName)
-                            val currentIris: Set[SmartIri] = acc.knoraPropertyVariablesInFilters.getOrElse(typeableVariable, Set.empty)
-
-                            acc.copy(
-                                knoraPropertyIris = acc.knoraPropertyIris + iriRef.iri,
-                                knoraPropertyVariablesInFilters = acc.knoraPropertyVariablesInFilters + (typeableVariable -> (currentIris + iriRef.iri))
-                            )
-
-                        case CompareExpression(queryVariable: QueryVariable, _, xsdLiteral: XsdLiteral) =>
-                            // A variable is compared to an XSD literal. Index the variable and the literal's type.
-                            val typeableVariable = TypeableVariable(queryVariable.variableName)
-                            val currentVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(typeableVariable, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
-                            )
-
-                        case CompareExpression(leftQueryVariable: QueryVariable, _, rightQueryVariable: QueryVariable) =>
-                            // Two variables are compared. Index them both.
-
-                            val leftTypeableVariable = TypeableVariable(leftQueryVariable.variableName)
-                            val rightTypeableVariable = TypeableVariable(rightQueryVariable.variableName)
-
-                            val currentComparisonsForLeftVariable: Set[TypeableVariable] = acc.variablesComparedInFilters.getOrElse(leftTypeableVariable, Set.empty)
-                            val currentCompareisonsForRightVariable: Set[TypeableVariable] = acc.variablesComparedInFilters.getOrElse(rightTypeableVariable, Set.empty)
-
-                            acc.copy(
-                                variablesComparedInFilters = acc.variablesComparedInFilters +
-                                    (leftTypeableVariable -> (currentComparisonsForLeftVariable + rightTypeableVariable)) +
-                                    (rightTypeableVariable -> (currentCompareisonsForRightVariable + leftTypeableVariable))
-                            )
-
-                        case _ =>
-                            val accFromLeft = visitFilterExpression(compareExpression.leftArg, acc)
-                            visitFilterExpression(compareExpression.rightArg, accFromLeft)
-                    }
+                    visitCompareExpression(compareExpression = compareExpression, usageIndex = usageIndex)
 
                 case functionCallExpression: FunctionCallExpression =>
-                    // One or more variables are used in functions. Index them and their types, if those can be determined from
-                    // the function.
-
-                    functionCallExpression.functionIri.iri.toString match {
-                        case OntologyConstants.KnoraApiV2Simple.MatchTextFunction =>
-                            // The first argument is a variable representing a string.
-                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
-                                    (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
-                            )
-
-                        case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
-                            // The first argument is a variable representing a text value.
-                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
-                                    (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
-                            )
-
-                        case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction =>
-                            // The first argument is a variable representing a resource.
-                            val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentResourceVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
-                                    (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
-                            )
-
-                        case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction =>
-                            // The first argument is a variable representing a resource.
-                            val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentResourceVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
-                                    (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri))
-                            )
-
-                        case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
-                            // The first argument is a variable representing a text value.
-                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
-
-                            // The second argument is a variable representing a standoff tag.
-                            val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
-                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
-                                    (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)) +
-                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
-                            )
-
-                        case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction =>
-                            if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}")
-
-                            // The first and third arguments are variables or IRIs representing resources.
-                            val resourceEntitiesAndTypes: Seq[(TypeableEntity, Set[SmartIri])] = Seq(functionCallExpression.args.head, functionCallExpression.args(2)).flatMap {
-                                entity => GravsearchTypeInspectionUtil.maybeTypeableEntity(entity)
-                            }.map {
-                                typeableEntity =>
-                                    val currentVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(typeableEntity, Set.empty)
-                                    typeableEntity -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri)
-                            }
-
-                            // The second argument is a variable representing a standoff tag.
-                            val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
-                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty)
-
-                            acc.copy(
-                                typedEntitiesInFilters = acc.typedEntitiesInFilters ++ resourceEntitiesAndTypes +
-                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
-                            )
-
-                        case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
-                            // The function knora-api:toSimpleDate can take either a knora-api:DateValue or a knora-api:StandoffTag,
-                            // so we don't infer the type of its argument.
-                            acc
-
-                        case _ => throw GravsearchException(s"Unrecognised function: ${functionCallExpression.functionIri.toSparql}")
-                    }
+                    visitFunctionCallExpression(functionCallExpression = functionCallExpression, usageIndex = usageIndex)
 
                 case andExpression: AndExpression =>
-                    val accFromLeft = visitFilterExpression(andExpression.leftArg, acc)
-                    visitFilterExpression(andExpression.rightArg, accFromLeft)
+                    val usageIndexFromLeft = visitFilterExpression(andExpression.leftArg, usageIndex)
+                    visitFilterExpression(filterExpression = andExpression.rightArg, usageIndex = usageIndexFromLeft)
 
                 case orExpression: OrExpression =>
-                    val accFromLeft = visitFilterExpression(orExpression.leftArg, acc)
-                    visitFilterExpression(orExpression.rightArg, accFromLeft)
+                    val usageIndexFromLeft = visitFilterExpression(orExpression.leftArg, usageIndex)
+                    visitFilterExpression(filterExpression = orExpression.rightArg, usageIndex = usageIndexFromLeft)
 
-                case _ => acc
+                case _ => usageIndex
             }
         }
     }
