@@ -59,6 +59,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
+    private val barIri = new MutableTestIri
+    private var barLastModDate: Instant = Instant.now
 
     private val chairIri = new MutableTestIri
     private var chairLastModDate: Instant = Instant.now
@@ -117,12 +119,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
-        "change the metadata of 'foo'" in {
+        "change the label in the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 
             responderManager ! ChangeOntologyMetadataRequestV2(
                 ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
-                label = newLabel,
+                label = Some(newLabel),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = imagesUser
@@ -136,6 +138,68 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
             assert(newFooLastModDate.isAfter(fooLastModDate))
             fooLastModDate = newFooLastModDate
+        }
+
+        "add a comment to the metadata of 'foo' ontology" in {
+            val aComment = "a comment"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+                comment = Some(aComment),
+                lastModificationDate = fooLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri == fooIri.get.toSmartIri)
+            assert(metadata.comment.contains(aComment))
+            val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newFooLastModDate.isAfter(fooLastModDate))
+            fooLastModDate = newFooLastModDate
+        }
+
+        "create an empty ontology called 'bar' with a comment" in {
+            responderManager ! CreateOntologyRequestV2(
+                ontologyName = "bar",
+                projectIri = imagesProjectIri,
+                label = "The bar ontology",
+                comment = Some("some comment"),
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/bar")
+            val returnedComment: String = metadata.comment.getOrElse(throw AssertionException("The bar ontology has no comment!"))
+            assert(returnedComment == "some comment")
+            barIri.set(metadata.ontologyIri.toString)
+            barLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+        }
+
+        "change the existing comment in the metadata of 'bar' ontology" in {
+            val newComment = "a new comment"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = barIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+                comment = Some(newComment),
+                lastModificationDate = barLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri == barIri.get.toSmartIri)
+            assert(metadata.comment.contains(newComment))
+            val newBarLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newBarLastModDate.isAfter(barLastModDate))
+            barLastModDate = newBarLastModDate
         }
 
         "not create 'foo' again" in {
@@ -2020,6 +2084,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "change the metadata of the 'anything' ontology" in {
+            val newLabel = "The modified anything ontology"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = AnythingOntologyIri,
+                label = Some(newLabel),
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri)
+            assert(metadata.label.contains(newLabel))
+            val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+            anythingLastModDate = newAnythingLastModDate
+        }
+
         "delete the class anything:CardinalityThing" in {
             val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
 
@@ -2102,10 +2187,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
             ).map(_.toSmartIri)
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3109,9 +3194,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri.fromLinkPropToLinkValueProp
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3388,9 +3473,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 AnythingOntologyIri.makeEntityIri("hasEmptiness")
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {

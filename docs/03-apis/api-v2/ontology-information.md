@@ -951,6 +951,13 @@ HTTP POST to http://host/v2/ontologies
 The ontology name must follow the rules given in
 [Knora IRIs](knora-iris.md).
 
+The ontology metadata can have an optional comment given in the request 
+body as:
+
+```
+"rdfs:comment": "some comment",
+``` 
+
 If the ontology is to be shared by multiple projects, it must be
 created in the default shared ontologies project,
 `http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject`,
@@ -972,8 +979,8 @@ be a valid XML [NCName](https://www.w3.org/TR/xml-names/#NT-NCName).
 
 ### Changing an Ontology's Metadata
 
-Currently, the only modifiable ontology metadata is the ontology's
-`rdfs:label`.
+One can modify an ontology's metadata by updating its `rdfs:label` or `rdfs:comment` 
+or both. The example below shows the request for changing the label of an ontology.
 
 ```
 HTTP PUT to http://host/v2/ontologies/metadata
@@ -995,6 +1002,26 @@ HTTP PUT to http://host/v2/ontologies/metadata
 }
 ```
 
+Similarly, a user can change an ontology's existing comment or add one by specifying 
+the new comment in the request body:
+
+```jsonld
+{
+  "@id" : "ONTOLOGY_IRI",
+  "rdfs:comment" : "NEW_ONTOLOGY_COMMENT",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
+  "@context" : {
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+  }
+}
+```
+
+The request body can also contain a new label and a new comment for the ontology's metadata. 
 A successful response will be a JSON-LD document providing only the
 ontology's metadata.
 

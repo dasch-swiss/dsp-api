@@ -421,6 +421,36 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 expectMsg(Failure(DuplicateValueException(s"Default object access permission already exists.")))
             }
         }
+
+        "asked to get all permissions" should {
+
+            "return all permissions for 'image' project " in {
+                responderManager ! PermissionsForProjectGetRequestADM(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: PermissionsForProjectGetResponseADM = expectMsgType[PermissionsForProjectGetResponseADM]
+                received.allPermissions.size should be (8)
+            }
+
+            "return all permissions for 'incunabula' project " in {
+                responderManager ! PermissionsForProjectGetRequestADM(
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                expectMsg(PermissionsForProjectGetResponseADM( allPermissions =
+                    Set(PermissionInfoADM(perm003_a1.iri, OntologyConstants.KnoraAdmin.AdministrativePermission),
+                        PermissionInfoADM(perm003_a2.iri, OntologyConstants.KnoraAdmin.AdministrativePermission),
+                        PermissionInfoADM(perm003_d1.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission),
+                        PermissionInfoADM(perm003_d2.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission),
+                        PermissionInfoADM(perm003_d3.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission)
+                    )
+                ))
+            }
+        }
+
         "asked to delete a permission object " should {
 
             "delete an administrative permission " ignore {}

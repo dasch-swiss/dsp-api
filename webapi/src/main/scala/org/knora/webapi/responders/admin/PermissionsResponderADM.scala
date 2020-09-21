@@ -71,6 +71,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID)
+        case PermissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser) => permissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -1261,6 +1262,47 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     () => createPermissionTask(createRequest, requestingUser)
                 )
             } yield taskResult
+    }
+
+    /**
+     * Gets all permissions defined inside a project.
+     *
+     * @param projectIRI     the IRI of the project.
+     * @param requestingUser the [[UserADM]] of the requesting user.
+     * @param apiRequestID    the API request ID.
+     * @return a list of of [[PermissionInfoADM]] objects.
+     */
+    private def permissionsForProjectGetRequestADM(projectIRI: IRI,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID
+                                                    ): Future[PermissionsForProjectGetResponseADM] = {
+
+        for {
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjectPermissions(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIRI
+            ).toString())
+
+            permissionsQueryResponse <- (storeManager ? SparqlConstructRequest(sparqlQueryString)).mapTo[SparqlConstructResponse]
+
+            /* extract response statements */
+            permissionsQueryResponseStatements: Map[IRI, Seq[(IRI, String)]] = permissionsQueryResponse.statements
+
+
+            permissionsInfo: Set[PermissionInfoADM] = if (permissionsQueryResponseStatements.isEmpty) {
+                throw NotFoundException(s"No permission could be found for $projectIRI.")
+            } else {
+                permissionsQueryResponseStatements.map{ statement =>
+                        val permissionIri = statement._1
+                        val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
+                        PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
+                }.toSet
+            }
+
+            /* construct response object */
+            response = permissionsmessages.PermissionsForProjectGetResponseADM(permissionsInfo)
+
+        } yield response
     }
 
 }

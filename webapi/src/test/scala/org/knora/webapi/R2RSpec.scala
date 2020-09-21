@@ -139,7 +139,7 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
             val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
             val newOutputFile = new File(testOutputDir, file.getPath)
             newOutputFile.getParentFile.mkdirs()
-            FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
+            FileUtil.writeTextFile(newOutputFile, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
             FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)

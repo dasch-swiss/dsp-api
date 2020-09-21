@@ -343,10 +343,20 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Generate Github release notes
-        uses: lakto/gren-action@v1.1.0
+      - if: "github.event.release.prerelease"
+        name: Update release notes
+        uses: lakto/gren-action@v2.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          options: '--override --prerelease'
+      - if: "!github.event.release.prerelease"
+        name: Update release notes
+        uses: lakto/gren-action@v2.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          options: '--override'
       - name: Disk Free
         run: |
           df -h

@@ -910,7 +910,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // Do the update.
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-                newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+                newValueIri: IRI <- checkOrCreateEntityIri(updateValuePermissionsV2.newValueVersionIri, stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+
                 currentTime: Instant = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
                 sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.changeValuePermissions(
@@ -1074,6 +1075,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             valueCreator = updateValueRequest.requestingUser.id,
                             valuePermissions = newValueVersionPermissionLiteral,
                             valueCreationDate = updateValueContentV2.valueCreationDate,
+                            newValueVersionIri = updateValueContentV2.newValueVersionIri,
                             requestingUser = updateValueRequest.requestingUser
                         )
 
@@ -1087,6 +1089,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             valueCreator = updateValueRequest.requestingUser.id,
                             valuePermissions = newValueVersionPermissionLiteral,
                             valueCreationDate = updateValueContentV2.valueCreationDate,
+                            newValueVersionIri = updateValueContentV2.newValueVersionIri,
                             requestingUser = updateValueRequest.requestingUser
                         )
                 }
@@ -1142,15 +1145,16 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
      *
-     * @param dataNamedGraph    the IRI of the named graph to be updated.
-     * @param resourceInfo      information about the resource containing the value.
-     * @param propertyIri       the IRI of the property that points to the value.
-     * @param currentValue      a [[ReadValueV2]] representing the existing value version.
-     * @param newValueVersion   a [[ValueContentV2]] representing the new value version, in the internal schema.
-     * @param valueCreator      the IRI of the new value's owner.
-     * @param valuePermissions  the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-     * @param valueCreationDate a custom value creation date.
-     * @param requestingUser    the user making the request.
+     * @param dataNamedGraph     the IRI of the named graph to be updated.
+     * @param resourceInfo       information about the resource containing the value.
+     * @param propertyIri        the IRI of the property that points to the value.
+     * @param currentValue       a [[ReadValueV2]] representing the existing value version.
+     * @param newValueVersion    a [[ValueContentV2]] representing the new value version, in the internal schema.
+     * @param valueCreator       the IRI of the new value's owner.
+     * @param valuePermissions   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+     * @param valueCreationDate  a custom value creation date.
+     * @param newValueVersionIri an optional IRI to be used for the new value version.
+     * @param requestingUser     the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def updateOrdinaryValueV2AfterChecks(dataNamedGraph: IRI,
@@ -1161,9 +1165,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
                                                  valueCreationDate: Option[Instant],
+                                                 newValueVersionIri: Option[SmartIri],
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
-            newValueIri: IRI <- makeUnusedValueIri(resourceInfo.resourceIri)
+            newValueIri: IRI <- checkOrCreateEntityIri(newValueVersionIri, stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
 
             // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValue.valueContent, newValueVersion) match {
@@ -1255,15 +1260,16 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     /**
      * Changes a link, assuming that pre-update checks have already been done.
      *
-     * @param dataNamedGraph    the IRI of the named graph to be updated.
-     * @param resourceInfo      information about the resource containing the link.
-     * @param linkPropertyIri   the IRI of the link property.
-     * @param currentLinkValue  a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
-     * @param newLinkValue      a [[LinkValueContentV2]] indicating the new target resource.
-     * @param valueCreator      the IRI of the new link value's owner.
-     * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-     * @param valueCreationDate a custom value creation date.
-     * @param requestingUser    the user making the request.
+     * @param dataNamedGraph     the IRI of the named graph to be updated.
+     * @param resourceInfo       information about the resource containing the link.
+     * @param linkPropertyIri    the IRI of the link property.
+     * @param currentLinkValue   a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
+     * @param newLinkValue       a [[LinkValueContentV2]] indicating the new target resource.
+     * @param valueCreator       the IRI of the new link value's owner.
+     * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param valueCreationDate  a custom value creation date.
+     * @param newValueVersionIri an optional IRI to be used for the new value version.
+     * @param requestingUser     the user making the request.
      * @return an [[UnverifiedValueV2]].
      */
     private def updateLinkValueV2AfterChecks(dataNamedGraph: IRI,
@@ -1274,6 +1280,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              valueCreationDate: Option[Instant],
+                                             newValueVersionIri: Option[SmartIri],
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
 
         // Are we changing the link target?
@@ -1294,6 +1301,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     sourceResourceInfo = resourceInfo,
                     linkPropertyIri = linkPropertyIri,
                     targetResourceIri = newLinkValue.referredResourceIri,
+                    customNewLinkValueIri = newValueVersionIri,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -1342,6 +1350,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     sourceResourceInfo = resourceInfo,
                     linkPropertyIri = linkPropertyIri,
                     targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+                    customNewLinkValueIri = newValueVersionIri,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     requestingUser = requestingUser
@@ -2165,17 +2174,19 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to change the metadata
      * on a `LinkValue`.
      *
-     * @param sourceResourceInfo information about the source resource.
-     * @param linkPropertyIri    the IRI of the property that links the source resource to the target resource.
-     * @param targetResourceIri  the IRI of the target resource.
-     * @param valueCreator       the IRI of the new link value's owner.
-     * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-     * @param requestingUser     the user making the request.
+     * @param sourceResourceInfo    information about the source resource.
+     * @param linkPropertyIri       the IRI of the property that links the source resource to the target resource.
+     * @param targetResourceIri     the IRI of the target resource.
+     * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
+     * @param valueCreator          the IRI of the new link value's owner.
+     * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+     * @param requestingUser        the user making the request.
      * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
      */
     private def changeLinkValueMetadata(sourceResourceInfo: ReadResourceV2,
                                         linkPropertyIri: SmartIri,
                                         targetResourceIri: IRI,
+                                        customNewLinkValueIri: Option[SmartIri] = None,
                                         valueCreator: IRI,
                                         valuePermissions: String,
                                         requestingUser: UserADM): Future[SparqlTemplateLinkUpdate] = {
@@ -2193,8 +2204,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // Yes. Make a SparqlTemplateLinkUpdate.
 
                 for {
-                    // Generate an IRI for the new LinkValue.
-                    newLinkValueIri: IRI <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
+                    // If no custom IRI was provided, generate an IRI for the new LinkValue.
+                    newLinkValueIri: IRI <- checkOrCreateEntityIri(customNewLinkValueIri, stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
+
                 } yield SparqlTemplateLinkUpdate(
                     linkPropertyIri = linkPropertyIri,
                     directLinkExists = true,
