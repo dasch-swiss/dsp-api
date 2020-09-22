@@ -204,7 +204,6 @@
   knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>;
   beol:title <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/jGtT_87FS2qTkUEigdXMPg>;
-  beol:hasSubject <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/YdnovfaXRnW4c5qO7h02Ag>;
   beol:creationDate <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/5_JuhLykRBmhJs_b9X0qhg>;
   beol:hasAuthor <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>;
   beol:hasAuthorValue <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/b5JkQWJEQz6V-Spue9TqGA>;
@@ -261,16 +260,6 @@
   knora-base:valueHasString "2018-06-04 CE";
   knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
-
-<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/YdnovfaXRnW4c5qO7h02Ag> a knora-base:ListValue;
-  knora-base:valueHasUUID "YdnovfaXRnW4c5qO7h02Ag"^^xsd:string;
-  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>;
-  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
-  knora-base:isDeleted false;
-  knora-base:valueCreationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
-  knora-base:valueHasListNode <http://rdfh.ch/lists/0801/dragging_motion_pursuit_curves_tractrix_construction>;
-  knora-base:valueHasOrder 0;
-  knora-base:valueHasString "http://rdfh.ch/lists/0801/logarithmic_curves" .
 
 <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/jGtT_87FS2qTkUEigdXMPg> a knora-base:TextValue;
   knora-base:valueHasUUID "jGtT_87FS2qTkUEigdXMPg"^^xsd:string;
