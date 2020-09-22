@@ -61,6 +61,14 @@ To restart the knora-api use the following command:
 $ make stack-restart-api
 ```
 
+If a change is made to knora-api code, only its image needs to be rebuild. In that case, use 
+
+```
+$ make stack-up-fast
+```
+
+which starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
+
 ## Managing Containers in Docker Dashboard
 
 The Docker Desktop is installed on your computer during the installation of docker, it enables easy management of docker 
