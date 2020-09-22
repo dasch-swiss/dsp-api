@@ -24,7 +24,7 @@ import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.model.Multipart
-import akka.http.scaladsl.model.Multipart.BodyPart
+import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -32,14 +32,17 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.scaladsl.FileIO
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceInfoGetRequestV1, ResourceInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil}
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.DateUtilV1
 
 import scala.concurrent.{Future, Promise}
 
@@ -528,14 +531,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         /* get the file data and save file to temporary location */
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
-                            case b: BodyPart =>
+                            b: FormData.BodyPart =>
                                 if (b.name == FILE_PART) {
                                     log.debug(s"inside allPartsFuture - processing $FILE_PART")
                                     val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                                     val tmpFile = FileUtil.createTempFile(settings)
                                     val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                     written.map { written =>
-                                        log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        log.debug(s"written result: ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                         receivedFile.success(tmpFile)
                                         (b.name, FileInfo(b.name, filename, b.entity.contentType))
                                     }

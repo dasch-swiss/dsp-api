@@ -19,24 +19,23 @@
 
 package org.knora.webapi
 
-import java.io.File
-import java.nio.file.{Files, Paths}
-
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.event.LoggingAdapter
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
-import org.knora.webapi.util.StringFormatter
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.knora.webapi.core.Core
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json.{JsObject, _}
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.languageFeature.postfixOps
 
 
@@ -48,18 +47,18 @@ object ITKnoraFakeSpec {
   * This class can be used in End-to-End testing. It starts a Fake Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, ITKnoraFakeSpec.defaultConfig))
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraFakeSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
+    def this() = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     /* Needs to be initialized before any responders */
@@ -68,7 +67,8 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with
     val log = akka.event.Logging(system, this.getClass)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */

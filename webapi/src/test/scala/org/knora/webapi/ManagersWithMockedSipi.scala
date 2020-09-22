@@ -21,8 +21,10 @@ package org.knora.webapi
 
 import akka.actor.{Actor, ActorRef, Props}
 import org.knora.webapi.app.Managers
-import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
-import org.knora.webapi.store.{MockableStoreManager, SipiConnectorActorName, StoreManagerActorName}
+import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.responders.MockableResponderManager
+import org.knora.webapi.settings._
+import org.knora.webapi.store.MockableStoreManager
 import org.knora.webapi.store.iiif.MockSipiConnector
 
 /**
@@ -34,6 +36,6 @@ trait ManagersWithMockedSipi extends Managers {
     lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector)))
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-    lazy val storeManager: ActorRef = context.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker), name = StoreManagerActorName)
-    lazy val responderManager: ActorRef = context.actorOf(Props(new MockableResponderManager(mockResponders, self, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
+    lazy val storeManager: ActorRef = context.actorOf(Props(new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self) with LiveActorMaker), name = StoreManagerActorName)
+    lazy val responderManager: ActorRef = context.actorOf(Props(new MockableResponderManager(mockRespondersOrStoreConnectors = mockResponders, appActor = self)), name = RESPONDER_MANAGER_ACTOR_NAME)
 }

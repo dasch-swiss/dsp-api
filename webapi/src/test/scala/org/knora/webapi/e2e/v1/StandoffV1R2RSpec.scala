@@ -26,15 +26,17 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.knora.webapi.SharedTestDataV1._
+import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.routing.v1.{StandoffRouteV1, ValuesRouteV1}
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -45,7 +47,6 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
   * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class StandoffV1R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -67,10 +68,10 @@ class StandoffV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     private val firstTextValueIri = new MutableTestIri
@@ -111,13 +112,13 @@ class StandoffV1R2RSpec extends R2RSpec {
                |}
              """.stripMargin
 
-        val pathToLetterMapping = "_test_data/test_route/texts/mappingForLetter.xml"
+        val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
 
-        val pathToLetterXML = "_test_data/test_route/texts/letter.xml"
+        val pathToLetterXML = "test_data/test_route/texts/letter.xml"
 
-        val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
+        val pathToLetter2XML = "test_data/test_route/texts/letter2.xml"
 
-        val pathToLetter3XML = "_test_data/test_route/texts/letter3.xml"
+        val pathToLetter3XML = "test_data/test_route/texts/letter3.xml"
 
         val paramsCreateHTMLMappingFromXML: String =
             s"""
@@ -129,13 +130,13 @@ class StandoffV1R2RSpec extends R2RSpec {
              """.stripMargin
 
         // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
-        val pathToStandardHTML = "_test_data/test_route/texts/StandardHTML.xml"
+        val pathToStandardHTML = "test_data/test_route/texts/StandardHTML.xml"
 
-        val pathToStandardHTMLInternalLink = "_test_data/test_route/texts/StandardHTML-internal-link.xml"
+        val pathToStandardHTMLInternalLink = "test_data/test_route/texts/StandardHTML-internal-link.xml"
 
-        val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
+        val pathToHTMLMapping = "test_data/test_route/texts/mappingForHTML.xml"
 
-        val pathToHTML = "_test_data/test_route/texts/HTML.xml"
+        val pathToHTML = "test_data/test_route/texts/HTML.xml"
 
 
     }

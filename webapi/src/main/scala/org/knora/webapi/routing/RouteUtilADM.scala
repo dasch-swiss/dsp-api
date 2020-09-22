@@ -26,7 +26,9 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,7 +52,7 @@ object RouteUtilADM {
      */
     def runJsonRoute(requestMessageF: Future[KnoraRequestADM],
                      requestContext: RequestContext,
-                     settings: SettingsImpl,
+                     settings: KnoraSettingsImpl,
                      responderManager: ActorRef,
                      log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {

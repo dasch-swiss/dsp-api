@@ -1,39 +1,22 @@
-.PHONY: graphdb-se-docker-init-knora-test
-graphdb-se-docker-init-knora-test: ## initializes docker GraphDB-SE with the knora-test repository
-	./graphdb-se-docker-init-knora-test.sh
+.PHONY: fuseki-init-knora-test
+fuseki-init-knora-test: ## initializes Fuseki with the knora-test repository and data
+	./fuseki-init-knora-test.sh
 
-.PHONY: graphdb-se-docker-init-knora-test-minimal
-graphdb-se-docker-init-knora-test-minimal: ## initializes docker GraphDB-SE with the knora-test repository and minimal data
-	./graphdb-se-docker-init-knora-test-minimal.sh
+.PHONY: fuseki-init-knora-test-minimal
+fuseki-init-knora-test-minimal: ## initializes Fuseki with the knora-test repository and minimal data
+	./fuseki-init-knora-test-minimal.sh
 
-.PHONY: graphdb-se-docker-init-knora-test-unit
-graphdb-se-docker-init-knora-test-unit: ## initializes docker GraphDB-SE with the knora-test-unit repository
-	./graphdb-se-docker-init-knora-test-unit.sh
+.PHONY: fuseki-init-knora-test-empty
+fuseki-init-knora-test-empty: ## initializes Fuseki with the knora-test repository and no data
+	./fuseki-init-knora-test-empty.sh
 
-.PHONY: graphdb-free-docker-init-knora-test
-graphdb-free-docker-init-knora-test: ## initializes docker GraphDB-Free with the knora-test repository
-	./graphdb-free-docker-init-knora-test.sh
+.PHONY: fuseki-init-knora-test-unit
+fuseki-init-knora-test-unit: ## initializes Fuseki with the knora-test-unit repository and no data
+	./fuseki-init-knora-test-unit.sh
 
-.PHONY: graphdb-free-docker-init-knora-test-minimal
-graphdb-free-docker-init-knora-test-minimal: ## initializes docker GraphDB-Free with the knora-test repository and minimal data
-	./graphdb-free-docker-init-knora-test-minimal.sh
-
-.PHONY: graphdb-free-docker-init-knora-test-unit
-graphdb-free-docker-init-knora-test-unit: ## initializes docker GraphDB-Free with the knora-test-unit repository
-	./graphdb-free-docker-init-knora-test-unit.sh
-
-.PHONY: graphdb-se-local-init-knora-test
-graphdb-se-local-init-knora-test: ## initializes local GraphDB-SE with the knora-test repository
-	./graphdb-se-local-init-knora-test.sh
-
-.PHONY: graphdb-se-local-init-knora-test-minimal
-graphdb-se-local-init-knora-test-minimal: ## initializes local GraphDB-SE with the knora-test repository and minimal data
-	./graphdb-se-local-init-knora-test-minimal.sh
-
-.PHONY: graphdb-se-local-init-knora-test-unit
-graphdb-se-local-init-knora-test-unit: ## initializes local GraphDB-SE with the knora-test-unit repository
-	./graphdb-se-local-init-knora-test-unit.sh
-
+.PHONY: fuseki-init-knora-test-unit-minimal
+fuseki-init-knora-test-unit-minimal: ## initializes Fuseki with the knora-test-unit repository and minimal data
+	./fuseki-init-knora-test-unit-minimal.sh
 
 .PHONY: help
 help: ## this help

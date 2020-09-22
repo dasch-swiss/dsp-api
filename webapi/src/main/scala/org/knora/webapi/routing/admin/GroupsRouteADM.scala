@@ -27,15 +27,14 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
-import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{BadRequestException, OntologyConstants, SharedTestDataADM}
+import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -56,32 +55,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     import GroupsRouteADM._
 
     /**
-     * The name of this [[ClientEndpoint]].
-     */
-    override val name: String = "GroupsEndpoint"
-
-    /**
      * The directory name to be used for this endpoint's code.
      */
     override val directoryName: String = "groups"
-
-    /**
-     * The URL path of this [[ClientEndpoint]].
-     */
-    override val urlPath: String = "/groups"
-
-    /**
-     * A description of this [[ClientEndpoint]].
-     */
-    override val description: String = "An endpoint for working with Knora groups."
-
-    // Classes used in client function definitions.
-
-    private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
-    private val GroupResponse = classRef(OntologyConstants.KnoraAdminV2.GroupResponse.toSmartIri)
-    private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
-    private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
-    private val UpdateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateGroupRequest.toSmartIri)
 
     private val groupIri = SharedTestDataADM.imagesReviewerGroup.id
     private val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
@@ -107,16 +83,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val getGroupsFunction: ClientFunction =
-        "getGroups" description "Returns a list of all groups." params() doThis {
-            httpGet(BasePath)
-        } returns GroupsResponse
-
-    private def getGroupsTestResponse: Future[SourceCodeFileContent] = {
+    private def getGroupsTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(baseApiUrl + GroupsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-groups-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-groups-response"),
             text = responseStr
         )
     }
@@ -148,21 +119,17 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val createGroupFunction: ClientFunction =
-        "createGroup" description "Creates a group." params (
-            "group" description "The group to be created." paramType CreateGroupRequest
-            ) doThis {
-            httpPost(
-                path = BasePath,
-                body = Some(arg("group"))
-            )
-        } returns GroupResponse
-
-    private def createGroupTestRequest: Future[SourceCodeFileContent] = {
+    private def createGroupTestRequest: Future[Set[TestDataFileContent]] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("create-group-request"),
-                text = SharedTestDataADM.createGroupRequest
+            Set(
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-group-request"),
+                    text = SharedTestDataADM.createGroupRequest
+                ),
+                TestDataFileContent(
+                    filePath = TestDataFilePath.makeJsonPath("create-group-with-custom-Iri-request"),
+                    text = SharedTestDataADM.createGroupWithCustomIriRequest
+                )
             )
         )
     }
@@ -190,18 +157,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val getGroupByIriFunction: ClientFunction =
-        "getGroupByIri" description "Gets a group by IRI." params (
-            "iri" description "The IRI of the group." paramType UriDatatype
-            ) doThis {
-            httpGet(arg("iri"))
-        } returns GroupResponse
-
-    private def getGroupByIriTestResponse: Future[SourceCodeFileContent] = {
+    private def getGroupByIriTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$GroupsBasePathString/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-group-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-group-response"),
             text = responseStr
         )
     }
@@ -245,21 +205,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val updateGroupFunction: ClientFunction =
-        "updateGroup" description "Updates a group." params(
-            "iri" description "The IRI of the group to be updated." paramType UriDatatype,
-            "groupInfo" description "The group information to be updated." paramType UpdateGroupRequest
-        ) doThis {
-            httpPut(
-                path = arg("iri"),
-                body = Some(arg("groupInfo"))
-            )
-        } returns GroupResponse
-
-    private def updateGroupTestRequest: Future[SourceCodeFileContent] = {
+    private def updateGroupTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-group-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("update-group-request"),
                 text = SharedTestDataADM.updateGroupRequest
             )
         )
@@ -307,23 +256,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val changeGroupStatusFunction: ClientFunction =
-        "updateGroupStatus" description "Updates the status of a group." params(
-            "iri" description "The IRI of the group to be updated." paramType UriDatatype,
-            "status" description "The new status of the group." paramType BooleanDatatype
-        ) doThis {
-            httpPut(
-                path = arg("iri") / str("status"),
-                body = Some(json(
-                    "status" -> arg("status")
-                ))
-            )
-        } returns GroupResponse
-
-    private def changeGroupStatusTestRequest: Future[SourceCodeFileContent] = {
+    private def changeGroupStatusTestRequest: Future[TestDataFileContent] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("change-group-status-request"),
+            TestDataFileContent(
+                filePath = TestDataFilePath.makeJsonPath("change-group-status-request"),
                 text = SharedTestDataADM.changeGroupStatusRequest
             )
         )
@@ -357,16 +293,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val deleteGroupFunction: ClientFunction =
-        "deleteGroup" description "Deletes a group. This method does not actually delete a group, but sets the status to false." params (
-            "iri" description "The IRI of the group." paramType UriDatatype
-            ) doThis {
-            httpDelete(
-                path = arg("iri")
-            )
-        } returns GroupResponse
-
-
     /**
      * Gets members of single group.
      */
@@ -390,18 +316,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private val getGroupMembersFunction: ClientFunction =
-        "getGroupMembers" description "Gets the members of a group." params (
-            "iri" description "The IRI of the group." paramType UriDatatype
-            ) doThis {
-            httpGet(arg("iri") / str("members"))
-        } returns MembersResponse
-
-    private def getGroupMembersTestResponse: Future[SourceCodeFileContent] = {
+    private def getGroupMembersTestResponse: Future[TestDataFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(s"$baseApiUrl$GroupsBasePathString/$groupIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-group-members-response"),
+        } yield TestDataFileContent(
+            filePath = TestDataFilePath.makeJsonPath("get-group-members-response"),
             text = responseStr
         )
     }
@@ -413,35 +332,21 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         updateGroup ~ changeGroupStatus ~ deleteGroup ~ getGroupMembers
 
     /**
-     * The functions defined by this [[ClientEndpoint]].
-     */
-    override val functions: Seq[ClientFunction] = Seq(
-        getGroupsFunction,
-        createGroupFunction,
-        getGroupByIriFunction,
-        updateGroupFunction,
-        changeGroupStatusFunction,
-        deleteGroupFunction,
-        getGroupMembersFunction
-    )
-
-    /**
      * Returns test data for this endpoint.
      *
      * @return a set of test data files to be used for testing this endpoint.
      */
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
-                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        Future.sequence {
-            Set(
-                getGroupsTestResponse,
-                createGroupTestRequest,
-                getGroupByIriTestResponse,
-                updateGroupTestRequest,
-                changeGroupStatusTestRequest,
-                getGroupMembersTestResponse
-            )
-        }
+                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
+        for {
+            getGroupsResponse <- getGroupsTestResponse
+            createGroupRequest <- createGroupTestRequest
+            getGroupByIriResponse <- getGroupByIriTestResponse
+            updateGroupRequest <- updateGroupTestRequest
+            changeGroupStatusRequest <- changeGroupStatusTestRequest
+            getGroupMembersResponse <- getGroupMembersTestResponse
+        } yield createGroupRequest + getGroupsResponse + getGroupByIriResponse + updateGroupRequest +
+            changeGroupStatusRequest + getGroupMembersResponse
     }
 }

@@ -29,10 +29,13 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.util.{MutableTestIri, StringFormatter}
+import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -549,7 +552,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             "return all unique keywords for all projects" in {
                 responderManager ! ProjectsKeywordsGetRequestADM(SharedTestDataADM.rootUser)
                 val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
-                received.keywords.size should be (18)
+                received.keywords.size should be (20)
             }
 
             "return all keywords for a single project" in {
@@ -563,7 +566,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return empty list for a project without keywords" in {
                 responderManager ! ProjectKeywordsGetRequestADM(
-                    projectIri = SharedTestDataADM.anythingProject.id,
+                    projectIri = SharedTestDataADM.dokubibProject.id,
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)

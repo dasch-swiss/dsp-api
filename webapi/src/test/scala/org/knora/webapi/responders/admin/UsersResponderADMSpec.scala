@@ -29,12 +29,15 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectIdentifierADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -257,7 +260,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the username 'root' already exists")))
             }
 
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
@@ -275,8 +278,63 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the email 'root@example.com' already exists")))
             }
+
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters (@)" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "donald.duck2@example.com",
+                        email = "donald.duck2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The username 'donald.duck2@example.com' contains invalid characters")))
+            }
+
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters (-)" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "donald-duck",
+                        email = "donald.duck2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The username 'donald-duck' contains invalid characters")))
+            }
+
+            "return a 'BadRequestException' if the supplied 'email' is invalid" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "root3",
+                        email = "root3",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The email 'root3' is invalid")))
+            }
+
         }
 
         "asked to update a user" should {
@@ -332,6 +390,73 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response3.user.givenName should equal (SharedTestDataADM.normalUser.givenName)
                 response3.user.familyName should equal (SharedTestDataADM.normalUser.familyName)
 
+            }
+         
+            "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("root")
+                    ),
+                    SharedTestDataADM.superUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException(s"User with the username 'root' already exists")))
+            }
+
+            "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        email = Some("root@example.com")
+                    ),
+                    SharedTestDataADM.superUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException(s"User with the email 'root@example.com' already exists")))
+            }
+
+            "return 'BadRequest' if the new 'username' contains invalid characters (@)" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("donald.duck2@example.com")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The username 'donald.duck2@example.com' contains invalid characters")))
+            }
+
+            "return 'BadRequest' if the new 'username' contains invalid characters (-)" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("donald-duck")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The username 'donald-duck' contains invalid characters")))
+            }
+
+
+            "return 'BadRequest' if the new 'email' is invalid" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        email = Some("root3")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The email address 'root3' is invalid")))
             }
 
             "UPDATE the user's password (by himself)" in {

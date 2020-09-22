@@ -1,20 +1,20 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
@@ -25,31 +25,33 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, OntologyConstraintException}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, DataConversionException, IRI, OntologyConstraintException}
+import org.knora.webapi.IRI
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
+import org.knora.webapi.messages.StringFormatter
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
 /**
-  * Represents an API request payload that asks the Knora API server to create a new project.
-  *
-  * @param shortname   the shortname of the project to be created (unique).
-  * @param shortcode   the shortcode of the project to be creates (unique)
-  * @param longname    the longname of the project to be created.
-  * @param description the description of the project to be created.
-  * @param keywords    the keywords of the project to be created (optional).
-  * @param logo        the logo of the project to be created.
-  * @param status      the status of the project to be created (active = true, inactive = false).
-  * @param selfjoin    the status of self-join of the project to be created.
-  */
-case class CreateProjectApiRequestADM(shortname: String,
+ * Represents an API request payload that asks the Knora API server to create a new project.
+ *
+ * @param id          the optional IRI of the project to be created.
+ * @param shortname   the shortname of the project to be created (unique).
+ * @param shortcode   the shortcode of the project to be creates (unique)
+ * @param longname    the longname of the project to be created.
+ * @param description the description of the project to be created.
+ * @param keywords    the keywords of the project to be created (optional).
+ * @param logo        the logo of the project to be created.
+ * @param status      the status of the project to be created (active = true, inactive = false).
+ * @param selfjoin    the status of self-join of the project to be created.
+ */
+case class CreateProjectApiRequestADM(id: Option[IRI] = None,
+                                      shortname: String,
                                       shortcode: String,
                                       longname: Option[String],
                                       description: Seq[StringLiteralV2],
@@ -57,24 +59,26 @@ case class CreateProjectApiRequestADM(shortname: String,
                                       logo: Option[String],
                                       status: Boolean,
                                       selfjoin: Boolean) extends ProjectsADMJsonProtocol {
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
 
-    if (description.isEmpty) {
-        throw BadRequestException("Project description needs to be supplied.")
-    }
+    if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
+
+    stringFormatter.validateOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update an existing project.
-  *
-  * @param shortname   the new project's shortname.
-  * @param longname    the new project's longname.
-  * @param description the new project's description.
-  * @param keywords    the new project's keywords.
-  * @param logo        the new project's logo.
-  * @param status      the new project's status.
-  * @param selfjoin    the new project's self-join status.
-  */
+ * Represents an API request payload that asks the Knora API server to update an existing project.
+ *
+ * @param shortname   the new project's shortname.
+ * @param longname    the new project's longname.
+ * @param description the new project's description.
+ * @param keywords    the new project's keywords.
+ * @param logo        the new project's logo.
+ * @param status      the new project's status.
+ * @param selfjoin    the new project's self-join status.
+ */
 case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
                                       longname: Option[String] = None,
                                       description: Option[Seq[StringLiteralV2]] = None,
@@ -104,130 +108,130 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
 // Messages
 
 /**
-  * An abstract trait representing a request message that can be sent to [[ProjectsResponderADM]].
-  */
+ * An abstract trait representing a request message that can be sent to [[ProjectsResponderADM]].
+ */
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 
 // Requests
 
 /**
-  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
-  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
-  *
-  * @param requestingUser the user making the request.
-  */
+ * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
+ * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
+ *
+ * @param requestingUser the user making the request.
+ */
 case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
-  * no projects are found. Administration permission checking is skipped.
-  *
-  * @param requestingUser the user making the request.
-  */
+ * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
+ * no projects are found. Administration permission checking is skipped.
+ *
+ * @param requestingUser the user making the request.
+ */
 case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
-  * of [[ProjectGetResponseADM]]. External use.
-  *
-  * @param identifier     the IRI, email, or username of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
+ * of [[ProjectGetResponseADM]]. External use.
+ *
+ * @param identifier     the IRI, email, or username of the project.
+ * @param requestingUser the user making the request.
+ */
 case class ProjectGetRequestADM(identifier: ProjectIdentifierADM,
                                 requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
-  * of [[ProjectADM]]. Internal use only.
-  *
-  * @param identifier     the IRI, email, or username of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
+ * of [[ProjectADM]]. Internal use only.
+ *
+ * @param identifier     the IRI, email, or username of the project.
+ * @param requestingUser the user making the request.
+ */
 case class ProjectGetADM(identifier: ProjectIdentifierADM,
                          requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
-  *
-  * @param identifier     the IRI, email, or username of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
+ *
+ * @param identifier     the IRI, email, or username of the project.
+ * @param requestingUser the user making the request.
+ */
 case class ProjectMembersGetRequestADM(identifier: ProjectIdentifierADM,
                                        requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 
 /**
-  * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
-  *
-  * @param identifier     the IRI, email, or username of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
+ *
+ * @param identifier     the IRI, email, or username of the project.
+ * @param requestingUser the user making the request.
+ */
 case class ProjectAdminMembersGetRequestADM(identifier: ProjectIdentifierADM,
                                             requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Returns all unique keywords for all projects.
-  *
-  * @param requestingUser the user making the request.
-  */
+ * Returns all unique keywords for all projects.
+ *
+ * @param requestingUser the user making the request.
+ */
 case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Returns all keywords for a project identified through IRI.
-  *
-  * @param projectIri     the IRI of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Returns all keywords for a project identified through IRI.
+ *
+ * @param projectIri     the IRI of the project.
+ * @param requestingUser the user making the request.
+ */
 case class ProjectKeywordsGetRequestADM(projectIri: IRI,
                                         requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
-  *
-  * @param identifier     the identifier of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
+ *
+ * @param identifier     the identifier of the project.
+ * @param requestingUser the user making the request.
+ */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM, requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
-  *
-  * @param identifier     the identifier of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
+ *
+ * @param identifier     the identifier of the project.
+ * @param requestingUser the user making the request.
+ */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentifierADM,
                                                       requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
-  *
-  * @param projectIdentifier the identifier of the project.
-  * @param requestingUser    the user making the request.
-  */
+ * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
+ *
+ * @param projectIdentifier the identifier of the project.
+ * @param requestingUser    the user making the request.
+ */
 case class ProjectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM,
                                     requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
-  * Requests the creation of a new project.
-  *
-  * @param createRequest  the [[CreateProjectApiRequestADM]] information for creation a new project.
-  * @param requestingUser the user making the request.
-  * @param apiRequestID   the ID of the API request.
-  */
+ * Requests the creation of a new project.
+ *
+ * @param createRequest  the [[CreateProjectApiRequestADM]] information for creation a new project.
+ * @param requestingUser the user making the request.
+ * @param apiRequestID   the ID of the API request.
+ */
 case class ProjectCreateRequestADM(createRequest: CreateProjectApiRequestADM,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 /**
-  * Requests updating an existing project.
-  *
-  * @param projectIri           the IRI of the project to be updated.
-  * @param changeProjectRequest the data which needs to be update.
-  * @param requestingUser       the user making the request.
-  * @param apiRequestID         the ID of the API request.
-  */
+ * Requests updating an existing project.
+ *
+ * @param projectIri           the IRI of the project to be updated.
+ * @param changeProjectRequest the data which needs to be update.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the ID of the API request.
+ */
 case class ProjectChangeRequestADM(projectIri: IRI,
                                    changeProjectRequest: ChangeProjectApiRequestADM,
                                    requestingUser: UserADM,
@@ -236,85 +240,85 @@ case class ProjectChangeRequestADM(projectIri: IRI,
 // Responses
 
 /**
-  * Represents the Knora API ADM JSON response to a request for information about all projects.
-  *
-  * @param projects information about all existing projects.
-  */
+ * Represents the Knora API ADM JSON response to a request for information about all projects.
+ *
+ * @param projects information about all existing projects.
+ */
 case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue: JsValue = projectsResponseADMFormat.write(this)
 }
 
 /**
-  * Represents the Knora API ADM JSON response to a request for information about a single project.
-  *
-  * @param project all information about the project.
-  */
+ * Represents the Knora API ADM JSON response to a request for information about a single project.
+ *
+ * @param project all information about the project.
+ */
 case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue: JsValue = projectResponseADMFormat.write(this)
 }
 
 /**
-  * Represents the Knora API ADM JSON response to a request for a list of members inside a single project.
-  *
-  * @param members a list of members.
-  */
+ * Represents the Knora API ADM JSON response to a request for a list of members inside a single project.
+ *
+ * @param members a list of members.
+ */
 case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
     def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
 }
 
 /**
-  * Represents the Knora API ADM JSON response to a request for a list of admin members inside a single project.
-  *
-  * @param members a list of admin members.
-  */
+ * Represents the Knora API ADM JSON response to a request for a list of admin members inside a single project.
+ *
+ * @param members a list of admin members.
+ */
 case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
     def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 }
 
 /**
-  * Represents a response to a request for all keywords of all projects.
-  *
-  * @param keywords a list of keywords.
-  */
+ * Represents a response to a request for all keywords of all projects.
+ *
+ * @param keywords a list of keywords.
+ */
 case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
 }
 
 /**
-  * Represents a response to a request for all keywords of a single project.
-  *
-  * @param keywords a list of keywords.
-  */
+ * Represents a response to a request for all keywords of a single project.
+ *
+ * @param keywords a list of keywords.
+ */
 case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 }
 
 /**
-  * API MAY CHANGE: Represents a response to a request for the project's restricted view settings.
-  *
-  * @param settings the restricted view settings.
-  */
+ * API MAY CHANGE: Represents a response to a request for the project's restricted view settings.
+ *
+ * @param settings the restricted view settings.
+ */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 }
 
 /**
-  * Represents an answer to a project creating/modifying operation.
-  *
-  * @param project the new project info of the created/modified project.
-  */
+ * Represents an answer to a project creating/modifying operation.
+ *
+ * @param project the new project info of the created/modified project.
+ */
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
 /**
-  * Represents a project's data in TriG format.
-  *
-  * @param projectDataFile a file containing the project's data in TriG format.
-  */
+ * Represents a project's data in TriG format.
+ *
+ * @param projectDataFile a file containing the project's data in TriG format.
+ */
 case class ProjectDataGetResponseADM(projectDataFile: File)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,19 +326,19 @@ case class ProjectDataGetResponseADM(projectDataFile: File)
 
 
 /**
-  * Represents basic information about a project.
-  *
-  * @param id          The project's IRI.
-  * @param shortname   The project's shortname. [[ServerUnique]].
-  * @param shortcode   The project's shortcode. [[ServerUnique]].
-  * @param longname    The project's long name.
-  * @param description The project's description.
-  * @param keywords    The project's keywords.
-  * @param logo        The project's logo.
-  * @param ontologies  The project's ontologies.
-  * @param status      The project's status.
-  * @param selfjoin    The project's self-join status.
-  */
+ * Represents basic information about a project.
+ *
+ * @param id          The project's IRI.
+ * @param shortname   The project's shortname. [[ServerUnique]].
+ * @param shortcode   The project's shortcode. [[ServerUnique]].
+ * @param longname    The project's long name.
+ * @param description The project's description.
+ * @param keywords    The project's keywords.
+ * @param logo        The project's logo.
+ * @param ontologies  The project's ontologies.
+ * @param status      The project's status.
+ * @param selfjoin    The project's self-join status.
+ */
 case class ProjectADM(id: IRI,
                       @ServerUnique shortname: String,
                       @ServerUnique shortcode: String,
@@ -351,8 +355,8 @@ case class ProjectADM(id: IRI,
     }
 
     /**
-      * Allows to sort collections of ProjectADM. Sorting is done by the id.
-      */
+     * Allows to sort collections of ProjectADM. Sorting is done by the id.
+     */
     def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
 
     // ToDo: Refactor by using implicit conversions (when I manage to understand them)
@@ -421,9 +425,9 @@ case class ProjectADM(id: IRI,
 }
 
 /**
-  * The ProjectIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
-  * validated and escaped.
-  */
+ * The ProjectIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
+ * validated and escaped.
+ */
 object ProjectIdentifierADM {
     def apply(maybeIri: Option[IRI] = None,
               maybeShortname: Option[String] = None,
@@ -448,14 +452,15 @@ object ProjectIdentifierADM {
 }
 
 /**
-  * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-  * @param maybeIri       the project's IRI.
-  * @param maybeShortname the project's shortname.
-  * @param maybeShortcode the project's shortcode
-  */
-class ProjectIdentifierADM private (maybeIri: Option[IRI] = None,
-                                    maybeShortname: Option[String] = None,
-                                    maybeShortcode: Option[String] = None) {
+ * Represents the project's identifier. It can be an IRI, shortcode or shortname.
+ *
+ * @param maybeIri       the project's IRI.
+ * @param maybeShortname the project's shortname.
+ * @param maybeShortcode the project's shortcode
+ */
+class ProjectIdentifierADM private(maybeIri: Option[IRI] = None,
+                                   maybeShortname: Option[String] = None,
+                                   maybeShortcode: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
@@ -476,50 +481,50 @@ class ProjectIdentifierADM private (maybeIri: Option[IRI] = None,
     }
 
     /**
-      * Tries to return the value as an IRI.
-      */
+     * Tries to return the value as an IRI.
+     */
     def toIri: IRI = {
         maybeIri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type."))
     }
 
     /**
-      * Returns an optional value of the identifier.
-      */
+     * Returns an optional value of the identifier.
+     */
     def toIriOption: Option[IRI] = {
         maybeIri
     }
 
     /**
-      * Tries to return the value as an SHORTNAME.
-      */
+     * Tries to return the value as an SHORTNAME.
+     */
     def toShortname: String = {
         maybeShortname.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type."))
     }
 
     /**
-      * Returns an optional value of the identifier.
-      */
+     * Returns an optional value of the identifier.
+     */
     def toShortnameOption: Option[String] = {
         maybeShortname
     }
 
     /**
-      * Tries to return the value as an SHORTCODE.
-      */
+     * Tries to return the value as an SHORTCODE.
+     */
     def toShortcode: String = {
         maybeShortcode.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type."))
     }
 
     /**
-      * Returns an optional value of the identifier.
-      */
+     * Returns an optional value of the identifier.
+     */
     def toShortcodeOption: Option[String] = {
         maybeShortcode
     }
 
     /**
-      * Returns the string representation
-      */
+     * Returns the string representation
+     */
     override def toString: IRI = {
         s"ProjectIdentifierADM(${this.value})"
     }
@@ -528,11 +533,11 @@ class ProjectIdentifierADM private (maybeIri: Option[IRI] = None,
 
 
 /**
-  * Project identifier types:
-  *  - IRI
-  *  - Shortcode
-  *  - Shortname
-  */
+ * Project identifier types:
+ *  - IRI
+ *  - Shortcode
+ *  - Shortname
+ */
 object ProjectIdentifierType extends Enumeration {
 
     type ProjectIdentifierType
@@ -544,25 +549,25 @@ object ProjectIdentifierType extends Enumeration {
 
 
 /**
-  * API MAY CHANGE: Represents the project's restricted view settings.
-  *
-  * @param size      the restricted view size.
-  * @param watermark the watermark file.
-  */
+ * API MAY CHANGE: Represents the project's restricted view settings.
+ *
+ * @param size      the restricted view size.
+ * @param watermark the watermark file.
+ */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
 
 /**
-  * Payload used for updating of an existing project.
-  *
-  * @param shortname   The project's shortname. Needs to be system wide unique.
-  * @param longname    The project's long name.
-  * @param description The project's description.
-  * @param keywords    The project's keywords.
-  * @param logo        The project's logo.
-  * @param status      The project's status.
-  * @param selfjoin    The project's self-join status.
-  */
+ * Payload used for updating of an existing project.
+ *
+ * @param shortname   The project's shortname. Needs to be system wide unique.
+ * @param longname    The project's long name.
+ * @param description The project's description.
+ * @param keywords    The project's keywords.
+ * @param logo        The project's logo.
+ * @param status      The project's status.
+ * @param selfjoin    The project's self-join status.
+ */
 case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
                                    longname: Option[String] = None,
                                    description: Option[Seq[StringLiteralV2]] = None,
@@ -575,8 +580,8 @@ case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
 // JSON formating
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
-  */
+ * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
+ */
 trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
@@ -589,7 +594,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))
-    implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
+    implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "id", "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
     implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")

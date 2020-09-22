@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-FORMATSRCDIRV1  = ../salsah1/src/typescript_interfaces
+FORMATSRCDIRV1  = src/api-v1
 FORMATDOCDIRV1  = target/site/api-v1
 FORMATSRCDIRV2  = src/api-v2
 FORMATDOCDIRV2  = target/site/api-v2
@@ -15,7 +15,7 @@ $(error The '$(TYPEDOC)' command was not found. Make sure you have Typedoc insta
 endif
 
 # Graphviz diagrams to be converted to PNG
-DOT_FIGURES = $(shell find src/paradox -type f -name '*.dot')
+DOT_FIGURES = $(shell find ./ -type f -name '*.dot')
 PNG_FIGURES = $(patsubst %.dot,%.dot.png,$(DOT_FIGURES))
 
 .PHONY: clean

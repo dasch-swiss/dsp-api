@@ -25,13 +25,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
-import org.knora.webapi.http.ApiStatusCodesV1
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
+import org.knora.webapi.settings.KnoraSettingsImpl
 import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,7 +58,7 @@ object RouteUtilV1 {
      */
     def runJsonRoute(requestMessage: KnoraRequestV1,
                      requestContext: RequestContext,
-                     settings: SettingsImpl,
+                     settings: KnoraSettingsImpl,
                      responderManager: ActorRef,
                      log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -109,7 +111,7 @@ object RouteUtilV1 {
      */
     def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV1](requestMessageF: Future[RequestMessageT],
                                                                   requestContext: RequestContext,
-                                                                  settings: SettingsImpl,
+                                                                  settings: KnoraSettingsImpl,
                                                                   responderManager: ActorRef,
                                                                   log: LoggingAdapter)
                                                                  (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -142,7 +144,7 @@ object RouteUtilV1 {
     def runHtmlRoute[RequestMessageT <: KnoraRequestV1, ReplyMessageT <: KnoraResponseV1 : ClassTag](requestMessageF: Future[RequestMessageT],
                                                                                                      viewHandler: (ReplyMessageT, ActorRef) => String,
                                                                                                      requestContext: RequestContext,
-                                                                                                     settings: SettingsImpl,
+                                                                                                     settings: KnoraSettingsImpl,
                                                                                                      responderManager: ActorRef,
                                                                                                      log: LoggingAdapter)
                                                                                                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -204,7 +206,7 @@ object RouteUtilV1 {
                                   mappingIri: IRI,
                                   acceptStandoffLinksToClientIDs: Boolean,
                                   userProfile: UserADM,
-                                  settings: SettingsImpl,
+                                  settings: KnoraSettingsImpl,
                                   responderManager: ActorRef,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV2] = {
 

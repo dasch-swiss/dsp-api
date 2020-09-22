@@ -164,7 +164,6 @@ for imgindex, imgparam in pairs(server.uploads) do
         return
     end
 
-    -- #snip_marker
     server.log("make_thumbnail - external_protocol: " .. get_external_protocol(), server.loglevel.LOG_DEBUG)
 
     server.log("make_thumbnail - external_hostname: " .. get_external_hostname(), server.loglevel.LOG_DEBUG)
@@ -175,13 +174,12 @@ for imgindex, imgparam in pairs(server.uploads) do
         nx_thumb = dims.nx,
         ny_thumb = dims.ny,
         mimetype_thumb = 'image/jpeg',
-        preview_path =  get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .."/thumbs/" .. thumbName .. "/full/full/0/default.jpg",
+        preview_path =  get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .."/thumbs/" .. thumbName .. "/full/max/0/default.jpg",
         filename = tmpName, -- make this a IIIF URL
         original_mimetype = submitted_mimetype.mimetype,
         original_filename = filename,
         file_type = 'IMAGE'
     }
-    -- #snip_marker
 
 end
 

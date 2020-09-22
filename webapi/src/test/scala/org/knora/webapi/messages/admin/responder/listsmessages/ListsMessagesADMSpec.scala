@@ -19,16 +19,18 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
-import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.{BadRequestException, SharedListsTestDataADM, SharedTestDataADM}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
+class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJsonProtocol {
 
     val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
@@ -157,6 +159,24 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
             thrown.getMessage should equal (LABEL_MISSING_ERROR)
+        }
+
+        "throw a 'BadRequestException' for `CreateListApiRequestADM` when an invalid list IRI is given" in {
+
+            // invalid list IRI
+            val payload =
+                s"""
+                   |{
+                   |    "id": "invalid-list-IRI",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "New List", "language": "en"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+
+            thrown.getMessage should equal ("Invalid list IRI")
         }
 
         "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is empty" in {

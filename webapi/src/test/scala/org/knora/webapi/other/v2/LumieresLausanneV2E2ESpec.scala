@@ -25,7 +25,6 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.testing.tags.E2ETest
 
 object LumieresLausanneV2E2ESpec {
     val config: Config = ConfigFactory.parseString(
@@ -38,14 +37,13 @@ object LumieresLausanneV2E2ESpec {
 /**
   * End-to-End (E2E) test specification for additional testing of permissions.
   */
-@E2ETest
 class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config) with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl", name = "http://www.knora.org/ontology/0113/lumieres-lausanne"),
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl", name = "http://www.knora.org/data/0113/lumieres-lausanne")
+        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl", name = "http://www.knora.org/ontology/0113/lumieres-lausanne"),
+        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl", name = "http://www.knora.org/data/0113/lumieres-lausanne")
     )
 
     "For project Lumieres Lausanne" should {

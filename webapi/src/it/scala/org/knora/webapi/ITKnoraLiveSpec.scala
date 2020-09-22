@@ -23,15 +23,21 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.core.Core
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.util.StartupUtils
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
@@ -46,18 +52,18 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraLiveSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    def this() = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
     /* needed by the core trait (represents the KnoraTestCore trait)*/
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // can be overridden in individual spec
@@ -71,15 +77,18 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
+
+
 
     override def beforeAll: Unit = {
 
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start knora without loading ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = true)
+        // Start Knora, reading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -98,7 +107,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     protected def checkIfSipiIsRunning(): Unit = {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
+        val request = Get(baseInternalSipiUrl + "/server/test.html")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
         if (response.status.isSuccess()) logger.info("Sipi is running.")
@@ -109,7 +118,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     protected def getResponseString(request: HttpRequest): String = {

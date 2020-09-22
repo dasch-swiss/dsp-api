@@ -22,15 +22,18 @@ package org.knora.webapi.e2e.admin
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.testkit.RouteTestTimeout
+
+import scala.concurrent.Await
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
-import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -45,14 +48,13 @@ object ListsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-@E2ETest
 class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     val rootCreds: CredentialsADM = CredentialsADM(
@@ -149,6 +151,47 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
                 receivedList.listinfo.sorted should be (treeListInfo.sorted)
                 receivedList.children.map(_.sorted) should be (treeListNodes.map(_.sorted))
+            }
+        }
+
+        "given a custom Iri" should {
+
+            "create a list with the provided custom Iri" in {
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+                val listInfo = receivedList.listinfo
+                listInfo.id should be (SharedTestDataADM.customListIRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
+            }
+
+            "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
+
+                // duplicate list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "id": "${SharedTestDataADM.customListIRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customListIRI}' already exists, try another one.")
+                invalidIri should be(true)
             }
         }
 
@@ -270,6 +313,26 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val comments = receivedListInfo.comments.stringLiterals
                 comments.size should be (2)
+            }
+
+            "update basic list information with repeated comment and label in different languages" in {
+                val params = SharedTestDataADM.updateListInfoWithRepeatedCommentAndLabelValuesRequest("http://rdfh.ch/lists/0001/treeList")
+                val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+                labels.size should be (2)
+
+                val comments = receivedListInfo.comments.stringLiterals
+                comments.size should be (4)
             }
 
             "return a ForbiddenException if the user updating the list is not project or system admin" in {
@@ -508,7 +571,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             "delete node if not in use" ignore {
 
             }
-
         }
     }
 }

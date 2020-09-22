@@ -20,27 +20,12 @@
 package org.knora.webapi.routing.v2
 
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.util.clientapi.{ApiSerialisationFormat, ClientApi, ClientEndpoint, JsonLD}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{ClientApi, ClientEndpoint}
 
+/**
+ * Represents the structure of client test data generated for Knora API v2.
+ */
 class V2ClientApi(routeData: KnoraRouteData) extends ClientApi {
-    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    /**
-     * The serialisation format used by this [[ClientApi]].
-     */
-    override val serialisationFormat: ApiSerialisationFormat = JsonLD
-
-    /**
-     * Don't generate endpoints for this API.
-     */
-    override val generateEndpoints: Boolean = false
-
-    /**
-     * Don't generate classes for this API.
-     */
-    override val generateClasses: Boolean = false
-
     /**
      * The endpoints in this [[ClientApi]].
      */
@@ -53,61 +38,7 @@ class V2ClientApi(routeData: KnoraRouteData) extends ClientApi {
     )
 
     /**
-     * The name of this [[ClientApi]].
-     */
-    override val name: String = "V2Endpoint"
-
-    /**
-     * The directory name to be used for this API's code.
+     * The directory name to be used for the generated test data.
      */
     override val directoryName: String = "v2"
-
-    /**
-     * The URL path of this [[ClientApi]].
-     */
-    override val urlPath: String = "/v2"
-
-    /**
-     * A description of this [[ClientApi]].
-     */
-    override val description: String = "The Knora API v2."
-
-    /**
-     * A map of class IRIs to their read-only properties.
-     */
-    override val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]] = Map.empty
-
-    /**
-      * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
-      * subclasses.
-      */
-    override val requestClasses: Set[SmartIri] = Set.empty
-
-    /**
-     * A set of IRIs of classes that are always read-only and that therefore do not need `Stored*`
-     * or `Read*` subclasses.
-     */
-    override val readOnlyClasses: Set[SmartIri] = Set.empty
-
-    /**
-      * A set of IRIs of classes that represent API responses.
-      */
-    override val responseClasses: Set[SmartIri] = Set.empty
-
-    /**
-     * A set of property IRIs that are used for the unique IDs of objects.
-     */
-    override val idProperties: Set[SmartIri] = Set.empty
-
-    /**
-     * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
-     * in those classes. Needed only for JSON, and only if two different properties should have the same name in
-     * different classes. `JsonInstanceInspector` also needs to know about these.
-     */
-    override val propertyNames: Map[SmartIri, Map[SmartIri, String]] = Map.empty
-    /**
-     * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
-     * be made optional in generated code.
-     */
-    override val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]] = Map.empty
 }

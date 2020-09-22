@@ -24,9 +24,10 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{ApiV2Complex, CoreSpec, MarkupAsXml, SchemaOptions, SharedTestDataADM}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.{ApiV2Complex, CoreSpec, MarkupAsXml, SchemaOptions}
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -39,9 +40,9 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -123,7 +124,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
                     // TODO: do better testing once JSON-LD can be converted back into case classes
-                    assert(response.numberOfResources == 18, s"18 books were expected, but ${response.numberOfResources} given.")
+                    assert(response.resources.size == 18, s"18 books were expected, but ${response.resources.size} given.")
             }
 
         }
@@ -141,7 +142,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+                    assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
             }
 
         }
@@ -159,7 +160,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+                    assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
             }
 
         }
@@ -174,7 +175,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 =>
+                case response: ResourceCountV2 =>
                     assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
             }
 
@@ -190,7 +191,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 =>
+                case response: ResourceCountV2 =>
                     assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
             }
 
@@ -208,7 +209,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => response.numberOfResources should ===(19)
+                case response: ReadResourcesSequenceV2 => response.resources.size should ===(19)
             }
         }
 

@@ -25,19 +25,23 @@ import java.util.UUID
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.MockSipiConnector
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
-import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri, StringFormatter}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -62,9 +66,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     override lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -73,6 +77,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val firstIntValueVersionIri = new MutableTestIri
     private val intValueIri = new MutableTestIri
     private val intValueIriWithCustomPermissions = new MutableTestIri
+    private val intValueForRsyncIri = new MutableTestIri
     private val zeitglöckleinCommentWithoutStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithStandoffIri = new MutableTestIri
     private val zeitglöckleinCommentWithCommentIri = new MutableTestIri
@@ -92,6 +97,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val linkValueIri = new MutableTestIri
     private val standoffLinkValueIri = new MutableTestIri
     private val stillImageFileValueIri = new MutableTestIri
+
+    private var integerValueUUID = UUID.randomUUID
+    private var linkValueUUID = UUID.randomUUID
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -158,7 +166,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       requestingUser: UserADM): ReadResourceV2 = {
         // Make a Gravsearch query from a template.
-        val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+        val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
             propertyIris = propertyIrisForGravsearch
         ).toString()
@@ -175,13 +183,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
 
         expectMsgPF(timeout) {
-            case searchResponse: ReadResourcesSequenceV2 =>
-                // Get the resource from the response.
-                resourcesSequenceToResource(
-                    requestedresourceIri = resourceIri,
-                    readResourcesSequence = searchResponse,
-                    requestingUser = requestingUser
-                )
+            case searchResponse: ReadResourcesSequenceV2 => searchResponse.toResource(resourceIri).toOntologySchema(ApiV2Complex)
         }
     }
 
@@ -202,6 +204,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                                     propertyIriForGravsearch: SmartIri,
                                     propertyIriInResult: SmartIri,
                                     valueIri: IRI,
+                                    customDeleteDate: Option[Instant] = None,
                                     requestingUser: UserADM): Unit = {
         val resource = getResourceWithValues(
             resourceIri = resourceIri,
@@ -219,6 +222,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         propertyValues.find(_.valueIri == valueIri) match {
             case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
+            case None => ()
+        }
+
+        // If a custom delete date was used, check that it was saved correctly.
+        customDeleteDate match {
+            case Some(deleteDate) =>
+                val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getDeleteDate(
+                    triplestore = settings.triplestoreType,
+                    entityIri = valueIri
+                ).toString()
+
+                storeManager ! SparqlSelectRequest(sparqlQuery)
+
+                expectMsgPF(timeout) {
+                    case sparqlSelectResponse: SparqlSelectResponse =>
+                        val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
+
+                        val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
+                            savedDeleteDateStr,
+                            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
+                        )
+
+                        assert(savedDeleteDate == deleteDate)
+                }
+
             case None => ()
         }
     }
@@ -263,35 +291,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
     }
 
-    private def resourcesSequenceToResource(requestedresourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
-        if (readResourcesSequence.numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedresourceIri>, but no resources were returned")
-        }
-
-        if (readResourcesSequence.numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedresourceIri>")
-        }
-
-        val resourceInfo = readResourcesSequence.resources.head
-
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
-            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
-        }
-
-        resourceInfo.toOntologySchema(ApiV2Complex)
-    }
-
     private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
         responderManager ! ResourcesPreviewGetRequestV2(resourceIris = Seq(resourceIri), targetSchema = ApiV2Complex, requestingUser = requestingUser)
 
         expectMsgPF(timeout) {
             case previewResponse: ReadResourcesSequenceV2 =>
-                val resourcePreview: ReadResourceV2 = resourcesSequenceToResource(
-                    requestedresourceIri = resourceIri,
-                    readResourcesSequence = previewResponse,
-                    requestingUser = requestingUser
-                )
-
+                val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
                 resourcePreview.lastModificationDate
         }
     }
@@ -384,6 +389,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case createValueResponse: CreateValueResponseV2 =>
                     intValueIri.set(createValueResponse.valueIri)
                     firstIntValueVersionIri.set(createValueResponse.valueIri)
+                    integerValueUUID = createValueResponse.valueUUID
             }
 
             // Read the value back to check that it was added correctly.
@@ -399,6 +405,331 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+                case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate integer value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 4
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+            }
+        }
+
+        "update an integer value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Get the value before update.
+            val previousValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
+
+            // Update the value.
+
+            val intValue = 5
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueIri.set(updateValueResponse.valueIri)
+                    assert(updateValueResponse.valueUUID == integerValueUUID)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+                    updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+            }
+
+            // Check that the permissions and UUID were deleted from the previous version of the value.
+            assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
+            assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
+        }
+
+        "not update an integer value without a comment without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 5
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+            }
+        }
+
+        "update an integer value, adding a comment" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+            val comment = "Added a comment"
+
+            // Get the value before update.
+            val previousValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
+
+            // Update the value.
+
+            val intValue = 5
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+                    updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
+                    assert(updatedValueFromTriplestore.valueContent.comment.contains(comment))
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+            }
+
+            // Check that the permissions and UUID were deleted from the previous version of the value.
+            assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
+            assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
+        }
+
+        "not update an integer value with a comment without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 5
+            val comment = "Added a comment"
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+            }
+        }
+
+        "update an integer value with a comment, changing only the comment" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+            val comment = "An updated comment"
+
+            // Get the value before update.
+            val previousValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
+
+            // Update the value.
+
+            val intValue = 5
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+                    updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
+                    assert(updatedValueFromTriplestore.valueContent.comment.contains(comment))
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+            }
+
+            // Check that the permissions and UUID were deleted from the previous version of the value.
+            assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
+            assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
+        }
+
+        "create an integer value with a comment" in {
+            // Add the value.
+
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 8
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+            val comment = "Initial comment"
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 =>
+                    intValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    assert(savedValue.comment.contains(comment))
+
                 case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
             }
         }
@@ -473,7 +804,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
 
         }
@@ -500,7 +831,187 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+            }
+        }
+
+        "create an integer value with custom UUID and creation date" in {
+            // Add the value.
+
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 987
+            val valueUUID = UUID.randomUUID
+            val valueCreationDate = Instant.now
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueUUID = Some(valueUUID),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => intValueForRsyncIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueForRsyncIri.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    valueFromTriplestore.valueHasUUID should ===(valueUUID)
+                    valueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update an integer value with a custom creation date that is earlier than the date of the current version" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 989
+            val valueCreationDate = Instant.parse("2019-11-29T10:00:00Z")
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueForRsyncIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+            }
+        }
+
+        "update an integer value with a custom creation date" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Update the value.
+
+            val intValue = 988
+            val valueCreationDate = Instant.now
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueForRsyncIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    valueCreationDate = Some(valueCreationDate)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueForRsyncIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueForRsyncIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.valueCreationDate should ===(valueCreationDate)
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+            }
+        }
+
+        "update an integer value with a custom new version IRI" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Update the value.
+
+            val intValue = 1000
+            val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueForRsyncIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    ),
+                    newValueVersionIri = Some(newValueVersionIri.toSmartIri)
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueForRsyncIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueForRsyncIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: IntegerValueContentV2 =>
+                    savedValue.valueHasInteger should ===(intValue)
+                    updatedValueFromTriplestore.valueIri should ===(newValueVersionIri)
+
+                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
             }
         }
 
@@ -524,32 +1035,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-            }
-        }
-
-        "not create a duplicate integer value" in {
-            val resourceIri: IRI = aThingIri
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue = 4
-
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2Complex,
-                        valueHasInteger = intValue
-                    )
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -612,7 +1098,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -733,7 +1219,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -800,7 +1286,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -926,7 +1412,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1036,7 +1522,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1110,7 +1596,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1179,7 +1665,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1203,7 +1689,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -1272,7 +1758,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1341,7 +1827,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1410,7 +1896,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1437,7 +1923,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! createValueRequest
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => linkValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 =>
+                    linkValueIri.set(createValueResponse.valueIri)
+                    linkValueUUID = createValueResponse.valueUUID
             }
 
             val valueFromTriplestore = getValue(
@@ -1479,7 +1967,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! createValueRequest
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -1504,7 +1992,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! createValueRequest
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -1524,7 +2012,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -1549,9 +2037,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    // msg.cause.isInstanceOf[NotFoundException] should ===(true)
-                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -1575,9 +2061,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    // msg.cause.isInstanceOf[NotFoundException] should ===(true)
-                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -1602,8 +2086,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -1626,7 +2109,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
             }
         }
 
@@ -1650,7 +2133,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
             }
 
             // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
@@ -1670,8 +2153,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
             }
         }
 
@@ -1854,70 +2336,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
         }
 
-        "update an integer value" in {
-            val resourceIri: IRI = aThingIri
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-            // Get the value before update.
-            val previousValueFromTriplestore: ReadValueV2 = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = intValueIri.get,
-                requestingUser = anythingUser1,
-                checkLastModDateChanged = false
-            )
-
-            // Update the value.
-
-            val intValue = 5
-
-            responderManager ! UpdateValueRequestV2(
-                UpdateValueContentV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueIri = intValueIri.get,
-                    valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2Complex,
-                        valueHasInteger = intValue
-                    )
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
-            }
-
-            // Read the value back to check that it was added correctly.
-
-            val updatedValueFromTriplestore = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = intValueIri.get,
-                requestingUser = anythingUser1
-            )
-
-            updatedValueFromTriplestore.valueContent match {
-                case savedValue: IntegerValueContentV2 =>
-                    savedValue.valueHasInteger should ===(intValue)
-                    updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-                    updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-
-                case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-            }
-
-            // Check that the permissions and UUID were deleted from the previous version of the value.
-            assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
-            assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-        }
-
         "not update a value if an outdated value IRI is given" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -1939,7 +2357,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -1964,7 +2382,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -2038,7 +2456,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -2065,7 +2483,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -2092,7 +2510,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -2163,7 +2581,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -2186,7 +2604,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -2209,7 +2627,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -2234,32 +2652,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-            }
-        }
-
-        "not update an integer value without changing it" in {
-            val resourceIri: IRI = aThingIri
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue = 6
-
-            responderManager ! UpdateValueRequestV2(
-                UpdateValueContentV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueIri = intValueIri.get,
-                    valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2Complex,
-                        valueHasInteger = intValue
-                    )
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2399,7 +2792,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2476,7 +2869,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2555,7 +2948,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2579,7 +2972,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2646,7 +3039,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2713,7 +3106,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2796,7 +3189,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2863,7 +3256,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -2930,7 +3323,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3004,7 +3397,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3073,7 +3466,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3098,7 +3491,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
             }
         }
 
@@ -3167,7 +3560,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3236,7 +3629,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3305,7 +3698,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3333,7 +3726,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! updateValueRequest
 
             expectMsgPF(timeout) {
-                case updateValueResponse: UpdateValueResponseV2 => linkValueIri.set(updateValueResponse.valueIri)
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    linkValueIri.set(updateValueResponse.valueIri)
+
+                    // When you change a link value's target, it gets a new UUID.
+                    assert(updateValueResponse.valueUUID != linkValueUUID)
+                    linkValueUUID = updateValueResponse.valueUUID
             }
 
             val valueFromTriplestore = getValue(
@@ -3354,7 +3752,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not update a link without changing it" in {
+        "not update a link without a comment without changing it" in {
             val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
@@ -3376,7 +3774,186 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! updateValueRequest
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+            }
+        }
+
+        "update a link, adding a comment" in {
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val comment: String = "Adding a comment"
+
+            val updateValueRequest = UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueIri = linkValueIri.get,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        referredResourceIri = generationeIri,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! updateValueRequest
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    linkValueIri.set(updateValueResponse.valueIri)
+
+                    // Since we only changed metadata, the link should have the same UUID.
+                    assert(updateValueResponse.valueUUID == linkValueUUID)
+            }
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore match {
+                case readLinkValueV2: ReadLinkValueV2 =>
+                    readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+                    readLinkValueV2.valueHasRefCount should ===(1)
+                    assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+                case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a link with a comment without changing it" in {
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val comment: String = "Adding a comment"
+
+            val updateValueRequest = UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueIri = linkValueIri.get,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        referredResourceIri = generationeIri,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! updateValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+            }
+        }
+
+        "update a link with a comment, changing only the comment" in {
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val comment = "An updated comment"
+
+            val updateValueRequest = UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueIri = linkValueIri.get,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        referredResourceIri = generationeIri,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! updateValueRequest
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    linkValueIri.set(updateValueResponse.valueIri)
+
+                    // Since we only changed metadata, the link should have the same UUID.
+                    assert(updateValueResponse.valueUUID == linkValueUUID)
+            }
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore match {
+                case readLinkValueV2: ReadLinkValueV2 =>
+                    readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+                    readLinkValueV2.valueHasRefCount should ===(1)
+                    assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+                case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a link with a comment" in {
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val comment = "Initial comment"
+
+            val createValueRequest = CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = linkValuePropertyIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        referredResourceIri = zeitglöckleinIri,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! createValueRequest
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => linkValueIri.set(createValueResponse.valueIri)
+            }
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore match {
+                case readLinkValueV2: ReadLinkValueV2 =>
+                    readLinkValueV2.valueContent.referredResourceIri should ===(zeitglöckleinIri)
+                    readLinkValueV2.valueHasRefCount should ===(1)
+                    assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+                case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
             }
         }
 
@@ -3397,7 +3974,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -3432,7 +4009,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! updateValueRequest
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
             }
         }
 
@@ -3534,7 +4111,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                    assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -3568,16 +4145,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[SipiException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[SipiException])
             }
         }
 
         "not delete a value if the requesting user does not have DeletePermission on the value" in {
             val resourceIri: IRI = aThingIri
-            // #toSmartIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            // #toSmartIri
 
             responderManager ! DeleteValueRequestV2(
                 resourceIri = resourceIri,
@@ -3591,7 +4165,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -3621,6 +4195,37 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = anythingUser1)
         }
 
+        "delete an integer value, specifying a custom delete date" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+            val deleteDate: Instant = Instant.now
+
+            responderManager ! DeleteValueRequestV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                propertyIri = propertyIri,
+                valueIri = intValueForRsyncIri.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                deleteComment = Some("this value was incorrect"),
+                deleteDate = Some(deleteDate),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            checkValueIsDeleted(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                valueIri = intValueForRsyncIri.get,
+                customDeleteDate = Some(deleteDate),
+                requestingUser = anythingUser1
+            )
+        }
+
         "not delete a standoff link directly" in {
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
@@ -3633,7 +4238,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
             }
         }
 
@@ -3654,12 +4259,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgType[SuccessResponseV2](timeout)
 
-            checkValueIsDeleted(resourceIri = zeitglöckleinIri,
+            checkValueIsDeleted(
+                resourceIri = zeitglöckleinIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 valueIri = zeitglöckleinCommentWithStandoffIri.get,
-                requestingUser = incunabulaUser)
+                requestingUser = incunabulaUser
+            )
 
             // There should be no standoff link values left in the resource.
 
@@ -3690,12 +4297,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgType[SuccessResponseV2](timeout)
 
-            checkValueIsDeleted(resourceIri = resourceIri,
+            checkValueIsDeleted(
+                resourceIri = resourceIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = linkPropertyIri,
                 propertyIriInResult = linkValuePropertyIri,
-                valueIri = intValueIri.get,
-                requestingUser = anythingUser1)
+                valueIri = linkValueIri.get,
+                requestingUser = anythingUser1
+            )
         }
 
         "not delete a value if the property's cardinality doesn't allow it" in {
@@ -3712,7 +4321,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
             }
         }
 
@@ -3720,7 +4329,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -3756,8 +4365,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
             }
         }
 
@@ -3765,7 +4373,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,
@@ -3807,7 +4415,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
             val inputResource = CreateResourceV2(
-                resourceIri = resourceIri,
+                resourceIri = Some(resourceIri.toSmartIri),
                 resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
                 label = "test bildformat",
                 values = Map.empty,

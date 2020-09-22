@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
-import org.knora.webapi.util.InstrumentationSupport
+import org.knora.webapi.instrumentation.InstrumentationSupport
 
 /**
  * Akka HTTP directives which can be wrapped around a [[akka.http.scaladsl.server.Route]]].

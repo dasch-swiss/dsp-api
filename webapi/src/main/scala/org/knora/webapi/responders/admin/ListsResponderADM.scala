@@ -24,37 +24,25 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.responders.{IriLocker, Responder}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
 import scala.concurrent.Future
 
-object ListsResponderADM {
-
-    val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
-    val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
-    val LIST_NODE_IRI_MISSING_ERROR = "List node IRI cannot be empty."
-    val LIST_NODE_IRI_INVALID_ERROR = "List node IRI is invalid."
-    val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
-    val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
-    val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
-    val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
-    val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
-    val REQUEST_NOT_CHANGING_DATA_ERROR = "No data would be changed."
-}
-
 /**
-  * A responder that returns information about hierarchical lists.
-  */
+ * A responder that returns information about hierarchical lists.
+ */
 class ListsResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
 
@@ -62,8 +50,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
 
     /**
-      * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
+     */
     def receive(msg: ListsResponderRequestADM) = msg match {
         case ListsGetRequestADM(projectIri, requestingUser) => listsGetRequestADM(projectIri, requestingUser)
         case ListGetRequestADM(listIri, requestingUser) => listGetRequestADM(listIri, requestingUser)
@@ -78,20 +66,20 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
     /**
-      * Gets all lists and returns them as a [[ListsGetResponseADM]]. For performance reasons
-      * (as lists can be very large), we only return the head of the list, i.e. the root node without
-      * any children.
-      *
-      * @param projectIri     the IRI of the project the list belongs to.
-      * @param requestingUser the user making the request.
-      * @return a [[ListsGetResponseADM]].
-      */
+     * Gets all lists and returns them as a [[ListsGetResponseADM]]. For performance reasons
+     * (as lists can be very large), we only return the head of the list, i.e. the root node without
+     * any children.
+     *
+     * @param projectIri     the IRI of the project the list belongs to.
+     * @param requestingUser the user making the request.
+     * @return a [[ListsGetResponseADM]].
+     */
     private def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getLists(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getLists(
                 triplestore = settings.triplestoreType,
                 maybeProjectIri = projectIri
             ).toString())
@@ -125,12 +113,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
-      *
-      * @param rootNodeIri    the Iri if the root node of the list to be queried.
-      * @param requestingUser the user making the request.
-      * @return a optional [[ListADM]].
-      */
+     * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
+     *
+     * @param rootNodeIri    the Iri if the root node of the list to be queried.
+     * @param requestingUser the user making the request.
+     * @return a optional [[ListADM]].
+     */
     private def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
 
         for {
@@ -164,12 +152,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
-      *
-      * @param rootNodeIri    the Iri if the root node of the list to be queried.
-      * @param requestingUser the user making the request.
-      * @return a [[ListGetResponseADM]].
-      */
+     * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
+     *
+     * @param rootNodeIri    the Iri if the root node of the list to be queried.
+     * @param requestingUser the user making the request.
+     * @return a [[ListGetResponseADM]].
+     */
     private def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
 
         for {
@@ -182,12 +170,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Retrieves information about a list (root) node.
-      *
-      * @param listIri        the Iri if the list (root node) to be queried.
-      * @param requestingUser the user making the request.
-      * @return a [[ListInfoGetResponseADM]].
-      */
+     * Retrieves information about a list (root) node.
+     *
+     * @param listIri        the Iri if the list (root node) to be queried.
+     * @param requestingUser the user making the request.
+     * @return a [[ListInfoGetResponseADM]].
+     */
     private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
         for {
             listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
@@ -206,16 +194,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Retrieves information about a single node (without information about children). The single node can be the
-      * lists root node or child node
-      *
-      * @param nodeIri        the Iri if the list node to be queried.
-      * @param requestingUser the user making the request.
-      * @return a optional [[ListNodeInfoADM]].
-      */
+     * Retrieves information about a single node (without information about children). The single node can be the
+     * lists root node or child node
+     *
+     * @param nodeIri        the Iri if the list node to be queried.
+     * @param requestingUser the user making the request.
+     * @return a optional [[ListNodeInfoADM]].
+     */
     private def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri
             ).toString())
@@ -299,13 +287,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Retrieves information about a single node (without information about children). The single node can be the
-      * lists root node or child node
-      *
-      * @param nodeIri        the IRI of the list node to be queried.
-      * @param requestingUser the user making the request.
-      * @return a [[ListNodeInfoGetResponseADM]].
-      */
+     * Retrieves information about a single node (without information about children). The single node can be the
+     * lists root node or child node
+     *
+     * @param nodeIri        the IRI of the list node to be queried.
+     * @param requestingUser the user making the request.
+     * @return a [[ListNodeInfoGetResponseADM]].
+     */
     private def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
         for {
             maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(nodeIri, requestingUser)
@@ -318,17 +306,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
     /**
-      * Retrieves a complete node including children. The node can be the lists root node or child node.
-      *
-      * @param nodeIri        the IRI of the list node to be queried.
-      * @param shallow        denotes if all children or only the immediate children will be returned.
-      * @param requestingUser the user making the request.
-      * @return a optional [[ListNodeADM]]
-      */
+     * Retrieves a complete node including children. The node can be the lists root node or child node.
+     *
+     * @param nodeIri        the IRI of the list node to be queried.
+     * @param shallow        denotes if all children or only the immediate children will be returned.
+     * @param requestingUser the user making the request.
+     * @return a optional [[ListNodeADM]]
+     */
     private def listNodeGetADM(nodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Option[ListNodeADM]] = {
         for {
             // this query will give us only the information about the root node.
-            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri
             ).toString())
@@ -416,24 +404,24 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
     /**
-      * Retrieves the child nodes from the triplestore. If shallow is true, then only the immediate children will be
-      * returned, otherwise all children and their children's children will be returned.
-      *
-      * @param ofNodeIri      the IRI of the node for which children are to be returned.
-      * @param shallow        denotes if all children or only the immediate children will be returned.
-      * @param requestingUser the user making the request.
-      * @return a sequence of [[ListChildNodeADM]].
-      */
+     * Retrieves the child nodes from the triplestore. If shallow is true, then only the immediate children will be
+     * returned, otherwise all children and their children's children will be returned.
+     *
+     * @param ofNodeIri      the IRI of the node for which children are to be returned.
+     * @param shallow        denotes if all children or only the immediate children will be returned.
+     * @param requestingUser the user making the request.
+     * @return a sequence of [[ListChildNodeADM]].
+     */
     private def getChildren(ofNodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Seq[ListChildNodeADM]] = {
 
         /**
-          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
-          *
-          * @param nodeIri    the IRI of the node to be created.
-          * @param statements a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
-          *                   of SPARQL query results representing that node's children.
-          * @return a [[ListChildNodeADM]].
-          */
+         * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
+         *
+         * @param nodeIri    the IRI of the node to be created.
+         * @param statements a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
+         *                   of SPARQL query results representing that node's children.
+         * @return a [[ListChildNodeADM]].
+         */
         def createChildNode(nodeIri: IRI, statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])]): ListChildNodeADM = {
 
             val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(nodeIri)).head._2
@@ -476,7 +464,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         for {
             nodeChildrenQuery <- Future {
-                queries.sparql.admin.txt.getListNodeWithChildren(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNodeWithChildren(
                     triplestore = settings.triplestoreType,
                     startNodeIri = ofNodeIri
                 ).toString()
@@ -500,21 +488,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Provides the path to a particular hierarchical list node.
-      *
-      * @param queryNodeIri   the IRI of the node whose path is to be queried.
-      * @param requestingUser the user making the request.
-      */
+     * Provides the path to a particular hierarchical list node.
+     *
+     * @param queryNodeIri   the IRI of the node whose path is to be queried.
+     * @param requestingUser the user making the request.
+     */
     private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Future[NodePathGetResponseADM] = {
         /**
-          * Recursively constructs the path to a node.
-          *
-          * @param node      the IRI of the node whose path is to be constructed.
-          * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
-          * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
-          * @param path      the path constructed so far.
-          * @return the complete path to `node`.
-          */
+         * Recursively constructs the path to a node.
+         *
+         * @param node      the IRI of the node whose path is to be constructed.
+         * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
+         * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
+         * @param path      the path constructed so far.
+         * @return the complete path to `node`.
+         */
         @tailrec
         def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[NodePathElementADM]): Seq[NodePathElementADM] = {
             // Get the details of the node.
@@ -550,7 +538,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // TODO: Rewrite using a construct sparql query
         for {
             nodePathQuery <- Future {
-                queries.sparql.admin.txt.getNodePath(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = requestingUser.lang,
@@ -591,20 +579,20 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
     /**
-      * Creates a list.
-      *
-      * @param createListRequest the new list's information.
-      * @param requestingUser    the user that is making the request.
-      * @param apiRequestID      the unique api request ID.
-      * @return a [[ListInfoGetResponseADM]]
-      * @throws ForbiddenException  in the case that the user is not allowed to perform the operation.
-      * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
-      */
+     * Creates a list.
+     *
+     * @param createListRequest the new list's information.
+     * @param requestingUser    the user that is making the request.
+     * @param apiRequestID      the unique api request ID.
+     * @return a [[ListInfoGetResponseADM]]
+     * @throws ForbiddenException  in the case that the user is not allowed to perform the operation.
+     * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
+     */
     private def listCreateRequestADM(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
 
         /**
-          * The actual task run with an IRI lock.
-          */
+         * The actual task run with an IRI lock.
+         */
         def listCreateTask(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
 
             // check if the requesting user is allowed to perform operation
@@ -632,10 +620,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            listIri = stringFormatter.makeRandomListIri(maybeShortcode)
+            // check the custom IRI; if not given, create an unused IRI
+            customListIri: Option[SmartIri] = createListRequest.id.map(iri => iri.toSmartIri)
+            listIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
             // Create the new list
-            createNewListSparqlString = queries.sparql.admin.txt.createNewList(
+            createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewList(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
@@ -668,22 +658,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Changes basic list information stored in the list's root node.
-      *
-      * @param listIri           the list's IRI.
-      * @param changeListRequest the new list information.
-      * @param requestingUser    the user that is making the request.
-      * @param apiRequestID      the unique api request ID.
-      * @return a [[ListInfoGetResponseADM]]
-      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-      * @throws BadRequestException         in the case when the project IRI is missing or invalid.
-      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
-      */
+     * Changes basic list information stored in the list's root node.
+     *
+     * @param listIri           the list's IRI.
+     * @param changeListRequest the new list information.
+     * @param requestingUser    the user that is making the request.
+     * @param apiRequestID      the unique api request ID.
+     * @return a [[ListInfoGetResponseADM]]
+     * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+     * @throws BadRequestException         in the case when the project IRI is missing or invalid.
+     * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+     */
     private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
 
         /**
-          * The actual task run with an IRI lock.
-          */
+         * The actual task run with an IRI lock.
+         */
         def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = for {
             // check if required information is supplied
             _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
@@ -716,7 +706,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
             // Update the list
-            changeListInfoSparqlString = queries.sparql.admin.txt.updateListInfo(
+            changeListInfoSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateListInfo(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
@@ -735,11 +725,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             _ = if (changeListRequest.labels.nonEmpty) {
-                if (updatedList.listinfo.labels.stringLiterals.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.labels.stringLiterals.diff(changeListRequest.labels).nonEmpty) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
             }
 
             _ = if (changeListRequest.comments.nonEmpty) {
-                if (updatedList.listinfo.comments.stringLiterals.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.comments.stringLiterals.diff(changeListRequest.comments).nonEmpty)
+
+                    throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
 
             // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
@@ -758,19 +750,19 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
     /**
-      * Creates a new list node and appends it to an existing list node.
-      *
-      * @param parentNodeIri          the existing list node to which we want to append.
-      * @param createChildNodeRequest the new list node's information.
-      * @param requestingUser         the user making the request.
-      * @param apiRequestID           the unique api request ID.
-      * @return a [[ListNodeInfoGetResponseADM]]
-      */
+     * Creates a new list node and appends it to an existing list node.
+     *
+     * @param parentNodeIri          the existing list node to which we want to append.
+     * @param createChildNodeRequest the new list node's information.
+     * @param requestingUser         the user making the request.
+     * @param apiRequestID           the unique api request ID.
+     * @return a [[ListNodeInfoGetResponseADM]]
+     */
     private def listChildNodeCreateRequestADM(parentNodeIri: IRI, createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
 
         /**
-          * The actual task run with an IRI lock.
-          */
+         * The actual task run with an IRI lock.
+         */
         def listChildNodeCreateTask(createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
 
             // check if the requesting user is allowed to perform operation
@@ -826,7 +818,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             newListNodeIri = stringFormatter.makeRandomListIri(maybeShortcode)
 
             // Create the new list node
-            createNewListSparqlString = queries.sparql.admin.txt.createNewListChildNode(
+            createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewListChildNode(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -867,14 +859,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     ////////////////////
 
     /**
-      * Helper method for checking if a project identified by IRI exists.
-      *
-      * @param projectIri the IRI of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by IRI exists.
+     *
+     * @param projectIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
     private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -884,14 +876,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Helper method for checking if a list node identified by IRI exists and is a root node.
-      *
-      * @param listNodeIri the IRI of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a list node identified by IRI exists and is a root node.
+     *
+     * @param listNodeIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
     private def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
             // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -901,14 +893,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Helper method for checking if a list node identified by IRI exists.
-      *
-      * @param listNodeIri the IRI of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a list node identified by IRI exists.
+     *
+     * @param listNodeIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
     private def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
             //_ = log.debug("listNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -918,14 +910,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Helper method for checking if a list node identified by name exists.
-      *
-      * @param name the name of the list.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a list node identified by name exists.
+     *
+     * @param name the name of the list.
+     * @return a [[Boolean]].
+     */
     private def listNodeByNameExists(name: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
             //_ = log.debug("listNodeByNameExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -935,18 +927,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
-      * name is NOT used inside any list of this project.
-      *
-      * @param projectIri   the IRI of the project.
-      * @param listNodeName the list node name.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
+     * name is NOT used inside any list of this project.
+     *
+     * @param projectIri   the IRI of the project.
+     * @param listNodeName the list node name.
+     * @return a [[Boolean]].
+     */
     private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
         listNodeName match {
             case Some(name) => {
                 for {
-                    askString <- Future(queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
+                    askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
                     //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
 
                     askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

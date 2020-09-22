@@ -27,18 +27,20 @@ import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{BadRequestException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Await, ExecutionContext}
 
 
 /**
-  * The GraphProtocolAccessor object is a basic implementation of the
-  * SPARQL 1.1 Graph Store HTTP Protocol: http://www.w3.org/TR/sparql11-http-rdf-update
-  */
+ * The GraphProtocolAccessor object is a basic implementation of the
+ * SPARQL 1.1 Graph Store HTTP Protocol: http://www.w3.org/TR/sparql11-http-rdf-update
+ */
 object GraphProtocolAccessor {
 
     val HTTP_PUT_METHOD = "PUT"
@@ -47,42 +49,42 @@ object GraphProtocolAccessor {
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
-      *
-      * @param graphName the name of the graph.
-      * @param filepath  a path to the file containing turtle.
-      * @return String
-      */
-    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+     * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
+     *
+     * @param graphName the name of the graph.
+     * @param filepath  a path to the file containing turtle.
+     * @return String
+     */
+    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
     /**
-      * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
-      *
-      * @param graphName the name of the graph.
-      * @param filepath  path to the file containing turtle.
-      * @return String
-      */
-    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+     * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
+     *
+     * @param graphName the name of the graph.
+     * @param filepath  path to the file containing turtle.
+     * @return String
+     */
+    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
     /**
-      * Use the HTTP POST method to send the data. Post is defined as an INSERT.
-      *
-      * @param graphName the name of the graph.
-      * @param filepath  a path to the file containing turtle.
-      * @return String
-      */
-    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+     * Use the HTTP POST method to send the data. Post is defined as an INSERT.
+     *
+     * @param graphName the name of the graph.
+     * @param filepath  a path to the file containing turtle.
+     * @return String
+     */
+    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }
 
-    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: Materializer): StatusCode = {
 
         val log = akka.event.Logging(_system, this.getClass)
-        val settings = Settings(_system)
+        val settings = KnoraSettings(_system)
         implicit val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
         log.debug("GraphProtocolAccessor - execute started")
@@ -103,8 +105,7 @@ object GraphProtocolAccessor {
         // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
         val requestPath = settings.triplestoreType match {
             case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-            case TriplestoreTypes.HttpFuseki if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/data"
-            case TriplestoreTypes.HttpFuseki if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
+            case TriplestoreTypes.HttpFuseki => s"/${settings.triplestoreDatabaseName}/data"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")
         }
 

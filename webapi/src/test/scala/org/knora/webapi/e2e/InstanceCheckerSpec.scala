@@ -24,17 +24,17 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.testing.tags.E2ETest
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{FileUtil, StringFormatter}
-import org.knora.webapi.{AssertionException, E2ESpec}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.StringFormatter
 
 import scala.concurrent.ExecutionContextExecutor
 
 /**
   * Tests [[InstanceChecker]].
   */
-@E2ETest
 class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -43,11 +43,10 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
-    private val jsonInstanceChecker: InstanceChecker = InstanceChecker.getJsonChecker
 
     "The InstanceChecker" should {
         "accept a JSON-LD instance of anything:Thing" in {
-            val testDing = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/Testding.jsonld"))
+            val testDing = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/Testding.jsonld"))
 
             jsonLDInstanceChecker.check(
                 instanceResponse = testDing,
@@ -138,50 +137,6 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
             }
 
             assert(exception.getMessage == "Property http://www.w3.org/2000/01/rdf-schema#label has 0 objects, but its cardinality is 1")
-        }
-
-        "accept a correct JSON instance of an admin:User" in {
-            jsonInstanceChecker.check(
-                instanceResponse = InstanceCheckerSpec.correctUser,
-                expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                knoraRouteGet = doGetRequest
-            )
-        }
-
-        "reject a JSON instance of an admin:User with an extra property" in {
-            val exception = intercept[AssertionException] {
-                jsonInstanceChecker.check(
-                    instanceResponse = InstanceCheckerSpec.userWithExtraProperty,
-                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                    knoraRouteGet = doGetRequest
-                )
-            }
-
-            assert(exception.getMessage == "One or more instance properties are not allowed by cardinalities: extraProperty")
-        }
-
-        "reject a JSON instance of an admin:User without a username" in {
-            val exception = intercept[AssertionException] {
-                jsonInstanceChecker.check(
-                    instanceResponse = InstanceCheckerSpec.userWithMissingUsername,
-                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                    knoraRouteGet = doGetRequest
-                )
-            }
-
-            assert(exception.getMessage == "Property username has 0 objects, but its cardinality is 1")
-        }
-
-        "reject a JSON instance of an admin:User with an invalid literal object type" in {
-            val exception = intercept[AssertionException] {
-                jsonInstanceChecker.check(
-                    instanceResponse = InstanceCheckerSpec.userWithInvalidObjectType,
-                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
-                    knoraRouteGet = doGetRequest
-                )
-            }
-
-            assert(exception.getMessage == "Property status has an object of type String with literal content 'invalidValue', but type http://www.w3.org/2001/XMLSchema#boolean was expected")
         }
     }
 }

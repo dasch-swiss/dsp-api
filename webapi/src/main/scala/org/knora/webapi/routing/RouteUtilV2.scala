@@ -31,11 +31,13 @@ import org.eclipse.rdf4j.rio._
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, UnexpectedMessageException}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.JsonLDDocument
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.JsonLDDocument
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception.catching
@@ -192,7 +194,7 @@ object RouteUtilV2 {
      */
     private def runRdfRoute(requestMessage: KnoraRequestV2,
                             requestContext: RequestContext,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
                             targetSchema: ApiV2Schema,
@@ -252,7 +254,7 @@ object RouteUtilV2 {
      */
     def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
-                       settings: SettingsImpl,
+                       settings: KnoraSettingsImpl,
                        responderManager: ActorRef,
                        log: LoggingAdapter,
                        targetSchema: ApiV2Schema)
@@ -301,7 +303,7 @@ object RouteUtilV2 {
      */
     def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
                               requestContext: RequestContext,
-                              settings: SettingsImpl,
+                              settings: KnoraSettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
                               targetSchema: ApiV2Schema,
@@ -387,7 +389,7 @@ object RouteUtilV2 {
                                responseMediaType: MediaType.NonBinary,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
-                               settings: SettingsImpl): HttpResponse = {
+                               settings: KnoraSettingsImpl): HttpResponse = {
         // Find the most specific media type that is compatible with the one requested.
         val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
 

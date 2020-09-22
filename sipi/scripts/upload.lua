@@ -42,6 +42,27 @@ if token == nil then
   return
 end
 
+-- Check that the temp folder is created
+local tmpFolder = config.imgroot .. '/tmp/'
+
+local exists
+success, exists = server.fs.exists(tmpFolder)
+
+if not success then
+    send_error(500, "server.fs.exists() failed: " .. exists)
+    return
+end
+
+if not exists then
+    local error_msg
+    success, error_msg = server.fs.mkdir(tmpFolder, 511)
+
+    if not success then
+        send_error(500, "server.fs.mkdir() failed: " .. error_msg)
+        return
+    end
+end
+
 -- A table of data about each file that was uploaded.
 local file_upload_data = {}
 

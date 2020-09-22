@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v7" .
+    :ontologyVersion "knora-base v8" .
 
 
 
@@ -456,8 +456,6 @@
                            "has Link to"@en ,
                            "a lien vers"@fr ,
                            "ha Link verso"@it ;
-
-                rdfs:comment "Represents a direct connection between two resources"@en ;
 
                 :isEditable true ;
 
@@ -2560,19 +2558,6 @@
                     rdfs:comment "A resource containing a text file"@en .
 
 
-### http://www.knora.org/ontology/knora-base#ForbiddenResource
-
-:ForbiddenResource  rdf:type owl:Class ;
-
-                    rdfs:subClassOf :Resource ,
-                    [ rdf:type owl:Restriction ;
-                      owl:onProperty :hasComment ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ];
-
-                    rdfs:label """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en ;
-
-                    rdfs:comment """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en .
 
 ### http://www.knora.org/ontology/knora-base#XSLTransformation
 

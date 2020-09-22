@@ -20,18 +20,18 @@
 package org.knora.webapi.util
 
 /**
-  * Utility functions for converting to SPARQL literal strings.
-  */
+ * Utility functions for converting to SPARQL literal strings.
+ */
 object SparqlUtil {
 
     // TODO: Refactor so Any is not used (issue #371)
 
     /**
-      * Converts the value of any type to a SPARQL literal string.
-      *
-      * @param value the value to be converted.
-      * @return a string containing the SPARQL literal.
-      */
+     * Converts the value of any type to a SPARQL literal string.
+     *
+     * @param value the value to be converted.
+     * @return a string containing the SPARQL literal.
+     */
     def any2SparqlLiteral(value: Any): String = {
         value match {
             case value: Boolean => if (value.asInstanceOf[Boolean]) {
@@ -45,11 +45,11 @@ object SparqlUtil {
     }
 
     /**
-      * Converts a string to a SPARQL literal string.
-      *
-      * @param value the value to be converted.
-      * @return a string containing the SPARQL literal.
-      */
+     * Converts a string to a SPARQL literal string.
+     *
+     * @param value the value to be converted.
+     * @return a string containing the SPARQL literal.
+     */
     def string2SparqlLiteral(value: String): String = {
         value match {
             case value: String if value.nonEmpty => "\"" + value.asInstanceOf[String] + "\"^^xsd:string"
@@ -58,11 +58,11 @@ object SparqlUtil {
     }
 
     /**
-      * Converts a boolean to a SPARQL literal string.
-      *
-      * @param value the value to be converted.
-      * @return a string containing the SPARQL literal.
-      */
+     * Converts a boolean to a SPARQL literal string.
+     *
+     * @param value the value to be converted.
+     * @return a string containing the SPARQL literal.
+     */
     def boolean2SparqlLiteral(value: Boolean): String = {
         value match {
             case value: Boolean => if (value.asInstanceOf[Boolean]) {

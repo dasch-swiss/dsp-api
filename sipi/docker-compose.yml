@@ -1,10 +1,9 @@
 version: '3'
 
-
 services:
   # sipi using default (production-like) configuration with additional routes for testing
   sipi:
-    image: dhlabbasel/sipi:develop
+    image: ${SIPI_IMAGE}
     container_name: sipi
     ports:
       - "1024:1024"
@@ -16,7 +15,7 @@ services:
       - $PWD/images:/sipi/images
       - $PWD/server:/sipi/server
     extra_hosts:
-      - api:$DOCKERHOST
+      - api:${DOCKERHOST}
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http
@@ -26,7 +25,7 @@ services:
 
   # sipi using configuration which disables authentication
   sipi-no-auth:
-    image: dhlabbasel/sipi:develop
+    image: ${SIPI_IMAGE}
     container_name: sipi-no-auth
     ports:
       - "1024:1024"
@@ -38,7 +37,7 @@ services:
       - $PWD/images:/sipi/images
       - $PWD/server:/sipi/server
     extra_hosts:
-      - api:$DOCKERHOST
+      - api:${DOCKERHOST}
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http

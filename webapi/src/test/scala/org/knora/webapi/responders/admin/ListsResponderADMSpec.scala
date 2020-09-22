@@ -24,11 +24,13 @@ import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedTestDataV1._
+import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
-import org.knora.webapi.responders.admin.ListsResponderADM._
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -52,8 +54,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     implicit val timeout = 5.seconds
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo

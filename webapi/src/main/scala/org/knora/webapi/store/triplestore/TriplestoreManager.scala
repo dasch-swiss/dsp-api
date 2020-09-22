@@ -22,21 +22,31 @@ package org.knora.webapi.store.triplestore
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import org.knora.webapi._
-import org.knora.webapi.store._
+import org.knora.webapi.core.ActorMaker
+import org.knora.webapi.exceptions.UnsuportedTriplestoreException
+import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
+import org.knora.webapi.messages.util.FakeTriplestore
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes, _}
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
-import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.util.ActorUtil._
+
+import scala.concurrent.ExecutionContext
 
 /**
-  * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured triple stores (embedded or remote).
-  */
-class TriplestoreManager extends Actor with ActorLogging {
+ * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
+ * triple stores.
+ *
+ * @param appActor a reference to the main application actor.
+ */
+class TriplestoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    private val settings = Settings(context.system)
+    private val settings = KnoraSettings(context.system)
+    protected implicit val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    var storeActorRef: ActorRef = _
+    private var storeActorRef: ActorRef = _
 
     // TODO: run the fake triple store as an actor (the fake triple store will not be needed anymore, once the embedded triple store is implemented)
     FakeTriplestore.init(settings.fakeTriplestoreDataDir)
@@ -55,19 +65,27 @@ class TriplestoreManager extends Actor with ActorLogging {
 
     log.debug(settings.triplestoreType)
 
+    // A RepositoryUpdater for processing requests to update the repository.
+    private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
+        system = context.system,
+        appActor = appActor,
+        settings = settings
+    )
+
     override def preStart() {
         log.debug("TriplestoreManagerActor: start with preStart")
 
         storeActorRef = settings.triplestoreType match {
             case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = HttpTriplestoreActorName)
-            case TriplestoreTypes.EmbeddedJenaTdb=> makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
+            case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }
 
         log.debug("TriplestoreManagerActor: finished with preStart")
     }
 
-    def receive = LoggingReceive {
-        case msg ⇒ storeActorRef forward msg
+    def receive: Receive = LoggingReceive {
+        case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, log)
+        case other => storeActorRef.forward(other)
     }
 }

@@ -1,34 +1,34 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.messages.admin.responder.listsmessages
-
 
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2, TriplestoreJsonProtocol}
-import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.util.StringFormatter
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,19 +36,24 @@ import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, 
 
 
 /**
-  * Represents an API request payload that asks the Knora API server to create a new list. At least one
-  * label needs to be supplied.
-  *
-  * @param projectIri the IRI of the project the list belongs to.
-  * @param labels     the list's labels.
-  * @param comments   the list's comments.
-  */
-case class CreateListApiRequestADM(projectIri: IRI,
-                                   name: Option[String],
+ * Represents an API request payload that asks the Knora API server to create a new list. At least one
+ * label needs to be supplied.
+ *
+ * @param id         the optional custom list IRI.
+ * @param projectIri the IRI of the project the list belongs to.
+ * @param name       the optional name of the list.
+ * @param labels     the list's labels.
+ * @param comments   the list's comments.
+ */
+case class CreateListApiRequestADM(id: Option[IRI] = None,
+                                   projectIri: IRI,
+                                   name: Option[String] = None,
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
 
     if (projectIri.isEmpty) {
         // println(this)
@@ -69,15 +74,15 @@ case class CreateListApiRequestADM(projectIri: IRI,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to create a new child list node which will be
-  * attached to the list node identified by the supplied listNodeIri, where the list node to which a child list node
-  * is added can be either a root list node or a child list node. At least one label needs to be supplied. If other
-  * child nodes exist, the newly created list node will be appended to the end.
-  *
-  * @param parentNodeIri
-  * @param labels
-  * @param comments
-  */
+ * Represents an API request payload that asks the Knora API server to create a new child list node which will be
+ * attached to the list node identified by the supplied listNodeIri, where the list node to which a child list node
+ * is added can be either a root list node or a child list node. At least one label needs to be supplied. If other
+ * child nodes exist, the newly created list node will be appended to the end.
+ *
+ * @param parentNodeIri
+ * @param labels
+ * @param comments
+ */
 case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
                                         projectIri: IRI,
                                         name: Option[String],
@@ -115,13 +120,13 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
-  *
-  * @param listIri    the IRI of the list to change.
-  * @param projectIri the IRI of the project the list belongs to.
-  * @param labels     the labels.
-  * @param comments   the comments.
-  */
+ * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
+ *
+ * @param listIri    the IRI of the list to change.
+ * @param projectIri the IRI of the project the list belongs to.
+ * @param labels     the labels.
+ * @param comments   the comments.
+ */
 case class ChangeListInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
                                        labels: Seq[StringLiteralV2],
@@ -156,92 +161,92 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
 // Messages
 
 /**
-  * An abstract trait for messages that can be sent to `HierarchicalListsResponderV2`.
-  */
+ * An abstract trait for messages that can be sent to `HierarchicalListsResponderV2`.
+ */
 sealed trait ListsResponderRequestADM extends KnoraRequestADM
 
 
 /**
-  * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
-  *
-  * @param projectIri     the IRI of the project.
-  * @param requestingUser the user making the request.
-  */
+ * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
+ *
+ * @param projectIri     the IRI of the project.
+ * @param requestingUser the user making the request.
+ */
 case class ListsGetRequestADM(projectIri: Option[IRI] = None,
                               requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
-  * Requests a list. A successful response will be a [[ListGetResponseADM]]
-  *
-  * @param iri            the IRI of the list.
-  * @param requestingUser the user making the request.
-  */
+ * Requests a list. A successful response will be a [[ListGetResponseADM]]
+ *
+ * @param iri            the IRI of the list.
+ * @param requestingUser the user making the request.
+ */
 case class ListGetRequestADM(iri: IRI,
                              requestingUser: UserADM) extends ListsResponderRequestADM
 
 
 /**
-  * Request basic information about a list. A successful response will be a [[ListInfoGetResponseADM]]
-  *
-  * @param iri            the IRI of the list node.
-  * @param requestingUser the user making the request.
-  */
+ * Request basic information about a list. A successful response will be a [[ListInfoGetResponseADM]]
+ *
+ * @param iri            the IRI of the list node.
+ * @param requestingUser the user making the request.
+ */
 case class ListInfoGetRequestADM(iri: IRI,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
-  * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseADM]]
-  *
-  * @param iri            the IRI of the list node.
-  * @param requestingUser the user making the request.
-  */
+ * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseADM]]
+ *
+ * @param iri            the IRI of the list node.
+ * @param requestingUser the user making the request.
+ */
 case class ListNodeInfoGetRequestADM(iri: IRI,
                                      requestingUser: UserADM) extends ListsResponderRequestADM
 
 
 /**
-  * Requests the path from the root node of a list to a particular node. A successful response will be
-  * a [[NodePathGetResponseADM]].
-  *
-  * @param iri            the IRI of the node.
-  * @param requestingUser the user making the request.
-  */
+ * Requests the path from the root node of a list to a particular node. A successful response will be
+ * a [[NodePathGetResponseADM]].
+ *
+ * @param iri            the IRI of the node.
+ * @param requestingUser the user making the request.
+ */
 case class NodePathGetRequestADM(iri: IRI,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 
 /**
-  * Requests the creation of a new list.
-  *
-  * @param createListRequest the [[CreateListApiRequestADM]] information used for creating the new list.
-  * @param requestingUser    the user creating the new list.
-  * @param apiRequestID      the ID of the API request.
-  */
+ * Requests the creation of a new list.
+ *
+ * @param createListRequest the [[CreateListApiRequestADM]] information used for creating the new list.
+ * @param requestingUser    the user creating the new list.
+ * @param apiRequestID      the ID of the API request.
+ */
 case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
-  * Request updating basic information of an existing list.
-  *
-  * @param listIri           the IRI of the list to be updated.
-  * @param changeListRequest the data which needs to be update.
-  * @param requestingUser    the user initiating the request.
-  * @param apiRequestID      the ID of the API request.
-  */
+ * Request updating basic information of an existing list.
+ *
+ * @param listIri           the IRI of the list to be updated.
+ * @param changeListRequest the data which needs to be update.
+ * @param requestingUser    the user initiating the request.
+ * @param apiRequestID      the ID of the API request.
+ */
 case class ListInfoChangeRequestADM(listIri: IRI,
                                     changeListRequest: ChangeListInfoApiRequestADM,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
-  * Request the creation of a new list (child) node.
-  *
-  * @param parentNodeIri          the IRI of the list node to which we want to attach the newly created node.
-  * @param createChildNodeRequest the new node information.
-  * @param requestingUser         the user making the request.
-  * @param apiRequestID           the ID of the API request.
-  */
+ * Request the creation of a new list (child) node.
+ *
+ * @param parentNodeIri          the IRI of the list node to which we want to attach the newly created node.
+ * @param createChildNodeRequest the new node information.
+ * @param requestingUser         the user making the request.
+ * @param apiRequestID           the ID of the API request.
+ */
 case class ListChildNodeCreateRequestADM(parentNodeIri: IRI,
                                          createChildNodeRequest: CreateChildNodeApiRequestADM,
                                          requestingUser: UserADM,
@@ -251,19 +256,19 @@ case class ListChildNodeCreateRequestADM(parentNodeIri: IRI,
 // Responses
 
 /**
-  * Represents a sequence of list info nodes.
-  *
-  * @param lists a [[ListRootNodeInfoADM]] sequence.
-  */
+ * Represents a sequence of list info nodes.
+ *
+ * @param lists a [[ListRootNodeInfoADM]] sequence.
+ */
 case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
     def toJsValue = listsGetResponseADMFormat.write(this)
 }
 
 /**
-  * Provides completes information about the list. The basic information (rood node) and all the child nodes.
-  *
-  * @param list the complete list.
-  */
+ * Provides completes information about the list. The basic information (rood node) and all the child nodes.
+ *
+ * @param list the complete list.
+ */
 case class ListGetResponseADM(list: ListADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = listGetResponseADMFormat.write(this)
@@ -271,10 +276,10 @@ case class ListGetResponseADM(list: ListADM) extends KnoraResponseADM with ListA
 
 
 /**
-  * Provides basic information about a list (root) node (without it's children).
-  *
-  * @param listinfo the basic information about a list.
-  */
+ * Provides basic information about a list (root) node (without it's children).
+ *
+ * @param listinfo the basic information about a list.
+ */
 case class ListInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
@@ -282,10 +287,10 @@ case class ListInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends KnoraRe
 
 
 /**
-  * Provides basic information about a list (child) node (without it's children).
-  *
-  * @param nodeinfo the basic information about a list node.
-  */
+ * Provides basic information about a list (child) node (without it's children).
+ *
+ * @param nodeinfo the basic information about a list node.
+ */
 case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
@@ -293,10 +298,10 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
 
 
 /**
-  * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
-  *
-  * @param elements a list of the nodes composing the path from the list's root node up to and including the specified node.
-  */
+ * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
+ *
+ * @param elements a list of the nodes composing the path from the list's root node up to and including the specified node.
+ */
 case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = nodePathGetResponseADMFormat.write(this)
@@ -308,10 +313,10 @@ case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends Kno
 
 case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM]) {
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[List]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[List]].
+     */
     def sorted: ListADM = {
         ListADM(
             listinfo = listinfo,
@@ -321,38 +326,38 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
 }
 
 /**
-  * Represents basic information about a list node, the information which is found in the list's root or child node.
-  *
-  * @param id          the IRI of the list.
-  * @param name        the name of the list node.
-  * @param labels      the labels of the node in all available languages.
-  * @param comments    the comments attached to the node in all available languages.
-  */
+ * Represents basic information about a list node, the information which is found in the list's root or child node.
+ *
+ * @param id       the IRI of the list.
+ * @param name     the name of the list node.
+ * @param labels   the labels of the node in all available languages.
+ * @param comments the comments attached to the node in all available languages.
+ */
 abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) {
 
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListNodeInfoADM]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[ListNodeInfoADM]].
+     */
     def sorted: ListNodeInfoADM
 
     /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
+     * Gets the label in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if label is not available in user's preferred language.
+     * @return the label in the preferred language.
+     */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 
     /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
+     * Gets the comment in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if comment is not available in user's preferred language.
+     * @return the comment in the preferred language.
+     */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 
 }
@@ -360,10 +365,10 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
 case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) extends ListNodeInfoADM(id, name, labels, comments) {
 
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListRootNodeInfoADM]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[ListRootNodeInfoADM]].
+     */
     def sorted: ListRootNodeInfoADM = {
         ListRootNodeInfoADM(
             id = id,
@@ -375,23 +380,23 @@ case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], l
     }
 
     /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
+     * Gets the label in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if label is not available in user's preferred language.
+     * @return the label in the preferred language.
+     */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         labels.getPreferredLanguage(userLang, fallbackLang)
     }
 
     /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
+     * Gets the comment in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if comment is not available in user's preferred language.
+     * @return the comment in the preferred language.
+     */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         comments.getPreferredLanguage(userLang, fallbackLang)
     }
@@ -401,10 +406,10 @@ case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], l
 case class ListChildNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Int, hasRootNode: IRI) extends ListNodeInfoADM(id, name, labels, comments) {
 
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListChildNodeInfoADM]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[ListChildNodeInfoADM]].
+     */
     def sorted: ListChildNodeInfoADM = {
         ListChildNodeInfoADM(
             id = id,
@@ -417,82 +422,82 @@ case class ListChildNodeInfoADM(id: IRI, name: Option[String], labels: StringLit
     }
 
     /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
+     * Gets the label in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if label is not available in user's preferred language.
+     * @return the label in the preferred language.
+     */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         labels.getPreferredLanguage(userLang, fallbackLang)
     }
 
     /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
+     * Gets the comment in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if comment is not available in user's preferred language.
+     * @return the comment in the preferred language.
+     */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
 /**
-  * Represents a hierarchical list node.
-  *
-  * @param id       the IRI of the list node.
-  * @param name     the name of the list node.
-  * @param labels   the label(s) of the list node.
-  * @param comments the comment(s) attached to the list in a specific language (if language tags are used) .
-  * @param children the list node's child nodes.
-  */
+ * Represents a hierarchical list node.
+ *
+ * @param id       the IRI of the list node.
+ * @param name     the name of the list node.
+ * @param labels   the label(s) of the list node.
+ * @param comments the comment(s) attached to the list in a specific language (if language tags are used) .
+ * @param children the list node's child nodes.
+ */
 abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListChildNodeADM]) {
 
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListNodeADM]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[ListNodeADM]].
+     */
     def sorted: ListNodeADM
 
     /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
+     * Gets the label in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if label is not available in user's preferred language.
+     * @return the label in the preferred language.
+     */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 
     /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
+     * Gets the comment in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if comment is not available in user's preferred language.
+     * @return the comment in the preferred language.
+     */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 }
 
 /**
-  * Represents a hierarchical list root node.
-  *
-  * @param id         the IRI of the list node.
-  * @param projectIri the IRI of the project the list belongs to.
-  * @param name       the name of the list node.
-  * @param labels     the label(s) of the list node.
-  * @param comments   the comment(s) attached to the list in a specific language (if language tags are used) .
-  * @param children   the list node's child nodes.
-  */
+ * Represents a hierarchical list root node.
+ *
+ * @param id         the IRI of the list node.
+ * @param projectIri the IRI of the project the list belongs to.
+ * @param name       the name of the list node.
+ * @param labels     the label(s) of the list node.
+ * @param comments   the comment(s) attached to the list in a specific language (if language tags are used) .
+ * @param children   the list node's child nodes.
+ */
 case class ListRootNodeADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListChildNodeADM]) extends ListNodeADM(id, name, labels, comments, children) {
 
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListNodeADM]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[ListNodeADM]].
+     */
     def sorted: ListRootNodeADM = {
         ListRootNodeADM(
             id = id,
@@ -505,47 +510,47 @@ case class ListRootNodeADM(id: IRI, projectIri: IRI, name: Option[String], label
     }
 
     /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
+     * Gets the label in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if label is not available in user's preferred language.
+     * @return the label in the preferred language.
+     */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         labels.getPreferredLanguage(userLang, fallbackLang)
     }
 
     /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
+     * Gets the comment in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if comment is not available in user's preferred language.
+     * @return the comment in the preferred language.
+     */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
 /**
-  * Represents a hierarchical list child node.
-  *
-  * @param id          the IRI of the list node.
-  * @param name        the name of the list node.
-  * @param labels      the label(s) of the list node.
-  * @param comments    the comment(s) attached to the list in a specific language (if language tags are used) .
-  * @param children    the list node's child nodes.
-  * @param position    the position of the node among its siblings.
-  * @param hasRootNode the root node of the list.
-  */
+ * Represents a hierarchical list child node.
+ *
+ * @param id          the IRI of the list node.
+ * @param name        the name of the list node.
+ * @param labels      the label(s) of the list node.
+ * @param comments    the comment(s) attached to the list in a specific language (if language tags are used) .
+ * @param children    the list node's child nodes.
+ * @param position    the position of the node among its siblings.
+ * @param hasRootNode the root node of the list.
+ */
 case class ListChildNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Int, hasRootNode: IRI, children: Seq[ListChildNodeADM]) extends ListNodeADM(id, name, labels, comments, children) {
 
 
     /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListNodeADM]].
-      */
+     * Sorts the whole hierarchy.
+     *
+     * @return a sorted [[ListNodeADM]].
+     */
     def sorted: ListChildNodeADM = {
         ListChildNodeADM(
             id = id,
@@ -559,49 +564,49 @@ case class ListChildNodeADM(id: IRI, name: Option[String], labels: StringLiteral
     }
 
     /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
+     * Gets the label in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if label is not available in user's preferred language.
+     * @return the label in the preferred language.
+     */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         labels.getPreferredLanguage(userLang, fallbackLang)
     }
 
     /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
+     * Gets the comment in the user's preferred language.
+     *
+     * @param userLang     the user's preferred language.
+     * @param fallbackLang language to use if comment is not available in user's preferred language.
+     * @return the comment in the preferred language.
+     */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
         comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
 /**
-  * Represents an element of a node path.
-  *
-  * @param id       the IRI of the node path element.
-  * @param name     the optional name of the node path element.
-  * @param labels   the label(s) of the node path element.
-  * @param comments the comment(s) of the node path element.
-  */
+ * Represents an element of a node path.
+ *
+ * @param id       the IRI of the node path element.
+ * @param name     the optional name of the node path element.
+ * @param labels   the label(s) of the node path element.
+ * @param comments the comment(s) of the node path element.
+ */
 case class NodePathElementADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
 /**
-  * A spray-json protocol for generating Knora API V2 JSON providing data about lists.
-  */
+ * A spray-json protocol for generating Knora API V2 JSON providing data about lists.
+ */
 trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     implicit object ListRootNodeInfoFormat extends JsonFormat[ListRootNodeInfoADM] {
 
-        def write(node:ListRootNodeInfoADM): JsValue = {
+        def write(node: ListRootNodeInfoADM): JsValue = {
             ListNodeInfoFormat.write(node)
         }
 
@@ -613,7 +618,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object ListChildNodeInfoFormat extends JsonFormat[ListChildNodeInfoADM] {
 
-        def write(node:ListChildNodeInfoADM): JsValue = {
+        def write(node: ListChildNodeInfoADM): JsValue = {
             ListNodeInfoFormat.write(node)
         }
 
@@ -625,11 +630,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object ListNodeInfoFormat extends JsonFormat[ListNodeInfoADM] {
         /**
-          * Converts a [[ListNodeInfoADM]] to a [[JsValue]].
-          *
-          * @param nodeInfo a [[ListNodeInfoADM]].
-          * @return a [[JsValue]].
-          */
+         * Converts a [[ListNodeInfoADM]] to a [[JsValue]].
+         *
+         * @param nodeInfo a [[ListNodeInfoADM]].
+         * @return a [[JsValue]].
+         */
         def write(nodeInfo: ListNodeInfoADM): JsValue = {
 
 
@@ -682,11 +687,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
 
         /**
-          * Converts a [[JsValue]] to a [[ListNodeInfoADM]].
-          *
-          * @param value a [[JsValue]].
-          * @return a [[ListNodeInfoADM]].
-          */
+         * Converts a [[JsValue]] to a [[ListNodeInfoADM]].
+         *
+         * @param value a [[JsValue]].
+         * @return a [[ListNodeInfoADM]].
+         */
         def read(value: JsValue): ListNodeInfoADM = {
 
             val fields = value.asJsObject.fields
@@ -742,7 +747,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object ListRootNodeFormat extends JsonFormat[ListRootNodeADM] {
 
-        def write(node:ListRootNodeADM): JsValue = {
+        def write(node: ListRootNodeADM): JsValue = {
             ListNodeFormat.write(node)
         }
 
@@ -754,7 +759,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object ListChildNodeFormat extends JsonFormat[ListChildNodeADM] {
 
-        def write(node:ListChildNodeADM): JsValue = {
+        def write(node: ListChildNodeADM): JsValue = {
             ListNodeFormat.write(node)
         }
 
@@ -766,11 +771,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object ListNodeFormat extends JsonFormat[ListNodeADM] {
         /**
-          * Converts a [[ListNodeADM]] to a [[JsValue]].
-          *
-          * @param node a [[ListNodeADM]].
-          * @return a [[JsValue]].
-          */
+         * Converts a [[ListNodeADM]] to a [[JsValue]].
+         *
+         * @param node a [[ListNodeADM]].
+         * @return a [[JsValue]].
+         */
         def write(node: ListNodeADM): JsValue = {
 
             node match {
@@ -800,11 +805,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
 
         /**
-          * Converts a [[JsValue]] to a [[ListNodeADM]].
-          *
-          * @param value a [[JsValue]].
-          * @return a [[ListNodeADM]].
-          */
+         * Converts a [[JsValue]] to a [[ListNodeADM]].
+         *
+         * @param value a [[JsValue]].
+         * @return a [[ListNodeADM]].
+         */
         def read(value: JsValue): ListNodeADM = {
 
             val fields = value.asJsObject.fields
@@ -868,11 +873,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object NodePathElementFormat extends JsonFormat[NodePathElementADM] {
         /**
-          * Converts a [[NodePathElementADM]] to a [[JsValue]].
-          *
-          * @param element a [[NodePathElementADM]].
-          * @return a [[JsValue]].
-          */
+         * Converts a [[NodePathElementADM]] to a [[JsValue]].
+         *
+         * @param element a [[NodePathElementADM]].
+         * @return a [[JsValue]].
+         */
         def write(element: NodePathElementADM): JsValue = {
 
             JsObject(
@@ -884,11 +889,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
 
         /**
-          * Converts a [[JsValue]] to a [[ListNodeInfoADM]].
-          *
-          * @param value a [[JsValue]].
-          * @return a [[ListNodeInfoADM]].
-          */
+         * Converts a [[JsValue]] to a [[ListNodeInfoADM]].
+         *
+         * @param value a [[JsValue]].
+         * @return a [[ListNodeInfoADM]].
+         */
         def read(value: JsValue): NodePathElementADM = {
 
             val fields = value.asJsObject.fields
@@ -919,11 +924,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit object ListFormat extends JsonFormat[ListADM] {
         /**
-          * Converts a [[ListADM]] to a [[JsValue]].
-          *
-          * @param list a [[ListADM]].
-          * @return a [[JsValue]].
-          */
+         * Converts a [[ListADM]] to a [[JsValue]].
+         *
+         * @param list a [[ListADM]].
+         * @return a [[JsValue]].
+         */
         def write(list: ListADM): JsValue = {
             JsObject(
                 "listinfo" -> list.listinfo.toJson,
@@ -932,11 +937,11 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
 
         /**
-          * Converts a [[JsValue]] to a [[List]].
-          *
-          * @param value a [[JsValue]].
-          * @return a [[List]].
-          */
+         * Converts a [[JsValue]] to a [[List]].
+         *
+         * @param value a [[JsValue]].
+         * @return a [[List]].
+         */
         def read(value: JsValue): ListADM = {
 
             val fields = value.asJsObject.fields
@@ -956,7 +961,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
-    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "name", "labels", "comments")
+    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
