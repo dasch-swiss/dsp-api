@@ -6,6 +6,10 @@ fuseki-init-knora-test: ## initializes Fuseki with the knora-test repository and
 fuseki-init-knora-test-minimal: ## initializes Fuseki with the knora-test repository and minimal data
 	./fuseki-init-knora-test-minimal.sh
 
+.PHONY: fuseki-init-knora-test-empty
+fuseki-init-knora-test-empty: ## initializes Fuseki with the knora-test repository and no data
+	./fuseki-init-knora-test-empty.sh
+
 .PHONY: fuseki-init-knora-test-unit
 fuseki-init-knora-test-unit: ## initializes Fuseki with the knora-test-unit repository and no data
 	./fuseki-init-knora-test-unit.sh

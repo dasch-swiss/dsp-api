@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import java.io
 import java.time.Instant
 import java.util.UUID
 
@@ -827,12 +828,14 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
  *
  * @param ontologyIri          the external ontology IRI.
  * @param label                the ontology's new label.
+ * @param comment              the ontology's new comment.
  * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
  * @param apiRequestID         the ID of the API request.
  * @param requestingUser       the user making the request.
  */
 case class ChangeOntologyMetadataRequestV2(ontologyIri: SmartIri,
-                                           label: String,
+                                           label: Option[String] = None,
+                                           comment: Option[String] = None,
                                            lastModificationDate: Instant,
                                            apiRequestID: UUID,
                                            requestingUser: UserADM) extends OntologiesResponderRequestV2
@@ -876,12 +879,14 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
         val inputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val inputMetadata = inputOntologyV2.ontologyMetadata
         val ontologyIri = inputMetadata.ontologyIri
-        val label = inputMetadata.label.getOrElse(throw BadRequestException(s"No rdfs:label submitted"))
+        val label: Option[String] = inputMetadata.label
+        val comment: Option[String] = inputMetadata.comment
         val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(throw BadRequestException("No knora-api:lastModificationDate submitted"))
 
         ChangeOntologyMetadataRequestV2(
             ontologyIri = ontologyIri,
             label = label,
+            comment = comment,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
