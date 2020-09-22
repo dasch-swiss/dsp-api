@@ -649,6 +649,48 @@ except that the first argument is a variable representing a resource:
 FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
 ```
 
+### Filtering on Resource IRIs
+
+A `FILTER` can compare a variable with another variable or IRI
+representing a resource. For example, to find a letter whose
+author and recipient are different persons:
+
+```
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+    ?letter knora-api:isMainResource true .
+    ?letter beol:hasAuthor ?person1 .
+    ?letter beol:hasRecipient ?person2 .
+} WHERE {
+    ?letter a beol:letter .
+    ?letter beol:hasAuthor ?person1 .
+    ?letter beol:hasRecipient ?person2 .
+    FILTER(?person1 != ?person2) .
+}
+OFFSET 0
+```
+
+To find a letter whose author is not a person with a specified IRI:
+
+```
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+    ?letter knora-api:isMainResource true .
+    ?letter beol:hasAuthor ?person1 .
+    ?letter beol:hasRecipient ?person2 .
+} WHERE {
+    ?letter a beol:letter .
+    ?letter beol:hasAuthor ?person1 .
+    ?letter beol:hasRecipient ?person2 .
+    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+}
+OFFSET 0
+```
+
 ### CONSTRUCT Clause
 
 In the `CONSTRUCT` clause of a Gravsearch query, the variable representing the

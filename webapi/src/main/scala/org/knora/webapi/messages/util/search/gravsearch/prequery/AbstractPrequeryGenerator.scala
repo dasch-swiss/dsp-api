@@ -868,16 +868,12 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
         typeInspectionResult.getTypeOfEntity(queryVar) match {
             case Some(typeInfo) =>
-                // check if queryVar represents a property or a value
+                // Does queryVar represent a property?
                 typeInfo match {
-
                     case propInfo: PropertyTypeInfo =>
-
-                        // left arg queryVar is a variable representing a property
-                        // therefore the right argument must be an IRI restricting the property variable to a certain property
+                        // Yes. The right argument must be an IRI restricting the property variable to a certain property.
                         compareExpression.rightArg match {
                             case iriRef: IriRef =>
-
                                 handlePropertyIriQueryVar(
                                     queryVar = queryVar,
                                     comparisonOperator = compareExpression.operator,
@@ -889,16 +885,21 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                         }
 
                     case nonPropInfo: NonPropertyTypeInfo =>
-
-                        // Is the query using the API v2 simple schema?
-                        if (querySchema == ApiV2Simple) {
+                        // queryVar doesn't represent a property. Does it represent a resource?
+                        if (nonPropInfo.isResourceType) {
+                            // Yes. If the right argument is a variable or IRI, keep the expression as is. We know that the types of the
+                            // arguments are consistent, because this already been checked during type inspection.
+                            compareExpression.rightArg match {
+                                case _: QueryVariable | _: IriRef  => TransformedFilterPattern(Some(compareExpression))
+                                case other => throw GravsearchException(s"Invalid right argument ${other.toSparql} in comparison (expected a variable or IRI representing a resource)")
+                            }
+                        } else if (querySchema == ApiV2Simple) { // The left operand doesn't represent a resource. Is the query using the API v2 simple schema?
                             // Yes. Depending on the value type, transform the given Filter pattern.
                             // Add an extra level by getting the value literal from the value object.
                             // If queryVar refers to a value object as a literal, for the value literal an extra variable has to be created, taking its type into account.
                             nonPropInfo.typeIri.toString match {
 
                                 case OntologyConstants.Xsd.Integer =>
-
                                     handleLiteralQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
@@ -908,7 +909,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                                     )
 
                                 case OntologyConstants.Xsd.Decimal =>
-
                                     handleLiteralQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
@@ -918,7 +918,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                                     )
 
                                 case OntologyConstants.Xsd.DateTimeStamp =>
-
                                     handleLiteralQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
@@ -928,7 +927,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                                     )
 
                                 case OntologyConstants.Xsd.Boolean =>
-
                                     handleLiteralQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
@@ -939,7 +937,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                                     )
 
                                 case OntologyConstants.Xsd.String =>
-
                                     handleLiteralQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
@@ -950,7 +947,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                                     )
 
                                 case OntologyConstants.Xsd.Uri =>
-
                                     handleLiteralQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
@@ -961,22 +957,17 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                                     )
 
                                 case OntologyConstants.KnoraApiV2Simple.Date =>
-
                                     handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
 
                                 case OntologyConstants.KnoraApiV2Simple.ListNode =>
-
                                     handleListQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, literalValueExpression = compareExpression.rightArg)
 
                                 case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
-
                             }
-
                         } else {
                             // The query is using the complex schema. Keep the expression as it is.
                             TransformedFilterPattern(Some(compareExpression))
                         }
-
                 }
 
             case None =>
