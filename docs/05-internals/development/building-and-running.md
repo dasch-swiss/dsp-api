@@ -61,7 +61,7 @@ To restart the knora-api use the following command:
 $ make stack-restart-api
 ```
 
-If a change is made to knora-api code, only its image needs to be rebuild. In that case, use 
+If a change is made to knora-api code, only its image needs to be rebuilt. In that case, use 
 
 ```
 $ make stack-up-fast
