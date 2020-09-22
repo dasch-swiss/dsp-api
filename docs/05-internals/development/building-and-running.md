@@ -23,20 +23,20 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Running the stack
 
 With [Docker](https://www.docker.com/) installed,
- 
+
 1. Run the following:
 
-```
-$ make init-db-test
-```
+    ```
+    $ make init-db-test
+    ```
 
-to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki). 
+    to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki). 
 
-2. Start the entire knora-stack (fuseki (db), sipi, redis, api, salsah1) with the following command:
+1. Start the entire knora-stack (fuseki (db), sipi, redis, api, salsah1) with the following command:
 
-```
-$ make stack-up
-```
+    ```
+    $ make stack-up
+    ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
 
