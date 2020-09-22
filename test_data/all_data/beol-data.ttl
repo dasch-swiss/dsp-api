@@ -65,6 +65,34 @@
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
+<http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA> a beol:person;
+  rdfs:label "Testperson3";
+  knora-base:isDeleted false;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>;
+  knora-base:creationDate "2020-09-21T07:14:09.621165Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>;
+  beol:hasGivenName <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA/values/R0yqYbumTD-R7wA3U57ndQ>;
+  beol:hasFamilyName <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA/values/Eaj-gUutRpONYPetDp-SyQ> .
+
+<http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA/values/Eaj-gUutRpONYPetDp-SyQ> a knora-base:TextValue;
+  knora-base:valueHasUUID "Eaj-gUutRpONYPetDp-SyQ"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2020-09-21T07:14:09.621165Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "Hummel";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA/values/R0yqYbumTD-R7wA3U57ndQ> a knora-base:TextValue;
+  knora-base:valueHasUUID "R0yqYbumTD-R7wA3U57ndQ"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2020-09-21T07:14:09.621165Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "Johann Nepomuk";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> a beol:letter;
   rdfs:label "Testbrief1";
   knora-base:isDeleted false;
@@ -166,6 +194,80 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "Testbrief1";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> a beol:letter;
+  rdfs:label "letter to self";
+  knora-base:isDeleted false;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>;
+  knora-base:creationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>;
+  beol:title <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/jGtT_87FS2qTkUEigdXMPg>;
+  beol:creationDate <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/5_JuhLykRBmhJs_b9X0qhg>;
+  beol:hasAuthor <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>;
+  beol:hasAuthorValue <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/b5JkQWJEQz6V-Spue9TqGA>;
+  beol:hasRecipient <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>;
+  beol:hasRecipientValue <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/HqYA8dx1QzGzb9hqZNLDzA>;
+  beol:hasText <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/xFaiZnw4RH-ES-eovy_FgQ> .
+
+<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/xFaiZnw4RH-ES-eovy_FgQ> a knora-base:TextValue;
+  knora-base:valueHasUUID "xFaiZnw4RH-ES-eovy_FgQ"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
+  knora-base:valueCreationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "I am writing this to myself.";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/b5JkQWJEQz6V-Spue9TqGA> a knora-base:LinkValue;
+  knora-base:valueHasUUID "Cvp07eTqQQSnYdcvqlWW_g"^^xsd:string;
+  knora-base:isDeleted false;
+  rdf:subject <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g>;
+  rdf:predicate beol:hasAuthor;
+  rdf:object <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>;
+  knora-base:valueCreationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueHasString "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/HqYA8dx1QzGzb9hqZNLDzA> a knora-base:LinkValue;
+  knora-base:valueHasUUID "HqYA8dx1QzGzb9hqZNLDzA"^^xsd:string;
+  knora-base:isDeleted false;
+  rdf:subject <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g>;
+  rdf:predicate beol:hasRecipient;
+  rdf:object <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>;
+  knora-base:valueCreationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueHasString "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/5_JuhLykRBmhJs_b9X0qhg> a knora-base:DateValue;
+  knora-base:valueHasUUID "5_JuhLykRBmhJs_b9X0qhg"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
+  knora-base:valueHasCalendar "GREGORIAN";
+  knora-base:valueHasEndJDN 2458274;
+  knora-base:valueHasEndPrecision "DAY";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasStartJDN 2458274;
+  knora-base:valueHasStartPrecision "DAY";
+  knora-base:valueHasString "2018-06-04 CE";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g/values/jGtT_87FS2qTkUEigdXMPg> a knora-base:TextValue;
+  knora-base:valueHasUUID "jGtT_87FS2qTkUEigdXMPg"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2020-09-18T10:46:06.442289Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "letter to self";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/letter_resource> a beol:letter;
