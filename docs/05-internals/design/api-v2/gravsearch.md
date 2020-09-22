@@ -153,8 +153,8 @@ The classes involved in generating prequeries can be found in `org.knora.webapi.
 If the client submits a count query, the prequery returns the overall number of hits, but not the results themselves.
 
 In a first step, before transforming the WHERE clause, query patterns must be further optimised by removing
-the `rdfs:type` statement for entities whose type could be inferred from a property since there would be no need 
-for explicit `rdfs:type` statements for them (unless the property from which the type of an entity must be inferred from 
+the `rdfs:type` statement for entities whose type could be inferred from their use with a property IRI, since there would be no need 
+for explicit `rdfs:type` statements for them (unless the property IRI from which the type of an entity must be inferred from 
 is wrapped in an `OPTIONAL` block). This optimisation takes the Gravsearch query as input (rather than the generated SPARQL),
 because it uses type information that refers to entities in the Gravsearch query, and the generated SPARQL might
 have different entities.

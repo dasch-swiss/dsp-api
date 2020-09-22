@@ -2499,68 +2499,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a Gravsearch query for a letter that links to a person with a specified name (optional)" in {
-
-            val gravsearchQuery =
-                """
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?letter knora-api:isMainResource true .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1  ?person1 .
-                  |
-                  |        ?person1 beol:hasFamilyName ?name .
-                  |
-                  |    } WHERE {
-                  |        ?letter a knora-api:Resource .
-                  |        ?letter a beol:letter .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        beol:creationDate knora-api:objectType knora-api:Date .
-                  |        ?date a knora-api:Date .
-                  |
-                  |        ?letter ?linkingProp1 ?person1 .
-                  |
-                  |        ?person1 a knora-api:Resource .
-                  |
-                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-                  |
-                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-                  |
-                  |        OPTIONAL {
-                  |             ?person1 beol:hasFamilyName ?name .
-                  |
-                  |             beol:hasFamilyName knora-api:objectType xsd:string .
-                  |             ?name a xsd:string .
-                  |
-                  |             FILTER(?name = "Meier")
-                  |        }
-                  |
-                  |    } ORDER BY ?date
-                """.stripMargin
-
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"), writeTestDataFiles)
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-            }
-        }
-
         "do a Gravsearch query for a letter that links to another person with a specified name" in {
 
             val gravsearchQuery =
@@ -4889,55 +4827,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a Gravsearch query for a letter that links to a person with a specified name (optional) (with type inference)" in {
-
-            val gravsearchQuery =
-                """
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?letter knora-api:isMainResource true .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1  ?person1 .
-                  |
-                  |        ?person1 beol:hasFamilyName ?name .
-                  |
-                  |    } WHERE {
-                  |        ?letter a beol:letter .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1 ?person1 .
-                  |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-                  |
-                  |        OPTIONAL {
-                  |             ?person1 beol:hasFamilyName ?name .
-                  |
-                  |             FILTER(?name = "Meier")
-                  |        }
-                  |
-                  |    } ORDER BY ?date
-                """.stripMargin
-
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"), writeTestDataFiles)
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-            }
-        }
-
         "do a Gravsearch query for a letter that links to another person with a specified name (with type inference)" in {
 
             val gravsearchQuery =
@@ -6945,55 +6834,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a Gravsearch query for a letter that links to a person with a specified name (optional) (submitting the complex schema)" in {
-
-            val gravsearchQuery =
-                """
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?letter knora-api:isMainResource true .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1  ?person1 .
-                  |
-                  |        ?person1 beol:hasFamilyName ?name .
-                  |
-                  |    } WHERE {
-                  |        ?letter a beol:letter .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1 ?person1 .
-                  |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-                  |
-                  |        OPTIONAL {
-                  |             ?person1 beol:hasFamilyName ?name .
-                  |
-                  |             ?name knora-api:valueAsString "Meier" .
-                  |        }
-                  |
-                  |    } ORDER BY ?date
-                """.stripMargin
-
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"), writeTestDataFiles)
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-            }
-        }
-
         "do a Gravsearch query for a letter that links to another person with a specified name (submitting the complex schema)" in {
 
             val gravsearchQuery =
@@ -8371,6 +8211,114 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val searchResponseStr = responseAs[String]
                 assert(status == StatusCodes.OK, searchResponseStr)
                 val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares two variables representing resources (in the simple schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != ?person2) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares two variables representing resources (in the complex schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != ?person2) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares a variable with a resource IRI (in the simple schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares a variable with a resource IRI (in the complex schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
