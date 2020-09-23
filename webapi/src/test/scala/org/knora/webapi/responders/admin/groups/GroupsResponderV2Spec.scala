@@ -17,24 +17,18 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.metadata
-
+package org.knora.webapi.responders.admin.groups
+import akka.{actor => classic}
+import akka.actor.typed.scaladsl.adapter._
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
-import akka.actor.typed.scaladsl.Behaviors
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, SubjectV2}
 import org.scalatest.wordspec.AnyWordSpecLike
-import akka.actor.typed.scaladsl.adapter._
-import akka.{actor => classic}
-import org.knora.webapi.responders.v2.metadata.GetMetadataResponderV2.InitWithStore
 
-class MetadataResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+class GroupsResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
     "The Get Metadata Responder" must {
         "return metadata" in {
-            val responder = testKit.spawn(GetMetadataResponderV2(), "responder")
-            val probe = testKit.createTestProbe[GetMetadataResponderV2.MetadataForProject]()
-
-            val mockStore = system.toClassic.actorOf(classic.Props(new classic.Actor {
+            val mockedStore = system.toClassic.actorOf(classic.Props(new classic.Actor {
                 def receive = {
                     case SparqlExtendedConstructRequest(sparql) =>
                         SparqlExtendedConstructResponse(
@@ -43,9 +37,11 @@ class MetadataResponderV2Spec extends ScalaTestWithActorTestKit with AnyWordSpec
                 }
             }))
 
-            responder ! InitWithStore(store = mockStore)
-            responder ! GetMetadataResponderV2.GetMetadataForProject("iri", probe.ref)
-            probe.expectMessage(GetMetadataResponderV2.MetadataForProject("blabla"))
+            val responder = testKit.spawn(GetGroupResponderV2(mockedStore), "responder")
+            val probe = testKit.createTestProbe[GetGroupResponderV2.AllGroupsForProject]()
+
+            responder ! GetGroupResponderV2.GetAllGroupsForProject("iri", probe.ref)
+            probe.expectMessage(GetGroupResponderV2.AllGroupsForProject("blabla"))
         }
     }
 }

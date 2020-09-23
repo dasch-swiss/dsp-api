@@ -17,44 +17,43 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi._
 
 @**
- * Gets all information about a single project or all projects. Selection either through the project's IRI, shortname, or shortcode.
+ * Gets information about a single or all groups.
  *
  * @param triplestore the name of the triplestore being used.
- * @param maybeIri the project's IRI.
- * @param maybeShortname the project's shortname.
- * @param maybeShortcode the project's shortcode.
+ * @param maybeIri the IRI of the group.
  *@
 @(triplestore: String,
-  maybeIri: Option[IRI],
-  maybeShortname: Option[String],
-  maybeShortcode: Option[String])
+  maybeIri: Option[IRI])
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
-CONSTRUCT { ?s ?p ?o . }
+CONSTRUCT { ?s ?p ?o }
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
 
-    @if(maybeIri.nonEmpty) {
-        BIND(IRI("@maybeIri") as ?s)
+    @maybeIri match {
+        case Some(iri) => {
+            BIND(IRI("@iri") as ?s)
+            FILTER(isIri(?s))
+        }
+
+        case None => {}
     }
 
-    @if(maybeShortname.nonEmpty) {
-        ?s knora-admin:projectShortname "@maybeShortname.get"^^xsd:string .
-    }
-
-    @if(maybeShortcode.nonEmpty) {
-        ?s knora-admin:projectShortcode "@maybeShortcode.get"^^xsd:string .
-    }
-
-    ?s rdf:type knora-admin:knoraProject .
+    ?s rdf:type knora-admin:UserGroup .
     ?s ?p ?o .
+    FILTER (?s != <http://www.knora.org/ontology/knora-admin#UnknownUser>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-admin#KnownUser>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-admin#Creator>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-admin#ProjectMember>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-admin#ProjectAdmin>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-admin#SystemAdmin>)
 }
