@@ -22,7 +22,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## JsonLDUtil
 
 Knora provides a utility object called `JsonLDUtil`, which wraps the
-[JSON-LD Java API](https://github.com/jsonld-java/jsonld-java), and parses JSON-LD text to a
+[titanium-json-ld Java library](https://github.com/filip26/titanium-json-ld), and parses JSON-LD text to a
 Knora data structure called `JsonLDDocument`. These classes provide commonly needed
 functionality for extracting and validating data from JSON-LD documents, as well
 as for constructing new documents.
