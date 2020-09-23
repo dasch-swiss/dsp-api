@@ -135,6 +135,11 @@ object CalendarNameV2 {
 sealed trait CalendarNameGregorianOrJulian extends CalendarNameV2
 
 /**
+ * Represents the name of an Arabic Or Persian calendar.
+ */
+sealed trait CalendarNameArabic extends CalendarNameV2
+
+/**
  * Represents the name of the Gregorian calendar.
  */
 case object CalendarNameGregorian extends CalendarNameGregorianOrJulian {
@@ -151,7 +156,7 @@ case object CalendarNameJulian extends CalendarNameGregorianOrJulian {
 /**
  * Represents the name of the Islamic calendar.
  */
-case object CalendarNameIslamic extends CalendarNameV2 {
+case object CalendarNameIslamic extends CalendarNameArabic {
     override def toString: String = StringFormatter.CalendarIslamic
 }
 
@@ -241,11 +246,9 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
 
                 calendar
 
-            case islamicName =>
+            case _ : CalendarNameArabic =>
                 val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
-                calendar.setCivil(true) //set the calendar to the civil/deterministic version
-                calendar.setLenient(false) //check for invalid dates
-            //TODO: it seems like the rest that is done for Gregorian/Julian is not necessary for Islamic Calendars. Need to check.
+                calendar.setCivil(false) //set the calendar to the civil/deterministic version
         }
     }
 
@@ -337,7 +340,7 @@ object CalendarDateV2 {
 
                 (calendar, maybeGregorianEra)
 
-            case islamicName: CalendarNameIslamic =>
+            case islamicName: CalendarNameArabic =>
                 val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
                 calendar.set(Calendar.JULIAN_DAY, julianDay) //TODO check if this works as intended
         }
