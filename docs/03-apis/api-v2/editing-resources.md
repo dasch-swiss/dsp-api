@@ -28,8 +28,7 @@ HTTP POST to http://host/v2/resources
 ```
 
 The body of the request is a JSON-LD document in the
-[complex API schema](introduction.md#api-schema), specifying the resource's IRI, type,
-and `rdfs:label`, along with its Knora resource properties and their values. The representation of the
+[complex API schema](introduction.md#api-schema), specifying the type,`rdfs:label`, and its Knora resource properties and their values. The representation of the
 resource is the same as when it is returned in a `GET` request, except that its `knora-api:attachedToUser` is not given,
 and the resource IRI and those of its values can be optionally specified. The format of the values submitted
 is described in [Editing Values](editing-values.md). If there are multiple values for a property,
