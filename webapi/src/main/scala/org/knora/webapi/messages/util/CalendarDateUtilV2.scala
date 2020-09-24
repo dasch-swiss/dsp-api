@@ -226,8 +226,15 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
      * Constructs a [[Calendar]] based on the calendar name and era, to be used in subsequent date conversions.
      */
     private def makeBaseCalendar: Calendar = {
+        def calendarSetInitTime(calendar: Calendar): Calendar = {
+            calendar.set(Calendar.HOUR, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+
+            calendar
+        }
+
         calendarName match {
-            // TODO: support calendars other than Gregorian and Julian.
 
             case gregorianOrJulianName: CalendarNameGregorianOrJulian =>
                 val calendar: GregorianCalendar = new GregorianCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
@@ -240,15 +247,11 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
                     case None => throw AssertionException(s"Unreachable code")
                 }
 
-                calendar.set(Calendar.HOUR, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-
-                calendar
+                calendarSetInitTime(calendar)
 
             case _ : CalendarNameArabic =>
-                val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
-                calendar.setCivil(false) //set the calendar to the civil/deterministic version
+                val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH) //sets to civil calendar
+                calendarSetInitTime(calendar)
         }
     }
 
