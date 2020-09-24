@@ -328,8 +328,6 @@ object CalendarDateV2 {
     def fromJulianDayNumber(julianDay: Int, precision: DatePrecisionV2, calendarName: CalendarNameV2): CalendarDateV2 = {
         // Convert the Julian Day Number to a com.ibm.icu.util.Calendar.
         val (calendar: Calendar, maybeEra: Option[DateEraV2]) = calendarName match {
-            // TODO: support calendars other than Gregorian and Julian.
-
             case gregorianOrJulianName: CalendarNameGregorianOrJulian =>
                 val calendar: GregorianCalendar = new GregorianCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
                 calendar.setGregorianChange(CalendarDateUtilV2.getGregorianCalendarChangeDate(gregorianOrJulianName))
@@ -343,9 +341,10 @@ object CalendarDateV2 {
 
                 (calendar, maybeGregorianEra)
 
-            case islamicName: CalendarNameArabic =>
+            case _ : CalendarNameArabic =>
                 val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
-                calendar.set(Calendar.JULIAN_DAY, julianDay) //TODO check if this works as intended
+                calendar.set(Calendar.JULIAN_DAY, julianDay)
+                (calendar, None)
         }
 
         // Get the year, month, and day from the com.ibm.icu.util.Calendar.

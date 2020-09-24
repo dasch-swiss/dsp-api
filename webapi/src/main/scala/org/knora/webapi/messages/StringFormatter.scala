@@ -744,7 +744,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
-    private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
+    private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
         CalendarSeparator + // calendar name
         """(?:[1-9][0-9]{0,3})(""" + // year
         PrecisionSeparator +
