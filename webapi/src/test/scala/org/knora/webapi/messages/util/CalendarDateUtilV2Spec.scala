@@ -276,6 +276,13 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
             calendarDate.toJulianDayRange
         }
 
+        "not convert an islamic date to a Julian Day range if an era is given" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1432-08-29 AH", CalendarNameIslamic)
+                calendarDate.toJulianDayRange
+            }
+        }
+
         "convert an islamic date range to a Julian Day range" in {
             val calendarDate: CalendarDateRangeV2 = CalendarDateRangeV2.parse("ISLAMIC:1432-08-29:1441")
             calendarDate.toJulianDayRange
