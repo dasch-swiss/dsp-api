@@ -37,7 +37,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 The classes in this file provide a Scala API for formatting and parsing JSON-LD. The implementation
 uses the javax.json API and a Java implementation of the JSON-LD API <https://www.w3.org/TR/json-ld11-api/>
-(currently= <https://github.com/filip26/titanium-json-ld>). This shields the rest of Knora from the details
+(currently <https://github.com/filip26/titanium-json-ld>). This shields the rest of Knora from the details
 of the JSON-LD implementation. These classes also provide Knora-specific JSON-LD functionality to facilitate
 reading data from Knora API requests and constructing Knora API responses.
 
