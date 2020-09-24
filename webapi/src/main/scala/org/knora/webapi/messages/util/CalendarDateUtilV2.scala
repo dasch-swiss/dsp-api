@@ -135,7 +135,7 @@ object CalendarNameV2 {
 sealed trait CalendarNameGregorianOrJulian extends CalendarNameV2
 
 /**
- * Represents the name of a Islamic Civil Or Umm al-Qura calendar.
+ * Represents the name of a Islamic Civil
  */
 sealed trait CalendarNameIslamicCivil extends CalendarNameV2
 
