@@ -259,5 +259,12 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
                 calendarDateRange.toJulianDayRange
             }
         }
+
+        "convert an islamic date string to a CalendarDateV2 BC" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1441-02-15", CalendarNameIslamic)
+            assert(calendarDate.year == 1441)
+            assert(calendarDate.maybeMonth == Some(2))
+            assert(calendarDate.maybeDay == Some(15))
+        }
     }
 }
