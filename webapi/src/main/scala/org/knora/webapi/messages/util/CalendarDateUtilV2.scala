@@ -135,9 +135,9 @@ object CalendarNameV2 {
 sealed trait CalendarNameGregorianOrJulian extends CalendarNameV2
 
 /**
- * Represents the name of an Arabic Or Persian calendar.
+ * Represents the name of a Islamic Civil Or Umm al-Qura calendar.
  */
-sealed trait CalendarNameArabic extends CalendarNameV2
+sealed trait CalendarNameIslamicCivil extends CalendarNameV2
 
 /**
  * Represents the name of the Gregorian calendar.
@@ -156,7 +156,7 @@ case object CalendarNameJulian extends CalendarNameGregorianOrJulian {
 /**
  * Represents the name of the Islamic calendar.
  */
-case object CalendarNameIslamic extends CalendarNameArabic {
+case object CalendarNameIslamic extends CalendarNameIslamicCivil {
     override def toString: String = StringFormatter.CalendarIslamic
 }
 
@@ -249,7 +249,7 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
 
                 calendarSetInitTime(calendar)
 
-            case _ : CalendarNameArabic =>
+            case _ : CalendarNameIslamicCivil =>
                 val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH) //sets to civil calendar
                 calendarSetInitTime(calendar)
         }
@@ -341,7 +341,7 @@ object CalendarDateV2 {
 
                 (calendar, maybeGregorianEra)
 
-            case _ : CalendarNameArabic =>
+            case _ : CalendarNameIslamicCivil =>
                 val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
                 calendar.set(Calendar.JULIAN_DAY, julianDay)
                 (calendar, None)
