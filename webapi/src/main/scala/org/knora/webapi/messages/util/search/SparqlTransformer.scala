@@ -45,10 +45,13 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))
+        }
 
-        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
+        override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
+        }
 
         override def getFromClause: Option[FromClause] = {
             if (useInference) {
@@ -76,7 +79,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(moveLuceneToBeginning(patterns))
+            moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -99,7 +102,9 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = moveLuceneToBeginning(patterns)
+        override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))
+        }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
             transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
@@ -119,7 +124,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(moveLuceneToBeginning(patterns))
+            moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -194,12 +199,12 @@ object SparqlTransformer {
     }
 
     /**
-     * Optimises `knora-base:isDeleted` by moving it to the end of a block.
+     * Optimises a query by moving `knora-base:isDeleted` to the end of a block.
      *
      * @param patterns the block of patterns to be optimised.
      * @return the result of the optimisation.
      */
-    private def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+    def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
             case statementPattern: StatementPattern =>
                 statementPattern.pred match {
@@ -214,7 +219,7 @@ object SparqlTransformer {
     }
 
     /**
-     * Optimises queries by moving Lucene query patterns to the beginning of a block.
+     * Optimises a query by moving Lucene query patterns to the beginning of a block.
      *
      * @param patterns the block of patterns to be optimised.
      * @return the result of the optimisation.
@@ -228,6 +233,34 @@ object SparqlTransformer {
         luceneQueryPatterns ++ otherPatterns
     }
 
+
+    /**
+     * Optimises a query by moving statement patterns containing resource IRIs to the beginning of a block.
+     *
+     * @param patterns the query patterns to be optimised.
+     * @return the optimised query patterns.
+     */
+    def moveResourceIrisToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val (patternsWithResourceIris: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case statementPattern: StatementPattern =>
+                val subjIsResourceIri = statementPattern.subj match {
+                    case iriRef: IriRef if iriRef.iri.isKnoraResourceIri => true
+                    case _ => false
+                }
+
+                val objIsResourceIri = statementPattern.obj match {
+                    case iriRef: IriRef if iriRef.iri.isKnoraResourceIri => true
+                    case _ => false
+                }
+
+                subjIsResourceIri || objIsResourceIri
+
+            case _ => false
+        }
+
+        patternsWithResourceIris ++ otherPatterns
+    }
+
     /**
      * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
      *
@@ -235,7 +268,7 @@ object SparqlTransformer {
      * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
      * @return the statement pattern as expanded to work without inference.
      */
-    private def transformStatementInWhereForNoInference(statementPattern: StatementPattern, simulateInference: Boolean): Seq[StatementPattern] = {
+    def transformStatementInWhereForNoInference(statementPattern: StatementPattern, simulateInference: Boolean): Seq[StatementPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         statementPattern.pred match {
