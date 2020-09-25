@@ -98,6 +98,28 @@ class SparqlTransformerSpec extends CoreSpec() {
             optimisedPatterns should ===(expectedPatterns)
         }
 
+        "move a BIND pattern to the beginning of a block" in {
+            val typeStatement = StatementPattern.makeExplicit(subj = QueryVariable("foo"), pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri))
+            val hasValueStatement = StatementPattern.makeExplicit(subj = QueryVariable("foo"), pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri), obj = QueryVariable("text"))
+            val bindPattern = BindPattern(variable = QueryVariable("foo"), expression = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
+
+            val patterns: Seq[QueryPattern] = Seq(
+                typeStatement,
+                hasValueStatement,
+                bindPattern
+            )
+
+            val optimisedPatterns = SparqlTransformer.moveBindToBeginning(patterns)
+
+            val expectedPatterns: Seq[QueryPattern] = Seq(
+                bindPattern,
+                typeStatement,
+                hasValueStatement
+            )
+
+            optimisedPatterns should ===(expectedPatterns)
+        }
+
         "move a Lucene query pattern to the beginning of a block" in {
             val hasValueStatement = StatementPattern.makeExplicit(subj = QueryVariable("foo"), pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri), obj = QueryVariable("text"))
             val valueHasStringStatement = StatementPattern.makeExplicit(subj = QueryVariable("text"), pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), QueryVariable("text__valueHasString"))
@@ -117,7 +139,7 @@ class SparqlTransformerSpec extends CoreSpec() {
 
             val optimisedPatterns = SparqlTransformer.moveLuceneToBeginning(patterns)
 
-            val expectedPatterns = Seq(
+            val expectedPatterns: Seq[QueryPattern] = Seq(
                 luceneQueryPattern,
                 hasValueStatement,
                 valueHasStringStatement
@@ -139,7 +161,7 @@ class SparqlTransformerSpec extends CoreSpec() {
 
             val optimisedPatterns = SparqlTransformer.moveResourceIrisToBeginning(patterns)
 
-            val expectedPatterns = Seq(
+            val expectedPatterns: Seq[StatementPattern] = Seq(
                 linkStatement,
                 typeStatement,
                 hasValueStatement
@@ -161,7 +183,7 @@ class SparqlTransformerSpec extends CoreSpec() {
 
             val optimisedPatterns = SparqlTransformer.moveResourceIrisToBeginning(patterns)
 
-            val expectedPatterns = Seq(
+            val expectedPatterns: Seq[StatementPattern] = Seq(
                 linkStatement,
                 typeStatement,
                 hasValueStatement
@@ -174,7 +196,7 @@ class SparqlTransformerSpec extends CoreSpec() {
             val typeStatement = StatementPattern.makeInferred(subj = QueryVariable("foo"), pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri))
             val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(statementPattern = typeStatement, simulateInference = true)
 
-            val expectedStatements = Seq(
+            val expectedStatements: Seq[StatementPattern] = Seq(
                 StatementPattern(
                     subj = QueryVariable(variableName = "foo__subClassOf__httpwwwknoraorgontology0001anythingThing"),
                     pred = IriRef(
@@ -205,7 +227,7 @@ class SparqlTransformerSpec extends CoreSpec() {
             val hasValueStatement = StatementPattern.makeInferred(subj = QueryVariable("foo"), pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri), obj = QueryVariable("text"))
             val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(statementPattern = hasValueStatement, simulateInference = true)
 
-            val expectedStatements = Seq(
+            val expectedStatements: Seq[StatementPattern] = Seq(
                 StatementPattern(
                     subj = QueryVariable(variableName = "httpwwwknoraorgontology0001anythinghasText__subPropertyOf"),
                     pred = IriRef(
