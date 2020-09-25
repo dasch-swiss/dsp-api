@@ -123,14 +123,14 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+        val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 
     protected def responseToString(httpResponse: HttpResponse): String = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+        Await.result(responseBodyFuture, 10.seconds)
     }
 
     protected def doGetRequest(urlPath: String): String = {
@@ -152,8 +152,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
-        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(5.seconds).map(_.data.toArray)
-        Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(10.seconds).map(_.data.toArray)
+        Await.result(responseBodyFuture, 10.seconds)
     }
 
     protected def getZipContents(responseBytes: Array[Byte]): Set[String] = {
