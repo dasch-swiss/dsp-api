@@ -1678,20 +1678,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartYear = 1407
             val dateValueHasStartMonth = 1
             val dateValueHasStartDay = 26
-            val dateValueHasStartEra = ""
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+            val jsonLdEntity = SharedTestDataADM.createIslamicDateValueWithDayPrecisionRequest(
                 resourceIri = resourceIri,
                 dateValueHasCalendar = dateValueHasCalendar,
                 dateValueHasStartYear = dateValueHasStartYear,
                 dateValueHasStartMonth = dateValueHasStartMonth,
                 dateValueHasStartDay = dateValueHasStartDay,
-                dateValueHasStartEra = dateValueHasStartEra,
                 dateValueHasEndYear = dateValueHasStartYear,
                 dateValueHasEndMonth = dateValueHasStartMonth,
-                dateValueHasEndDay = dateValueHasStartDay,
-                dateValueHasEndEra = dateValueHasStartEra
+                dateValueHasEndDay = dateValueHasStartDay
             )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
@@ -1729,24 +1726,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartYear = 1407
             val dateValueHasStartMonth = 1
             val dateValueHasStartDay = 15
-            val dateValueHasStartEra = ""
             val dateValueHasEndYear = 1407
             val dateValueHasEndMonth = 1
             val dateValueHasEndDay = 26
-            val dateValueHasEndEra = ""
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+            val jsonLdEntity = SharedTestDataADM.createIslamicDateValueWithDayPrecisionRequest(
                 resourceIri = resourceIri,
                 dateValueHasCalendar = dateValueHasCalendar,
                 dateValueHasStartYear = dateValueHasStartYear,
                 dateValueHasStartMonth = dateValueHasStartMonth,
                 dateValueHasStartDay = dateValueHasStartDay,
-                dateValueHasStartEra = dateValueHasStartEra,
                 dateValueHasEndYear = dateValueHasEndYear,
                 dateValueHasEndMonth = dateValueHasEndMonth,
-                dateValueHasEndDay = dateValueHasEndDay,
-                dateValueHasEndEra = dateValueHasEndEra
+                dateValueHasEndDay = dateValueHasEndDay
             )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
@@ -1767,7 +1760,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 userEmail = anythingUserEmail
             )
 
-            savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-1-15:1407-1-26")
+            savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-15:1407-01-26")
             savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(dateValueHasCalendar)
             savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
             savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(dateValueHasStartMonth)
