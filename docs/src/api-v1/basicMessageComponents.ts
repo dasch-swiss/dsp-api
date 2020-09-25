@@ -234,7 +234,7 @@ export module basicMessageComponents {
     export type KnoraIRI = string;
 
     /**
-     * String must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][ era][:YYYY[-MM[-DD]]][ era]
+     * String must have the following format: (GREGORIAN|JULIAN|ISLAMIC):YYYY[-MM[-DD]][ era][:YYYY[-MM[-DD]]][ era]
      * E.g. an exact date like GREGORIAN:2015-12-03 CE or a period like GREGORIAN:2015-12-03 CE:2015-12-04 CE.
      * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
      */

@@ -234,7 +234,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Date,
         datatypeInfo = DatatypeInfoV2(
             onDatatype = OntologyConstants.Xsd.String.toSmartIri,
-            pattern = Some("(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?")
+            pattern = Some("(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?")
         ),
         predicates = Seq(
             makePredicate(

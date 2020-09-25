@@ -123,6 +123,7 @@ object CalendarNameV2 {
         calendarNameStr match {
             case StringFormatter.CalendarGregorian => CalendarNameGregorian
             case StringFormatter.CalendarJulian => CalendarNameJulian
+            case StringFormatter.CalendarIslamic => CalendarNameIslamic
             case _ => errorFun
         }
     }
@@ -132,6 +133,11 @@ object CalendarNameV2 {
  * Represents the name of a Gregorian or Julian calendar.
  */
 sealed trait CalendarNameGregorianOrJulian extends CalendarNameV2
+
+/**
+ * Represents the name of a Islamic Civil
+ */
+sealed trait CalendarNameIslamicCivil extends CalendarNameV2
 
 /**
  * Represents the name of the Gregorian calendar.
@@ -145,6 +151,13 @@ case object CalendarNameGregorian extends CalendarNameGregorianOrJulian {
  */
 case object CalendarNameJulian extends CalendarNameGregorianOrJulian {
     override def toString: String = StringFormatter.CalendarJulian
+}
+
+/**
+ * Represents the name of the Islamic calendar.
+ */
+case object CalendarNameIslamic extends CalendarNameIslamicCivil {
+    override def toString: String = StringFormatter.CalendarIslamic
 }
 
 /**
@@ -213,8 +226,15 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
      * Constructs a [[Calendar]] based on the calendar name and era, to be used in subsequent date conversions.
      */
     private def makeBaseCalendar: Calendar = {
+        def calendarSetInitTime(calendar: Calendar): Calendar = {
+            calendar.set(Calendar.HOUR, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+
+            calendar
+        }
+
         calendarName match {
-            // TODO: support calendars other than Gregorian and Julian.
 
             case gregorianOrJulianName: CalendarNameGregorianOrJulian =>
                 val calendar: GregorianCalendar = new GregorianCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
@@ -227,11 +247,11 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
                     case None => throw AssertionException(s"Unreachable code")
                 }
 
-                calendar.set(Calendar.HOUR, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
+                calendarSetInitTime(calendar)
 
-                calendar
+            case _ : CalendarNameIslamicCivil =>
+                val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH) //sets to civil calendar
+                calendarSetInitTime(calendar)
         }
     }
 
@@ -308,8 +328,6 @@ object CalendarDateV2 {
     def fromJulianDayNumber(julianDay: Int, precision: DatePrecisionV2, calendarName: CalendarNameV2): CalendarDateV2 = {
         // Convert the Julian Day Number to a com.ibm.icu.util.Calendar.
         val (calendar: Calendar, maybeEra: Option[DateEraV2]) = calendarName match {
-            // TODO: support calendars other than Gregorian and Julian.
-
             case gregorianOrJulianName: CalendarNameGregorianOrJulian =>
                 val calendar: GregorianCalendar = new GregorianCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
                 calendar.setGregorianChange(CalendarDateUtilV2.getGregorianCalendarChangeDate(gregorianOrJulianName))
@@ -322,6 +340,11 @@ object CalendarDateV2 {
                 }
 
                 (calendar, maybeGregorianEra)
+
+            case _ : CalendarNameIslamicCivil =>
+                val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
+                calendar.set(Calendar.JULIAN_DAY, julianDay)
+                (calendar, None)
         }
 
         // Get the year, month, and day from the com.ibm.icu.util.Calendar.

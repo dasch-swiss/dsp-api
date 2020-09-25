@@ -42,6 +42,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
+import spray.json.JsonParser
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
@@ -862,7 +863,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(updateResponseAsString == SharedTestDataADM.successResponse("Resource metadata updated"))
+            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource metadata updated")))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -897,7 +898,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(updateResponseAsString == SharedTestDataADM.successResponse("Resource marked as deleted"))
+            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource marked as deleted")))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -918,7 +919,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(updateResponseAsString == SharedTestDataADM.successResponse("Resource marked as deleted"))
+            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource marked as deleted")))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)

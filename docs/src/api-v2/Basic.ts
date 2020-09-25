@@ -20,7 +20,7 @@ export module Basic {
 
     /**
      * Formal description of a Knora date literal.
-     * (GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?
+     * (GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?
      */
     export type DateLiteral = string;
 

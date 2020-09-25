@@ -890,7 +890,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
                             // Yes. If the right argument is a variable or IRI, keep the expression as is. We know that the types of the
                             // arguments are consistent, because this already been checked during type inspection.
                             compareExpression.rightArg match {
-                                case _: QueryVariable | _: IriRef  => TransformedFilterPattern(Some(compareExpression))
+                                case _: QueryVariable | _: IriRef => TransformedFilterPattern(Some(compareExpression))
                                 case other => throw GravsearchException(s"Invalid right argument ${other.toSparql} in comparison (expected a variable or IRI representing a resource)")
                             }
                         } else if (querySchema == ApiV2Simple) { // The left operand doesn't represent a resource. Is the query using the API v2 simple schema?
@@ -1511,7 +1511,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
         typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-            case Some(nonPropertyTypeInfo : NonPropertyTypeInfo) if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
+            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
             case _ => throw GravsearchException(s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
         }
 
@@ -1685,11 +1685,13 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     }
 
     /**
-     * Removes the type statements for entities whose types can be inferred from properties unless the property statement
-     * is in an optional block.
+     * Optimises a query by removing `rdf:type` statements that are known to be redundant. A redundant
+     * `rdf:type` statement gives the type of a variable whose type is already restricted by its
+     * use with a property that can only be used with that type (unless the property
+     * statement is in an `OPTIONAL` block).
      *
-     * @param patterns     the query patterns.
-     * @return a set of [[QueryPattern]].
+     * @param patterns the query patterns.
+     * @return the optimised query patterns.
      */
     protected def removeEntitiesInferredFromProperty(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
@@ -1726,5 +1728,4 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
         optimisedPatterns
     }
-
 }
