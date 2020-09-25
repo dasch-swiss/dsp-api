@@ -188,7 +188,7 @@ knora-api:Date a rdfs:Datatype;
   rdfs:label "Date literal";
   owl:onDatatype xsd:string;
   owl:withRestrictions [
-      xsd:pattern "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
+      xsd:pattern "(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
     ] .
 
 knora-api:DocumentRepresentation a owl:Class;
