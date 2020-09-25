@@ -46,7 +46,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))
+            moveBindToBeginning(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
@@ -79,7 +79,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
+            moveBindToBeginning(moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -103,7 +103,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))
+            moveBindToBeginning(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -124,7 +124,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
+            moveBindToBeginning(moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -216,6 +216,21 @@ object SparqlTransformer {
         }
 
         otherPatterns ++ isDeletedPatterns
+    }
+
+    /**
+     * Optimises a query by moving BIND patterns to the beginning of a block.
+     *
+     * @param patterns the block of patterns to be optimised.
+     * @return the result of the optimisation.
+     */
+    def moveBindToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val (bindQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case _: BindPattern => true
+            case _ => false
+        }
+
+        bindQueryPatterns ++ otherPatterns
     }
 
     /**
