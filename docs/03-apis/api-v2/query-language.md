@@ -369,6 +369,18 @@ CONSTRUCT {
 You can also use `knora-api:toSimpleDate` with to search for date tags in standoff
 text markup (see [Matching Standoff Dates](#matching-standoff-dates)).
 
+Note that the given date value for comparison must have the following format: 
+  
+    ```
+    (GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?
+    ```
+    
+E.g. an exact date like `GREGORIAN:2015-12-03` or a period like `GREGORIAN:2015-12-03:2015-12-04`.
+Dates may also have month or year precision, e.g. `ISLAMIC:1407-02` (the whole month of december) or `JULIAN:1330` 
+(the whole year 1330). An optional ERA indicator term (`BCE`, `CE`, or `BC`, `AD`) can be added to the date, when no 
+era is provided the default era `AD` will be considered. Era can be given as `GREGORIAN:1220 BC` or in range as 
+`GREGORIAN:600 BC:480 BC`.
+
 #### Searching for Matching Words
 
 The function `knora-api:matchText` searches for matching words anywhere in a
