@@ -263,7 +263,7 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
         }
 
         //*** Test ISLAMIC Date Conversions ****//
-        "convert an islamic date string to a CalendarDateV2 BC" in {
+        "convert an islamic date string to a CalendarDateV2" in {
             val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1441-02-15", CalendarNameIslamic)
             assert(calendarDate.year == 1441)
             assert(calendarDate.maybeMonth.contains(2))
