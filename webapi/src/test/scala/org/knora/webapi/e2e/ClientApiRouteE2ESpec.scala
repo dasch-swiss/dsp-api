@@ -47,7 +47,6 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
         RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
-    // FIXME: Ignored Test!
     "The client API route" should {
         "generate a Zip file of client test data" in {
             val request = Get(baseApiUrl + s"/clientapitest")
