@@ -14,7 +14,7 @@
 	<owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 	<owl:withRestrictions>
 		<rdf:Description rdf:nodeID="genid-301dc38dab7747b79c76d568907641a9-b0">
-			<xsd:pattern rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?</xsd:pattern>
+			<xsd:pattern rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?</xsd:pattern>
 		</rdf:Description>
 	</owl:withRestrictions>
 </rdfs:Datatype>
