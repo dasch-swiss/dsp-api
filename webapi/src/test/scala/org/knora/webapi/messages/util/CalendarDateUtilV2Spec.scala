@@ -85,7 +85,7 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
     }
 
     "The CalendarDateUtilV2Spec class" should {
-        "convert between calendar dates, Julian Day Numbers, and strings" in {
+        "convert between calendar dates, Julian Day Numbers, and strings for the JULIAN calendar" in {
             // JULIAN:1291-08-01 CE
 
             checkSingleDate(
@@ -115,9 +115,11 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
                 expectedEndJDN = 0,
                 dateStr = "JULIAN:4713-01-01 BCE"
             )
+        }
+
+        "convert between calendar dates, Julian Day Numbers, and strings for the GREGORIAN calendar" in {
 
             // GREGORIAN:1969-03-10 CE
-
             checkSingleDate(
                 calendarDate = CalendarDateV2(
                     calendarName = CalendarNameGregorian,
@@ -258,6 +260,79 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
                 val calendarDateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse("GREGORIAN:2000:1900")
                 calendarDateRange.toJulianDayRange
             }
+        }
+
+        //*** Test ISLAMIC Date Conversions ****//
+        "convert an islamic date string to a CalendarDateV2" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1441-02-15", CalendarNameIslamic)
+            assert(calendarDate.year == 1441)
+            assert(calendarDate.maybeMonth.contains(2))
+            assert(calendarDate.maybeDay.contains(15))
+            assert(calendarDate.maybeEra.isEmpty)
+        }
+
+        "convert a valid islamic date string with month precision to a Julian Day range" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1432-08-29", CalendarNameIslamic)
+            calendarDate.toJulianDayRange
+        }
+
+        "not convert an islamic date to a Julian Day range if an era is given" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1432-08-29 AH", CalendarNameIslamic)
+                calendarDate.toJulianDayRange
+            }
+        }
+
+        "convert an islamic date range to a Julian Day range" in {
+            val calendarDate: CalendarDateRangeV2 = CalendarDateRangeV2.parse("ISLAMIC:1432-08-29:1441")
+            calendarDate.toJulianDayRange
+        }
+
+        "not convert an islamic date range if end date is before start data" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateRangeV2 = CalendarDateRangeV2.parse("ISLAMIC:1432-08-29:1413")
+                calendarDate.toJulianDayRange
+            }
+        }
+
+        "convert between calendar dates, Julian Day Numbers, and strings for the islamic calendar" in {
+            // ISLAMIC:1432-08-29
+            checkSingleDate(
+                calendarDate = CalendarDateV2(
+                    calendarName = CalendarNameIslamic,
+                    year = 1432,
+                    maybeMonth = Some(8),
+                    maybeDay = Some(29),
+                    maybeEra = None
+                ),
+                expectedStartJDN = 2455774,
+                expectedEndJDN = 2455774,
+                dateStr = "ISLAMIC:1432-08-29"
+            )
+
+            // ISLAMIC:1432-08-29:1436-09-14
+
+            checkDateRange(
+                calendarDateRange = CalendarDateRangeV2(
+                    startCalendarDate = CalendarDateV2(
+                        calendarName = CalendarNameIslamic,
+                        year = 1432,
+                        maybeMonth = Some(8),
+                        maybeDay = Some(29),
+                        maybeEra = None
+                    ),
+                    endCalendarDate = CalendarDateV2(
+                        calendarName = CalendarNameIslamic,
+                        year = 1436,
+                        maybeMonth = Some(9),
+                        maybeDay = Some(14),
+                        maybeEra = None
+                    )
+                ),
+                expectedStartJDN = 2455774,
+                expectedEndJDN = 2457205,
+                dateStr = "ISLAMIC:1432-08-29:1436-09-14"
+            )
         }
     }
 }
