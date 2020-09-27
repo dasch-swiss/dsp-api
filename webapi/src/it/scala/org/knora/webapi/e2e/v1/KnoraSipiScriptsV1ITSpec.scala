@@ -57,11 +57,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
     "Calling Knora Sipi Scripts" should {
 
         "successfully call C++ functions from Lua scripts" in {
-            val request = Get(baseInternalSipiUrl + "/test_functions" )
-            checkResponseOK(request)
-        }
-
-        "successfully call C++ functions from Lua scripts (second try)" in {
+            Thread.sleep(1000)
             val request = Get(baseInternalSipiUrl + "/test_functions" )
             checkResponseOK(request)
         }
