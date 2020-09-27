@@ -21,12 +21,13 @@ package org.knora.webapi.e2e.v1
 
 import java.io.{File, FileInputStream, FileOutputStream}
 
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.knora.webapi.util.FileUtil
 import spray.json._
 
 
@@ -50,15 +51,13 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
     private val username = "root@example.com"
     private val password = "test"
     private val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
-    private val pathToMarbles = "test_data/test_route/images/marbles.tif"
-    private val firstPageIri = new MutableTestIri
-    private val secondPageIri = new MutableTestIri
 
     "Calling Knora Sipi Scripts" should {
 
         "successfully call C++ functions from Lua scripts" in {
-            Thread.sleep(1000)
             val request = Get(baseInternalSipiUrl + "/test_functions" )
+            // DSP-707: trying to wake up sipi first (without triggering an exception)
+            Http().singleRequest(request)
             checkResponseOK(request)
         }
 
