@@ -47,43 +47,6 @@ object JavaUtil {
         (a: A, b: B) => f(a, b)
 
     /**
-     * Recursively converts a Java collection into a Scala collection.
-     *
-     * Usage: `val scalaObj = deepScalaToJava(javaObj).asInstanceOf[Map[String, Any]]`
-     *
-     * @param javaObj the Java collection to be converted.
-     * @return an equivalent Scala collection.
-     */
-    def deepJavaToScala(javaObj: Any): Any = {
-        import collection.JavaConverters._
-        javaObj match {
-            case x: java.util.HashMap[_, _] => x.asScala.toMap.mapValues(deepJavaToScala)
-            case x: java.util.ArrayList[_] => x.asScala.toList.map(deepJavaToScala)
-            case _ => javaObj
-        }
-    }
-
-    /**
-     * Recursively converts a Scala collection into a Java collection.
-     *
-     * @param scalaCollection the Scala collection to be converted.
-     * @return an equivalent Java collection.
-     */
-    def deepScalaToJava(scalaCollection: Any): Any = {
-        import collection.JavaConverters._
-
-        scalaCollection match {
-            case x: List[_] => x.map(deepScalaToJava).asJava
-            case x: Seq[_] => x.map(deepScalaToJava).asJava
-            case x: Array[_] => x.map(deepScalaToJava)
-            case x: collection.mutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
-            case x: collection.immutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
-            case x: collection.Map[_, _] => x.mapValues(deepScalaToJava).asJava
-            case _ => scalaCollection
-        }
-    }
-
-    /**
      * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
      * [[https://stackoverflow.com/a/18794646]].
      */

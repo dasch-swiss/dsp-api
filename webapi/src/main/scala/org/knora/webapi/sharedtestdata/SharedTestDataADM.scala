@@ -1078,6 +1078,35 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createIslamicDateValueWithDayPrecisionRequest(resourceIri: IRI,
+                                               dateValueHasCalendar: String,
+                                               dateValueHasStartYear: Int,
+                                               dateValueHasStartMonth: Int,
+                                               dateValueHasStartDay: Int,
+                                               dateValueHasEndYear: Int,
+                                               dateValueHasEndMonth: Int,
+                                               dateValueHasEndDay: Int): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDate" : {
+           |    "@type" : "knora-api:DateValue",
+           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+           |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
+           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+           |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
     def createDateValueWithMonthPrecisionRequest(resourceIri: IRI,
                                                  dateValueHasCalendar: String,
                                                  dateValueHasStartYear: Int,

@@ -199,7 +199,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
         val body = JsonLDObject(Map(
             JsonLDConstants.ID -> JsonLDString(mappingIri),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
-            "rdfs:label" -> JsonLDString(label),
+            OntologyConstants.Rdfs.Label -> JsonLDString(label),
             OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
         ))
 

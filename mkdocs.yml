@@ -99,7 +99,6 @@ nav:
           - Index: 05-internals/development/index.md
           - Overview: 05-internals/development/overview.md
           - Build and Running: 05-internals/development/building-and-running.md
-          - Build Process: 05-internals/development/build-process.md
           - Setup IntelliJ for development of Knora: 05-internals/development/intellij-config.md
           - Bazel Notes: 05-internals/development/bazel.md
           - Testing: 05-internals/development/testing.md

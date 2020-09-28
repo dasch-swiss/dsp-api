@@ -466,6 +466,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
             val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
+            val temporaryBaseIIIFDirectDownloadUrl = temporaryBaseIIIFUrl + "/file"
 
             // JSON describing the new image to Knora.
             val jsonLdEntity =
@@ -488,7 +489,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(knoraPostResponse.status == StatusCodes.Forbidden)
 
             // Request the temporary image from Sipi.
-            val sipiGetTmpFileRequest = Get(temporaryBaseIIIFUrl)
+            val sipiGetTmpFileRequest = Get(temporaryBaseIIIFDirectDownloadUrl)
             val sipiResponse = singleAwaitingRequest(sipiGetTmpFileRequest)
             assert(sipiResponse.status == StatusCodes.NotFound)
         }

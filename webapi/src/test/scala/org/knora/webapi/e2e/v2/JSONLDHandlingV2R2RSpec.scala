@@ -25,13 +25,12 @@ import java.net.URLEncoder
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.util.{FileUtil, JavaUtil}
+import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -58,14 +57,14 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
         RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
-    "The JSONLD processor" should {
+    "The JSON-LD processor" should {
 
         "expand prefixes (on the client side)" in {
 
-            // JSONLD with prefixes and context object
+            // JSON-LD with prefixes and context object
             val jsonldWithPrefixes = readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
 
-            // expand JSONLD with JSONLD processor
+            // expand JSON-LD with JSON-LD processor
             val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
 
             // expected result after expansion
@@ -75,17 +74,17 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
         }
 
-        "produce the expected JSONLD context object (on the server side)" in {
+        "produce the expected JSON-LD context object (on the server side)" in {
 
             Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
+                val receivedJson: JsObject = JsonParser(responseAs[String]).asJsObject
 
-                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false))).asInstanceOf[Map[String, Any]]
+                val expectedJson: JsObject = JsonParser(readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)).asJsObject
 
-                assert(receivedJSONLDAsScala("@context") == expectedJSONLDAsScala("@context"), "@context incorrect")
+                assert(receivedJson.fields("@context") == expectedJson.fields("@context"), "@context incorrect")
 
             }
 
