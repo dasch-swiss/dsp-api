@@ -41,7 +41,7 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -121,7 +121,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         logger.info("... loading test data done.")
     }
 
-    protected def getResponseString(request: HttpRequest): String = {
+    protected def getResponseStringOrThrow(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
         val responseBodyStr: String = Await.result(response.entity.toStrict(10999.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
 
@@ -133,20 +133,20 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     }
 
     protected def checkResponseOK(request: HttpRequest): Unit = {
-        getResponseString(request)
+        getResponseStringOrThrow(request)
     }
 
     protected def getResponseJson(request: HttpRequest): JsObject = {
-        getResponseString(request).parseJson.asJsObject
+        getResponseStringOrThrow(request).parseJson.asJsObject
     }
 
     protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
+        val responseFuture: Future[HttpResponse] = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
 
     protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument = {
-        val responseBodyStr = getResponseString(request)
+        val responseBodyStr = getResponseStringOrThrow(request)
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 }
