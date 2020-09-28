@@ -327,34 +327,21 @@ case class GetFileMetadataRequestV2(fileUrl: String,
 
 
 /**
- * Represents a response from Sipi providing metadata about an image file.
+ * Represents file metadata returned by Sipi.
  *
  * @param originalFilename the file's original filename, if known.
  * @param originalMimeType the file's original MIME type.
- * @param mimeType         the file's original MIME type (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
+ * @param internalMimeType the file's internal MIME type. Always defined (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
  * @param width            the file's width in pixels, if applicable.
  * @param height           the file's height in pixels, if applicable.
- * @param numpages         the number of pages in the file, if applicable.
+ * @param pageCount         the number of pages in the file, if applicable.
  */
 case class GetFileMetadataResponseV2(originalFilename: Option[String],
                                      originalMimeType: Option[String],
-                                     internalMimeType: Option[String],
-                                     mimeType: Option[String],
+                                     internalMimeType: String,
                                      width: Option[Int],
                                      height: Option[Int],
-                                     numpages: Option[Int]) {
-    if (originalFilename.contains("")) {
-        throw SipiException(s"Sipi returned an empty originalFilename")
-    }
-
-    if (originalMimeType.contains("")) {
-        throw SipiException(s"Sipi returned an empty originalMimeType")
-    }
-}
-
-object GetFileMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val getImageMetadataResponseV2Format: RootJsonFormat[GetFileMetadataResponseV2] = jsonFormat7(GetFileMetadataResponseV2)
-}
+                                     pageCount: Option[Int])
 
 /**
  * Asks Sipi to move a file from temporary to permanent storage.

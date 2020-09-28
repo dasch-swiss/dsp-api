@@ -126,11 +126,10 @@ class MockSipiConnector extends Actor with ActorLogging {
             GetFileMetadataResponseV2(
                 originalFilename = Some("test2.tiff"),
                 originalMimeType = Some("image/tiff"),
-                internalMimeType = Some("image/jp2"),
-                mimeType = None,
+                internalMimeType = "image/jp2",
                 width = Some(512),
                 height = Some(256),
-                numpages = None
+                pageCount = None
             )
         }
 

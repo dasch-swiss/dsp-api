@@ -2723,17 +2723,12 @@ object FileValueWithSipiMetadata {
             internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
-
             tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
-
             fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
-
-            // workaround for https://dasch.myjetbrains.com/youtrack/issue/DSP-711
-            internalMimeType: String = fileMetadataResponse.internalMimeType.getOrElse(fileMetadataResponse.mimeType.getOrElse(throw SipiException(s"Sipi didn't return an internal MIME type for file $internalFilename")))
 
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
-                internalMimeType = internalMimeType,
+                internalMimeType = fileMetadataResponse.internalMimeType,
                 originalFilename = fileMetadataResponse.originalFilename,
                 originalMimeType = fileMetadataResponse.originalMimeType
             )
@@ -2967,7 +2962,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
         } yield DocumentFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,
-            pageCount = fileValueWithSipiMetadata.sipiFileMetadata.numpages.getOrElse(throw SipiException("Sipi did not return a page count")),
+            pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount.getOrElse(throw SipiException("Sipi did not return a page count")),
             dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
             dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
             comment = getComment(jsonLDObject)
