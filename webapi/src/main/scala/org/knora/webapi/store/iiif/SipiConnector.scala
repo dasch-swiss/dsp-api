@@ -245,7 +245,16 @@ class SipiConnector extends Actor with ActorLogging {
 
         for {
             responseStr <- doSipiRequest(request)
-        } yield responseStr.parseJson.convertTo[GetFileMetadataResponseV2]
+            response = responseStr.parseJson.convertTo[GetFileMetadataResponseV2]
+        } yield if (response.mimeType.contains("text/comma-separated-values")) {
+            // workaround for https://dasch.myjetbrains.com/youtrack/issue/DSP-711
+            response.copy(
+                internalMimeType = Some("text/csv"),
+                mimeType = Some("text/csv")
+            )
+        } else {
+            response
+        }
     }
 
     /**

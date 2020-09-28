@@ -2723,11 +2723,17 @@ object FileValueWithSipiMetadata {
             internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
+
             tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
+
             fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
+
+            // workaround for https://dasch.myjetbrains.com/youtrack/issue/DSP-711
+            internalMimeType: String = fileMetadataResponse.internalMimeType.getOrElse(fileMetadataResponse.mimeType.getOrElse(throw SipiException(s"Sipi didn't return an internal MIME type for file $internalFilename")))
+
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
-                internalMimeType = fileMetadataResponse.internalMimeType,
+                internalMimeType = internalMimeType,
                 originalFilename = fileMetadataResponse.originalFilename,
                 originalMimeType = fileMetadataResponse.originalMimeType
             )
@@ -2849,6 +2855,10 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
                 settings = settings,
                 log = log
             )
+
+            _ = if (!settings.imageMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+                throw BadRequestException(s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for still image files")
+            }
         } yield StillImageFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,
@@ -2950,6 +2960,10 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
                 settings = settings,
                 log = log
             )
+
+            _ = if (!settings.documentMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+                throw BadRequestException(s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for document files")
+            }
         } yield DocumentFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,
@@ -3035,6 +3049,10 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
                 settings = settings,
                 log = log
             )
+
+            _ = if (!settings.textMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+                throw BadRequestException(s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for text files")
+            }
         } yield TextFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,

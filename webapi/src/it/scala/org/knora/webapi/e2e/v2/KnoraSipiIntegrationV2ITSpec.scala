@@ -135,6 +135,14 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     case class SavedDocument(internalFilename: String, url: String, pageCount: Int, width: Option[Int], height: Option[Int])
 
     /**
+     * Represents the information that Knora returns about a text file value that was created.
+     *
+     * @param internalFilename the files's internal filename.
+     * @param url              the file's URL.
+     */
+    case class SavedTextFile(internalFilename: String, url: String)
+
+    /**
      * Uploads a file to Sipi and returns the information in Sipi's response.
      *
      * @param loginToken    the login token to be included in the request to Sipi.
@@ -250,7 +258,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     /**
-     * Given a JSON-LD object representing a Knora document file value, returns a [[SavedImage]] containing the same information.
+     * Given a JSON-LD object representing a Knora document file value, returns a [[SavedDocument]] containing the same information.
      *
      * @param savedValue a JSON-LD object representing a Knora document file value.
      * @return a [[SavedDocument]] containing the same information.
@@ -274,6 +282,27 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             pageCount = pageCount,
             width = dimX,
             height = dimY
+        )
+    }
+
+    /**
+     * Given a JSON-LD object representing a Knora text file value, returns a [[SavedTextFile]] containing the same information.
+     *
+     * @param savedValue a JSON-LD object representing a Knora document file value.
+     * @return a [[SavedTextFile]] containing the same information.
+     */
+    private def savedValueToSavedTextFile(savedValue: JsonLDObject): SavedTextFile = {
+        val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+
+        val url: String = savedValue.requireDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
+            expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+            validationFun = stringFormatter.toSparqlEncodedString
+        )
+
+        SavedTextFile(
+            internalFilename = internalFilename,
+            url = url
         )
     }
 
@@ -658,7 +687,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val savedValues: JsonLDArray = getValuesFromResource(
                 resource = resource,
-                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
+                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri
             )
 
             val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
@@ -672,11 +701,8 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 case other => throw AssertionException(s"Invalid value object: $other")
             }
 
-            val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
-            assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-            assert(savedDocument.pageCount == 1)
-            assert(savedDocument.width.isEmpty)
-            assert(savedDocument.height.isEmpty)
+            val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValueObj)
+            assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
         }
     }
 }
