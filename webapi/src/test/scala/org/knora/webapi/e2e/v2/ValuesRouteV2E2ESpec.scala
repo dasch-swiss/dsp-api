@@ -1671,6 +1671,105 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
         }
 
+        "create a date value representing a single islamic date with day precision" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val dateValueHasCalendar = "ISLAMIC"
+            val dateValueHasStartYear = 1407
+            val dateValueHasStartMonth = 1
+            val dateValueHasStartDay = 26
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.createIslamicDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndDay = dateValueHasStartDay
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            dateValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = dateValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-26")
+            savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(dateValueHasCalendar)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(dateValueHasStartMonth)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+        }
+
+        "create an islamic date value representing a range with day precision" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val dateValueHasCalendar = "ISLAMIC"
+            val dateValueHasStartYear = 1407
+            val dateValueHasStartMonth = 1
+            val dateValueHasStartDay = 15
+            val dateValueHasEndYear = 1407
+            val dateValueHasEndMonth = 1
+            val dateValueHasEndDay = 26
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.createIslamicDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndDay = dateValueHasEndDay
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            dateValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = dateValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-15:1407-01-26")
+            savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(dateValueHasCalendar)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(dateValueHasStartMonth)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
+            savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+        }
+
         "create a boolean value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
