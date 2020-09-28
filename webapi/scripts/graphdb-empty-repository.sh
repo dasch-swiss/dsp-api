@@ -14,7 +14,7 @@ case $key in
     shift # past value
     ;;
     -u|--username)
-    USERNAME="$2"
+    USER_NAME="$2"
     shift # past argument
     shift # past value
     ;;
@@ -36,7 +36,7 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [[ -z "${REPOSITORY}" || -z "${USERNAME}" ]]; then
+if [[ -z "${REPOSITORY}" || -z "${USER_NAME}" ]]; then
     echo "Usage: $(basename "$0") -r|--repository REPOSITORY -u|--username USERNAME [-p|--password PASSWORD] [-h|--host HOST]"
     exit 1
 fi
@@ -51,4 +51,4 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:7200"
 fi
 
-curl -sS -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements"
+curl -sS -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "${USER_NAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements"
