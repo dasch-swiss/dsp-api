@@ -127,6 +127,7 @@ class MockSipiConnector extends Actor with ActorLogging {
                 originalFilename = Some("test2.tiff"),
                 originalMimeType = Some("image/tiff"),
                 internalMimeType = Some("image/jp2"),
+                mimeType = None,
                 width = Some(512),
                 height = Some(256),
                 numpages = None
