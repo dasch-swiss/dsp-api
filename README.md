@@ -228,16 +228,17 @@ data would be necessary, e.g., any changes to the Knora-Base ontologies which ar
 ## Release Notes Generation
 
 Release notes are generated automatically based on the closed PRs. The PRs should be labeled based on the
-following grouping scheme:
+following grouping scheme. Add at least one of the corresponding labels to your PR:
 
-| Category | Label |
-|---|---|
-| Breaking changes | breaking/api, breaking/data, breaking |
-| Enhancements  | enhancement |
-| Bug Fixes | bug |
-| Documentation | documentation |
-| Other | chore, refactor |
-
+- **breaking** Breaking Changes
+- **enhancement** New feature
+- **bug** A bug fix
+- **styling** Update style; no production code change
+- **documentation** Changes to the documentation
+- **testing** All about tests: adding, refactoring tests; no production code change
+- **refactor** Refactoring production code
+- **chore** Maintenance tasks; no production code change
+- **dependencies** Update a dependency package version
 
 ## Acknowledgments
 
