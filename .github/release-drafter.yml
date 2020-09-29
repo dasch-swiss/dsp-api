@@ -1,0 +1,44 @@
+name-template: 'Next release'
+tag-template: 'next-release'
+categories:
+  - title: 'Breaking changes'
+    labels:
+      - 'breaking/api'
+      - 'breaking'
+  - title: 'Enhancements'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: 'Styling'
+    label: 'styling'
+  - title: 'Bug fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: 'Documentation'
+    label: 'documentation'
+  - title: 'Dependencies'
+    label: 'dependencies'
+  - title: 'Maintenance'
+    labels:
+      - 'chore'
+      - 'refactor'
+  - title: 'Testing'
+    label: 'testing'
+change-template: '- #$NUMBER $TITLE'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+template: |
+
+  $CHANGES
