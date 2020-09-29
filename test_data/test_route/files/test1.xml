@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu>
+    <food>
+        <name>egg and bacon</name>
+    </food>
+    <food>
+        <name>egg sausage and bacon</name>
+    </food>
+    <food>
+        <name>egg and spam</name>
+    </food>
+    <food>
+        <name>egg bacon and spam</name>
+    </food>
+    <food>
+        <name>egg bacon sausage and spam</name>
+    </food>
+</menu>

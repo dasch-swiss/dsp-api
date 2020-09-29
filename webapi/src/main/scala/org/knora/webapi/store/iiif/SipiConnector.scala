@@ -22,6 +22,7 @@ package org.knora.webapi.store.iiif
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
@@ -32,7 +33,6 @@ import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi.exceptions.{BadRequestException, NotImplementedException, SipiException}
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.store.sipimessages._
@@ -208,8 +208,7 @@ class SipiConnector extends Actor with ActorLogging {
                     )
 
                 case SipiConstants.FileType.TEXT =>
-
-                    // parse response as a [[SipiTextResponse]]
+                    // parse response as a SipiTextResponse
                     val textStoreResult = try {
                         responseAsJson.convertTo[SipiTextResponse]
                     } catch {
@@ -233,19 +232,69 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     /**
+     * Represents a response from Sipi's `knora.json` route.
+     *
+     * @param originalFilename the file's original filename, if known.
+     * @param originalMimeType the file's original MIME type.
+     * @param internalMimeType the file's internal MIME type (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
+     * @param mimeType         the file's internal MIME type (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
+     * @param width            the file's width in pixels, if applicable.
+     * @param height           the file's height in pixels, if applicable.
+     * @param numpages         the number of pages in the file, if applicable.
+     */
+    case class SipiKnoraJsonResponse(originalFilename: Option[String],
+                                     originalMimeType: Option[String],
+                                     internalMimeType: Option[String],
+                                     mimeType: Option[String],
+                                     width: Option[Int],
+                                     height: Option[Int],
+                                     numpages: Option[Int]) {
+        if (originalFilename.contains("")) {
+            throw SipiException(s"Sipi returned an empty originalFilename")
+        }
+
+        if (originalMimeType.contains("")) {
+            throw SipiException(s"Sipi returned an empty originalMimeType")
+        }
+    }
+
+    object SipiKnoraJsonResponseProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+        implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat7(SipiKnoraJsonResponse)
+    }
+
+    /**
      * Asks Sipi for metadata about a file.
      *
      * @param getFileMetadataRequestV2 the request.
      * @return a [[GetFileMetadataResponseV2]] containing the requested metadata.
      */
     private def getFileMetadataV2(getFileMetadataRequestV2: GetFileMetadataRequestV2): Try[GetFileMetadataResponseV2] = {
-        val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
+        import SipiKnoraJsonResponseProtocol._
 
-        val request = new HttpGet(knoraInfoUrl)
+        val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
+        val sipiRequest = new HttpGet(knoraInfoUrl)
 
         for {
-            responseStr <- doSipiRequest(request)
-        } yield responseStr.parseJson.convertTo[GetFileMetadataResponseV2]
+            sipiResponseStr <- doSipiRequest(sipiRequest)
+            sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
+
+            // Workaround for https://dasch.myjetbrains.com/youtrack/issue/DSP-711
+
+            internalMimeType: String = sipiResponse.internalMimeType.getOrElse(sipiResponse.mimeType.getOrElse(throw SipiException(s"Sipi returned no internal MIME type in response to $knoraInfoUrl")))
+
+            correctedInternalMimeType: String = internalMimeType match {
+                case "text/comma-separated-values" => "text/csv"
+                case other => other
+            }
+        } yield
+            GetFileMetadataResponseV2(
+                originalFilename = sipiResponse.originalFilename,
+                originalMimeType = sipiResponse.originalMimeType,
+                internalMimeType = correctedInternalMimeType,
+                width = sipiResponse.width,
+                height = sipiResponse.height,
+                pageCount = sipiResponse.numpages
+            )
     }
 
     /**
