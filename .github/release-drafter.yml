@@ -4,6 +4,7 @@ categories:
   - title: 'Breaking changes'
     labels:
       - 'breaking/api'
+      - 'breaking/data'
       - 'breaking'
   - title: 'Enhancements'
     labels:
