@@ -14,7 +14,7 @@ case $key in
     shift # past value
     ;;
     -u|--username)
-    USERNAME="$2"
+    USER_NAME="$2"
     shift # past argument
     shift # past value
     ;;
@@ -38,7 +38,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 FILE="$1"
 
-if [[ -z "${REPOSITORY}" || -z "${USERNAME}" || -z "${FILE}" ]]; then
+if [[ -z "${REPOSITORY}" || -z "${USER_NAME}" || -z "${FILE}" ]]; then
     echo "Usage: $(basename "$0") -r|--repository REPOSITORY -u|--username USERNAME [-p|--password PASSWORD] [-h|--host HOST] FILE"
     exit 1
 fi
@@ -53,4 +53,4 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:3030"
 fi
 
-curl -sS -X POST -H "Content-Type: application/trig" --data-binary "@${FILE}" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/${REPOSITORY}" | tee /dev/null
+curl -sS -X POST -H "Content-Type: application/trig" --data-binary "@${FILE}" -u "${USER_NAME}:${PASSWORD}" "http://${HOST}/${REPOSITORY}" | tee /dev/null

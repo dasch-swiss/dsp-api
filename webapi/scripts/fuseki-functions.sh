@@ -13,7 +13,7 @@ while [[ $# -gt 0 ]]; do
     shift # past value
     ;;
   -u | --username)
-    USERNAME="$2"
+    USER_NAME="$2"
     shift # past argument
     shift # past value
     ;;
@@ -45,8 +45,8 @@ if [[ -z "${HOST}" ]]; then
   HOST="localhost:3030"
 fi
 
-if [[ -z "${USERNAME}" ]]; then
-  USERNAME="admin"
+if [[ -z "${USER_NAME}" ]]; then
+  USER_NAME="admin"
 fi
 
 if [[ -z "${PASSWORD}" ]]; then
@@ -54,7 +54,7 @@ if [[ -z "${PASSWORD}" ]]; then
 fi
 
 delete-repository() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -X DELETE http://${HOST}/\$/datasets/${REPOSITORY})
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -X DELETE http://${HOST}/\$/datasets/${REPOSITORY})
 
   if [ "${STATUS}" -eq 200 ]; then
     echo "==> delete repository done"
@@ -67,7 +67,7 @@ delete-repository() {
 
 create-repository() {
   REPOSITORY_CONFIG=$(sed "s/@REPOSITORY@/${REPOSITORY}/g" ./fuseki-repository-config.ttl.template)
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-raw "${REPOSITORY_CONFIG}" -X POST http://${HOST}/\$/datasets)
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-raw "${REPOSITORY_CONFIG}" -X POST http://${HOST}/\$/datasets)
 
   if [ "${STATUS}" -eq 200 ]; then
     echo "==> create repository done"
@@ -79,7 +79,7 @@ create-repository() {
 }
 
 upload-graph() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-binary @$1 -X PUT http://${HOST}/${REPOSITORY}\?graph\="$2")
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-binary @$1 -X PUT http://${HOST}/${REPOSITORY}\?graph\="$2")
 
   if [ "${STATUS}" -eq 201 ]; then
     echo "==> 201 Created: $1 -> $2"

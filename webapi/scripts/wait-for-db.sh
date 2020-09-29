@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
     ;;
 
    -u | --username)
-    USERNAME="$2"
+    USER_NAME="$2"
     shift # past argument
     shift # past value
     ;;
@@ -48,8 +48,8 @@ if [[ -z "${TIMEOUT}" ]]; then
   TIMEOUT=360
 fi
 
-if [[ -z "${USERNAME}" ]]; then
-  USERNAME="admin"
+if [[ -z "${USER_NAME}" ]]; then
+  USER_NAME="admin"
 fi
 
 if [[ -z "${PASSWORD}" ]]; then
@@ -57,7 +57,7 @@ if [[ -z "${PASSWORD}" ]]; then
 fi
 
 poll-db() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USERNAME}:${PASSWORD} http://${HOST}/\$/server)
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} http://${HOST}/\$/server)
 
   if [ "${STATUS}" -eq 200 ]; then
     echo "==> DB started"
