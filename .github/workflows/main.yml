@@ -300,7 +300,13 @@ jobs:
   # Update release notes for "Next release"
   update_release_draft:
     name: Update next release draft
-    needs: build-test
+    needs: [
+      api-unit-tests,
+      api-e2e-tests,
+      api-integration-tests,
+      upgrade-integration-tests,
+      docs-build-test
+    ]
     runs-on: ubuntu-latest
     # Drafts your next Release notes as Pull Requests are merged into "develop"
     if: github.ref == 'refs/heads/develop'
