@@ -346,6 +346,11 @@ jobs:
           npm install --global typedoc
           npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CUSTOM_DOMAIN: docs.knora.org
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -365,12 +370,6 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: run docs build
-        run: make docs-build
-      - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Disk Free After
         run: |
           df -h
