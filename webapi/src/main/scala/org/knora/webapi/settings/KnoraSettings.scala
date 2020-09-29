@@ -86,9 +86,17 @@ class KnoraSettingsImpl(config: Config) extends Extension {
         }
     }
 
-    val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
+    val imageMimeTypes: Set[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
         mType: ConfigValue => mType.unwrapped.toString
-    }.toVector
+    }.toSet
+
+    val documentMimeTypes: Set[String] = config.getList("app.sipi.document-mime-types").iterator.asScala.map {
+        mType: ConfigValue => mType.unwrapped.toString
+    }.toSet
+
+    val textMimeTypes: Set[String] = config.getList("app.sipi.text-mime-types").iterator.asScala.map {
+        mType: ConfigValue => mType.unwrapped.toString
+    }.toSet
 
     val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
     val internalSipiHost: String = config.getString("app.sipi.internal-host")

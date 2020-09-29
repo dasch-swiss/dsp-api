@@ -228,8 +228,9 @@ Knora supports the storage of certain types of data as files, using
 (see [FileValue](../../02-knora-ontologies/knora-base.md#filevalue)).
 Knora API v2 currently supports using Sipi to store the following types of files:
 
-* Images (JPEG, JPEG2000, TIFF, PNG), which are stored internally as JPEG2000
-* PDF
+* Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
+* Documents: PDF
+* Text files: XML or CSV
 
 Support for other types of files will be added in the future.
 
@@ -331,6 +332,10 @@ If you're submitting a PDF document, use the resource class
 `knora-api:DocumentRepresentation`, which has the property
 `knora-api:hasDocumentFileValue`, pointing to a
 `knora-api:DocumentFileValue`.
+
+For a text file, use `knora-api:TextRepresentation`, which has the property
+`knora-api:hasTextFileValue`, pointing to a
+`knora-api:TextFileValue`.
 
 ## Updating a Value
 
