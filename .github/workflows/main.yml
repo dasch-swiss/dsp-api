@@ -297,6 +297,24 @@ jobs:
           df -h
           docker system df
 
+  # Update release notes for "Next release"
+  update_release_draft:
+    name: Update next release draft
+    needs: [
+      api-unit-tests,
+      api-e2e-tests,
+      api-integration-tests,
+      upgrade-integration-tests,
+      docs-build-test
+    ]
+    runs-on: ubuntu-latest
+    # Drafts your next Release notes as Pull Requests are merged into "develop"
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
   # publish only on release
   publish:
     name: Publish (on release only)
@@ -334,6 +352,11 @@ jobs:
           npm install --global typedoc
           npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CUSTOM_DOMAIN: docs.knora.org
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -343,20 +366,6 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - if: "github.event.release.prerelease"
-        name: Update release notes
-        uses: lakto/gren-action@v2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          options: '--override --prerelease'
-      - if: "!github.event.release.prerelease"
-        name: Update release notes
-        uses: lakto/gren-action@v2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          options: '--override'
       - name: Disk Free
         run: |
           df -h
@@ -367,12 +376,6 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: run docs build
-        run: make docs-build
-      - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Disk Free After
         run: |
           df -h
