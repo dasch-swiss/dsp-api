@@ -297,6 +297,18 @@ jobs:
           df -h
           docker system df
 
+  # Update release notes for "Next release"
+  update_release_draft:
+    name: Update next release draft
+    needs: build-test
+    runs-on: ubuntu-latest
+    # Drafts your next Release notes as Pull Requests are merged into "develop"
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
   # publish only on release
   publish:
     name: Publish (on release only)
@@ -343,20 +355,6 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - if: "github.event.release.prerelease"
-        name: Update release notes
-        uses: lakto/gren-action@v2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          options: '--override --prerelease'
-      - if: "!github.event.release.prerelease"
-        name: Update release notes
-        uses: lakto/gren-action@v2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          options: '--override'
       - name: Disk Free
         run: |
           df -h
