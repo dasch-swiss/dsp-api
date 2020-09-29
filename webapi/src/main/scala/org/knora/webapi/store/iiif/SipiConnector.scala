@@ -243,12 +243,12 @@ class SipiConnector extends Actor with ActorLogging {
      * @param numpages         the number of pages in the file, if applicable.
      */
     case class SipiKnoraJsonResponse(originalFilename: Option[String],
-                                                       originalMimeType: Option[String],
-                                                       internalMimeType: Option[String],
-                                                       mimeType: Option[String],
-                                                       width: Option[Int],
-                                                       height: Option[Int],
-                                                       numpages: Option[Int]) {
+                                     originalMimeType: Option[String],
+                                     internalMimeType: Option[String],
+                                     mimeType: Option[String],
+                                     width: Option[Int],
+                                     height: Option[Int],
+                                     numpages: Option[Int]) {
         if (originalFilename.contains("")) {
             throw SipiException(s"Sipi returned an empty originalFilename")
         }
@@ -279,23 +279,18 @@ class SipiConnector extends Actor with ActorLogging {
             sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
 
             // Workaround for https://dasch.myjetbrains.com/youtrack/issue/DSP-711
-            internalMimeType = sipiResponse.internalMimeType.getOrElse(
-                sipiResponse.mimeType match {
-                    case Some(mimeType) =>
-                        if (mimeType == "text/comma-separated-values") {
-                            "text/csv"
-                        } else {
-                            mimeType
-                        }
 
-                    case None => throw SipiException(s"Sipi returned no internal MIME type in response to $knoraInfoUrl")
-                }
-            )
+            internalMimeType: String = sipiResponse.internalMimeType.getOrElse(sipiResponse.mimeType.getOrElse(throw SipiException(s"Sipi returned no internal MIME type in response to $knoraInfoUrl")))
+
+            correctedInternalMimeType: String = internalMimeType match {
+                case "text/comma-separated-values" => "text/csv"
+                case other => other
+            }
         } yield
             GetFileMetadataResponseV2(
                 originalFilename = sipiResponse.originalFilename,
                 originalMimeType = sipiResponse.originalMimeType,
-                internalMimeType = internalMimeType,
+                internalMimeType = correctedInternalMimeType,
                 width = sipiResponse.width,
                 height = sipiResponse.height,
                 pageCount = sipiResponse.numpages
