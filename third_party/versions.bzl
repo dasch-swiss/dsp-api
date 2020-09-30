@@ -8,10 +8,10 @@ METRICS_VERSION = "4.0.1"
 
 # SIPI - digest takes precedence!
 SIPI_REPOSITORY = "daschswiss/sipi"
-SIPI_VERSION = "3.0.0-rc.5"
+SIPI_VERSION = "3.0.0-rc.7"
 SIPI_TAG = "v" + SIPI_VERSION
 SIPI_IMAGE = SIPI_REPOSITORY + ":" + SIPI_VERSION
-SIPI_IMAGE_DIGEST = "sha256:3a3eba0bb0ba9e3c772012c03fb93c7187e8a1016cc4ee0d975b37920c56ccfa"
+SIPI_IMAGE_DIGEST = "sha256:0ae1ca94148c2f159a03390718703625d5262b2c7097baf20579dfceb934f090"
 
 # Jena Fuseki - digest takes precedence!
 FUSEKI_REPOSITORY = "stain/jena-fuseki"

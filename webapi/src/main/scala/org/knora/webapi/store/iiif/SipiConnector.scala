@@ -236,16 +236,14 @@ class SipiConnector extends Actor with ActorLogging {
      *
      * @param originalFilename the file's original filename, if known.
      * @param originalMimeType the file's original MIME type.
-     * @param internalMimeType the file's internal MIME type (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
-     * @param mimeType         the file's internal MIME type (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
+     * @param internalMimeType the file's internal MIME type.
      * @param width            the file's width in pixels, if applicable.
      * @param height           the file's height in pixels, if applicable.
      * @param numpages         the number of pages in the file, if applicable.
      */
     case class SipiKnoraJsonResponse(originalFilename: Option[String],
                                      originalMimeType: Option[String],
-                                     internalMimeType: Option[String],
-                                     mimeType: Option[String],
+                                     internalMimeType: String,
                                      width: Option[Int],
                                      height: Option[Int],
                                      numpages: Option[Int]) {
@@ -259,7 +257,7 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     object SipiKnoraJsonResponseProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat7(SipiKnoraJsonResponse)
+        implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat6(SipiKnoraJsonResponse)
     }
 
     /**
@@ -277,20 +275,11 @@ class SipiConnector extends Actor with ActorLogging {
         for {
             sipiResponseStr <- doSipiRequest(sipiRequest)
             sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
-
-            // Workaround for https://dasch.myjetbrains.com/youtrack/issue/DSP-711
-
-            internalMimeType: String = sipiResponse.internalMimeType.getOrElse(sipiResponse.mimeType.getOrElse(throw SipiException(s"Sipi returned no internal MIME type in response to $knoraInfoUrl")))
-
-            correctedInternalMimeType: String = internalMimeType match {
-                case "text/comma-separated-values" => "text/csv"
-                case other => other
-            }
         } yield
             GetFileMetadataResponseV2(
                 originalFilename = sipiResponse.originalFilename,
                 originalMimeType = sipiResponse.originalMimeType,
-                internalMimeType = correctedInternalMimeType,
+                internalMimeType = sipiResponse.internalMimeType,
                 width = sipiResponse.width,
                 height = sipiResponse.height,
                 pageCount = sipiResponse.numpages
