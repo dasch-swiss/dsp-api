@@ -28,27 +28,29 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
+import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
-import org.knora.webapi.util._
 
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -68,7 +70,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         case ResourceRightsGetRequestV1(resourceIri, userProfile) => getRightsResponseV1(resourceIri, userProfile)
         case graphDataGetRequest: GraphDataGetRequestV1 => getGraphDataResponseV1(graphDataGetRequest)
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile)
-        case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID)
+        case ResourceCreateRequestV1(resourceTypeIri, label, values, file, projectIri, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, file, projectIri, userProfile, apiRequestID)
         case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => checkResourceClass(resourceIri, owlClass, userProfile)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile)
@@ -160,7 +162,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             for {
                 // Get the direct links from/to the start node.
-                sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getGraphData(
+                sparql <- Future(queries.sparql.v1.txt.getGraphData(
                     triplestore = settings.triplestoreType,
                     startNodeIri = startNode.nodeIri,
                     startNodeOnly = false,
@@ -295,7 +297,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         for {
             // Get the start node.
-            sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getGraphData(
+            sparql <- Future(queries.sparql.v1.txt.getGraphData(
                 triplestore = settings.triplestoreType,
                 startNodeIri = graphDataGetRequest.resourceIri,
                 startNodeOnly = true
@@ -449,7 +451,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         // Get information about the references pointing from other resources to this resource.
         val maybeIncomingRefsFuture: Future[Option[SparqlSelectResponse]] = if (getIncoming) {
             for {
-                incomingRefsSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getIncomingReferences(
+                incomingRefsSparql <- Future(queries.sparql.v1.txt.getIncomingReferences(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri
                 ).toString())
@@ -869,7 +871,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }
 
             // If this resource is part of another resource, get its parent resource.
-            isPartOfSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.isPartOf(
+            isPartOfSparqlQuery = queries.sparql.v1.txt.isPartOf(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString()
@@ -912,7 +914,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             resourceContexts: Seq[ResourceContextItemV1] <- if (containingResInfoV1Option.isEmpty) {
                 for {
                     // Otherwise, do a SPARQL query that returns resources that are part of this resource (as indicated by knora-base:isPartOf).
-                    contextSparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getContext(
+                    contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(
                         triplestore = settings.triplestoreType,
                         resourceIri = resourceIri
                     ).toString())
@@ -964,7 +966,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     //
                     // check if there are regions pointing to this resource
                     //
-                    regionSparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getRegions(
+                    regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
                         triplestore = settings.triplestoreType,
                         resourceIri = resourceIri
                     ).toString())
@@ -1110,7 +1112,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         for {
 
-            searchResourcesSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourceSearchResult(
+            searchResourcesSparql <- Future(queries.sparql.v1.txt.getResourceSearchResult(
                 triplestore = settings.triplestoreType,
                 searchPhrase = searchPhrase,
                 restypeIriOption = resourceTypeIri,
@@ -1219,36 +1221,42 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param resourcesToCreate collection of ResourceRequests .
      * @param projectIri        IRI of the project .
      * @param apiRequestID      the the ID of the API request.
-     * @param userProfile       the profile of the user making the request.
+     * @param requestingUser    the user making the request.
      * @return a [[MultipleResourceCreateResponseV1]] informing the client about the new resources.
      */
     private def createMultipleNewResources(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri: IRI,
-                                           userProfile: UserADM,
+                                           requestingUser: UserADM,
                                            apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
-        val userProfileV1 = userProfile.asUserProfileV1
+        // Convert all the image metadata in the request to StillImageFileValueContentV2 instances, so we
+        // can use ResourceUtilV2.doSipiPostUpdate after updating the triplestore.
+        val stillImageFileValueContentV2s: Seq[StillImageFileValueContentV2] = resourcesToCreate.flatMap {
+            resourceToCreate => resourceToCreate.file.map(_.toStillImageFileValueContentV2)
+        }
 
-        for {
+        val updateFuture: Future[MultipleResourceCreateResponseV1] = for {
             // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
-                if (userProfile.isAnonymousUser) {
+                if (requestingUser.isAnonymousUser) {
                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
                 } else {
-                    userProfile.id
+                    requestingUser.id
                 }
             }
 
             // Get information about the project in which the resources will be created.
             projectInfoResponse <- {
-                responderManager ? ProjectInfoByIRIGetRequestV1(
-                    projectIri,
-                    Some(userProfileV1)
+                responderManager ? ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                    requestingUser = requestingUser
                 )
-            }.mapTo[ProjectInfoResponseV1]
+            }.mapTo[ProjectGetResponseADM]
+
+            projectADM = projectInfoResponse.project
 
             // Ensure that the project isn't the system project or the shared ontologies project.
 
-            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+            resourceProjectIri: IRI = projectADM.id
 
             _ = if (resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
@@ -1256,11 +1264,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Ensure that the resource class isn't from a non-shared ontology in another project.
 
-            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
+            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectADM)
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1279,7 +1287,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Ensure that none of the resource classes is from a non-shared ontology in another project.
 
             resourceClassOntologyIris: Set[SmartIri] = resourceClasses.map(_.toSmartIri.getOntologyFromEntity)
-            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, userProfile)).mapTo[ReadOntologyMetadataV2]
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, requestingUser)).mapTo[ReadOntologyMetadataV2]
 
             _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
                 val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
@@ -1292,7 +1300,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = resourceClasses,
                 propertyIris = Set.empty[IRI],
-                userProfile = userProfile
+                userProfile = requestingUser
             )).mapTo[EntityInfoGetResponseV1]
 
             allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceClassInfoMap.flatMap {
@@ -1303,7 +1311,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set.empty[IRI],
                 propertyIris = allPropertyIris,
-                userProfile = userProfile
+                userProfile = requestingUser
             )).mapTo[EntityInfoGetResponseV1]
 
             propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyInfoV1]] = resourceClassesEntityInfoResponse.resourceClassInfoMap.map {
@@ -1325,7 +1333,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
-                                targetUser = userProfile,
+                                targetUser = requestingUser,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -1345,7 +1353,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                         projectIri = projectIri,
                                         resourceClassIri = resourceClassIri,
                                         propertyIri = propertyIri,
-                                        targetUser = userProfile,
+                                        targetUser = requestingUser,
                                         requestingUser = KnoraSystemInstances.Users.SystemUser)
                                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
@@ -1388,9 +1396,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             resourceClassInfo = resourceClassesEntityInfoResponse.resourceClassInfoMap(resourceCreateRequest.resourceTypeIri),
                             propertyInfoMap = propertyEntityInfoMapsPerResource(resourceCreateRequest.resourceTypeIri),
                             values = resourceCreateRequest.values,
-                            sipiConversionRequest = resourceCreateRequest.file,
+                            convertedFile = resourceCreateRequest.file,
                             clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
-                            userProfile = userProfile
+                            userProfile = requestingUser
                         )
 
                         // Convert each LinkToClientIDUpdateV1 into a LinkUpdateV1.
@@ -1423,7 +1431,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                             creationDate = creationDate,
                             fileValues = fileValues,
-                            userProfile = userProfile,
+                            userProfile = requestingUser,
                             apiRequestID = apiRequestID
                         )
 
@@ -1463,7 +1471,43 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         label = resourceToCreate.label
                     )
             }
-        } yield MultipleResourceCreateResponseV1(responses)
+        } yield MultipleResourceCreateResponseV1(responses, projectADM)
+
+        doSipiPostUpdateForResources(
+            updateFuture = updateFuture,
+            fileValueContentV2s = stillImageFileValueContentV2s,
+            requestingUser = requestingUser
+        )
+    }
+
+    /**
+     * Asks Sipi to to move temporary image files to permanent storage if a triplestore update was successful,
+     * or to delete the temporary files if the triplestore update failed.
+     *
+     * @param updateFuture        the future resulting from the triplestore update.
+     * @param fileValueContentV2s the file values that were created, if any.
+     * @param requestingUser      the user making the request.
+     * @return `updateFuture`, or a failed future (if Sipi failed to move a file to permanent storage).
+     */
+    private def doSipiPostUpdateForResources[T <: UpdateResultInProject](updateFuture: Future[T],
+                                                                         fileValueContentV2s: Seq[StillImageFileValueContentV2],
+                                                                         requestingUser: UserADM): Future[T] = {
+        val resultFutures: Seq[Future[T]] = fileValueContentV2s.map {
+            valueContent =>
+                ResourceUtilV2.doSipiPostUpdate(
+                    updateFuture = updateFuture,
+                    valueContent = valueContent,
+                    requestingUser = requestingUser,
+                    responderManager = responderManager,
+                    storeManager = storeManager,
+                    log = log
+                )
+        }
+
+        Future.sequence(resultFutures).transformWith {
+            case Success(_) => updateFuture
+            case Failure(e) => Future.failed(e)
+        }
     }
 
     /**
@@ -1475,7 +1519,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param values                             values to be created for resource. If `linkTargetsAlreadyExist` is true, any links must be represented as [[LinkUpdateV1]] instances.
      *                                           Otherwise, they must be represented as [[LinkToClientIDUpdateV1]] instances, so that appropriate error messages can
      *                                           be generated for links to missing resources.
-     * @param sipiConversionRequest              a file (binary representation) to be attached to the resource (GUI and non GUI-case).
+     * @param convertedFile                      an already converted file to be attached to the resource.
      * @param clientResourceIDsToResourceClasses for each client resource ID, the IRI of the resource's class. Used only if `linkTargetsAlreadyExist` is false.
      * @param userProfile                        the profile of the user making the request.
      * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
@@ -1484,19 +1528,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                               resourceClassInfo: ClassInfoV1,
                               propertyInfoMap: Map[IRI, PropertyInfoV1],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
-                              sipiConversionRequest: Option[SipiConversionRequestV1],
+                              convertedFile: Option[StillImageFileValueV1],
                               clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
                                   toWrap = Map.empty[IRI, IRI],
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                                   errorFun = { errorMsg => throw BadRequestException(errorMsg) }
                               ),
                               userProfile: UserADM): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
-        val userProfileV1 = userProfile.asUserProfileV1
-
         for {
-            // Get ontology information about the resource class's cardinalities and about each property's knora-base:objectClassConstraint.
-
-
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
             // point to it.
             propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
@@ -1569,12 +1608,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     }
             }
 
-            // maximally one file value can be handled here
-            _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value. This is not supported for API V1")
-
             // Check that no required values are missing.
             requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter {
-                case (propIri, cardinalityInfo) => cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
+                case (_, cardinalityInfo) => cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
             }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
             submittedPropertyIris = values.keySet
@@ -1585,35 +1621,23 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }
 
             // check if a file value is required by the ontology
-            fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.nonEmpty) {
-                // call sipi responder
-                for {
-                    sipiResponse: SipiConversionResponseV1 <- (storeManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiConversionResponseV1]
+            fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] = if (resourceClassInfo.fileValueProperties.nonEmpty) {
+                convertedFile match {
+                    case Some(converted) =>
+                        // TODO: check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
+                        Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(converted)))
 
-                    // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
-                    _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
-                        // TODO: remove the file from SIPI (delete request)
-                        throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
-                    }
+                    case None => throw BadRequestException(s"File required but none submitted")
+                }
 
-                    // in case we deal with a SipiResponderConversionPathRequestV1 (non GUI-case), the tmp file created by resources route
-                    // has already been deleted by the SipiResponder
-
-                } yield Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(sipiResponse.fileValueV1)))
             } else {
-                // resource class requires no binary representation
-                // check if there was no file sent
-                // TODO: in all cases of an error, the tmp file has to be deleted
-                sipiConversionRequest match {
-                    case None => Future(None) // expected behaviour
-                    case Some(_: SipiConversionFileRequestV1) =>
-                        throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
-                    case Some(_: SipiConversionPathRequestV1) =>
-                        throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
+                if (convertedFile.nonEmpty) {
+                    throw BadRequestException(s"File params are given but resource class $resourceClassIri does not allow any representation")
+                } else {
+                    None
                 }
             }
         } yield fileValues
-
     }
 
     /**
@@ -1671,7 +1695,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      */
     def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI): String = {
         // Generate SPARQL for creating the resources, and include the SPARQL for creating the values of every resource.
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.createNewResources(
+        queries.sparql.v1.txt.createNewResources(
             dataNamedGraph = namedGraph,
             triplestore = settings.triplestoreType,
             resourcesToCreate = resourcesToCreate,
@@ -1687,6 +1711,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param creatorIri                      the creator of the resources to be created.
      * @param createNewResourceSparql         Sparql query to create the resource .
      * @param generateSparqlForValuesResponse Sparql statement for creation of values of resource.
+     * @param projectADM                      the project in which the resource was created.
      * @param userProfile                     the profile of the user making the request.
      * @return a [[ResourceCreateResponseV1]] containing information about the created resource .
      */
@@ -1694,10 +1719,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                               creatorIri: IRI,
                               createNewResourceSparql: String,
                               generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
+                              projectADM: ProjectADM,
                               userProfile: UserADM): Future[ResourceCreateResponseV1] = {
         // Verify that the resource was created.
         for {
-            createdResourcesSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getCreatedResource(
+            createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
@@ -1729,7 +1755,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 })
             }
 
-            apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = resourceCreateValueResponses, res_id = resourceIri)
+            apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(
+                results = resourceCreateValueResponses,
+                res_id = resourceIri,
+                projectADM = projectADM
+            )
         } yield apiResponse
     }
 
@@ -1737,30 +1767,37 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Does pre-update checks, creates a resource, and verifies that it was created.
      *
-     * @param resourceIri  the IRI of the resource to be created.
-     * @param values       the values to be attached to the resource.
-     * @param creatorIri   the creator of the resource to be created.
-     * @param namedGraph   the named graph the resource belongs to.
-     * @param apiRequestID the request ID used for locking the resource.
+     * @param resourceClassIri the IRI of the resource class.
+     * @param projectADM       the project in which the resource should be created.
+     * @param label            the `rdfs:label` of the resource to be created.
+     * @param resourceIri      the IRI of the resource to be created.
+     * @param values           the values to be attached to the resource.
+     * @param file             a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
+     * @param creatorIri       the creator of the resource to be created.
+     * @param namedGraph       the named graph the resource belongs to.
+     * @param requestingUser   the user making the request.
+     * @param apiRequestID     the request ID used for locking the resource.
      * @return a [[ResourceCreateResponseV1]] containing information about the created resource.
      */
     def createResourceAndCheck(resourceClassIri: IRI,
-                               projectIri: IRI,
+                               projectADM: ProjectADM,
                                label: String,
                                resourceIri: IRI,
                                values: Map[IRI, Seq[CreateValueV1WithComment]],
-                               sipiConversionRequest: Option[SipiConversionRequestV1],
+                               file: Option[StillImageFileValueV1],
                                creatorIri: IRI,
                                namedGraph: IRI,
-                               userProfile: UserADM,
+                               requestingUser: UserADM,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
-        for {
+        val fileValueContent: Option[StillImageFileValueContentV2] = file.map(_.toStillImageFileValueContentV2)
+
+        val updateFuture = for {
             // Get ontology information about the resource class and its properties.
 
             resourceClassEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set(resourceClassIri),
                 propertyIris = Set.empty[IRI],
-                userProfile = userProfile
+                userProfile = requestingUser
             )).mapTo[EntityInfoGetResponseV1]
 
             resourceClassInfo = resourceClassEntityInfoResponse.resourceClassInfoMap(resourceClassIri)
@@ -1768,7 +1805,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set.empty[IRI],
                 propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
-                userProfile = userProfile
+                userProfile = requestingUser
             )).mapTo[EntityInfoGetResponseV1]
 
             propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap
@@ -1777,9 +1814,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = projectIri,
+                    projectIri = projectADM.id,
                     resourceClassIri = resourceClassIri,
-                    targetUser = userProfile,
+                    targetUser = requestingUser,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -1791,10 +1828,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     for {
                         defaultObjectAccessPermissions <- {
                             responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                                projectIri = projectIri,
+                                projectIri = projectADM.id,
                                 resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
-                                targetUser = userProfile,
+                                targetUser = requestingUser,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
@@ -1808,8 +1845,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 resourceClassInfo = resourceClassInfo,
                 propertyInfoMap = propertyInfoMap,
                 values = values,
-                sipiConversionRequest = sipiConversionRequest,
-                userProfile = userProfile
+                convertedFile = file,
+                userProfile = requestingUser
             )
 
             // Everything looks OK, so we can create the resource and its values.
@@ -1818,7 +1855,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             creationDate: Instant = Instant.now
 
             generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
-                projectIri = projectIri,
+                projectIri = projectADM.id,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
                 defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
@@ -1826,7 +1863,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 fileValues = fileValues,
                 clientResourceIDsToResourceIris = Map.empty[String, IRI],
                 creationDate = creationDate,
-                userProfile = userProfile,
+                userProfile = requestingUser,
                 apiRequestID = apiRequestID
             )
 
@@ -1843,7 +1880,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             createNewResourceSparql = generateSparqlForNewResources(
                 resourcesToCreate = resourcesToCreate,
-                projectIri = projectIri,
+                projectIri = projectADM.id,
                 namedGraph = namedGraph,
                 creatorIri = creatorIri
             )
@@ -1856,32 +1893,37 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 creatorIri = creatorIri,
                 createNewResourceSparql = createNewResourceSparql,
                 generateSparqlForValuesResponse = generateSparqlForValuesResponse,
-                userProfile = userProfile
+                projectADM = projectADM,
+                userProfile = requestingUser
             )
         } yield apiResponse
+
+        doSipiPostUpdateForResources(
+            updateFuture = updateFuture,
+            fileValueContentV2s = fileValueContent.toSeq,
+            requestingUser = requestingUser
+        )
     }
 
     /**
      * Creates a new resource and attaches the given values to it.
      *
-     * @param resourceClassIri      the resource type of the resource to be created.
-     * @param values                the values to be attached to the resource.
-     * @param sipiConversionRequest a file (binary representation) to be attached to the resource (GUI and non GUI-case)
-     * @param projectIri            the project the resource belongs to.
-     * @param userProfile           the user that is creating the resource
-     * @param apiRequestID          the ID of this API request.
+     * @param resourceClassIri the resource type of the resource to be created.
+     * @param values           the values to be attached to the resource.
+     * @param file             a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
+     * @param projectIri       the project the resource belongs to.
+     * @param userProfile      the user that is creating the resource
+     * @param apiRequestID     the ID of this API request.
      * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
      */
     private def createNewResource(resourceClassIri: IRI,
                                   label: String,
                                   values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                  sipiConversionRequest: Option[SipiConversionRequestV1] = None,
+                                  file: Option[StillImageFileValueV1] = None,
                                   projectIri: IRI,
                                   userProfile: UserADM,
                                   apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
-        val userProfileV1 = userProfile.asUserProfileV1
-
-        val resultFuture = for {
+        for {
 
             // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
@@ -1896,16 +1938,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
             }
 
-            projectInfoResponse <- {
-                responderManager ? ProjectInfoByIRIGetRequestV1(
-                    projectIri,
-                    Some(userProfileV1)
+            // Get project info
+            projectResponse <- {
+                responderManager ? ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                    requestingUser = userProfile
                 )
-            }.mapTo[ProjectInfoResponseV1]
+            }.mapTo[ProjectGetResponseADM]
 
             // Ensure that the project isn't the system project or the shared ontologies project.
 
-            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+            resourceProjectIri: IRI = projectResponse.project.id
 
             _ = if (resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
@@ -1922,8 +1965,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project")
             }
 
-            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
-            resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)
+            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
+            resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.shortcode)
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
@@ -1936,33 +1979,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 resourceIri,
                 () => createResourceAndCheck(
                     resourceClassIri = resourceClassIri,
-                    projectIri = resourceProjectIri,
+                    projectADM = projectResponse.project,
                     label = label,
                     resourceIri = resourceIri,
                     values = values,
-                    sipiConversionRequest = sipiConversionRequest,
+                    file = file,
                     creatorIri = userIri,
                     namedGraph = namedGraph,
-                    userProfile = userProfile,
+                    requestingUser = userProfile,
                     apiRequestID = apiRequestID
                 )
             )
         } yield result
-
-        // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
-        resultFuture.andThen {
-            case _ =>
-                sipiConversionRequest match {
-                    case Some(conversionRequest) =>
-                        conversionRequest match {
-                            case conversionPathRequest: SipiConversionPathRequestV1 =>
-                                // a tmp file has been created by the resources route (non GUI-case), delete it
-                                FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
-                            case _ => ()
-                        }
-                    case None => ()
-                }
-        }
     }
 
     /**
@@ -1993,8 +2021,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 currentTime: String = Instant.now.toString
 
                 // Create update sparql string
-                sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.deleteResource(
-                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info),
+                sparqlUpdate = queries.sparql.v1.txt.deleteResource(
+                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfoResponse.project_info),
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment,
@@ -2006,7 +2034,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
                 // Check whether the update succeeded.
-                sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkResourceDeletion(
+                sparqlQuery = queries.sparql.v1.txt.checkResourceDeletion(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri
                 ).toString()
@@ -2097,13 +2125,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 }.mapTo[ProjectInfoResponseV1]
 
                 // get the named graph the resource is contained in by the resource's project
-                namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
+                namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfoResponse.project_info)
 
                 // Make a timestamp to indicate when the resource was updated.
                 currentTime: String = Instant.now.toString
 
                 // the user has sufficient permissions to change the resource's label
-                sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.changeResourceLabel(
+                sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
                     dataNamedGraph = namedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
@@ -2117,7 +2145,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
                 // Check whether the update succeeded.
-                sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkResourceLabelChange(
+                sparqlQuery = queries.sparql.v1.txt.checkResourceLabelChange(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
                     label = label
@@ -2169,7 +2197,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserADM, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
         for {
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourceInfo(
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
@@ -2192,7 +2220,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         for {
             // get resource class of the specified resource
 
-            resclassSparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourceClass(
+            resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
@@ -2410,7 +2438,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     private def getGroupedProperties(resourceIri: IRI): Future[GroupedPropertiesByType] = {
 
         for {
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourcePropertiesAndValues(
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())

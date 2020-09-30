@@ -56,52 +56,21 @@ has to be used in order to create a new value (all these TypeScript interfaces a
 
 ## Modifying a File Value
 
-In order to exchange a file value (digital representation of a
-resource), the path segment `filevalue` has to be used. The IRI of the
-resource whose file value is to be exchanged has to be appended:
+To change a file value, the client first uploads the new file to
+Sipi, following the procedure described in
+[Adding Resources with Image Files](adding-resources.md#adding-resources-with-image-files).
+
+Then the client sends a request to Knora, using this following route:
 
 ```
 HTTP PUT to http://host/filevalue/resourceIRI
 ```
 
-Please note that the resource IRI has to be URL encoded.
-
-There are two ways to change a file of a resource: Either by submitting
-directly the binaries of the file in a HTTP Multipart request or by
-indicating the location of the file. The two cases are referred to as
-non-GUI case and GUI case (TODO: add a link to "Sipi and Knora").
-
-### Including the binaries (non-GUI case)
-
-Here, a HTTP MULTIPART request has to be made simply providing the
-binaries (without JSON):
-
-```python
-#!/usr/bin/env python3
-
-import requests, json, urllib
-
-# the name of the file to be submitted
-filename = 'myimage.tif'
-
-# a tuple containing the file's name, its binaries and its mimetype
-files = {'file': (filename, open(filename, 'rb'), "image/tiff")}
-
-resIri = urllib.parse.quote_plus('http://rdfh.ch/xy')
-
-r = requests.put("http://host/filevalue/" + resIri,
-                 files=files)
-```
-
-Please note that the file has to be read in binary mode (by default it
-would be read in text mode).
-
-### Indicating the location of a file (GUI case)
-
-Here, simply the location of the new file has to be submitted as JSON.
-The JSON format is described in the TypeScript interface
-`changeFileValueRequest` in module `changeValueFormats`. The request
-header's content type has to set to `application/json`.
+Here, `resourceIRI` is the URL-encoded IRI of the resource whose file value is
+to be changed. The body of the request is a JSON object described in the TypeScript
+interface `changeFileValueRequest` in module `changeValueFormats`, and contains
+`file`, whose value is the `internalFilename` that Sipi returned. The request header's
+content type must be set to `application/json`.
 
 ## Response on Value Change
 

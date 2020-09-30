@@ -109,16 +109,8 @@ class KnoraSettingsImpl(config: Config) extends Extension {
     val externalSipiHost: String = config.getString("app.sipi.external-host")
     val externalSipiPort: Int = config.getInt("app.sipi.external-port")
     val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + (if (externalSipiPort != 80) ":" + externalSipiPort else "")
-
-
     val sipiFileServerPrefix: String = config.getString("app.sipi.file-server-path")
-
     val externalSipiIIIFGetUrl: String = externalSipiBaseUrl
-
-    val internalSipiImageConversionUrlV1: String = s"$internalSipiBaseUrl"
-    val sipiPathConversionRouteV1: String = config.getString("app.sipi.v1.path-conversion-route")
-    val sipiFileConversionRouteV1: String = config.getString("app.sipi.v1.file-conversion-route")
-
     val sipiFileMetadataRouteV2: String = config.getString("app.sipi.v2.file-metadata-route")
     val sipiMoveFileRouteV2: String = config.getString("app.sipi.v2.move-file-route")
     val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
