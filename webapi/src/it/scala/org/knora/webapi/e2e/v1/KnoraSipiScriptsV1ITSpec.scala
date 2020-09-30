@@ -20,6 +20,7 @@
 package org.knora.webapi.e2e.v1
 
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.Http
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -46,7 +47,9 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
 
         "successfully call C++ functions from Lua scripts" in {
             val request = Get(baseInternalSipiUrl + "/test_functions" )
-            getResponseString(request)
+            // DSP-707: trying to wake up sipi first (without triggering an exception)
+            Http().singleRequest(request)
+            checkResponseOK(request)
         }
 
         "successfully call Lua functions for mediatype handling" in {
