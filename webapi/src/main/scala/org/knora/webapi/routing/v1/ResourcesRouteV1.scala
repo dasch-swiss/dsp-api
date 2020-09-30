@@ -231,13 +231,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
-                file <- apiRequest.file match {
+                file: Option[StillImageFileValueV1] <- apiRequest.file match {
                     case Some(filename) =>
                         // Ask Sipi about the file's metadata.
                         val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
                         for {
-                            fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponseV2]
+                            fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponse]
 
                             // TODO: check that the file stored is an image.
                         } yield Some(StillImageFileValueV1(
@@ -579,7 +579,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } :+ knoraXmlImportSchemaNamespaceInfo
 
                         // Generate the schema using a Twirl template.
-                        val unformattedSchemaXml = xsd.v1.xml.xmlImport(
+                        val unformattedSchemaXml = org.knora.webapi.messages.twirl.xsd.v1.xml.xmlImport(
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaceInfos,
                             knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
