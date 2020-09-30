@@ -58,7 +58,7 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
 
         val drawingsOfGodsUserEmail = "ddd1@unil.ch"
         val testPass = "test"
-        val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
+        val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
         var loginToken: String = ""
 
         "log in as a Knora user" in {
