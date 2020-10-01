@@ -105,7 +105,7 @@
 									$this.find('.uploadButton').remove();
 
 									var uploadedFile = data["uploadedFiles"][0];
-									var preview_path = uploadedFile["temporaryBaseIIIFUrl"] + "/" + uploadedFile["internalFilename"] + "/full/!128,128/0/default.jpg";
+									var preview_path = uploadedFile["temporaryUrl"] + "/full/!128,128/0/default.jpg";
 
 									$this.append($('<div>').addClass('thumbNail')
 										.append($('<img>', {src: preview_path, style: "image-orientation: from-image"}))
