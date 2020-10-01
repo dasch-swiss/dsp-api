@@ -122,7 +122,7 @@ def dependencies():
             "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
             "org.scalatest:scalatest_2.12:3.1.2",
-            "org.testcontainers:testcontainers:1.14.3",
+            "org.testcontainers:testcontainers:1.15.0-rc2",
             "junit:junit:4.13",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
