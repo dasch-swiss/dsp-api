@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotFoundException, SipiException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotFoundException}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
@@ -326,18 +326,12 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
             for {
                 fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponse]
-
-                // TODO: check that the file stored is an image.
             } yield ChangeFileValueRequestV1(
                 resourceIri = resourceIri,
-                file = StillImageFileValueV1(
-                    internalFilename = apiRequest.file,
-                    internalMimeType = fileMetadataResponse.internalMimeType,
-                    originalFilename = fileMetadataResponse.originalFilename.getOrElse(throw SipiException(s"Sipi did not return the original filename of the image")),
-                    originalMimeType = fileMetadataResponse.originalMimeType,
-                    projectShortcode = projectShortcode,
-                    dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
-                    dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
+                file = RouteUtilV1.makeFileValue(
+                    filename = apiRequest.file,
+                    fileMetadataResponse = fileMetadataResponse,
+                    projectShortcode = projectShortcode
                 ),
                 apiRequestID = UUID.randomUUID,
                 userProfile = userADM

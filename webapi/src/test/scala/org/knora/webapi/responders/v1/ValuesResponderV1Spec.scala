@@ -1613,7 +1613,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val fileValue = StillImageFileValueV1(
                 internalMimeType = "image/jp2",
                 internalFilename = "gaga.jpg",
-                originalFilename = "test.jpg",
+                originalFilename = Some("test.jpg"),
                 originalMimeType = Some("image/jpg"),
                 projectShortcode = "0803",
                 dimX = 1000,

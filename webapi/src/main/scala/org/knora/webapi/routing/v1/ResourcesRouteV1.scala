@@ -220,7 +220,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         }
 
-
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, userADM: UserADM): Future[ResourceCreateRequestV1] = {
             val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
@@ -231,23 +230,17 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
-                file: Option[StillImageFileValueV1] <- apiRequest.file match {
+                file: Option[FileValueV1] <- apiRequest.file match {
                     case Some(filename) =>
                         // Ask Sipi about the file's metadata.
                         val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
                         for {
                             fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponse]
-
-                            // TODO: check that the file stored is an image.
-                        } yield Some(StillImageFileValueV1(
-                            internalFilename = filename,
-                            internalMimeType = fileMetadataResponse.internalMimeType,
-                            originalFilename = fileMetadataResponse.originalFilename.getOrElse(throw SipiException(s"Sipi did not return the original filename of the image")),
-                            originalMimeType = fileMetadataResponse.originalMimeType,
-                            projectShortcode = projectShortcode,
-                            dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
-                            dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
+                        } yield Some(RouteUtilV1.makeFileValue(
+                            filename = filename,
+                            fileMetadataResponse = fileMetadataResponse,
+                            projectShortcode = projectShortcode
                         ))
 
                     case None => FastFuture.successful(None)
@@ -301,16 +294,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                         for {
                             fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetFileMetadataResponse]
-
-                            // TODO: check that the file stored is an image.
-                        } yield Some(StillImageFileValueV1(
-                            internalFilename = filename,
-                            internalMimeType = fileMetadataResponse.internalMimeType,
-                            originalFilename = fileMetadataResponse.originalFilename.getOrElse(throw SipiException(s"Sipi did not return the original filename of the image")),
-                            originalMimeType = fileMetadataResponse.originalMimeType,
-                            projectShortcode = projectShortcode,
-                            dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
-                            dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
+                        } yield Some(RouteUtilV1.makeFileValue(
+                            filename = filename,
+                            fileMetadataResponse = fileMetadataResponse,
+                            projectShortcode = projectShortcode
                         ))
 
                     case None => FastFuture.successful(None)

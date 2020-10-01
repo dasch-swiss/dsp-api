@@ -673,7 +673,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
-            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
+            originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
             projectShortcode = projectShortcode,
             dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
             dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
@@ -692,7 +692,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         Future(TextFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
-            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
+            originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
             projectShortcode = projectShortcode
         ))
     }

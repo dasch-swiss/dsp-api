@@ -334,7 +334,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+            val knoraPostRequest: HttpRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val knoraPostResponseJson: JsObject = getResponseJson(knoraPostRequest)
 
             val createdResources = knoraPostResponseJson.fields("createdResources").asInstanceOf[JsArray].elements
@@ -360,38 +360,28 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(sipiGetRequest)
         }
 
-        "create a TextRepresentation of type XSLTransformation and refer to it in a mapping" ignore {
+        "create a TextRepresentation of type XSLTransformation and refer to it in a mapping" in {
+            // Upload the XSLT file to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToXSLTransformation, mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)))
+            )
 
-            // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
-            // create an XSL transformation
+            // Create a resource for the XSL transformation.
             val knoraParams = JsObject(
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
                     "label" -> JsString("XSLT"),
                     "project_id" -> JsString("http://rdfh.ch/projects/0001"),
-                    "properties" -> JsObject()
-                )
-            )
-
-            val XSLTransformationFile = new File(pathToXSLTransformation)
-
-            // A multipart/form-data request containing the image and the JSON.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), XSLTransformationFile.toPath),
-                    Map("filename" -> XSLTransformationFile.getName)
+                    "properties" -> JsObject(),
+                    "file" -> JsString(uploadedFile.internalFilename)
                 )
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-
+            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val responseJson: JsObject = getResponseJson(knoraPostRequest)
 
             // get the Iri of the XSL transformation
@@ -435,9 +425,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         }
 
-        "create a sample BEOL letter" ignore {
-            // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
-
+        "create a sample BEOL letter" in {
             val mapping = FileUtil.readTextFile(new File(pathToBEOLLetterMapping))
 
             val paramsForMapping =
@@ -479,40 +467,31 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         }
 
-        "create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data" ignore {
-            // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
+        "create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data" in {
+            // Upload the body XSLT file to Sipi.
+            val bodyXsltUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToBEOLBodyXSLTransformation, mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)))
+            )
 
-            // create an XSL transformation
-            val standoffXSLTParams = JsObject(
+            val uploadedBodyXsltFile: SipiUploadResponseEntry = bodyXsltUploadResponse.uploadedFiles.head
+
+            // Create a resource for the XSL transformation.
+            val bodyXsltParams = JsObject(
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
                     "label" -> JsString("XSLT"),
                     "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
-                    "properties" -> JsObject()
-                )
-            )
-
-            val XSLTransformationFile = new File(pathToBEOLBodyXSLTransformation)
-
-            // A multipart/form-data request containing the image and the JSON.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, standoffXSLTParams.compactPrint)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), XSLTransformationFile.toPath),
-                    Map("filename" -> XSLTransformationFile.getName)
+                    "properties" -> JsObject(),
+                    "file" -> JsString(uploadedBodyXsltFile.internalFilename)
                 )
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-
+            val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, bodyXsltParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
 
-            // get the Iri of the XSL transformation
+            // get the Iri of the body XSL transformation
             val resId: String = bodyXSLTJson.fields.get("res_id") match {
                 case Some(JsString(resid: String)) => resid
                 case _ => throw InvalidApiJsonException("member 'res_id' was expected")
@@ -551,77 +530,57 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             getResponseJson(mappingRequest)
 
-            // create an XSL transformation
+            // Upload a Gravsearch template to Sipi.
+            val gravsearchTemplateUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToBEOLGravsearchTemplate, mimeType = MediaTypes.`text/plain`.toContentType(HttpCharsets.`UTF-8`)))
+            )
+
+            val uploadedGravsearchTemplateFile: SipiUploadResponseEntry = gravsearchTemplateUploadResponse.uploadedFiles.head
+
             val gravsearchTemplateParams = JsObject(
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#TextRepresentation"),
                     "label" -> JsString("BEOL Gravsearch template"),
                     "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
-                    "properties" -> JsObject()
-                )
-            )
-
-            val gravsearchTemplateFile = new File(pathToBEOLGravsearchTemplate)
-
-            // A multipart/form-data request containing the image and the JSON.
-            val formDataGravsearch = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, gravsearchTemplateParams.compactPrint)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`text/plain`.toContentType(HttpCharsets.`UTF-8`), gravsearchTemplateFile.toPath),
-                    Map("filename" -> gravsearchTemplateFile.getName)
+                    "properties" -> JsObject(),
+                    "file" -> JsString(uploadedGravsearchTemplateFile.internalFilename)
                 )
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val gravsearchTemplateRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataGravsearch) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-
+            val gravsearchTemplateRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, gravsearchTemplateParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val gravsearchTemplateJSON: JsObject = getResponseJson(gravsearchTemplateRequest)
 
             gravsearchTemplateIri.set(gravsearchTemplateJSON.fields.get("res_id") match {
-
                 case Some(JsString(gravsearchIri)) => gravsearchIri
-
                 case _ => throw InvalidApiJsonException("expected IRI for Gravsearch template")
             })
 
-            // create an XSL transformation
-            val headerParams = JsObject(
+            // Upload the header XSLT file to Sipi.
+            val headerXsltUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToBEOLHeaderXSLTransformation, mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)))
+            )
+
+            val uploadedHeaderXsltFile: SipiUploadResponseEntry = headerXsltUploadResponse.uploadedFiles.head
+
+            val headerXsltParams = JsObject(
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
                     "label" -> JsString("BEOL header XSLT"),
                     "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
-                    "properties" -> JsObject()
-                )
-            )
-
-            val headerXSLTFile = new File(pathToBEOLHeaderXSLTransformation)
-
-            // A multipart/form-data request containing the image and the JSON.
-            val formDataHeader = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, headerParams.compactPrint)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), headerXSLTFile.toPath),
-                    Map("filename" -> headerXSLTFile.getName)
+                    "properties" -> JsObject(),
+                    "file" -> JsString(uploadedHeaderXsltFile.internalFilename)
                 )
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val headerXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataHeader) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-
+            val headerXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, headerXsltParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             val headerXSLTJson = getResponseJson(headerXSLTRequest)
 
             val headerXSLTIri: IRI = headerXSLTJson.fields.get("res_id") match {
-
                 case Some(JsString(gravsearchIri)) => gravsearchIri
-
                 case _ => throw InvalidApiJsonException("expected IRI for header XSLT template")
             }
 
@@ -635,7 +594,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val letterTEIResponse: HttpResponse = singleAwaitingRequest(letterTEIRequest)
-
             val letterResponseBodyFuture: Future[String] = letterTEIResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
             val letterResponseBodyXML: String = Await.result(letterResponseBodyFuture, 5.seconds)
 
@@ -685,14 +643,10 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 """.stripMargin
 
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()
-
             xmlDiff.hasDifferences should be(false)
-
         }
 
-        "provide a helpful error message if an XSLT file is not found" ignore {
-            // TODO: re-enable this with the preceding test, when we can upload non-image files to Sipi (PR #1206).
-
+        "provide a helpful error message if an XSLT file is not found" in {
             val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
 
             val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData, ValueUtilV1}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, MessageUtil, PermissionUtilADM, ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -38,7 +38,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
@@ -624,7 +624,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
          * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
          */
         def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1, projectADM: ProjectADM): Future[ChangeFileValueResponseV1] = {
-            val fileValueContent: StillImageFileValueContentV2 = changeFileValueRequest.file.toStillImageFileValueContentV2
+            val fileValueContent: FileValueContentV2 = changeFileValueRequest.file.toFileValueContentV2
 
             // get the Iris of the current file value(s)
             val triplestoreUpdateFuture = for {
@@ -1809,12 +1809,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 ).toString()
             }
 
-
-
-            updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-
+            updateVerificationResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
-
             resultOption <- sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
 
         } yield resultOption.getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))

@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotImplementedException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueV2, StillImageFileValueContentV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, FileValueV2, StillImageFileValueContentV2, TextFileValueContentV2}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 
@@ -482,7 +482,7 @@ case class DeleteValueResponseV1(id: IRI) extends KnoraResponseV1 {
  * @param resourceIri the resource whose files value(s) should be changed.
  * @param file        a file that has been uploaded to Sipi's temporary storage.
  */
-case class ChangeFileValueRequestV1(resourceIri: IRI, file: StillImageFileValueV1, apiRequestID: UUID, userProfile: UserADM) extends ValuesResponderRequestV1
+case class ChangeFileValueRequestV1(resourceIri: IRI, file: FileValueV1, apiRequestID: UUID, userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
  * Represents a response to a [[ChangeFileValueRequestV1]].
@@ -1436,9 +1436,11 @@ case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiVal
 sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
     val internalMimeType: String
     val internalFilename: String
-    val originalFilename: String
+    val originalFilename: Option[String]
     val originalMimeType: Option[String]
     val projectShortcode: String
+
+    def toFileValueContentV2: FileValueContentV2
 }
 
 /**
@@ -1452,7 +1454,7 @@ sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
  */
 case class StillImageFileValueV1(internalMimeType: String,
                                  internalFilename: String,
-                                 originalFilename: String,
+                                 originalFilename: Option[String] = None,
                                  originalMimeType: Option[String] = None,
                                  projectShortcode: String,
                                  dimX: Int,
@@ -1462,7 +1464,7 @@ case class StillImageFileValueV1(internalMimeType: String,
 
     def toJsValue: JsValue = ApiValueV1JsonProtocol.stillImageFileValueV1Format.write(this)
 
-    override def toString: String = originalFilename
+    override def toString: String = internalFilename
 
     /**
      * Checks if a new still image file value would duplicate an existing still image file value.
@@ -1490,13 +1492,13 @@ case class StillImageFileValueV1(internalMimeType: String,
         }
     }
 
-    def toStillImageFileValueContentV2: StillImageFileValueContentV2 = {
+    override def toFileValueContentV2: FileValueContentV2 = {
         StillImageFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
                 internalMimeType = internalMimeType,
-                originalFilename = Some(originalFilename),
+                originalFilename = originalFilename,
                 originalMimeType = Some(internalMimeType)
             ),
             dimX = dimX,
@@ -1507,7 +1509,7 @@ case class StillImageFileValueV1(internalMimeType: String,
 
 case class MovingImageFileValueV1(internalMimeType: String,
                                   internalFilename: String,
-                                  originalFilename: String,
+                                  originalFilename: Option[String],
                                   originalMimeType: Option[String] = None,
                                   projectShortcode: String) extends FileValueV1 {
 
@@ -1515,7 +1517,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
 
     def toJsValue: JsValue = ApiValueV1JsonProtocol.movingImageFileValueV1Format.write(this)
 
-    override def toString: String = originalFilename
+    override def toString: String = internalFilename
 
     /**
      * Checks if a new moving image file value would duplicate an existing moving image file value.
@@ -1543,11 +1545,14 @@ case class MovingImageFileValueV1(internalMimeType: String,
         }
     }
 
+    override def toFileValueContentV2: FileValueContentV2 = {
+        throw NotImplementedException("Moving image file values are not supported in Knora API v1")
+    }
 }
 
 case class TextFileValueV1(internalMimeType: String,
                            internalFilename: String,
-                           originalFilename: String,
+                           originalFilename: Option[String],
                            originalMimeType: Option[String] = None,
                            projectShortcode: String) extends FileValueV1 {
 
@@ -1555,7 +1560,7 @@ case class TextFileValueV1(internalMimeType: String,
 
     def toJsValue: JsValue = ApiValueV1JsonProtocol.textFileValueV1Format.write(this)
 
-    override def toString: String = originalFilename
+    override def toString: String = internalFilename
 
     /**
      * Checks if a new text file value would duplicate an existing text file value.
@@ -1583,8 +1588,18 @@ case class TextFileValueV1(internalMimeType: String,
         }
     }
 
+    override def toFileValueContentV2: FileValueContentV2 = {
+        TextFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = FileValueV2(
+                internalFilename = internalFilename,
+                internalMimeType = internalMimeType,
+                originalFilename = originalFilename,
+                originalMimeType = Some(internalMimeType)
+            )
+        )
+    }
 }
-
 
 /**
  * Represents information about a version of a value.

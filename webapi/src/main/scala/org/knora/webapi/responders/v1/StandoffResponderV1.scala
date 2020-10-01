@@ -58,7 +58,7 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL file from Sipi.
      *
-     * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
+     * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[org.knora.webapi.messages.OntologyConstants.KnoraBase.XSLTransformation]]).
      * @param userProfile          The client making the request.
      * @return a [[GetXSLTransformationResponseV1]].
      */

@@ -41,7 +41,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, StillImageFileValueContentV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
@@ -802,7 +802,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         image = StillImageFileValueV1(
                             internalMimeType = row.rowMap("internalMimeType"),
                             internalFilename = row.rowMap("internalFilename"),
-                            originalFilename = row.rowMap("originalFilename"),
+                            originalFilename = row.rowMap.get("originalFilename"),
                             projectShortcode = projectShortcode,
                             dimX = row.rowMap("dimX").toInt,
                             dimY = row.rowMap("dimY").toInt
@@ -1228,10 +1228,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                            projectIri: IRI,
                                            requestingUser: UserADM,
                                            apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
-        // Convert all the image metadata in the request to StillImageFileValueContentV2 instances, so we
+        // Convert all the image metadata in the request to FileValueContentV2 instances, so we
         // can use ResourceUtilV2.doSipiPostUpdate after updating the triplestore.
-        val stillImageFileValueContentV2s: Seq[StillImageFileValueContentV2] = resourcesToCreate.flatMap {
-            resourceToCreate => resourceToCreate.file.map(_.toStillImageFileValueContentV2)
+        val fileValueContentV2s: Seq[FileValueContentV2] = resourcesToCreate.flatMap {
+            resourceToCreate => resourceToCreate.file.map(_.toFileValueContentV2)
         }
 
         val updateFuture: Future[MultipleResourceCreateResponseV1] = for {
@@ -1475,7 +1475,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         doSipiPostUpdateForResources(
             updateFuture = updateFuture,
-            fileValueContentV2s = stillImageFileValueContentV2s,
+            fileValueContentV2s = fileValueContentV2s,
             requestingUser = requestingUser
         )
     }
@@ -1490,7 +1490,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @return `updateFuture`, or a failed future (if Sipi failed to move a file to permanent storage).
      */
     private def doSipiPostUpdateForResources[T <: UpdateResultInProject](updateFuture: Future[T],
-                                                                         fileValueContentV2s: Seq[StillImageFileValueContentV2],
+                                                                         fileValueContentV2s: Seq[FileValueContentV2],
                                                                          requestingUser: UserADM): Future[T] = {
         val resultFutures: Seq[Future[T]] = fileValueContentV2s.map {
             valueContent =>
@@ -1528,7 +1528,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                               resourceClassInfo: ClassInfoV1,
                               propertyInfoMap: Map[IRI, PropertyInfoV1],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
-                              convertedFile: Option[StillImageFileValueV1],
+                              convertedFile: Option[FileValueV1],
                               clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
                                   toWrap = Map.empty[IRI, IRI],
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
@@ -1784,12 +1784,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                label: String,
                                resourceIri: IRI,
                                values: Map[IRI, Seq[CreateValueV1WithComment]],
-                               file: Option[StillImageFileValueV1],
+                               file: Option[FileValueV1],
                                creatorIri: IRI,
                                namedGraph: IRI,
                                requestingUser: UserADM,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
-        val fileValueContent: Option[StillImageFileValueContentV2] = file.map(_.toStillImageFileValueContentV2)
+        val fileValueContent: Option[FileValueContentV2] = file.map(_.toFileValueContentV2)
 
         val updateFuture = for {
             // Get ontology information about the resource class and its properties.
@@ -1919,7 +1919,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     private def createNewResource(resourceClassIri: IRI,
                                   label: String,
                                   values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                  file: Option[StillImageFileValueV1] = None,
+                                  file: Option[FileValueV1] = None,
                                   projectIri: IRI,
                                   userProfile: UserADM,
                                   apiRequestID: UUID): Future[ResourceCreateResponseV1] = {

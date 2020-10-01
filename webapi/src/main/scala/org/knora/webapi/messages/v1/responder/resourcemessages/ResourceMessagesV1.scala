@@ -214,7 +214,7 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
 case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    label: String,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                   file: Option[StillImageFileValueV1] = None,
+                                   file: Option[FileValueV1] = None,
                                    projectIri: IRI,
                                    userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
@@ -234,7 +234,7 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                 clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                file: Option[StillImageFileValueV1] = None,
+                                                file: Option[FileValueV1] = None,
                                                 creationDate: Option[Instant])
 
 /**
@@ -617,7 +617,7 @@ case class ExternalResourceIDV1(id: IRI,
  * @param path        the URL from which this representation can be retrieved.
  */
 case class LocationV1(format_name: String,
-                      origname: String,
+                      origname: Option[String],
                       nx: Option[Int] = None,
                       ny: Option[Int] = None,
                       path: String,
