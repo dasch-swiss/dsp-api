@@ -225,13 +225,14 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)
         val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
+        // println(s"sipiUploadResponse: $sipiUploadResponse")
 
         // Request the temporary file from Sipi.
         for (responseEntry <- sipiUploadResponse.uploadedFiles) {
             val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
-                Get(responseEntry.temporaryUrl + "/full/full/0/default.jpg/file")
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/max/0/default.jpg")
             } else {
-                Get(responseEntry.temporaryUrl)
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/file")
             }
 
             checkResponseOK(sipiGetTmpFileRequest)
