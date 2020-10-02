@@ -217,8 +217,12 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     // Cache Service
     val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
-    val redisHost: String = config.getString("app.cache-service.redis.host")
-    val redisPort: Int = config.getInt("app.cache-service.redis.port")
+    val cacheServiceRedisHost: String = config.getString("app.cache-service.redis.host")
+    val cacheServiceRedisPort: Int = config.getInt("app.cache-service.redis.port")
+
+    // Client test data service
+    val clientTestDataRedisHost: String = config.getString("app.client-test-data-service.redis.host")
+    val clientTestDataRedisPort: Int = config.getInt("app.client-test-data-service.redis.port")
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x

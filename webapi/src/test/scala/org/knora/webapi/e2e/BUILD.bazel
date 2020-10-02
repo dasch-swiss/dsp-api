@@ -7,7 +7,8 @@ filegroup(
     name = "srcs",
     srcs = [
         "//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs",
-        "InstanceChecker.scala"
+        "InstanceChecker.scala",
+        "ClientTestDataCollector.scala"
     ],
 )
 
