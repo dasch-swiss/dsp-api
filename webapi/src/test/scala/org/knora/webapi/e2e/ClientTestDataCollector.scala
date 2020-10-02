@@ -19,6 +19,7 @@
 
 package org.knora.webapi.e2e
 
+import org.knora.webapi.exceptions.TestConfigurationException
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.TestDataFileContent
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
@@ -30,7 +31,10 @@ import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
  */
 class ClientTestDataCollector(settings: KnoraSettingsImpl) {
     private val redisHashName: String = "client-test-data"
-    private val jedisPool: JedisPool = new JedisPool(new JedisPoolConfig(), settings.clientTestDataRedisHost, settings.clientTestDataRedisPort, 30999)
+
+    private val redisHost: String = settings.clientTestDataRedisHost.getOrElse(throw TestConfigurationException(s"No Redis host configured for client test data"))
+    private val redisPort: Int = settings.clientTestDataRedisPort.getOrElse(throw TestConfigurationException(s"No Redis port configured for client test data"))
+    private val jedisPool: JedisPool = new JedisPool(new JedisPoolConfig(), redisHost, redisPort, 30999)
 
     /**
      * Stores a client test data file.
