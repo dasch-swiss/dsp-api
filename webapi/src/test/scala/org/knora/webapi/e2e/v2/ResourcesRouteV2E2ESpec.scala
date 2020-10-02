@@ -30,7 +30,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.e2e.InstanceChecker
+import org.knora.webapi.e2e.{ClientTestDataCollector, InstanceChecker}
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
@@ -64,7 +64,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private val hamletResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-    private val writeTestDataFiles = false
+    private val writeTestDataFiles = true
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -73,6 +73,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     )
 
     private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
+
+    // Directory path for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("v2", "resources")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -124,6 +130,26 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+        }
+
+        "perform a resource preview request for a Thing resource using the complex schema" in {
+            val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/AThing.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "resource-preview",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
@@ -327,6 +353,44 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/Testding.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "testding",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request for a Thing resource with a link to a ThingPicture resource test1" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-picture", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithPicture.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "thing-with-picture",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
+
             // Check that the resource corresponds to the ontology.
             instanceChecker.check(
                 instanceResponse = responseAsString,
@@ -443,6 +507,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "resource-graph",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
+
             assert(response.status == StatusCodes.OK, responseAsString)
             val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
 
@@ -544,6 +620,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource with values" in {
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-values-request",
+                        fileExtension = "json"
+                    ),
+                    text = SharedTestDataADM.createResourceWithValues
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, SharedTestDataADM.createResourceWithValues)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -591,7 +678,19 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "create a resource with a custom creation date" in {
             val creationDate: Instant = SharedTestDataADM.customResourceCreationDate
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomCreationDate(creationDate)
+            val jsonLDEntity: String = SharedTestDataADM.createResourceWithCustomCreationDate(creationDate)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-creation-date",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -611,6 +710,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         "create a resource with a custom IRI" in {
             val customIRI: IRI = SharedTestDataADM.customResourceIRI
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-IRI-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -637,7 +748,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.BadRequest, response.toString)
         }
 
-        "return a DuplicateValueException during resource creation when the supplied resource Iri is not unique" in {
+        "return a DuplicateValueException during resource creation when the supplied resource IRI is not unique" in {
 
             // duplicate resource IRI
             val params =
@@ -670,9 +781,21 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             invalidIri should be(true)
         }
 
-        "create a resource with random Iri and a custom value Iri" in {
+        "create a resource with random IRI and a custom value IRI" in {
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueIRI(customValueIRI)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-value-IRI-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -691,10 +814,20 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(valueIri == customValueIRI)
         }
 
-        "create a resource with random resource Iri and custom value UUIDs" in {
-
+        "create a resource with random resource IRI and custom value UUIDs" in {
             val customValueUUID = SharedTestDataADM.customValueUUID
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(valueUUID = customValueUUID)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-value-UUID-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -714,10 +847,20 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         }
 
-        "create a resource with random resource Iri and custom value creation date" in {
-
+        "create a resource with random resource IRI and custom value creation date" in {
             val creationDate: Instant = SharedTestDataADM.customValueCreationDate
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueCreationDate(creationDate = creationDate)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-value-creationDate-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -741,16 +884,28 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         }
 
-        "create a resource with custom resource Iri, creation date, and a value with custom value Iri and UUID" in {
+        "create a resource with custom resource IRI, creation date, and a value with custom value IRI and UUID" in {
             val customResourceIRI: IRI = SharedTestDataADM.customResourceIRI_resourceWithValues
             val customCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
             val customValueUUID = SharedTestDataADM.customValueUUID
+
             val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
                 resourceIRI = customResourceIRI,
                 creationDate = customCreationDate,
                 valueIRI = customValueIRI,
                 valueUUID = customValueUUID)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -795,6 +950,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "create a resource as another user" in {
             val jsonLDEntity = SharedTestDataADM.createResourceAsUser(SharedTestDataADM.anythingUser1)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-as-user",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -859,6 +1026,80 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 newModificationDate = newModificationDate
             )
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-resource-metadata-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val updateRequest = Put(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
+            val updateResponseAsString: String = responseToString(updateResponse)
+            assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource metadata updated")))
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-resource-metadata-response",
+                        fileExtension = "json"
+                    ),
+                    text = updateResponseAsString
+                )
+            )
+
+            val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+            val previewResponseAsString = responseToString(previewResponse)
+            assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
+
+            val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+            val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
+            assert(updatedLabel == newLabel)
+            val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+            assert(PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions))
+
+            val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            assert(lastModificationDate == newModificationDate)
+            aThingLastModificationDate = newModificationDate
+        }
+
+        "update the metadata of a resource that has a last modification date" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val newLabel = "test thing with modified label again"
+            val newPermissions = "CR knora-admin:ProjectMember|V knora-admin:ProjectMember"
+            val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
+
+            val jsonLDEntity = SharedTestDataADM.updateResourceMetadata(
+                resourceIri = resourceIri,
+                lastModificationDate = Some(aThingLastModificationDate),
+                newLabel = newLabel,
+                newPermissions = newPermissions,
+                newModificationDate = newModificationDate
+            )
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-resource-metadata-request-with-last-mod-date",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val updateRequest = Put(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
@@ -894,11 +1135,33 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 lastModificationDate = aThingLastModificationDate
             )
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "delete-resource-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
             assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource marked as deleted")))
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "delete-resource-response",
+                        fileExtension = "json"
+                    ),
+                    text = updateResponseAsString
+                )
+            )
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -913,6 +1176,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val jsonLDEntity = SharedTestDataADM.deleteResourceWithCustomDeleteDate(
                 resourceIri = resourceIri,
                 deleteDate = deleteDate
+            )
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "delete-resource-with-custom-delete-date-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
             )
 
             val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.superUser.email, password))
@@ -1062,6 +1336,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val jsonLDEntity = SharedTestDataADM.eraseResource(
                 resourceIri = resourceIri,
                 lastModificationDate = resourceLastModificationDate
+            )
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "erase-resource-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
             )
 
             val updateRequest = Post(s"$baseApiUrl/v2/resources/erase", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))

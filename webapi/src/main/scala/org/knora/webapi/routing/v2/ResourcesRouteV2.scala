@@ -19,16 +19,11 @@
 
 package org.knora.webapi.routing.v2
 
-import java.net.URLEncoder
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.IriConversions._
@@ -37,10 +32,8 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 object ResourcesRouteV2 {
     val ResourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
@@ -50,12 +43,9 @@ object ResourcesRouteV2 {
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     import ResourcesRouteV2._
-
-    // Directory name for generated test data
-    override val directoryName: String = "resources"
 
     private val Text_Property = "textProperty"
     private val Mapping_Iri = "mappingIri"
@@ -108,50 +98,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def createResourceTestRequests: Future[Set[TestDataFileContent]] = {
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-values-request"),
-                    text = SharedTestDataADM.createResourceWithValues
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-creation-date"),
-                    text = SharedTestDataADM.createResourceWithCustomCreationDate(SharedTestDataADM.customResourceCreationDate)
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-IRI-request"),
-                    text = SharedTestDataADM.createResourceWithCustomIRI(SharedTestDataADM.customResourceIRI)
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-value-IRI-request"),
-                    text = SharedTestDataADM.createResourceWithCustomValueIRI(SharedTestDataADM.customValueIRI)
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-value-UUID-request"),
-                    text = SharedTestDataADM.createResourceWithCustomValueUUID(SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID)
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-value-creationDate-request"),
-                    text = SharedTestDataADM.createResourceWithCustomValueCreationDate(SharedTestDataADM.customValueCreationDate)
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request"),
-                    text = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
-                        SharedTestDataADM.customResourceIRI_resourceWithValues,
-                        SharedTestDataADM.customResourceCreationDate,
-                        SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID,
-                        SharedTestDataADM.customValueUUID
-                    )
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-resource-as-user"),
-                    text = SharedTestDataADM.createResourceAsUser(SharedTestDataADM.anythingUser1)
-                )
-            )
-        )
-    }
-
     private def updateResourceMetadata: Route = path(ResourcesBasePath) {
         put {
             entity(as[String]) { jsonRequest =>
@@ -183,42 +129,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 }
             }
         }
-    }
-
-    private def updateResourceMetadataTestRequestsAndResponse: Future[Set[TestDataFileContent]] = {
-        val resourceIri = "http://rdfh.ch/0001/a-thing"
-        val newLabel = "test thing with modified label"
-        val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
-        val newModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
-
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("update-resource-metadata-request"),
-                    text = SharedTestDataADM.updateResourceMetadata(
-                        resourceIri = resourceIri,
-                        lastModificationDate = None,
-                        newLabel = newLabel,
-                        newPermissions = newPermissions,
-                        newModificationDate = newModificationDate
-                    )
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("update-resource-metadata-request-with-last-mod-date"),
-                    text = SharedTestDataADM.updateResourceMetadata(
-                        resourceIri = resourceIri,
-                        lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
-                        newLabel = newLabel,
-                        newPermissions = newPermissions,
-                        newModificationDate = newModificationDate
-                    )
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("update-resource-metadata-response"),
-                    text = SharedTestDataADM.successResponse("Resource metadata updated")
-                )
-            )
-        )
     }
 
     private def getResourcesInProject: Route = path(ResourcesBasePath) {
@@ -361,28 +271,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    // Resources to return in test data.
-    private val testResources: Map[String, IRI] = Map(
-        "testding" -> SharedTestDataADM.TestDing.iri,
-        "thing-with-picture" -> "http://rdfh.ch/0001/a-thing-with-picture"
-    )
-
-    private def getResourceTestResponses: Future[Set[TestDataFileContent]] = {
-        val responseFutures: Iterable[Future[TestDataFileContent]] = testResources.map {
-            case (filename, resourceIri) =>
-                val encodedResourceIri = URLEncoder.encode(resourceIri, "UTF-8")
-
-                for {
-                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ResourcesBasePathString/$encodedResourceIri"))
-                } yield TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath(filename),
-                    text = responseStr
-                )
-        }
-
-        Future.sequence(responseFutures).map(_.toSet)
-    }
-
     private def getResourcesPreview: Route = path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
         get {
             requestContext => {
@@ -410,15 +298,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
             }
         }
-    }
-
-    private def getResourcesPreviewTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/resourcespreview/${SharedTestDataADM.AThing.iriEncoded}"))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("resource-preview"),
-            text = responseStr
-        )
     }
 
     private def getResourcesTei: Route = path("v2" / "tei" / Segment) { resIri: String =>
@@ -510,16 +389,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResourceGraphTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both"))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("resource-graph"),
-            text = responseStr
-        )
-
-    }
-
     private def deleteResource: Route = path(ResourcesBasePath / "delete") {
         post {
             entity(as[String]) { jsonRequest =>
@@ -551,34 +420,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 }
             }
         }
-    }
-
-    private def deleteResourceTestRequestsAndResponses: Future[Set[TestDataFileContent]] = {
-        val resourceIri = "http://rdfh.ch/0001/a-thing"
-        val lastModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
-        val deleteDate = Instant.parse("2020-08-14T10:00:00Z")
-
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("delete-resource-request"),
-                    text = SharedTestDataADM.deleteResource(
-                        resourceIri = resourceIri,
-                        lastModificationDate = lastModificationDate
-                    )
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("delete-resource-with-custom-delete-date-request"),
-                    text = SharedTestDataADM.deleteResourceWithCustomDeleteDate(
-                        resourceIri = resourceIri,
-                        deleteDate = deleteDate
-                    )
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("delete-resource-response"),
-                    text = SharedTestDataADM.successResponse("Resource marked as deleted"))
-            )
-        )
     }
 
     private def eraseResource: Route = path(ResourcesBasePath / "erase") {
@@ -613,37 +454,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             }
         }
     }
-
-    private def eraseResourceTestRequest: Future[TestDataFileContent] = {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-        val resourceLastModificationDate = Instant.parse("2019-02-13T09:05:10Z")
-
-        FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("erase-resource-request"),
-                text = SharedTestDataADM.eraseResource(
-                    resourceIri = resourceIri,
-                    lastModificationDate = resourceLastModificationDate
-                )
-            )
-        )
-    }
-
-    override def getTestData(implicit executionContext: ExecutionContext,
-                             actorSystem: ActorSystem,
-                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        for {
-            getResponses <- getResourceTestResponses
-            createRequests <- createResourceTestRequests
-            previewResponse <- getResourcesPreviewTestResponse
-            graphResponse <- getResourceGraphTestResponse
-            metadataRequestsAndResponse <- updateResourceMetadataTestRequestsAndResponse
-            deleteRequestAndResponse <- deleteResourceTestRequestsAndResponses
-            eraseRequest <- eraseResourceTestRequest
-        } yield getResponses ++ createRequests ++ metadataRequestsAndResponse ++ deleteRequestAndResponse +
-            previewResponse + graphResponse + eraseRequest
-    }
-
     /**
      * Gets the Iri of the property that represents the text of the resource.
      *
