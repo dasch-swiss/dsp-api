@@ -1,0 +1,176 @@
+@prefix anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#> .
+@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://0.0.0.0:3333/ontology/0001/anything/v2> a owl:Ontology;
+  knora-api:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-api:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp;
+  rdfs:label "The anything ontology" .
+
+anything:Thing a owl:Class;
+  knora-api:canBeInstantiated true;
+  knora-api:isResourceClass true;
+  knora-api:resourceIcon "thing.png";
+  rdfs:comment "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"@de;
+  rdfs:label "Chose"@fr, "Cosa"@it, "Ding"@de, "Thing"@en;
+  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:versionDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 0;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasListItem
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 0;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasOtherListItem
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 1;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasOtherThing
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 1;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasOtherThingValue
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 2;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasRichtext
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 2;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasText
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 3;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasDate
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 4;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasInteger
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 5;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasDecimal
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 6;
+      owl:maxCardinality 1;
+      owl:onProperty anything:hasBoolean
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 7;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasUri
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 9;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasInterval
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 10;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasColor
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 11;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasGeometry
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 12;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasGeoname
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasThingDocument
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasThingDocumentValue
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasThingPicture
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasThingPictureValue
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 15;
+      owl:minCardinality 0;
+      owl:onProperty anything:isPartOfOtherThing
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 15;
+      owl:minCardinality 0;
+      owl:onProperty anything:isPartOfOtherThingValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deletedBy
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLinkValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ] .

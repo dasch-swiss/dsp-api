@@ -22,6 +22,7 @@ package org.knora.webapi
 import java.io.{File, StringReader}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -84,7 +85,7 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     override def beforeAll {
         // set allow reload over http

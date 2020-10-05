@@ -37,7 +37,6 @@ import scala.concurrent.Future
 
 object ResourcesRouteV2 {
     val ResourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
-    val ResourcesBasePathString = "/v2/resources"
 }
 
 /**

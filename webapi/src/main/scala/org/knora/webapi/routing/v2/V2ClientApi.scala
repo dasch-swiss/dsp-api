@@ -30,7 +30,6 @@ class V2ClientApi(routeData: KnoraRouteData) extends ClientApi {
      * The endpoints in this [[ClientApi]].
      */
     override val endpoints: Seq[ClientEndpoint] = Seq(
-        new OntologiesRouteV2(routeData),
         new ValuesRouteV2(routeData),
         new SearchRouteV2(routeData),
         new ListsRouteV2(routeData)

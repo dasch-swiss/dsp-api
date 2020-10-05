@@ -782,7 +782,30 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "create a resource with a custom creation date" in {
             val creationDate: Instant = SharedTestDataADM.customResourceCreationDate
-            val jsonLDEntity: String = SharedTestDataADM.createResourceWithCustomCreationDate(creationDate)
+
+            val jsonLDEntity: String =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "knora-api:creationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$creationDate"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -811,9 +834,31 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(savedCreationDate == creationDate)
         }
 
+        def createResourceWithCustomIRI(iri: IRI): String = {
+            s"""{
+               |  "@id" : "$iri",
+               |  "@type" : "anything:Thing",
+               |  "knora-api:attachedToProject" : {
+               |    "@id" : "http://rdfh.ch/projects/0001"
+               |  },
+               |  "anything:hasBoolean" : {
+               |    "@type" : "knora-api:BooleanValue",
+               |    "knora-api:booleanValueAsBoolean" : true
+               |  },
+               |  "rdfs:label" : "test thing",
+               |  "@context" : {
+               |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+               |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+               |  }
+               |}""".stripMargin
+        }
+
         "create a resource with a custom IRI" in {
             val customIRI: IRI = SharedTestDataADM.customResourceIRI
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+            val jsonLDEntity = createResourceWithCustomIRI(customIRI)
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -836,7 +881,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "not create a resource with an invalid custom IRI" in {
             val customIRI: IRI = "http://rdfh.ch/invalid-resource-IRI"
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+            val jsonLDEntity = createResourceWithCustomIRI(customIRI)
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             println(responseToString(response))
@@ -845,7 +890,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "not create a resource with a custom IRI containing the wrong project code" in {
             val customIRI: IRI = "http://rdfh.ch/0803/a-thing-with-IRI"
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomIRI(customIRI)
+            val jsonLDEntity = createResourceWithCustomIRI(customIRI)
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             println(responseToString(response))
@@ -885,9 +930,31 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             invalidIri should be(true)
         }
 
+        def createResourceWithCustomValueIRI(valueIRI: IRI): String = {
+            s"""{
+               |  "@type" : "anything:Thing",
+               |  "knora-api:attachedToProject" : {
+               |    "@id" : "http://rdfh.ch/projects/0001"
+               |  },
+               |  "anything:hasBoolean" : {
+               |    "@id" : "$valueIRI",
+               |    "@type" : "knora-api:BooleanValue",
+               |    "knora-api:booleanValueAsBoolean" : true
+               |  },
+               |  "rdfs:label" : "test thing with value IRI",
+               |  "@context" : {
+               |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+               |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+               |  }
+               |}""".stripMargin
+        }
+
         "create a resource with random IRI and a custom value IRI" in {
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueIRI(customValueIRI)
+            val jsonLDEntity = createResourceWithCustomValueIRI(customValueIRI)
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -920,7 +987,27 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "create a resource with random resource IRI and custom value UUIDs" in {
             val customValueUUID = SharedTestDataADM.customValueUUID
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueUUID(valueUUID = customValueUUID)
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true,
+                   |    "knora-api:valueHasUUID" : "$customValueUUID"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   | }
+                   |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -953,7 +1040,30 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
         "create a resource with random resource IRI and custom value creation date" in {
             val creationDate: Instant = SharedTestDataADM.customValueCreationDate
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomValueCreationDate(creationDate = creationDate)
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : false,
+                   |    "knora-api:valueCreationDate" : {
+                   |        "@type" : "xsd:dateTimeStamp",
+                   |        "@value" : "$creationDate"
+                   |    }
+                   |  },
+                   |  "rdfs:label" : "test thing with value has creation date",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   | }
+                   |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
