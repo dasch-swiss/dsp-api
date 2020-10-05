@@ -51,7 +51,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
     // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
+    private val clientTestDataPath: Seq[String] = Seq("admin", "groups")
 
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)

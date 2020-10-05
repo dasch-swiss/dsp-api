@@ -96,7 +96,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
     private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
     // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
+    private val clientTestDataPath: Seq[String] = Seq("admin", "users")
 
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)
