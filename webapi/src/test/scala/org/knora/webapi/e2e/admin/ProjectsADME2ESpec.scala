@@ -22,8 +22,8 @@ package org.knora.webapi.e2e.admin
 import java.net.URLEncoder
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
@@ -34,14 +34,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.{E2ESpec, IRI}
+import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import scala.collection.JavaConverters._
-import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-
+import scala.concurrent.duration._
+import scala.collection.JavaConverters._
 
 object ProjectsADME2ESpec {
     val config: Config = ConfigFactory.parseString(
@@ -64,6 +64,16 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
     private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
+
+    // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
+    private val writeTestDataFiles = true
+
+    // Directory path for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
+
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -98,6 +108,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
+
             }
 
             "return the information for a single project identified by shortcode" in {
@@ -107,7 +118,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(response.status === StatusCodes.OK)
             }
 
-            "return the project's restricted view settings" in {
+            "return the project's restricted view settings using its IRI" in {
                 val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 logger.debug(s"response: {}", response)
@@ -116,6 +127,61 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
                 settings.size should be (Some("!512,512"))
                 settings.watermark should be (Some("path_to_image"))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-project-restricted-view-settings-by-IRI-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "return the project's restricted view settings using its shortname" in {
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                logger.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+                settings.size should be (Some("!512,512"))
+                settings.watermark should be (Some("path_to_image"))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-project-restricted-view-settings-by-shortname-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "return the project's restricted view settings using its shortcode" in {
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                logger.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+                settings.size should be (Some("!512,512"))
+                settings.watermark should be (Some("path_to_image"))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-project-restricted-view-settings-by-shortcode-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
         }
 
@@ -123,14 +189,40 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "CREATE a new project with the provided custom Iri" in {
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createProjectWithCustomIRIRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
+
+                val createProjectWithCustomIRIRequest: String =
+                    s"""{
+                       |    "id": "$customProjectIri",
+                       |    "shortname": "newprojectWithIri",
+                       |    "shortcode": "3333",
+                       |    "longname": "new project with a custom IRI",
+                       |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
+                       |    "keywords": ["projectIRI"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-project-with-custom-Iri-request",
+                            fileExtension = "json"
+                        ),
+                        text = createProjectWithCustomIRIRequest
+                    )
+                )
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, createProjectWithCustomIRIRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be (StatusCodes.OK)
 
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
 
                 //check that the custom IRI is correctly assigned
-                result.id should be (SharedTestDataADM.customProjectIri)
+                result.id should be (customProjectIri)
 
                 //check the rest of project info
                 result.shortcode should be ("3333")
@@ -139,12 +231,23 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.keywords should be (Seq("projectIRI"))
                 result.description should be (Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en"))))
 
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-project-with-custom-Iri-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+
             }
 
             "return 'BadRequest' if the supplied project IRI is not unique" in {
                 val params =
                     s"""{
-                       |    "id": "${SharedTestDataADM.customProjectIri}",
+                       |    "id": "http://rdfh.ch/projects/3333",
                        |    "shortname": "newprojectWithDuplicateIri",
                        |    "shortcode": "2222",
                        |    "longname": "new project with a duplicate custom invalid IRI",
@@ -161,7 +264,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 response.status should be (StatusCodes.BadRequest)
 
                 val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customProjectIri}' already exists, try another one.")
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/projects/3333' already exists, try another one.")
                 invalidIri should be(true)
             }
         }
@@ -171,8 +274,29 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             val newProjectIri = new MutableTestIri
 
             "CREATE a new project and return the project info if the supplied shortname is unique" in {
+                val createProjectRequest: String =
+                    s"""{
+                       |    "shortname": "newproject",
+                       |    "shortcode": "1111",
+                       |    "longname": "project longname",
+                       |    "description": [{"value": "project description", "language": "en"}],
+                       |    "keywords": ["keywords"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}""".stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-project-request",
+                            fileExtension = "json"
+                        ),
+                        text = createProjectRequest
+                    )
+                )
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, createProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -186,6 +310,17 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.logo should be (Some("/fu/bar/baz.jpg"))
                 result.status should be (true)
                 result.selfjoin should be (false)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-project-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
 
                 newProjectIri.set(result.id)
             }

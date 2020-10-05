@@ -416,8 +416,6 @@ object SharedTestDataADM {
 
     val customListIRI: IRI = "http://rdfh.ch/lists/0001/a-list-with-IRI"
 
-    val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
-
     def anythingAdminUser: UserADM = UserADM(
         id = "http://rdfh.ch/users/AnythingAdminUser",
         username = "AnythingAdminUser",
@@ -603,31 +601,6 @@ object SharedTestDataADM {
     val changeGroupStatusRequest: String =
         s"""{
            |    "status": true
-           |}""".stripMargin
-
-    val createProjectRequest: String =
-        s"""{
-           |    "shortname": "newproject",
-           |    "shortcode": "1111",
-           |    "longname": "project longname",
-           |    "description": [{"value": "project description", "language": "en"}],
-           |    "keywords": ["keywords"],
-           |    "logo": "/fu/bar/baz.jpg",
-           |    "status": true,
-           |    "selfjoin": false
-           |}""".stripMargin
-
-    val createProjectWithCustomIRIRequest: String =
-        s"""{
-           |    "id": "$customProjectIri",
-           |    "shortname": "newprojectWithIri",
-           |    "shortcode": "3333",
-           |    "longname": "new project with a custom IRI",
-           |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
-           |    "keywords": ["projectIRI"],
-           |    "logo": "/fu/bar/baz.jpg",
-           |    "status": true,
-           |    "selfjoin": false
            |}""".stripMargin
 
     val updateProjectRequest: String =
