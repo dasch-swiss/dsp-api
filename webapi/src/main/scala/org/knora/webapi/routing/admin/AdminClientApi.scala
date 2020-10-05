@@ -31,7 +31,6 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
      * The endpoints in this [[ClientApi]].
      */
     override val endpoints: Seq[ClientEndpoint] = Seq(
-        new UsersRouteADM(routeData),
         new PermissionsRouteADM(routeData),
         new ListsRouteADM(routeData)
     )

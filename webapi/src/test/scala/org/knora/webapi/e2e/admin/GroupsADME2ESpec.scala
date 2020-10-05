@@ -56,7 +56,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
-    private val rootEmail = SharedTestDataADM.rootUser.email
     private val imagesUser01Email = SharedTestDataADM.imagesUser01.email
     private val testPass = SharedTestDataADM.testPass
 
