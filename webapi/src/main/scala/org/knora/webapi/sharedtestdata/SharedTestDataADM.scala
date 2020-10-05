@@ -603,25 +603,6 @@ object SharedTestDataADM {
            |    "status": true
            |}""".stripMargin
 
-    val updateProjectRequest: String =
-        s"""{
-           |    "shortname": "newproject",
-           |    "longname": "updated project longname",
-           |    "description": [{"value": "updated project description", "language": "en"}],
-           |    "keywords": ["updated", "keywords"],
-           |    "logo": "/fu/bar/baz-updated.jpg",
-           |    "status": true,
-           |    "selfjoin": true
-           |}""".stripMargin
-
-    val updateProjectMultipleDescriptionRequest: String =
-        s"""{
-           |    "description": [
-           |                    {"value": "Test Project", "language": "en"},
-           |                    {"value": "Test Project", "language": "se"}
-           |                    ]
-           |}""".stripMargin
-
     val createUserRequest: String =
         s"""{
            |    "username": "donald.duck",

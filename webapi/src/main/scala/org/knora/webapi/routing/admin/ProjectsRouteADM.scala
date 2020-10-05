@@ -99,15 +99,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-//    private def getProjectsTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(baseApiUrl + ProjectsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-projects-response"),
-//            text = responseStr
-//        )
-//    }
-
     /* create a new project */
     @ApiOperation(value = "Add new project", nickname = "addProject", httpMethod = "POST", response = classOf[ProjectOperationResponseADM])
     @ApiImplicitParams(Array(
@@ -158,15 +149,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-//    private def getKeywordsTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-keywords-response"),
-//            text = responseStr
-//        )
-//    }
-
     /* returns all keywords for a single project */
     private def getProjectKeywords: Route = path(ProjectsBasePath / "iri" / Segment / "Keywords") { value =>
         get {
@@ -186,15 +168,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-//    private def getProjectKeywordsTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$anythingProjectIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-project-keywords-response"),
-//            text = responseStr
-//        )
-//    }
 
     /**
      * returns a single project identified through iri
@@ -217,15 +190,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-//    private def getProjectTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-project-response"),
-//            text = responseStr
-//        )
-//    }
 
     /**
      * returns a single project identified through shortname.
@@ -302,15 +266,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-//    private def updateProjectTestRequest: Future[TestDataFileContent] = {
-//        FastFuture.successful(
-//            TestDataFileContent(
-//                filePath = TestDataFilePath.makeJsonPath("update-project-request"),
-//                text = SharedTestDataADM.updateProjectRequest
-//            )
-//        )
-//    }
-
     /**
      * API MAY CHANGE: update project status to false
      */
@@ -362,15 +317,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-//    private def getProjectMembersTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-project-members-response"),
-//            text = responseStr
-//        )
-//    }
 
     /**
      * API MAY CHANGE: returns all members part of a project identified through shortname
@@ -441,15 +387,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
-
-//    private def getProjectAdminMembersTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$imagesProjectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-project-admin-members-response"),
-//            text = responseStr
-//        )
-//    }
 
     /**
      * API MAY CHANGE: returns all admin members part of a project identified through shortname
