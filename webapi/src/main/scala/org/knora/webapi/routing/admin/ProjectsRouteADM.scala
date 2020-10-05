@@ -41,9 +41,7 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.IRI
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -58,9 +56,6 @@ object ProjectsRouteADM {
 class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectsADMJsonProtocol {
 
     import ProjectsRouteADM._
-
-    private val imagesProjectIriEnc = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
-    private val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
 
     /**
      * Returns the route.

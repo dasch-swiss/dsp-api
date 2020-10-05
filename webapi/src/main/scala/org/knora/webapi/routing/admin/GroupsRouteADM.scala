@@ -32,11 +32,8 @@ import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.{ExecutionContext, Future}
 
 
 object GroupsRouteADM {
@@ -50,18 +47,10 @@ object GroupsRouteADM {
 
 @Api(value = "groups", produces = "application/json")
 @Path("/admin/groups")
-class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with GroupsADMJsonProtocol with ClientEndpoint {
+class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with GroupsADMJsonProtocol {
 
     import GroupsRouteADM._
-
-    /**
-     * The directory name to be used for this endpoint's code.
-     */
-    override val directoryName: String = "groups"
-
-    private val groupIri = SharedTestDataADM.imagesReviewerGroup.id
-    private val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
-
+    
     /**
      * Returns all groups
      */
@@ -81,15 +70,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     log
                 )
         }
-    }
-
-    private def getGroupsTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(baseApiUrl + GroupsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-groups-response"),
-            text = responseStr
-        )
     }
 
     /**
@@ -119,21 +99,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private def createGroupTestRequest: Future[Set[TestDataFileContent]] = {
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-group-request"),
-                    text = SharedTestDataADM.createGroupRequest
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-group-with-custom-Iri-request"),
-                    text = SharedTestDataADM.createGroupWithCustomIriRequest
-                )
-            )
-        )
-    }
-
     /**
      * Returns a single group identified by IRI.
      */
@@ -155,15 +120,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     log
                 )
         }
-    }
-
-    private def getGroupByIriTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$GroupsBasePathString/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-group-response"),
-            text = responseStr
-        )
     }
 
     /**
@@ -203,15 +159,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     )
             }
         }
-    }
-
-    private def updateGroupTestRequest: Future[TestDataFileContent] = {
-        FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("update-group-request"),
-                text = SharedTestDataADM.updateGroupRequest
-            )
-        )
     }
 
     /**
@@ -254,15 +201,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     )
             }
         }
-    }
-
-    private def changeGroupStatusTestRequest: Future[TestDataFileContent] = {
-        FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("change-group-status-request"),
-                text = SharedTestDataADM.changeGroupStatusRequest
-            )
-        )
     }
 
     /**
@@ -316,37 +254,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
-    private def getGroupMembersTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$GroupsBasePathString/$groupIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-group-members-response"),
-            text = responseStr
-        )
-    }
-
     /**
      * Returns the route.
      */
     override def knoraApiPath: Route = getGroups ~ createGroup ~ getGroupByIri ~
         updateGroup ~ changeGroupStatus ~ deleteGroup ~ getGroupMembers
 
-    /**
-     * Returns test data for this endpoint.
-     *
-     * @return a set of test data files to be used for testing this endpoint.
-     */
-    override def getTestData(implicit executionContext: ExecutionContext,
-                             actorSystem: ActorSystem,
-                             materializer: Materializer): Future[Set[TestDataFileContent]] = {
-        for {
-            getGroupsResponse <- getGroupsTestResponse
-            createGroupRequest <- createGroupTestRequest
-            getGroupByIriResponse <- getGroupByIriTestResponse
-            updateGroupRequest <- updateGroupTestRequest
-            changeGroupStatusRequest <- changeGroupStatusTestRequest
-            getGroupMembersResponse <- getGroupMembersTestResponse
-        } yield createGroupRequest + getGroupsResponse + getGroupByIriResponse + updateGroupRequest +
-            changeGroupStatusRequest + getGroupMembersResponse
-    }
 }

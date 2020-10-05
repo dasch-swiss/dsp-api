@@ -65,9 +65,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
-    // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-    private val writeTestDataFiles = true
-
     // Directory path for generated client test data
     private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
 
