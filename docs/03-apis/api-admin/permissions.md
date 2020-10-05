@@ -98,10 +98,9 @@ default object access permission for a group of a project the request body would
 }
 ```
 
-Similar to the previous case a custom IRI can be assigned to a permission through 
-the `@id` attribute. The example below shows the request body to create a new default 
-object access permission with a custom IRI defined for a resource class 
-of a specific project:
+Similar to the previous case a custom IRI can be assigned to a permission specified by the `id` in the request body. 
+The example below shows the request body to create a new default object access permission with a custom IRI defined for 
+a resource class of a specific project:
 
 ```json
 {
