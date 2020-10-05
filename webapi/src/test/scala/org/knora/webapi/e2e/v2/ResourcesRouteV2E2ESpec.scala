@@ -49,8 +49,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
-  * Tests the API v2 resources route.
-  */
+ * Tests the API v2 resources route.
+ */
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -620,6 +620,110 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource with values" in {
+            val createResourceWithValues: String =
+                """{
+                  |  "@type" : "anything:Thing",
+                  |  "anything:hasBoolean" : {
+                  |    "@type" : "knora-api:BooleanValue",
+                  |    "knora-api:booleanValueAsBoolean" : true
+                  |  },
+                  |  "anything:hasColor" : {
+                  |    "@type" : "knora-api:ColorValue",
+                  |    "knora-api:colorValueAsColor" : "#ff3333"
+                  |  },
+                  |  "anything:hasDate" : {
+                  |    "@type" : "knora-api:DateValue",
+                  |    "knora-api:dateValueHasCalendar" : "GREGORIAN",
+                  |    "knora-api:dateValueHasEndEra" : "CE",
+                  |    "knora-api:dateValueHasEndYear" : 1489,
+                  |    "knora-api:dateValueHasStartEra" : "CE",
+                  |    "knora-api:dateValueHasStartYear" : 1489
+                  |  },
+                  |  "anything:hasDecimal" : {
+                  |    "@type" : "knora-api:DecimalValue",
+                  |    "knora-api:decimalValueAsDecimal" : {
+                  |      "@type" : "xsd:decimal",
+                  |      "@value" : "100000000000000.000000000000001"
+                  |    }
+                  |  },
+                  |  "anything:hasGeometry" : {
+                  |    "@type" : "knora-api:GeomValue",
+                  |    "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"
+                  |  },
+                  |  "anything:hasGeoname" : {
+                  |    "@type" : "knora-api:GeonameValue",
+                  |    "knora-api:geonameValueAsGeonameCode" : "2661604"
+                  |  },
+                  |  "anything:hasInteger" : [ {
+                  |    "@type" : "knora-api:IntValue",
+                  |    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+                  |    "knora-api:intValueAsInt" : 5,
+                  |    "knora-api:valueHasComment" : "this is the number five"
+                  |  }, {
+                  |    "@type" : "knora-api:IntValue",
+                  |    "knora-api:intValueAsInt" : 6
+                  |  } ],
+                  |  "anything:hasInterval" : {
+                  |    "@type" : "knora-api:IntervalValue",
+                  |    "knora-api:intervalValueHasEnd" : {
+                  |      "@type" : "xsd:decimal",
+                  |      "@value" : "3.4"
+                  |    },
+                  |    "knora-api:intervalValueHasStart" : {
+                  |      "@type" : "xsd:decimal",
+                  |      "@value" : "1.2"
+                  |    }
+                  |  },
+                  |  "anything:hasTimeStamp" : {
+                  |    "@type" : "knora-api:TimeValue",
+                  |    "knora-api:timeValueAsTimeStamp" : {
+                  |      "@type" : "xsd:dateTimeStamp",
+                  |      "@value" : "2020-01-24T08:47:10.307068Z"
+                  |    }
+                  |  },
+                  |  "anything:hasListItem" : {
+                  |    "@type" : "knora-api:ListValue",
+                  |    "knora-api:listValueAsListNode" : {
+                  |      "@id" : "http://rdfh.ch/lists/0001/treeList03"
+                  |    }
+                  |  },
+                  |  "anything:hasOtherThingValue" : {
+                  |    "@type" : "knora-api:LinkValue",
+                  |    "knora-api:linkValueHasTargetIri" : {
+                  |      "@id" : "http://rdfh.ch/0001/a-thing"
+                  |    }
+                  |  },
+                  |  "anything:hasRichtext" : {
+                  |    "@type" : "knora-api:TextValue",
+                  |    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p><strong>this is</strong> text</p> with standoff</text>",
+                  |    "knora-api:textValueHasMapping" : {
+                  |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+                  |    }
+                  |  },
+                  |  "anything:hasText" : {
+                  |    "@type" : "knora-api:TextValue",
+                  |    "knora-api:valueAsString" : "this is text without standoff"
+                  |  },
+                  |  "anything:hasUri" : {
+                  |    "@type" : "knora-api:UriValue",
+                  |    "knora-api:uriValueAsUri" : {
+                  |      "@type" : "xsd:anyURI",
+                  |      "@value" : "https://www.knora.org"
+                  |    }
+                  |  },
+                  |  "knora-api:attachedToProject" : {
+                  |    "@id" : "http://rdfh.ch/projects/0001"
+                  |  },
+                  |  "rdfs:label" : "test thing",
+                  |  "@context" : {
+                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                  |  }
+                  |}""".stripMargin
+
             clientTestDataCollector.addFile(
                 TestDataFileContent(
                     filePath = TestDataFilePath(
@@ -627,11 +731,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                         filename = "create-resource-with-values-request",
                         fileExtension = "json"
                     ),
-                    text = SharedTestDataADM.createResourceWithValues
+                    text = createResourceWithValues
                 )
             )
 
-            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, SharedTestDataADM.createResourceWithValues)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -776,7 +880,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.BadRequest, response.toString)
 
-            val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+            val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
             val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
             invalidIri should be(true)
         }
@@ -810,7 +914,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             // Get the value from the response.
             val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
             val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
-              requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIRI)
         }
 
@@ -890,11 +994,32 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
             val customValueUUID = SharedTestDataADM.customValueUUID
 
-            val jsonLDEntity = SharedTestDataADM.createResourceWithCustomResourceIriAndCreationDateAndValueWithCustomIRIAndUUID(
-                resourceIRI = customResourceIRI,
-                creationDate = customCreationDate,
-                valueIRI = customValueIRI,
-                valueUUID = customValueUUID)
+            val jsonLDEntity =
+                s"""{
+                   |   "@id" : "$customResourceIRI",
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@id": "$customValueIRI",
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true,
+                   |    "knora-api:valueHasUUID" : "$customValueUUID"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "knora-api:creationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$customCreationDate"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   | }
+                   |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -913,7 +1038,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            assert(resourceIri ==  customResourceIRI)
+            assert(resourceIri == customResourceIRI)
 
             // Request the newly created resource.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
@@ -923,7 +1048,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             // Get the value from the response.
             val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
             val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
-              requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIRI)
 
             val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
@@ -949,7 +1074,28 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource as another user" in {
-            val jsonLDEntity = SharedTestDataADM.createResourceAsUser(SharedTestDataADM.anythingUser1)
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "knora-api:attachedToUser" : {
+                   |    "@id" : "${SharedTestDataADM.anythingUser1.id}"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1018,13 +1164,24 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
             val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
-            val jsonLDEntity = SharedTestDataADM.updateResourceMetadata(
-                resourceIri = resourceIri,
-                lastModificationDate = None,
-                newLabel = newLabel,
-                newPermissions = newPermissions,
-                newModificationDate = newModificationDate
-            )
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1081,13 +1238,28 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val newPermissions = "CR knora-admin:ProjectMember|V knora-admin:ProjectMember"
             val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
-            val jsonLDEntity = SharedTestDataADM.updateResourceMetadata(
-                resourceIri = resourceIri,
-                lastModificationDate = Some(aThingLastModificationDate),
-                newLabel = newLabel,
-                newPermissions = newPermissions,
-                newModificationDate = newModificationDate
-            )
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$aThingLastModificationDate"
+                    |  },
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1130,10 +1302,23 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         "mark a resource as deleted" in {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
 
-            val jsonLDEntity = SharedTestDataADM.deleteResource(
-                resourceIri = resourceIri,
-                lastModificationDate = aThingLastModificationDate
-            )
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$aThingLastModificationDate"
+                    |  },
+                    |  "knora-api:deleteComment" : "This resource is too boring.",
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1173,10 +1358,23 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
             val deleteDate = Instant.now
 
-            val jsonLDEntity = SharedTestDataADM.deleteResourceWithCustomDeleteDate(
-                resourceIri = resourceIri,
-                deleteDate = deleteDate
-            )
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "knora-api:deleteComment" : "This resource is too boring.",
+                    |  "knora-api:deleteDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$deleteDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1326,17 +1524,29 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     expectedClassIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr),
                     knoraRouteGet = doGetRequest
                 )
-           }
+            }
         }
 
         "erase a resource" in {
             val resourceIri = "http://rdfh.ch/0001/thing-with-history"
             val resourceLastModificationDate = Instant.parse("2019-02-13T09:05:10Z")
 
-            val jsonLDEntity = SharedTestDataADM.eraseResource(
-                resourceIri = resourceIri,
-                lastModificationDate = resourceLastModificationDate
-            )
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$resourceLastModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
