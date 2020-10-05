@@ -236,6 +236,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                     Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
                         val responseStr: String = responseAs[String]
+                        assert(response.status == StatusCodes.OK, responseStr)
 
                         // Are we writing expected response files?
                         if (writeGetTestResponses) {
@@ -248,17 +249,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                                     if (existingFile.exists()) {
                                         val parsedResponse: Model = parseRdfXml(responseStr)
+                                        val parsedExistingFile: Model = parseRdfXml(httpGetTest.readFile(mediaType))
 
-                                        try {
-                                            val parsedExistingFile: Model = parseRdfXml(httpGetTest.readFile(mediaType))
-
-                                            if (parsedResponse != parsedExistingFile) {
-                                                httpGetTest.writeFile(responseStr, mediaType)
-                                            }
-                                        } catch {
-                                            case _: RDFParseException =>
-                                                // This could happen if an earlier failed test wrote an error message to the file.
-                                                httpGetTest.writeFile(responseStr, mediaType)
+                                        if (parsedResponse != parsedExistingFile) {
+                                            httpGetTest.writeFile(responseStr, mediaType)
                                         }
                                     } else {
                                         httpGetTest.writeFile(responseStr, mediaType)

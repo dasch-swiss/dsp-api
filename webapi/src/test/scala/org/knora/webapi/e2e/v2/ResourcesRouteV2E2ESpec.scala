@@ -79,6 +79,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)
+    
+    private def successResponse(message: String): String =
+        s"""{
+           |  "knora-api:result" : "$message",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+           |  }
+           |}""".stripMargin
 
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -1308,7 +1316,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource metadata updated")))
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource metadata updated")))
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1386,7 +1394,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource metadata updated")))
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource metadata updated")))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -1445,7 +1453,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource marked as deleted")))
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
             clientTestDataCollector.addFile(
                 TestDataFileContent(
@@ -1501,7 +1509,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-            assert(JsonParser(updateResponseAsString) == JsonParser(SharedTestDataADM.successResponse("Resource marked as deleted")))
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
