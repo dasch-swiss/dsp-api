@@ -1335,13 +1335,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.originalFilename.exists(_.endsWith(".txt")))) {
+            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.internalFilename.endsWith(".txt"))) {
                 throw BadRequestException(s"Resource $gravsearchTemplateIri does not have a file value referring to a Gravsearch template")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}"
-
-        } yield gravSearchUrl
+            gravsearchUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
+        } yield gravsearchUrl
 
         val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover {
             case notFound: NotFoundException => throw BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")

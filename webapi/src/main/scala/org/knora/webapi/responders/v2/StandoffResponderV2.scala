@@ -62,6 +62,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /* actor materializer needed for http requests */
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
+    private def xmlMimeTypes = Set(
+        "text/xml",
+        "application/xml"
+    )
+
     /**
      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
      */
@@ -179,12 +184,12 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
-            // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(xsltFileValueContent.fileValue.internalMimeType == "text/xml" && xsltFileValueContent.fileValue.originalFilename.exists(_.endsWith(".xsl")))) {
+            // check if xsltFileValue represents an XSL transformation
+            _ = if (!(xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType) && xsltFileValueContent.fileValue.internalFilename.endsWith(".xsl"))) {
                 throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
 
-            xsltUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}"
+            xsltUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
         } yield xsltUrl
 

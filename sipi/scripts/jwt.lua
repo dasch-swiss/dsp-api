@@ -25,7 +25,6 @@ function get_knora_token()
     local token = get_token()
 
     if token == nil then
-        send_error(401, "Not a Knora token")
         return nil
     end
 
@@ -57,15 +56,15 @@ function get_token()
     local expiration_date = token["exp"]
 
     if expiration_date == nil then
-       send_error(401, "Token has no expiry date")
-       return nil
+        send_error(401, "Token has no expiry date")
+        return nil
     end
 
     local systime = server.systime()
 
     if (expiration_date <= systime) then
-      send_error(401, "Expired token")
-      return nil
+        send_error(401, "Expired token")
+        return nil
     end
 
     local audience = token["aud"]

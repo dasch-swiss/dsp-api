@@ -45,11 +45,10 @@ Whenever a file is requested from Sipi (e.g. a browser trying to
 dereference an image link served by Knora), a preflight function is
 called. This function is defined in `sipi.init-knora.lua` present in the
 Sipi root directory. It takes three parameters: `prefix`, `identifier`
-(the name of the requested file), and `cookie`. File links created by
-Knora use the prefix `knora`, e.g.
-`http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg`.
+(the name of the requested file), and `cookie`. The prefix is the shortcode
+of the project that the resource containing the file value belongs to.
 
-Given these information, Sipi asks Knora about the current's users
+Given this information, Sipi asks Knora about the current's users
 permissions on the given file. The cookie contains the current user's
 Knora session id, so Knora can match Sipi's request with a given user
 profile and determine the permissions this user has on the file. If the
@@ -60,8 +59,8 @@ refuses to serve the file. However, all of this behaviour is defined in
 the preflight function in Sipi and not controlled by Knora. Knora only
 provides the permission code.
 
-See [Sharing the Session ID with Sipi](sipi-and-knora.md#sharing-the-session-id-with-sipi) for more
-information about sharing the session id.
+See [Authentication of Users with Sipi](sipi-and-knora.md#authentication-of-users-with-sipi) for more
+information about sharing the session ID.
 
 ## Using Sipi in Test Mode
 
@@ -76,42 +75,11 @@ $ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/con
 ```
 
 Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
-not aks Knora about the user's permission on the requested file.
-
-## Using Sipi in production behind a proxy
-
-For SIPI to work with Salsah1 (non-angular) GUI, we need to define an additional set of
-environment variables if we want to run SIPI behind a proxy:
-
-- `SIPI_EXTERNAL_PROTOCOL=https`
-- `SIPI_EXTERNAL_HOSTNAME=iiif.example.org`
-- `SIPI_EXTERNAL_PORT=443`
-
-These variables are only used by `make_thumbnail.lua`:
-
-```lua
-    server.log("make_thumbnail - external_protocol: " .. get_external_protocol(), server.loglevel.LOG_DEBUG)
-
-    server.log("make_thumbnail - external_hostname: " .. get_external_hostname(), server.loglevel.LOG_DEBUG)
-
-    server.log("make_thumbnail - external_port: " .. get_external_port(), server.loglevel.LOG_DEBUG)
-
-    answer = {
-        nx_thumb = dims.nx,
-        ny_thumb = dims.ny,
-        mimetype_thumb = 'image/jpeg',
-        preview_path =  get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .."/thumbs/" .. thumbName .. "/full/max/0/default.jpg",
-        filename = tmpName, -- make this a IIIF URL
-        original_mimetype = submitted_mimetype.mimetype,
-        original_filename = filename,
-        file_type = 'IMAGE'
-    }
-```
-
+not ask Knora about the user's permission on the requested file.
 
 ## Additional Sipi Environment Variables
 
-Additionaly, these environment variables can be used to further configure sipi:
+Additionally, these environment variables can be used to further configure Sipi:
 
 - `SIPI_WEBAPI_HOSTNAME=localhost`: overrides `knora_path` in Sipi's config
 - `SIPI_WEBAPI_PORT=3333`: overrides `knora_port` in Sipi's config
