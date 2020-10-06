@@ -385,7 +385,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                     TestDataFileContent(
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
-                            filename = "create-ontology-with-comment-request",
+                            filename = "create-ontology-with-comment-response",
                             fileExtension = "json"
                         ),
                         text = responseStr

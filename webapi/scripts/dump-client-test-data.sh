@@ -2,8 +2,6 @@
 
 # Downloads client test data from Redis into a Zip file.
 
-set -e
-
 # A pushd that produces no output.
 pushd () {
     command pushd "$@" > /dev/null
@@ -20,6 +18,9 @@ hash_name=client-test-data
 
 # The name of the Zip file that will contain client test data download from Redis.
 zip_file_name=client-test-data.zip
+
+# A file listing the expected contents of that Zip file.
+expected_contents_file=$(dirname "$0")/expected-client-test-data.txt
 
 # Make a temporary directory for downloading the data from Redis.
 temp_dir=$(mktemp -d)
@@ -64,3 +65,25 @@ rm -rf $temp_dir
 
 # Remove the hash from Redis.
 redis-cli del $hash_name > /dev/null
+
+# Make a temporary file to hold the file paths in the Zip file.
+temp_contents=$(mktemp)
+
+# Get the file paths from the Zip file.
+zipinfo -1 $zip_file_name | sort > $temp_contents
+
+# Compare them to the expected file paths.
+diff -q $expected_contents_file $temp_contents > /dev/null
+diff_result=$?
+
+# Return an error if they're different.
+
+if [ $diff_result -ne 0 ]; then
+  echo "Generated client test data archive $zip_file_name does not have the expected contents:"
+  diff -u $expected_contents_file $temp_contents
+else
+  echo "Generated client test data archive: $zip_file_name"
+fi
+
+rm -f $temp_contents
+exit $diff_result

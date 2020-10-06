@@ -85,7 +85,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val writeTestDataFiles = false
 
     // Directory paths for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("v2", "searchextended")
+    private val clientTestDataPath: Seq[String] = Seq("v2", "search")
 
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)

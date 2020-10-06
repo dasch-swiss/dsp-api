@@ -51,8 +51,9 @@ object ListsADME2ESpec {
 class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
+
     // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "permissions")
+    private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
 
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)

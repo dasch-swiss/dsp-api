@@ -227,9 +227,7 @@ stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuse
 .PHONY: test-webapi
 test-webapi: docker-build ## runs all dsp-api tests.
 	docker-compose -f docker-compose.yml up -d redis
-	$(CURRENT_DIR)/webapi/scripts/clear-client-test-data.sh
 	bazel test //webapi/...
-	$(CURRENT_DIR)/webapi/scripts/dump-client-test-data.sh
 
 .PHONY: test-unit
 test-unit: docker-build ## runs the dsp-api unit tests.
@@ -243,10 +241,10 @@ test-unit: docker-build ## runs the dsp-api unit tests.
 	//webapi/src/test/scala/org/knora/webapi/util/... \
 
 .PHONY: test-e2e
-test-e2e: docker-build ## runs the dsp-api e2e tests.
+test-e2e: docker-build ## runs the dsp-api e2e tests and generates client test data.
 	docker-compose -f docker-compose.yml up -d redis
 	$(CURRENT_DIR)/webapi/scripts/clear-client-test-data.sh
-	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
+	bazel test --cache_test_results=no //webapi/src/test/scala/org/knora/webapi/e2e/...
 	$(CURRENT_DIR)/webapi/scripts/dump-client-test-data.sh
 
 .PHONY: test-it
@@ -272,6 +270,7 @@ test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration tes
 
 .PHONY: test
 test: docker-build ## runs all test targets.
+	docker-compose -f docker-compose.yml up -d redis
 	bazel test //webapi/...
 
 #################################
