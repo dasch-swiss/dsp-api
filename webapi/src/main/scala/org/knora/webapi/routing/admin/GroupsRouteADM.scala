@@ -38,7 +38,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object GroupsRouteADM {
     val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
-    val GroupsBasePathString: String = "/admin/groups"
 }
 
 /**

@@ -27,9 +27,9 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.Await

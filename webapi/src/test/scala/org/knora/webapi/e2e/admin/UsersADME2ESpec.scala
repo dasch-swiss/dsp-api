@@ -24,9 +24,9 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -36,14 +36,14 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
 object UsersADME2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -55,21 +55,21 @@ object UsersADME2ESpec {
   */
 class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJsonProtocol with GroupsADMJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
-    val rootCreds = CredentialsV1(
+    val rootCreds: CredentialsV1 = CredentialsV1(
         SharedTestDataADM.rootUser.id,
         SharedTestDataADM.rootUser.email,
         "test"
     )
 
-    val projectAdminCreds = CredentialsV1(
+    val projectAdminCreds: CredentialsV1 = CredentialsV1(
         SharedTestDataADM.imagesUser01.id,
         SharedTestDataADM.imagesUser01.email,
         "test"
     )
 
-    val normalUserCreds = CredentialsV1(
+    val normalUserCreds: CredentialsV1 = CredentialsV1(
         SharedTestDataADM.normalUser.id,
         SharedTestDataADM.normalUser.email,
         "test"

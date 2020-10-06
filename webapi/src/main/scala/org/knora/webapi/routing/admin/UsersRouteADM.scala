@@ -44,7 +44,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object UsersRouteADM {
     val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
-    val UsersBasePathString: String = "/admin/users"
 }
 
 /**

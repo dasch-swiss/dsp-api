@@ -48,7 +48,6 @@ import scala.util.Try
 
 object ProjectsRouteADM {
     val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
-    val ProjectsBasePathString = "/admin/projects"
 }
 
 @Api(value = "projects", produces = "application/json")

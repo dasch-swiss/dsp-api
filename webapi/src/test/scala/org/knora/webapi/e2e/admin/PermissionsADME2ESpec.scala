@@ -21,20 +21,19 @@ package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
-import org.knora.webapi.util.{AkkaHttpUtils, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.util.AkkaHttpUtils
 import spray.json._
 
 import scala.concurrent.duration._
 
 object PermissionsADME2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"

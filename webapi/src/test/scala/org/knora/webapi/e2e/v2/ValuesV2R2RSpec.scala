@@ -24,9 +24,8 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.settings._
 import org.knora.webapi.app.ApplicationActor
-import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -34,9 +33,9 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
-import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.{MutableTestIri, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.ExecutionContextExecutor
 

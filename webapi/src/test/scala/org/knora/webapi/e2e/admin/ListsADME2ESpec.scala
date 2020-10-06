@@ -22,20 +22,19 @@ package org.knora.webapi.e2e.admin
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.testkit.RouteTestTimeout
-
-import scala.concurrent.Await
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.{E2ESpec, IRI}
-import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.{E2ESpec, IRI}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object ListsADME2ESpec {

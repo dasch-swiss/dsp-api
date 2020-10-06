@@ -40,7 +40,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object ListsRouteADM {
     val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
-    val ListsBasePathString: String = "/admin/lists"
 }
 
 /**

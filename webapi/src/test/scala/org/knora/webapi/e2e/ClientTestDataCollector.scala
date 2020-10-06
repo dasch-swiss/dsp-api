@@ -21,7 +21,6 @@ package org.knora.webapi.e2e
 
 import org.knora.webapi.exceptions.TestConfigurationException
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.util.TestDataFileContent
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 /**
@@ -49,5 +48,27 @@ class ClientTestDataCollector(settings: KnoraSettingsImpl) {
         } finally {
             jedis.close()
         }
+    }
+}
+
+/**
+ * Represents a file containing generated client API test data.
+ *
+ * @param filePath the file path in which the test data should be saved.
+ * @param text     the source code.
+ */
+case class TestDataFileContent(filePath: TestDataFilePath, text: String)
+
+/**
+ * Represents the filesystem path of a file containing generated test data.
+ *
+ * @param directoryPath the path of the directory containing the file,
+ *                      relative to the root directory of the source tree.
+ * @param filename      the filename, without the file extension.
+ * @param fileExtension the file extension.
+ */
+case class TestDataFilePath(directoryPath: Seq[String], filename: String, fileExtension: String) {
+    override def toString: String = {
+        (directoryPath :+ filename + "." + fileExtension).mkString("/")
     }
 }

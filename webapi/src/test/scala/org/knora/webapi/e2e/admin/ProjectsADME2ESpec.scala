@@ -22,26 +22,26 @@ package org.knora.webapi.e2e.admin
 import java.net.URLEncoder
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.eclipse.rdf4j.model.Model
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.{E2ESpec, IRI}
-import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.{E2ESpec, IRI}
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 object ProjectsADME2ESpec {
     val config: Config = ConfigFactory.parseString(
@@ -56,7 +56,7 @@ object ProjectsADME2ESpec {
   */
 class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with SessionJsonProtocol with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
 
-    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
+    private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
     private val rootEmail = SharedTestDataADM.rootUser.email
     private val testPass = SharedTestDataADM.testPass
