@@ -402,7 +402,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                         new HealthRoute(routeData).knoraApiPath ~
                             new VersionRoute(routeData).knoraApiPath ~
                             new RejectingRoute(routeData).knoraApiPath ~
-                            new ClientApiRoute(routeData).knoraApiPath ~
                             new ResourcesRouteV1(routeData).knoraApiPath ~
                             new ValuesRouteV1(routeData).knoraApiPath ~
                             new StandoffRouteV1(routeData).knoraApiPath ~
