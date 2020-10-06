@@ -710,6 +710,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
+                maybeName = changeListRequest.name,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
                 maybeLabels = changeListRequest.labels,
@@ -734,6 +735,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
 
+            _ = if (changeListRequest.name.nonEmpty) {
+                if (updatedList.listinfo.name.get != changeListRequest.name.get)
+                    throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
+            }
             // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
 
         } yield ListInfoGetResponseADM(listinfo = updatedList.listinfo)

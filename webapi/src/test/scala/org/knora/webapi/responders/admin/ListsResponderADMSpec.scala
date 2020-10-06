@@ -222,6 +222,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     changeListRequest = ChangeListInfoApiRequestADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
+                        name = Some("updated name"),
                         labels = Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
@@ -239,7 +240,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 val listInfo = received.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
-
+                listInfo.name should be (Some("updated name"))
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (2)
                 labels.sorted should be (Seq(
