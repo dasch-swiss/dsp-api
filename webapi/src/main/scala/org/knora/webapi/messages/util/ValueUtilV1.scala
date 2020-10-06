@@ -75,7 +75,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String = {
-        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/max/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/!128,128/0/default.jpg"
     }
 
     /**
@@ -105,10 +105,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
-    private val mimeType2V1Format = new ErrorHandlingMap(Map( // TODO: add mime types for text files that are supported by Sipi
+    private val mimeType2V1Format = new ErrorHandlingMap(Map(
         "application/octet-stream" -> "BINARY-UNKNOWN",
         "image/jpeg" -> "JPEG",
         "image/jp2" -> "JPEG2000",
+        "image/jpx" -> "JPEG2000",
         "application/pdf" -> "PDF",
         "application/postscript" -> "POSTSCRIPT",
         "application/vnd.ms-powerpoint" -> "PPT",
@@ -123,6 +124,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "XLSX",
         "application/xml" -> "XML",
         "text/xml" -> "XML",
+        "text/csv" -> "CSV",
         "application/zip" -> "ZIP",
         "application/x-compressed-zip" -> "ZIP"
     ), { key: String => s"Unknown MIME type: $key" })
@@ -671,7 +673,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
-            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
+            originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
             projectShortcode = projectShortcode,
             dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
             dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
@@ -690,7 +692,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         Future(TextFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
-            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
+            originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
             projectShortcode = projectShortcode
         ))
     }

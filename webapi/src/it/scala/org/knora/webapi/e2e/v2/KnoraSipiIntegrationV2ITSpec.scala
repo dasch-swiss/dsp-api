@@ -1,9 +1,27 @@
+/*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.e2e.v2
 
 import java.io.File
 import java.net.URLEncoder
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -17,7 +35,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -87,48 +104,6 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val xmlValueIri = new MutableTestIri
 
     /**
-     * Represents a file to be uploaded to Sipi.
-     *
-     * @param path     the path of the file.
-     * @param mimeType the MIME type of the file.
-     *
-     */
-    case class FileToUpload(path: String, mimeType: ContentType)
-
-    /**
-     * Represents an image file to be uploaded to Sipi.
-     *
-     * @param fileToUpload the file to be uploaded.
-     * @param width        the image's width in pixels.
-     * @param height       the image's height in pixels.
-     */
-    case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
-
-    /**
-     * Represents the information that Sipi returns about each file that has been uploaded.
-     *
-     * @param originalFilename the original filename that was submitted to Sipi.
-     * @param internalFilename Sipi's internal filename for the stored temporary file.
-     * @param temporaryUrl     the URL at which the temporary file can be accessed.
-     * @param fileType         `image`, `text`, or `document`.
-     */
-    case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryUrl: String, fileType: String)
-
-    /**
-     * Represents Sipi's response to a file upload request.
-     *
-     * @param uploadedFiles the information about each file that was uploaded.
-     */
-    case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
-
-    object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(SipiUploadResponseEntry)
-        implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
-    }
-
-    import SipiUploadResponseJsonProtocol._
-
-    /**
      * Represents the information that Knora returns about an image file value that was created.
      *
      * @param internalFilename the image's internal filename.
@@ -156,52 +131,6 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
      * @param url              the file's URL.
      */
     case class SavedTextFile(internalFilename: String, url: String)
-
-    /**
-     * Uploads a file to Sipi and returns the information in Sipi's response.
-     *
-     * @param loginToken    the login token to be included in the request to Sipi.
-     * @param filesToUpload the files to be uploaded.
-     * @return a [[SipiUploadResponse]] representing Sipi's response.
-     */
-    private def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
-        // Make a multipart/form-data request containing the files.
-
-        val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map {
-            fileToUpload =>
-                val fileToSend = new File(fileToUpload.path)
-                assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
-
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-        }
-
-        val sipiFormData = Multipart.FormData(formDataParts: _*)
-
-        // Send Sipi the file in a POST request.
-        val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
-
-        val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
-        // println(sipiUploadResponseJson.prettyPrint)
-        val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
-        // println(s"sipiUploadResponse: $sipiUploadResponse")
-
-        // Request the temporary file from Sipi.
-        for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-            val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
-                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/max/0/default.jpg")
-            } else {
-                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl))
-            }
-
-            checkResponseOK(sipiGetTmpFileRequest)
-        }
-
-        sipiUploadResponse
-    }
 
     /**
      * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
@@ -509,8 +438,8 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
-            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
-            val temporaryBaseIIIFDirectDownloadUrl = temporaryBaseIIIFUrl + "/file"
+            val temporaryUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
+            val temporaryDirectDownloadUrl = temporaryUrl + "/file"
 
             // JSON describing the new image to Knora.
             val jsonLdEntity =
@@ -533,7 +462,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(knoraPostResponse.status == StatusCodes.Forbidden)
 
             // Request the temporary image from Sipi.
-            val sipiGetTmpFileRequest = Get(temporaryBaseIIIFDirectDownloadUrl)
+            val sipiGetTmpFileRequest = Get(temporaryDirectDownloadUrl)
             val sipiResponse = singleAwaitingRequest(sipiGetTmpFileRequest)
             assert(sipiResponse.status == StatusCodes.NotFound)
         }

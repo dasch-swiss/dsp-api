@@ -28,7 +28,7 @@ import org.knora.webapi.exceptions.{ForbiddenException, NotFoundException}
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
+import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequest, MoveTemporaryFileToPermanentStorageRequest}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
@@ -161,7 +161,7 @@ object ResourceUtilV2 {
                 updateFuture.transformWith {
                     case Success(updateInProject: UpdateResultInProject) =>
                         // Yes. Ask Sipi to move the file to permanent storage.
-                        val sipiRequest = MoveTemporaryFileToPermanentStorageRequestV2(
+                        val sipiRequest = MoveTemporaryFileToPermanentStorageRequest(
                             internalFilename = fileValueContent.fileValue.internalFilename,
                             prefix = updateInProject.projectADM.shortcode,
                             requestingUser = requestingUser
@@ -172,7 +172,7 @@ object ResourceUtilV2 {
 
                     case Failure(_) =>
                         // The file value update failed. Ask Sipi to delete the temporary file.
-                        val sipiRequest = DeleteTemporaryFileRequestV2(
+                        val sipiRequest = DeleteTemporaryFileRequest(
                             internalFilename = fileValueContent.fileValue.internalFilename,
                             requestingUser = requestingUser
                         )

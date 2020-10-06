@@ -40,7 +40,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
             )
 
             // Wait a bit to allow the first request to get the lock.
-            Thread.sleep(200)
+            Thread.sleep(500)
 
             val secondApiRequestID = UUID.randomUUID
 

@@ -26,11 +26,11 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{SipiConstants, SipiConversionPathRequestV1, SipiConversionRequestV1, SipiConversionResponseV1}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData, ValueUtilV1}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, MessageUtil, PermissionUtilADM, ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -38,8 +38,10 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 
@@ -217,7 +219,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // Everything seems OK, so create the value.
 
             unverifiedValue <- createValueV1AfterChecks(
-                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                 projectIri = resourceFullResponse.resinfo.get.project_id,
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
@@ -614,26 +616,18 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
          */
         case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
 
-        def changeFileValue(oldFileValue: CurrentFileValue, newFileValue: FileValueV1): Future[ChangeValueResponseV1] = {
-            changeValueV1(ChangeValueRequestV1(
-                valueIri = oldFileValue.valueObjectIri,
-                value = newFileValue,
-                userProfile = changeFileValueRequest.userProfile,
-                apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
-            ))
-        }
-
         /**
-         * Preprocesses a file value change request by calling the Sipi responder to create a new file
-         * and calls [[changeValueV1]] to actually change the file value in Knora.
+         * Changes a file value in the triplestore.
          *
          * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+         * @param projectADM             the project in which the value is being updated.
          * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
          */
-        def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
+        def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1, projectADM: ProjectADM): Future[ChangeFileValueResponseV1] = {
+            val fileValueContent: FileValueContentV2 = changeFileValueRequest.file.toFileValueContentV2
 
             // get the Iris of the current file value(s)
-            val resultFuture = for {
+            val triplestoreUpdateFuture = for {
 
                 resourceIri <- Future(changeFileValueRequest.resourceIri)
 
@@ -651,7 +645,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
                     row: VariableResultsRow =>
-
                         CurrentFileValue(
                             property = row.rowMap("p"),
                             valueObjectIri = row.rowMap("fileValueIri"),
@@ -662,56 +655,44 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         )
                 }
 
-                // the message to be sent to SipiConnector
-                sipiConversionRequest: SipiConversionRequestV1 = changeFileValueRequest.file
+                // TODO: check if the file type returned by Sipi corresponds to the already existing file value type
 
-                sipiResponse: SipiConversionResponseV1 <- (storeManager ? sipiConversionRequest).mapTo[SipiConversionResponseV1]
+                response: ChangeValueResponseV1 <- changeValueV1(ChangeValueRequestV1(
+                    valueIri = fileValues.head.valueObjectIri,
+                    value = changeFileValueRequest.file,
+                    userProfile = changeFileValueRequest.userProfile,
+                    apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
+                ))
 
-                // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
-                _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
-                    // TODO: remove the file from SIPI (delete request)
-                    throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${fileValues.head.property}")
-                }
-
-                //
-                // handle file types individually
-                //
-
-                // create the apt case class depending on the file type returned by Sipi
-                changedLocation: LocationV1 <- sipiResponse.file_type match {
-                    case SipiConstants.FileType.IMAGE =>
-                        if (fileValues.size != 1) {
-                            throw InconsistentTriplestoreDataException(s"Expected 1 file value for $resourceIri, but ${fileValues.size} given.")
-                        }
-
-                        val oldFileValue: CurrentFileValue = fileValues.head
-                        val newFileValue: FileValueV1 = sipiResponse.fileValueV1
-
-                        for {
-                            response: ChangeValueResponseV1 <- changeFileValue(oldFileValue, newFileValue)
-                        } yield response.value match {
-                            case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
-                            case other => throw AssertionException(s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}")
-                        }
-
-                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
+                changedLocation = response.value match {
+                    case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
+                    case other => throw AssertionException(s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}")
                 }
             } yield ChangeFileValueResponseV1(
-                locations = Vector(changedLocation)
+                locations = Vector(changedLocation),
+                projectADM = projectADM
             )
 
-            // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
-            resultFuture.andThen {
-                case _ => changeFileValueRequest.file match {
-                    case conversionPathRequest: SipiConversionPathRequestV1 =>
-                        // a tmp file has been created by the resources route (non GUI-case), delete it
-                        FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
-                    case _ => ()
-                }
-            }
+            ResourceUtilV2.doSipiPostUpdate(
+                updateFuture = triplestoreUpdateFuture,
+                valueContent = fileValueContent,
+                requestingUser = changeFileValueRequest.userProfile,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                log = log
+            )
         }
 
         for {
+            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(iri = changeFileValueRequest.resourceIri, userProfile = changeFileValueRequest.userProfile)).mapTo[ResourceInfoResponseV1]
+
+            // Get project info
+            projectResponse <- {
+                responderManager ? ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(resourceInfoResponse.resource_info.get.project_id)),
+                    requestingUser = changeFileValueRequest.userProfile
+                )
+            }.mapTo[ProjectGetResponseADM]
 
             // Do the preparations of a file value change while already holding an update lock on the resource.
             // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
@@ -721,7 +702,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             taskResult <- IriLocker.runWithIriLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
-                () => makeTaskFuture(changeFileValueRequest)
+                () => makeTaskFuture(changeFileValueRequest, projectResponse.project)
             )
         } yield taskResult
 
@@ -883,7 +864,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         // We'll need to create a new LinkValue.
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
-                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = propertyIri,
                             currentLinkValueV1 = currentLinkValueQueryResult.value,
@@ -986,7 +967,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 // Generate a SPARQL update.
                 sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.changeComment(
-                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
@@ -1104,7 +1085,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         )
 
                         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.deleteLink(
-                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -1155,7 +1136,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         }
 
                         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.deleteValue(
-                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = findResourceWithValueResult.propertyIri,
@@ -1828,12 +1809,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 ).toString()
             }
 
-
-
-            updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-
+            updateVerificationResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
-
             resultOption <- sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
 
         } yield resultOption.getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
@@ -2177,7 +2154,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
             // Generate a SPARQL update string.
             sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.changeLink(
-                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
@@ -2324,7 +2301,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
             // Generate a SPARQL update.
             sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.addValueVersion(
-                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,

@@ -32,7 +32,7 @@ import org.knora.webapi.exceptions.{AssertionException, BadRequestException, Not
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequestV2, GetFileMetadataResponseV2}
+import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
@@ -2704,7 +2704,7 @@ case class FileValueV2(internalFilename: String,
  * @param fileValue        a [[FileValueV2]].
  * @param sipiFileMetadata the metadata that Sipi returned about the file.
  */
-case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: GetFileMetadataResponseV2)
+case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: GetFileMetadataResponse)
 
 /**
  * Constructs [[FileValueWithSipiMetadata]] objects based on JSON-LD input.
@@ -2723,8 +2723,8 @@ object FileValueWithSipiMetadata {
             internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
-            tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
-            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
+            tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, internalFilename)
+            fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponse]
 
             fileValue = FileValueV2(
                 internalFilename = internalFilename,

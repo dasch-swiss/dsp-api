@@ -26,11 +26,13 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.exceptions.{BadRequestException, SipiException, UnexpectedMessageException}
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
+import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -223,5 +225,55 @@ object RouteUtilV1 {
             )
 
         } yield textWithStandoffTagV1
+    }
+
+    /**
+     * MIME types used in Sipi to store image files.
+     */
+    private val imageMimeTypes: Set[String] = Set(
+        "image/jp2",
+        "image/jpx",
+    )
+
+    /**
+     * MIME types used in Sipi to store text files.
+     */
+    private val textMimeTypes: Set[String] = Set(
+        "application/xml",
+        "text/xml",
+        "text/csv",
+        "text/plain"
+    )
+
+    /**
+     * Converts file metadata from Sipi into a [[FileValueV1]].
+     *
+     * @param filename             the filename.
+     * @param fileMetadataResponse the file metadata from Sipi.
+     * @param projectShortcode     the project short code that the file value is to be created in.
+     * @return a [[FileValueV1]] representing the file.
+     */
+    def makeFileValue(filename: String, fileMetadataResponse: GetFileMetadataResponse, projectShortcode: String): FileValueV1 = {
+        if (imageMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+            StillImageFileValueV1(
+                internalFilename = filename,
+                internalMimeType = fileMetadataResponse.internalMimeType,
+                originalFilename = fileMetadataResponse.originalFilename,
+                originalMimeType = fileMetadataResponse.originalMimeType,
+                projectShortcode = projectShortcode,
+                dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
+                dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
+            )
+        } else if (textMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+            TextFileValueV1(
+                internalFilename = filename,
+                internalMimeType = fileMetadataResponse.internalMimeType,
+                originalFilename = fileMetadataResponse.originalFilename,
+                originalMimeType = fileMetadataResponse.originalMimeType,
+                projectShortcode = projectShortcode
+            )
+        } else {
+            throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
+        }
     }
 }

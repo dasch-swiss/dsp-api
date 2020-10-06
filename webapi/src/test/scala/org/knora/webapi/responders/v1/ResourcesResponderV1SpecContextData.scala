@@ -23,15 +23,15 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.{KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
 
 object ResourcesResponderV1SpecContextData {
 
-    implicit lazy val system = ActorSystem("webapi")
+    implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
-    val settings = KnoraSettings(system)
+    val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     /*
 
@@ -48,7 +48,7 @@ object ResourcesResponderV1SpecContextData {
 
     val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
-    val expectedPageResourceContextResponse = ResourceContextResponseV1(
+    val expectedPageResourceContextResponse: ResourceContextResponseV1 = ResourceContextResponseV1(
         resource_context = ResourceContextV1(
             parent_resinfo = Some(ResourceInfoV1(
                 firstproperty = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
@@ -83,7 +83,7 @@ object ResourcesResponderV1SpecContextData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                     ny = Some(3505),
                     nx = Some(2613),
-                    origname = "ad+s167_druck1=0001.tif",
+                     origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 )),
                 locations = Some(Vector(
@@ -94,7 +94,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                         ny = Some(128),
                         nx = Some(95),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -104,7 +104,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                         ny = Some(110),
                         nx = Some(82),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -114,7 +114,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                         ny = Some(219),
                         nx = Some(163),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -124,7 +124,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                         ny = Some(438),
                         nx = Some(327),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -134,7 +134,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                         ny = Some(876),
                         nx = Some(653),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -144,7 +144,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                         ny = Some(1753),
                         nx = Some(1307),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -154,7 +154,7 @@ object ResourcesResponderV1SpecContextData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                         ny = Some(3505),
                         nx = Some(2613),
-                        origname = "ad+s167_druck1=0001.tif",
+                         origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     )
                 )),
@@ -165,7 +165,7 @@ object ResourcesResponderV1SpecContextData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                     ny = Some(128),
                     nx = Some(95),
-                    origname = "ad+s167_druck1=0001.tif",
+                     origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 )),
                 restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
