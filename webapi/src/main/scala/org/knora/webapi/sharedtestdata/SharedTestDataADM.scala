@@ -674,12 +674,6 @@ object SharedTestDataADM {
         val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
     }
 
-    val treeList: IRI = "http://rdfh.ch/lists/0001/treeList"
-
-    val treeListNode: IRI = "http://rdfh.ch/lists/0001/treeList01"
-
-    val otherTreeList: IRI = "http://rdfh.ch/lists/0001/otherTreeList"
-
     val testResponseValueIri: IRI = "http://rdfh.ch/0001/_GlNQXdYRTyQPhpdh76U1w/values/OGbYaSgNSUCKQtmn9suXlw"
     val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
     val testResponseValueCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")

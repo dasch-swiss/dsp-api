@@ -27,7 +27,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.routing.admin.AdminClientApi
-import org.knora.webapi.routing.v2.V2ClientApi
 import org.knora.webapi.util.{FileUtil, TestDataFileContent}
 
 import scala.concurrent.Future
@@ -40,8 +39,7 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     override implicit val timeout: Timeout = 20111.millis
 
     private val apiDefs = Seq(
-        new AdminClientApi(routeData),
-        new V2ClientApi(routeData)
+        new AdminClientApi(routeData)
     )
 
     /**
