@@ -30,9 +30,7 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     /**
      * The endpoints in this [[ClientApi]].
      */
-    override val endpoints: Seq[ClientEndpoint] = Seq(
-        new ListsRouteADM(routeData)
-    )
+    override val endpoints: Seq[ClientEndpoint] = Seq()
 
     /**
      * The directory name to be used for this API's test data.

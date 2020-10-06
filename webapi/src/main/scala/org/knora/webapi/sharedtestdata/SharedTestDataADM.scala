@@ -574,60 +574,6 @@ object SharedTestDataADM {
     /** Test requests                   **/
     /** **********************************/
 
-    val createListRequest: String =
-        s"""{
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-           |    "comments": []
-           |}""".stripMargin
-
-    val createListWithCustomIriRequest: String =
-        s"""{
-           |    "id": "${SharedTestDataADM.customListIRI}",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-           |    "comments": []
-           |}""".stripMargin
-
-    def updateListInfoRequest(listIri: IRI): String = {
-        s"""{
-           |    "listIri": "$listIri",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-           |}""".stripMargin
-    }
-
-    def updateListInfoWithRepeatedCommentAndLabelValuesRequest(listIri: IRI): String = {
-        s"""{
-           |    "listIri": "$listIri",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |  "labels": [
-           |    {"language": "en", "value": "Test List"},
-           |    {"language": "se", "value": "Test List"}
-           |  ],
-           |  "comments": [
-           |    {"language": "en", "value": "test"},
-           |    {"language": "de", "value": "test"},
-           |    {"language": "fr", "value": "test"},
-           |     {"language": "it", "value": "test"}
-           |  ]
-           |}""".stripMargin
-    }
-
-    def addChildListNodeRequest(parentNodeIri: IRI,
-                                name: String,
-                                label: String,
-                                comment: String): String = {
-        s"""{
-           |    "parentNodeIri": "$parentNodeIri",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "name": "$name",
-           |    "labels": [{ "value": "$label", "language": "en"}],
-           |    "comments": [{ "value": "$comment", "language": "en"}]
-           |}""".stripMargin
-    }
-
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
