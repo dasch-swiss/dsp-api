@@ -89,6 +89,52 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
+    object AThing {
+        val iri: IRI = "http://rdfh.ch/0001/a-thing"
+        val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
+    }
+
+    object TestDing {
+        val iri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+        val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
+
+        val intValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
+        val decimalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
+        val dateValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q"
+        val booleanValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
+        val uriValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg"
+        val intervalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
+        val timeValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
+        val colorValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w"
+        val geomValueIri: IRI = "http://rdfh.ch/0001/http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ"
+        val geonameValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg"
+        val textValueWithStandoffIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg"
+        val textValueWithoutStandoffIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ"
+        val listValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew"
+        val linkValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uvRVxzL1RD-t9VIQ1TpfUw"
+
+        val intValueUuid = "dJ1ES8QTQNepFKF5-EAqdg"
+        val decimalValueUuid = "bXMwnrHvQH2DMjOFrGmNzg"
+        val dateValueUuid = "-rG4F5FTTu2iB5mTBPVn5Q"
+        val booleanValueUuid = "IN4R19yYR0ygi3K2VEHpUQ"
+        val uriValueUuid = "uBAmWuRhR-eo1u1eP7qqNg"
+        val intervalValueUuid = "RbDKPKHWTC-0lkRKae-E6A"
+        val timeValueUuid = "l6DhS5SCT9WhXSoYEZRTRw"
+        val colorValueUuid = "TAziKNP8QxuyhC4Qf9-b6w"
+        val geomValueUuid = "we-ybmj-SRen-91n4RaDOQ"
+        val geonameValueUuid = "hty-ONF8SwKN2RKU7rLKDg"
+        val textValueWithStandoffUuid = "rvB4eQ5MTF-Qxq0YgkwaDg"
+        val textValueWithoutStandoffUuid = "SZyeLLmOTcCCuS3B0VksHQ"
+        val listValueUuid = "XAhEeE3kSVqM4JPGdLt4Ew"
+        val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
+    }
+
+    object AThingPicture {
+        val iri: IRI = "http://rdfh.ch/0001/a-thing-picture"
+        val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
+        val stillImageFileValueUuid: IRI = "goZ7JFRNSeqF-dNxsqAS7Q"
+    }
+
     private def getResourceWithValues(resourceIri: IRI,
                                       propertyIrisForGravsearch: Seq[SmartIri],
                                       userEmail: String): JsonLDDocument = {
@@ -626,36 +672,36 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "The values v2 endpoint" should {
         "get the latest versions of values, given their UUIDs" in {
-            // The UUIDs of values in SharedTestDataADM.TestDing.
+            // The UUIDs of values in TestDing.
             val testDingValues: Map[String, String] = Map(
-                "int-value" -> SharedTestDataADM.TestDing.intValueUuid,
-                "decimal-value" -> SharedTestDataADM.TestDing.decimalValueUuid,
-                "date-value" -> SharedTestDataADM.TestDing.dateValueUuid,
-                "boolean-value" -> SharedTestDataADM.TestDing.booleanValueUuid,
-                "uri-value" -> SharedTestDataADM.TestDing.uriValueUuid,
-                "interval-value" -> SharedTestDataADM.TestDing.intervalValueUuid,
-                "time-value" -> SharedTestDataADM.TestDing.timeValueUuid,
-                "color-value" -> SharedTestDataADM.TestDing.colorValueUuid,
-                "geom-value" -> SharedTestDataADM.TestDing.geomValueUuid,
-                "geoname-value" -> SharedTestDataADM.TestDing.geonameValueUuid,
-                "text-value-with-standoff" -> SharedTestDataADM.TestDing.textValueWithStandoffUuid,
-                "text-value-without-standoff" -> SharedTestDataADM.TestDing.textValueWithoutStandoffUuid,
-                "list-value" -> SharedTestDataADM.TestDing.listValueUuid,
-                "link-value" -> SharedTestDataADM.TestDing.linkValueUuid
+                "int-value" -> TestDing.intValueUuid,
+                "decimal-value" -> TestDing.decimalValueUuid,
+                "date-value" -> TestDing.dateValueUuid,
+                "boolean-value" -> TestDing.booleanValueUuid,
+                "uri-value" -> TestDing.uriValueUuid,
+                "interval-value" -> TestDing.intervalValueUuid,
+                "time-value" -> TestDing.timeValueUuid,
+                "color-value" -> TestDing.colorValueUuid,
+                "geom-value" -> TestDing.geomValueUuid,
+                "geoname-value" -> TestDing.geonameValueUuid,
+                "text-value-with-standoff" -> TestDing.textValueWithStandoffUuid,
+                "text-value-without-standoff" -> TestDing.textValueWithoutStandoffUuid,
+                "list-value" -> TestDing.listValueUuid,
+                "link-value" -> TestDing.linkValueUuid
             )
 
             testDingValues.foreach {
                 case (valueTypeName, valueUuid) =>
                     testValue(
-                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        resourceIri = TestDing.iri,
                         valueUuid = valueUuid,
                         fileBasename = s"get-$valueTypeName-response"
                     )
             }
 
             testValue(
-                resourceIri = SharedTestDataADM.AThingPicture.iri,
-                valueUuid = SharedTestDataADM.AThingPicture.stillImageFileValueUuid,
+                resourceIri = AThingPicture.iri,
+                valueUuid = AThingPicture.stillImageFileValueUuid,
                 fileBasename = "get-still-image-file-value-response"
             )
         }
@@ -681,7 +727,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 4
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -747,7 +793,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with a custom value IRI" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 30
             val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI"
 
@@ -791,7 +837,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             // duplicate value IRI
             val params =
                 s"""{
-                   |  "@id" : "${SharedTestDataADM.AThing.iri}",
+                   |  "@id" : "${AThing.iri}",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasInteger" : {
                    |    "@id" : "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI",
@@ -815,7 +861,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with a custom UUID" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 45
             val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
 
@@ -857,7 +903,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
         "create an integer value with a custom creation date" in {
             val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 25
 
             val jsonLDEntity =
@@ -908,7 +954,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with custom IRI, UUID, and creation date" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 10
             val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-IRI"
             val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
@@ -965,7 +1011,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not create an integer value if the simple schema is submitted" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 10
 
             val jsonLDEntity =
@@ -986,7 +1032,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value with custom permissions" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 1
             val customPermissions: String = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
@@ -1043,7 +1089,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value without standoff and without a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "text without standoff"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -1087,7 +1133,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update a text value without a comment without changing it" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "text without standoff"
 
             val jsonLDEntity = updateTextValueWithoutStandoffRequest(
@@ -1102,7 +1148,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update a text value so it's empty" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = ""
 
             val jsonLDEntity = updateTextValueWithoutStandoffRequest(
@@ -1117,7 +1163,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value without standoff" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "text without standoff updated"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -1162,7 +1208,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value without standoff, adding a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "text without standoff updated"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -1208,7 +1254,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update a text value without standoff and with a comment without changing it" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "text without standoff updated"
 
             val jsonLDEntity = updateTextValueWithCommentRequest(
@@ -1224,7 +1270,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value without standoff, changing only the a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "text without standoff updated"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -1259,7 +1305,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value without standoff and with a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "this is a text value that has a comment"
             val valueHasComment: String = "this is a comment"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
@@ -1316,7 +1362,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value with standoff test1" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -1364,7 +1410,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a very long text value with standoff and linked tags" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
 
             val textValueAsXml: String =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -1829,7 +1875,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value with standoff containing a URL" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
 
             val textValueAsXml: String =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -1869,7 +1915,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value with standoff containing escaped text" in {
-            val resourceIri = SharedTestDataADM.AThing.iri
+            val resourceIri = AThing.iri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
             val jsonLDEntity = FileUtil.readTextFile(new File("test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
@@ -1881,7 +1927,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
             val savedValue: JsonLDObject = getValue(
-                resourceIri = SharedTestDataADM.AThing.iri,
+                resourceIri = AThing.iri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
@@ -1935,7 +1981,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             // Create the text value.
 
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -1972,7 +2018,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not create an empty text value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = ""
 
             val jsonLDEntity = createTextValueWithoutStandoffRequest(
@@ -1986,7 +2032,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a decimal value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val decimalValueAsDecimal = BigDecimal(4.3)
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2048,7 +2094,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a range with day precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2116,7 +2162,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a range with month precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2180,7 +2226,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a range with year precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2241,7 +2287,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
 
         "create a date value representing a single date with day precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2294,7 +2340,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a single date with month precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2344,7 +2390,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a single date with year precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2391,7 +2437,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a single Islamic date with day precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "ISLAMIC"
             val dateValueHasStartYear = 1407
@@ -2439,7 +2485,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an Islamic date value representing a range with day precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "ISLAMIC"
             val dateValueHasStartYear = 1407
@@ -2490,7 +2536,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a boolean value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val booleanValue: Boolean = true
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2543,7 +2589,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a geometry value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -2595,7 +2641,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an interval value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val intervalStart = BigDecimal("1.2")
             val intervalEnd = BigDecimal("3.4")
@@ -2670,7 +2716,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a time value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
             val timeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2732,7 +2778,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a list value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val listNode = "http://rdfh.ch/lists/0001/treeList03"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2788,7 +2834,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a color value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val color = "#ff3333"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2842,7 +2888,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a URI value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val uri = "https://www.knora.org"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2904,7 +2950,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a geoname value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val geonameCode = "2661604"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2958,7 +3004,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a link between two resources, without a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
             val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2970,7 +3016,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                    |  "anything:hasOtherThingValue" : {
                    |    "@type" : "knora-api:LinkValue",
                    |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "${SharedTestDataADM.TestDing.iri}"
+                   |      "@id" : "${TestDing.iri}"
                    |    }
                    |  },
                    |  "@context" : {
@@ -3013,11 +3059,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
-            savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
+            savedTargetIri should ===(TestDing.iri)
         }
 
         "create a link between two resources with a custom link value IRI, UUID, creationDate" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
             val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI"
             val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
@@ -3076,7 +3122,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an integer value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 5
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -3144,7 +3190,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an integer value with a custom creation date" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 6
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -3212,7 +3258,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an integer value with a custom new value version IRI" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 7
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -3248,7 +3294,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update an integer value with a custom new value version IRI that is the same as the current IRI" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 8
             val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/updated-int-value"
 
@@ -3266,7 +3312,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update an integer value with an invalid custom new value version IRI" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 8
             val newValueVersionIri: IRI = "foo"
 
@@ -3284,7 +3330,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update an integer value with a custom new value version IRI that refers to the wrong project code" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 8
             val newValueVersionIri: IRI = "http://rdfh.ch/0002/a-thing/values/foo"
 
@@ -3302,7 +3348,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update an integer value with a custom new value version IRI that refers to the wrong resource" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 8
             val newValueVersionIri: IRI = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/foo"
 
@@ -3320,7 +3366,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update an integer value if the simple schema is submitted" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val intValue: Int = 10
 
             val jsonLDEntity =
@@ -3345,7 +3391,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an integer value with custom permissions" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 3879
             val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher"
@@ -3403,7 +3449,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an integer value, changing only the permissions" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -3457,7 +3503,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a decimal value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val decimalValue = BigDecimal(5.6)
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -3520,7 +3566,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value with standoff" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -3578,7 +3624,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value with standoff containing escaped text" in {
-            val resourceIri = SharedTestDataADM.AThing.iri
+            val resourceIri = AThing.iri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
             val jsonLDEntity = FileUtil.readTextFile(new File("test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
             val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
@@ -3609,7 +3655,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value with a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val valueAsString: String = "this is a text value that has an updated comment"
             val valueHasComment: String = "this is an updated comment"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
@@ -3647,7 +3693,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a range with day precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -3716,7 +3762,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a range with month precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -3781,7 +3827,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a range with year precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -3842,7 +3888,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a single date with day precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -3896,7 +3942,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a single date with month precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -3947,7 +3993,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a single date with year precision" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2019
@@ -3995,7 +4041,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a boolean value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val booleanValue: Boolean = false
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4049,7 +4095,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a geometry value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -4102,7 +4148,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an interval value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val intervalStart = BigDecimal("5.6")
             val intervalEnd = BigDecimal("7.8")
@@ -4178,7 +4224,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a time value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
             val timeStamp = Instant.parse("2019-12-16T09:14:56.409249Z")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4241,7 +4287,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a list value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val listNode = "http://rdfh.ch/lists/0001/treeList02"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4298,7 +4344,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a color value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val color = "#ff3344"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4353,7 +4399,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a URI value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val uri = "https://docs.knora.org"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4416,7 +4462,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a geoname value" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val geonameCode = "2988507"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4471,7 +4517,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a link between two resources" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
             val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
             val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
@@ -4524,7 +4570,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update a link without a comment without changing it" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
 
             val jsonLDEntity = updateLinkValueRequest(
@@ -4539,7 +4585,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a link between two resources, adding a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
             val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
             val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
@@ -4581,7 +4627,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a link between two resources, changing only the comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
             val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
             val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
@@ -4623,7 +4669,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update a link with a comment without changing it" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
             val comment = "changing only the comment"
 
@@ -4640,7 +4686,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a link between two resources, with a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val resourceIri: IRI = AThing.iri
             val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
             val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -4653,7 +4699,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                    |  "anything:hasOtherThingValue" : {
                    |    "@type" : "knora-api:LinkValue",
                    |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "${SharedTestDataADM.TestDing.iri}"
+                   |      "@id" : "${TestDing.iri}"
                    |    },
                    |    "knora-api:valueHasComment" : "$comment"
                    |  },
@@ -4685,7 +4731,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
-            savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
+            savedTargetIri should ===(TestDing.iri)
 
             val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
             savedComment should ===(comment)
@@ -4693,7 +4739,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
         "delete an integer value" in {
             val jsonLDEntity = deleteIntValueRequest(
-                resourceIri = SharedTestDataADM.AThing.iri,
+                resourceIri = AThing.iri,
                 valueIri = intValueIri.get,
                 maybeDeleteComment = Some("this value was incorrect")
             )
@@ -4719,7 +4765,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val jsonLDEntity =
                 s"""{
-                   |  "@id" : "${SharedTestDataADM.AThing.iri}",
+                   |  "@id" : "${AThing.iri}",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasInteger" : {
                    |    "@id" : "${intValueForRsyncIri.get}",
@@ -4755,7 +4801,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "not delete an integer value if the simple schema is submitted" in {
             val jsonLDEntity =
                 s"""{
-                   |  "@id" : "${SharedTestDataADM.AThing.iri}",
+                   |  "@id" : "${AThing.iri}",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasInteger" : {
                    |    "@id" : "${intValueIri.get}",
@@ -4798,7 +4844,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "delete a link between two resources" in {
             val jsonLDEntity =
                 s"""{
-                   |  "@id" : "${SharedTestDataADM.AThing.iri}",
+                   |  "@id" : "${AThing.iri}",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasOtherThingValue" : {
                    |    "@id": "${linkValueIri.get}",

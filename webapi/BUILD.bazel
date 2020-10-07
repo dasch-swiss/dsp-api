@@ -159,7 +159,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/responders",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
         "//webapi/src/main/scala/org/knora/webapi/store",
         "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
@@ -214,7 +213,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
         "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",

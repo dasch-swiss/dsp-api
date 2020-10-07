@@ -33,7 +33,6 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.Await
@@ -53,9 +52,9 @@ object KnoraSipiIntegrationV2ITSpec {
 class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-    private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
-    private val password = SharedTestDataADM.testPass
+    private val anythingUserEmail = "anything.user01@example.org"
+    private val incunabulaUserEmail = "test.user2@test.ch"
+    private val password = "test"
 
     private val stillImageResourceIri = new MutableTestIri
     private val stillImageFileValueIri = new MutableTestIri

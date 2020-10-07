@@ -1,38 +1,34 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
- *  This file is part of Knora.
+ * This file is part of Knora.
  *
- *  Knora is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published
- *  by the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  Knora is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU Affero General Public
- *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.knora.webapi.sharedtestdata
 
-import java.net.URLEncoder
 import java.time.Instant
-import java.util.UUID
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
 
 /**
  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
@@ -263,8 +259,8 @@ object SharedTestDataADM {
             ),
             administrativePermissionsPerProject = Map(
                 IMAGES_PROJECT_IRI -> Set(
-                    PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
-                    PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
+                    PermissionADM.projectResourceCreateRestrictedPermission(s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"),
+                    PermissionADM.projectResourceCreateRestrictedPermission(s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bildformat")
                 )
             )
         ))
@@ -569,58 +565,4 @@ object SharedTestDataADM {
         status = false,
         selfjoin = false
     )
-
-    /** **********************************/
-    /** Test requests                   **/
-    /** **********************************/
-
-    object AThing {
-        val iri: IRI = "http://rdfh.ch/0001/a-thing"
-        val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
-    }
-
-    object AThingPicture {
-        val iri: IRI = "http://rdfh.ch/0001/a-thing-picture"
-        val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
-        val stillImageFileValueUuid: IRI = "goZ7JFRNSeqF-dNxsqAS7Q"
-    }
-
-    object TestDing {
-        val iri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
-        val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
-
-        val intValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
-        val decimalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
-        val dateValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q"
-        val booleanValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
-        val uriValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg"
-        val intervalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
-        val timeValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
-        val colorValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w"
-        val geomValueIri: IRI = "http://rdfh.ch/0001/http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ"
-        val geonameValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg"
-        val textValueWithStandoffIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg"
-        val textValueWithoutStandoffIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ"
-        val listValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew"
-        val linkValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uvRVxzL1RD-t9VIQ1TpfUw"
-
-        val intValueUuid = "dJ1ES8QTQNepFKF5-EAqdg"
-        val decimalValueUuid = "bXMwnrHvQH2DMjOFrGmNzg"
-        val dateValueUuid = "-rG4F5FTTu2iB5mTBPVn5Q"
-        val booleanValueUuid = "IN4R19yYR0ygi3K2VEHpUQ"
-        val uriValueUuid = "uBAmWuRhR-eo1u1eP7qqNg"
-        val intervalValueUuid = "RbDKPKHWTC-0lkRKae-E6A"
-        val timeValueUuid = "l6DhS5SCT9WhXSoYEZRTRw"
-        val colorValueUuid = "TAziKNP8QxuyhC4Qf9-b6w"
-        val geomValueUuid = "we-ybmj-SRen-91n4RaDOQ"
-        val geonameValueUuid = "hty-ONF8SwKN2RKU7rLKDg"
-        val textValueWithStandoffUuid = "rvB4eQ5MTF-Qxq0YgkwaDg"
-        val textValueWithoutStandoffUuid = "SZyeLLmOTcCCuS3B0VksHQ"
-        val listValueUuid = "XAhEeE3kSVqM4JPGdLt4Ew"
-        val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
-    }
-
-    val testResponseValueIri: IRI = "http://rdfh.ch/0001/_GlNQXdYRTyQPhpdh76U1w/values/OGbYaSgNSUCKQtmn9suXlw"
-    val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
-    val testResponseValueCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
 }
