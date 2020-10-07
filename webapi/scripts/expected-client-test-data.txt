@@ -18,6 +18,8 @@ test-data/admin/lists/add-second-child-to-root-request.json
 test-data/admin/lists/add-second-child-to-root-response.json
 test-data/admin/lists/create-child-node-request.json
 test-data/admin/lists/create-child-node-response.json
+test-data/admin/lists/create-list-request.json
+test-data/admin/lists/create-list-response.json
 test-data/admin/lists/create-list-with-custom-IRI-request.json
 test-data/admin/lists/create-list-with-custom-IRI-response.json
 test-data/admin/lists/get-anything-project-lists-response.json
@@ -33,6 +35,8 @@ test-data/admin/lists/update-list-info-response.json
 test-data/admin/permissions/
 test-data/admin/permissions/create-administrative-permission-request.json
 test-data/admin/permissions/create-administrative-permission-response.json
+test-data/admin/permissions/create-administrative-permission-withCustomIRI-request.json
+test-data/admin/permissions/create-administrative-permission-withCustomIRI-response.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-request.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-response.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-withCustomIRI-request.json
