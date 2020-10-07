@@ -879,10 +879,11 @@ object JsonLDUtil {
      * has a `@value` predicate and a `@language` predicate.
      *
      * @param objectsWithLangs a map of language codes to predicate values.
-     * @return a JSON-LD array in which each element has a `@value` predicate and a `@language` predicate.
+     * @return a JSON-LD array in which each element has a `@value` predicate and a `@language` predicate,
+     *         sorted by language code.
      */
     def objectsWithLangsToJsonLDArray(objectsWithLangs: Map[String, String]): JsonLDArray = {
-        val objects: Seq[JsonLDObject] = objectsWithLangs.toSeq.map {
+        val objects: Seq[JsonLDObject] = objectsWithLangs.toSeq.sortBy(_._1).map {
             case (lang, obj) =>
                 objectWithLangToJsonLDObject(
                     obj = obj,

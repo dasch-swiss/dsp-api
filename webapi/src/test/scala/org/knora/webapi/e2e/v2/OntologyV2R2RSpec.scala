@@ -613,7 +613,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects)
+                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -675,7 +675,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects)
+                responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects.toSet should ===(paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects.toSet)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get

@@ -10,10 +10,6 @@
             "knora-api:isResourceClass": true,
             "rdfs:label": [
                 {
-                    "@value": "Cosa",
-                    "@language": "it"
-                },
-                {
                     "@value": "Ding",
                     "@language": "de"
                 },
@@ -24,6 +20,10 @@
                 {
                     "@value": "Chose",
                     "@language": "fr"
+                },
+                {
+                    "@value": "Cosa",
+                    "@language": "it"
                 }
             ],
             "knora-api:resourceIcon": "thing.png",
