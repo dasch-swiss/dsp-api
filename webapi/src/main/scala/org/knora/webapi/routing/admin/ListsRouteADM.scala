@@ -301,13 +301,4 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 ???
             }
     }
-
-//    private def getListNodeInfoTestResponse: Future[TestDataFileContent] = {
-//        for {
-//            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/nodes/$anythingListNode") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-//        } yield TestDataFileContent(
-//            filePath = TestDataFilePath.makeJsonPath("get-list-node-info-response"),
-//            text = responseStr
-//        )
-//    }
 }
