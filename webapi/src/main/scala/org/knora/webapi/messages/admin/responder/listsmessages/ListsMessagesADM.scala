@@ -130,8 +130,8 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
 case class ChangeListInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
                                        name: Option[String] = None,
-                                       labels: Seq[StringLiteralV2],
-                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+                                       labels: Option[Seq[StringLiteralV2]] = None,
+                                       comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -151,10 +151,14 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    if (labels.isEmpty && comments.isEmpty) {
+    // If payload containes label or comments they should not be empty
+    if (labels.nonEmpty && labels.get.isEmpty) {
         throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
     }
 
+    if (comments.nonEmpty && comments.get.isEmpty) {
+        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+    }
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 

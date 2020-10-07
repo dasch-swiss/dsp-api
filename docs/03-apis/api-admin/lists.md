@@ -103,6 +103,9 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
  - GET: `/admin/lists/infos/<listIri>`
  
 ### Update list's information
+The basic information of a list such as its labels, comments, name, or all of them can be updated. The parameters that 
+must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
+list and the IRI of the project it belongs to. 
 
  - Required permission: none
  - Update list information
@@ -113,9 +116,20 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
    {
        "listIri": "listIri",
        "projectIri": "someprojectiri",
+       "name": "a new name",
        "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
        "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
    }
+```
+
+If only name of the list must be updated, it can be given as below in the body of the request:
+
+```json
+   {
+       "listIri": "listIri",
+       "projectIri": "someprojectiri",
+       "name": "another name"
+  }
 ```
 
 ## List Node Operations

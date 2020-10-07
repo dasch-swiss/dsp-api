@@ -26,7 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.{DuplicateValueException, ForbiddenException}
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
@@ -223,15 +223,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("updated name"),
-                        labels = Seq(
+                        labels = Some(Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
-                        ),
-                        comments = Seq(
+                        )),
+                        comments = Some(Seq(
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
                         )
-                    ),
+                    )),
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
@@ -254,7 +254,19 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                     StringLiteralV2(value = "New comment", language = Some("en"))
                 ).sorted)
+            }
 
+            "not update basic list information if name is duplicate" in {
+                responderManager ! ListInfoChangeRequestADM(
+                    listIri = newListIri.get,
+                    changeListRequest = ChangeListInfoApiRequestADM(
+                        listIri = newListIri.get,
+                        projectIri = IMAGES_PROJECT_IRI,
+                        name = Some("sommer")),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException("The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF.")))
             }
 
             "return a 'ForbiddenException' if the user changing the list is not project or system admin" in {
@@ -263,15 +275,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     changeListRequest = ChangeListInfoApiRequestADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
-                        labels = Seq(
+                        labels = Some(Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
-                        ),
-                        comments = Seq(
+                        )),
+                        comments = Some(Seq(
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
                         )
-                    ),
+                    )),
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID
                 )

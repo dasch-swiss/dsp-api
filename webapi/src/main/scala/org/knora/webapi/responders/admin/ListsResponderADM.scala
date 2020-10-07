@@ -675,18 +675,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          * The actual task run with an IRI lock.
          */
         def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = for {
-            // check if required information is supplied
-            _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
-            _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
+            // check if listIRI in path and payload match
+            _ <- Future(
+                if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
+            )
 
             // check if the requesting user is allowed to perform operation
-            _ <- Future(
-                if (!requestingUser.permissions.isProjectAdmin(changeListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+            _ = if (!requestingUser.permissions.isProjectAdmin(changeListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
                     // not project or a system admin
                     // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
                     throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
                 }
-            )
 
             /* Verify that the list exists. */
             maybeList <- listGetADM(rootNodeIri = listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
@@ -735,11 +734,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             _ = if (changeListRequest.labels.nonEmpty) {
-                if (updatedList.listinfo.labels.stringLiterals.diff(changeListRequest.labels).nonEmpty) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.labels.stringLiterals.diff(changeListRequest.labels.get).nonEmpty) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
             }
 
             _ = if (changeListRequest.comments.nonEmpty) {
-                if (updatedList.listinfo.comments.stringLiterals.diff(changeListRequest.comments).nonEmpty)
+                if (updatedList.listinfo.comments.stringLiterals.diff(changeListRequest.comments.get).nonEmpty)
 
                     throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
