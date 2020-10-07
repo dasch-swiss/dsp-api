@@ -153,11 +153,11 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
 
     // If payload containes label or comments they should not be empty
     if (labels.nonEmpty && labels.get.isEmpty) {
-        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+        throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
 
     if (comments.nonEmpty && comments.get.isEmpty) {
-        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+        throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
