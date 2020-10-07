@@ -340,7 +340,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     TestDataFileContent(
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
-                            filename = "create-list-with-custom-IRI-request",
+                            filename = "create-list-request",
                             fileExtension = "json"
                         ),
                         text = createListRequest
@@ -370,7 +370,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     TestDataFileContent(
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
-                            filename = "create-list-with-custom-IRI-response",
+                            filename = "create-list-response",
                             fileExtension = "json"
                         ),
                         text = responseToString(response)

@@ -192,6 +192,52 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                         text = responseToString(response)
                     )
                 )
+
+                val createAdministrativePermissionWithCustomIriRequest: String =
+                    s"""{
+                       |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+                       |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+                       |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-administrative-permission-withCustomIRI-request",
+                            fileExtension = "json"
+                        ),
+                        text = createAdministrativePermissionWithCustomIriRequest
+                    )
+                )
+
+                val createAdministrativePermissionWithCustomIriResponse: String =
+                    s"""{
+                       |    "administrative_permission": {
+                       |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+                       |        "forProject": "http://rdfh.ch/projects/0001",
+                       |        "hasPermissions": [
+                       |            {
+                       |                "additionalInformation": null,
+                       |                "name": "ProjectAdminGroupAllPermission",
+                       |                "permissionCode": null
+                       |            }
+                       |        ],
+                       |        "iri": "http://rdfh.ch/permissions/0001/AP-with-customIri"
+                       |    }
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-administrative-permission-withCustomIRI-response",
+                            fileExtension = "json"
+                        ),
+                        text = createAdministrativePermissionWithCustomIriResponse
+                    )
+                )
             }
 
             "create a default object access permission" in {
