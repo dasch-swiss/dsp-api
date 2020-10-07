@@ -26,10 +26,10 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
 - `GET: /admin/lists/<listIri>` : return complete list with children
 - `POST: /admin/lists` : create new list
+- `PUT: /admin/lists/<listIri>` : update list information
 - `POST: /admin/lists/<nodeIri>` : create new child node under the supplied parent node IRI
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
-- `PUT: /admin/lists/infos/<listIri>` : update list information
 
 **List Node operations**
 
@@ -106,7 +106,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
 
  - Required permission: none
  - Update list information
- - PUT: `/admin/lists/infos/<listIri>`
+ - PUT: `/admin/lists/<listIri>`
  - BODY:
  
 ```json
