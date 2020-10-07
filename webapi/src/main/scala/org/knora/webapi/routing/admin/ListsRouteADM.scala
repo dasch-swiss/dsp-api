@@ -19,16 +19,10 @@
 
 package org.knora.webapi.routing.admin
 
-import java.net.URLEncoder
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi._
@@ -36,7 +30,7 @@ import org.knora.webapi.exceptions.{BadRequestException, NotImplementedException
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 object ListsRouteADM {
     val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")

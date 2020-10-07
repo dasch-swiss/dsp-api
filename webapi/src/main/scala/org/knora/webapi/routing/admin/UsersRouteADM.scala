@@ -19,16 +19,10 @@
 
 package org.knora.webapi.routing.admin
 
-import java.net.URLEncoder
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
@@ -37,9 +31,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 
 object UsersRouteADM {
