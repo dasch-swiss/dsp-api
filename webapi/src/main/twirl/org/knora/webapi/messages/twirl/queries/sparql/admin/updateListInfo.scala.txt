@@ -29,7 +29,8 @@
  * @param listIri            the IRI of the list we want to update.
  * @param projectIri         the IRI of the list's project.
  * @param listClassIri       the IRI of the OWL class that the list should belong to.
- * @param maybeName          the name of the list.
+ * @param hasOldName         the old name of the list.
+ * @param maybeName          the new name of the list.
  * @param maybelabels        the new optional label values.
  * @param maybeComments      the new optional comment values.
  *@
@@ -38,6 +39,7 @@
   listIri: IRI,
   projectIri: IRI,
   listClassIri: IRI,
+  hasOldName: Boolean,
   maybeName : Option[String],
   maybeLabels: Seq[StringLiteralV2],
   maybeComments: Seq[StringLiteralV2])
@@ -56,7 +58,7 @@ DELETE {
         ?listIri  rdfs:label ?currentLabels .
     }
 
-    @if(maybeName.nonEmpty) {
+    @if(hasOldName && maybeName.nonEmpty) {
         ?listIri knora-base:listNodeName ?currentListName .
     }
 
@@ -119,7 +121,7 @@ WHERE {
 
     ?listIri knora-base:attachedToProject ?projectIri .
 
-    ?listIri knora-base:listNodeName ?currentListName .
+    optional {?listIri knora-base:listNodeName ?currentListName .}
 
     optional {?listIri rdfs:label ?currentLabels .}
 

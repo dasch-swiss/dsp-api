@@ -702,6 +702,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 case None => throw BadRequestException(s"Project '${list.listinfo.projectIri}' not found.")
             }
 
+            /* verify that the list name is unique for the project */
+            nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name)
+            _ = if (!nodeNameUnique) {
+                throw DuplicateValueException(s"The name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
+            }
+
+            hasOldName: Boolean = list.listinfo.name.nonEmpty
+
             // get the data graph of the project.
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
@@ -710,6 +718,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
+                hasOldName = hasOldName,
                 maybeName = changeListRequest.name,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
