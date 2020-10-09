@@ -205,6 +205,7 @@ scala_library(
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
+        "//webapi:test_library",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/app",
         "//webapi/src/main/scala/org/knora/webapi/core",

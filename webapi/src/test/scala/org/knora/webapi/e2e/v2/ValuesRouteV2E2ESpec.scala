@@ -53,7 +53,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     private val intValueIri = new MutableTestIri
     private val intValueWithCustomPermissionsIri = new MutableTestIri

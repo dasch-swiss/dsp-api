@@ -59,7 +59,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
     private var aThingLastModificationDate = Instant.now
     private val hamletResourceIri = new MutableTestIri
 

@@ -76,7 +76,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
     private val incunabulaUserEmail = incunabulaUser.email
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     private val hamletResourceIri = new MutableTestIri
     private val timeTagResourceIri = new MutableTestIri

@@ -31,7 +31,7 @@ object OntologyV2R2RSpec {
     private val superUserProfile = SharedTestDataADM.superUser
     private val superUsername = superUserProfile.email
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 }
 
 /**
