@@ -19,46 +19,28 @@
 
 package org.knora.webapi.routing.admin
 
-import java.net.URLEncoder
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 
 object PermissionsRouteADM {
     val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
-    val PermissionsBasePathString: String = "/admin/permissions"
 }
 
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with PermissionsADMJsonProtocol with ClientEndpoint {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with PermissionsADMJsonProtocol {
 
     import PermissionsRouteADM._
-
-    /**
-     * The directory name to be used for this endpoint's code.
-     */
-    override val directoryName: String = "permissions"
-
-    private val projectIri: String = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
-    private val groupIri: String = URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
     /**
      * Returns the route.
@@ -90,15 +72,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             }
     }
 
-    private def getAdministrativePermissionForProjectGroupTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/ap/$projectIri/$groupIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-administrative-permission-for-project-group-response"),
-            text = responseStr
-        )
-    }
-
     private def getAdministrativePermissionsForProject: Route = path(PermissionsBasePath / "ap" / Segment) { projectIri =>
         get {
             requestContext =>
@@ -118,15 +91,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     log
                 )
         }
-    }
-
-    private def getAdministrativePermissionsForProjectTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/ap/$projectIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-administrative-permissions-for-project-response"),
-            text = responseStr
-        )
     }
 
     private def getDefaultObjectAccessPermissionsForProject: Route = path(PermissionsBasePath / "doap" / Segment) { projectIri =>
@@ -150,16 +114,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         }
     }
 
-    private def getDefaultObjectAccessPermissionsForProjectTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/doap/$projectIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-defaultObjectAccess-permissions-for-project-response"),
-            text = responseStr
-        )
-    }
-
-
     private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) {
         (projectIri) =>
             get {
@@ -180,15 +134,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                         log
                     )
             }
-    }
-
-    private def getPermissionsForProjectTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/$projectIri") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-permissions-for-project-response"),
-            text = responseStr
-        )
     }
 
     /**
@@ -218,29 +163,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         }
     }
 
-    private def createAdminPermissionTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-request"),
-                    text = SharedTestDataADM.createAdministrativePermissionRequest
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-response"),
-                    text = SharedTestDataADM.createAdministrativePermissionResponse
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-withCustomIRI-request"),
-                    text = SharedTestDataADM.createAdministrativePermissionWithCustomIriRequest
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-administrative-permission-withCustomIRI-response"),
-                    text = SharedTestDataADM.createAdministrativePermissionWithCustomIriResponse
-                )
-            )
-        )
-    }
-
     /**
      * Create default object access permission
      */
@@ -266,47 +188,5 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     )
             }
         }
-    }
-    private def createDOAPermissionTestRequestAndResponse: Future[Set[TestDataFileContent]] = {
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-request"),
-                    text = SharedTestDataADM.createDefaultObjectAccessPermissionRequest
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-response"),
-                    text = SharedTestDataADM.createDefaultObjectAccessPermissionResponse
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-withCustomIRI-request"),
-                    text = SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriRequest
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-defaultObjectAccess-permission-withCustomIRI-response"),
-                    text = SharedTestDataADM.createDefaultObjectAccessPermissionWithCustomIriResponse
-                )
-            )
-        )
-    }
-
-
-    /**
-     * Returns test data for this endpoint.
-     *
-     * @return a set of test data files to be used for testing this endpoint.
-     */
-    override def getTestData(implicit executionContext: ExecutionContext,
-                             actorSystem: ActorSystem, materializer: Materializer
-                            ): Future[Set[TestDataFileContent]] =  {
-        for {
-                getAdminPermissionForPG <- getAdministrativePermissionForProjectGroupTestResponse
-                getAdminPermissionsForP <- getAdministrativePermissionsForProjectTestResponse
-                getDOAPermissionsForP <- getDefaultObjectAccessPermissionsForProjectTestResponse
-                getAllPermissionsForP <- getPermissionsForProjectTestResponse
-                createAP <- createAdminPermissionTestRequestAndResponse
-                createDOAP <- createDOAPermissionTestRequestAndResponse
-
-        } yield createAP ++ createDOAP + getAdminPermissionForPG + getAdminPermissionsForP + getDOAPermissionsForP + getAllPermissionsForP
     }
 }

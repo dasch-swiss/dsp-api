@@ -156,7 +156,6 @@ ALL_WEBAPI_MAIN_DEPENDENCIES = [
     "//webapi/src/main/scala/org/knora/webapi/responders",
     "//webapi/src/main/scala/org/knora/webapi/routing",
     "//webapi/src/main/scala/org/knora/webapi/settings",
-    "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
     "//webapi/src/main/scala/org/knora/webapi/store",
     "//webapi/src/main/scala/org/knora/webapi/util",
     "//webapi/src/main/scala/org/knora/webapi/util/cache",

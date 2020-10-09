@@ -7,26 +7,9 @@ filegroup(
     name = "srcs",
     srcs = [
         "//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs",
-        "InstanceChecker.scala"
+        "InstanceChecker.scala",
+        "ClientTestDataCollector.scala"
     ],
-)
-
-scala_test(
-    name = "ClientApiRouteE2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "ClientApiRouteE2ESpec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(

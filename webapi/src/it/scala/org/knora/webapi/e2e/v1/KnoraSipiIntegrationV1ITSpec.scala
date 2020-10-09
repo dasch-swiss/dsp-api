@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, InvalidApiJsonException}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -60,8 +61,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    private val userEmail = "root@example.com"
-    private val password = "test"
+    private val userEmail = SharedTestDataADM.rootUser.email
+    private val password = SharedTestDataADM.testPass
     private val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
     private val pathToMarbles = "test_data/test_route/images/marbles.tif"
     private val pathToXSLTransformation = "test_data/test_route/texts/letterToHtml.xsl"

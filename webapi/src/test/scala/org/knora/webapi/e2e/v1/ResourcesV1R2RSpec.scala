@@ -79,7 +79,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val beolUser = SharedTestDataADM.beolUser
     private val beolUserEmail = beolUser.email
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout * 2)
 
