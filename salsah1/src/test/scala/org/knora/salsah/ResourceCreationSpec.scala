@@ -19,13 +19,11 @@
 
 package org.knora.salsah
 
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.openqa.selenium.WebElement
-import org.scalatest.concurrent.Eventually
 
 /**
-  * Tests the SALSAH web interface using Selenium.
-  */
+ * Tests the SALSAH web interface using Selenium.
+ */
 class ResourceCreationSpec extends SalsahSpec {
     /*
 
@@ -40,7 +38,7 @@ class ResourceCreationSpec extends SalsahSpec {
     private val page = new SalsahPage(pageUrl, true)
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit private val patienceConfig: Eventually.PatienceConfig = page.patienceConfig
+    implicit private val patienceConfig = page.patienceConfig
 
 
 
@@ -54,13 +52,19 @@ class ResourceCreationSpec extends SalsahSpec {
             ]
         """
 
-    private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
+    private val anythingUserEmail = "anything.user01@example.org"
     private val anythingUserFullName = "Anything User01"
 
-    private val imagesUserEmail = SharedTestDataADM.imagesUser02.email
+    private val imagesUserEmail = "user02.user@example.com"
     private val imagesUserFullName = "User02 User"
 
-    private val testPassword = SharedTestDataADM.testPass
+    private val multiUserEmail = "multi.user@example.com"
+    private val multiUserFullName = "Multi User"
+
+    private val testPassword = "test"
+
+    private val anythingProjectIri = "http://rdfh.ch/projects/0001"
+    private val incunabulaProjectIri = "http://rdfh.ch/projects/0803"
 
     // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 

@@ -19,14 +19,13 @@
 
 package org.knora.salsah
 
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.Eventually._
 
 /**
-  * Tests the SALSAH web interface using Selenium.
-  */
+ * Tests the SALSAH web interface using Selenium.
+ */
 class SearchAndEditSpec extends SalsahSpec {
     /*
 
@@ -54,9 +53,9 @@ class SearchAndEditSpec extends SalsahSpec {
             ]
         """
 
-    private val userEmail = SharedTestDataADM.rootUser
+    private val userEmail = "root@example.com"
     private val userFullName = "System Administrator"
-    private val testPassword = SharedTestDataADM.testPass
+    private val testPassword = "test"
 
     // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
