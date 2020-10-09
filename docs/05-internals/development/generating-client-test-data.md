@@ -39,13 +39,13 @@ with the list in `webapi/scripts/expected-client-test-data.txt`.
 To generate client test data, type:
 
 ```
-make test-e2e
+make client-test-data
 ```
 
 When the tests have finished running, you will find the file
 `client-test-data.zip` in the current directory.
 
-If generated client test data changes, run `make test-e2e`, then run
+If generated client test data changes, run `make client-test-data`, then run
 this script to update the list of expected test data files:
 
 ```

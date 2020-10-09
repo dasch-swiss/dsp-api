@@ -29,5 +29,5 @@ object ListsMessagesUtilADM {
     val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
     val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
     val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
-    val REQUEST_NOT_CHANGING_DATA_ERROR = "No data would be changed."
+    val UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR = "List labels and comments cannot be empty."
 }

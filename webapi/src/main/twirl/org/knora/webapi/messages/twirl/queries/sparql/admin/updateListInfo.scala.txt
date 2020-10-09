@@ -29,6 +29,8 @@
  * @param listIri            the IRI of the list we want to update.
  * @param projectIri         the IRI of the list's project.
  * @param listClassIri       the IRI of the OWL class that the list should belong to.
+ * @param hasOldName         the old name of the list.
+ * @param maybeName          the new name of the list.
  * @param maybelabels        the new optional label values.
  * @param maybeComments      the new optional comment values.
  *@
@@ -37,8 +39,10 @@
   listIri: IRI,
   projectIri: IRI,
   listClassIri: IRI,
-  maybeLabels: Seq[StringLiteralV2],
-  maybeComments: Seq[StringLiteralV2])
+  hasOldName: Boolean,
+  maybeName : Option[String],
+  maybeLabels: Option[Seq[StringLiteralV2]],
+  maybeComments: Option[Seq[StringLiteralV2]])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -54,6 +58,10 @@ DELETE {
         ?listIri  rdfs:label ?currentLabels .
     }
 
+    @if(hasOldName && maybeName.nonEmpty) {
+        ?listIri knora-base:listNodeName ?currentListName .
+    }
+
     @if(maybeComments.nonEmpty) {
         ?listIri rdfs:comment ?currentComments .
     }
@@ -62,8 +70,12 @@ DELETE {
 
     @* Add the new values. *@
 
+    @if(maybeName.nonEmpty) {
+        ?listIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
+    }
+
     @if(maybeLabels.nonEmpty) {
-        @for(label <- maybeLabels) {
+        @for(label <- maybeLabels.get) {
             @if(label.language.nonEmpty) {
                 ?listIri rdfs:label """@label.value"""@@@{label.language.get} .
             } else {
@@ -73,7 +85,7 @@ DELETE {
      }
 
     @if(maybeComments.nonEmpty) {
-        @for(comment <- maybeComments) {
+        @for(comment <- maybeComments.get) {
             @if(comment.language.nonEmpty) {
                 ?listIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
             } else {
@@ -108,6 +120,8 @@ WHERE {
     ?listIri rdf:type knora-base:ListNode .
 
     ?listIri knora-base:attachedToProject ?projectIri .
+
+    optional {?listIri knora-base:listNodeName ?currentListName .}
 
     optional {?listIri rdfs:label ?currentLabels .}
 

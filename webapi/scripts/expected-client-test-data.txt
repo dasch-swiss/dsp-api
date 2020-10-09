@@ -32,6 +32,8 @@ test-data/admin/lists/update-list-info-comment-label-multiple-languages-request.
 test-data/admin/lists/update-list-info-comment-label-multiple-languages-response.json
 test-data/admin/lists/update-list-info-request.json
 test-data/admin/lists/update-list-info-response.json
+test-data/admin/lists/update-list-name-request.json
+test-data/admin/lists/update-list-name-response.json
 test-data/admin/permissions/
 test-data/admin/permissions/create-administrative-permission-request.json
 test-data/admin/permissions/create-administrative-permission-response.json

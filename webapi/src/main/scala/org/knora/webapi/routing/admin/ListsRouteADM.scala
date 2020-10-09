@@ -48,8 +48,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
+
     override def knoraApiPath: Route = getLists ~ createList ~ getList ~ updateList ~ createListChildNode ~ deleteListNode ~
-        getListInfo ~ updateListInfo ~ getListNodeInfo
+        getListInfo ~ getListNodeInfo
 
     /* return all lists optionally filtered by project */
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
@@ -242,33 +243,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     responderManager,
                     log
                 )
-        }
-    }
-
-    def updateListInfo: Route = path(ListsBasePath / "infos" / Segment) { iri =>
-        put {
-            /* update list info */
-            entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
-                requestContext =>
-                    val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                    val requestMessage: Future[ListInfoChangeRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ListInfoChangeRequestADM(
-                        listIri = listIri,
-                        changeListRequest = apiRequest,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
         }
     }
 

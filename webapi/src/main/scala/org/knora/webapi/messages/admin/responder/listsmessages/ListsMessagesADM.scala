@@ -129,8 +129,9 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
  */
 case class ChangeListInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
-                                       labels: Seq[StringLiteralV2],
-                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+                                       name: Option[String] = None,
+                                       labels: Option[Seq[StringLiteralV2]] = None,
+                                       comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -150,10 +151,14 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    if (labels.isEmpty && comments.isEmpty) {
-        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+    // If payload containes label or comments they should not be empty
+    if (labels.exists(_.isEmpty)) {
+        throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
 
+    if (comments.exists(_.isEmpty)) {
+        throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
+    }
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
@@ -963,7 +968,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
-    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
