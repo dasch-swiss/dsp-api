@@ -416,4 +416,5 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             }
         }
     }
+
 }

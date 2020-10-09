@@ -214,6 +214,12 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     // Client test data service
 
+    val collectClientTestData: Boolean = if (config.hasPath("app.client-test-data-service.collect-client-test-data")) {
+        config.getBoolean("app.client-test-data-service.collect-client-test-data")
+    } else {
+        false
+    }
+
     val clientTestDataRedisHost: Option[String] = if (config.hasPath("app.client-test-data-service.redis.host")) {
         Some(config.getString("app.client-test-data-service.redis.host"))
     } else {

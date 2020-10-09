@@ -184,5 +184,6 @@ class ListsRouteV2R2RSpec extends R2RSpec {
                 assert(responseRdfXml == expectedAnswerRdfXml)
             }
         }
+
     }
 }

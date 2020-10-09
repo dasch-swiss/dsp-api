@@ -57,7 +57,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
     // If false, the responses from the server are compared to the contents fo the expected response files.
-    private val writeGetTestResponses = false
+    private val writeTestDataFiles = false
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
@@ -238,7 +238,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                         assert(response.status == StatusCodes.OK, responseStr)
 
                         // Are we writing expected response files?
-                        if (writeGetTestResponses) {
+                        if (writeTestDataFiles) {
                             // Yes. But only write RDF/XML files if they're semantically different from the ones that we already
                             // have, to avoid writing new files into Git that differ only in their blank node IDs.
 

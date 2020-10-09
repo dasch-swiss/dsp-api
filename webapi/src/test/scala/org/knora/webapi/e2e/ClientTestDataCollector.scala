@@ -31,9 +31,16 @@ import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 class ClientTestDataCollector(settings: KnoraSettingsImpl) {
     private val redisHashName: String = "client-test-data"
 
-    private val redisHost: String = settings.clientTestDataRedisHost.getOrElse(throw TestConfigurationException(s"No Redis host configured for client test data"))
-    private val redisPort: Int = settings.clientTestDataRedisPort.getOrElse(throw TestConfigurationException(s"No Redis port configured for client test data"))
-    private val jedisPool: JedisPool = new JedisPool(new JedisPoolConfig(), redisHost, redisPort, 30999)
+    // Are we configured to collect client test data?
+    private val maybeJedisPool: Option[JedisPool] = if (settings.collectClientTestData) {
+        // Yes. Make a connection pool for connecting to Redis.
+
+        val redisHost: String = settings.clientTestDataRedisHost.getOrElse(throw TestConfigurationException(s"No Redis host configured for client test data"))
+        val redisPort: Int = settings.clientTestDataRedisPort.getOrElse(throw TestConfigurationException(s"No Redis port configured for client test data"))
+        Some(new JedisPool(new JedisPoolConfig(), redisHost, redisPort, 30999))
+    } else {
+        None
+    }
 
     /**
      * Stores a client test data file.
@@ -41,12 +48,22 @@ class ClientTestDataCollector(settings: KnoraSettingsImpl) {
      * @param fileContent the content of the file to be stored.
      */
     def addFile(fileContent: TestDataFileContent): Unit = {
-        val jedis: Jedis = jedisPool.getResource
+        // Are we configured to collect client test data?
+        maybeJedisPool match {
+            case Some(jedisPool) =>
+                // Yes. Store the file.
 
-        try {
-            jedis.hset(redisHashName, fileContent.filePath.toString, fileContent.text)
-        } finally {
-            jedis.close()
+                val jedis: Jedis = jedisPool.getResource
+
+                try {
+                    jedis.hset(redisHashName, fileContent.filePath.toString, fileContent.text)
+                } finally {
+                    jedis.close()
+                }
+
+            case None =>
+                // No. Do nothing.
+                ()
         }
     }
 }
