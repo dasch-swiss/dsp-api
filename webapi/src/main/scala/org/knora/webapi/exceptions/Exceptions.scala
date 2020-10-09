@@ -446,6 +446,13 @@ case class UnsuportedTriplestoreException(message: String) extends ApplicationCo
  */
 case class HttpConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
+/**
+ * Indicates that a test configuration is incorrect.
+ *
+ * @param message a description of the error.
+ */
+case class TestConfigurationException(message: String) extends ApplicationConfigurationException(message)
+
 
 /**
  * Helper functions for error handling.

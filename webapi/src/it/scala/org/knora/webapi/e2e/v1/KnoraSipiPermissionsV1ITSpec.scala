@@ -34,9 +34,6 @@ class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    private val username = "root@example.com"
-    private val password = "test"
-
     "Requesting Image" should {
 
         "returned as a restricted image in a smaller size" ignore {

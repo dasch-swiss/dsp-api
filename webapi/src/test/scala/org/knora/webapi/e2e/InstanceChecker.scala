@@ -214,7 +214,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         val classDef: ClassInfoContentV2 = getClassDef(classIri = classIri, knoraRouteGet = knoraRouteGet)
 
         // Get the IRIs of the base classes of that class.
-        val baseClassIris = classDef.getPredicateIriObjects(OntologyConstants.Rdfs.SubClassOf.toSmartIri).toSet
+        val baseClassIris = classDef.subClassOf.filter(baseClassIri => isKnoraDefinedClass(baseClassIri))
 
         // Get the IRIs of the Knora properties on which that class has cardinalities.
         val propertyIrisFromCardinalities: Set[SmartIri] = (classDef.directCardinalities.keySet -- definitions.propertyDefs.keySet).filter(_.isKnoraApiV2EntityIri)

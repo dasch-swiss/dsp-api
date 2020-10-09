@@ -26,19 +26,28 @@ client code without the need for a running Knora instance.
   
 ## Implementation
 
-A class for each Knora API extends the `ClientApi` trait.
-A `ClientApi` contains one or more `KnoraRoute` implementations that extend
-`ClientEndpoint`. Each endpoint provides functions that return generated
-client test data.
-
-The route `ClientApiRoute` returns a Zip file containing generated test data.
-returning source code in a Zip file.
+Client test data is generated as a side effect of running Knora's E2E tests.
+E2E tests use `ClientTestDataCollector` to collect test API requests and
+responses. The implementation of `ClientTestDataCollector` collects these
+in a Redis hash. When the E2E tests have completed, the script
+`webapi/scripts/dump-client-test-data.sh` saves the collected test data
+in a Zip file. It then checks the filenames in the Zip file by comparing them
+with the list in `webapi/scripts/expected-client-test-data.txt`.
 
 ## Usage
 
-The following route returns a Zip file containing generated client test
-data:
+To generate client test data, type:
 
 ```
-HTTP GET to http://host/clientapitest
+make test-e2e
+```
+
+When the tests have finished running, you will find the file
+`client-test-data.zip` in the current directory.
+
+If generated client test data changes, run `make test-e2e`, then run
+this script to update the list of expected test data files:
+
+```
+webapi/scripts/update-expected-client-test-data.sh
 ```

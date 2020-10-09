@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:salsah-gui="http://api.knora.org/ontology/salsah-gui/v2#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+<owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0803/incunabula/v2">
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0803"/>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The incunabula ontology</rdfs:label>
+</owl:Ontology>
+<owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue">
+	<knora-api:isEditable rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isEditable>
+	<knora-api:isLinkValueProperty rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isLinkValueProperty>
+	<knora-api:isResourceProperty rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isResourceProperty>
+	<knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/v2#LinkValue"/>
+	<knora-api:subjectType rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#page"/>
+	<salsah-gui:guiElement rdf:resource="http://api.knora.org/ontology/salsah-gui/v2#Searchbox"/>
+	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.</rdfs:comment>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">is a part of</rdfs:label>
+	<rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#isPartOfValue"/>
+</owl:ObjectProperty>
+
+</rdf:RDF>

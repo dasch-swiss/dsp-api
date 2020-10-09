@@ -24,8 +24,8 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.settings._
 import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -33,15 +33,15 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.messages.util.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
-import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Tests creating a still image file value using a mock Sipi.
-  */
+ * Tests creating a still image file value using a mock Sipi.
+ */
 class ValuesV2R2RSpec extends R2RSpec {
     override def testConfigSource: String =
         """
@@ -64,9 +64,15 @@ class ValuesV2R2RSpec extends R2RSpec {
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     private val stillImageFileValueIri = new MutableTestIri
+
+    // Directory path for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("v2", "values")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -138,13 +144,33 @@ class ValuesV2R2RSpec extends R2RSpec {
             val resourceIri: IRI = aThingPictureIri
             val internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
 
-            val jsonLdEntity = SharedTestDataADM.updateStillImageFileValueRequest(
-                resourceIri = resourceIri,
-                valueIri = "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q",
-                internalFilename = internalFilename
+            val jsonLDEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:ThingPicture",
+                   |  "knora-api:hasStillImageFileValue" : {
+                   |    "@id" : "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q",
+                   |    "@type" : "knora-api:StillImageFileValue",
+                   |    "knora-api:fileValueHasFilename" : "$internalFilename"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-still-image-file-value-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
             )
 
-            Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+            Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)

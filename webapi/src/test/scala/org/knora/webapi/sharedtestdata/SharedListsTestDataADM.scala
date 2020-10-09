@@ -76,6 +76,14 @@ object SharedListsTestDataADM {
         comments = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Anything Tree List", language = Some("en"))))
     )
 
+    val treeListNode01Info : ListChildNodeInfoADM = ListChildNodeInfoADM(
+        id = "http://rdfh.ch/lists/0001/treeList01",
+        name = Some("Tree list node 01"),
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 01", language = Some("en")))),
+        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+        position = 0,
+        hasRootNode = "http://rdfh.ch/lists/0001/treeList"
+    )
     val treeListChildNodes: Seq[ListChildNodeADM] = Seq(
         ListChildNodeADM(
             id = "http://rdfh.ch/lists/0001/treeList01",

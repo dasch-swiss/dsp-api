@@ -22,8 +22,8 @@ package org.knora.salsah
 import org.openqa.selenium.WebElement
 
 /**
-  * Tests the SALSAH web interface using Selenium.
-  */
+ * Tests the SALSAH web interface using Selenium.
+ */
 class ResourceCreationSpec extends SalsahSpec {
     /*
 

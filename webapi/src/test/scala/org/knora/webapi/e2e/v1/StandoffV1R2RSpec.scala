@@ -36,7 +36,7 @@ import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -61,7 +61,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

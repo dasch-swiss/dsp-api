@@ -15,7 +15,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",

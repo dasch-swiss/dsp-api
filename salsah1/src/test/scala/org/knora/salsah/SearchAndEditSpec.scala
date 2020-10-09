@@ -24,8 +24,8 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.Eventually._
 
 /**
-  * Tests the SALSAH web interface using Selenium.
-  */
+ * Tests the SALSAH web interface using Selenium.
+ */
 class SearchAndEditSpec extends SalsahSpec {
     /*
 

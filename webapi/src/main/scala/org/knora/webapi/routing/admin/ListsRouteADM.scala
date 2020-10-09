@@ -19,31 +19,21 @@
 
 package org.knora.webapi.routing.admin
 
-import java.net.URLEncoder
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.Materializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, NotImplementedException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.{ClientEndpoint, TestDataFileContent, TestDataFilePath}
 
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 object ListsRouteADM {
     val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
-    val ListsBasePathString: String = "/admin/lists"
 }
 
 /**
@@ -51,22 +41,14 @@ object ListsRouteADM {
  */
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
-class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol with ClientEndpoint {
+class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol {
 
     import ListsRouteADM._
 
     /**
-     * The directory name to be used for this endpoint's code.
-     */
-    override val directoryName: String = "lists"
-
-    private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
-    private val anythingListNode = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")
-
-    /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
+    override def knoraApiPath: Route = getLists ~ createList ~ getList ~ updateList ~ createListChildNode ~ deleteListNode ~
         getListInfo ~ updateListInfo ~ getListNodeInfo
 
     /* return all lists optionally filtered by project */
@@ -97,15 +79,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def getListsTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(baseApiUrl + ListsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-lists-response"),
-            text = responseStr
-        )
-    }
-
     /* create a new list (root node) */
     @ApiOperation(value = "Add new list", nickname = "addList", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
@@ -115,7 +88,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    def postList: Route = path(ListsBasePath) {
+    def createList: Route = path(ListsBasePath) {
         post {
             /* create a list */
             entity(as[CreateListApiRequestADM]) { apiRequest =>
@@ -137,21 +110,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
             }
         }
-    }
-
-    private def createListTestRequest: Future[Set[TestDataFileContent]] = {
-        FastFuture.successful(
-            Set(
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-list-request"),
-                    text = SharedTestDataADM.createListRequest
-                ),
-                TestDataFileContent(
-                    filePath = TestDataFilePath.makeJsonPath("create-list-with-custom-IRI-request"),
-                    text = SharedTestDataADM.createListWithCustomIriRequest
-                )
-            )
-        )
     }
 
     /* get a list */
@@ -180,15 +138,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def getListTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-list-response"),
-            text = responseStr
-        )
-    }
-
     /**
      * update list
      */
@@ -201,7 +150,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    def putList: Route = path(ListsBasePath / Segment) { iri =>
+    def updateList: Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
             entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
@@ -228,15 +177,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def updateListInfoTestRequest: Future[TestDataFileContent] = {
-        FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("update-list-info-request"),
-                text = SharedTestDataADM.updateListInfoRequest("http://rdfh.ch/lists/0001/treeList01")
-            )
-        )
-    }
-
     /**
      * create a new child node
      */
@@ -249,7 +189,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    def postListChildNode: Route = path(ListsBasePath / Segment) { iri =>
+    def createListChildNode: Route = path(ListsBasePath / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
             entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
@@ -274,20 +214,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
             }
         }
-    }
-
-    private def createChildNodeTestRequest: Future[TestDataFileContent] = {
-        FastFuture.successful(
-            TestDataFileContent(
-                filePath = TestDataFilePath.makeJsonPath("create-child-node-request"),
-                text = SharedTestDataADM.addChildListNodeRequest(
-                    parentNodeIri = "http://rdfh.ch/lists/0001/treeList01",
-                    name = "abc123",
-                    label = "test node",
-                    comment = "a node for testing"
-                )
-            )
-        )
     }
 
     /* delete list node which should also delete its children */
@@ -317,15 +243,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     log
                 )
         }
-    }
-
-    private def getListInfoTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/infos/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-list-info-response"),
-            text = responseStr
-        )
     }
 
     def updateListInfo: Route = path(ListsBasePath / "infos" / Segment) { iri =>
@@ -383,33 +300,5 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 throw NotImplementedException("Method not implemented.")
                 ???
             }
-    }
-
-    private def getListNodeInfoTestResponse: Future[TestDataFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/nodes/$anythingListNode") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield TestDataFileContent(
-            filePath = TestDataFilePath.makeJsonPath("get-list-node-info-response"),
-            text = responseStr
-        )
-    }
-
-    /**
-     * Returns test data for this endpoint.
-     *
-     * @return a set of test data files to be used for testing this endpoint.
-     */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: Materializer): Future[Set[TestDataFileContent]] = {
-
-        for {
-            getListsResponse <- getListsTestResponse
-            createListRequest <- createListTestRequest
-            getListResponse <- getListTestResponse
-            updateListInfoRequest <- updateListInfoTestRequest
-            createChildNodeRequest <- createChildNodeTestRequest
-            getListInfoTestResponse <- getListInfoTestResponse
-            getListNodeInfoTestResponse <- getListNodeInfoTestResponse
-        } yield createListRequest + getListsResponse + getListResponse + updateListInfoRequest +
-            createChildNodeRequest + getListInfoTestResponse + getListNodeInfoTestResponse
     }
 }
