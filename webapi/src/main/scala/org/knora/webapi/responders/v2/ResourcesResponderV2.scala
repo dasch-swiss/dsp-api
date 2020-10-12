@@ -65,9 +65,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
      *                                       the resource.
      * @param values                         the resource's values for verification.
+     * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
      */
     private case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-                                             values: Map[SmartIri, Seq[UnverifiedValueV2]])
+                                             values: Map[SmartIri, Seq[UnverifiedValueV2]],
+                                             hasStandoffLink: Boolean)
 
     /**
      * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
@@ -701,7 +703,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceLabel = internalCreateResource.label,
                 resourceCreationDate = creationDate
             ),
-            values = sparqlForValuesResponse.unverifiedValues
+            values = sparqlForValuesResponse.unverifiedValues,
+            hasStandoffLink = sparqlForValuesResponse.hasStandoffLink
         )
     }
 
@@ -1066,11 +1069,25 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label")
             }
 
-            _ = if (resource.values.keySet != resourceReadyToCreate.values.keySet) {
-                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong properties")
+            savedPropertyIris: Set[SmartIri] = resource.values.keySet
+
+            // Check that the property knora-base:hasStandoffLinkToValue was automatically added if necessary.
+            expectedPropertyIris: Set[SmartIri] = resourceReadyToCreate.values.keySet ++ (if (resourceReadyToCreate.hasStandoffLink) {
+                Some(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
+            } else {
+                None
+            })
+
+            _ = if (savedPropertyIris != expectedPropertyIris) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris.map(_.toSparql).mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})")
             }
 
-            _ = resource.values.foreach {
+            // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
+            resourceWithoutStandoffLinkProp = resource.copy(
+                values = resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri
+            )
+
+            _ = resourceWithoutStandoffLinkProp.values.foreach {
                 case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
                     val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
 
