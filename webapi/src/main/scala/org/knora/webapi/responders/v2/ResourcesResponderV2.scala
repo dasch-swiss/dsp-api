@@ -1083,11 +1083,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             }
 
             // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
-            resourceWithoutStandoffLinkProp = resource.copy(
-                values = resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri
-            )
-
-            _ = resourceWithoutStandoffLinkProp.values.foreach {
+            _ = (resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri).foreach {
                 case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
                     val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
 
