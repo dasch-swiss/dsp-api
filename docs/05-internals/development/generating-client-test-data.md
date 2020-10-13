@@ -36,6 +36,12 @@ with the list in `webapi/scripts/expected-client-test-data.txt`.
 
 ## Usage
 
+On macOS, you will need to install Redis in order to have the `redis-cli` command-line tool:
+
+```
+brew install redis
+```
+
 To generate client test data, type:
 
 ```

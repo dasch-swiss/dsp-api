@@ -1687,6 +1687,52 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
+
+        "create a resource containing a text value with a standoff link" in {
+            val jsonLDEntity =
+                """{
+                  |  "@type": "anything:Thing",
+                  |  "anything:hasText": {
+                  |    "@type": "knora-api:TextValue",
+                  |    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/another-thing\">resource</a>.\n</text>",
+                  |    "knora-api:textValueHasMapping": {
+                  |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                  |    }
+                  |  },
+                  |  "knora-api:attachedToProject": {
+                  |    "@id": "http://rdfh.ch/projects/0001"
+                  |  },
+                  |  "rdfs:label": "obj_inst1",
+                  |  "@context": {
+                  |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                  |    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+                  |  }
+                  |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+            // Request the newly created resource in the complex schema, and check that it matches the ontology.
+            val resourceComplexGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+            val resourceComplexGetResponseAsString = responseToString(resourceComplexGetResponse)
+
+            instanceChecker.check(
+                instanceResponse = resourceComplexGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+
+            // Check that it has the property knora-api:hasStandoffLinkToValue.
+            val resourceJsonLDDoc = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
+            assert(resourceJsonLDDoc.body.value.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue))
+        }
     }
 }
 
