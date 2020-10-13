@@ -560,8 +560,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     private def generateSparqlToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
         for {
             // Generate SPARQL to create links and LinkValues for standoff links in text values.
-
-            sparqlForStandoffLinks: String <- generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest)
+            sparqlForStandoffLinks: Option[String] <- generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest)
 
             // Generate SPARQL for each value.
             sparqlForPropertyValueFutures: Map[SmartIri, Seq[Future[InsertSparqlWithUnverifiedValue]]] = createMultipleValuesRequest.values.map {
@@ -582,7 +581,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] <- ActorUtil.sequenceSeqFuturesInMap(sparqlForPropertyValueFutures)
 
             // Concatenate all the generated SPARQL.
-            allInsertSparql: String = sparqlForPropertyValues.values.flatten.map(_.insertSparql).mkString("\n\n") + "\n\n" + sparqlForStandoffLinks
+            allInsertSparql: String = sparqlForPropertyValues.values.flatten.map(_.insertSparql).mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
 
             // Collect all the unverified values.
             unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] = sparqlForPropertyValues.map {
@@ -590,7 +589,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
         } yield GenerateSparqlToCreateMultipleValuesResponseV2(
             insertSparql = allInsertSparql,
-            unverifiedValues = unverifiedValues
+            unverifiedValues = unverifiedValues,
+            hasStandoffLink = sparqlForStandoffLinks.isDefined
         )
     }
 
@@ -694,66 +694,72 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param createMultipleValuesRequest the request to create multiple values.
      * @return SPARQL INSERT statements.
      */
-    private def generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[String] = {
+    private def generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[Option[String]] = {
         // To create LinkValues for the standoff links in the values to be created, we need to compute
         // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
         // that have standoff links to a particular target resource.
 
         // First, get the standoff link targets from all the text values to be created.
         val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = createMultipleValuesRequest.flatValues.foldLeft(Vector.empty[Set[IRI]]) {
-            case (acc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
+            case (standoffLinkTargetsAcc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
                 createValueV2.valueContent match {
-                    case textValueContentV2: TextValueContentV2 => acc :+ textValueContentV2.standoffLinkTagTargetResourceIris
-                    case _ => acc
+                    case textValueContentV2: TextValueContentV2 if textValueContentV2.standoffLinkTagTargetResourceIris.nonEmpty =>
+                        standoffLinkTargetsAcc :+ textValueContentV2.standoffLinkTagTargetResourceIris
+
+                    case _ => standoffLinkTargetsAcc
                 }
         }
 
-        // Combine those resource references into a single list, so if there are n text values with a link to
-        // some IRI, the list will contain that IRI n times.
-        val allStandoffLinkTargets: Vector[IRI] = standoffLinkTargetsPerTextValue.flatten
+        if (standoffLinkTargetsPerTextValue.nonEmpty) {
+            // Combine those resource references into a single list, so if there are n text values with a link to
+            // some IRI, the list will contain that IRI n times.
+            val allStandoffLinkTargets: Vector[IRI] = standoffLinkTargetsPerTextValue.flatten
 
-        // Now we need to count the number of times each IRI occurs in allStandoffLinkTargets. To do this, first
-        // use groupBy(identity). The groupBy method takes a function that returns a key for each item in the
-        // collection, and makes a Map in which items with the same key are grouped together. The identity
-        // function just returns its argument. So groupBy(identity) makes a Map[IRI, Vector[IRI]] in which each
-        // IRI points to a sequence of the same IRI repeated as many times as it occurred in allStandoffLinkTargets.
-        val allStandoffLinkTargetsGrouped: Map[IRI, Vector[IRI]] = allStandoffLinkTargets.groupBy(identity)
+            // Now we need to count the number of times each IRI occurs in allStandoffLinkTargets. To do this, first
+            // use groupBy(identity). The groupBy method takes a function that returns a key for each item in the
+            // collection, and makes a Map in which items with the same key are grouped together. The identity
+            // function just returns its argument. So groupBy(identity) makes a Map[IRI, Vector[IRI]] in which each
+            // IRI points to a sequence of the same IRI repeated as many times as it occurred in allStandoffLinkTargets.
+            val allStandoffLinkTargetsGrouped: Map[IRI, Vector[IRI]] = allStandoffLinkTargets.groupBy(identity)
 
-        // Replace each Vector[IRI] with its size. That's the number of text values containing
-        // standoff links to that IRI.
-        val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
+            // Replace each Vector[IRI] with its size. That's the number of text values containing
+            // standoff links to that IRI.
+            val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
 
-        for {
-            newValueIri: IRI <- makeUnusedValueIri(createMultipleValuesRequest.resourceIri)
+            for {
+                newValueIri: IRI <- makeUnusedValueIri(createMultipleValuesRequest.resourceIri)
 
-            // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
-            // and one LinkValue with its initial reference count.
-            standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
-                case (targetIri, initialReferenceCount) =>
-                    SparqlTemplateLinkUpdate(
-                        linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                        directLinkExists = false,
-                        insertDirectLink = true,
-                        deleteDirectLink = false,
-                        linkValueExists = false,
-                        linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-                        newLinkValueIri = newValueIri,
-                        linkTargetIri = targetIri,
-                        currentReferenceCount = 0,
-                        newReferenceCount = initialReferenceCount,
-                        newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                        newLinkValuePermissions = standoffLinkValuePermissions
-                    )
-            }
+                // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
+                // and one LinkValue with its initial reference count.
+                standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
+                    case (targetIri, initialReferenceCount) =>
+                        SparqlTemplateLinkUpdate(
+                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                            directLinkExists = false,
+                            insertDirectLink = true,
+                            deleteDirectLink = false,
+                            linkValueExists = false,
+                            linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+                            newLinkValueIri = newValueIri,
+                            linkTargetIri = targetIri,
+                            currentReferenceCount = 0,
+                            newReferenceCount = initialReferenceCount,
+                            newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                            newLinkValuePermissions = standoffLinkValuePermissions
+                        )
+                }
 
-            // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-            sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
-                resourceIri = createMultipleValuesRequest.resourceIri,
-                linkUpdates = standoffLinkUpdates,
-                creationDate = createMultipleValuesRequest.creationDate,
-                stringFormatter = stringFormatter
-            ).toString()
-        } yield sparqlInsert
+                // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
+                sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
+                    resourceIri = createMultipleValuesRequest.resourceIri,
+                    linkUpdates = standoffLinkUpdates,
+                    creationDate = createMultipleValuesRequest.creationDate,
+                    stringFormatter = stringFormatter
+                ).toString()
+            } yield Some(sparqlInsert)
+        } else {
+            FastFuture.successful(None)
+        }
     }
 
     /**
