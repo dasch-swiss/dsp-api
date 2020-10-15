@@ -273,6 +273,20 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExte
 case class GraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
+ * Requests a named graph, which will be returned as Turtle. A successful response
+ * will be a [[GraphReturnedResponse]].
+ *
+ * @param graphIri   the IRI of the named graph.
+ */
+case class GraphDataRequest(graphIri: IRI) extends TriplestoreRequest
+
+/**
+ * Indicates that the graph was successfully retrieved.
+ */
+case class GraphReturnedResponse()
+
+
+/**
  * Represents a SPARQL Update operation to be performed.
  *
  * @param sparql the SPARQL string.
@@ -283,7 +297,6 @@ case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
  * Indicates that the requested SPARQL Update was executed and returned no errors.
  */
 case class SparqlUpdateResponse()
-
 
 /**
  * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
