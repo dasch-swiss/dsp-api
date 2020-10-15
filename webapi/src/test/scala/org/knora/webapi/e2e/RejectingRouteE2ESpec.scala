@@ -20,7 +20,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.testing.tags.E2ETest
 
 
 object RejectingRouteE2ESpec {
@@ -35,7 +34,6 @@ object RejectingRouteE2ESpec {
 /**
   * End-to-End (E2E) test specification for testing route rejections.
   */
-@E2ETest
 class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)

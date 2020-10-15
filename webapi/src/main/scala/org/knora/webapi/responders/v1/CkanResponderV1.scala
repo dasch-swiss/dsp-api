@@ -21,40 +21,41 @@ package org.knora.webapi.responders.v1
 
 import java.net.URLEncoder
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi
-import org.knora.webapi._
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
-import org.knora.webapi.responders.{Responder, ResponderData}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
-  * under http://data.humanities.ch
-  */
+ * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
+ * under http://data.humanities.ch
+ */
 class CkanResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
 
     /**
-      * A user representing the Knora API server, used in those cases where a user is required.
-      */
+     * A user representing the Knora API server, used in those cases where a user is required.
+     */
     private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     /**
-      * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: CkanResponderRequestV1) = msg match {
         case CkanRequestV1(projects, limit, info, userProfile) => getCkanResponseV1(projects, limit, info, userProfile)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -99,13 +100,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Dokubib specific Ckan export stuff
-      *
-      * @param pinfo
-      * @param limit
-      * @param userProfile
-      * @return
-      */
+     * Dokubib specific Ckan export stuff
+     *
+     * @param pinfo
+     * @param limit
+     * @param userProfile
+     * @return
+     */
     private def getDokubibCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfile: UserADM): Future[CkanProjectV1] = {
 
         /*
@@ -159,18 +160,18 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all Bilder IRIs for Dokubib
-      *
-      * @param projectIri
-      * @param limit
-      * @return
-      */
+     * Get all Bilder IRIs for Dokubib
+     *
+     * @param projectIri
+     * @param limit
+     * @return
+     */
     private def getDokubibBilderIRIs(projectIri: IRI, limit: Option[Int]): Future[Seq[IRI]] = {
 
         implicit val timeout = Timeout(180.seconds)
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.ckanDokubib(settings.triplestoreType, projectIri, limit).toString())
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.ckanDokubib(settings.triplestoreType, projectIri, limit).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -190,13 +191,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Incunabula specific Ckan stuff
-      *
-      * @param pinfo
-      * @param limit
-      * @param userProfile
-      * @return
-      */
+     * Incunabula specific Ckan stuff
+     *
+     * @param pinfo
+     * @param limit
+     * @param userProfile
+     * @return
+     */
     private def getIncunabulaCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfile: UserADM): Future[CkanProjectV1] = {
 
         /*
@@ -224,7 +225,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         val bookDatasetsFuture = booksWithPagesFuture.flatMap {
             case singleBook =>
                 val bookDataset = singleBook map {
-                    case (bookIri: webapi.IRI, pageIris: Seq[webapi.IRI]) =>
+                    case (bookIri: IRI, pageIris: Seq[IRI]) =>
                         val bookResourceFuture = getResource(bookIri, userProfile)
                         bookResourceFuture flatMap {
                             case (bIri, bInfo, bProps) =>
@@ -268,16 +269,16 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all book IRIs for Incunabula
-      *
-      * @param projectIri
-      * @param limit
-      * @return
-      */
-    private def getIncunabulaBooksWithPagesIRIs(projectIri: webapi.IRI, limit: Option[Int]): Future[Map[webapi.IRI, Seq[webapi.IRI]]] = {
+     * Get all book IRIs for Incunabula
+     *
+     * @param projectIri
+     * @param limit
+     * @return
+     */
+    private def getIncunabulaBooksWithPagesIRIs(projectIri: IRI, limit: Option[Int]): Future[Map[IRI, Seq[IRI]]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -300,12 +301,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Get detailed information about the projects
-      *
-      * @param projectNames
-      * @param userProfile
-      * @return
-      */
+     * Get detailed information about the projects
+     *
+     * @param projectNames
+     * @param userProfile
+     * @return
+     */
     private def getProjectInfos(projectNames: Seq[String], userProfile: UserADM): Future[Seq[(String, ProjectInfoV1)]] = {
         Future.sequence {
             for {
@@ -319,18 +320,18 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get IRIs of a certain type inside a certain project
-      *
-      * @param projectIri
-      * @param resType
-      * @param limit
-      * @param userProfile
-      * @return
-      */
-    private def getIris(projectIri: webapi.IRI, resType: String, limit: Option[Int], userProfile: UserProfileV1): Future[Seq[webapi.IRI]] = {
+     * Get IRIs of a certain type inside a certain project
+     *
+     * @param projectIri
+     * @param resType
+     * @param limit
+     * @param userProfile
+     * @return
+     */
+    private def getIris(projectIri: IRI, resType: String, limit: Option[Int], userProfile: UserProfileV1): Future[Seq[IRI]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcesByProjectAndType(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourcesByProjectAndType(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri,
                 resType = resType
@@ -346,12 +347,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all information there is about these resources
-      *
-      * @param iris
-      * @param userProfile
-      * @return
-      */
+     * Get all information there is about these resources
+     *
+     * @param iris
+     * @param userProfile
+     * @return
+     */
     private def getResources(iris: Seq[IRI], userProfile: UserADM): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] = {
 
         Future.sequence {
@@ -363,13 +364,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     }
 
     /**
-      * Get all information there is about this one resource
-      *
-      * @param iri
-      * @param userProfile
-      * @return
-      */
-    private def getResource(iri: webapi.IRI, userProfile: UserADM): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
+     * Get all information there is about this one resource
+     *
+     * @param iri
+     * @param userProfile
+     * @return
+     */
+    private def getResource(iri: IRI, userProfile: UserADM): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
         val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfile)).mapTo[ResourceFullResponseV1]
 
@@ -406,7 +407,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         location match {
             case None => Vector(None)
             case Some(loc) =>
-                Vector(Some(("preview_loc_origname", loc.origname)))
+                Vector(Some(("preview_loc_origname", loc.origname.getOrElse(""))))
         }
     }
 

@@ -25,6 +25,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.listmessages._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -49,8 +50,8 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
     implicit val timeout = 5.seconds
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // A test UserProfileV1.

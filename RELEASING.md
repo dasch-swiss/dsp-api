@@ -1,6 +1,9 @@
 ## Releasing
 
- 1. (optional) Run `GenerateContributorsFile`, passing it a GitHub API token (`runMain org.knora.webapi.util.GenerateContributorsFile [ -t TOKEN ]`), to generate `Contributors.md`, then commit that file.
+ 1. (optional) Run `GenerateContributorsFile`, passing it a GitHub API token
+    (`bazel run //webapi:GenerateContributorsFile -- [ -t TOKEN ]`), to generate
+    `Contributors.md`, then commit that file. The file can be found under:
+    `/bazel-bin/webapi/GenerateContributorsFile.runfiles/io_dasch_knora_api/Contributors.md`
  1. (optional) Push and merge PR to `develop`.
  1. Github CI will start a [CI build](https://github.com/dasch-swiss/knora-api/actions) for the new tag and publish
     artifacts to Docker Hub.

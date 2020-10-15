@@ -28,16 +28,18 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.messages.util.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2}
-import org.knora.webapi.testing.tags.E2ETest
-import org.knora.webapi.util.{FileUtil, MutableTestIri, StringFormatter}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json.JsString
@@ -49,7 +51,6 @@ import scala.concurrent.ExecutionContextExecutor
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class SearchRouteV2R2RSpec extends R2RSpec {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -75,21 +76,28 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
     private val incunabulaUserEmail = incunabulaUser.email
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     private val hamletResourceIri = new MutableTestIri
+    private val timeTagResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
 
+    // Directory paths for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("v2", "search")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
+
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
-        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+        RdfDataObject(path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
+        RdfDataObject(path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
     )
 
     "The Search v2 Endpoint" should {
@@ -99,7 +107,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/NarrFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/NarrFulltextSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -125,7 +133,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // the response involves forbidden resource
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithforbiddenResource.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/searchResponseWithHiddenResource.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -137,7 +145,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"test_data/searchR2RV2/DingeFulltextSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -149,7 +157,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File(s"test_data/searchR2RV2/DingeFulltextSearchSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -171,7 +179,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingUniform.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingUniform.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -183,7 +191,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingUniform.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingUniform.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -207,23 +215,27 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |    anything:hasDate knora-api:objectType knora-api:Date .
                   |    ?date a knora-api:Date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    anything:hasInteger knora-api:objectType xsd:integer .
+                  |    ?intVal a xsd:integer .
+                  |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
-
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseStr, new File("test_data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -240,17 +252,21 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing knora-api:isMainResource true .
                   |  ?thing anything:hasDate ?date .
                   |} WHERE {
-                  |
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |    anything:hasDate knora-api:objectType knora-api:Date .
                   |    ?date a knora-api:Date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    anything:hasInteger knora-api:objectType xsd:integer .
+                  |    ?intVal a xsd:integer .
+                  |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -294,7 +310,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -332,7 +348,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -369,7 +385,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -407,7 +423,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -477,7 +493,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -514,7 +530,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -598,7 +614,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -684,7 +700,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -730,7 +746,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -772,7 +788,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -815,7 +831,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -896,7 +912,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -940,7 +956,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -986,7 +1002,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1031,7 +1047,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1076,7 +1092,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1121,7 +1137,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1166,7 +1182,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1212,7 +1228,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBetweenDates.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1269,7 +1285,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/RegionsForPage.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1329,7 +1345,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1383,7 +1399,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1392,7 +1408,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
-            var gravsearchQuery =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1430,7 +1446,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/IncomingLinksForBook.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/IncomingLinksForBook.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1499,7 +1515,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1538,7 +1554,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingBiggerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1577,7 +1593,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1613,7 +1629,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithURI.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingWithURI.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1685,7 +1701,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBoolean.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBoolean.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1718,15 +1734,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         FILTER(?boolean = true)
                   |     }
-                  |} OFFSET 0
                   |
-                """.stripMargin
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         anything:hasInteger knora-api:objectType xsd:integer .
+                  |         ?intVal a xsd:integer .
+                  |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
+                  |     }
+                  |} OFFSET 0""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset0.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOptionalOffset0.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1761,6 +1782,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         FILTER(?boolean = true)
                   |     }
+                  |
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         anything:hasInteger knora-api:objectType xsd:integer .
+                  |         ?intVal a xsd:integer .
+                  |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
+                  |     }
                   |} OFFSET 1
                   |
                 """.stripMargin
@@ -1768,7 +1796,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1820,7 +1848,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1861,7 +1889,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1892,7 +1920,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -1901,7 +1929,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1933,7 +1961,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -1942,7 +1970,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1983,7 +2011,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2021,7 +2049,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2061,7 +2089,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
@@ -2098,7 +2126,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
@@ -2109,7 +2137,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Get("/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
 
@@ -2121,7 +2149,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2147,7 +2175,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2172,7 +2200,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2249,7 +2277,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LinkObjectsToBooks.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LinkObjectsToBooks.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2303,7 +2331,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithAuthor.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithAuthor.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2412,7 +2440,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2478,68 +2506,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a Gravsearch query for a letter that links to a person with a specified name (optional)" in {
-
-            val gravsearchQuery =
-                """
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?letter knora-api:isMainResource true .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1  ?person1 .
-                  |
-                  |        ?person1 beol:hasFamilyName ?name .
-                  |
-                  |    } WHERE {
-                  |        ?letter a knora-api:Resource .
-                  |        ?letter a beol:letter .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        beol:creationDate knora-api:objectType knora-api:Date .
-                  |        ?date a knora-api:Date .
-                  |
-                  |        ?letter ?linkingProp1 ?person1 .
-                  |
-                  |        ?person1 a knora-api:Resource .
-                  |
-                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-                  |
-                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-                  |
-                  |        OPTIONAL {
-                  |             ?person1 beol:hasFamilyName ?name .
-                  |
-                  |             beol:hasFamilyName knora-api:objectType xsd:string .
-                  |             ?name a xsd:string .
-                  |
-                  |             FILTER(?name = "Meier")
-                  |        }
-                  |
-                  |    } ORDER BY ?date
-                """.stripMargin
-
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"), writeTestDataFiles)
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-            }
-        }
-
         "do a Gravsearch query for a letter that links to another person with a specified name" in {
 
             val gravsearchQuery =
@@ -2592,7 +2558,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2639,7 +2605,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/foafPerson.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/foafPerson.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2678,7 +2644,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -2734,7 +2700,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithAuthorWithInformation.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -2780,7 +2746,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/incomingPagesForBook.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/incomingPagesForBook.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -2877,7 +2843,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/regionsOfZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -2909,7 +2875,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -2950,7 +2916,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -2989,7 +2955,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3026,7 +2992,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3062,7 +3028,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3098,7 +3064,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3131,7 +3097,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithoutName.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithoutName.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3148,8 +3114,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -3168,7 +3133,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/booksWithPage100.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/booksWithPage100.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3206,7 +3171,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/lettersByMeier.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/lettersByMeier.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3237,7 +3202,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3271,7 +3236,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3304,7 +3269,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3338,7 +3303,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3400,7 +3365,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3433,7 +3398,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3506,7 +3471,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3578,7 +3543,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3617,7 +3582,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3652,7 +3617,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3688,7 +3653,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3756,7 +3721,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3793,7 +3758,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3832,7 +3797,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3871,7 +3836,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3910,7 +3875,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3949,7 +3914,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -3988,7 +3953,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4027,7 +3992,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBetweenDates.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4071,7 +4036,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/RegionsForPage.jsonld"), writeFile = false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4118,7 +4083,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4159,7 +4124,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4167,8 +4132,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (with type inference)" in {
-            var gravsearchQuery =
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf (with type inference)" in {
+            val gravsearchQuery =
                 """
                   |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4185,9 +4150,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-                  |     }
                   |
                   |     FILTER NOT EXISTS {
                   |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
@@ -4200,7 +4162,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/IncomingLinksForBook.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/IncomingLinksForBook.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4263,7 +4225,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4298,7 +4260,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingBiggerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4333,7 +4295,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeFile = false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4399,7 +4361,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBoolean.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBoolean.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4411,8 +4373,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that may have a Boolean value that is true (with type inference)" in {
             // set OFFSET to 1 to get "Testding for extended search"
             val gravsearchQuery =
-                """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -4425,20 +4386,21 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a knora-api:Resource .
                   |
                   |     OPTIONAL {
-                  |
                   |         ?thing anything:hasBoolean ?boolean .
-                  |
                   |         FILTER(?boolean = true)
                   |     }
-                  |} OFFSET 1
                   |
-                """.stripMargin
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
+                  |     }
+                  |} OFFSET 1""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4484,7 +4446,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4522,7 +4484,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4551,7 +4513,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -4560,7 +4522,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4590,7 +4552,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -4599,7 +4561,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4636,7 +4598,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4670,7 +4632,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4704,7 +4666,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
@@ -4735,7 +4697,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
@@ -4770,7 +4732,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LinkObjectsToBooks.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LinkObjectsToBooks.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4815,7 +4777,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithAuthor.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithAuthor.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4863,56 +4825,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName.jsonld"), writeTestDataFiles)
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-            }
-        }
-
-        "do a Gravsearch query for a letter that links to a person with a specified name (optional) (with type inference)" in {
-
-            val gravsearchQuery =
-                """
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?letter knora-api:isMainResource true .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1  ?person1 .
-                  |
-                  |        ?person1 beol:hasFamilyName ?name .
-                  |
-                  |    } WHERE {
-                  |        ?letter a beol:letter .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1 ?person1 .
-                  |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-                  |
-                  |        OPTIONAL {
-                  |             ?person1 beol:hasFamilyName ?name .
-                  |
-                  |             FILTER(?name = "Meier")
-                  |        }
-                  |
-                  |    } ORDER BY ?date
-                """.stripMargin
-
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4960,7 +4873,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5005,7 +4918,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/foafPerson.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/foafPerson.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5039,7 +4952,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -5081,7 +4994,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithAuthorWithInformation.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -5120,7 +5033,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/incomingPagesForBook.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/incomingPagesForBook.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -5198,7 +5111,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/regionsOfZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -5227,7 +5140,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -5260,7 +5173,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithListNodeLabel.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithListNodeLabel.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -5315,11 +5228,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 123454321 .
+                  |  }
+                  |
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 999999999 .
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -5328,7 +5249,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeFile = false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5350,11 +5271,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 123454321 .
+                  |  }
+                  |
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 999999999 .
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -5387,10 +5316,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     OPTIONAL {
                   |        ?thing anything:hasDecimal ?decimal .
-                  |
                   |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+                  |        FILTER(?decimalVal > "1"^^xsd:decimal)
+                  |     }
                   |
-                  |       FILTER(?decimalVal > "1"^^xsd:decimal)
+                  |     MINUS {
+                  |        ?thing anything:hasInteger ?intVal .
+                  |        ?intVal knora-api:intValueAsInt 123454321 .
+                  |     }
+                  |
+                  |     MINUS {
+                  |       ?thing anything:hasInteger ?intVal .
+                  |       ?intVal knora-api:intValueAsInt 999999999 .
                   |     }
                   |} ORDER BY DESC(?decimal)
                 """.stripMargin
@@ -5399,7 +5336,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingsWithOptionalDecimalGreaterThan1.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingsWithOptionalDecimalGreaterThan1.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5415,8 +5352,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |
-                  |  ?book knora-api:isMainResource true ;
-                  |    incunabula:title ?title .
+                  |  ?book knora-api:isMainResource true .
                   |
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
@@ -5435,7 +5371,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/booksWithPage100.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/booksWithPage100.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5473,7 +5409,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/lettersByMeier.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/lettersByMeier.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5504,7 +5440,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5566,7 +5502,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5601,7 +5537,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5676,7 +5612,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5747,7 +5683,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5788,7 +5724,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5823,7 +5759,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5859,7 +5795,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5896,7 +5832,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5934,7 +5870,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5974,7 +5910,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6014,7 +5950,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6054,7 +5990,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6094,7 +6030,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6134,7 +6070,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6174,7 +6110,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBetweenDates.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6186,39 +6122,28 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "get the regions belonging to a page (submitting the complex schema)" in {
             val gravsearchQuery =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
                   |
-                  |    CONSTRUCT {
-                  |        ?region knora-api:isMainResource true .
-                  |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-                  |
-                  |        ?region knora-api:hasGeometry ?geom .
-                  |
-                  |        ?region knora-api:hasComment ?comment .
-                  |
-                  |        ?region knora-api:hasColor ?color .
-                  |    } WHERE {
-                  |
-                  |        ?region a knora-api:Region .
-                  |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-                  |
-                  |        ?region knora-api:hasGeometry ?geom .
-                  |
-                  |        ?region knora-api:hasComment ?comment .
-                  |
-                  |        ?region knora-api:hasColor ?color .
-                  |
-                  |    }
-                """.stripMargin
+                  |CONSTRUCT {
+                  |    ?region knora-api:isMainResource true .
+                  |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |    ?region knora-api:hasGeometry ?geom .
+                  |    ?region knora-api:hasComment ?comment .
+                  |    ?region knora-api:hasColor ?color .
+                  |} WHERE {
+                  |    ?region a knora-api:Region .
+                  |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |    ?region knora-api:hasGeometry ?geom .
+                  |    ?region knora-api:hasComment ?comment .
+                  |    ?region knora-api:hasColor ?color .
+                  |}""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/RegionsForPage.jsonld"), writeFile = false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6265,7 +6190,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6306,7 +6231,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6314,8 +6239,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (submitting the complex schema)" in {
-            var gravsearchQuery =
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf (submitting the complex schema)" in {
+            val gravsearchQuery =
                 """
                   |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -6333,10 +6258,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-                  |     }
-                  |
-                  |     FILTER NOT EXISTS {
                   |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
                   |     }
                   |
@@ -6347,7 +6268,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/IncomingLinksForBook.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/IncomingLinksForBook.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6380,7 +6301,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6388,6 +6309,29 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
 
+        }
+
+        "search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema), without inference" in {
+            val gravsearchQuery =
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |    knora-api:GravsearchOptions knora-api:useInference false .
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasDecimal ?decimal .
+                  |    ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingEqualsDecimal.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+            }
         }
 
         "search for an anything:Thing that has a decimal value bigger than 2.0 (submitting the complex schema)" in {
@@ -6417,7 +6361,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingBiggerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6429,39 +6373,109 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for an anything:Thing that has a decimal value smaller than 3.0 (submitting the complex schema)" in {
             val gravsearchQuery =
-                """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
-                  |
                   |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal ?decimal .
-                  |
                   |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
-                  |
                   |     FILTER(?decimalDec < "3"^^xsd:decimal)
-                  |}
-                  |
-                """.stripMargin
+                  |}""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD: String = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 2)
 
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "things",
+                            fileExtension = "json"
+                        ),
+                        text = expectedAnswerJSONLD
+                    )
+                )
             }
 
+        }
+
+        "search for an anything:Thing that has a link to a specified other thing" in {
+            val gravsearchQuery =
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD: String = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithLinkToStart.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "thing-links",
+                            fileExtension = "json"
+                        ),
+                        text = expectedAnswerJSONLD
+                    )
+                )
+            }
+        }
+
+        "return a page of anything:Thing resources" in {
+            val gravsearchQuery =
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD: String = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/PageOfThings.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "things-with-paging",
+                            fileExtension = "json"
+                        ),
+                        text = expectedAnswerJSONLD
+                    )
+                )
+            }
         }
 
         "search for an anything:Thing that has a Boolean value that is true (submitting the complex schema)" in {
@@ -6490,7 +6504,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBoolean.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBoolean.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6515,20 +6529,27 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |
                   |     OPTIONAL {
-                  |
                   |         ?thing anything:hasBoolean ?boolean .
-                  |
                   |         ?boolean knora-api:booleanValueAsBoolean true .
                   |     }
-                  |} OFFSET 1
                   |
-                """.stripMargin
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         ?intVal knora-api:intValueAsInt 123454321 .
+                  |     }
+                  |
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         ?intVal knora-api:intValueAsInt 999999999 .
+                  |     }
+                  |
+                  |} OFFSET 1""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6575,7 +6596,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6615,7 +6636,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6644,9 +6665,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein")
+                  |        FILTER knora-api:matchText(?title, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -6655,7 +6674,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6685,9 +6704,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein AND Lebens")
+                  |        FILTER knora-api:matchText(?title, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -6696,7 +6713,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6731,7 +6748,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6765,7 +6782,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
@@ -6798,7 +6815,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LanguageFulltextSearch.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
@@ -6833,7 +6850,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/LinkObjectsToBooks.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/LinkObjectsToBooks.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6878,7 +6895,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithAuthor.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithAuthor.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6925,56 +6942,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName.jsonld"), writeTestDataFiles)
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-            }
-        }
-
-        "do a Gravsearch query for a letter that links to a person with a specified name (optional) (submitting the complex schema)" in {
-
-            val gravsearchQuery =
-                """
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?letter knora-api:isMainResource true .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1  ?person1 .
-                  |
-                  |        ?person1 beol:hasFamilyName ?name .
-                  |
-                  |    } WHERE {
-                  |        ?letter a beol:letter .
-                  |
-                  |        ?letter beol:creationDate ?date .
-                  |
-                  |        ?letter ?linkingProp1 ?person1 .
-                  |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-                  |
-                  |        OPTIONAL {
-                  |             ?person1 beol:hasFamilyName ?name .
-                  |
-                  |             ?name knora-api:valueAsString "Meier" .
-                  |        }
-                  |
-                  |    } ORDER BY ?date
-                """.stripMargin
-
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -7021,7 +6989,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithPersonWithName2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -7054,7 +7022,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7096,7 +7064,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithAuthorWithInformation.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -7137,7 +7105,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/incomingPagesForBook.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/incomingPagesForBook.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -7217,7 +7185,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/regionsOfZeitgloecklein.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -7393,7 +7361,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingReferringToSpecificListNode.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingReferringToSpecificListNode.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7425,7 +7393,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingNotReferringToSpecificListNode.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingNotReferringToSpecificListNode.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7456,7 +7424,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
-                
+
                 checkCountResponse(responseAs[String], 2)
             }
         }
@@ -7484,7 +7452,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingReferringToSpecificListNodeWithSubnodes.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingReferringToSpecificListNodeWithSubnodes.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7514,7 +7482,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/letterWithSubject.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/letterWithSubject.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7543,7 +7511,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinks.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingsWithStandoffLinks.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7573,7 +7541,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinks.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingsWithStandoffLinks.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7602,7 +7570,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7632,7 +7600,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
         }
@@ -7650,10 +7618,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |} WHERE {
                   |    ?thing a anything:Thing .
                   |    ?thing anything:hasRichtext ?text .
-                  |    ?text knora-api:valueAsString ?textStr .
                   |    ?text knora-api:textValueHasStandoff ?standoffTag .
                   |    ?standoffTag a standoff:StandoffItalicTag .
-                  |    FILTER knora-api:matchInStandoff(?textStr, ?standoffTag, "interesting text")
+                  |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
                   |}
                 """.stripMargin
 
@@ -7661,7 +7628,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
@@ -7671,7 +7638,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
             // First, create a standoff-to-XML mapping that can handle standoff date tags.
 
-            val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
+            val mappingFileToSend = new File("test_data/test_route/texts/mappingForHTML.xml")
 
             val paramsCreateHTMLMappingFromXML =
                 s"""
@@ -7703,14 +7670,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             // send mapping xml to route
             Post("/v2/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
 
-                assert(status == StatusCodes.OK)
+                assert(status == StatusCodes.OK, responseAs[String])
 
             }
 
 
             // Next, create a resource with a text value containing a standoff date tag. TODO: Use API v2.
 
-            val xmlFileToSend = new File("_test_data/test_route/texts/HTML.xml")
+            val xmlFileToSend = new File("test_data/test_route/texts/HTML.xml")
 
             val newValueParams =
                 s"""
@@ -7821,10 +7788,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
             // Create a resource containing the text of Hamlet.
 
-            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+            val hamletXml = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/hamlet.xml"))
 
             val jsonLDEntity =
                 s"""{
@@ -7859,24 +7826,22 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "search for the large text and its markup and receive it as XML, and check that it matches the original XML" in {
-            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+        "search for the large text and its markup and receive it as XML, and check that it matches the original XML" ignore { // depends on previous test
+            val hamletXml = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/hamlet.xml"))
 
             val gravsearchQuery =
-                s"""
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-                  |
-                  |CONSTRUCT {
-                  |    ?thing knora-api:isMainResource true .
-                  |    ?thing anything:hasRichtext ?text .
-                  |} WHERE {
-                  |    BIND(<${hamletResourceIri.get}> AS ?thing)
-                  |    ?thing a anything:Thing .
-                  |    ?thing anything:hasRichtext ?text .
-                  |}
-                """.stripMargin
+                s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasRichtext ?text .
+                   |} WHERE {
+                   |    BIND(<${hamletResourceIri.get}> AS ?thing)
+                   |    ?thing a anything:Thing .
+                   |    ?thing anything:hasRichtext ?text .
+                   |}""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
                 val searchResponseStr = responseAs[String]
@@ -8007,6 +7972,472 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
             assert(searchResultIri == targetResourceIri)
+        }
+
+        "search for an anything:Thing with a time value (using the simple schema)" in {
+            val gravsearchQuery =
+                s"""
+                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                   |
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasTimeStamp ?timeStamp .
+                   |} WHERE {
+                   |    ?thing a anything:Thing .
+                   |    ?thing anything:hasTimeStamp ?timeStamp .
+                   |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
+                   |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ThingWithTimeStamp.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "get a resource with a link to another resource that the user doesn't have permission to see" in {
+            val gravsearchQuery =
+                s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |
+                   |CONSTRUCT {
+                   |    ?mainThing knora-api:isMainResource true .
+                   |    ?mainThing anything:hasOtherThing ?hiddenThing .
+                   |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+                   |    ?mainThing anything:hasOtherThing ?visibleThing .
+                   |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+                   |} WHERE {
+                   |    ?mainThing a anything:Thing .
+                   |    ?mainThing anything:hasOtherThing ?hiddenThing .
+                   |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+                   |    ?intValInHiddenThing knora-api:intValueAsInt 123454321 .
+                   |    ?mainThing anything:hasOtherThing ?visibleThing .
+                   |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+                   |    ?intValInVisibleThing knora-api:intValueAsInt 543212345 .
+                   |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ThingWithHiddenThing.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "not return duplicate results when there are unbound variables in one or more UNION branches" in {
+            val gravsearchQuery =
+                s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasInteger ?int .
+                   |    ?thing anything:hasRichtext ?richtext .
+                   |    ?thing anything:hasText ?text .
+                   |} WHERE {
+                   |    ?thing a knora-api:Resource .
+                   |    ?thing a anything:Thing .
+                   |
+                   |    {
+                   |        ?thing anything:hasRichtext ?richtext .
+                   |        FILTER knora-api:matchText(?richtext, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |    UNION
+                   |    {
+                   |        ?thing anything:hasText ?text .
+                   |        FILTER knora-api:matchText(?text, "test")
+                   |
+                   |		?thing anything:hasInteger ?int .
+                   |		?int knora-api:intValueAsInt 1
+                   |    }
+                   |}
+                   |ORDER BY (?int)""".stripMargin
+
+            val expectedCount = 1
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkCountResponse(searchResponseStr, expectedCount)
+            }
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                checkSearchResponseNumberOfResults(searchResponseStr, expectedCount)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ThingFromQueryWithUnion.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for a resource containing a time value tag" in {
+            // Create a resource containing a time value.
+
+            val xmlStr =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text documentType="html">
+                  |    <p>The timestamp for this test is <span class="timestamp" data-timestamp="2020-01-27T08:31:51.503187Z">27 January 2020</span>.</p>
+                  |</text>
+                  |""".stripMargin
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasText" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlStr)},
+                   |    "knora-api:textValueHasMapping" : {
+                   |      "@id" : "$anythingProjectIri/mappings/HTMLMapping"
+                   |    }
+                   |  },
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "rdfs:label" : "thing with timestamp in markup",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            Post(s"/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcePath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                val resourceCreateResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+                val resourceIri: IRI = resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                assert(resourceIri.toSmartIri.isKnoraDataIri)
+                timeTagResourceIri.set(resourceIri)
+            }
+
+            // Search for the resource.
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a knora-api:StandoffTimeTag .
+                  |    ?standoffTag knora-api:timeValueAsTimeStamp ?timeStamp .
+                  |    FILTER(?timeStamp > "2020-01-27T08:31:51Z"^^xsd:dateTimeStamp && ?timeStamp < "2020-01-27T08:31:52Z"^^xsd:dateTimeStamp)
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+
+                val responseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+                val resourceIri: IRI = responseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                assert(resourceIri == timeTagResourceIri.get)
+
+                val xmlFromResponse: String = responseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText").
+                    requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+
+                // Compare it to the original XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
+                xmlDiff.hasDifferences should be(false)
+            }
+        }
+
+        "search for an rdfs:label using a literal in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using a literal in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using a variable in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?label .
+                  |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using a variable in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?label .
+                  |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using knora-api:matchLabel in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using knora-api:matchLabel in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using the regex function in the simple schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?bookLabel .
+                  |    FILTER regex(?bookLabel, "Zeit", "i")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "search for an rdfs:label using the regex function in the complex schema" in {
+            val gravsearchQuery: String =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |} WHERE {
+                  |    ?book rdf:type incunabula:book .
+                  |    ?book rdfs:label ?bookLabel .
+                  |    FILTER regex(?bookLabel, "Zeit", "i")
+                  |}""".stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"), writeFile = false)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares two variables representing resources (in the simple schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != ?person2) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares two variables representing resources (in the complex schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != ?person2) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares a variable with a resource IRI (in the simple schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
+        }
+
+        "perform a search that compares a variable with a resource IRI (in the complex schema)" in {
+            val gravsearchQuery: String =
+                """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:hasAuthor ?person1 .
+                  |    ?letter beol:hasRecipient ?person2 .
+                  |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+                  |}
+                  |OFFSET 0""".stripMargin
+
+            // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
+            }
         }
     }
 }

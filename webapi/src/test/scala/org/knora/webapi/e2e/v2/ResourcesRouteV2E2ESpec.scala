@@ -27,26 +27,30 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.e2e.InstanceChecker
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.e2e.{ClientTestDataCollector, InstanceChecker, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.testing.tags.E2ETest
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
+import spray.json.JsonParser
 
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
-  * Tests the API v2 resources route.
-  */
-@E2ETest
+ * Tests the API v2 resources route.
+ */
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -55,7 +59,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
     private var aThingLastModificationDate = Instant.now
     private val hamletResourceIri = new MutableTestIri
 
@@ -63,13 +67,26 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private val writeTestDataFiles = false
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker()
+    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
+
+    // Directory path for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("v2", "resources")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
+    
+    private def successResponse(message: String): String =
+        s"""{
+           |  "knora-api:result" : "$message",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+           |  }
+           |}""".stripMargin
 
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -77,7 +94,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"), writeTestDataFiles)
+
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -100,7 +118,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerTurtle = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"), writeTestDataFiles)
+            val expectedAnswerTurtle = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"), writeTestDataFiles)
             assert(parseTurtle(responseAsString) == parseTurtle(expectedAnswerTurtle))
         }
 
@@ -109,7 +127,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerRdfXml = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"), writeTestDataFiles)
+            val expectedAnswerRdfXml = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"), writeTestDataFiles)
             assert(parseRdfXml(responseAsString) == parseRdfXml(expectedAnswerRdfXml))
         }
 
@@ -118,8 +136,28 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+        }
+
+        "perform a resource preview request for a Thing resource using the complex schema" in {
+            val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/AThing.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "resource-preview",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
@@ -127,7 +165,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -145,7 +183,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerTurtle = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"), writeTestDataFiles)
+            val expectedAnswerTurtle = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"), writeTestDataFiles)
             assert(parseTurtle(responseAsString) == parseTurtle(expectedAnswerTurtle))
         }
 
@@ -156,7 +194,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerRdfXml = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"), writeTestDataFiles)
+            val expectedAnswerRdfXml = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"), writeTestDataFiles)
             assert(parseRdfXml(responseAsString) == parseRdfXml(expectedAnswerRdfXml))
         }
 
@@ -165,7 +203,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimplePreview.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimplePreview.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -174,7 +212,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -183,7 +221,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -192,7 +230,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithBCEDate.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -208,7 +246,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate2.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithBCEDate2.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -224,7 +262,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -240,7 +278,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValueSimple.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithListValueSimple.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -256,7 +294,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkComplex.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -272,7 +310,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkSimple.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithLinkSimple.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -288,7 +326,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithTextLangComplex.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithTextLangComplex.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -304,7 +342,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithTextLangSimple.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithTextLangSimple.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -320,7 +358,79 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/Testding.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/Testding.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "testding",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request for a Thing resource with a link to a ThingPicture resource test1" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-picture", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithPicture.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "thing-with-picture",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request with a link to a resource that the user doesn't have permission to see" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw", "UTF-8")}")
+
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithOneHiddenResource.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request with a link to a resource that is marked as deleted" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A", "UTF-8")}")
+
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithOneDeletedResource.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
             // Check that the resource corresponds to the ontology.
@@ -336,7 +446,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithVersionHistory.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithVersionHistory.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -345,7 +455,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithVersionHistory.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingWithVersionHistory.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -354,7 +464,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/CompleteVersionHistory.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/CompleteVersionHistory.jsonld"), writeTestDataFiles)
             compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -366,7 +476,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/PartialVersionHistory.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/PartialVersionHistory.jsonld"), writeTestDataFiles)
             compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -393,7 +503,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                         val versionResponse: HttpResponse = singleAwaitingRequest(versionRequest)
                         val versionResponseAsString = responseToString(versionResponse)
                         assert(versionResponse.status == StatusCodes.OK, versionResponseAsString)
-                        val expectedAnswerJSONLD = readOrWriteTextFile(versionResponseAsString, new File(s"src/test/resources/test-data/resourcesR2RV2/ThingWithVersionHistory$arkTimestamp.jsonld"), writeTestDataFiles)
+                        val expectedAnswerJSONLD = readOrWriteTextFile(versionResponseAsString, new File(s"test_data/resourcesR2RV2/ThingWithVersionHistory$arkTimestamp.jsonld"), writeTestDataFiles)
                         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = versionResponseAsString)
 
                     case other => throw AssertionException(s"Expected JsonLDObject, got $other")
@@ -405,10 +515,22 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "resource-graph",
+                        fileExtension = "json"
+                    ),
+                    text = responseAsString
+                )
+            )
+
             assert(response.status == StatusCodes.OK, responseAsString)
             val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
 
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphBoth.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphBoth.jsonld"), writeTestDataFiles)
             val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
@@ -421,7 +543,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
 
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphOutbound.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphOutbound.jsonld"), writeTestDataFiles)
             val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
@@ -434,7 +556,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
 
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphInbound.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphInbound.jsonld"), writeTestDataFiles)
             val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
@@ -447,7 +569,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
 
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphBothWithExcludedProp.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphBothWithExcludedProp.jsonld"), writeTestDataFiles)
             val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
@@ -460,7 +582,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
 
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphBothWithDepth.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphBothWithDepth.jsonld"), writeTestDataFiles)
             val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
@@ -501,12 +623,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BooksFromIncunabula.jsonld"), writeTestDataFiles)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/BooksFromIncunabula.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
         "create a resource with values" in {
-            val jsonLDEntity =
+            val createResourceWithValues: String =
                 """{
                   |  "@type" : "anything:Thing",
                   |  "anything:hasBoolean" : {
@@ -560,6 +682,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                   |      "@value" : "1.2"
                   |    }
                   |  },
+                  |  "anything:hasTimeStamp" : {
+                  |    "@type" : "knora-api:TimeValue",
+                  |    "knora-api:timeValueAsTimeStamp" : {
+                  |      "@type" : "xsd:dateTimeStamp",
+                  |      "@value" : "2020-01-24T08:47:10.307068Z"
+                  |    }
+                  |  },
                   |  "anything:hasListItem" : {
                   |    "@type" : "knora-api:ListValue",
                   |    "knora-api:listValueAsListNode" : {
@@ -603,7 +732,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                   |  }
                   |}""".stripMargin
 
-            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-values-request",
+                        fileExtension = "json"
+                    ),
+                    text = createResourceWithValues
+                )
+            )
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -639,7 +779,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource whose label contains a Unicode escape and quotation marks" in {
-            val jsonLDEntity: String = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"))
+            val jsonLDEntity: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"))
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -649,9 +789,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource with a custom creation date" in {
-            val creationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
+            val creationDate: Instant = SharedTestDataADM.customResourceCreationDate
 
-            val jsonLDEntity =
+            val jsonLDEntity: String =
                 s"""{
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
@@ -675,6 +815,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |  }
                    |}""".stripMargin
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-creation-date",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -689,6 +840,355 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             assert(savedCreationDate == creationDate)
+        }
+
+        def createResourceWithCustomIRI(iri: IRI): String = {
+            s"""{
+               |  "@id" : "$iri",
+               |  "@type" : "anything:Thing",
+               |  "knora-api:attachedToProject" : {
+               |    "@id" : "http://rdfh.ch/projects/0001"
+               |  },
+               |  "anything:hasBoolean" : {
+               |    "@type" : "knora-api:BooleanValue",
+               |    "knora-api:booleanValueAsBoolean" : true
+               |  },
+               |  "rdfs:label" : "test thing",
+               |  "@context" : {
+               |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+               |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+               |  }
+               |}""".stripMargin
+        }
+
+        "create a resource with a custom IRI" in {
+            val customIRI: IRI = SharedTestDataADM.customResourceIRI
+            val jsonLDEntity = createResourceWithCustomIRI(customIRI)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-IRI-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri == customIRI)
+        }
+
+        "not create a resource with an invalid custom IRI" in {
+            val customIRI: IRI = "http://rdfh.ch/invalid-resource-IRI"
+            val jsonLDEntity = createResourceWithCustomIRI(customIRI)
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(responseToString(response))
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "not create a resource with a custom IRI containing the wrong project code" in {
+            val customIRI: IRI = "http://rdfh.ch/0803/a-thing-with-IRI"
+            val jsonLDEntity = createResourceWithCustomIRI(customIRI)
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(responseToString(response))
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "return a DuplicateValueException during resource creation when the supplied resource IRI is not unique" in {
+
+            // duplicate resource IRI
+            val params =
+                s"""{
+                   |  "@id" : "http://rdfh.ch/0001/a-thing",
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true
+                   |  },
+                   |  "rdfs:label" : "test thing with duplicate iri",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+
+            val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+            val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
+            invalidIri should be(true)
+        }
+
+        def createResourceWithCustomValueIRI(valueIRI: IRI): String = {
+            s"""{
+               |  "@type" : "anything:Thing",
+               |  "knora-api:attachedToProject" : {
+               |    "@id" : "http://rdfh.ch/projects/0001"
+               |  },
+               |  "anything:hasBoolean" : {
+               |    "@id" : "$valueIRI",
+               |    "@type" : "knora-api:BooleanValue",
+               |    "knora-api:booleanValueAsBoolean" : true
+               |  },
+               |  "rdfs:label" : "test thing with value IRI",
+               |  "@context" : {
+               |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+               |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+               |  }
+               |}""".stripMargin
+        }
+
+        "create a resource with random IRI and a custom value IRI" in {
+            val customValueIRI: IRI = SharedTestDataADM.customValueIRI
+            val jsonLDEntity = createResourceWithCustomValueIRI(customValueIRI)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-value-IRI-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
+                requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIRI)
+        }
+
+        "create a resource with random resource IRI and custom value UUIDs" in {
+            val customValueUUID = SharedTestDataADM.customValueUUID
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true,
+                   |    "knora-api:valueHasUUID" : "$customValueUUID"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   | }
+                   |}""".stripMargin
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-value-UUID-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+            assert(valueUUID == customValueUUID)
+
+        }
+
+        "create a resource with random resource IRI and custom value creation date" in {
+            val creationDate: Instant = SharedTestDataADM.customValueCreationDate
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : false,
+                   |    "knora-api:valueCreationDate" : {
+                   |        "@type" : "xsd:dateTimeStamp",
+                   |        "@value" : "$creationDate"
+                   |    }
+                   |  },
+                   |  "rdfs:label" : "test thing with value has creation date",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   | }
+                   |}""".stripMargin
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-value-creationDate-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val savedCreationDate: Instant = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+            assert(savedCreationDate == creationDate)
+
+        }
+
+        "create a resource with custom resource IRI, creation date, and a value with custom value IRI and UUID" in {
+            val customResourceIRI: IRI = SharedTestDataADM.customResourceIRI_resourceWithValues
+            val customCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
+            val customValueIRI: IRI = SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID
+            val customValueUUID = SharedTestDataADM.customValueUUID
+
+            val jsonLDEntity =
+                s"""{
+                   |   "@id" : "$customResourceIRI",
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@id": "$customValueIRI",
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true,
+                   |    "knora-api:valueHasUUID" : "$customValueUUID"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "knora-api:creationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$customCreationDate"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   | }
+                   |}""".stripMargin
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri == customResourceIRI)
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Get the value from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
+                requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(valueIri == customValueIRI)
+
+            val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+            assert(valueUUID == customValueUUID)
+
+            val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            assert(savedCreationDate == customCreationDate)
+
+            // when no custom creation date is given to the value, it should have the same creation date as the resource
+            val savedValueCreationDate: Instant = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+            assert(savedValueCreationDate == customCreationDate)
+
+
         }
 
         "create a resource as another user" in {
@@ -715,13 +1215,23 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |  }
                    |}""".stripMargin
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "create-resource-as-user",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri.toSmartIri.isKnoraDataIri)
-
             val savedAttachedToUser: IRI = responseJsonDoc.body.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToUser, stringFormatter.validateAndEscapeIri)
             assert(savedAttachedToUser == SharedTestDataADM.anythingUser1.id)
         }
@@ -757,7 +1267,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource containing escaped text" in {
-            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
+            val jsonLDEntity = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -791,10 +1301,100 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     |  }
                     |}""".stripMargin
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-resource-metadata-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val updateRequest = Put(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
-            val updateResponseAsString = responseToString(updateResponse)
+            val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource metadata updated")))
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-resource-metadata-response",
+                        fileExtension = "json"
+                    ),
+                    text = updateResponseAsString
+                )
+            )
+
+            val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+            val previewResponseAsString = responseToString(previewResponse)
+            assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
+
+            val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+            val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
+            assert(updatedLabel == newLabel)
+            val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+            assert(PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions))
+
+            val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            assert(lastModificationDate == newModificationDate)
+            aThingLastModificationDate = newModificationDate
+        }
+
+        "update the metadata of a resource that has a last modification date" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val newLabel = "test thing with modified label again"
+            val newPermissions = "CR knora-admin:ProjectMember|V knora-admin:ProjectMember"
+            val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
+
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$aThingLastModificationDate"
+                    |  },
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "update-resource-metadata-request-with-last-mod-date",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val updateRequest = Put(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
+            val updateResponseAsString: String = responseToString(updateResponse)
+            assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource metadata updated")))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -838,10 +1438,33 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     |  }
                     |}""".stripMargin
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "delete-resource-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
-            val updateResponseAsString = responseToString(updateResponse)
+            val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "delete-resource-response",
+                        fileExtension = "json"
+                    ),
+                    text = updateResponseAsString
+                )
+            )
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -849,10 +1472,56 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
 
-        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+        "mark a resource as deleted, supplying a custom delete date" in {
+            val resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val deleteDate = Instant.now
+
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "knora-api:deleteComment" : "This resource is too boring.",
+                    |  "knora-api:deleteDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$deleteDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "delete-resource-with-custom-delete-date-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
+            val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.superUser.email, password))
+            val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
+            val updateResponseAsString: String = responseToString(updateResponse)
+            assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
+
+            val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+            val previewResponseAsString = responseToString(previewResponse)
+            assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+        }
+
+
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
             // Create a resource containing the text of Hamlet.
 
-            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+            val hamletXml = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/hamlet.xml"))
 
             val jsonLDEntity =
                 s"""{
@@ -887,8 +1556,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             hamletResourceIri.set(resourceIri)
         }
 
-        "read the large text and its markup as XML, and check that it matches the original XML" in {
-            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+        "read the large text and its markup as XML, and check that it matches the original XML" ignore { // depends on previous test
+            val hamletXml = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/hamlet.xml"))
 
             // Request the newly created resource.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
@@ -912,7 +1581,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "read the large text without its markup, and get the markup separately as pages of standoff" in {
+        "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
             // Get the resource without markup.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
@@ -973,7 +1642,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     expectedClassIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr),
                     knoraRouteGet = doGetRequest
                 )
-           }
+            }
         }
 
         "erase a resource" in {
@@ -997,6 +1666,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     |  }
                     |}""".stripMargin
 
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "erase-resource-request",
+                        fileExtension = "json"
+                    ),
+                    text = jsonLDEntity
+                )
+            )
+
             val updateRequest = Post(s"$baseApiUrl/v2/resources/erase", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
             val updateResponseAsString = responseToString(updateResponse)
@@ -1006,6 +1686,52 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+        }
+
+        "create a resource containing a text value with a standoff link" in {
+            val jsonLDEntity =
+                """{
+                  |  "@type": "anything:Thing",
+                  |  "anything:hasText": {
+                  |    "@type": "knora-api:TextValue",
+                  |    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/another-thing\">resource</a>.\n</text>",
+                  |    "knora-api:textValueHasMapping": {
+                  |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                  |    }
+                  |  },
+                  |  "knora-api:attachedToProject": {
+                  |    "@id": "http://rdfh.ch/projects/0001"
+                  |  },
+                  |  "rdfs:label": "obj_inst1",
+                  |  "@context": {
+                  |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                  |    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+                  |  }
+                  |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+            // Request the newly created resource in the complex schema, and check that it matches the ontology.
+            val resourceComplexGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+            val resourceComplexGetResponseAsString = responseToString(resourceComplexGetResponse)
+
+            instanceChecker.check(
+                instanceResponse = resourceComplexGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+
+            // Check that it has the property knora-api:hasStandoffLinkToValue.
+            val resourceJsonLDDoc = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
+            assert(resourceJsonLDDoc.body.value.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue))
         }
     }
 }

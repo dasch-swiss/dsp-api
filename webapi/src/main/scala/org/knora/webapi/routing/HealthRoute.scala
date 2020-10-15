@@ -24,8 +24,7 @@ import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
-import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
+import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.Future
@@ -38,28 +37,36 @@ case class HealthCheckResult(name: String,
                              message: String)
 
 /**
-  * Provides health check logic
-  */
+ * Provides health check logic
+ */
 trait HealthCheck {
     this: HealthRoute =>
 
-    override implicit val timeout: Timeout = 1.second
+    override implicit val timeout: Timeout = 2997.millis
 
-    protected def healthcheck(): Future[HttpResponse] = for {
+    protected def healthCheck(): Future[HttpResponse] = for {
 
-        state <- (applicationStateActor ? GetAppState()).mapTo[AppState]
+        state: AppState <- (applicationActor ? GetAppState()).mapTo[AppState]
 
-        result = state match {
-            case AppState.Stopped => unhealthy("Stopped. Please retry later.")
-            case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
-            case AppState.WaitingForRepository => unhealthy("Waiting for Repository. Please retry later.")
-            case AppState.RepositoryReady => unhealthy("Repository ready. Please retry later.")
-            case AppState.CreatingCaches => unhealthy("Creating caches. Please retry later.")
-            case AppState.CachesReady => unhealthy("Caches ready. Please retry later.")
-            case AppState.LoadingOntologies => unhealthy("Loading ontologies. Please retry later.")
-            case AppState.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
-            case AppState.MaintenanceMode => unhealthy("Application is in maintenance mode. Please retry later.")
-            case AppState.Running => healthy()
+        result: HealthCheckResult = state match {
+            case AppStates.Stopped => unhealthy("Stopped. Please retry later.")
+            case AppStates.StartingUp => unhealthy("Starting up. Please retry later.")
+            case AppStates.WaitingForTriplestore => unhealthy("Waiting for triplestore. Please retry later.")
+            case AppStates.TriplestoreReady => unhealthy("Triplestore ready. Please retry later.")
+            case AppStates.UpdatingRepository => unhealthy("Updating repository. Please retry later.")
+            case AppStates.RepositoryUpToDate => unhealthy("Repository up to date. Please retry later.")
+            case AppStates.CreatingCaches => unhealthy("Creating caches. Please retry later.")
+            case AppStates.CachesReady => unhealthy("Caches ready. Please retry later.")
+            case AppStates.UpdatingSearchIndex => unhealthy("Updating search index. Please retry later.")
+            case AppStates.SearchIndexReady => unhealthy("Search index ready. Please retry later.")
+            case AppStates.LoadingOntologies => unhealthy("Loading ontologies. Please retry later.")
+            case AppStates.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
+            case AppStates.WaitingForIIIFService => unhealthy("Waiting for IIIF service. Please retry later.")
+            case AppStates.IIIFServiceReady => unhealthy("IIIF service ready. Please retry later.")
+            case AppStates.WaitingForCacheService => unhealthy("Waiting for cache service. Please retry later.")
+            case AppStates.CacheServiceReady => unhealthy("Cache service ready. Please retry later.")
+            case AppStates.MaintenanceMode => unhealthy("Application is in maintenance mode. Please retry later.")
+            case AppStates.Running => healthy()
         }
 
         response = createResponse(result)
@@ -106,15 +113,18 @@ trait HealthCheck {
 }
 
 /**
-  * Provides the '/health' endpoint serving the health status.
-  */
+ * Provides the '/health' endpoint serving the health status.
+ */
 class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck {
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route = {
         path("health") {
             get {
                 requestContext =>
-                    requestContext.complete(healthcheck())
+                    requestContext.complete(healthCheck())
             }
         }
     }

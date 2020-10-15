@@ -25,23 +25,26 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import org.knora.webapi._
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.util.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffPageRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
-  * Provides a function for API routes that deal with search.
-  */
+ * Provides a function for API routes that deal with search.
+ */
 class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v2" / "standoff" / Segment / Segment / Segment) { (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
             get {

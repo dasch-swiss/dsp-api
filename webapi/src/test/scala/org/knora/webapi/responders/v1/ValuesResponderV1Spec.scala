@@ -19,22 +19,25 @@
 
 package org.knora.webapi.responders.v1
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedOntologyTestDataADM._
-import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
-import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MutableTestIri, StringFormatter}
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -47,9 +50,6 @@ object ValuesResponderV1Spec {
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
-
-    private val incunabulaProjectIri = INCUNABULA_PROJECT_IRI
-    private val anythingProjectIri = ANYTHING_PROJECT_IRI
 
     private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
     private val miscResourceIri = "http://rdfh.ch/0803/miscResource"
@@ -74,9 +74,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     override lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -88,6 +88,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val secondValueIriWithResourceRef = new MutableTestIri
     private val standoffLinkValueIri = new MutableTestIri
     private val currentSeqnumValueIri = new MutableTestIri
+    private val currentTimeValueIri = new MutableTestIri
     private val currentPubdateValueIri = new MutableTestIri
     private val linkObjLinkValueIri = new MutableTestIri
     private val currentColorValueIri = new MutableTestIri
@@ -210,7 +211,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     }
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
-        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+        val lastModSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getLastModificationDate(
             triplestore = settings.triplestoreType,
             resourceIri = resourceIri
         ).toString()
@@ -817,7 +818,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -904,7 +905,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -980,7 +981,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1038,7 +1039,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1101,7 +1102,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1179,7 +1180,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1230,6 +1231,42 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
                     newValue should ===(IntegerValueV1(seqnum))
+            }
+        }
+
+        "add a new timestamp value" in {
+
+            val timeStamp = Instant.parse("2019-08-28T15:13:10.968318Z")
+
+            responderManager ! CreateValueRequestV1(
+                resourceIri = "http://rdfh.ch/0001/a-thing",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
+                value = TimeValueV1(timeStamp),
+                userProfile = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case CreateValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+                    currentTimeValueIri.set(newValueIri)
+                    newValue should ===(TimeValueV1(timeStamp))
+            }
+        }
+
+        "change an existing timestamp value" in {
+
+            val timeStamp = Instant.parse("2019-08-28T15:55:22.213394Z")
+
+            responderManager ! ChangeValueRequestV1(
+                value = TimeValueV1(timeStamp),
+                userProfile = anythingUser,
+                valueIri = currentTimeValueIri.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+                    newValue should ===(TimeValueV1(timeStamp))
             }
         }
 
@@ -1306,7 +1343,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = resourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1386,7 +1423,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The old LinkValue should be deleted now, and the old direct link should have been removed.
 
-            val oldLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val oldLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1407,7 +1444,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-            val newLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val newLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1448,7 +1485,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: DeleteValueResponseV1 => linkObjLinkValueIri.set(msg.id)
             }
 
-            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
@@ -1573,17 +1610,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "add a new image file value to an incunabula:page" in {
 
-            val fileRequest = SipiConversionFileRequestV1(
-                originalFilename = "Chlaus.jpg",
-                originalMimeType = "image/jpeg",
+            val fileValue = StillImageFileValueV1(
+                internalMimeType = "image/jp2",
+                internalFilename = "gaga.jpg",
+                originalFilename = Some("test.jpg"),
+                originalMimeType = Some("image/jpg"),
                 projectShortcode = "0803",
-                filename = "./test_server/images/Chlaus.jpg",
-                userProfile = incunabulaUser.asUserProfileV1
+                dimX = 1000,
+                dimY = 1000
             )
 
             val fileChangeRequest = ChangeFileValueRequestV1(
                 resourceIri = "http://rdfh.ch/0803/8a0b1e75",
-                file = fileRequest,
+                file = fileValue,
                 apiRequestID = UUID.randomUUID,
                 userProfile = incunabulaUser)
 
@@ -1781,7 +1820,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.rights should ===(2)
             }
 
-            val initialLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val initialLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = thingWithTextValues,
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1848,7 +1887,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // It should have a previousValue, and the direct link should still exist.
 
-            val decrementedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val decrementedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = thingWithTextValues,
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -1905,7 +1944,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The LinkValue should point to its previous version. There should be no direct link.
 
-            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+            val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
                 subjectIri = thingWithTextValues,
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,

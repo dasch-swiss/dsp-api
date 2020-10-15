@@ -21,24 +21,26 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
 import scala.concurrent.Future
 
 /**
-  * A responder that returns information about hierarchical lists.
-  */
+ * A responder that returns information about hierarchical lists.
+ */
 class ListsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     /**
-      * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: ListsResponderRequestV1) = msg match {
         case HListGetRequestV1(listIri, userProfile) => listGetRequestV1(listIri, userProfile, PathType.HList)
         case SelectionGetRequestV1(listIri, userProfile) => listGetRequestV1(listIri, userProfile, PathType.Selection)
@@ -47,15 +49,15 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     /**
-      * Retrieves a list from the triplestore and returns it as a [[ListGetResponseV1]].
-      * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
-      * [[ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
-      *
-      * @param rootNodeIri the Iri if the root node of the list to be queried.
-      * @param userProfile the profile of the user making the request.
-      * @param pathType    the type of the list (HList or Selection).
-      * @return a [[ListGetResponseV1]].
-      */
+     * Retrieves a list from the triplestore and returns it as a [[ListGetResponseV1]].
+     * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
+     * [[ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
+     *
+     * @param rootNodeIri the Iri if the root node of the list to be queried.
+     * @param userProfile the profile of the user making the request.
+     * @param pathType    the type of the list (HList or Selection).
+     * @return a [[ListGetResponseV1]].
+     */
     def listGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListGetResponseV1] = {
 
         for {
@@ -76,33 +78,33 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     /**
-      * Retrieves a list from the triplestore and returns it as a sequence of child nodes.
-      *
-      * @param rootNodeIri the Iri of the root node of the list to be queried.
-      * @param userProfile the profile of the user making the request.
-      * @return a sequence of [[ListNodeV1]].
-      */
+     * Retrieves a list from the triplestore and returns it as a sequence of child nodes.
+     *
+     * @param rootNodeIri the Iri of the root node of the list to be queried.
+     * @param userProfile the profile of the user making the request.
+     * @return a sequence of [[ListNodeV1]].
+     */
     private def listGetV1(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListNodeV1]] = {
 
         /**
-          * Compares the `position`-values of two nodes
-          *
-          * @param list1 node in a list
-          * @param list2 node in the same list
-          * @return true if the `position` of list1 is lower than the one of list2
-          */
+         * Compares the `position`-values of two nodes
+         *
+         * @param list1 node in a list
+         * @param list2 node in the same list
+         * @return true if the `position` of list1 is lower than the one of list2
+         */
         def orderNodes(list1: ListNodeV1, list2: ListNodeV1): Boolean = {
             list1.position < list2.position
         }
 
         /**
-          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListNodeV1]].
-          *
-          * @param nodeIri          the IRI of the node to be created.
-          * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
-          *                         of SPARQL query results representing that node's children.
-          * @return a [[ListNodeV1]].
-          */
+         * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListNodeV1]].
+         *
+         * @param nodeIri          the IRI of the node to be created.
+         * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
+         *                         of SPARQL query results representing that node's children.
+         * @return a [[ListNodeV1]].
+         */
         def createHierarchicalListV1(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNodeV1 = {
             val childRows = groupedByNodeIri(nodeIri)
 
@@ -146,7 +148,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             listQuery <- Future {
-                queries.sparql.v1.txt.getList(
+                org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getList(
                     triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
                     preferredLanguage = userProfile.userData.lang,
@@ -174,21 +176,21 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     /**
-      * Provides the path to a particular hierarchical list node.
-      *
-      * @param queryNodeIri the IRI of the node whose path is to be queried.
-      * @param userProfile  the profile of the user making the request.
-      */
+     * Provides the path to a particular hierarchical list node.
+     *
+     * @param queryNodeIri the IRI of the node whose path is to be queried.
+     * @param userProfile  the profile of the user making the request.
+     */
     private def getNodePathResponseV1(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetResponseV1] = {
         /**
-          * Recursively constructs the path to a node.
-          *
-          * @param node      the IRI of the node whose path is to be constructed.
-          * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
-          * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
-          * @param path      the path constructed so far.
-          * @return the complete path to `node`.
-          */
+         * Recursively constructs the path to a node.
+         *
+         * @param node      the IRI of the node whose path is to be constructed.
+         * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
+         * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
+         * @param path      the path constructed so far.
+         * @return the complete path to `node`.
+         */
         @tailrec
         def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[NodePathElementV1]): Seq[NodePathElementV1] = {
             // Get the details of the node.
@@ -218,7 +220,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
         for {
             nodePathQuery <- Future {
-                queries.sparql.v1.txt.getNodePath(
+                org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = userProfile.userData.lang,

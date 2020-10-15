@@ -23,9 +23,9 @@ import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v1.SearchRouteV1
-import org.knora.webapi.testing.tags.E2ETest
 import org.scalatest.Assertion
 import spray.json._
 
@@ -35,7 +35,6 @@ import scala.concurrent.ExecutionContextExecutor
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class SearchV1R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -51,9 +50,9 @@ class SearchV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     /**
@@ -134,7 +133,6 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
                 checkNumberOfHits(responseAs[String], 15)
 
             }
@@ -150,7 +148,6 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
                 checkNumberOfHits(responseAs[String], 4)
 
             }
@@ -166,7 +163,6 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query below)
                 checkNumberOfHits(responseAs[String], 1)
 
             }
@@ -271,6 +267,21 @@ class SearchV1R2RSpec extends R2RSpec {
             val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001"
 
             Get("/v1/search/?searchtype=extended" + props_two_lists_one + props_two_lists_two + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing with a timestamp" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasTimeStamp&compop=GT&searchval=2019-08-30T10%3A45%3A26.365863Z"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

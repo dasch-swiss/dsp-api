@@ -23,45 +23,53 @@ import java.io._
 import java.util.UUID
 
 import akka.pattern._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.util.Timeout
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
+import org.knora.webapi.messages.util.{ConstructResponseUtilV2, KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.standoff.StandoffTagUtilV2.XMLTagItem
+import org.knora.webapi.util.cache.CacheUtil
 import org.xml.sax.SAXException
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Elem, Node, NodeSeq, XML}
 
 /**
-  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
-  */
+ * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
+ */
 class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
     /* actor materializer needed for http requests */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
+
+    private def xmlMimeTypes = Set(
+        "text/xml",
+        "application/xml"
+    )
 
     /**
-      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
+     */
     def receive(msg: StandoffResponderRequestV2) = msg match {
         case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
         case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 => getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
@@ -77,7 +85,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
 
         for {
-            resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+            resourceRequestSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = Seq(getStandoffRequestV2.resourceIri),
                 preview = false,
@@ -102,23 +110,23 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             // _ = println(s"Got a page of standoff in ${standoffPageEndTime - standoffPageStartTime} ms")
 
             // separate resources and values
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)
+            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)
 
-            _ = if (queryResultsSeparated.keySet != Set(getStandoffRequestV2.resourceIri)) {
-                throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> was not found (maybe you do not have permission to see it, or it is marked as deleted)")
-            }
-
-            readResourceV2: ReadResourceV2 <- ConstructResponseUtilV2.createFullResourceResponse(
-                resourceIri = getStandoffRequestV2.resourceIri,
-                resourceRdfData = queryResultsSeparated(getStandoffRequestV2.resourceIri),
+            readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
+                pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
                 mappings = Map.empty,
                 queryStandoff = false,
+                calculateMayHaveMoreResults = false,
                 versionDate = None,
                 responderManager = responderManager,
                 targetSchema = getStandoffRequestV2.targetSchema,
                 settings = settings,
                 requestingUser = getStandoffRequestV2.requestingUser
             )
+
+            readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
             valueObj: ReadValueV2 = readResourceV2.values.values.flatten.find(_.valueIri == getStandoffRequestV2.valueIri).getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"))
 
@@ -145,12 +153,12 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
-      *
-      * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
-      * @param requestingUser       the user making the request.
-      * @return a [[GetXSLTransformationResponseV2]].
-      */
+     * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
+     *
+     * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
+     * @param requestingUser       the user making the request.
+     * @return a [[GetXSLTransformationResponseV2]].
+     */
     private def getXSLTransformation(xslTransformationIri: IRI, requestingUser: UserADM): Future[GetXSLTransformationResponseV2] = {
 
         val xsltUrlFuture = for {
@@ -176,12 +184,12 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
-            // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(xsltFileValueContent.fileValue.internalMimeType == "text/xml" && xsltFileValueContent.fileValue.originalFilename.endsWith(".xsl"))) {
+            // check if xsltFileValue represents an XSL transformation
+            _ = if (!(xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType) && xsltFileValueContent.fileValue.internalFilename.endsWith(".xsl"))) {
                 throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
 
-            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}"
+            xsltUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
         } yield xsltUrl
 
@@ -201,7 +209,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 Future(xsltMaybe.get)
             } else {
                 for {
-                    response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = xsltFileUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+                    response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
+                        fileUrl = xsltFileUrl,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        senderName = this.getClass.getName
+                    )).mapTo[SipiGetTextFileResponse]
                     _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
                 } yield response.content
             }
@@ -212,12 +224,12 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
 
     /**
-      * Creates a mapping between XML elements and attributes to standoff classes and properties.
-      * The mapping is used to convert XML documents to texts with standoff and back.
-      *
-      * @param xml            the provided mapping.
-      * @param requestingUser the client that made the request.
-      */
+     * Creates a mapping between XML elements and attributes to standoff classes and properties.
+     * The mapping is used to convert XML documents to texts with standoff and back.
+     *
+     * @param xml            the provided mapping.
+     * @param requestingUser the client that made the request.
+     */
     private def createMappingV2(xml: String, label: String, projectIri: SmartIri, mappingName: String, requestingUser: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV2] = {
 
         def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, requestingUser: UserADM): Future[CreateMappingResponseV2] = {
@@ -347,7 +359,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
                 // check if the mapping IRI already exists
-                getExistingMappingSparql = queries.sparql.v2.txt.getMapping(
+                getExistingMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
                     triplestore = settings.triplestoreType,
                     mappingIri = mappingIri
                 ).toString()
@@ -357,7 +369,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                     throw BadRequestException(s"mapping IRI $mappingIri already exists")
                 }
 
-                createNewMappingSparql = queries.sparql.v2.txt.createNewMapping(
+                createNewMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.createNewMapping(
                     triplestore = settings.triplestoreType,
                     dataNamedGraph = namedGraph,
                     mappingIri = mappingIri,
@@ -446,12 +458,12 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Transforms a mapping represented as a Seq of [[MappingElement]] to a [[MappingXMLtoStandoff]].
-      * This method is called when reading a mapping back from the triplestore.
-      *
-      * @param mappingElements the Seq of MappingElement to be transformed.
-      * @return a [[MappingXMLtoStandoff]].
-      */
+     * Transforms a mapping represented as a Seq of [[MappingElement]] to a [[MappingXMLtoStandoff]].
+     * This method is called when reading a mapping back from the triplestore.
+     *
+     * @param mappingElements the Seq of MappingElement to be transformed.
+     * @return a [[MappingXMLtoStandoff]].
+     */
     private def transformMappingElementsToMappingXMLtoStandoff(mappingElements: Seq[MappingElement], defaultXSLTransformation: Option[IRI]): MappingXMLtoStandoff = {
 
         val mappingXMLToStandoff = mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, Map[String, XMLTag]]], defaultXSLTransformation = None)) {
@@ -560,17 +572,17 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * The name of the mapping cache.
-      */
+     * The name of the mapping cache.
+     */
     val mappingCacheName = "mappingCache"
 
     /**
-      * Gets a mapping either from the cache or by making a request to the triplestore.
-      *
-      * @param mappingIri     the IRI of the mapping to retrieve.
-      * @param requestingUser the user making the request.
-      * @return a [[MappingXMLtoStandoff]].
-      */
+     * Gets a mapping either from the cache or by making a request to the triplestore.
+     *
+     * @param mappingIri     the IRI of the mapping to retrieve.
+     * @param requestingUser the user making the request.
+     * @return a [[MappingXMLtoStandoff]].
+     */
     private def getMappingV2(mappingIri: IRI, requestingUser: UserADM): Future[GetMappingResponseV2] = {
 
         val mappingFuture: Future[GetMappingResponseV2] = CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
@@ -612,16 +624,16 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      *
-      * Gets a mapping from the triplestore.
-      *
-      * @param mappingIri     the IRI of the mapping to retrieve.
-      * @param requestingUser the user making the request.
-      * @return a [[MappingXMLtoStandoff]].
-      */
+     *
+     * Gets a mapping from the triplestore.
+     *
+     * @param mappingIri     the IRI of the mapping to retrieve.
+     * @param requestingUser the user making the request.
+     * @return a [[MappingXMLtoStandoff]].
+     */
     private def getMappingFromTriplestore(mappingIri: IRI, requestingUser: UserADM): Future[MappingXMLtoStandoff] = {
 
-        val getMappingSparql = queries.sparql.v2.txt.getMapping(
+        val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
             triplestore = settings.triplestoreType,
             mappingIri = mappingIri
         ).toString()
@@ -711,12 +723,12 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
-      *
-      * @param mappingXMLtoStandoff the mapping to be used.
-      * @param requestingUser       the client that made the request.
-      * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
-      */
+     * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
+     *
+     * @param mappingXMLtoStandoff the mapping to be used.
+     * @param requestingUser       the client that made the request.
+     * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
+     */
     private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff, requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -819,29 +831,29 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * A [[TaskResult]] containing a page of standoff queried from a text value.
-      *
-      * @param underlyingResult the underlying standoff result.
-      * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
-      */
+     * A [[TaskResult]] containing a page of standoff queried from a text value.
+     *
+     * @param underlyingResult the underlying standoff result.
+     * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
+     */
     case class StandoffTaskResult(underlyingResult: StandoffTaskUnderlyingResult,
                                   nextTask: Option[GetStandoffTask]) extends TaskResult[StandoffTaskUnderlyingResult]
 
     /**
-      * The underlying result type contained in a [[StandoffTaskResult]].
-      *
-      * @param standoff the standoff that was queried.
-      */
+     * The underlying result type contained in a [[StandoffTaskResult]].
+     *
+     * @param standoff the standoff that was queried.
+     */
     case class StandoffTaskUnderlyingResult(standoff: Vector[StandoffTagV2])
 
     /**
-      * A task that gets a page of standoff from a text value.
-      *
-      * @param resourceIri    the IRI of the resource containing the value.
-      * @param valueIri       the IRI of the value.
-      * @param offset         the start index of the first standoff tag to be returned.
-      * @param requestingUser the user making the request.
-      */
+     * A task that gets a page of standoff from a text value.
+     *
+     * @param resourceIri    the IRI of the resource containing the value.
+     * @param valueIri       the IRI of the value.
+     * @param offset         the start index of the first standoff tag to be returned.
+     * @param requestingUser the user making the request.
+     */
     case class GetStandoffTask(resourceIri: IRI,
                                valueIri: IRI,
                                offset: Int,
@@ -882,11 +894,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Returns all pages of standoff markup from a text value, except for the first page.
-      *
-      * @param getRemainingStandoffFromTextValueRequestV2 the request message.
-      * @return the text value's standoff markup.
-      */
+     * Returns all pages of standoff markup from a text value, except for the first page.
+     *
+     * @param getRemainingStandoffFromTextValueRequestV2 the request message.
+     * @return the text value's standoff markup.
+     */
     private def getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2): Future[GetStandoffResponseV2] = {
         val firstTask = GetStandoffTask(
             resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,

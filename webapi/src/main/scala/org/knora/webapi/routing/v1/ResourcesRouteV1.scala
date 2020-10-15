@@ -22,55 +22,54 @@ package org.knora.webapi.routing.v1
 
 import java.io._
 import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 
-import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.directives.FileInfo
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.FileIO
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, ForbiddenException, InconsistentTriplestoreDataException, SipiException}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
+import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
+import org.knora.webapi.messages.twirl.ResourceHtmlView
+import org.knora.webapi.messages.util.DateUtilV1
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
-import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri}
-import org.knora.webapi.viewhandlers.ResourceHtmlView
+import org.knora.webapi.util.FileUtil
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException
-import spray.json._
 
 import scala.collection.immutable
-import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 /**
-  * Provides API routes that deal with resources.
-  */
+ * Provides API routes that deal with resources.
+ */
 class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
     private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         def makeResourceRequestMessage(resIri: String,
                                        resinfo: Boolean,
@@ -200,6 +199,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                     if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
                                     Future(CreateValueV1WithComment(IntervalValueV1(timeVals.head, timeVals(1)), givenValue.comment))
 
+                                case OntologyConstants.KnoraBase.TimeValue =>
+                                    val timeValStr: String = givenValue.time_value.get
+                                    val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(timeValStr, throw BadRequestException(s"Invalid timestamp: $timeValStr"))
+                                    Future(CreateValueV1WithComment(TimeValueV1(timeStamp), givenValue.comment))
+
                                 case OntologyConstants.KnoraBase.GeonameValue =>
                                     Future(CreateValueV1WithComment(GeonameValueV1(givenValue.geoname_value.get), givenValue.comment))
 
@@ -216,8 +220,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         }
 
-
-        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiConversionPathRequestV1] = None, userADM: UserADM): Future[ResourceCreateRequestV1] = {
+        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, userADM: UserADM): Future[ResourceCreateRequestV1] = {
             val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
@@ -227,18 +230,20 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
-                // for GUI-case:
-                // file has already been stored by Sipi.
-                // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
-                paramConversionRequest: Option[SipiConversionFileRequestV1] = apiRequest.file match {
-                    case Some(createFile: CreateFileV1) => Some(SipiConversionFileRequestV1(
-                        originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
-                        originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
-                        projectShortcode = projectShortcode,
-                        filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
-                        userProfile = userADM.asUserProfileV1
-                    ))
-                    case None => None
+                file: Option[FileValueV1] <- apiRequest.file match {
+                    case Some(filename) =>
+                        // Ask Sipi about the file's metadata.
+                        val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+
+                        for {
+                            fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponse]
+                        } yield Some(RouteUtilV1.makeFileValue(
+                            filename = filename,
+                            fileMetadataResponse = fileMetadataResponse,
+                            projectShortcode = projectShortcode
+                        ))
+
+                    case None => FastFuture.successful(None)
                 }
 
                 valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
@@ -246,10 +251,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     acceptStandoffLinksToClientIDs = false,
                     userProfile = userADM
                 )
-
-                // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
-                // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
-                _ = if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
 
                 // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
@@ -263,11 +264,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 label = label,
                 projectIri = projectIri,
                 values = valuesToBeCreated.toMap,
-                file = if (multipartConversionRequest.nonEmpty) // either multipartConversionRequest or paramConversionRequest might be given, but never both
-                    multipartConversionRequest // Non GUI-case
-                else if (paramConversionRequest.nonEmpty)
-                    paramConversionRequest // GUI-case
-                else None, // no file given
+                file = file,
                 userProfile = userADM,
                 apiRequestID = UUID.randomUUID
             )
@@ -289,21 +286,28 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             values <- valuesFuture
                         } yield propIri -> values
                 }
+
+                convertedFile <- resourceRequest.file match {
+                    case Some(filename) =>
+                        // Ask Sipi about the file's metadata.
+                        val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+
+                        for {
+                            fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetFileMetadataResponse]
+                        } yield Some(RouteUtilV1.makeFileValue(
+                            filename = filename,
+                            fileMetadataResponse = fileMetadataResponse,
+                            projectShortcode = projectShortcode
+                        ))
+
+                    case None => FastFuture.successful(None)
+                }
             } yield OneOfMultipleResourceCreateRequestV1(
                 resourceTypeIri = resourceRequest.restype_id,
                 clientResourceID = resourceRequest.client_id,
                 label = stringFormatter.toSparqlEncodedString(resourceRequest.label, throw BadRequestException(s"The resource label is invalid: '${resourceRequest.label}'")),
                 values = valuesToBeCreated.toMap,
-                file = resourceRequest.file.map {
-                    fileToRead =>
-                        SipiConversionPathRequestV1(
-                            originalFilename = stringFormatter.toSparqlEncodedString(fileToRead.file.getName, throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
-                            originalMimeType = stringFormatter.toSparqlEncodedString(fileToRead.mimeType, throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
-                            projectShortcode = projectShortcode,
-                            source = fileToRead.file,
-                            userProfile = userProfile.asUserProfileV1
-                        )
-                },
+                file = convertedFile,
                 creationDate = resourceRequest.creationDate
             )
         }
@@ -354,29 +358,29 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Given the IRI the main internal ontology to be used in an XML import, recursively gets instances of
-          * [[NamedGraphEntityInfoV1]] for that ontology, for `knora-base`, and for any other ontologies containing
-          * classes used in object class constraints in the main ontology.
-          *
-          * @param mainOntologyIri the IRI of the main ontology used in the XML import.
-          * @param userProfile     the profile of the user making the request.
-          * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
-          */
+         * Given the IRI the main internal ontology to be used in an XML import, recursively gets instances of
+         * [[NamedGraphEntityInfoV1]] for that ontology, for `knora-base`, and for any other ontologies containing
+         * classes used in object class constraints in the main ontology.
+         *
+         * @param mainOntologyIri the IRI of the main ontology used in the XML import.
+         * @param userProfile     the profile of the user making the request.
+         * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
+         */
         def getNamedGraphInfos(mainOntologyIri: IRI, userProfile: UserADM): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
             /**
-              * Does the actual recursion for `getNamedGraphInfos`, loading only information about project-specific
-              * ontologies (i.e. ontologies other than `knora-base`).
-              *
-              * @param initialOntologyIri  the IRI of the internal project-specific ontology to start with.
-              * @param intermediateResults the intermediate results collected so far (a map of internal ontology IRIs to
-              *                            [[NamedGraphEntityInfoV1]] objects). When this method is first called, this
-              *                            collection must already contain a [[NamedGraphEntityInfoV1]] for
-              *                            the `knora-base` ontology. This is an optimisation to avoid getting
-              *                            information about `knora-base` repeatedly, since every project-specific
-              *                            ontology depends on `knora-base`.
-              * @param userProfile         the profile of the user making the request.
-              * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
-              */
+             * Does the actual recursion for `getNamedGraphInfos`, loading only information about project-specific
+             * ontologies (i.e. ontologies other than `knora-base`).
+             *
+             * @param initialOntologyIri  the IRI of the internal project-specific ontology to start with.
+             * @param intermediateResults the intermediate results collected so far (a map of internal ontology IRIs to
+             *                            [[NamedGraphEntityInfoV1]] objects). When this method is first called, this
+             *                            collection must already contain a [[NamedGraphEntityInfoV1]] for
+             *                            the `knora-base` ontology. This is an optimisation to avoid getting
+             *                            information about `knora-base` repeatedly, since every project-specific
+             *                            ontology depends on `knora-base`.
+             * @param userProfile         the profile of the user making the request.
+             * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
+             */
             def getNamedGraphInfosRec(initialOntologyIri: IRI, intermediateResults: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserADM): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
                 assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
@@ -464,22 +468,22 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Given the IRI of an internal project-specific ontology, generates an [[XmlImportSchemaBundleV1]] for validating
-          * XML imports for that ontology and any other ontologies it depends on.
-          *
-          * @param internalOntologyIri the IRI of the main internal project-specific ontology to be used in the XML import.
-          * @param userProfile         the profile of the user making the request.
-          * @return an [[XmlImportSchemaBundleV1]] for validating the import.
-          */
+         * Given the IRI of an internal project-specific ontology, generates an [[XmlImportSchemaBundleV1]] for validating
+         * XML imports for that ontology and any other ontologies it depends on.
+         *
+         * @param internalOntologyIri the IRI of the main internal project-specific ontology to be used in the XML import.
+         * @param userProfile         the profile of the user making the request.
+         * @return an [[XmlImportSchemaBundleV1]] for validating the import.
+         */
         def generateSchemasFromOntologies(internalOntologyIri: IRI, userProfile: UserADM): Future[XmlImportSchemaBundleV1] = {
             /**
-              * Called by the schema generation template to get the prefix label for an internal ontology
-              * entity IRI. The schema generation template gets these IRIs from resource cardinalities
-              * and property object class constraints, which we get from the ontology responder.
-              *
-              * @param internalEntityIri an internal ontology entity IRI.
-              * @return the prefix label that Knora uses to refer to the ontology.
-              */
+             * Called by the schema generation template to get the prefix label for an internal ontology
+             * entity IRI. The schema generation template gets these IRIs from resource cardinalities
+             * and property object class constraints, which we get from the ontology responder.
+             *
+             * @param internalEntityIri an internal ontology entity IRI.
+             * @return the prefix label that Knora uses to refer to the ontology.
+             */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
                 val prefixLabel = internalEntityIri.toSmartIri.getLongPrefixLabel
 
@@ -493,13 +497,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             }
 
             /**
-              * Called by the schema generation template to get the entity name (i.e. the local name part) of an
-              * internal ontology entity IRI. The schema generation template gets these IRIs from resource cardinalities
-              * and property object class constraints, which we get from the ontology responder.
-              *
-              * @param internalEntityIri an internal ontology entity IRI.
-              * @return the local name of the entity.
-              */
+             * Called by the schema generation template to get the entity name (i.e. the local name part) of an
+             * internal ontology entity IRI. The schema generation template gets these IRIs from resource cardinalities
+             * and property object class constraints, which we get from the ontology responder.
+             *
+             * @param internalEntityIri an internal ontology entity IRI.
+             * @return the local name of the entity.
+             */
             def getEntityName(internalEntityIri: IRI): String = {
                 internalEntityIri.toSmartIri.getEntityName
             }
@@ -562,7 +566,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } :+ knoraXmlImportSchemaNamespaceInfo
 
                         // Generate the schema using a Twirl template.
-                        val unformattedSchemaXml = xsd.v1.xml.xmlImport(
+                        val unformattedSchemaXml = org.knora.webapi.messages.twirl.xsd.v1.xml.xmlImport(
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaceInfos,
                             knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
@@ -600,12 +604,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Generates a byte array representing a Zip file containing XML schemas for validating XML import data.
-          *
-          * @param internalOntologyIri the IRI of the main internal ontology for which data will be imported.
-          * @param userProfile         the profile of the user making the request.
-          * @return a byte array representing a Zip file containing XML schemas.
-          */
+         * Generates a byte array representing a Zip file containing XML schemas for validating XML import data.
+         *
+         * @param internalOntologyIri the IRI of the main internal ontology for which data will be imported.
+         * @param userProfile         the profile of the user making the request.
+         * @return a byte array representing a Zip file containing XML schemas.
+         */
         def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserADM): Future[Array[Byte]] = {
             for {
                 // Generate a bundle of XML schemas.
@@ -625,14 +629,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Validates bulk import XML using project-specific XML schemas and the Knora XML import schema v1.
-          *
-          * @param xml              the XML to be validated.
-          * @param defaultNamespace the default namespace of the submitted XML. This should be the Knora XML import
-          *                         namespace corresponding to the main internal ontology used in the import.
-          * @param userADM          the profile of the user making the request.
-          * @return a `Future` containing `()` if successful, otherwise a failed future.
-          */
+         * Validates bulk import XML using project-specific XML schemas and the Knora XML import schema v1.
+         *
+         * @param xml              the XML to be validated.
+         * @param defaultNamespace the default namespace of the submitted XML. This should be the Knora XML import
+         *                         namespace corresponding to the main internal ontology used in the import.
+         * @param userADM          the profile of the user making the request.
+         * @return a `Future` containing `()` if successful, otherwise a failed future.
+         */
         def validateImportXml(xml: String, defaultNamespace: IRI, userADM: UserADM): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
@@ -670,12 +674,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Converts parsed import XML into a sequence of [[CreateResourceFromXmlImportRequestV1]] for each resource
-          * described in the XML.
-          *
-          * @param rootElement the root element of an XML document describing multiple resources to be created.
-          * @return Seq[CreateResourceFromXmlImportRequestV1] a collection of resource creation requests.
-          */
+         * Converts parsed import XML into a sequence of [[CreateResourceFromXmlImportRequestV1]] for each resource
+         * described in the XML.
+         *
+         * @param rootElement the root element of an XML document describing multiple resources to be created.
+         * @return Seq[CreateResourceFromXmlImportRequestV1] a collection of resource creation requests.
+         */
         def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceFromXmlImportRequestV1] = {
             rootElement.head.child
                 .filter(node => node.label != "#PCDATA")
@@ -707,21 +711,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                     val childElementsAfterLabel = childElements.tail
 
-                    // Get the resource's file metadata, if any. This represents a file that has already been stored by Sipi.
+                    // Get the name of the resource's file, if any. This represents a file that in Sipi's temporary storage.
                     // If provided, it must be the second child element of the resource element.
-                    val file: Option[ReadFileV1] = childElementsAfterLabel.headOption match {
+                    val file: Option[String] = childElementsAfterLabel.headOption match {
                         case Some(secondChildElem) =>
                             if (secondChildElem.label == "file") {
-                                val path = Paths.get(secondChildElem.attribute("path").get.text)
-
-                                if (!path.isAbsolute) {
-                                    throw BadRequestException(s"File path $path in resource '$clientIDForResource' is not absolute")
-                                }
-
-                                Some(ReadFileV1(
-                                    file = path.toFile,
-                                    mimeType = secondChildElem.attribute("mimetype").get.text
-                                ))
+                                Some(secondChildElem.attribute("filename").get.text)
                             } else {
                                 None
                             }
@@ -791,12 +786,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Given an XML element representing a property value in an XML import, returns a [[CreateResourceValueV1]]
-          * describing the value to be created.
-          *
-          * @param node the XML element.
-          * @return a [[CreateResourceValueV1]] requesting the creation of the value described by the element.
-          */
+         * Given an XML element representing a property value in an XML import, returns a [[CreateResourceValueV1]]
+         * describing the value to be created.
+         *
+         * @param node the XML element.
+         * @return a [[CreateResourceValueV1]] requesting the creation of the value described by the element.
+         */
         def knoraDataTypeXml(node: Node): CreateResourceValueV1 = {
             val knoraType: Seq[Node] = node.attribute("knoraType").getOrElse(throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'"))
             val elementValue = node.text
@@ -884,6 +879,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                 throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
                         }
 
+                    case "time_value" =>
+                        val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(elementValue, throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue"))
+                        CreateResourceValueV1(time_value = Some(timeStamp.toString))
+
                     case "geoname_value" =>
                         CreateResourceValueV1(geoname_value = Some(elementValue))
                     case other => throw BadRequestException(s"Invalid 'knoraType' in element '${node.label}': '$other'")
@@ -941,7 +940,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         log = log
                     )
             } ~ post {
-                // Create a new resource with he given type and possibly a file (GUI-case).
+                // Create a new resource with the given type and possibly a file.
                 // The binary file is already managed by Sipi.
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[CreateResourceApiRequestV1]) { apiRequest =>
@@ -950,100 +949,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             userProfile <- getUserADM(requestContext)
                             request <- makeCreateResourceRequestMessage(apiRequest = apiRequest, userADM = userProfile)
                         } yield request
-
-                        RouteUtilV1.runJsonRouteWithFuture(
-                            requestMessageF = requestMessageFuture,
-                            requestContext = requestContext,
-                            settings = settings,
-                            responderManager = responderManager,
-                            log = log
-                        )
-                }
-            } ~ post {
-                // Create a new resource with the given type, properties, and binary data (file) (non GUI-case).
-                // The binary data are contained in the request and have to be temporarily stored by Knora.
-                // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
-                entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
-                    requestContext =>
-
-                        log.debug("/v1/resources - POST - Multipart.FormData - Route")
-
-                        type Name = String
-
-                        val JSON_PART = "json"
-                        val FILE_PART = "file"
-
-                        val receivedFile = Promise[File]
-
-                        log.debug(s"receivedFile is completed before: ${receivedFile.isCompleted}")
-
-                        // collect all parts of the multipart as it arrives into a map
-                        val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
-                            case b: BodyPart if b.name == JSON_PART =>
-                                log.debug(s"inside allPartsFuture - processing $JSON_PART")
-                                b.toStrict(2.seconds).map(strict => (b.name, strict.entity.data.utf8String.parseJson))
-
-                            case b: BodyPart if b.name == FILE_PART =>
-                                log.debug(s"inside allPartsFuture - processing $FILE_PART")
-                                val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                                val tmpFile = FileUtil.createTempFile(settings)
-                                val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
-                                written.map { written =>
-                                    //println(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
-                                    receivedFile.success(tmpFile)
-                                    (b.name, FileInfo(b.name, b.filename.get, b.entity.contentType))
-                                }
-
-                            case b: BodyPart if b.name.isEmpty => throw BadRequestException("part of HTTP multipart request has no name")
-                            case b: BodyPart => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
-                        }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
-
-                        // this file will be deleted by Knora once it is not needed anymore
-                        // TODO: add a script that cleans files in the tmp location that have a certain age
-                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
-                        // TODO: how to check if the user has sent multiple files?
-
-                        val requestMessageFuture: Future[ResourceCreateRequestV1] = for {
-
-                            userADM <- getUserADM(requestContext)
-                            userProfile = userADM.asUserProfileV1
-
-                            allParts <- allPartsFuture
-                            // get the json params and turn them into a case class
-                            apiRequest: CreateResourceApiRequestV1 = try {
-                                allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).asInstanceOf[JsValue].convertTo[CreateResourceApiRequestV1]
-                            } catch {
-                                case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
-                            }
-
-                            // check if the API request contains file information: this is illegal for this route
-                            _ = if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
-
-                            sourcePath <- receivedFile.future
-
-                            // get the file info containing the original filename and content type.
-                            fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
-                            originalFilename = fileInfo.fileName
-                            originalMimeType = fileInfo.contentType.toString
-
-                            projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
-
-                            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
-
-                            sipiConvertPathRequest = SipiConversionPathRequestV1(
-                                originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
-                                originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
-                                projectShortcode = projectResponse.project.shortcode,
-                                source = sourcePath,
-                                userProfile = userProfile
-                            )
-
-                            requestMessage <- makeCreateResourceRequestMessage(
-                                apiRequest = apiRequest,
-                                multipartConversionRequest = Some(sipiConvertPathRequest),
-                                userADM = userADM
-                            )
-                        } yield requestMessage
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessageF = requestMessageFuture,
@@ -1278,27 +1183,27 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     /**
-      * Represents an XML import schema corresponding to an ontology.
-      *
-      * @param namespaceInfo information about the schema's namespace.
-      * @param schemaXml     the XML text of the schema.
-      */
+     * Represents an XML import schema corresponding to an ontology.
+     *
+     * @param namespaceInfo information about the schema's namespace.
+     * @param schemaXml     the XML text of the schema.
+     */
     case class XmlImportSchemaV1(namespaceInfo: XmlImportNamespaceInfoV1, schemaXml: String)
 
     /**
-      * Represents a bundle of XML import schemas corresponding to ontologies.
-      *
-      * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
-      * @param schemas       a map of XML namespaces to schemas.
-      */
+     * Represents a bundle of XML import schemas corresponding to ontologies.
+     *
+     * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
+     * @param schemas       a map of XML namespaces to schemas.
+     */
     case class XmlImportSchemaBundleV1(mainNamespace: IRI, schemas: Map[IRI, XmlImportSchemaV1])
 
     /**
-      * An implementation of [[LSResourceResolver]] that resolves resources from a [[XmlImportSchemaBundleV1]].
-      * This is used to allow the XML schema validator to load additional schemas during XML import data validation.
-      *
-      * @param schemaBundle an [[XmlImportSchemaBundleV1]].
-      */
+     * An implementation of [[LSResourceResolver]] that resolves resources from a [[XmlImportSchemaBundleV1]].
+     * This is used to allow the XML schema validator to load additional schemas during XML import data validation.
+     *
+     * @param schemaBundle an [[XmlImportSchemaBundleV1]].
+     */
     class SchemaBundleResolver(schemaBundle: XmlImportSchemaBundleV1) extends LSResourceResolver {
         private val contents: Map[IRI, Array[Byte]] = schemaBundle.schemas.map {
             case (namespace, schema) => namespace -> schema.schemaXml.getBytes(StandardCharsets.UTF_8)

@@ -1,0 +1,210 @@
+
+{
+    "rdfs:label": "The knora-api ontology in the complex schema",
+    "@graph": [
+        {
+            "knora-api:isValueClass": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:DateBase"
+                },
+                {
+                    "@id": "knora-api:Value"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasCalendar"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasEndDay"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasEndEra"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasEndMonth"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasEndYear"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasStartDay"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasStartEra"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasStartMonth"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:dateValueHasStartYear"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueAsString"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueCreationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasUUID"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "rdfs:comment": "Represents a Knora date value",
+            "@type": "owl:Class",
+            "@id": "knora-api:DateValue"
+        }
+    ],
+    "knora-api:attachedToProject": {
+        "@id": "http://www.knora.org/ontology/knora-admin#SystemProject"
+    },
+    "knora-api:isBuiltIn": true,
+    "@type": "owl:Ontology",
+    "@id": "http://api.knora.org/ontology/knora-api/v2",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    }
+}

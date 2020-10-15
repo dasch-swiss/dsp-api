@@ -20,13 +20,14 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class TriplestoreMessagesSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
+class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADMJsonProtocol {
 
     "Conversion from case class to JSON and back" should {
 

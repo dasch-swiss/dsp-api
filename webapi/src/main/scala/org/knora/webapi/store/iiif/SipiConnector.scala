@@ -22,6 +22,7 @@ package org.knora.webapi.store.iiif
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
@@ -30,31 +31,28 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.GetImageMetadataResponseV2JsonProtocol._
-import org.knora.webapi.messages.store.sipimessages.RepresentationV1JsonProtocol._
-import org.knora.webapi.messages.store.sipimessages.SipiConstants.FileType
+import org.knora.webapi.exceptions.{BadRequestException, SipiException}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.JWTHelper
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings}
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
-import org.knora.webapi.util.{SipiUtil, StringFormatter}
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, NotImplementedException, Settings, SipiException}
+import org.knora.webapi.util.SipiUtil
 import spray.json._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 /**
-  * Makes requests to Sipi.
-  */
+ * Makes requests to Sipi.
+ */
 class SipiConnector extends Actor with ActorLogging {
 
     implicit val system: ActorSystem = context.system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    private val settings = Settings(system)
+    private val settings = KnoraSettings(system)
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -63,197 +61,84 @@ class SipiConnector extends Actor with ActorLogging {
     private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
 
     private val sipiRequestConfig = RequestConfig.custom()
-            .setConnectTimeout(sipiTimeoutMillis)
-            .setConnectionRequestTimeout(sipiTimeoutMillis)
-            .setSocketTimeout(sipiTimeoutMillis)
-            .build()
+        .setConnectTimeout(sipiTimeoutMillis)
+        .setConnectionRequestTimeout(sipiTimeoutMillis)
+        .setSocketTimeout(sipiTimeoutMillis)
+        .build()
 
     private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     override def receive: Receive = {
-        case convertPathRequest: SipiConversionPathRequestV1 => try2Message(sender(), convertPathV1(convertPathRequest), log)
-        case convertFileRequest: SipiConversionFileRequestV1 => try2Message(sender(), convertFileV1(convertFileRequest), log)
-        case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
-        case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
-        case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
-        case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetXsltTransformationRequestV2(fileUrl, requestingUser), log)
+        case getFileMetadataRequest: GetFileMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
+        case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
+        case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
+        case getTextFileRequest: SipiGetTextFileRequest => try2Message(sender(), sipiGetTextFileRequest(getTextFileRequest), log)
         case IIIFServiceGetStatus => try2Message(sender(), iiifGetStatus(), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
-      * Convert a file that has been sent to Knora (non GUI-case).
-      *
-      * @param conversionRequest the information about the file (uploaded by Knora).
-      * @return a [[SipiConversionResponseV1]] representing the file values to be added to the triplestore.
-      */
-    private def convertPathV1(conversionRequest: SipiConversionPathRequestV1): Try[SipiConversionResponseV1] = {
-        val url = s"${settings.internalSipiImageConversionUrlV1}/${settings.sipiPathConversionRouteV1}"
+     * Represents a response from Sipi's `knora.json` route.
+     *
+     * @param originalFilename the file's original filename, if known.
+     * @param originalMimeType the file's original MIME type.
+     * @param internalMimeType the file's internal MIME type.
+     * @param width            the file's width in pixels, if applicable.
+     * @param height           the file's height in pixels, if applicable.
+     * @param numpages         the number of pages in the file, if applicable.
+     */
+    case class SipiKnoraJsonResponse(originalFilename: Option[String],
+                                     originalMimeType: Option[String],
+                                     internalMimeType: String,
+                                     width: Option[Int],
+                                     height: Option[Int],
+                                     numpages: Option[Int]) {
+        if (originalFilename.contains("")) {
+            throw SipiException(s"Sipi returned an empty originalFilename")
+        }
 
-        callSipiConvertRoute(url, conversionRequest)
+        if (originalMimeType.contains("")) {
+            throw SipiException(s"Sipi returned an empty originalMimeType")
+        }
+    }
+
+    object SipiKnoraJsonResponseProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+        implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat6(SipiKnoraJsonResponse)
     }
 
     /**
-      * Convert a file that is already managed by Sipi (GUI-case).
-      *
-      * @param conversionRequest the information about the file (managed by Sipi).
-      * @return a [[SipiConversionResponseV1]] representing the file values to be added to the triplestore.
-      */
-    private def convertFileV1(conversionRequest: SipiConversionFileRequestV1): Try[SipiConversionResponseV1] = {
-        val url = s"${settings.internalSipiImageConversionUrlV1}/${settings.sipiFileConversionRouteV1}"
+     * Asks Sipi for metadata about a file.
+     *
+     * @param getFileMetadataRequest the request.
+     * @return a [[GetFileMetadataResponse]] containing the requested metadata.
+     */
+    private def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Try[GetFileMetadataResponse] = {
+        import SipiKnoraJsonResponseProtocol._
 
-        callSipiConvertRoute(url, conversionRequest)
-    }
-
-    /**
-      * Makes a conversion request to Sipi and creates a [[SipiConversionResponseV1]]
-      * containing the file values to be added to the triplestore.
-      *
-      * @param urlPath           the Sipi route to be called.
-      * @param conversionRequest the message holding the information to make the request.
-      * @return a [[SipiConversionResponseV1]].
-      */
-    private def callSipiConvertRoute(urlPath: String, conversionRequest: SipiConversionRequestV1): Try[SipiConversionResponseV1] = {
-        val context: HttpClientContext = HttpClientContext.create
-
-        val formParams = new util.ArrayList[NameValuePair]()
-
-        for ((key, value) <- conversionRequest.toFormData) {
-            formParams.add(new BasicNameValuePair(key, value))
-        }
-
-        val postEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-        val httpPost = new HttpPost(urlPath)
-        httpPost.setEntity(postEntity)
-
-        val conversionResultTry: Try[String] = Try {
-            var maybeResponse: Option[CloseableHttpResponse] = None
-
-            try {
-                maybeResponse = Some(httpClient.execute(targetHost, httpPost, context))
-
-                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
-                    case None => ""
-                }
-
-                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-                val statusCategory: Int = statusCode / 100
-
-                // Was the request successful?
-                if (statusCategory == 2) {
-                    // Yes.
-                    responseEntityStr
-                } else {
-                    // No. Throw an appropriate exception.
-                    val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
-
-                    if (statusCategory == 4) {
-                        throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
-                    } else {
-                        throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
-                    }
-                }
-            } finally {
-                maybeResponse match {
-                    case Some(response) => response.close()
-                    case None => ()
-                }
-            }
-        }
-
-        //
-        // handle unsuccessful requests to Sipi
-        //
-        val recoveredConversionResultTry = conversionResultTry.recoverWith {
-            case badRequestException: BadRequestException => throw badRequestException
-            case sipiException: SipiException => throw sipiException
-            case e: Exception => throw SipiException("Failed to connect to Sipi", e, log)
-        }
+        val knoraInfoUrl = getFileMetadataRequest.fileUrl + "/knora.json"
+        val sipiRequest = new HttpGet(knoraInfoUrl)
 
         for {
-            responseAsStr: String <- recoveredConversionResultTry
-
-            /* get json from response body */
-            responseAsJson: JsValue = JsonParser(responseAsStr)
-
-            // get file type from Sipi response
-            fileType: String = responseAsJson.asJsObject.fields.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
-                case JsString(ftype: String) => ftype
-                case other => throw SipiException(message = s"Sipi returned an invalid file type: $other")
-            }
-
-            // turn fileType returned by Sipi (a string) into an enum
-            fileTypeEnum: FileType.Value = SipiConstants.FileType.lookup(fileType)
-
-            // create the apt case class depending on the file type returned by Sipi
-            fileValueV1: FileValueV1 = fileTypeEnum match {
-                case SipiConstants.FileType.IMAGE =>
-                    // parse response as a [[SipiImageConversionResponse]]
-                    val imageConversionResult = try {
-                        responseAsJson.convertTo[SipiImageConversionResponse]
-                    } catch {
-                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
-                    }
-
-                    StillImageFileValueV1(
-                        internalMimeType = stringFormatter.toSparqlEncodedString(imageConversionResult.mimetype_full, throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${imageConversionResult.mimetype_full}")),
-                        originalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.original_filename, throw BadRequestException(s"The original filename returned by Sipi is invalid: '${imageConversionResult.original_filename}")),
-                        originalMimeType = Some(stringFormatter.toSparqlEncodedString(imageConversionResult.original_mimetype, throw BadRequestException(s"The original MIME type returned by Sipi is invalid: '${imageConversionResult.original_mimetype}"))),
-                        projectShortcode = conversionRequest.projectShortcode,
-                        dimX = imageConversionResult.nx_full,
-                        dimY = imageConversionResult.ny_full,
-                        internalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.filename_full, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${imageConversionResult.filename_full}"))
-                    )
-
-                case SipiConstants.FileType.TEXT =>
-
-                    // parse response as a [[SipiTextResponse]]
-                    val textStoreResult = try {
-                        responseAsJson.convertTo[SipiTextResponse]
-                    } catch {
-                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiTextResponse", e = e, log = log)
-                    }
-
-                    TextFileValueV1(
-                        internalMimeType = stringFormatter.toSparqlEncodedString(textStoreResult.mimetype, throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${textStoreResult.mimetype}")),
-                        internalFilename = stringFormatter.toSparqlEncodedString(textStoreResult.filename, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.filename}")),
-                        originalFilename = stringFormatter.toSparqlEncodedString(textStoreResult.original_filename, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.original_filename}")),
-                        originalMimeType = Some(stringFormatter.toSparqlEncodedString(textStoreResult.mimetype, throw BadRequestException(s"The orignal MIME type returned by Sipi is invalid: '${textStoreResult.original_mimetype}"))),
-                        projectShortcode = conversionRequest.projectShortcode
-                    )
-
-                case unknownType => throw NotImplementedException(s"Could not handle file type $unknownType")
-
-                // TODO: add missing file types
-            }
-
-        } yield SipiConversionResponseV1(fileValueV1, file_type = fileTypeEnum)
+            sipiResponseStr <- doSipiRequest(sipiRequest)
+            sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
+        } yield
+            GetFileMetadataResponse(
+                originalFilename = sipiResponse.originalFilename,
+                originalMimeType = sipiResponse.originalMimeType,
+                internalMimeType = sipiResponse.internalMimeType,
+                width = sipiResponse.width,
+                height = sipiResponse.height,
+                pageCount = sipiResponse.numpages
+            )
     }
 
     /**
-      * Asks Sipi for metadata about a file.
-      *
-      * @param getFileMetadataRequestV2 the request.
-      * @return a [[GetImageMetadataResponseV2]] containing the requested metadata.
-      */
-    private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] = {
-        val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
-
-        val request = new HttpGet(knoraInfoUrl)
-
-        for {
-            responseStr <- doSipiRequest(request)
-        } yield responseStr.parseJson.convertTo[GetImageMetadataResponseV2]
-    }
-
-    /**
-      * Asks Sipi to move a file from temporary storage to permanent storage.
-      *
-      * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-      * @return a [[SuccessResponseV2]].
-      */
-    private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] = {
+     * Asks Sipi to move a file from temporary storage to permanent storage.
+     *
+     * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
+     * @return a [[SuccessResponseV2]].
+     */
+    private def moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest): Try[SuccessResponseV2] = {
         val token: String = JWTHelper.createToken(
             userIri = moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
             secret = settings.jwtSecretKey,
@@ -284,12 +169,12 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Asks Sipi to delete a temporary file.
-      *
-      * @param deleteTemporaryFileRequestV2 the request.
-      * @return a [[SuccessResponseV2]].
-      */
-    private def deleteTemporaryFileV2(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2): Try[SuccessResponseV2] = {
+     * Asks Sipi to delete a temporary file.
+     *
+     * @param deleteTemporaryFileRequestV2 the request.
+     * @return a [[SuccessResponseV2]].
+     */
+    private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] = {
         val token: String = JWTHelper.createToken(
             userIri = deleteTemporaryFileRequestV2.requestingUser.id,
             secret = settings.jwtSecretKey,
@@ -313,22 +198,26 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Asks Sipi for a file.
-      * @param xsltFileUrl the file's URL.
-      * @param requestingUser the user making the request.
-      */
-    private def sipiGetXsltTransformationRequestV2(xsltFileUrl: String, requestingUser: UserADM): Try[SipiGetTextFileResponse] = {
-        // ask Sipi to return the XSL transformation
-        val request = new HttpGet(xsltFileUrl)
+     * Asks Sipi for a text file used internally by Knora.
+     *
+     * @param textFileRequest the request message.
+     */
+    private def sipiGetTextFileRequest(textFileRequest: SipiGetTextFileRequest): Try[SipiGetTextFileResponse] = {
+        val httpRequest = new HttpGet(textFileRequest.fileUrl)
 
-        for {
-            responseStr <- doSipiRequest(request)
+        val sipiResponseTry: Try[SipiGetTextFileResponse] = for {
+            responseStr <- doSipiRequest(httpRequest)
         } yield SipiGetTextFileResponse(responseStr)
+
+        sipiResponseTry.recover {
+            case badRequestException: BadRequestException => throw SipiException(s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}")
+            case sipiException: SipiException => throw SipiException(s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}", sipiException.cause)
+        }
     }
 
     /**
-      * Tries to access the IIIF Service.
-      */
+     * Tries to access the IIIF Service.
+     */
     private def iiifGetStatus(): Try[IIIFServiceStatusResponse] = {
         val request = new HttpGet(settings.internalSipiBaseUrl + "/server/test.html")
 
@@ -341,11 +230,11 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Makes an HTTP request to Sipi and returns the response.
-      *
-      * @param request the HTTP request.
-      * @return Sipi's response.
-      */
+     * Makes an HTTP request to Sipi and returns the response.
+     *
+     * @param request the HTTP request.
+     * @return Sipi's response.
+     */
     private def doSipiRequest(request: HttpRequest): Try[String] = {
         val httpContext: HttpClientContext = HttpClientContext.create
 

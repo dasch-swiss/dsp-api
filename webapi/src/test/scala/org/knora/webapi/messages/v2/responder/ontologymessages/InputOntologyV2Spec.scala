@@ -21,12 +21,13 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import java.time.Instant
 
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.util.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2Complex, BadRequestException, CoreSpec}
+import org.knora.webapi.{ApiV2Complex, CoreSpec}
 
 /**
   * Tests [[InputOntologyV2]].
@@ -42,7 +43,10 @@ class InputOntologyV2Spec extends CoreSpec {
                   |{
                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |  "@type" : "owl:Ontology",
-                  |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                  |  "knora-api:lastModificationDate" : {
+                  |    "@type" : "xsd:dateTimeStamp",
+                  |    "@value" : "2017-12-19T15:23:42.166Z"
+                  |  },
                   |  "@graph" : [ {
                   |    "@id" : "anything:hasName",
                   |    "@type" : "owl:ObjectProperty",
@@ -93,7 +97,10 @@ class InputOntologyV2Spec extends CoreSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "2017-12-19T15:23:42.166Z"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:WildThing",
                    |    "@type" : "owl:Class",
@@ -136,7 +143,10 @@ class InputOntologyV2Spec extends CoreSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "2017-12-19T15:23:42.166Z"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:WildThing",
                    |    "@type" : "owl:Class",

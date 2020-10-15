@@ -19,76 +19,69 @@
 
 package org.knora.webapi.routing.admin
 
-import java.net.URLEncoder
+import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.{Get, addCredentials}
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.ActorMaterializer
-import io.swagger.annotations.Api
+import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
-import org.knora.webapi.util.clientapi._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
+
 
 object PermissionsRouteADM {
-    val PermissionsBasePath = PathMatcher("admin" / "permissions")
-    val PermissionsBasePathString: String = "/admin/permissions"
+    val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 }
+
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with PermissionsADMJsonProtocol {
 
     import PermissionsRouteADM._
 
     /**
-     * The name of this [[ClientEndpoint]].
+     * Returns the route.
      */
-    override val name: String = "PermissionsEndpoint"
+    override def knoraApiPath: Route =
+        getAdministrativePermissionForProjectGroup ~
+        getAdministrativePermissionsForProject ~
+        getDefaultObjectAccessPermissionsForProject ~
+        getPermissionsForProject ~
+        createAdministrativePermission ~
+        createDefaultObjectAccessPermission
 
-    /**
-     * The directory name to be used for this endpoint's code.
-     */
-    override val directoryName: String = "permissions"
 
-    /**
-     * The URL path of of this [[ClientEndpoint]].
-     */
-    override val urlPath: String = "/permissions"
+    private def getAdministrativePermissionForProjectGroup: Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
+        (projectIri, groupIri) =>
+            get {
+                requestContext =>
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
-    /**
-     * A description of this [[ClientEndpoint]].
-     */
-    override val description: String = "An endpoint for working with Knora permissions."
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+    }
 
-    // Classes used in client function definitions.
-
-    private val AdministrativePermissionResponse = classRef(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse.toSmartIri)
-
-    private val projectIri: String = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
-    private val groupIri: String = URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
-
-    override def knoraApiPath: Route = getAdministrativePermission
-
-    private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
+    private def getAdministrativePermissionsForProject: Route = path(PermissionsBasePath / "ap" / Segment) { projectIri =>
         get {
             requestContext =>
-                val params = requestContext.request.uri.query().toMap
-                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield permissionType match {
-                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-                }
+                } yield AdministrativePermissionsForProjectGetRequestADM(
+                    projectIri = projectIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -100,46 +93,100 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         }
     }
 
-    // #getAdministrativePermissionFunction
-    private val getAdministrativePermissionFunction: ClientFunction =
-        "getAdministrativePermission" description "Gets the administrative permission for a project and group." params(
-            "projectIri" description "The project IRI." paramType UriDatatype,
-            "groupIri" description "The group IRI." paramType UriDatatype,
-            "permissionType" description "The permission type." paramOptionType StringDatatype
-        ) doThis {
-            httpGet(
-                path = arg("projectIri") / arg("groupIri"),
-                params = Seq("permissionType" -> arg("permissionType"))
-            )
-        } returns AdministrativePermissionResponse
-    // #getAdministrativePermissionFunction
+    private def getDefaultObjectAccessPermissionsForProject: Route = path(PermissionsBasePath / "doap" / Segment) { projectIri =>
+        get {
+            requestContext =>
+                val requestMessage = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield DefaultObjectAccessPermissionsForProjectGetRequestADM(
+                    projectIri = projectIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
 
-    private def getAdministrativePermissionTestResponse: Future[SourceCodeFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/$projectIri/$groupIri"))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-administrative-permission-response"),
-            text = responseStr
-        )
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) {
+        (projectIri) =>
+            get {
+                requestContext =>
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield PermissionsForProjectGetRequestADM(
+                        projectIri = projectIri,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
     }
 
     /**
-     * The functions defined by this [[ClientEndpoint]].
+     * Create a new administrative permission
      */
-    override val functions: Seq[ClientFunction] = Seq(
-        getAdministrativePermissionFunction
-    )
+    private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
+        post {
+            /* create a new administrative permission */
+                entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield AdministrativePermissionCreateRequestADM(
+                            createRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+        }
+    }
 
     /**
-     * Returns test data for this endpoint.
-     *
-     * @return a set of test data files to be used for testing this endpoint.
+     * Create default object access permission
      */
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        Future.sequence {
-            Set(
-                getAdministrativePermissionTestResponse
-            )
+    private def createDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap") {
+        post {
+            /* create a new default object access permission */
+            entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield DefaultObjectAccessPermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 }

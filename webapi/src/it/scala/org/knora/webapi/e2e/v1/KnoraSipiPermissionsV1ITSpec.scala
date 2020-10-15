@@ -30,12 +30,9 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
-
-    private val username = "root@example.com"
-    private val password = "test"
 
     "Requesting Image" should {
 

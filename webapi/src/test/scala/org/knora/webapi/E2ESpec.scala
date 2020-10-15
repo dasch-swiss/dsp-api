@@ -27,17 +27,22 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.core.Core
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.util.{FileUtil, StartupUtils}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
 import resource.managed
 import spray.json._
 
@@ -54,22 +59,22 @@ object E2ESpec {
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-    def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
     /* needed by the core trait */
 
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // can be overridden in individual spec
@@ -89,8 +94,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service without loading of the ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
+        // start the knora service, loading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -108,24 +113,24 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+        val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 
     protected def responseToString(httpResponse: HttpResponse): String = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+        Await.result(responseBodyFuture, 10.seconds)
     }
 
     protected def doGetRequest(urlPath: String): String = {
@@ -147,8 +152,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
-        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(5.seconds).map(_.data.toArray)
-        Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(10.seconds).map(_.data.toArray)
+        Await.result(responseBodyFuture, 10.seconds)
     }
 
     protected def getZipContents(responseBytes: Array[Byte]): Set[String] = {
@@ -185,6 +190,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
 
     /**
      * Reads or writes a test data file.
+     * The written test data files can be found under:
+     * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
      *
      * @param responseAsString the API response received from Knora.
      * @param file             the file in which the expected API response is stored.
@@ -193,10 +200,15 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
      */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString)
+            // Per default only read access is allowed in the bazel sandbox.
+            // This workaround allows to save test output.
+            val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+            val newOutputFile = new File(testOutputDir, file.getPath)
+            newOutputFile.getParentFile.mkdirs()
+            FileUtil.writeTextFile(newOutputFile, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
-            FileUtil.readTextFile(file)
+            FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
         }
     }
 }

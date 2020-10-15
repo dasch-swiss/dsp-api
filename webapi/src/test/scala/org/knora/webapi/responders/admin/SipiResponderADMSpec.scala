@@ -25,6 +25,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -42,7 +43,7 @@ object SipiResponderADMSpec {
 class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     // The default timeout for receiving reply messages from actors.

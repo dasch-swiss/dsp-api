@@ -20,20 +20,20 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.ActorSystem
-import org.knora.webapi.{Settings, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}
+import org.knora.webapi.settings.{KnoraSettings, KnoraSettingsImpl}
 
-
+// FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 object ResourcesResponderV1SpecFullData {
 
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
-    val settings: SettingsImpl = Settings(system)
+    val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     // The expected response to a "full" resource request for a book.
-    val expectedBookResourceFullResponse = ResourceFullResponseV1(
+    val expectedBookResourceFullResponse: ResourceFullResponseV1 = ResourceFullResponseV1(
         access = "OK",
         incoming = Vector(
             IncomingV1(
@@ -419,7 +419,7 @@ object ResourcesResponderV1SpecFullData {
     )
 
     // The expected response to a "full" resource request for a page.
-    val expectedPageResourceFullResponse = ResourceFullResponseV1(
+    val expectedPageResourceFullResponse: ResourceFullResponseV1 = ResourceFullResponseV1(
         access = "OK",
         incoming = Nil,
         props = Some(PropsV1(properties = Vector(
@@ -432,7 +432,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                         ny = Some(128),
                         nx = Some(95),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -442,7 +442,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                         ny = Some(110),
                         nx = Some(82),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -452,7 +452,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                         ny = Some(219),
                         nx = Some(163),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -462,7 +462,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                         ny = Some(438),
                         nx = Some(327),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -472,7 +472,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                         ny = Some(876),
                         nx = Some(653),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -482,7 +482,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                         ny = Some(1753),
                         nx = Some(1307),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     ),
                     LocationV1(
@@ -492,7 +492,7 @@ object ResourcesResponderV1SpecFullData {
                         path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                         ny = Some(3505),
                         nx = Some(2613),
-                        origname = "ad+s167_druck1=0001.tif",
+                        origname = Some("ad+s167_druck1=0001.tif"),
                         format_name = "JPEG2000"
                     )
                 ),
@@ -758,7 +758,7 @@ object ResourcesResponderV1SpecFullData {
                 path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                 ny = Some(3505),
                 nx = Some(2613),
-                origname = "ad+s167_druck1=0001.tif",
+                origname = Some("ad+s167_druck1=0001.tif"),
                 format_name = "JPEG2000"
             )),
             locations = Some(Vector(
@@ -769,7 +769,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                     ny = Some(128),
                     nx = Some(95),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 ),
                 LocationV1(
@@ -779,7 +779,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                     ny = Some(110),
                     nx = Some(82),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 ),
                 LocationV1(
@@ -789,7 +789,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                     ny = Some(219),
                     nx = Some(163),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 ),
                 LocationV1(
@@ -799,7 +799,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                     ny = Some(438),
                     nx = Some(327),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 ),
                 LocationV1(
@@ -809,7 +809,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                     ny = Some(876),
                     nx = Some(653),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 ),
                 LocationV1(
@@ -819,7 +819,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                     ny = Some(1753),
                     nx = Some(1307),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 ),
                 LocationV1(
@@ -829,7 +829,7 @@ object ResourcesResponderV1SpecFullData {
                     path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                     ny = Some(3505),
                     nx = Some(2613),
-                    origname = "ad+s167_druck1=0001.tif",
+                    origname = Some("ad+s167_druck1=0001.tif"),
                     format_name = "JPEG2000"
                 )
             )),
@@ -840,7 +840,7 @@ object ResourcesResponderV1SpecFullData {
                 path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                 ny = Some(128),
                 nx = Some(95),
-                origname = "ad+s167_druck1=0001.tif",
+                origname = Some("ad+s167_druck1=0001.tif"),
                 format_name = "JPEG2000"
             )),
             restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
@@ -853,7 +853,7 @@ object ResourcesResponderV1SpecFullData {
         ))
     )
 
-    val dummyMapping = MappingXMLtoStandoff(
+    val dummyMapping: MappingXMLtoStandoff = MappingXMLtoStandoff(
         namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
         defaultXSLTransformation = None
     )

@@ -21,7 +21,7 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.BadRequestException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
@@ -33,7 +33,10 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     /**
      * A routing function for the API that Sipi connects to.
      */
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
             get {

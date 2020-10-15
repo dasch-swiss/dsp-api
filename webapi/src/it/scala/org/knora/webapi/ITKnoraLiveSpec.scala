@@ -19,23 +19,33 @@
 
 package org.knora.webapi
 
+import java.io.File
+
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.core.Core
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{StartupUtils, StringFormatter}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
-import spray.json.{JsObject, _}
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.util.StartupUtils
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Suite}
+import spray.json._
 
-import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -46,18 +56,18 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraLiveSpec.defaultConfig)))
-    def this(name: String) = this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
+    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    def this() = this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
     /* needed by the core trait (represents the KnoraTestCore trait)*/
     implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: SettingsImpl = Settings(system)
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // can be overridden in individual spec
@@ -66,20 +76,23 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
+    protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
+
+
 
     override def beforeAll: Unit = {
 
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start knora without loading ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = true)
+        // Start Knora, reading data from the repository
+        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -98,7 +111,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     protected def checkIfSipiIsRunning(): Unit = {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
+        val request = Get(baseInternalSipiUrl + "/server/test.html")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
         if (response.status.isSuccess()) logger.info("Sipi is running.")
@@ -109,33 +122,122 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("Loading test data done.")
+        logger.info("... loading test data done.")
     }
 
-    protected def getResponseString(request: HttpRequest): String = {
+    protected def getResponseStringOrThrow(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
-        val responseBodyStr: String = Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
-        responseBodyStr
+        val responseBodyStr: String = Await.result(response.entity.toStrict(10999.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
+
+        if (response.status.isSuccess) {
+            responseBodyStr
+        } else {
+            throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
+        }
     }
 
     protected def checkResponseOK(request: HttpRequest): Unit = {
-        getResponseString(request)
+        getResponseStringOrThrow(request)
     }
 
     protected def getResponseJson(request: HttpRequest): JsObject = {
-        getResponseString(request).parseJson.asJsObject
+        getResponseStringOrThrow(request).parseJson.asJsObject
     }
 
-
-
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
+        val responseFuture: Future[HttpResponse] = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
 
     protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument = {
-        val responseBodyStr = getResponseString(request)
+        val responseBodyStr = getResponseStringOrThrow(request)
         JsonLDUtil.parseJsonLD(responseBodyStr)
+    }
+
+    /**
+     * Represents a file to be uploaded to Sipi.
+     *
+     * @param path     the path of the file.
+     * @param mimeType the MIME type of the file.
+     */
+    protected case class FileToUpload(path: String, mimeType: ContentType)
+
+    /**
+     * Represents an image file to be uploaded to Sipi.
+     *
+     * @param fileToUpload the file to be uploaded.
+     * @param width        the image's width in pixels.
+     * @param height       the image's height in pixels.
+     */
+    protected case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
+
+    /**
+     * Represents the information that Sipi returns about each file that has been uploaded.
+     *
+     * @param originalFilename the original filename that was submitted to Sipi.
+     * @param internalFilename Sipi's internal filename for the stored temporary file.
+     * @param temporaryUrl     the URL at which the temporary file can be accessed.
+     * @param fileType         `image`, `text`, or `document`.
+     */
+    protected case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryUrl: String, fileType: String)
+
+    /**
+     * Represents Sipi's response to a file upload request.
+     *
+     * @param uploadedFiles the information about each file that was uploaded.
+     */
+    protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
+
+    object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(SipiUploadResponseEntry)
+        implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+    }
+
+    import SipiUploadResponseJsonProtocol._
+
+    /**
+     * Uploads a file to Sipi and returns the information in Sipi's response.
+     *
+     * @param loginToken    the login token to be included in the request to Sipi.
+     * @param filesToUpload the files to be uploaded.
+     * @return a [[SipiUploadResponse]] representing Sipi's response.
+     */
+    protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
+        // Make a multipart/form-data request containing the files.
+
+        val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map {
+            fileToUpload =>
+                val fileToSend = new File(fileToUpload.path)
+                assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
+
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+        }
+
+        val sipiFormData = Multipart.FormData(formDataParts: _*)
+
+        // Send Sipi the file in a POST request.
+        val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
+
+        val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
+        // println(sipiUploadResponseJson.prettyPrint)
+        val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
+        // println(s"sipiUploadResponse: $sipiUploadResponse")
+
+        // Request the temporary file from Sipi.
+        for (responseEntry <- sipiUploadResponse.uploadedFiles) {
+            val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/max/0/default.jpg")
+            } else {
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/file")
+            }
+
+            checkResponseOK(sipiGetTmpFileRequest)
+        }
+
+        sipiUploadResponse
     }
 }

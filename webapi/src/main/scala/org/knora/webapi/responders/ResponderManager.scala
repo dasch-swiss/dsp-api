@@ -21,6 +21,7 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.event.LoggingReceive
+import org.knora.webapi.core.ActorMaker
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -43,131 +44,136 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.{ActorMaker, KnoraDispatchers}
+import org.knora.webapi.settings.KnoraDispatchers
 
 import scala.concurrent.ExecutionContext
 
 /**
-  * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
-  */
-class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) extends Actor with ActorLogging {
+ * This actor receives messages representing client requests, and forwards them to pools of specialised actors
+ * that it supervises.
+ *
+ * @param appActor the main application actor.
+ */
+class ResponderManager(appActor: ActorRef) extends Actor with ActorLogging {
     this: ActorMaker =>
 
     /**
-      * The responder's Akka actor system.
-      */
+     * The responder's Akka actor system.
+     */
     protected implicit val system: ActorSystem = context.system
 
     /**
-      * The Akka actor system's execution context for futures.
-      */
+     * The Akka actor system's execution context for futures.
+     */
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
 
     /**
-      * The responder data.
-      */
-    private val responderData = ResponderData(system, applicationStateActor)
+     * The responder data.
+     */
+    private val responderData = ResponderData(
+        system = system,
+        appActor = appActor
+    )
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing responder classes. To construct a default
     // responder, a subclass can call one of the protected methods below.
 
     /**
-      * Constructs the default [[CkanResponderV1]].
-      */
+     * Constructs the default [[CkanResponderV1]].
+     */
     protected final def makeDefaultCkanResponderV1: CkanResponderV1 = new CkanResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val ckanResponderV1: CkanResponderV1 = makeDefaultCkanResponderV1
 
     /**
-      * Constructs the default [[ResourcesResponderV1]].
-      */
+     * Constructs the default [[ResourcesResponderV1]].
+     */
     protected final def makeDefaultResourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val resourcesResponderV1: ResourcesResponderV1 = makeDefaultResourcesResponderV1
 
     /**
-      * Constructs the default [[ValuesResponderV1]].
-      */
+     * Constructs the default [[ValuesResponderV1]].
+     */
     protected final def makeDefaultValuesResponderV1: ValuesResponderV1 = new ValuesResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val valuesResponderV1: ValuesResponderV1 = makeDefaultValuesResponderV1
 
     /**
-      * Constructs the default [[StandoffResponderV1]].
-      */
+     * Constructs the default [[StandoffResponderV1]].
+     */
     protected final def makeDefaultStandoffResponderV1: StandoffResponderV1 = new StandoffResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val standoffResponderV1: StandoffResponderV1 = makeDefaultStandoffResponderV1
 
     /**
-      * Constructs the default [[UsersResponderV1]].
-      */
+     * Constructs the default [[UsersResponderV1]].
+     */
     protected final def makeDefaultUsersResponderV1: UsersResponderV1 = new UsersResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val usersResponderV1: UsersResponderV1 = makeDefaultUsersResponderV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
-      */
+     * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
+     */
     protected final def makeDefaultListsResponderV1: ListsResponderV1 = new ListsResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val listsResponderV1: ListsResponderV1 = makeDefaultListsResponderV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
-      */
+     * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
+     */
     protected final def makeDefaultSearchResponderV1: SearchResponderV1 = new SearchResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val searchResponderV1: SearchResponderV1 = makeDefaultSearchResponderV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
-      */
+     * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
+     */
     protected final def makeDefaultOntologyResponderV1: OntologyResponderV1 = new OntologyResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val ontologyResponderV1: OntologyResponderV1 = makeDefaultOntologyResponderV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
-      */
+     * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
+     */
     protected final def makeDefaultProjectsResponderV1: ProjectsResponderV1 = new ProjectsResponderV1(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val projectsResponderV1: ProjectsResponderV1 = makeDefaultProjectsResponderV1
-
-
 
 
     //
@@ -175,63 +181,63 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     //
 
     /**
-      * Constructs the default [[OntologyResponderV2]].
-      */
+     * Constructs the default [[OntologyResponderV2]].
+     */
     protected final def makeDefaultOntologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData)
 
     /**
-      * Constructs the default [[SearchResponderV2]].
-      */
+     * Constructs the default [[SearchResponderV2]].
+     */
     protected final def makeDefaultSearchResponderV2: SearchResponderV2 = new SearchResponderV2(responderData)
 
     /**
-      * Constructs the default [[ResourcesResponderV2]].
-      */
+     * Constructs the default [[ResourcesResponderV2]].
+     */
     protected final def makeDefaultResourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
 
     /**
-      * Constructs the default [[ValuesResponderV2]].
-      */
+     * Constructs the default [[ValuesResponderV2]].
+     */
     protected final def makeDefaultValuesResponderV2: ValuesResponderV2 = new ValuesResponderV2(responderData)
 
     /**
-      * Constructs the default [[StandoffResponderV2]].
-      */
+     * Constructs the default [[StandoffResponderV2]].
+     */
     protected final def makeDefaultStandoffResponderV2: StandoffResponderV2 = new StandoffResponderV2(responderData)
 
     /**
-      * Constructs the default [[ListsResponderV2]].
-      */
+     * Constructs the default [[ListsResponderV2]].
+     */
     protected final def makeDefaultListsResponderV2: ListsResponderV2 = new ListsResponderV2(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val ontologiesResponderV2: OntologyResponderV2 = makeDefaultOntologiesResponderV2
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val searchResponderV2: SearchResponderV2 = makeDefaultSearchResponderV2
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val resourcesResponderV2: ResourcesResponderV2 = makeDefaultResourcesResponderV2
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val valuesResponderV2: ValuesResponderV2 = makeDefaultValuesResponderV2
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val standoffResponderV2: StandoffResponderV2 = makeDefaultStandoffResponderV2
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val listsResponderV2: ListsResponderV2 = makeDefaultListsResponderV2
 
 
@@ -240,82 +246,82 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     //
 
     /**
-      * Constructs the default [[GroupsResponderADM]].
-      */
+     * Constructs the default [[GroupsResponderADM]].
+     */
     protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val groupsResponderADM: GroupsResponderADM = makeDefaultGroupsResponderADM
 
     /**
-      * Constructs the default [[ListsResponderADM]].
-      */
+     * Constructs the default [[ListsResponderADM]].
+     */
     protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val listsResponderADM: ListsResponderADM = makeDefaultListsResponderADM
 
     /**
-      * Constructs the default [[PermissionsResponderADM]].
-      */
+     * Constructs the default [[PermissionsResponderADM]].
+     */
     protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val permissionsResponderADM: PermissionsResponderADM = makeDefaultPermissionsResponderADM
 
     /**
-      * Constructs the default [[ProjectsResponderADM]].
-      */
+     * Constructs the default [[ProjectsResponderADM]].
+     */
     protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
-    protected val projectsResponderADMM: ProjectsResponderADM = makeDefaultProjectsResponderADM
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
+    protected val projectsResponderADM: ProjectsResponderADM = makeDefaultProjectsResponderADM
 
     /**
-      * Constructs the default [[StoresResponderADM]].
-      */
+     * Constructs the default [[StoresResponderADM]].
+     */
     protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val storeResponderADM: StoresResponderADM = makeDefaultStoreResponderADM
 
     /**
-      * Constructs the default [[UsersResponderADM]].
-      */
+     * Constructs the default [[UsersResponderADM]].
+     */
     protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected val usersResponderADM: UsersResponderADM = makeDefaultUsersResponderADM
 
     /**
-      * Constructs the default [[SipiResponderADM]].
-      */
+     * Constructs the default [[SipiResponderADM]].
+     */
     protected final def makeDefaultSipiResponderADM: SipiResponderADM = new SipiResponderADM(responderData)
 
     /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
+     * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+     */
     protected lazy val sipiRouterADM: SipiResponderADM = makeDefaultSipiResponderADM
 
 
     /**
-      * Each responder's receive method is called and only messages of the allowed type are supplied as the parameter.
-      * If a serious error occurs (i.e. an error that isn't the client's fault), the future2Message method first
-      * returns `Failure` to the sender, then throws an exception.
-      */
-    def receive = LoggingReceive {
+     * Each responder's receive method is called and only messages of the allowed type are supplied as the parameter.
+     * If a serious error occurs (i.e. an error that isn't the client's fault), the future2Message method first
+     * returns `Failure` to the sender, then throws an exception.
+     */
+    def receive: Receive = LoggingReceive {
         // Knora API V1 messages
         case ckanResponderRequestV1: CkanResponderRequestV1 => future2Message(sender(), ckanResponderV1 receive ckanResponderRequestV1, log)
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => future2Message(sender(), resourcesResponderV1 receive resourcesResponderRequestV1, log)
@@ -340,7 +346,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case groupsResponderRequestADM: GroupsResponderRequestADM => future2Message(sender(), groupsResponderADM receive groupsResponderRequestADM, log)
         case listsResponderRequest: ListsResponderRequestADM => future2Message(sender(), listsResponderADM receive listsResponderRequest, log)
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => future2Message(sender(), permissionsResponderADM receive permissionsResponderRequestADM, log)
-        case projectsResponderRequestADM: ProjectsResponderRequestADM => future2Message(sender(), projectsResponderADMM receive projectsResponderRequestADM, log)
+        case projectsResponderRequestADM: ProjectsResponderRequestADM => future2Message(sender(), projectsResponderADM receive projectsResponderRequestADM, log)
         case storeResponderRequestADM: StoreResponderRequestADM => future2Message(sender(), storeResponderADM receive storeResponderRequestADM, log)
         case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersResponderADM receive usersResponderRequestADM, log)
         case sipiResponderRequestADM: SipiResponderRequestADM => future2Message(sender(), sipiRouterADM receive sipiResponderRequestADM, log)

@@ -23,20 +23,22 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.SharedTestDataV1.IMAGES_PROJECT_IRI
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.{E2ESpec, IRI}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object ListsADME2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -46,62 +48,58 @@ object ListsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-@E2ETest
 class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
+
+    // Directory path for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    val rootCreds = CredentialsADM(
+    val rootCreds: CredentialsADM = CredentialsADM(
         SharedTestDataADM.rootUser,
         "test"
     )
 
-    val normalUserCreds = CredentialsADM(
+    val normalUserCreds: CredentialsADM = CredentialsADM(
         SharedTestDataADM.normalUser,
         "test"
     )
 
-    val images01UserCreds = CredentialsADM(
-        SharedTestDataADM.imagesUser01,
+    val anythingUserCreds: CredentialsADM = CredentialsADM(
+        SharedTestDataADM.anythingUser1,
         "test"
     )
 
-    val images02UserCreds = CredentialsADM(
-        SharedTestDataADM.imagesUser02,
+    val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+        SharedTestDataADM.anythingAdminUser,
         "test"
     )
-
-    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
-
-
-    private val normalUserIri = SharedTestDataADM.normalUser.id
-    private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
-
-    private val multiUserIri = SharedTestDataADM.multiuserUser.id
-    private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
-
-    private val wrongEmail = "wrong@example.com"
-    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
-
-    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
-
-    private val imagesProjectIri = SharedTestDataADM.imagesProject.id
-    private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
-
-    private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
-    private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
-
 
     private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
     private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
-    "The Lists Route ('/admin/lists')" when {
+    def addChildListNodeRequest(parentNodeIri: IRI,
+                                name: String,
+                                label: String,
+                                comment: String): String = {
+        s"""{
+           |    "parentNodeIri": "$parentNodeIri",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "name": "$name",
+           |    "labels": [{ "value": "$label", "language": "en"}],
+           |    "comments": [{ "value": "$comment", "language": "en"}]
+           |}""".stripMargin
+    }
+
+    "The Lists Route (/admin/lists)" when {
 
         "used to query information about lists" should {
 
@@ -118,6 +116,16 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // log.debug("lists: {}", lists)
 
                 lists.size should be (7)
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-lists-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "return all lists belonging to the images project" in {
@@ -132,6 +140,17 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // log.debug("lists: {}", lists)
 
                 lists.size should be (4)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-image-project-lists-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "return all lists belonging to the anything project" in {
@@ -146,6 +165,17 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // log.debug("lists: {}", lists)
 
                 lists.size should be (2)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-anything-project-lists-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "return basic list information" in {
@@ -160,6 +190,17 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
 
                 receivedListInfo.sorted should be (expectedListInfo.sorted)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-list-info-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "return a complete list" in {
@@ -172,6 +213,111 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
                 receivedList.listinfo.sorted should be (treeListInfo.sorted)
                 receivedList.children.map(_.sorted) should be (treeListNodes.map(_.sorted))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-list-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "return node info without children" in {
+                val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedListInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+
+                val expectedListInfo: ListChildNodeInfoADM = SharedListsTestDataADM.treeListNode01Info
+
+                receivedListInfo.sorted should be (expectedListInfo.sorted)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-list-node-info-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+        }
+
+        "given a custom Iri" should {
+
+            "create a list with the provided custom Iri" in {
+                val createListWithCustomIriRequest: String =
+                    s"""{
+                       |    "id": "${SharedTestDataADM.customListIRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
+                       |    "comments": []
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-list-with-custom-IRI-request",
+                            fileExtension = "json"
+                        ),
+                        text = createListWithCustomIriRequest
+                    )
+                )
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+                val listInfo = receivedList.listinfo
+                listInfo.id should be (SharedTestDataADM.customListIRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-list-with-custom-IRI-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
+
+                // duplicate list IRI
+                val params =
+                    s"""
+                       |{
+                       |    "id": "${SharedTestDataADM.customListIRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "labels": [{ "value": "New List", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+
+                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customListIRI}' already exists, try another one.")
+                invalidIri should be(true)
             }
         }
 
@@ -183,17 +329,24 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             val thirdChildIri = new MutableTestIri
 
             "create a list" in {
-
-                val params =
-                    s"""
-                       |{
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                val createListRequest: String =
+                    s"""{
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
                        |    "comments": []
-                       |}
-                """.stripMargin
+                       |}""".stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-list-request",
+                            fileExtension = "json"
+                        ),
+                        text = createListRequest
+                    )
+                )
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -201,7 +354,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
                 val listInfo = receivedList.listinfo
-                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+                listInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
@@ -213,27 +366,37 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val children = receivedList.children
                 children.size should be (0)
 
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-list-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
                 // store list IRI for next test
                 newListIri.set(listInfo.id)
             }
 
-            "return a 'ForbiddenException' if the user creating the list is not project or system admin" in {
+            "return a ForbiddenException if the user creating the list is not project or system admin" in {
                 val params =
                     s"""
                        |{
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
                        |    "comments": []
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
             }
 
-            "return a `BadRequestException` during list creation when payload is not correct" in {
+            "return a BadRequestException during list creation when payload is not correct" in {
 
                 // no project IRI
                 val params01 =
@@ -271,7 +434,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val params03 =
                     s"""
                        |{
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [],
                        |    "comments": []
                        |}
@@ -285,40 +448,160 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "update basic list information" in {
-                val params =
-                    s"""
-                       |{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}
-                """.stripMargin
 
+                val updateListInfo: String =
+                    s"""{
+                       |    "listIri": "${newListIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-list-info-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateListInfo
+                    )
+                )
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfo)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
                 val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-                receivedListInfo.projectIri should be (IMAGES_PROJECT_IRI)
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
                 val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
                 labels.size should be (2)
 
                 val comments = receivedListInfo.comments.stringLiterals
                 comments.size should be (2)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-list-info-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
-            "return a 'ForbiddenException' if the user updating the list is not project or system admin" in {
+            "update basic list information with a new name" in {
+                val updateListName =
+                    s"""{
+                       |    "listIri": "${newListIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "name": "a totally new name"
+                       |}""".stripMargin
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-list-name-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateListName
+                    )
+                )
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+                receivedListInfo.name should be (Some("a totally new name"))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-list-name-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update basic list information with repeated comment and label in different languages" in {
+
+                val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
+                    s"""{
+                       |    "listIri": "http://rdfh.ch/lists/0001/treeList",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |  "labels": [
+                       |    {"language": "en", "value": "Test List"},
+                       |    {"language": "se", "value": "Test List"}
+                       |  ],
+                       |  "comments": [
+                       |    {"language": "en", "value": "test"},
+                       |    {"language": "de", "value": "test"},
+                       |    {"language": "fr", "value": "test"},
+                       |     {"language": "it", "value": "test"}
+                       |  ]
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-list-info-comment-label-multiple-languages-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateListInfoWithRepeatedCommentAndLabelValuesRequest
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+                labels.size should be (2)
+
+                val comments = receivedListInfo.comments.stringLiterals
+                comments.size should be (4)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-list-info-comment-label-multiple-languages-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "return a ForbiddenException if the user updating the list is not project or system admin" in {
                 val params =
                     s"""
                        |{
                        |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                        |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                        |}
@@ -326,13 +609,13 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
             }
 
-            "return a `BadRequestException` during list change when payload is not correct" in {
+            "return a BadRequestException during list change when payload is not correct" in {
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
@@ -341,13 +624,13 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     s"""
                        |{
                        |    "listIri": "",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                        |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                        |}
                 """.stripMargin
 
-                val request01 = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response01: HttpResponse = singleAwaitingRequest(request01)
                 // log.debug(s"response: ${response.toString}")
                 response01.status should be(StatusCodes.BadRequest)
@@ -363,7 +646,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                    |}
                 """.stripMargin
 
-                val request02 = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response02: HttpResponse = singleAwaitingRequest(request02)
                 // log.debug(s"response: ${response.toString}")
                 response02.status should be(StatusCodes.BadRequest)
@@ -373,13 +656,13 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     s"""
                        |{
                        |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [],
                        |    "comments": []
                        |}
                 """.stripMargin
 
-                val request03 = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response03: HttpResponse = singleAwaitingRequest(request03)
                 // log.debug(s"response: ${response.toString}")
                 response03.status should be(StatusCodes.BadRequest)
@@ -390,18 +673,29 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val params =
-                    s"""
-                       |{
-                       |    "parentNodeIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "first",
-                       |    "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
-                       |    "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
-                       |}
-                """.stripMargin
+                val name = "first"
+                val label = "New First Child List Node Value"
+                val comment = "New First Child List Node Comment"
 
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val addChildToRoot = addChildListNodeRequest(
+                    parentNodeIri = newListIri.get,
+                    name = name,
+                    label = label,
+                    comment = comment
+                )
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-child-node-request",
+                            fileExtension = "json"
+                        ),
+                        text = addChildToRoot
+                    )
+                )
+
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToRoot)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -417,12 +711,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
                 comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
@@ -431,7 +725,16 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check has root node
                 val rootNode = childNodeInfo.hasRootNode
                 rootNode should be (newListIri.get)
-
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-child-node-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
                 firstChildIri.set(childNodeInfo.id)
             }
 
@@ -439,18 +742,27 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val params =
-                    s"""
-                       |{
-                       |    "parentNodeIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "second",
-                       |    "labels": [{ "value": "New Second Child List Node Value", "language": "en"}],
-                       |    "comments": [{ "value": "New Second Child List Node Comment", "language": "en"}]
-                       |}
-                """.stripMargin
+                val name = "second"
+                val label = "New Second Child List Node Value"
+                val comment = "New Second Child List Node Comment"
 
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val addSecondChildToRoot = addChildListNodeRequest(
+                    parentNodeIri = newListIri.get,
+                    name = name,
+                    label = label,
+                    comment = comment
+                )
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "add-second-child-to-root-request",
+                            fileExtension = "json"
+                        ),
+                        text = addSecondChildToRoot
+                    )
+                )
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -466,12 +778,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
                 comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
@@ -483,24 +795,43 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 secondChildIri.set(childNodeInfo.id)
 
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "add-second-child-to-root-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "add child to second child node" in {
 
                 val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")
 
-                val params =
-                    s"""
-                       |{
-                       |    "parentNodeIri": "${secondChildIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "third",
-                       |    "labels": [{ "value": "New Third Child List Node Value", "language": "en"}],
-                       |    "comments": [{ "value": "New Third Child List Node Comment", "language": "en"}]
-                       |}
-                """.stripMargin
+                val name = "third"
+                val label = "New Third Child List Node Value"
+                val comment = "New Third Child List Node Comment"
 
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val addChildToSecondChild = addChildListNodeRequest(
+                    parentNodeIri = secondChildIri.get,
+                    name = name,
+                    label = label,
+                    comment = comment
+                )
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "add-second-child-to-root-request",
+                            fileExtension = "json"
+                        ),
+                        text = addChildToSecondChild
+                    )
+                )
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToSecondChild)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -516,12 +847,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
                 comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
@@ -532,6 +863,17 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 rootNode should be (newListIri.get)
 
                 thirdChildIri.set(childNodeInfo.id)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "add-second-child-to-root-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "add flat nodes" ignore {
@@ -549,7 +891,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             "delete node if not in use" ignore {
 
             }
-
         }
     }
 }

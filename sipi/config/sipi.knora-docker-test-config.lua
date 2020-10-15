@@ -107,7 +107,7 @@ sipi = {
     ---
     --- Size of the thumbnails
     ---
-    thumb_size = '!128,128',
+    thumb_size = 'pct:4',
 
     --
     -- Path to the temporary directory
@@ -180,21 +180,6 @@ fileserver = {
 routes = {
     {
         method = 'POST',
-        route = '/make_thumbnail',
-        script = 'make_thumbnail.lua'
-    },
-    {
-        method = 'POST',
-        route = '/convert_from_path',
-        script = 'convert_from_path.lua'
-    },
-    {
-        method = 'POST',
-        route = '/convert_from_file',
-        script = 'convert_from_file.lua'
-    },
-    {
-        method = 'POST',
         route = '/admin_upload',
         script = 'admin_upload.lua'
     },
@@ -220,8 +205,8 @@ routes = {
     },
     {
         method = 'GET',
-        route = '/test_mediatype',
-        script = 'test_mediatype.lua'
+        route = '/test_file_info',
+        script = 'test_file_info.lua'
     },
     {
         method = 'GET',

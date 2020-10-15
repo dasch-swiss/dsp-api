@@ -20,8 +20,8 @@
 package org.knora.webapi.store.iiif
 
 import akka.actor.ActorRef
-import org.knora.webapi.LiveActorMaker
-import org.knora.webapi.store.SipiConnectorActorName
+import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.settings.SipiConnectorActorName
 
 /**
   * A subclass of [[IIIFManager]] that allows tests to substitute standard connector for a custom one.

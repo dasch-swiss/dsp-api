@@ -18,14 +18,13 @@ package org.knora.webapi.e2e
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.app.appmessages.{AppState, SetAppState}
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.messages.app.appmessages.{AppStates, SetAppState}
 
 
 object HealthRouteE2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -35,10 +34,15 @@ object HealthRouteE2ESpec {
 /**
   * End-to-End (E2E) test specification for testing route rejections.
   */
-@E2ETest
 class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+
+    // Directory path for generated client test data
+    private val clientTestDataPath: Seq[String] = Seq("system", "health")
+
+    // Collects client test data
+    private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
     "The Health Route" should {
 
@@ -46,31 +50,79 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
+            val responseStr: String = responseToString(response)
+            val responseHeadersStr: String = response.headers.map(_.toString).mkString("\n")
 
             response.status should be(StatusCodes.OK)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "running-response",
+                        fileExtension = "json"
+                    ),
+                    text = responseStr
+                )
+            )
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "response-headers",
+                        fileExtension = "json"
+                    ),
+                    text = responseHeadersStr
+                )
+            )
         }
 
         "return 'ServiceUnavailable' for state 'Stopped'" in {
 
-            appActor ! SetAppState(AppState.Stopped)
+            appActor ! SetAppState(AppStates.Stopped)
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
+            val responseStr: String = responseToString(response)
 
             logger.debug(response.toString())
 
             response.status should be(StatusCodes.ServiceUnavailable)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "stopped-response",
+                        fileExtension = "json"
+                    ),
+                    text = responseStr
+                )
+            )
         }
 
         "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
-            appActor ! SetAppState(AppState.MaintenanceMode)
+            appActor ! SetAppState(AppStates.MaintenanceMode)
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
+            val responseStr: String = responseToString(response)
 
             logger.debug(response.toString())
 
             response.status should be(StatusCodes.ServiceUnavailable)
+
+            clientTestDataCollector.addFile(
+                TestDataFileContent(
+                    filePath = TestDataFilePath(
+                        directoryPath = clientTestDataPath,
+                        filename = "maintenance-mode-response",
+                        fileExtension = "json"
+                    ),
+                    text = responseStr
+                )
+            )
         }
 
     }

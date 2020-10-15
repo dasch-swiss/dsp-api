@@ -30,8 +30,8 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRespo
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-import org.knora.webapi.testing.tags.E2ETest
-import org.knora.webapi.{E2ESpec, SharedTestDataV1}
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -50,7 +50,6 @@ object SipiADME2ESpec {
   *
   * This spec tests the 'admin/files'.
   */
-@E2ETest
 class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
@@ -62,7 +61,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     def sessionLogin(email: String, password: String): String = {

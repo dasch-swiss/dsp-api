@@ -23,27 +23,28 @@ import java.util.UUID
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v1.responder.ontologymessages.{ConvertOntologyClassV2ToV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.Future
 
 
 /**
-  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
-  */
+ * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
+ */
 class StandoffResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     /**
-      * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: StandoffResponderRequestV1) = msg match {
         case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid)
         case GetMappingRequestV1(mappingIri, userProfile) => getMappingV1(mappingIri, userProfile)
@@ -55,12 +56,12 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     val xsltCacheName = "xsltCache"
 
     /**
-      * Retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL file from Sipi.
-      *
-      * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
-      * @param userProfile          The client making the request.
-      * @return a [[GetXSLTransformationResponseV1]].
-      */
+     * Retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL file from Sipi.
+     *
+     * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[org.knora.webapi.messages.OntologyConstants.KnoraBase.XSLTransformation]]).
+     * @param userProfile          The client making the request.
+     * @return a [[GetXSLTransformationResponseV1]].
+     */
     private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
 
         for {
@@ -71,12 +72,12 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Creates a mapping between XML elements and attributes to standoff classes and properties.
-      * The mapping is used to convert XML documents to [[TextValueV1]] and back.
-      *
-      * @param xml         the provided mapping.
-      * @param userProfile the client that made the request.
-      */
+     * Creates a mapping between XML elements and attributes to standoff classes and properties.
+     * The mapping is used to convert XML documents to [[TextValueV1]] and back.
+     *
+     * @param xml         the provided mapping.
+     * @param userProfile the client that made the request.
+     */
     private def createMappingV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV1] = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -101,17 +102,17 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * The name of the mapping cache.
-      */
+     * The name of the mapping cache.
+     */
     val mappingCacheName = "mappingCache"
 
     /**
-      * Gets a mapping either from the cache or by making a request to the triplestore.
-      *
-      * @param mappingIri  the IRI of the mapping to retrieve.
-      * @param userProfile the user making the request.
-      * @return a [[MappingXMLtoStandoff]].
-      */
+     * Gets a mapping either from the cache or by making a request to the triplestore.
+     *
+     * @param mappingIri  the IRI of the mapping to retrieve.
+     * @param userProfile the user making the request.
+     * @return a [[MappingXMLtoStandoff]].
+     */
     private def getMappingV1(mappingIri: IRI, userProfile: UserADM): Future[GetMappingResponseV1] = {
 
         for {

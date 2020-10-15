@@ -22,27 +22,30 @@ package org.knora.webapi.responders.v1
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{NamedGraphV1, NamedGraphsGetRequestV1, NamedGraphsResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{Responder, ResponderData}
 
 import scala.concurrent.Future
 
 /**
-  * Returns information about Knora projects.
-  */
+ * Returns information about Knora projects.
+ */
 class ProjectsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Global lock IRI used for project creation and update
     private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
     /**
-      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
-      */
+     * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
+     */
     def receive(msg: ProjectsResponderRequestV1) = msg match {
         case ProjectsGetRequestV1(userProfile) => projectsGetRequestV1(userProfile)
         case ProjectsGetV1(userProfile) => projectsGetV1(userProfile)
@@ -53,12 +56,12 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets all the projects and returns them as a [[ProjectsResponseV1]].
-      *
-      * @param userProfile the profile of the user that is making the request.
-      * @return all the projects as a [[ProjectsResponseV1]].
-      * @throws NotFoundException if no projects are found.
-      */
+     * Gets all the projects and returns them as a [[ProjectsResponseV1]].
+     *
+     * @param userProfile the profile of the user that is making the request.
+     * @return all the projects as a [[ProjectsResponseV1]].
+     * @throws NotFoundException if no projects are found.
+     */
     private def projectsGetRequestV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
         //log.debug("projectsGetRequestV1")
@@ -78,15 +81,15 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets all the projects and returns them as a sequence containing [[ProjectInfoV1]].
-      *
-      * @param userProfile the profile of the user that is making the request.
-      * @return all the projects as a sequence containing [[ProjectInfoV1]].
-      */
+     * Gets all the projects and returns them as a sequence containing [[ProjectInfoV1]].
+     *
+     * @param userProfile the profile of the user that is making the request.
+     * @return all the projects as a sequence containing [[ProjectInfoV1]].
+     */
     private def projectsGetV1(userProfile: Option[UserProfileV1]): Future[Seq[ProjectInfoV1]] = {
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjects(
                 triplestore = settings.triplestoreType
             ).toString())
             //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
@@ -138,13 +141,13 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
 
 
     /**
-      * Gets the ontologies that belong to each project.
-      *
-      * @param projectIris the IRIs of the projects whose ontologies should be requested. If empty, returns the ontologies
-      *                    for all projects.
-      * @param userProfile the requesting user.
-      * @return a map of project IRIs to sequences of ontology IRIs.
-      */
+     * Gets the ontologies that belong to each project.
+     *
+     * @param projectIris the IRIs of the projects whose ontologies should be requested. If empty, returns the ontologies
+     *                    for all projects.
+     * @param userProfile the requesting user.
+     * @return a map of project IRIs to sequences of ontology IRIs.
+     */
     private def getOntologiesForProjects(projectIris: Set[IRI] = Set.empty[IRI], userProfile: Option[UserProfileV1]): Future[Map[IRI, Seq[IRI]]] = {
         for {
             // Get a UserADM for the UserProfileV1, because we need it to send a message to OntologyResponderV1.
@@ -178,13 +181,13 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
-      *
-      * @param projectIri  the IRI of the project requested.
-      * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[ProjectInfoResponseV1]].
-      * @throws NotFoundException when no project for the given IRI can be found
-      */
+     * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
+     *
+     * @param projectIri  the IRI of the project requested.
+     * @param userProfile the profile of user that is making the request.
+     * @return information about the project as a [[ProjectInfoResponseV1]].
+     * @throws NotFoundException when no project for the given IRI can be found
+     */
     private def projectInfoByIRIGetRequestV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
 
         //log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
@@ -201,18 +204,18 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
-      *
-      * @param projectIri  the IRI of the project requested.
-      * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[ProjectInfoV1]].
-      */
+     * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
+     *
+     * @param projectIri  the IRI of the project requested.
+     * @param userProfile the profile of user that is making the request.
+     * @return information about the project as a [[ProjectInfoV1]].
+     */
     private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[Option[ProjectInfoV1]] = {
 
         //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
+            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri
             ).toString())
@@ -238,19 +241,19 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
-      *
-      * @param shortName   the shortname of the project requested.
-      * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[ProjectInfoResponseV1]].
-      * @throws NotFoundException in the case that no project for the given shortname can be found.
-      */
+     * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
+     *
+     * @param shortName   the shortname of the project requested.
+     * @param userProfile the profile of user that is making the request.
+     * @return information about the project as a [[ProjectInfoResponseV1]].
+     * @throws NotFoundException in the case that no project for the given shortname can be found.
+     */
     private def projectInfoByShortnameGetRequestV1(shortName: String, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
 
         //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
+            sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
                 shortname = shortName
             ).toString())
@@ -287,13 +290,13 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     ////////////////////
 
     /**
-      * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
-      *
-      * @param projectResponse results from the SPARQL query representing information about the project.
-      * @param projectIri      the IRI of the project the querid information belong to.
-      * @param userProfile     the profile of user that is making the request.
-      * @return a [[ProjectInfoV1]] representing information about project.
-      */
+     * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
+     *
+     * @param projectResponse results from the SPARQL query representing information about the project.
+     * @param projectIri      the IRI of the project the querid information belong to.
+     * @param userProfile     the profile of user that is making the request.
+     * @return a [[ProjectInfoV1]] representing information about project.
+     */
     private def createProjectInfoV1(projectResponse: Seq[VariableResultsRow], projectIri: IRI, ontologies: Seq[IRI], userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
 
         //log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
@@ -337,14 +340,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Helper method for checking if a project identified by IRI exists.
-      *
-      * @param projectIri the IRI of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by IRI exists.
+     *
+     * @param projectIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
     def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -354,14 +357,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Helper method for checking if a project identified by shortname exists.
-      *
-      * @param shortname the shortname of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by shortname exists.
+     *
+     * @param shortname the shortname of the project.
+     * @return a [[Boolean]].
+     */
     def projectByShortnameExists(shortname: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -371,14 +374,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Helper method for checking if a project identified by shortcode exists.
-      *
-      * @param shortcode the shortcode of the project.
-      * @return a [[Boolean]].
-      */
+     * Helper method for checking if a project identified by shortcode exists.
+     *
+     * @param shortcode the shortcode of the project.
+     * @return a [[Boolean]].
+     */
     def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

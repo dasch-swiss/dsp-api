@@ -23,25 +23,24 @@ import java.io.File
 import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
 
-import akka.actor.{Props, _}
+import akka.actor._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.exceptions.FileWriteException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateRichtextV1}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.store.iiif.SourcePath
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.settings._
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 /**
-  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
-  */
-@E2ETest
+ * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
+ * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ */
 class SipiV1R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -53,15 +52,14 @@ class SipiV1R2RSpec extends R2RSpec {
     private val resourcesPath = new ResourcesRouteV1(routeData).knoraApiPath
     private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
     private val testPass = "test"
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
     /* we need to run our app with the mocked sipi actor */
@@ -69,7 +67,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     object RequestParams {
 
-        val createResourceParams = CreateResourceApiRequestV1(
+        val createResourceParams: CreateResourceApiRequestV1 = CreateResourceApiRequestV1(
             restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
             properties = Map(
                 "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Seq(CreateResourceValueV1(
@@ -93,7 +91,7 @@ class SipiV1R2RSpec extends R2RSpec {
             project_id = "http://rdfh.ch/projects/0803"
         )
 
-        val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
+        val pathToFile = "test_data/test_route/images/Chlaus.jpg"
 
         def createTmpFileDir(): Unit = {
             // check if tmp datadir exists and create it if not
@@ -111,78 +109,11 @@ class SipiV1R2RSpec extends R2RSpec {
 
     "The Resources Endpoint" should {
 
-        "create a resource with a digital representation doing a multipart request containing the binary data (non GUI-case)" in {
-
-            val fileToSend = new File(RequestParams.pathToFile)
-            // check if the file exists
-            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
-
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            RequestParams.createTmpFileDir()
-
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> resourcesPath ~> check {
-
-                val tmpFile = SourcePath.getSourcePath()
-
-                //println("response in test: " + responseAs[String])
-                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
-                assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
-            }
-        }
-
-        "try to create a resource sending binaries (multipart request) but fail because the mimetype is wrong" in {
-
-            val fileToSend = new File(RequestParams.pathToFile)
-            // check if the file exists
-            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
-
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
-                ),
-                // set mimetype tiff, but jpeg is expected
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            RequestParams.createTmpFileDir()
-
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> Route.seal(resourcesPath) ~> check {
-
-                val tmpFile = SourcePath.getSourcePath()
-
-                // this test is expected to fail
-
-                // check that the tmp file is also deleted in case the test fails
-                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
-                //FIXME: Check for correct status code. This would then also test if the negative case is handled correctly inside Knora.
-                assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
-            }
-        }
-
-        "create a resource with a digital representation doing a params only request without binary data (GUI-case)" in {
+        "create a resource with a digital representation" in {
+            val internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
 
             val params = RequestParams.createResourceParams.copy(
-                file = Some(CreateFileV1(
-                    originalFilename = "Chlaus.jpg",
-                    originalMimeType = "image/jpeg",
-                    filename = "./test_server/images/Chlaus.jpg"
-                ))
+                file = Some(internalFilename)
             )
 
             Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> resourcesPath ~> check {
@@ -194,76 +125,11 @@ class SipiV1R2RSpec extends R2RSpec {
 
     "The Values endpoint" should {
 
-        "change the file value of an existing page (submitting binaries)" in {
-
-            val fileToSend = new File(RequestParams.pathToFile)
-            // check if the file exists
-            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
-
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            RequestParams.createTmpFileDir()
-
-            val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
-
-            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
-
-                val tmpFile = SourcePath.getSourcePath()
-
-                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
-                assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
-            }
-
-        }
-
-        "try to change the file value of an existing page (submitting binaries) but fail because the mimetype is wrong" in {
-
-            val fileToSend = new File(RequestParams.pathToFile)
-            // check if the file exists
-            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
-
-            val formData = Multipart.FormData(
-                // set mimetype tiff, but jpeg is expected
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            RequestParams.createTmpFileDir()
-
-            val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
-
-            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
-
-                val tmpFile = SourcePath.getSourcePath()
-
-                // this test is expected to fail
-
-                // check that the tmp file is also deleted in case the test fails
-                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
-                //FIXME: Check for correct status code. This would then also test if the negative case is handled correctly inside Knora.
-                assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
-            }
-
-        }
-
-
-        "change the file value of an existing page (submitting params only, no binaries)" in {
+        "change the file value of an existing page" in {
+            val internalFilename ="FSLC0vNvVpr-IQUO3t1AABm.jp2"
 
             val params = ChangeFileValueApiRequestV1(
-                file = CreateFileV1(
-                    originalFilename = "Chlaus.jpg",
-                    originalMimeType = "image/jpeg",
-                    filename = "./test_server/images/Chlaus.jpg"
-                )
+                file = internalFilename
             )
 
             val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")

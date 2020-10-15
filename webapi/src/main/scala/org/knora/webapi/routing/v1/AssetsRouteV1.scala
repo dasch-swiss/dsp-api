@@ -30,10 +30,13 @@ import javax.imageio.ImageIO
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
 
 /**
-  * A route used for faking the image server.
-  */
+ * A route used for faking the image server.
+ */
 class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route = {
 
         path("v1" / "assets" / Remaining) { assetId =>

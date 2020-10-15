@@ -31,75 +31,77 @@ import org.eclipse.rdf4j.rio._
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, UnexpectedMessageException}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.JsonLDDocument
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.JsonLDDocument
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception.catching
 
 /**
-  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
-  */
+ * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
+ */
 object RouteUtilV2 {
     /**
-      * The name of the HTTP header in which an ontology schema can be requested.
-      */
+     * The name of the HTTP header in which an ontology schema can be requested.
+     */
     val SCHEMA_HEADER: String = "x-knora-accept-schema"
 
     /**
-      * The name of the URL parameter in which an ontology schema can be requested.
-      */
+     * The name of the URL parameter in which an ontology schema can be requested.
+     */
     val SCHEMA_PARAM: String = "schema"
 
     /**
-      * The name of the complex schema.
-      */
+     * The name of the complex schema.
+     */
     val SIMPLE_SCHEMA_NAME: String = "simple"
 
     /**
-      * The name of the simple schema.
-      */
+     * The name of the simple schema.
+     */
     val COMPLEX_SCHEMA_NAME: String = "complex"
 
     /**
-      * The name of the HTTP header in which results from a project can be requested.
-      */
+     * The name of the HTTP header in which results from a project can be requested.
+     */
     val PROJECT_HEADER: String = "x-knora-accept-project"
 
     /**
-      * The name of the URL parameter that can be used to specify how markup should be returned
-      * with text values.
-      */
+     * The name of the URL parameter that can be used to specify how markup should be returned
+     * with text values.
+     */
     val MARKUP_PARAM: String = "markup"
 
     /**
-      * The name of the HTTP header that can be used to specify how markup should be returned with
-      * text values.
-      */
+     * The name of the HTTP header that can be used to specify how markup should be returned with
+     * text values.
+     */
     val MARKUP_HEADER: String = "x-knora-accept-markup"
 
     /**
-      * Indicates that standoff markup should be returned as XML with text values.
-      */
+     * Indicates that standoff markup should be returned as XML with text values.
+     */
     val MARKUP_XML: String = "xml"
 
     /**
-      * Indicates that markup should not be returned with text values, because it will be requested
-      * separately as standoff.
-      */
+     * Indicates that markup should not be returned with text values, because it will be requested
+     * separately as standoff.
+     */
     val MARKUP_STANDOFF: String = "standoff"
 
     /**
-      * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
-      * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
-      * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
-      *
-      * @param requestContext the akka-http [[RequestContext]].
-      * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
-      */
+     * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
+     * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
+     * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
+     *
+     * @param requestContext the akka-http [[RequestContext]].
+     * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
+     */
     def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
         def nameToSchema(schemaName: String): ApiV2Schema = {
             schemaName match {
@@ -123,15 +125,15 @@ object RouteUtilV2 {
     }
 
     /**
-      * Gets the type of standoff rendering that should be used when returning text with standoff.
-      * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
-      * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
-      * default of [[MarkupAsXml]] is returned.
-      *
-      * @param requestContext the akka-http [[RequestContext]].
-      * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
-      *         in the request.
-      */
+     * Gets the type of standoff rendering that should be used when returning text with standoff.
+     * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
+     * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
+     * default of [[MarkupAsXml]] is returned.
+     *
+     * @param requestContext the akka-http [[RequestContext]].
+     * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
+     *         in the request.
+     */
     private def getStandoffRendering(requestContext: RequestContext): Option[MarkupRendering] = {
         def nameToStandoffRendering(standoffRenderingName: String): MarkupRendering = {
             standoffRenderingName match {
@@ -154,21 +156,21 @@ object RouteUtilV2 {
     }
 
     /**
-      * Gets the schema options submitted in the request.
-      *
-      * @param requestContext the request context.
-      * @return the set of schema options submitted in the request, including default options.
-      */
+     * Gets the schema options submitted in the request.
+     *
+     * @param requestContext the request context.
+     * @return the set of schema options submitted in the request, including default options.
+     */
     def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] = {
         getStandoffRendering(requestContext).toSet
     }
 
     /**
-      * Gets the project IRI specified in a Knora-specific HTTP header.
-      *
-      * @param requestContext the akka-http [[RequestContext]].
-      * @return the specified project IRI, or [[None]] if no project header was included in the request.
-      */
+     * Gets the project IRI specified in a Knora-specific HTTP header.
+     *
+     * @param requestContext the akka-http [[RequestContext]].
+     * @return the specified project IRI, or [[None]] if no project header was included in the request.
+     */
     def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] = {
         requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map {
             header =>
@@ -178,21 +180,21 @@ object RouteUtilV2 {
     }
 
     /**
-      * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotation.
-      *
-      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-      * @param requestContext   the akka-http [[RequestContext]].
-      * @param settings         the application's settings.
-      * @param responderManager a reference to the responder manager.
-      * @param log              a logging adapter.
-      * @param targetSchema   the API schema that should be used in the response.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a [[Future]] containing a [[RouteResult]].
-      */
+     * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotation.
+     *
+     * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+     * @param requestContext   the akka-http [[RequestContext]].
+     * @param settings         the application's settings.
+     * @param responderManager a reference to the responder manager.
+     * @param log              a logging adapter.
+     * @param targetSchema     the API schema that should be used in the response.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a [[Future]] containing a [[RouteResult]].
+     */
     private def runRdfRoute(requestMessage: KnoraRequestV2,
                             requestContext: RequestContext,
-                            settings: SettingsImpl,
+                            settings: KnoraSettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
                             targetSchema: ApiV2Schema,
@@ -238,21 +240,21 @@ object RouteUtilV2 {
     }
 
     /**
-      * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
-      *
-      * @param requestMessageF  a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-      * @param requestContext   the akka-http [[RequestContext]].
-      * @param settings         the application's settings.
-      * @param responderManager a reference to the responder manager.
-      * @param log              a logging adapter.
-      * @param targetSchema   the API schema that should be used in the response.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a [[Future]] containing a [[RouteResult]].
-      */
+     * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
+     *
+     * @param requestMessageF  a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+     * @param requestContext   the akka-http [[RequestContext]].
+     * @param settings         the application's settings.
+     * @param responderManager a reference to the responder manager.
+     * @param log              a logging adapter.
+     * @param targetSchema     the API schema that should be used in the response.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a [[Future]] containing a [[RouteResult]].
+     */
     def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
-                       settings: SettingsImpl,
+                       settings: KnoraSettingsImpl,
                        responderManager: ActorRef,
                        log: LoggingAdapter,
                        targetSchema: ApiV2Schema)
@@ -286,22 +288,22 @@ object RouteUtilV2 {
     }
 
     /**
-      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
-      *
-      * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-      * @param requestContext   the akka-http [[RequestContext]].
-      * @param settings         the application's settings.
-      * @param responderManager a reference to the responder manager.
-      * @param log              a logging adapter.
-      * @param targetSchema   the API schema that should be used in the response.
-      * @param schemaOptions    the schema options that should be used when processing the request.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a [[Future]] containing a [[RouteResult]].
-      */
+     * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
+     *
+     * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+     * @param requestContext   the akka-http [[RequestContext]].
+     * @param settings         the application's settings.
+     * @param responderManager a reference to the responder manager.
+     * @param log              a logging adapter.
+     * @param targetSchema     the API schema that should be used in the response.
+     * @param schemaOptions    the schema options that should be used when processing the request.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a [[Future]] containing a [[RouteResult]].
+     */
     def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
                               requestContext: RequestContext,
-                              settings: SettingsImpl,
+                              settings: KnoraSettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
                               targetSchema: ApiV2Schema,
@@ -323,11 +325,11 @@ object RouteUtilV2 {
     }
 
     /**
-      * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].
-      *
-      * @param requestContext the request context.
-      * @return an RDF media type.
-      */
+     * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].
+     *
+     * @param requestContext the request context.
+     * @return an RDF media type.
+     */
     private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): MediaType.NonBinary = {
         // Get the client's HTTP Accept header, if provided.
         val maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
@@ -374,20 +376,20 @@ object RouteUtilV2 {
     }
 
     /**
-      * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
-      *
-      * @param knoraResponse     the response message.
-      * @param responseMediaType the media type selected for the response (must be one of the types in [[RdfMediaTypes]]).
-      * @param targetSchema    the response schema.
-      * @param schemaOptions     the schema options.
-      * @param settings          the application settings.
-      * @return an HTTP response.
-      */
+     * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
+     *
+     * @param knoraResponse     the response message.
+     * @param responseMediaType the media type selected for the response (must be one of the types in [[RdfMediaTypes]]).
+     * @param targetSchema      the response schema.
+     * @param schemaOptions     the schema options.
+     * @param settings          the application settings.
+     * @return an HTTP response.
+     */
     private def formatResponse(knoraResponse: KnoraResponseV2,
                                responseMediaType: MediaType.NonBinary,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
-                               settings: SettingsImpl): HttpResponse = {
+                               settings: KnoraSettingsImpl): HttpResponse = {
         // Find the most specific media type that is compatible with the one requested.
         val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
 

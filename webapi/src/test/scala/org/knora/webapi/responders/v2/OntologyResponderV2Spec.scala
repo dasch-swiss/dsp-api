@@ -22,14 +22,18 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.util.UUID
 
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import org.knora.webapi._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -47,14 +51,16 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
     private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
 
-    private val exampleSharedOntology = RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box")
-    private val anythingData = RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    private val exampleSharedOntology = RdfDataObject(path = "test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box")
+    private val anythingData = RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
 
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
+    private val barIri = new MutableTestIri
+    private var barLastModDate: Instant = Instant.now
 
     private val chairIri = new MutableTestIri
     private var chairLastModDate: Instant = Instant.now
@@ -69,8 +75,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     override lazy val rdfDataObjects: Seq[RdfDataObject] = List(exampleSharedOntology, anythingData)
 
     private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
-        storeManager ! ResetTriplestoreContent(rdfDataObjs)
-        expectMsg(5 minutes, ResetTriplestoreContentACK())
+        storeManager ! ResetRepositoryContent(rdfDataObjs)
+        expectMsg(5 minutes, ResetRepositoryContentACK())
 
         responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
 
@@ -109,16 +115,16 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
-            fooIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
+            fooIri.set(metadata.ontologyIri.toString)
             fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
-        "change the metadata of 'foo'" in {
+        "change the label in the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 
             responderManager ! ChangeOntologyMetadataRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
-                label = newLabel,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+                label = Some(newLabel),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = imagesUser
@@ -127,11 +133,73 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
-            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
+            assert(metadata.ontologyIri == fooIri.get.toSmartIri)
             assert(metadata.label.contains(newLabel))
             val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
             assert(newFooLastModDate.isAfter(fooLastModDate))
             fooLastModDate = newFooLastModDate
+        }
+
+        "add a comment to the metadata of 'foo' ontology" in {
+            val aComment = "a comment"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+                comment = Some(aComment),
+                lastModificationDate = fooLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri == fooIri.get.toSmartIri)
+            assert(metadata.comment.contains(aComment))
+            val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newFooLastModDate.isAfter(fooLastModDate))
+            fooLastModDate = newFooLastModDate
+        }
+
+        "create an empty ontology called 'bar' with a comment" in {
+            responderManager ! CreateOntologyRequestV2(
+                ontologyName = "bar",
+                projectIri = imagesProjectIri,
+                label = "The bar ontology",
+                comment = Some("some comment"),
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/bar")
+            val returnedComment: String = metadata.comment.getOrElse(throw AssertionException("The bar ontology has no comment!"))
+            assert(returnedComment == "some comment")
+            barIri.set(metadata.ontologyIri.toString)
+            barLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+        }
+
+        "change the existing comment in the metadata of 'bar' ontology" in {
+            val newComment = "a new comment"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = barIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+                comment = Some(newComment),
+                lastModificationDate = barLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri == barIri.get.toSmartIri)
+            assert(metadata.comment.contains(newComment))
+            val newBarLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newBarLastModDate.isAfter(barLastModDate))
+            barLastModDate = newBarLastModDate
         }
 
         "not create 'foo' again" in {
@@ -167,7 +235,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
             responderManager ! DeleteOntologyRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = SharedTestDataADM.imagesUser02
@@ -182,7 +250,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "delete the 'foo' ontology" in {
             responderManager ! DeleteOntologyRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = imagesUser
@@ -2016,6 +2084,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "change the metadata of the 'anything' ontology" in {
+            val newLabel = "The modified anything ontology"
+
+            responderManager ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = AnythingOntologyIri,
+                label = Some(newLabel),
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri)
+            assert(metadata.label.contains(newLabel))
+            val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+            anythingLastModDate = newAnythingLastModDate
+        }
+
         "delete the class anything:CardinalityThing" in {
             val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
 
@@ -2071,34 +2160,37 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
             ).map(_.toSmartIri)
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3102,9 +3194,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri.fromLinkPropToLinkValueProp
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3381,9 +3473,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 AnythingOntologyIri.makeEntityIri("hasEmptiness")
             )
 
-            val expectedAllBaseClasses: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -4174,7 +4266,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology that has no knora-base:attachedToProject" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/onto-without-project.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/onto-without-project.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4183,7 +4275,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a class that's missing a cardinality for a link value property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-value-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/missing-link-value-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4193,7 +4285,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a class that's missing a cardinality for a link property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/missing-link-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4202,7 +4294,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a class with a cardinality whose subject class constraint is incompatible with the class" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-incompatible-with-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-incompatible-with-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4211,7 +4303,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class without an rdfs:label" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4220,7 +4312,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource property without an rdfs:label" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/property-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/property-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4229,7 +4321,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class that is also a standoff class" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-class-is-standoff-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/resource-class-is-standoff-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4238,7 +4330,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class with a cardinality on an undefined property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-missing-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-missing-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4247,7 +4339,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class with a directly defined cardinality on a non-resource property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-resource-prop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-non-resource-prop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4256,7 +4348,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class with a cardinality on knora-base:resourceProperty" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbresprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbresprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4265,7 +4357,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class with a cardinality on knora-base:hasValue" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbhasvalue-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbhasvalue-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4274,7 +4366,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource class with a base class that has a Knora IRI but isn't a resource class" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/resource-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4283,7 +4375,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a standoff class with a cardinality on a resource property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-resprop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-resprop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4292,7 +4384,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a standoff class with a base class that's not a standoff class" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4301,7 +4393,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property with a subject class constraint of foaf:Person" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4310,7 +4402,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a Knora value property with a subject class constraint of knora-base:TextValue" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-value-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-value-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4319,7 +4411,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property with a subject class constraint of salsah-gui:Guielement" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-guielement-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-guielement-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4328,7 +4420,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property with an object class constraint of foaf:Person" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4337,7 +4429,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property whose object class constraint is incompatible with its base property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-incompatible-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-incompatible-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4346,7 +4438,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link property isn't really a link property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4355,7 +4447,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link value property isn't really a link value property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-value-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-value-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4364,7 +4456,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource property with no object class constraint" ignore { // Consistency checks don't allow this in GraphDB.
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4373,7 +4465,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource property with no rdfs:label" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4382,7 +4474,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property that's a subproperty of both knora-base:hasValue and knora-base:hasLinkTo" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-both-value-and-link-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-both-value-and-link-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4391,7 +4483,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property that's a subproperty of knora-base:hasFileValue" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/filevalue-prop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/filevalue-prop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4400,7 +4492,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a resource property with a base property that has a Knora IRI but isn't a resource property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-prop-wrong-base-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-wrong-base-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4409,7 +4501,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a property that contains salsah-gui:guiOrder" ignore { // Consistency checks don't allow this in GraphDB.
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-guiorder-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-guiorder-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4418,7 +4510,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a cardinality that contains salsah-gui:guiElement" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guielement-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guielement-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4427,7 +4519,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load an ontology containing a cardinality that contains salsah-gui:guiAttribute" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guiattribute-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guiattribute-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4436,7 +4528,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing an owl:TransitiveProperty" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/transitive-prop.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/transitive-prop.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4445,7 +4537,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology with a class that has cardinalities both on property P and on a subproperty of P" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-inherits-prop-and-subprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-inherits-prop-and-subprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4454,7 +4546,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing mismatched cardinalities for a link property and a link value property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-mismatched-link-cardinalities-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-mismatched-link-cardinalities-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4463,7 +4555,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing an invalid cardinality on a boolean property" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/invalid-card-on-boolean-prop.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/invalid-card-on-boolean-prop.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4472,7 +4564,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing a class with a cardinality on a property from a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-cardinality.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-cardinality.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4481,7 +4573,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing a class with a base class defined in a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-base-class.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-base-class.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4490,7 +4582,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing a property with a base property defined in a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-base-prop.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-base-prop.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4499,7 +4591,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing a property whose subject class constraint is defined in a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-scc.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-scc.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4508,7 +4600,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing a property whose object class constraint is defined in a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-occ.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-occ.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
@@ -4517,7 +4609,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not load a project-specific ontology containing a class with two cardinalities that override the same base class cardinality of 1 or 0-1" in {
             val invalidOnto = List(RdfDataObject(
-                path = "_test_data/responders.v2.OntologyResponderV2Spec/conflicting-cardinalities-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+                path = "test_data/responders.v2.OntologyResponderV2Spec/conflicting-cardinalities-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)

@@ -20,10 +20,11 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit._
-import org.knora.webapi.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.searchmessages._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
@@ -181,9 +182,9 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     import SearchResponderV1Spec._
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.

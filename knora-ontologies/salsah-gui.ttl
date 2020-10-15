@@ -141,6 +141,13 @@
 
 
 
+###  http://www.knora.org/ontology/salsah-gui#TimeStamp
+
+:TimeStamp rdf:type :Guielement ,
+                    owl:NamedIndividual .
+
+
+
 ###  http://www.knora.org/ontology/salsah-gui#List
 
 :List rdf:type :Guielement ,

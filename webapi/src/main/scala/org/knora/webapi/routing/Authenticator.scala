@@ -29,27 +29,32 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi._
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.{AuthenticationException, BadCredentialsException, BadRequestException}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.util.{CacheUtil, StringFormatter}
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.util.cache.CacheUtil
 import org.slf4j.LoggerFactory
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}
 import spray.json._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.KnoraSystemInstances
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
-  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
-  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
-  * session id. All private methods used in this trait can be found in the companion object.
-  */
+ * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
+ * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
+ * session id. All private methods used in this trait can be found in the companion object.
+ */
 trait Authenticator {
 
     // Import companion object
+
     import Authenticator._
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,17 +62,17 @@ trait Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
-      * with the generated session id for the client to save.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
-      *         the generated session id.
-      */
+     * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
+     * with the generated session id for the client to save.
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @param system         the current [[ActorSystem]]
+     * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
+     *         the generated session id.
+     */
     def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -95,13 +100,13 @@ trait Authenticator {
     }
 
     /**
-      * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
-      *
-      * @param credentials the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
-      * @param system      the current [[ActorSystem]]
-      * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
-      *         the generated session id.
-      */
+     * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
+     *
+     * @param credentials the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
+     * @param system      the current [[ActorSystem]]
+     * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
+     *         the generated session id.
+     */
     def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         log.debug(s"doLoginV2 - credentials: $credentials")
@@ -109,7 +114,7 @@ trait Authenticator {
         for {
             authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
-            settings = Settings(system)
+            settings = KnoraSettings(system)
 
             userADM <- getUserByIdentifier(credentials.identifier)
 
@@ -133,7 +138,7 @@ trait Authenticator {
 
     def presentLoginFormV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val apiUrl = settings.externalKnoraApiBaseUrl
 
@@ -156,9 +161,9 @@ trait Authenticator {
                |            </form>
                |        </div>
                |
-          |    </section>
+               |    </section>
                |
-          |    <section class="about">
+               |    <section class="about">
                |        <p class="about-author">
                |            &copy; 2015&ndash;2019 <a href="https://knora.org" target="_blank">Knora.org</a>
                |    </section>
@@ -181,13 +186,13 @@ trait Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
-      * generated.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[RequestContext]]
-      */
+     * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
+     * generated.
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @param system         the current [[ActorSystem]]
+     * @return a [[RequestContext]]
+     */
     def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
@@ -212,12 +217,12 @@ trait Authenticator {
     }
 
     /**
-      * Checks if the credentials provided in [[RequestContext]] are valid.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[HttpResponse]]
-      */
+     * Checks if the credentials provided in [[RequestContext]] are valid.
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @param system         the current [[ActorSystem]]
+     * @return a [[HttpResponse]]
+     */
     def doAuthenticateV2(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
@@ -243,17 +248,17 @@ trait Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[HttpResponse]]
-      */
+     * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @param system         the current [[ActorSystem]]
+     * @return a [[HttpResponse]]
+     */
     def doLogoutV2(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
         val credentials = extractCredentialsV2(requestContext)
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
         val cookieDomain = Some(settings.cookieDomain)
 
         credentials match {
@@ -309,19 +314,19 @@ trait Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Returns a UserProfile of the supplied type that match the credentials found in the [[RequestContext]].
-      * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
-      * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
-      * corresponding error is returned.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[UserProfileV1]]
-      */
+     * Returns a UserProfile of the supplied type that match the credentials found in the [[RequestContext]].
+     * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
+     * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
+     * corresponding error is returned.
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @param system         the current [[ActorSystem]]
+     * @return a [[UserProfileV1]]
+     */
     @deprecated("Please use: getUserADM()", "Knora v1.7.0")
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserProfileV1] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -344,18 +349,18 @@ trait Authenticator {
     }
 
     /**
-      * Returns a User that match the credentials found in the [[RequestContext]].
-      * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
-      * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
-      * corresponding error is returned.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[UserProfileV1]]
-      */
+     * Returns a User that match the credentials found in the [[RequestContext]].
+     * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
+     * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
+     * corresponding error is returned.
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @param system         the current [[ActorSystem]]
+     * @return a [[UserProfileV1]]
+     */
     def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -379,10 +384,10 @@ trait Authenticator {
 }
 
 /**
-  * This companion object holds all private methods used in the trait. This division is needed so that we can test
-  * the private methods directly with scalatest as described in [[https://groups.google.com/forum/#!topic/scalatest-users/FeaO\_\_f1dN4]]
-  * and [[http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester]]
-  */
+ * This companion object holds all private methods used in the trait. This division is needed so that we can test
+ * the private methods directly with scalatest as described in [[https://groups.google.com/forum/#!topic/scalatest-users/FeaO\_\_f1dN4]]
+ * and [[http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester]]
+ */
 object Authenticator {
 
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
@@ -402,22 +407,22 @@ object Authenticator {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
-      * authentication is performed checking if the supplied email/password combination is valid by retrieving the
-      * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
-      * to be valid.
-      *
-      * @param credentials the user supplied and extracted credentials.
-      * @param system      the current [[ActorSystem]]
-      * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
-      *         will be thrown.
-      * @throws BadCredentialsException when no credentials are supplied; when user is not active;
-      *                                 when the password does not match; when the supplied token is not valid.
-      */
+     * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
+     * authentication is performed checking if the supplied email/password combination is valid by retrieving the
+     * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
+     * to be valid.
+     *
+     * @param credentials the user supplied and extracted credentials.
+     * @param system      the current [[ActorSystem]]
+     * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
+     *         will be thrown.
+     * @throws BadCredentialsException when no credentials are supplied; when user is not active;
+     *                                 when the password does not match; when the supplied token is not valid.
+     */
     def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[Boolean] = {
 
         for {
-            settings <- FastFuture.successful(Settings(system))
+            settings <- FastFuture.successful(KnoraSettings(system))
 
             result <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
@@ -464,11 +469,11 @@ object Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @return [[KnoraCredentialsV2]].
-      */
+     * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
+     *
+     * @param requestContext a [[RequestContext]] containing the http request
+     * @return [[KnoraCredentialsV2]].
+     */
     private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
         // log.debug("extractCredentialsV2 start ...")
 
@@ -490,11 +495,11 @@ object Authenticator {
     }
 
     /**
-      * Tries to extract credentials supplied as URL parameters.
-      *
-      * @param requestContext the HTTP request context.
-      * @return [[KnoraCredentialsV2]].
-      */
+     * Tries to extract credentials supplied as URL parameters.
+     *
+     * @param requestContext the HTTP request context.
+     * @return [[KnoraCredentialsV2]].
+     */
     private def extractCredentialsFromParametersV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
         // extract email/password from parameters
 
@@ -547,20 +552,20 @@ object Authenticator {
     }
 
     /**
-      * Tries to extract the credentials (email/password, token) from the authorization header and the session token
-      * from the cookie header.
-      *
-      * The authorization header looks something like this: 'Authorization: Basic xyz, Bearer xyz.xyz.xyz'
-      * if both the email/password and token are sent.
-      *
-      * If more then one set of credentials is found, then they are selected as follows:
-      *    1. email/password
-      *    2. authorization token
-      *    3. session token
-      *
-      * @param requestContext the HTTP request context.
-      * @return an optional [[KnoraCredentialsV2]].
-      */
+     * Tries to extract the credentials (email/password, token) from the authorization header and the session token
+     * from the cookie header.
+     *
+     * The authorization header looks something like this: 'Authorization: Basic xyz, Bearer xyz.xyz.xyz'
+     * if both the email/password and token are sent.
+     *
+     * If more then one set of credentials is found, then they are selected as follows:
+     *    1. email/password
+     *    2. authorization token
+     *    3. session token
+     *
+     * @param requestContext the HTTP request context.
+     * @return an optional [[KnoraCredentialsV2]].
+     */
     private def extractCredentialsFromHeaderV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
 
         // Session token from cookie header
@@ -589,7 +594,7 @@ object Authenticator {
                 val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
                     case Some(value) =>
                         val trimmedValue = value.substring(5).trim() // remove 'Basic '
-                    val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
+                        val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
                         val decodedValueArr = decodedValue.split(":", 2)
                         (Some(decodedValueArr(0)), Some(decodedValueArr(1)))
                     case None =>
@@ -634,17 +639,17 @@ object Authenticator {
     }
 
     /**
-      * Tries to retrieve a [[UserADM]] based on the supplied credentials. If both email/password and session
-      * token are supplied, then the user profile for the session token is returned. This method should only be used
-      * with authenticated credentials.
-      *
-      * @param credentials the user supplied credentials.
-      * @return a [[UserADM]]
-      * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
-      */
+     * Tries to retrieve a [[UserADM]] based on the supplied credentials. If both email/password and session
+     * token are supplied, then the user profile for the session token is returned. This method should only be used
+     * with authenticated credentials.
+     *
+     * @param credentials the user supplied credentials.
+     * @return a [[UserADM]]
+     * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
+     */
     private def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
-        val settings = Settings(system)
+        val settings = KnoraSettings(system)
 
         for {
             authenticated <- authenticateCredentialsV2(credentials)
@@ -690,15 +695,15 @@ object Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Tries to get a [[UserADM]].
-      *
-      * @param identifier       the IRI, email, or username of the user to be queried
-      * @param system           the current akka actor system
-      * @param timeout          the timeout of the query
-      * @param executionContext the current execution context
-      * @return a [[UserADM]]
-      * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
-      */
+     * Tries to get a [[UserADM]].
+     *
+     * @param identifier       the IRI, email, or username of the user to be queried
+     * @param system           the current akka actor system
+     * @param timeout          the timeout of the query
+     * @param executionContext the current execution context
+     * @return a [[UserADM]]
+     * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
+     */
     private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit system: ActorSystem, responderManager: ActorRef, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
         val userADMFuture = for {
@@ -718,8 +723,8 @@ object Authenticator {
 }
 
 /**
-  * Provides functions for creating, decoding, and validating JWT tokens.
-  */
+ * Provides functions for creating, decoding, and validating JWT tokens.
+ */
 object JWTHelper {
 
     import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
@@ -731,14 +736,14 @@ object JWTHelper {
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Creates a JWT.
-      *
-      * @param userIri   the user IRI that will be encoded into the token.
-      * @param secret    the secret key used for encoding.
-      * @param longevity the token's longevity.
-      * @param content   any other content to be included in the token.
-      * @return a [[String]] containing the JWT.
-      */
+     * Creates a JWT.
+     *
+     * @param userIri   the user IRI that will be encoded into the token.
+     * @param secret    the secret key used for encoding.
+     * @param longevity the token's longevity.
+     * @param content   any other content to be included in the token.
+     * @return a [[String]] containing the JWT.
+     */
     def createToken(userIri: IRI, secret: String, longevity: FiniteDuration, content: Map[String, JsValue] = Map.empty): String = {
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -769,14 +774,14 @@ object JWTHelper {
     }
 
     /**
-      * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
-      * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
-      * present.
-      *
-      * @param token  the JWT.
-      * @param secret the secret used to encode the token.
-      * @return a [[Boolean]].
-      */
+     * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
+     * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
+     * present.
+     *
+     * @param token  the JWT.
+     * @param secret the secret used to encode the token.
+     * @return a [[Boolean]].
+     */
     def validateToken(token: String, secret: String): Boolean = {
         if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
             // token invalidated so no need to decode
@@ -788,12 +793,12 @@ object JWTHelper {
     }
 
     /**
-      * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
-      *
-      * @param token  the JWT.
-      * @param secret the secret used to encode the token.
-      * @return an optional [[IRI]].
-      */
+     * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
+     *
+     * @param token  the JWT.
+     * @param secret the secret used to encode the token.
+     * @return an optional [[IRI]].
+     */
     def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
         decodeToken(token, secret) match {
             case Some((_: JwtHeader, claim: JwtClaim)) => claim.subject
@@ -802,14 +807,14 @@ object JWTHelper {
     }
 
     /**
-      * Extracts application-specific content from a JWT token.  This method also makes sure that the required headers
-      * and claims are present.
-      *
-      * @param token       the JWT.
-      * @param secret      the secret used to encode the token.
-      * @param contentName the name of the content field to be extracted.
-      * @return the string value of the specified content field.
-      */
+     * Extracts application-specific content from a JWT token.  This method also makes sure that the required headers
+     * and claims are present.
+     *
+     * @param token       the JWT.
+     * @param secret      the secret used to encode the token.
+     * @param contentName the name of the content field to be extracted.
+     * @return the string value of the specified content field.
+     */
     def extractContentFromToken(token: String, secret: String, contentName: String): Option[String] = {
         decodeToken(token, secret) match {
             case Some((_: JwtHeader, claim: JwtClaim)) =>
@@ -823,12 +828,12 @@ object JWTHelper {
     }
 
     /**
-      * Decodes and validates a JWT token.
-      *
-      * @param token  the token to be decoded.
-      * @param secret the secret used to encode the token.
-      * @return the token's header and claim, or `None` if the token is invalid.
-      */
+     * Decodes and validates a JWT token.
+     *
+     * @param token  the token to be decoded.
+     * @param secret the secret used to encode the token.
+     * @return the token's header and claim, or `None` if the token is invalid.
+     */
     private def decodeToken(token: String, secret: String): Option[(JwtHeader, JwtClaim)] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

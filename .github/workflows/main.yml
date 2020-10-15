@@ -1,9 +1,9 @@
 name: CI
 
-on: [push]
-
-env:
-  KNORA_GDB_LICENSE: ${{ github.workspace }}/travis/graphdb.license
+on:
+  push:
+  release:
+    types: [published]
 
 jobs:
   compile:
@@ -13,228 +13,370 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "$STRATEGY_CONTEXT"
-      - name: Dump matrix context
-        env:
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        run: echo "$MATRIX_CONTEXT"
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: Run build everything
-        run: sbt clean test:compile it:compile stage
+        run: make build
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-unit-tests:
     name: API Unit Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
-      - name: prepare needed graphdb-se files
-        run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Check license
-        run: file $GITHUB_WORKSPACE/travis/graphdb.license
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: Print env file
-        run: make print-env-file
+        run: |
+          make env-file
+          make print-env-file
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: Run API unit tests
-        run: make unit-tests-with-coverage
+        run: make test-unit
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-e2e-tests:
     name: API E2E Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
-      - name: prepare needed graphdb-se files
-        run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: print env file
-        run: make print-env-file
+        run: |
+          make env-file
+          make print-env-file
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: run API E2E tests
-        run: make e2e-tests-with-coverage
+        run: make test-e2e
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   api-integration-tests:
     name: API Integration Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: cache maven artifacts
-        uses: actions/cache@v1
+      - uses: joschi/setup-jdk@v2
         with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}
-          restore-keys: |
-            ${{ runner.OS }}
-      - name: prepare needed graphdb-se files
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: print env file
-        run: make print-env-file
-      - name: run API integration tests
-        run: make it-tests-with-coverage
-
-  upgrade-unit-tests:
-    name: Upgrade Unit Tests
-    needs: compile
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
-      - name: run upgrade tests
-        run: sbt "upgrade/test"
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: print env file
+        run: |
+          make env-file
+          make print-env-file
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: run API integration tests
+        run: make test-it
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
   upgrade-integration-tests:
     name: Upgrade Integration Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - uses: actions/setup-java@v1
+      - uses: joschi/setup-jdk@v2
         with:
-          java-version: '11.x.x'
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          npm install --global @bazel/bazelisk
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
-      - name: build all images
-        run: make build-all-images
-      - name: prepare needed graphdb-se files
+      - name: Disk Free
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
-          mkdir -p $GITHUB_WORKSPACE/graphdb
-      - name: start and initialize graphdb-se
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: test repository upgrade
+        run: make test-repository-upgrade
+      - name: Disk Free After
         run: |
-          docker network create knora-net
-          docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $GITHUB_WORKSPACE/travis/graphdb.license:/graphdb/graphdb.license -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
-          sleep 5
-          make init-db-test-minimal
-      - name: unzip test data
-        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
-      - name: empty repository
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-      - name: load v7.0.0 data
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
-      - name: dump repository data
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/upgrade/out
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/dump-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgrade/out/dump.trig
-      - name: run upgrade from inside docker
-        run: docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/out:/upgrade/out daschswiss/knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
-      - name: empty repository
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-      - name: load upgraded data
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgraded/out/dump-upgraded.trig
+          df -h
+          docker system df
 
   docs-build-test:
     name: Docs Build Test
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 1
-      - name: cache maven artifacts
-        uses: actions/cache@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}
-          restore-keys: |
-            ${{ runner.OS }}
-      - name: run docs build test
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
         run: |
-          mkdir -p $GITHUB_WORKSPACE/docs/target
-          chmod 777 $GITHUB_WORKSPACE/docs/target
-          make docs-build
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
+          sudo apt-get install graphviz
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
+      - name: run docs build
+        run: make docs-build
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
 
-  # publish only for develop and tags
-  publish:
-    name: Publish to Dockerhub
-    needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
+  # Update release notes for "Next release"
+  update_release_draft:
+    name: Update next release draft
+    needs: [
+      api-unit-tests,
+      api-e2e-tests,
+      api-integration-tests,
+      upgrade-integration-tests,
+      docs-build-test
+    ]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
+    # Drafts your next Release notes as Pull Requests are merged into "develop"
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  # publish only on release
+  publish:
+    name: Publish (on release only)
+    needs: [
+      api-unit-tests,
+      api-e2e-tests,
+      api-integration-tests,
+      upgrade-integration-tests,
+      docs-build-test
+    ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 50
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java expect
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          npm install --global @bazel/bazelisk
+          sudo apt-get install graphviz
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CUSTOM_DOMAIN: docs.knora.org
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: Disk Free
+        run: |
+          df -h
+          docker system df
+          docker system prune --all --force --volumes
+          df -h
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make publish-all-images
+          make docker-publish
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
