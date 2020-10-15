@@ -20,7 +20,7 @@
 package org.knora.webapi.store.triplestore.http
 
 import java.io._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
@@ -31,6 +31,7 @@ import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.HttpRequest
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
@@ -489,6 +490,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
         try {
+            //TODO: GraphProtocolAccessor code here
             log.debug("==>> Loading Data Start")
 
             val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
@@ -548,13 +550,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             // call endpoint returning all datasets
 
-            val authCache: AuthCache = new BasicAuthCache
-            val basicAuth: BasicScheme = new BasicScheme
-            authCache.put(targetHost, basicAuth)
-
-            val context: HttpClientContext = HttpClientContext.create
-            context.setCredentialsProvider(credsProvider)
-            context.setAuthCache(authCache)
+            val context: HttpClientContext = makeHttpContext
 
             val httpGet = new HttpGet(checkRepositoryPath)
             httpGet.addHeader("Accept", mimeTypeApplicationJson)
@@ -615,53 +611,27 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         val configFileName = s"webapi/scripts/fuseki-repository-config.ttl.template"
 
-        try {
+        val triplestoreConfig: String = try {
             // take config from the classpath and write to triplestore
-            val triplestoreConfig: String = FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", settings.triplestoreDatabaseName)
-
-            val authCache: AuthCache = new BasicAuthCache
-            val basicAuth: BasicScheme = new BasicScheme
-            authCache.put(targetHost, basicAuth)
-
-            val httpContext: HttpClientContext = HttpClientContext.create
-            httpContext.setCredentialsProvider(credsProvider)
-            httpContext.setAuthCache(authCache)
-
-            val httpPost: HttpPost = new HttpPost("/$/datasets")
-            val stringEntity = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeApplicationTrig))
-            httpPost.setEntity(stringEntity)
-
-            val start = System.currentTimeMillis()
-            var maybeResponse: Option[CloseableHttpResponse] = None
-
-            maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
-
-            val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-                case Some(responseEntity) => EntityUtils.toString(responseEntity)
-                case None => ""
-            }
-
-            val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-            val statusCategory: Int = statusCode / 100
-
-            if (statusCategory != 2) {
-                log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-                throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-            }
-
-            val took = System.currentTimeMillis() - start
-            metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
-            RepositoryUploadedResponse()
-
+            FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", settings.triplestoreDatabaseName)
         } catch {
-            case e: NotFoundException =>
+            case _: NotFoundException =>
                 log.error(s"Cannot initialize repository. Config ${configFileName} not found.")
-            case tre: TriplestoreResponseException =>
-                log.error(tre.message)
-            case e: Exception =>
-                log.error(e, s"Failed to connect to triplestore: ${e.getMessage}")
+                ""
         }
 
+        val httpContext: HttpClientContext = makeHttpContext
+
+        val httpPost: HttpPost = new HttpPost("/$/datasets")
+        val stringEntity = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeApplicationTrig))
+        httpPost.setEntity(stringEntity)
+
+        executeHttpRequestAndReturnResponse[RepositoryUploadedResponse](
+            client = updateHttpClient,
+            request = httpPost,
+            context = httpContext,
+            responseType = RepositoryUploadedResponse()
+        )
         // do the check again
         checkFusekiTriplestore(true)
     }
@@ -678,13 +648,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             // call endpoint returning all repositories
 
-            val authCache: AuthCache = new BasicAuthCache
-            val basicAuth: BasicScheme = new BasicScheme
-            authCache.put(targetHost, basicAuth)
-
-            val context: HttpClientContext = HttpClientContext.create
-            context.setCredentialsProvider(credsProvider)
-            context.setAuthCache(authCache)
+            val context: HttpClientContext = makeHttpContext
 
             val httpGet = new HttpGet(checkRepositoryPath)
             httpGet.addHeader("Accept", mimeTypeApplicationJson)
@@ -737,13 +701,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return a string containing the contents of the graph in TriG format.
      */
     private def sparqlHttpGraphFile(graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
-        val authCache: AuthCache = new BasicAuthCache
-        val basicAuth: BasicScheme = new BasicScheme
-        authCache.put(targetHost, basicAuth)
-
-        val httpContext: HttpClientContext = HttpClientContext.create
-        httpContext.setCredentialsProvider(credsProvider)
-        httpContext.setAuthCache(authCache)
+        val httpContext: HttpClientContext = makeHttpContext
 
         val uriBuilder: URIBuilder = new URIBuilder(graphPath)
 
@@ -805,6 +763,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 log.error(e, s"Failed to connect to triplestore to get graph $graphIri")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
+//        executeHttpRequestAndReturnResponse[FileWrittenResponse](
+//            client = queryHttpClient,
+//            httpRequest = httpGet,
+//            httpContext = httpContext,
+//            responseType = FileWrittenResponse(),
+//            maybeOutputFile = Some(outputFile),
+//            maybeGraphIri = Some(graphIri),
+//            convertToTrig = true)
     }
 
     /**
@@ -817,15 +783,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def getSparqlHttpResponse(sparql: String, isUpdate: Boolean, acceptMimeType: String = mimeTypeApplicationSparqlResultsJson): Try[String] = {
 
-        val authCache: AuthCache = new BasicAuthCache
-        val basicAuth: BasicScheme = new BasicScheme
-        authCache.put(targetHost, basicAuth)
+            val httpContext: HttpClientContext = makeHttpContext
 
-        val httpContext: HttpClientContext = HttpClientContext.create
-        httpContext.setCredentialsProvider(credsProvider)
-        httpContext.setAuthCache(authCache)
-
-        val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
+            val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
             val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
             val updateHttpPost = new HttpPost(sparqlUpdatePath)
@@ -842,52 +802,17 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             }
 
             formParams.add(new BasicNameValuePair("query", sparql))
-            val requestEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-            val queryHttpPost = new HttpPost(queryPath)
+            val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
+            val queryHttpPost: HttpPost = new HttpPost(queryPath)
             queryHttpPost.setEntity(requestEntity)
             queryHttpPost.addHeader("Accept", acceptMimeType)
             (queryHttpClient, queryHttpPost)
         }
-
-        val triplestoreResponseTry = Try {
-
-            val start = System.currentTimeMillis()
-
-            var maybeResponse: Option[CloseableHttpResponse] = None
-
-            try {
-                maybeResponse = Some(httpClient.execute(targetHost, httpPost, httpContext))
-
-                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
-                    case None => ""
-                }
-
-                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-                val statusCategory: Int = statusCode / 100
-
-                if (statusCategory != 2) {
-                    log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr,SPARQL query was:\n$sparql")
-                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-                }
-
-                val took = System.currentTimeMillis() - start
-                metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
-
-                responseEntityStr
-            } finally {
-                maybeResponse.foreach(_.close)
-            }
-        }
-
-        triplestoreResponseTry.recover {
-            case tre: TriplestoreResponseException => throw tre
-            case e: Exception =>
-                // TODO: Can we throw a more user-friendly exception if the query timed out?
-                // TODO: Can we make Fuseki abandon the query if it takes too long?
-                log.error(e, s"Failed to connect to triplestore, SPARQL query was:\n$sparql")
-                throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
-        }
+        executeHttpRequestAndReturnResponse[String](
+            client = httpClient,
+            request = httpPost,
+            context = httpContext,
+            responseType = "")
     }
 
     /**
@@ -896,13 +821,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return a string containing the contents of the graph in TriG format.
      */
     private def downloadRepository(outputFile: File): Try[FileWrittenResponse] = {
-        val authCache: AuthCache = new BasicAuthCache
-        val basicAuth: BasicScheme = new BasicScheme
-        authCache.put(targetHost, basicAuth)
-
-        val httpContext: HttpClientContext = HttpClientContext.create
-        httpContext.setCredentialsProvider(credsProvider)
-        httpContext.setAuthCache(authCache)
+        val httpContext: HttpClientContext = makeHttpContext
 
         val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
 
@@ -916,62 +835,26 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         val httpGet = new HttpGet(uriBuilder.build())
         httpGet.addHeader("Accept", mimeTypeApplicationTrig)
+        val queryTimeoutMillis = settings.triplestoreQueryTimeout.toMillis.toInt * 10
 
-        val responseTry = Try {
-            val start = System.currentTimeMillis()
+        val queryRequestConfig = RequestConfig.custom()
+            .setConnectTimeout(queryTimeoutMillis)
+            .setConnectionRequestTimeout(queryTimeoutMillis)
+            .setSocketTimeout(queryTimeoutMillis)
+            .build
 
-            var maybeResponse: Option[CloseableHttpResponse] = None
+        val queryHttpClient: CloseableHttpClient = HttpClients.custom
+            .setDefaultCredentialsProvider(credsProvider)
+            .setDefaultRequestConfig(queryRequestConfig)
+            .build
 
-            try {
+        executeHttpRequestAndReturnResponse[FileWrittenResponse](
+            client = queryHttpClient,
+            request = httpGet,
+            context = httpContext,
+            responseType = FileWrittenResponse(),
+            maybeOutputFile = Some(outputFile))
 
-                val queryTimeoutMillis = settings.triplestoreQueryTimeout.toMillis.toInt * 10
-
-                val queryRequestConfig = RequestConfig.custom()
-                  .setConnectTimeout(queryTimeoutMillis)
-                  .setConnectionRequestTimeout(queryTimeoutMillis)
-                  .setSocketTimeout(queryTimeoutMillis)
-                  .build
-
-                val queryHttpClient: CloseableHttpClient = HttpClients.custom
-                  .setDefaultCredentialsProvider(credsProvider)
-                  .setDefaultRequestConfig(queryRequestConfig)
-                  .build
-
-                maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, httpContext))
-
-                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-                val statusCategory: Int = statusCode / 100
-
-                if (statusCategory != 2) {
-                    log.error(s"Triplestore responded with HTTP code $statusCode to request to dump repository")
-                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
-                }
-
-                val took = System.currentTimeMillis() - start
-                log.info(s"[$statusCode] DB Query took: ${took}ms")
-
-                Option(maybeResponse.get.getEntity) match {
-                    case Some(responseEntity: HttpEntity) =>
-                        // Stream the HTTP entity to the output file.
-                        Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
-                        FileWrittenResponse()
-
-                    case None =>
-                        log.error(s"Triplestore returned no content for repository dump")
-                        throw TriplestoreResponseException(s"Triplestore returned no content")
-                }
-            } finally {
-                maybeResponse.foreach(_.close)
-            }
-        }
-
-        responseTry.recover {
-            case tre: TriplestoreResponseException => throw tre
-
-            case e: Exception =>
-                log.error(e, s"Failed to connect to triplestore to dump repository")
-                throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
-        }
     }
 
     /**
@@ -980,6 +863,26 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @param inputFile a TriG file containing the content to be uploaded to the repository.
      */
     private def uploadRepository(inputFile: File): Try[RepositoryUploadedResponse] = {
+        val httpContext: HttpClientContext = makeHttpContext
+
+        val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
+        val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeApplicationTrig, "UTF-8"))
+        httpPost.setEntity(fileEntity)
+
+        executeHttpRequestAndReturnResponse[RepositoryUploadedResponse](
+            client = updateHttpClient,
+            request = httpPost,
+            context = httpContext,
+            responseType = RepositoryUploadedResponse())
+
+    }
+
+    /**
+     * Formulate HTTP context.
+     *
+     * @return httpContext with credentials and authorization
+     */
+    private def makeHttpContext(): HttpClientContext = {
         val authCache: AuthCache = new BasicAuthCache
         val basicAuth: BasicScheme = new BasicScheme
         authCache.put(targetHost, basicAuth)
@@ -987,20 +890,59 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val httpContext: HttpClientContext = HttpClientContext.create
         httpContext.setCredentialsProvider(credsProvider)
         httpContext.setAuthCache(authCache)
+        httpContext
+    }
 
-        val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
-        val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeApplicationTrig, "UTF-8"))
-        httpPost.setEntity(fileEntity)
+    private def executeHttpRequestAndReturnResponse[T](client: CloseableHttpClient,
+                                  request: HttpRequest,
+                                  context: HttpClientContext,
+                                  responseType: T,
+                                  maybeOutputFile: Option[File] = None,
+                                  maybeGraphIri: Option[IRI] = None,
+                                  convertToTrig: Boolean = false
+                                 ): Try[T] = {
+        def writeResponseFile(maybeResponse: Option[CloseableHttpResponse]):T = {
+            val outputFile: File = maybeOutputFile.get
+            Option(maybeResponse.get.getEntity) match {
+                case Some(responseEntity: HttpEntity) =>
+                    // Stream the HTTP entity to the output file.
+                    if (convertToTrig){
+                        // Stream the HTTP entity to the temporary .ttl file.
+                        val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
+                        Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
+
+                        // Convert the Turtle to Trig.
+                        val bufferedReader = new BufferedReader(new FileReader(turtleFile))
+                        turtleToTrig(input = bufferedReader, graphIri = maybeGraphIri.get, outputFile = outputFile)
+                        turtleFile.delete()
+
+                    } else {
+                        Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
+                    }
+
+                    // add writting graph here
+                    responseType
+                case None =>
+                    if (maybeGraphIri.nonEmpty){
+                        log.error(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
+                        throw TriplestoreResponseException(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
+                    } else {
+                        log.error(s"Triplestore returned no content for repository dump")
+                        throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+                    }
+            }
+        }
 
         val triplestoreResponseTry = Try {
             val start = System.currentTimeMillis()
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
-                maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
+                maybeResponse = Some(client.execute(targetHost, request, context))
 
                 val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                    case Some(responseEntity) =>
+                        EntityUtils.toString(responseEntity)
                     case None => ""
                 }
 
@@ -1014,18 +956,26 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
                 val took = System.currentTimeMillis() - start
                 metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
-                RepositoryUploadedResponse()
+                val responseToBeReturned : T = responseType match {
+                    case _ : String => responseEntityStr.asInstanceOf[T]
+                    case _ : FileWrittenResponse =>
+                        writeResponseFile(maybeResponse)
+                    case _ => responseType
+
+                }
+                responseToBeReturned
             } finally {
                 maybeResponse.foreach(_.close)
             }
         }
-
         triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
-
+            // TODO: Can we throw a more user-friendly exception if the query timed out?
+            // TODO: Can we make Fuseki abandon the query if it takes too long?
             case e: Exception =>
                 log.error(e, s"Failed to connect to triplestore")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
+        triplestoreResponseTry
     }
 }
