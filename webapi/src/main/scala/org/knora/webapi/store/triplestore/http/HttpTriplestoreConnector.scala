@@ -883,6 +883,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
             case e: Exception =>
+                // TODO: Can we throw a more user-friendly exception if the query timed out?
+                // TODO: Can we make Fuseki abandon the query if it takes too long?
                 log.error(e, s"Failed to connect to triplestore, SPARQL query was:\n$sparql")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
