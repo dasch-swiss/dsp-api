@@ -54,3 +54,4 @@ bazel-*
 dump.rdb
 /site/
 dependencies.txt
+/client-test-data.zip

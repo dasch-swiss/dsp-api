@@ -24,7 +24,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 
 object PermissionsHandlingV1E2ESpec {
     val config = ConfigFactory.parseString(
@@ -48,7 +48,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
     private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

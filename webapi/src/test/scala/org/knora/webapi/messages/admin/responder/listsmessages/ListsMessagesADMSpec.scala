@@ -220,8 +220,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |{
                    |    "listIri": "$exampleListIri",
                    |    "projectIri": "",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}]
                    |}
                 """.stripMargin
 
@@ -237,8 +236,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |{
                    |    "listIri": "$exampleListIri",
                    |    "projectIri": "notvalidIRI",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |    "name": "a new name"
                    |}
                 """.stripMargin
 
@@ -261,8 +259,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
 
-            thrown.getMessage should equal (REQUEST_NOT_CHANGING_DATA_ERROR)
-
+            thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
 
         "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when list node iri is empty" in {

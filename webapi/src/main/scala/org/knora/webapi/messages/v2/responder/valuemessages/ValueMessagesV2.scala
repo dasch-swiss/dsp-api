@@ -32,7 +32,7 @@ import org.knora.webapi.exceptions.{AssertionException, BadRequestException, Not
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequestV2, GetFileMetadataResponseV2}
+import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
@@ -528,9 +528,11 @@ case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
  *                         update that will create the values.
  * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV2]] objects describing
  *                         the values that should have been created.
+ * @param hasStandoffLink  `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
  */
 case class GenerateSparqlToCreateMultipleValuesResponseV2(insertSparql: String,
-                                                          unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]])
+                                                          unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
+                                                          hasStandoffLink: Boolean)
 
 /**
  * The value of a Knora property in the context of some particular input or output operation.
@@ -1120,6 +1122,9 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
 
                 case OntologyConstants.KnoraApiV2Complex.DocumentFileValue =>
                     DocumentFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+
+                case OntologyConstants.KnoraApiV2Complex.TextFileValue =>
+                    TextFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
             }
@@ -2701,7 +2706,7 @@ case class FileValueV2(internalFilename: String,
  * @param fileValue        a [[FileValueV2]].
  * @param sipiFileMetadata the metadata that Sipi returned about the file.
  */
-case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: GetFileMetadataResponseV2)
+case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: GetFileMetadataResponse)
 
 /**
  * Constructs [[FileValueWithSipiMetadata]] objects based on JSON-LD input.
@@ -2720,8 +2725,9 @@ object FileValueWithSipiMetadata {
             internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
-            tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
-            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
+            tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, internalFilename)
+            fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponse]
+
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
                 internalMimeType = fileMetadataResponse.internalMimeType,
@@ -2846,6 +2852,10 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
                 settings = settings,
                 log = log
             )
+
+            _ = if (!settings.imageMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+                throw BadRequestException(s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for still image files")
+            }
         } yield StillImageFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,
@@ -2947,10 +2957,14 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
                 settings = settings,
                 log = log
             )
+
+            _ = if (!settings.documentMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+                throw BadRequestException(s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for document files")
+            }
         } yield DocumentFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,
-            pageCount = fileValueWithSipiMetadata.sipiFileMetadata.numpages.getOrElse(throw SipiException("Sipi did not return a page count")),
+            pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount.getOrElse(throw SipiException("Sipi did not return a page count")),
             dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
             dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
             comment = getComment(jsonLDObject)
@@ -3032,6 +3046,10 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
                 settings = settings,
                 log = log
             )
+
+            _ = if (!settings.textMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+                throw BadRequestException(s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for text files")
+            }
         } yield TextFileValueContentV2(
             ontologySchema = ApiV2Complex,
             fileValue = fileValueWithSipiMetadata.fileValue,

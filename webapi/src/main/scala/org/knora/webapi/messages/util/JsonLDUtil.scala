@@ -19,17 +19,29 @@
 
 package org.knora.webapi.messages.util
 
+import java.io.{StringReader, StringWriter}
+import java.util
 import java.util.UUID
 
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
-import com.github.jsonldjava.utils.JsonUtils
+import com.apicatalog.jsonld._
+import com.apicatalog.jsonld.document._
+import javax.json._
+import javax.json.stream.JsonGenerator
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.util.JavaUtil
 
+/*
+
+The classes in this file provide a Scala API for formatting and parsing JSON-LD. The implementation
+uses the javax.json API and a Java implementation of the JSON-LD API <https://www.w3.org/TR/json-ld11-api/>
+(currently <https://github.com/filip26/titanium-json-ld>). This shields the rest of Knora from the details
+of the JSON-LD implementation. These classes also provide Knora-specific JSON-LD functionality to facilitate
+reading data from Knora API requests and constructing Knora API responses.
+
+*/
 
 /**
  * Constant strings used in JSON-LD.
@@ -53,10 +65,9 @@ object JsonLDConstants {
  */
 sealed trait JsonLDValue extends Ordered[JsonLDValue] {
     /**
-     * Converts this JSON-LD value to a Scala object that can be passed to [[org.knora.webapi.util.JavaUtil.deepScalaToJava]],
-     * whose return value can then be passed to the JSON-LD Java library.
+     * Converts this JSON-LD value to a `javax.json` [[JsonValue]].
      */
-    def toAny: Any
+    def toJavaxJsonValue: JsonValue
 }
 
 /**
@@ -65,7 +76,9 @@ sealed trait JsonLDValue extends Ordered[JsonLDValue] {
  * @param value the underlying string.
  */
 case class JsonLDString(value: String) extends JsonLDValue {
-    override def toAny: Any = value
+    override def toJavaxJsonValue: JsonString = {
+        Json.createValue(value)
+    }
 
     override def compare(that: JsonLDValue): Int = {
         that match {
@@ -81,7 +94,9 @@ case class JsonLDString(value: String) extends JsonLDValue {
  * @param value the underlying integer.
  */
 case class JsonLDInt(value: Int) extends JsonLDValue {
-    override def toAny: Any = value
+    override def toJavaxJsonValue: JsonNumber = {
+        Json.createValue(value)
+    }
 
     override def compare(that: JsonLDValue): Int = {
         that match {
@@ -97,7 +112,13 @@ case class JsonLDInt(value: Int) extends JsonLDValue {
  * @param value the underlying boolean value.
  */
 case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
-    override def toAny: Any = value
+    override def toJavaxJsonValue: JsonValue = {
+        if (value) {
+            JsonValue.TRUE
+        } else {
+            JsonValue.FALSE
+        }
+    }
 
     override def compare(that: JsonLDValue): Int = {
         that match {
@@ -113,8 +134,14 @@ case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
  * @param value a map of keys to JSON-LD values.
  */
 case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
-    override def toAny: Map[String, Any] = value.map {
-        case (k, v) => (k, v.toAny)
+    override def toJavaxJsonValue: JsonObject = {
+        val builder = Json.createObjectBuilder()
+
+        for ((entryKey, entryValue) <- value) {
+            builder.add(entryKey, entryValue.toJavaxJsonValue)
+        }
+
+        builder.build
     }
 
     /**
@@ -530,7 +557,15 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    override def toAny: Seq[Any] = value.map(_.toAny)
+    override def toJavaxJsonValue: JsonArray = {
+        val builder = Json.createArrayBuilder()
+
+        for (elem <- value) {
+            builder.add(elem.toJavaxJsonValue)
+        }
+
+        builder.build
+    }
 
     /**
      * Tries to interpret the elements of this array as JSON-LD objects containing `@language` and `@value`,
@@ -681,21 +716,39 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     def maybeUUID(key: String): Option[UUID] = body.maybeUUID(key: String)
 
     /**
-     * Converts this JSON-LD object to its compacted Java representation.
+     * Converts this JSON-LD document to its compacted representation.
      */
-    private def makeCompactedObject: java.util.Map[IRI, AnyRef] = {
-        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
-        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
-        JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+    private def makeCompactedJavaxJsonObject: JsonObject = {
+        val bodyAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(body.toJavaxJsonValue)
+        val contextAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(context.toJavaxJsonValue)
+        JsonLd.compact(bodyAsTitaniumJsonDocument, contextAsTitaniumJsonDocument).get
     }
 
     /**
-     * Converts this [[JsonLDDocument]] to a pretty-printed JSON-LD string.
+     * Formats this JSON-LD document as a string, using the specified [[JsonWriterFactory]].
+     *
+     * @param jsonWriterFactory a [[JsonWriterFactory]] configured with the desired options.
+     * @return the formatted document.
+     */
+    private def formatWithJsonWriterFactory(jsonWriterFactory: JsonWriterFactory): String = {
+        val compactedJavaxJsonObject: JsonObject = makeCompactedJavaxJsonObject
+        val stringWriter = new StringWriter()
+        val jsonWriter = jsonWriterFactory.createWriter(stringWriter)
+        jsonWriter.write(compactedJavaxJsonObject)
+        jsonWriter.close()
+        stringWriter.toString
+    }
+
+    /**
+     * Converts this JSON-LD document to a pretty-printed JSON-LD string.
      *
      * @return the formatted document.
      */
     def toPrettyString: String = {
-        JsonUtils.toPrettyString(makeCompactedObject)
+        val config = new util.HashMap[String, Boolean]()
+        config.put(JsonGenerator.PRETTY_PRINTING, true)
+        val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
+        formatWithJsonWriterFactory(jsonWriterFactory)
     }
 
     /**
@@ -704,7 +757,9 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
      * @return the formatted document.
      */
     def toCompactString: String = {
-        JsonUtils.toString(makeCompactedObject)
+        val config = new util.HashMap[String, Boolean]()
+        val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
+        formatWithJsonWriterFactory(jsonWriterFactory)
     }
 }
 
@@ -824,10 +879,11 @@ object JsonLDUtil {
      * has a `@value` predicate and a `@language` predicate.
      *
      * @param objectsWithLangs a map of language codes to predicate values.
-     * @return a JSON-LD array in which each element has a `@value` predicate and a `@language` predicate.
+     * @return a JSON-LD array in which each element has a `@value` predicate and a `@language` predicate,
+     *         sorted by language code.
      */
     def objectsWithLangsToJsonLDArray(objectsWithLangs: Map[String, String]): JsonLDArray = {
-        val objects: Seq[JsonLDObject] = objectsWithLangs.toSeq.map {
+        val objects: Seq[JsonLDObject] = objectsWithLangs.toSeq.sortBy(_._1).map {
             case (lang, obj) =>
                 objectWithLangToJsonLDObject(
                     obj = obj,
@@ -845,56 +901,59 @@ object JsonLDUtil {
      * @return a [[JsonLDDocument]].
      */
     def parseJsonLD(jsonLDString: String): JsonLDDocument = {
-        val jsonObject: AnyRef = try {
-            JsonUtils.fromString(jsonLDString)
-        } catch {
-            case e: com.fasterxml.jackson.core.JsonParseException => throw BadRequestException(s"Couldn't parse JSON-LD: ${e.getMessage}")
-        }
+        // Parse the string into a javax.json.JsonStructure.
+        val stringReader = new StringReader(jsonLDString)
+        val jsonReader: JsonReader = Json.createReader(stringReader)
+        val jsonStructure: JsonStructure = jsonReader.read()
 
-        val context: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]()
-        val options: JsonLdOptions = new JsonLdOptions()
-        val compact: java.util.Map[IRI, AnyRef] = JsonLdProcessor.compact(jsonObject, context, options)
-        val scalaColl: Any = JavaUtil.deepJavaToScala(compact)
+        // Convert the JsonStructure to a Titanium JsonDocument.
+        val titaniumDocument: JsonDocument = JsonDocument.of(jsonStructure)
 
-        val scalaMap: Map[String, Any] = try {
-            scalaColl.asInstanceOf[Map[String, Any]]
-        } catch {
-            case _: java.lang.ClassCastException => throw BadRequestException(s"Expected JSON-LD object: $scalaColl")
-        }
+        // Use Titanium to compact the document with an empty context.
+        val emptyContext = JsonDocument.of(Json.createObjectBuilder().build())
+        val compactedJsonObject: JsonObject = JsonLd.compact(titaniumDocument, emptyContext).get
 
-        mapToJsonLDDocument(scalaMap)
+        // Convert the resulting javax.json.JsonObject to a JsonLDDocument.
+        javaxJsonObjectToJsonLDDocument(compactedJsonObject)
     }
 
     /**
-     * Converts a map into a [[JsonLDDocument]].
+     * Converts JSON object into a [[JsonLDDocument]].
      *
-     * @param docContent a map representing a JSON-LD object.
+     * @param jsonObject a JSON object.
      * @return
      */
-    private def mapToJsonLDDocument(docContent: Map[String, Any]): JsonLDDocument = {
-        def anyToJsonLDValue(anyVal: Any): JsonLDValue = {
-            anyVal match {
-                case string: String => JsonLDString(string)
-                case int: Int => JsonLDInt(int)
-                case bool: Boolean => JsonLDBoolean(bool)
+    private def javaxJsonObjectToJsonLDDocument(jsonObject: JsonObject): JsonLDDocument = {
+        import collection.JavaConverters._
 
-                case obj: Map[_, _] =>
-                    val content: Map[String, JsonLDValue] = obj.map {
-                        case (key: String, value: Any) => key -> anyToJsonLDValue(value)
-                        case (otherKey, otherValue) => throw BadRequestException(s"Unexpected types in JSON-LD object: $otherKey, $otherValue")
-                    }
+        def jsonValueToJsonLDValue(jsonValue: JsonValue): JsonLDValue = {
+            jsonValue match {
+                case jsonString: JsonString => JsonLDString(jsonString.getString)
+                case jsonNumber: JsonNumber => JsonLDInt(jsonNumber.intValue)
+                case JsonValue.TRUE => JsonLDBoolean(true)
+                case JsonValue.FALSE => JsonLDBoolean(false)
+
+                case jsonObject: JsonObject =>
+                    val content: Map[IRI, JsonLDValue] = jsonObject.keySet.asScala.toSet.map {
+                        key: IRI => key -> jsonValueToJsonLDValue(jsonObject.get(key))
+                    }.toMap
 
                     JsonLDObject(content)
 
-                case array: Seq[Any] => JsonLDArray(array.map(value => anyToJsonLDValue(value)))
+                case jsonArray: JsonArray =>
+                    val content: Seq[JsonLDValue] = jsonArray.asScala.map {
+                        elem => jsonValueToJsonLDValue(elem)
+                    }
 
-                case _ => throw BadRequestException(s"Unexpected type in JSON-LD input: $anyVal")
+                    JsonLDArray(content)
+
+                case _ => throw BadRequestException(s"Unexpected type in JSON-LD input: $jsonValue")
             }
         }
 
-        anyToJsonLDValue(docContent) match {
+        jsonValueToJsonLDValue(jsonObject) match {
             case obj: JsonLDObject => JsonLDDocument(body = obj, context = JsonLDObject(Map.empty[IRI, JsonLDValue]))
-            case _ => throw BadRequestException(s"Expected JSON-LD object: $docContent")
+            case _ => throw BadRequestException(s"Expected JSON-LD object: $jsonObject")
         }
     }
 }

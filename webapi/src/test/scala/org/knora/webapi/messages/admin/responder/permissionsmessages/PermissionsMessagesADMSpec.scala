@@ -580,6 +580,30 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
         }
     }
 
+    "get all project permissions" should {
+        "return 'BadRequest' if the supplied project IRI for PermissionsForProjectGetRequestADM is not valid" in {
+            val caught = intercept[BadRequestException](
+                PermissionsForProjectGetRequestADM(
+                    projectIri = "invalid-project-IRI",
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Invalid project IRI")
+        }
+
+        "return 'ForbiddenException' if the user requesting PermissionsForProjectGetRequestADM is not SystemAdmin" in {
+            val caught = intercept[ForbiddenException](
+                PermissionsForProjectGetRequestADM(
+                    projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === "Permissions can only be queried by system and project admin.")
+        }
+    }
+    
     "querying the user's 'PermissionsDataADM' with 'hasPermissionFor'" should {
         "return true if the user is allowed to create a resource (root user)" in {
 

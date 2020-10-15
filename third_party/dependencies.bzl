@@ -98,8 +98,9 @@ def dependencies():
             "de.heikoseeberger:akka-http-circe_2.12:1.21.0",
             "com.fasterxml.jackson.module:jackson-module-scala_2.12:2.9.4",
 
-            "com.github.jsonld-java:jsonld-java:0.12.0",
-            "com.apicatalog:titanium-json-ld:0.8.3",
+            "com.apicatalog:titanium-json-ld:0.8.5",
+            "javax.json:javax.json-api:1.1.4",
+            "org.glassfish:jakarta.json:1.1.6",
 
             # swagger (api documentation)
             "com.github.swagger-akka-http:swagger-akka-http_2.12:0.14.0",
@@ -123,7 +124,7 @@ def dependencies():
             "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
             "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
             "org.scalatest:scalatest_2.12:3.1.2",
-            "org.testcontainers:testcontainers:1.14.3",
+            "org.testcontainers:testcontainers:1.15.0-rc2",
             "junit:junit:4.13",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
@@ -157,7 +158,6 @@ ALL_WEBAPI_MAIN_DEPENDENCIES = [
     "//webapi/src/main/scala/org/knora/webapi/responders",
     "//webapi/src/main/scala/org/knora/webapi/routing",
     "//webapi/src/main/scala/org/knora/webapi/settings",
-    "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
     "//webapi/src/main/scala/org/knora/webapi/store",
     "//webapi/src/main/scala/org/knora/webapi/util",
     "//webapi/src/main/scala/org/knora/webapi/util/cache",
@@ -184,8 +184,8 @@ BASE_TEST_DEPENDENCIES_WITH_JSON = BASE_TEST_DEPENDENCIES + [
 ]
 
 BASE_TEST_DEPENDENCIES_WITH_JSON_LD = BASE_TEST_DEPENDENCIES + [
-    "@maven//:com_fasterxml_jackson_core_jackson_core",
-    "@maven//:com_github_jsonld_java_jsonld_java",
+    "@maven//:io_spray_spray_json_2_12",
     "@maven//:com_apicatalog_titanium_json_ld",
+    "@maven//:javax_json_javax_json_api",
+    "@maven//:org_glassfish_jakarta_json"
 ]
-

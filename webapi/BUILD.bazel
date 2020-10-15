@@ -60,11 +60,11 @@ scala_library(
         #
         "@maven//:ch_megard_akka_http_cors_2_12",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-        "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_github_andrewoma_dexx_collection",
-        "@maven//:com_github_jsonld_java_jsonld_java",
         "@maven//:com_apicatalog_titanium_json_ld",
+        "@maven//:javax_json_javax_json_api",
+        "@maven//:org_glassfish_jakarta_json",
         "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",
         "@maven//:com_google_gwt_gwt_servlet",
         "@maven//:com_ibm_icu_icu4j",
@@ -159,7 +159,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/responders",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
         "//webapi/src/main/scala/org/knora/webapi/store",
         "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
@@ -168,7 +167,6 @@ scala_library(
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:com_github_jsonld_java_jsonld_java",
         "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -182,6 +180,8 @@ scala_library(
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_testcontainers_testcontainers",
         "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_pool2",
+        "@maven//:redis_clients_jedis",
     ],
 )
 
@@ -205,6 +205,7 @@ scala_library(
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = [
+        "//webapi:test_library",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/app",
         "//webapi/src/main/scala/org/knora/webapi/core",
@@ -213,7 +214,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi/src/main/scala/org/knora/webapi/sharedtestdata",
         "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",

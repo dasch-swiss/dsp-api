@@ -407,7 +407,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         location match {
             case None => Vector(None)
             case Some(loc) =>
-                Vector(Some(("preview_loc_origname", loc.origname)))
+                Vector(Some(("preview_loc_origname", loc.origname.getOrElse(""))))
         }
     }
 

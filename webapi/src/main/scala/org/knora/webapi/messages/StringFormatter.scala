@@ -126,6 +126,11 @@ object StringFormatter {
     val CalendarJulian: String = "JULIAN"
 
     /**
+     * String representation of the name of the Islamic calendar.
+     */
+    val CalendarIslamic: String = "ISLAMIC"
+
+    /**
      * String representation of day precision in a date.
      */
     val PrecisionDay: String = "DAY"
@@ -739,7 +744,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
-    private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
+    private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
         CalendarSeparator + // calendar name
         """(?:[1-9][0-9]{0,3})(""" + // year
         PrecisionSeparator +
@@ -2398,7 +2403,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
      * @param projectInfo the project's [[ProjectInfoV1]].
      * @return the IRI of the project's data named graph.
      */
-    def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
+    def projectDataNamedGraphV1(projectInfo: ProjectInfoV1): IRI = {
         OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
     }
 
@@ -2836,6 +2841,17 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
             case None =>
                 arkUrlWithoutTimestamp
         }
+    }
+
+    /**
+     * Constructs a URL for accessing a file that has been uploaded to Sipi's temporary storage.
+     *
+     * @param settings the application settings.
+     * @param filename the filename.
+     * @return a URL for accessing the file.
+     */
+    def makeSipiTempFileUrl(settings: KnoraSettingsImpl, filename: String): String = {
+        s"${settings.internalSipiBaseUrl}/tmp/$filename"
     }
 
     /**

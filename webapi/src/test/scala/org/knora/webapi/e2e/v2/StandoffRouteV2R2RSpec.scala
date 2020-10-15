@@ -59,7 +59,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
     private val anythingUser = SharedTestDataADM.anythingUser1
     private val anythingUserEmail = anythingUser.email
 
-    private val password = "test"
+    private val password = SharedTestDataADM.testPass
 
     object RequestParams {
 

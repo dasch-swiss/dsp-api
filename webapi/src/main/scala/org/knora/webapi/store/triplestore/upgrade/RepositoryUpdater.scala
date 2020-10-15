@@ -79,19 +79,22 @@ class RepositoryUpdater(system: ActorSystem,
      */
     def maybeUpdateRepository: Future[RepositoryUpdatedResponse] = {
         for {
-            maybeRepositoryVersionString <- getRepositoryVersion
+            foundRepositoryVersion: Option[String] <- getRepositoryVersion
+            requiredRepositoryVersion = org.knora.webapi.KnoraBaseVersion
 
             // Is the repository up to date?
-            repositoryUpdatedResponse: RepositoryUpdatedResponse <- if (maybeRepositoryVersionString.contains(org.knora.webapi.KnoraBaseVersion)) {
+            repositoryUpToData = foundRepositoryVersion.contains(requiredRepositoryVersion)
+            repositoryUpdatedResponse: RepositoryUpdatedResponse <- if (repositoryUpToData) {
                 // Yes. Nothing more to do.
-                FastFuture.successful(RepositoryUpdatedResponse(s"Repository is up to date at ${org.knora.webapi.KnoraBaseVersion}"))
+                FastFuture.successful(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
             } else {
                 // No. Construct the list of updates that it needs.
-                val pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion] = selectPluginsForNeededUpdates(maybeRepositoryVersionString)
-                log.info(s"Updating repository with transformations: ${pluginsForNeededUpdates.map(_.versionString).mkString(", ")}")
+                log.info(s"Repository not up-to-date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion")
+                val selectedPlugins: Seq[PluginForKnoraBaseVersion] = selectPluginsForNeededUpdates(foundRepositoryVersion)
+                log.info(s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}")
 
                 // Update it with those plugins.
-                updateRepository(pluginsForNeededUpdates)
+                updateRepositoryWithSelectedPlugins(selectedPlugins)
             }
         } yield repositoryUpdatedResponse
     }
@@ -144,7 +147,7 @@ class RepositoryUpdater(system: ActorSystem,
      * @param pluginsForNeededUpdates the plugins needed to update the repository.
      * @return a [[RepositoryUpdatedResponse]] indicating what was done.
      */
-    private def updateRepository(pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Future[RepositoryUpdatedResponse] = {
+    private def updateRepositoryWithSelectedPlugins(pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Future[RepositoryUpdatedResponse] = {
         // Was a download directory specified in the application settings?
         val downloadDir: File = settings.upgradeDownloadDir match {
             case Some(configuredDir) =>

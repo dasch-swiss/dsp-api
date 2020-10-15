@@ -86,9 +86,17 @@ class KnoraSettingsImpl(config: Config) extends Extension {
         }
     }
 
-    val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
+    val imageMimeTypes: Set[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
         mType: ConfigValue => mType.unwrapped.toString
-    }.toVector
+    }.toSet
+
+    val documentMimeTypes: Set[String] = config.getList("app.sipi.document-mime-types").iterator.asScala.map {
+        mType: ConfigValue => mType.unwrapped.toString
+    }.toSet
+
+    val textMimeTypes: Set[String] = config.getList("app.sipi.text-mime-types").iterator.asScala.map {
+        mType: ConfigValue => mType.unwrapped.toString
+    }.toSet
 
     val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
     val internalSipiHost: String = config.getString("app.sipi.internal-host")
@@ -101,16 +109,8 @@ class KnoraSettingsImpl(config: Config) extends Extension {
     val externalSipiHost: String = config.getString("app.sipi.external-host")
     val externalSipiPort: Int = config.getInt("app.sipi.external-port")
     val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + (if (externalSipiPort != 80) ":" + externalSipiPort else "")
-
-
     val sipiFileServerPrefix: String = config.getString("app.sipi.file-server-path")
-
     val externalSipiIIIFGetUrl: String = externalSipiBaseUrl
-
-    val internalSipiImageConversionUrlV1: String = s"$internalSipiBaseUrl"
-    val sipiPathConversionRouteV1: String = config.getString("app.sipi.v1.path-conversion-route")
-    val sipiFileConversionRouteV1: String = config.getString("app.sipi.v1.file-conversion-route")
-
     val sipiFileMetadataRouteV2: String = config.getString("app.sipi.v2.file-metadata-route")
     val sipiMoveFileRouteV2: String = config.getString("app.sipi.v2.move-file-route")
     val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
@@ -209,8 +209,28 @@ class KnoraSettingsImpl(config: Config) extends Extension {
 
     // Cache Service
     val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
-    val redisHost: String = config.getString("app.cache-service.redis.host")
-    val redisPort: Int = config.getInt("app.cache-service.redis.port")
+    val cacheServiceRedisHost: String = config.getString("app.cache-service.redis.host")
+    val cacheServiceRedisPort: Int = config.getInt("app.cache-service.redis.port")
+
+    // Client test data service
+
+    val collectClientTestData: Boolean = if (config.hasPath("app.client-test-data-service.collect-client-test-data")) {
+        config.getBoolean("app.client-test-data-service.collect-client-test-data")
+    } else {
+        false
+    }
+
+    val clientTestDataRedisHost: Option[String] = if (config.hasPath("app.client-test-data-service.redis.host")) {
+        Some(config.getString("app.client-test-data-service.redis.host"))
+    } else {
+        None
+    }
+
+    val clientTestDataRedisPort: Option[Int] = if (config.hasPath("app.client-test-data-service.redis.port")) {
+        Some(config.getInt("app.client-test-data-service.redis.port"))
+    } else {
+        None
+    }
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x

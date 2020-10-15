@@ -393,17 +393,18 @@ A text value can have a specified language:
 Humanities data includes many different types of dates. In Knora, a date
 has a specified calendar, and is always represented as a period with
 start and end points (which may be equal), each of which has a precision
-(`DAY`, `MONTH`, or `YEAR`). An optional ERA indicator term (`BCE`,
-`CE`, or `BC`, `AD`) can be added to the date, when no era is provided
-the default era `AD` will be considered. Internally, the start and end
-points are stored as two Julian Day Numbers. This calendar-independent
-representation makes it possible to compare and search for dates
-regardless of the calendar in which they were entered. Properties:
+(`DAY`, `MONTH`, or `YEAR`). For `GREGORIAN` and `JULIAN` calendars, an 
+optional `ERA` indicator term (`BCE`, `CE`, or `BC`, `AD`) can be added 
+to the date, when no era is provided the default era `AD` will be considered. 
+Internally, the start and end points are stored as two Julian Day Numbers. 
+This calendar-independent representation makes it possible to compare 
+and search for dates regardless of the calendar in which they were entered. 
+Properties:
 
 `valueHasCalendar` (1)
 
 :   The name of the calendar in which the date should be displayed.
-    Currently `GREGORIAN` and `JULIAN` are supported.
+    Currently `GREGORIAN`, `JULIAN`, and `ISLAMIC` civil calendars are supported.
 
 `valueHasStartJDN` (1)
 

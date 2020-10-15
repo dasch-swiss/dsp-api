@@ -59,7 +59,7 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     /**
      * The Redis Client Pool
      */
-    val pool: JedisPool = new JedisPool(new JedisPoolConfig(), s.redisHost, s.redisPort, 20999)
+    val pool: JedisPool = new JedisPool(new JedisPoolConfig(), s.cacheServiceRedisHost, s.cacheServiceRedisPort, 20999)
 
     // this is needed for time measurements using 'org.knora.webapi.Timing'
 

@@ -30,31 +30,36 @@ import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
  *
  * @param entities a map of Gravsearch entities to the types that were determined for them. If an entity
  *                 has more than one type, this means that it has been used with inconsistent types.
+ * @param entitiesInferredFromPropertyIris entities whose types were inferred from their use with a property IRI.
  */
 case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]],
-                                            entitiesInferredFromProperties: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty) {
+                                            entitiesInferredFromPropertyIris: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty) {
     /**
      * Adds types for an entity.
      *
      * @param entity               the entity for which types have been found.
      * @param entityTypes          the types to be added.
-     * @param inferredFromProperty `true` if any of the types of this entity were inferred from its use with a property.
+     * @param inferredFromPropertyIri `true` if any of the types of this entity were inferred from its use with a property IRI.
      * @return a new [[IntermediateTypeInspectionResult]] containing the additional type information.
      */
-    def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo], inferredFromProperty: Boolean = false): IntermediateTypeInspectionResult = {
-        val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
+    def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo], inferredFromPropertyIri: Boolean = false): IntermediateTypeInspectionResult = {
+        if (entityTypes.nonEmpty) {
+            val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
 
-        val newEntitiesInferredFromProperties = if (inferredFromProperty && entityTypes.nonEmpty) {
-            val newTypesInferredFromProperty = entitiesInferredFromProperties.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
-            entitiesInferredFromProperties + (entity -> newTypesInferredFromProperty)
+            val newEntitiesInferredFromPropertyIris = if (inferredFromPropertyIri && entityTypes.nonEmpty) {
+                val newTypesInferredFromPropertyIris = entitiesInferredFromPropertyIris.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
+                entitiesInferredFromPropertyIris + (entity -> newTypesInferredFromPropertyIris)
+            } else {
+                entitiesInferredFromPropertyIris
+            }
+
+            IntermediateTypeInspectionResult(
+                entities = entities + (entity -> newTypes),
+                entitiesInferredFromPropertyIris = newEntitiesInferredFromPropertyIris
+            )
         } else {
-            entitiesInferredFromProperties
+            this
         }
-
-        IntermediateTypeInspectionResult(
-            entities = entities + (entity -> newTypes),
-            entitiesInferredFromProperties = newEntitiesInferredFromProperties
-        )
     }
 
     /**
@@ -67,21 +72,21 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
     def removeType(entity: TypeableEntity, typeToRemove: GravsearchEntityTypeInfo): IntermediateTypeInspectionResult = {
         val remainingTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) - typeToRemove
 
-        val updatedEntitiesInferredFromProperties = if (entitiesInferredFromProperties.exists(aType => aType._1 == entity && aType._2.contains(typeToRemove))) {
-            val remainingTypesInferredFromProperty: Set[GravsearchEntityTypeInfo] = entitiesInferredFromProperties.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) - typeToRemove
+        val updatedEntitiesInferredFromProperties = if (entitiesInferredFromPropertyIris.exists(aType => aType._1 == entity && aType._2.contains(typeToRemove))) {
+            val remainingTypesInferredFromProperty: Set[GravsearchEntityTypeInfo] = entitiesInferredFromPropertyIris.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) - typeToRemove
             if (remainingTypesInferredFromProperty.nonEmpty) {
-                entitiesInferredFromProperties + (entity -> remainingTypesInferredFromProperty)
+                entitiesInferredFromPropertyIris + (entity -> remainingTypesInferredFromProperty)
             }
             else {
-                entitiesInferredFromProperties - entity
+                entitiesInferredFromPropertyIris - entity
             }
         } else {
-            entitiesInferredFromProperties
+            entitiesInferredFromPropertyIris
         }
 
         IntermediateTypeInspectionResult(
             entities = entities + (entity -> remainingTypes),
-            entitiesInferredFromProperties = updatedEntitiesInferredFromProperties
+            entitiesInferredFromPropertyIris = updatedEntitiesInferredFromProperties
         )
     }
 
@@ -117,7 +122,7 @@ case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[Gr
                         throw AssertionException(s"Cannot generate final type inspection result because of inconsistent types")
                     }
             },
-            entitiesInferredFromProperties = entitiesInferredFromProperties
+            entitiesInferredFromProperties = entitiesInferredFromPropertyIris
         )
     }
 }

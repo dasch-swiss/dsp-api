@@ -402,7 +402,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                         new HealthRoute(routeData).knoraApiPath ~
                             new VersionRoute(routeData).knoraApiPath ~
                             new RejectingRoute(routeData).knoraApiPath ~
-                            new ClientApiRoute(routeData).knoraApiPath ~
                             new ResourcesRouteV1(routeData).knoraApiPath ~
                             new ValuesRouteV1(routeData).knoraApiPath ~
                             new StandoffRouteV1(routeData).knoraApiPath ~
@@ -474,7 +473,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
                         ex.getMessage,
                         retryCnt
                     )
-                    self ! AppStart(ignoreRepository, requiresIIIFService, retryCnt + 1)
+
+                    // wait 1 second before trying to start again
+                    system.scheduler.scheduleOnce(1000 milliseconds) {
+                        self ! AppStart(ignoreRepository, requiresIIIFService, retryCnt + 1)
+                    }
                 } else {
                     logger.error(
                         "Failed to bind to {}:{}! - {}",

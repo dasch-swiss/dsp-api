@@ -243,6 +243,13 @@ test-unit: docker-build ## runs the dsp-api unit tests.
 test-e2e: docker-build ## runs the dsp-api e2e tests.
 	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
 
+.PHONY: client-test-data
+client-test-data: docker-build ## runs the dsp-api e2e tests and generates client test data.
+	docker-compose -f docker-compose.yml up -d redis
+	$(CURRENT_DIR)/webapi/scripts/clear-client-test-data.sh
+	bazel test --cache_test_results=no //webapi/src/test/scala/org/knora/webapi/e2e/... --action_env=KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA=true
+	$(CURRENT_DIR)/webapi/scripts/dump-client-test-data.sh
+
 .PHONY: test-it
 test-it: docker-build ## runs the dsp-api integration tests.
 	bazel test //webapi/src/it/...
@@ -281,6 +288,11 @@ init-db-test: stack-db-remove stack-db-only ## initializes the knora-test reposi
 init-db-test-minimal: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
+
+.PHONY: init-db-test-empty
+init-db-test-empty: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
+	@echo $@
+	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
 
 .PHONY: init-db-test-unit
 init-db-test-unit: stack-db-remove stack-db-only ## initializes the knora-test-unit repository

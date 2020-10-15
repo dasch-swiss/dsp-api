@@ -45,6 +45,8 @@ scala_binary(
     ],
     main_class = "org.knora.webapi.app.Main",
     resources = [
+        "//knora-ontologies",
+        "//webapi/scripts:fuseki_repository_config_ttl_template",
         "//webapi/src/main/resources",
     ],
     runtime_deps = [

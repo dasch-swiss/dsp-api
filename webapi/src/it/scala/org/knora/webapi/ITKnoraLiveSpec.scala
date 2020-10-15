@@ -19,9 +19,13 @@
 
 package org.knora.webapi
 
+import java.io.File
+
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
@@ -38,10 +42,10 @@ import org.knora.webapi.util.StartupUtils
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
-import spray.json.{JsObject, _}
+import spray.json._
 
-import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -72,7 +76,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
@@ -121,7 +125,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         logger.info("... loading test data done.")
     }
 
-    protected def getResponseString(request: HttpRequest): String = {
+    protected def getResponseStringOrThrow(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
         val responseBodyStr: String = Await.result(response.entity.toStrict(10999.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
 
@@ -133,20 +137,107 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     }
 
     protected def checkResponseOK(request: HttpRequest): Unit = {
-        getResponseString(request)
+        getResponseStringOrThrow(request)
     }
 
     protected def getResponseJson(request: HttpRequest): JsObject = {
-        getResponseString(request).parseJson.asJsObject
+        getResponseStringOrThrow(request).parseJson.asJsObject
     }
 
     protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
+        val responseFuture: Future[HttpResponse] = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
 
     protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument = {
-        val responseBodyStr = getResponseString(request)
+        val responseBodyStr = getResponseStringOrThrow(request)
         JsonLDUtil.parseJsonLD(responseBodyStr)
+    }
+
+    /**
+     * Represents a file to be uploaded to Sipi.
+     *
+     * @param path     the path of the file.
+     * @param mimeType the MIME type of the file.
+     */
+    protected case class FileToUpload(path: String, mimeType: ContentType)
+
+    /**
+     * Represents an image file to be uploaded to Sipi.
+     *
+     * @param fileToUpload the file to be uploaded.
+     * @param width        the image's width in pixels.
+     * @param height       the image's height in pixels.
+     */
+    protected case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
+
+    /**
+     * Represents the information that Sipi returns about each file that has been uploaded.
+     *
+     * @param originalFilename the original filename that was submitted to Sipi.
+     * @param internalFilename Sipi's internal filename for the stored temporary file.
+     * @param temporaryUrl     the URL at which the temporary file can be accessed.
+     * @param fileType         `image`, `text`, or `document`.
+     */
+    protected case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryUrl: String, fileType: String)
+
+    /**
+     * Represents Sipi's response to a file upload request.
+     *
+     * @param uploadedFiles the information about each file that was uploaded.
+     */
+    protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
+
+    object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(SipiUploadResponseEntry)
+        implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+    }
+
+    import SipiUploadResponseJsonProtocol._
+
+    /**
+     * Uploads a file to Sipi and returns the information in Sipi's response.
+     *
+     * @param loginToken    the login token to be included in the request to Sipi.
+     * @param filesToUpload the files to be uploaded.
+     * @return a [[SipiUploadResponse]] representing Sipi's response.
+     */
+    protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
+        // Make a multipart/form-data request containing the files.
+
+        val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map {
+            fileToUpload =>
+                val fileToSend = new File(fileToUpload.path)
+                assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
+
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+        }
+
+        val sipiFormData = Multipart.FormData(formDataParts: _*)
+
+        // Send Sipi the file in a POST request.
+        val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
+
+        val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
+        // println(sipiUploadResponseJson.prettyPrint)
+        val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
+        // println(s"sipiUploadResponse: $sipiUploadResponse")
+
+        // Request the temporary file from Sipi.
+        for (responseEntry <- sipiUploadResponse.uploadedFiles) {
+            val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/max/0/default.jpg")
+            } else {
+                Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/file")
+            }
+
+            checkResponseOK(sipiGetTmpFileRequest)
+        }
+
+        sipiUploadResponse
     }
 }
