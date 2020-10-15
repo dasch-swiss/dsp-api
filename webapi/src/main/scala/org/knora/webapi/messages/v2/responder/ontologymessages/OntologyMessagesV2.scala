@@ -1064,7 +1064,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
                           isWholeOntology: Boolean = false,
-                          userLang: Option[String] = None) extends KnoraResponseV2 with KnoraReadV2[ReadOntologyV2] {
+                          userLang: Option[String] = None) extends KnoraJsonLDResponseV2 with KnoraReadV2[ReadOntologyV2] {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -1448,7 +1448,7 @@ object InputOntologyV2 {
  *
  * @param ontologies the metadata to be returned.
  */
-case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 with KnoraReadV2[ReadOntologyMetadataV2] {
+case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraJsonLDResponseV2 with KnoraReadV2[ReadOntologyMetadataV2] {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
         // We may have metadata for knora-api in more than one schema. Just return the one for the target schema.

@@ -24,7 +24,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraJsonLDResponseV2}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.{messages, _}
@@ -76,7 +76,7 @@ trait ListResponderResponseV2 {
  * @param userLang     the user's preferred language.
  * @param fallbackLang the fallback language if the preferred language is not available.
  */
-case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
+case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraJsonLDResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
@@ -172,7 +172,7 @@ case class NodeGetRequestV2(nodeIri: IRI,
  * @param userLang     the user's preferred language.
  * @param fallbackLang the fallback language if the preferred language is not available.
  */
-case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
+case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraJsonLDResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 

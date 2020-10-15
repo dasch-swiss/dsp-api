@@ -105,7 +105,7 @@ case class ResourceHistoryEntry(versionDate: Instant, author: IRI)
 /**
  * Represents the version history of the values of a resource.
  */
-case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) extends KnoraResponseV2 {
+case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) extends KnoraJsonLDResponseV2 {
     /**
      * Converts the response to a data structure that can be used to generate JSON-LD.
      *
@@ -857,7 +857,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
  */
 case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
                                    hiddenResourceIris: Set[IRI] = Set.empty,
-                                   mayHaveMoreResults: Boolean = false) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
+                                   mayHaveMoreResults: Boolean = false) extends KnoraJsonLDResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
         copy(
@@ -1071,7 +1071,7 @@ case class GraphEdgeV2(source: IRI, propertyIri: SmartIri, target: IRI) extends 
  * @param nodes the nodes in the graph.
  * @param edges the edges in the graph.
  */
-case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV2], ontologySchema: OntologySchema) extends KnoraResponseV2 with KnoraReadV2[GraphDataGetResponseV2] {
+case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV2], ontologySchema: OntologySchema) extends KnoraJsonLDResponseV2 with KnoraReadV2[GraphDataGetResponseV2] {
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
