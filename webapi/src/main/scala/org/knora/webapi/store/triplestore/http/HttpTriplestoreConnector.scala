@@ -859,18 +859,18 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 val response = client.execute(targetHost, request, context)
                 maybeResponse = Some(response)
 
-                val responseEntityStr: String = Option(response.getEntity) match {
-                    case Some(responseEntity) =>
-                        EntityUtils.toString(responseEntity)
-                    case None => ""
-                }
+//                val responseEntityStr: String = Option(response.getEntity) match {
+//                    case Some(responseEntity) =>
+//                        EntityUtils.toString(responseEntity)
+//                    case None => ""
+//                }
 
                 val statusCode: Int = response.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
                 if (statusCategory != 2) {
-                    log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+                    log.error(s"Triplestore responded with HTTP code $statusCode")
+                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
                 }
 
                 val took = System.currentTimeMillis() - start
@@ -892,9 +892,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     def returnResponseAsString(response: CloseableHttpResponse): String = {
-        val responseEntity: HttpEntity = response.getEntity
-        val responseEntityStr: String = EntityUtils.toString(responseEntity)
-        responseEntityStr
+        Option(response.getEntity) match {
+            case None => ""
+            case Some(responseEntity) =>
+                EntityUtils.toString(responseEntity)
+        }
     }
 
     def returnUploadResponse(response: CloseableHttpResponse): RepositoryUploadedResponse = {
