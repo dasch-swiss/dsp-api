@@ -170,6 +170,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case SparqlExtendedConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
         case SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpConstructFile(sparql, graphIri, outputFile), log)
         case NamedGraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
+        case NamedGraphDataRequest(graphIri: IRI) => try2Message(sender(), sparqlHttpGraphData(graphIri), log)
         case SparqlUpdateRequest(sparql: String) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql: String) => try2Message(sender(), sparqlHttpAsk(sparql), log)
         case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
@@ -701,7 +702,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return a string containing the contents of the graph in TriG format.
      */
     private def sparqlHttpGraphFile(graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
-        var httpContext: HttpClientContext = makeHttpContext
+        val httpContext: HttpClientContext = makeHttpContext
 
         val uriBuilder: URIBuilder = new URIBuilder(graphPath)
 
@@ -724,6 +725,35 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         )
     }
 
+    /**
+     * Requests the contents of a named graph, returning the response as Turtle.
+     *
+     * @param graphIri   the IRI of the named graph.
+     * @return a string containing the contents of the graph in Turtle format.
+     */
+    private def sparqlHttpGraphData(graphIri: IRI): Try[NamedGraphDataResponse] = {
+        val httpContext: HttpClientContext = makeHttpContext
+
+        val uriBuilder: URIBuilder = new URIBuilder(graphPath)
+
+        if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+            uriBuilder.setParameter("infer", "false").setParameter("context", s"<$graphIri>")
+        } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+            uriBuilder.setParameter("graph", s"$graphIri")
+        } else {
+            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        }
+
+        val httpGet = new HttpGet(uriBuilder.build())
+        httpGet.addHeader("Accept", mimeTypeTextTurtle)
+        val makeResponse: CloseableHttpResponse => NamedGraphDataResponse = returnGraphDataAsTurtle(graphIri)
+        doHttpRequest[NamedGraphDataResponse](
+            client = queryHttpClient,
+            request = httpGet,
+            context = httpContext,
+            processResponse = makeResponse
+        )
+    }
     /**
      * Submits a SPARQL request to the triplestore and returns the response as a string.
      *
@@ -909,6 +939,18 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             case None => ""
             case Some(responseEntity) =>
                 EntityUtils.toString(responseEntity)
+        }
+    }
+
+    def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): NamedGraphDataResponse = {
+        Option(response.getEntity) match {
+            case None =>
+                log.error(s"Triplestore returned no content for graph ${graphIri}")
+                throw TriplestoreResponseException(s"Triplestore returned no content for graph ${graphIri}")
+            case Some(responseEntity: HttpEntity) =>
+                NamedGraphDataResponse(
+                    turtle = EntityUtils.toString(responseEntity)
+                )
         }
     }
 
