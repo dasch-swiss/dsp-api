@@ -626,7 +626,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val stringEntity = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeApplicationTrig))
         httpPost.setEntity(stringEntity)
 
-        executeHttpRequestAndReturnResponse[RepositoryUploadedResponse](
+        doHttpRequest[RepositoryUploadedResponse](
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
@@ -716,7 +716,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val httpGet = new HttpGet(uriBuilder.build())
         httpGet.addHeader("Accept", mimeTypeTextTurtle)
         val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile, Some(graphIri), true)
-        executeHttpRequestAndReturnResponse[FileWrittenResponse](
+        doHttpRequest[FileWrittenResponse](
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
@@ -760,7 +760,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             (queryHttpClient, queryHttpPost)
         }
 
-        executeHttpRequestAndReturnResponse[String](
+        doHttpRequest[String](
             client = httpClient,
             request = httpPost,
             context = httpContext,
@@ -801,7 +801,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             .setDefaultRequestConfig(queryRequestConfig)
             .build
         val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile)
-        executeHttpRequestAndReturnResponse[FileWrittenResponse](
+
+        doHttpRequest[FileWrittenResponse](
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
@@ -822,11 +823,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeApplicationTrig, "UTF-8"))
         httpPost.setEntity(fileEntity)
 
-        executeHttpRequestAndReturnResponse[RepositoryUploadedResponse](
+        doHttpRequest[RepositoryUploadedResponse](
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
-            processResponse = returnUploadResponse)
+            processResponse = returnUploadResponse
+        )
     }
 
     /**
@@ -856,10 +858,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @tparam T the return type of `processResponse`.
      * @return the return value of `processResponse`.
      */
-    private def executeHttpRequestAndReturnResponse[T](client: CloseableHttpClient,
-                                                       request: HttpRequest,
-                                                       context: HttpClientContext,
-                                                       processResponse: CloseableHttpResponse => T): Try[T] = {
+    private def doHttpRequest[T](client: CloseableHttpClient,
+                                 request: HttpRequest,
+                                 context: HttpClientContext,
+                                 processResponse: CloseableHttpResponse => T): Try[T] = {
         // Make an Option wrapper for the response, so we can close it if we get one,
         // even if an error occurs.
         var maybeResponse: Option[CloseableHttpResponse] = None
