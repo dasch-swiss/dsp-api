@@ -31,7 +31,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 
@@ -144,25 +144,27 @@ object RdfResponseFormatter {
         // A StringWriter to collect the formatted output.
         val stringWriter = new StringWriter()
 
-        // Construct an RDFWriter for the specified format.
-        val rdfWriter: RDFWriter = mediaType match {
-            case RdfMediaTypes.`application/ld+json` => Rio.createWriter(RDFFormat.JSONLD, stringWriter)
-            case RdfMediaTypes.`text/turtle` => Rio.createWriter(RDFFormat.TURTLE, stringWriter)
-            case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
-            case other => throw BadRequestException(s"Unsupported media type: $other")
+        mediaType match {
+            case RdfMediaTypes.`application/ld+json` =>
+                // Use our own conversion.
+                JsonLDUtil.fromModel(model).toPrettyString
+
+            case _ =>
+                // Construct an RDFWriter for the specified format.
+                val rdfWriter: RDFWriter = mediaType match {
+                    case RdfMediaTypes.`text/turtle` => Rio.createWriter(RDFFormat.TURTLE, stringWriter)
+                    case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
+                    case other => throw BadRequestException(s"Unsupported media type: $other")
+                }
+
+                // Configure the RDFWriter.
+                rdfWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
+                    set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
+
+                // Format the RDF.
+                Rio.write(model, rdfWriter)
+                stringWriter.toString
         }
-
-        // Configure the RDFWriter.
-        // TODO: Try again to get RDF4J to inline blank nodes in JSON-LD output.
-        rdfWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
-            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true).
-            set[JSONLDMode](JSONLDSettings.JSONLD_MODE, JSONLDMode.COMPACT).
-            // set[java.lang.Boolean](JSONLDSettings.HIERARCHICAL_VIEW, true).
-            set[java.lang.Boolean](JSONLDSettings.USE_NATIVE_TYPES, true)
-
-        // Format the RDF.
-        Rio.write(model, rdfWriter)
-        stringWriter.toString
     }
 }
 

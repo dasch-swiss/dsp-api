@@ -1156,6 +1156,12 @@ object JsonLDUtil {
         javaxJsonObjectToJsonLDDocument(compactedJsonObject)
     }
 
+    def fromModel(model: Model): JsonLDDocument = {
+        // TODO: inline blank nodes and entities with Knora data IRIs that are used only once.
+
+        ???
+    }
+
     /**
      * Converts JSON object into a [[JsonLDDocument]].
      *
