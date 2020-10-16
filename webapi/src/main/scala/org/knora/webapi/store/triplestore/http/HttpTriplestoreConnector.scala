@@ -630,7 +630,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
-            makeResponse = returnUploadResponse
+            processResponse = returnUploadResponse
         )
         // do the check again
         checkFusekiTriplestore(true)
@@ -720,7 +720,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
-            makeResponse = makeResponse
+            processResponse = makeResponse
         )
     }
 
@@ -764,7 +764,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = httpClient,
             request = httpPost,
             context = httpContext,
-            makeResponse = returnResponseAsString
+            processResponse = returnResponseAsString
         )
     }
 
@@ -805,7 +805,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
-            makeResponse = makeResponse
+            processResponse = makeResponse
         )
 
     }
@@ -826,7 +826,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
-            makeResponse = returnUploadResponse)
+            processResponse = returnUploadResponse)
     }
 
     /**
@@ -845,11 +845,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         httpContext
     }
 
+    /**
+     * Makes an HTTP connection to the triplestore, and delegates processing of the response
+     * to a function.
+     *
+     * @param client          the HTTP client to be used for the request.
+     * @param request         the request to be sent.
+     * @param context         the request context to be used.
+     * @param processResponse a function that processes the HTTP response.
+     * @tparam T the return type of `processResponse`.
+     * @return the return value of `processResponse`.
+     */
     private def executeHttpRequestAndReturnResponse[T](client: CloseableHttpClient,
                                                        request: HttpRequest,
                                                        context: HttpClientContext,
-                                                       makeResponse: (CloseableHttpResponse) => T
-                                                      ): Try[T] = {
+                                                       processResponse: CloseableHttpResponse => T): Try[T] = {
         // Make an Option wrapper for the response, so we can close it if we get one,
         // even if an error occurs.
         var maybeResponse: Option[CloseableHttpResponse] = None
@@ -875,7 +885,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             val took = System.currentTimeMillis() - start
             metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
-            makeResponse(response)
+            processResponse(response)
         }
 
         maybeResponse.foreach(_.close)
