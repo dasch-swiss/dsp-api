@@ -734,9 +734,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def getSparqlHttpResponse(sparql: String, isUpdate: Boolean, acceptMimeType: String = mimeTypeApplicationSparqlResultsJson): Try[String] = {
 
-            val httpContext: HttpClientContext = makeHttpContext
+        val httpContext: HttpClientContext = makeHttpContext
 
-            val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
+        val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
             val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
             val updateHttpPost = new HttpPost(sparqlUpdatePath)
@@ -806,7 +806,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             request = httpGet,
             context = httpContext,
             makeResponse = makeResponse
-            )
+        )
 
     }
 
@@ -826,7 +826,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
-            makeResponse= returnUploadResponse)
+            makeResponse = returnUploadResponse)
     }
 
     /**
@@ -850,36 +850,36 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                                                        context: HttpClientContext,
                                                        makeResponse: (CloseableHttpResponse) => T
                                                       ): Try[T] = {
+        // Make an Option wrapper for the response, so we can close it if we get one,
+        // even if an error occurs.
+        var maybeResponse: Option[CloseableHttpResponse] = None
 
         val triplestoreResponseTry = Try {
             val start = System.currentTimeMillis()
-            var maybeResponse: Option[CloseableHttpResponse] = None
+            val response = client.execute(targetHost, request, context)
+            maybeResponse = Some(response)
+            val statusCode: Int = response.getStatusLine.getStatusCode
+            val statusCategory: Int = statusCode / 100
 
-            try {
-                val response = client.execute(targetHost, request, context)
-                maybeResponse = Some(response)
+            if (statusCategory != 2) {
+                Option(response.getEntity).map(responseEntity => EntityUtils.toString(responseEntity)) match {
+                    case Some(responseEntityStr) =>
+                        log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+                        throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
 
-//                val responseEntityStr: String = Option(response.getEntity) match {
-//                    case Some(responseEntity) =>
-//                        EntityUtils.toString(responseEntity)
-//                    case None => ""
-//                }
-
-                val statusCode: Int = response.getStatusLine.getStatusCode
-                val statusCategory: Int = statusCode / 100
-
-                if (statusCategory != 2) {
-                    log.error(s"Triplestore responded with HTTP code $statusCode")
-                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+                    case None =>
+                        log.error(s"Triplestore responded with HTTP code $statusCode")
+                        throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
                 }
-
-                val took = System.currentTimeMillis() - start
-                metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
-                makeResponse(response)
-            } finally {
-                maybeResponse.foreach(_.close)
             }
+
+            val took = System.currentTimeMillis() - start
+            metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
+            makeResponse(response)
         }
+
+        maybeResponse.foreach(_.close)
+
         triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
             // TODO: Can we throw a more user-friendly exception if the query timed out?
@@ -888,6 +888,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 log.error(e, s"Failed to connect to triplestore")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
+
         triplestoreResponseTry
     }
 
