@@ -891,13 +891,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         triplestoreResponseTry
     }
 
-    def returnResponseAsString(maybeResponse: CloseableHttpResponse): String = {
-        val responseEntity: HttpEntity = maybeResponse.getEntity
+    def returnResponseAsString(response: CloseableHttpResponse): String = {
+        val responseEntity: HttpEntity = response.getEntity
         val responseEntityStr: String = EntityUtils.toString(responseEntity)
         responseEntityStr
     }
 
-    def returnUploadResponse(maybeResponse: CloseableHttpResponse): RepositoryUploadedResponse = {
+    def returnUploadResponse(response: CloseableHttpResponse): RepositoryUploadedResponse = {
         RepositoryUploadedResponse()
     }
 
