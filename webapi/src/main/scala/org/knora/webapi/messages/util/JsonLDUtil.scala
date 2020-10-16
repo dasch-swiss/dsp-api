@@ -28,7 +28,6 @@ import com.apicatalog.jsonld._
 import com.apicatalog.jsonld.document._
 import javax.json._
 import javax.json.stream.JsonGenerator
-import org.eclipse.rdf4j.model
 import org.eclipse.rdf4j.model.impl.{LinkedHashModel, SimpleNamespace, SimpleValueFactory}
 import org.eclipse.rdf4j.model.{Model, Namespace, Resource, Value, ValueFactory}
 import org.knora.webapi._
