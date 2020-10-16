@@ -616,7 +616,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", settings.triplestoreDatabaseName)
         } catch {
             case _: NotFoundException =>
-                log.error(s"Cannot initialize repository. Config ${configFileName} not found.")
+                log.error(s"Cannot initialize repository. Config $configFileName not found.")
                 ""
         }
 
@@ -882,7 +882,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      *
      * @return httpContext with credentials and authorization
      */
-    private def makeHttpContext(): HttpClientContext = {
+    private def makeHttpContext: HttpClientContext = {
         val authCache: AuthCache = new BasicAuthCache
         val basicAuth: BasicScheme = new BasicScheme
         authCache.put(targetHost, basicAuth)
