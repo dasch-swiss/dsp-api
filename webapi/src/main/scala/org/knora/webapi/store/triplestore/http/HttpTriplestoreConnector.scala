@@ -630,7 +630,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
-            responseType = RepositoryUploadedResponse()
+            makeResponse = returnUploadResponse
         )
         // do the check again
         checkFusekiTriplestore(true)
@@ -701,7 +701,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return a string containing the contents of the graph in TriG format.
      */
     private def sparqlHttpGraphFile(graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
-        val httpContext: HttpClientContext = makeHttpContext
+        var httpContext: HttpClientContext = makeHttpContext
 
         val uriBuilder: URIBuilder = new URIBuilder(graphPath)
 
@@ -715,62 +715,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         val httpGet = new HttpGet(uriBuilder.build())
         httpGet.addHeader("Accept", mimeTypeTextTurtle)
-
-        val responseTry = Try {
-            val start = System.currentTimeMillis()
-
-            var maybeResponse: Option[CloseableHttpResponse] = None
-
-            try {
-                maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, httpContext))
-
-                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-                val statusCategory: Int = statusCode / 100
-
-                if (statusCategory != 2) {
-                    log.error(s"Triplestore responded with HTTP code $statusCode to request for graph $graphIri")
-                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
-                }
-
-                val took = System.currentTimeMillis() - start
-                log.info(s"[$statusCode] DB Query took: ${took}ms")
-
-                Option(maybeResponse.get.getEntity) match {
-                    case Some(responseEntity: HttpEntity) =>
-                        // Stream the HTTP entity to the a temporary file.
-                        val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
-                        Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
-
-                        // Convert the Turtle to Trig.
-                        val bufferedReader = new BufferedReader(new FileReader(turtleFile))
-                        turtleToTrig(input = bufferedReader, graphIri = graphIri, outputFile = outputFile)
-                        turtleFile.delete()
-                        FileWrittenResponse()
-
-                    case None =>
-                        log.error(s"Triplestore returned no content for graph $graphIri")
-                        throw TriplestoreResponseException(s"Triplestore returned no content")
-                }
-            } finally {
-                maybeResponse.foreach(_.close)
-            }
-        }
-
-        responseTry.recover {
-            case tre: TriplestoreResponseException => throw tre
-
-            case e: Exception =>
-                log.error(e, s"Failed to connect to triplestore to get graph $graphIri")
-                throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
-        }
-//        executeHttpRequestAndReturnResponse[FileWrittenResponse](
-//            client = queryHttpClient,
-//            httpRequest = httpGet,
-//            httpContext = httpContext,
-//            responseType = FileWrittenResponse(),
-//            maybeOutputFile = Some(outputFile),
-//            maybeGraphIri = Some(graphIri),
-//            convertToTrig = true)
+        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile, Some(graphIri), true)
+        executeHttpRequestAndReturnResponse[FileWrittenResponse](
+            client = queryHttpClient,
+            request = httpGet,
+            context = httpContext,
+            makeResponse = makeResponse
+        )
     }
 
     /**
@@ -808,11 +759,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             queryHttpPost.addHeader("Accept", acceptMimeType)
             (queryHttpClient, queryHttpPost)
         }
+
         executeHttpRequestAndReturnResponse[String](
             client = httpClient,
             request = httpPost,
             context = httpContext,
-            responseType = "")
+            makeResponse = returnResponseAsString
+        )
     }
 
     /**
@@ -847,13 +800,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             .setDefaultCredentialsProvider(credsProvider)
             .setDefaultRequestConfig(queryRequestConfig)
             .build
-
+        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile)
         executeHttpRequestAndReturnResponse[FileWrittenResponse](
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
-            responseType = FileWrittenResponse(),
-            maybeOutputFile = Some(outputFile))
+            makeResponse = makeResponse
+            )
 
     }
 
@@ -873,8 +826,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
-            responseType = RepositoryUploadedResponse())
-
+            makeResponse= returnUploadResponse)
     }
 
     /**
@@ -894,59 +846,26 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     private def executeHttpRequestAndReturnResponse[T](client: CloseableHttpClient,
-                                  request: HttpRequest,
-                                  context: HttpClientContext,
-                                  responseType: T,
-                                  maybeOutputFile: Option[File] = None,
-                                  maybeGraphIri: Option[IRI] = None,
-                                  convertToTrig: Boolean = false
-                                 ): Try[T] = {
-        def writeResponseFile(maybeResponse: Option[CloseableHttpResponse]):T = {
-            val outputFile: File = maybeOutputFile.get
-            Option(maybeResponse.get.getEntity) match {
-                case Some(responseEntity: HttpEntity) =>
-                    // Stream the HTTP entity to the output file.
-                    if (convertToTrig){
-                        // Stream the HTTP entity to the temporary .ttl file.
-                        val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
-                        Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
-
-                        // Convert the Turtle to Trig.
-                        val bufferedReader = new BufferedReader(new FileReader(turtleFile))
-                        turtleToTrig(input = bufferedReader, graphIri = maybeGraphIri.get, outputFile = outputFile)
-                        turtleFile.delete()
-
-                    } else {
-                        Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
-                    }
-
-                    // add writting graph here
-                    responseType
-                case None =>
-                    if (maybeGraphIri.nonEmpty){
-                        log.error(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
-                        throw TriplestoreResponseException(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
-                    } else {
-                        log.error(s"Triplestore returned no content for repository dump")
-                        throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
-                    }
-            }
-        }
+                                                       request: HttpRequest,
+                                                       context: HttpClientContext,
+                                                       makeResponse: (CloseableHttpResponse) => T
+                                                      ): Try[T] = {
 
         val triplestoreResponseTry = Try {
             val start = System.currentTimeMillis()
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
-                maybeResponse = Some(client.execute(targetHost, request, context))
+                val response = client.execute(targetHost, request, context)
+                maybeResponse = Some(response)
 
-                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                val responseEntityStr: String = Option(response.getEntity) match {
                     case Some(responseEntity) =>
                         EntityUtils.toString(responseEntity)
                     case None => ""
                 }
 
-                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCode: Int = response.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
                 if (statusCategory != 2) {
@@ -956,14 +875,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
                 val took = System.currentTimeMillis() - start
                 metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
-                val responseToBeReturned : T = responseType match {
-                    case _ : String => responseEntityStr.asInstanceOf[T]
-                    case _ : FileWrittenResponse =>
-                        writeResponseFile(maybeResponse)
-                    case _ => responseType
-
-                }
-                responseToBeReturned
+                makeResponse(response)
             } finally {
                 maybeResponse.foreach(_.close)
             }
@@ -977,5 +889,47 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
         triplestoreResponseTry
+    }
+
+    def returnResponseAsString(maybeResponse: CloseableHttpResponse): String = {
+        val responseEntity: HttpEntity = maybeResponse.getEntity
+        val responseEntityStr: String = EntityUtils.toString(responseEntity)
+        responseEntityStr
+    }
+
+    def returnUploadResponse(maybeResponse: CloseableHttpResponse): RepositoryUploadedResponse = {
+        RepositoryUploadedResponse()
+    }
+
+    def writeResponseFile(outputFile: File,
+                          maybeGraphIri: Option[IRI] = None,
+                          convertToTrig: Boolean = false)(response: CloseableHttpResponse): FileWrittenResponse = {
+        Option(response.getEntity) match {
+            case None =>
+                if (maybeGraphIri.nonEmpty) {
+                    log.error(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
+                    throw TriplestoreResponseException(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
+                } else {
+                    log.error(s"Triplestore returned no content for repository dump")
+                    throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+                }
+            case Some(responseEntity: HttpEntity) =>
+                // Stream the HTTP entity to the output file.
+                if (convertToTrig) {
+                    // Stream the HTTP entity to the temporary .ttl file.
+                    val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
+                    Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
+
+                    // Convert the Turtle to Trig.
+                    val bufferedReader = new BufferedReader(new FileReader(turtleFile))
+                    turtleToTrig(input = bufferedReader, graphIri = maybeGraphIri.get, outputFile = outputFile)
+                    turtleFile.delete()
+
+                } else {
+                    Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
+                }
+
+                FileWrittenResponse()
+        }
     }
 }
