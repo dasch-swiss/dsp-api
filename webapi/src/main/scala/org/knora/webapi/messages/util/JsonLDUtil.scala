@@ -28,6 +28,7 @@ import com.apicatalog.jsonld._
 import com.apicatalog.jsonld.document._
 import javax.json._
 import javax.json.stream.JsonGenerator
+import org.eclipse.rdf4j.model
 import org.eclipse.rdf4j.model.impl.{LinkedHashModel, SimpleNamespace, SimpleValueFactory}
 import org.eclipse.rdf4j.model.{Model, Namespace, Resource, Value, ValueFactory}
 import org.knora.webapi._
@@ -150,8 +151,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Recursively adds the contents of this JSON-LD object to an RDF4J model, assuming that it does not
-     * represent an IRI, an XSD literal, or a string with a language.
+     * Recursively adds the contents of this JSON-LD object representing triples (rather than a literal)
+     * to an RDF4J model.
      *
      * @param model the model being constructed.
      * @return the subject of the contents of this JSON-LD object (an IRI or a blank node).
@@ -160,29 +161,36 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         /**
          * Recursively adds a [[JsonLDValue]] to the model, using the specified subject and predicate.
          *
-         * @param rdfSubj the subject.
-         * @param rdfPred the predicate.
+         * @param rdfSubj     the subject.
+         * @param rdfPred     the predicate.
          * @param jsonLDValue the value to be added.
          */
         def addJsonLDValueToModel(rdfSubj: Resource, rdfPred: org.eclipse.rdf4j.model.IRI, jsonLDValue: JsonLDValue): Unit = {
+            // Which type of JSON-LD value is this?
             jsonLDValue match {
                 case jsonLDObject: JsonLDObject =>
+                    // It's a JSON-LD object. What does it represent?
                     val rdfObj: Value = if (jsonLDObject.isIri) {
+                        // An IRI.
                         valueFactory.createIRI(jsonLDObject.requireString(JsonLDConstants.ID))
                     } else if (jsonLDObject.isDatatypeValue) {
+                        // A literal.
                         valueFactory.createLiteral(
                             jsonLDObject.requireString(JsonLDConstants.VALUE),
                             valueFactory.createIRI(jsonLDObject.requireString(JsonLDConstants.TYPE))
                         )
                     } else if (jsonLDObject.isStringWithLang) {
+                        // A string literal with a language tag.
                         valueFactory.createLiteral(
                             jsonLDObject.requireString(JsonLDConstants.VALUE),
                             jsonLDObject.requireString(JsonLDConstants.LANGUAGE)
                         )
                     } else {
+                        // Triples. Recurse to add its contents to the model.
                         jsonLDObject.addToModel(model, valueFactory)
                     }
 
+                    // Add a triple linking the subject to the object.
                     model.add(
                         rdfSubj,
                         rdfPred,
@@ -190,6 +198,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                     )
 
                 case jsonLDArray: JsonLDArray =>
+                    // It's a JSON-LD array. Recurse to add the contents of each value to the
+                    // model, and to add a triple linking the subject to each value.
                     for (elem <- jsonLDArray.value) {
                         addJsonLDValueToModel(
                             rdfSubj = rdfSubj,
@@ -199,6 +209,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                     }
 
                 case jsonLDString: JsonLDString =>
+                    // It's a string literal.
                     model.add(
                         rdfSubj,
                         rdfPred,
@@ -206,6 +217,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                     )
 
                 case jsonLDBoolean: JsonLDBoolean =>
+                    // It's a boolean literal.
                     model.add(
                         rdfSubj,
                         rdfPred,
@@ -213,7 +225,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                     )
 
                 case jsonLDInt: JsonLDInt =>
-                    // Use a BigInteger rather than an Int, so we get xsd:integer rather than xsd:int.
+                    // It's an integer literal. Use a BigInteger rather than an Int,
+                    // so we get xsd:integer rather than xsd:int.
                     model.add(
                         rdfSubj,
                         rdfPred,
@@ -239,6 +252,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case Some(rdfTypes: JsonLDValue) =>
                 rdfTypes match {
                     case jsonLDString: JsonLDString =>
+                        // It has just one @type.
                         model.add(
                             rdfSubj,
                             valueFactory.createIRI(OntologyConstants.Rdf.Type),
@@ -246,6 +260,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                         )
 
                     case jsonLDArray: JsonLDArray =>
+                        // It has more than one @type.
                         for (elem <- jsonLDArray.value) {
                             elem match {
                                 case jsonLDString: JsonLDString =>
@@ -255,11 +270,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                                         valueFactory.createIRI(jsonLDString.value)
                                     )
 
-                                case _ => throw InvalidJsonLDException(s"The objects of @type must be strings")
+                                case _ => throw InvalidJsonLDException("The objects of @type must be strings")
                             }
                         }
 
-                    case _ => throw InvalidJsonLDException(s"The objects of @type must be strings")
+                    case _ => throw InvalidJsonLDException("The objects of @type must be strings")
                 }
 
             case None => ()
@@ -278,12 +293,12 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                                     jsonLDObject.addToModel(model = model, valueFactory = valueFactory)
 
                                 case _ =>
-                                    throw InvalidJsonLDException(s"The object of @graph must be a JSON-LD array of JSON-LD objects")
+                                    throw InvalidJsonLDException("The object of @graph must be a JSON-LD array of JSON-LD objects")
                             }
                         }
 
                     case _ =>
-                        throw InvalidJsonLDException(s"The object of @graph must be a JSON-LD array of JSON-LD objects")
+                        throw InvalidJsonLDException("The object of @graph must be a JSON-LD array of JSON-LD objects")
                 }
 
             case None => ()
@@ -294,7 +309,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         val predicates = value.keySet -- JsonLDConstants.all
 
         for (pred <- predicates) {
-            val rdfPred = valueFactory.createIRI(pred)
+            val rdfPred: org.eclipse.rdf4j.model.IRI = valueFactory.createIRI(pred)
             val obj: JsonLDValue = value(pred)
 
             addJsonLDValueToModel(
@@ -315,7 +330,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Returns `true` if this JSON-LD object represents a string with a language tag.
+     * Returns `true` if this JSON-LD object represents a string literal with a language tag.
      */
     def isStringWithLang: Boolean = {
         value.keySet == Set(JsonLDConstants.VALUE, JsonLDConstants.LANGUAGE)
@@ -926,7 +941,8 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     }
 
     /**
-     * Converts this JSON-LD document to an RDF4J model.
+     * Converts this JSON-LD document to an RDF4J [[Model]], for conversion to
+     * other RDF formats.
      */
     def toModel: Model = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
