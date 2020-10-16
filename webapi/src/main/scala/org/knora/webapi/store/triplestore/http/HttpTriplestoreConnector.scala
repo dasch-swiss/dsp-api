@@ -169,7 +169,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case SparqlConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpConstruct(sparql), log)
         case SparqlExtendedConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
         case SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpConstructFile(sparql, graphIri, outputFile), log)
-        case GraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
+        case NamedGraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
         case SparqlUpdateRequest(sparql: String) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql: String) => try2Message(sender(), sparqlHttpAsk(sparql), log)
         case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)

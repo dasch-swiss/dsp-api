@@ -482,7 +482,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                     for {
                         fileWrittenResponse: FileWrittenResponse <- (
                             storeManager ?
-                                GraphFileRequest(
+                                NamedGraphFileRequest(
                                     graphIri = trigFile.graphIri,
                                     outputFile = trigFile.dataFile
                                 )
