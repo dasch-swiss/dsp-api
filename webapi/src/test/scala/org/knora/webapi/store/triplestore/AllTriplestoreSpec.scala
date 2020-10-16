@@ -24,6 +24,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.settings.TriplestoreTypes
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -341,6 +342,13 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                             msg.results.bindings.size should ===(1)
                     }
                 }
+            }
+        }
+        "receiving Graph data requests" should {
+            "read the graph data as turtle" in {
+                storeManager ! NamedGraphDataRequest(SharedOntologyTestDataADM.ANYTHING_DATA_IRI)
+                val response = expectMsgType[NamedGraphDataResponse](1.second)
+                response.turtle.length should be >0
             }
         }
     }
