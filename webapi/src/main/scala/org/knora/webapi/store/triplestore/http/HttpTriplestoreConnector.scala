@@ -169,7 +169,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case SparqlConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpConstruct(sparql), log)
         case SparqlExtendedConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
         case SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpConstructFile(sparql, graphIri, outputFile), log)
-        case GraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
+        case NamedGraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
         case SparqlUpdateRequest(sparql: String) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql: String) => try2Message(sender(), sparqlHttpAsk(sparql), log)
         case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
@@ -616,7 +616,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", settings.triplestoreDatabaseName)
         } catch {
             case _: NotFoundException =>
-                log.error(s"Cannot initialize repository. Config ${configFileName} not found.")
+                log.error(s"Cannot initialize repository. Config $configFileName not found.")
                 ""
         }
 
@@ -834,7 +834,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      *
      * @return httpContext with credentials and authorization
      */
-    private def makeHttpContext(): HttpClientContext = {
+    private def makeHttpContext: HttpClientContext = {
         val authCache: AuthCache = new BasicAuthCache
         val basicAuth: BasicScheme = new BasicScheme
         authCache.put(targetHost, basicAuth)
