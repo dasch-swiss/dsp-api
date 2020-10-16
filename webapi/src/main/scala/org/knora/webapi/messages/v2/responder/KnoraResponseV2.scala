@@ -24,7 +24,7 @@ import java.io.{StringReader, StringWriter}
 import akka.http.scaladsl.model.MediaType
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.model.impl.LinkedHashModel
-import org.eclipse.rdf4j.rio.helpers.{BasicWriterSettings, StatementCollector}
+import org.eclipse.rdf4j.rio.helpers.{BasicWriterSettings, JSONLDMode, JSONLDSettings, StatementCollector}
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi._
@@ -81,10 +81,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
                 // and return the model in the requested format.
                 RdfResponseFormatter.formatResponse(
                     model = jsonLDDocument.toModel,
-                    mediaType = mediaType,
-                    targetSchema = targetSchema,
-                    schemaOptions = schemaOptions,
-                    settings = settings
+                    mediaType = mediaType
                 )
         }
     }
@@ -99,12 +96,15 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
 }
 
 /**
- * An abstract class for Knora API V2 response messages that are constructed as
+ * A trait for Knora API V2 response messages that are constructed as
  * strings in Turtle format.
- *
- * @param turtleStr a string in Turtle format.
  */
-abstract class KnoraTurtleResponseV2(val turtleStr: String) extends KnoraResponseV2 {
+trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
+    /**
+     * A string containing RDF data in Turtle format.
+     */
+    protected val turtle: String
+
     override def format(mediaType: MediaType.NonBinary,
                         targetSchema: ApiV2Schema,
                         schemaOptions: Set[SchemaOption],
@@ -113,24 +113,16 @@ abstract class KnoraTurtleResponseV2(val turtleStr: String) extends KnoraRespons
         mediaType match {
             case RdfMediaTypes.`text/turtle` =>
                 // Turtle. Return the Turtle string as is.
-                turtleStr
+                turtle
 
             case _ =>
                 // Some other format. Parse the Turtle to an RDF4J Model.
-                val stringReader = new StringReader(turtleStr)
-                val model = new LinkedHashModel()
-                val turtleParser: RDFParser = Rio.createParser(RDFFormat.TURTLE)
-                turtleParser.setRDFHandler(new StatementCollector(model))
-                turtleParser.parse(stringReader, "")
-                stringReader.close()
+                val model = Rio.parse(new StringReader(turtle), "", RDFFormat.TURTLE)
 
                 // Return the model in the requested format.
                 RdfResponseFormatter.formatResponse(
                     model = model,
-                    mediaType = mediaType,
-                    targetSchema = targetSchema,
-                    schemaOptions = schemaOptions,
-                    settings = settings
+                    mediaType = mediaType
                 )
         }
     }
@@ -145,16 +137,10 @@ object RdfResponseFormatter {
      *
      * @param model         an RDF4J model.
      * @param mediaType     the specific media type selected for the response.
-     * @param targetSchema  the response schema.
-     * @param schemaOptions the schema options.
-     * @param settings      the application settings.
      * @return the model formatted in the specified format.
      */
     def formatResponse(model: Model,
-                       mediaType: MediaType.NonBinary,
-                       targetSchema: ApiV2Schema,
-                       schemaOptions: Set[SchemaOption],
-                       settings: KnoraSettingsImpl): String = {
+                       mediaType: MediaType.NonBinary): String = {
         // A StringWriter to collect the formatted output.
         val stringWriter = new StringWriter()
 
@@ -167,8 +153,12 @@ object RdfResponseFormatter {
         }
 
         // Configure the RDFWriter.
+        // TODO: Try again to get RDF4J to inline blank nodes in JSON-LD output.
         rdfWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
-            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
+            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true).
+            set[JSONLDMode](JSONLDSettings.JSONLD_MODE, JSONLDMode.COMPACT).
+            // set[java.lang.Boolean](JSONLDSettings.HIERARCHICAL_VIEW, true).
+            set[java.lang.Boolean](JSONLDSettings.USE_NATIVE_TYPES, true)
 
         // Format the RDF.
         Rio.write(model, rdfWriter)
