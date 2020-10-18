@@ -46,7 +46,7 @@ import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{NotFoundException, TriplestoreConnectionException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException, UnexpectedMessageException, UnsuportedTriplestoreException}
+import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, TriplestoreConnectionException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException, UnexpectedMessageException, UnsuportedTriplestoreException}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
@@ -159,7 +159,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
-    private val dataUploadPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+    private val dataInsertPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
         s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         s"/${settings.triplestoreDatabaseName}/data"
@@ -519,11 +519,20 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             for (elem <- completeRdfDataObjectList) {
                 val graphName: String = elem.name
-                val uriBuilder: URIBuilder = new URIBuilder(dataUploadPath)
+
+                if (graphName.toLowerCase == "default") {
+                    throw TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported")
+                }
+                val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
                 uriBuilder.addParameter("graph", graphName)
+                uriBuilder.setPort(settings.triplestorePort)
+                uriBuilder.setHost(settings.triplestoreHost)
                 val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
                 val inputFile = new File(elem.path)
+                if (!inputFile.exists) {
+                    throw BadRequestException(s"File ${inputFile.getAbsolutePath} does not exist")
+                }
                 val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
                 httpPost.setEntity(fileEntity)
                 maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
