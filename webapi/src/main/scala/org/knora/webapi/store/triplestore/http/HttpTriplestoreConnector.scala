@@ -159,6 +159,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
+    private val dataUploadPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+        s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
+    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+        s"/${settings.triplestoreDatabaseName}/data"
+    } else {
+        throw TriplestoreUnsupportedFeatureException(s"$triplestoreType is not supported!")
+    }
+
     /**
      * Receives a message requesting a SPARQL select or update, and returns an appropriate response message or
      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
@@ -490,8 +498,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return [[InsertTriplestoreContentACK]]
      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
+        val httpContext: HttpClientContext = makeHttpContext
+        var maybeResponse: Option[CloseableHttpResponse] = None
+
         try {
-            //TODO: GraphProtocolAccessor code here
             log.debug("==>> Loading Data Start")
 
             val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
@@ -508,8 +518,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             log.debug("insertDataIntoTriplestore - completeRdfDataObjectList: {}", completeRdfDataObjectList)
 
             for (elem <- completeRdfDataObjectList) {
+                val graphName: String = elem.name
+                val uriBuilder: URIBuilder = new URIBuilder(dataUploadPath)
+                uriBuilder.addParameter("graph", graphName)
+                val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
-                GraphProtocolAccessor.post(elem.name, elem.path)
+                val inputFile = new File(elem.path)
+                val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
+                httpPost.setEntity(fileEntity)
+                maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
 
                 log.debug(s"added: ${elem.name}")
             }
