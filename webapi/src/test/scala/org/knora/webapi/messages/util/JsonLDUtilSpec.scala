@@ -19,6 +19,10 @@
 
 package org.knora.webapi.util
 
+import java.io.{File, StringReader}
+
+import org.eclipse.rdf4j.model.Model
+import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.matchers.should.Matchers
@@ -115,6 +119,17 @@ class JsonLDUtilSpec extends AnyWordSpecLike with Matchers {
             val receivedOutputAsJsValue: JsValue = JsonParser(formattedCompactedDoc)
             val expectedOutputAsJsValue: JsValue = JsonParser(expectedOutputStr)
             receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
+        }
+
+        "convert JSON-LD to an RDF4J Model" in {
+            val inputJsonLD: String = FileUtil.readTextFile(new File("test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"))
+            val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
+            val outputModel: Model = jsonLDDocument.toModel
+
+            val expectedTurtle = FileUtil.readTextFile(new File("test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
+            val expectedModel = Rio.parse(new StringReader(expectedTurtle), "", RDFFormat.TURTLE)
+
+            outputModel should ===(expectedModel)
         }
     }
 }
