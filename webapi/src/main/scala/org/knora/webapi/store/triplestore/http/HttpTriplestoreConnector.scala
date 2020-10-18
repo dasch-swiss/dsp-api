@@ -498,8 +498,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return [[InsertTriplestoreContentACK]]
      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
+
+        // check triplestore
+        checkFusekiTriplestore(true)
+
         val httpContext: HttpClientContext = makeHttpContext
-        var maybeResponse: Option[CloseableHttpResponse] = None
 
         try {
             log.debug("==>> Loading Data Start")
@@ -523,10 +526,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 if (graphName.toLowerCase == "default") {
                     throw TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported")
                 }
+
                 val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
+                //note: addParameter automatically encodes the graphName
                 uriBuilder.addParameter("graph", graphName)
-                uriBuilder.setPort(settings.triplestorePort)
-                uriBuilder.setHost(settings.triplestoreHost)
+
                 val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
                 val inputFile = new File(elem.path)
@@ -535,8 +539,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
                 val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
                 httpPost.setEntity(fileEntity)
-                maybeResponse = Some(updateHttpClient.execute(targetHost, httpPost, httpContext))
+                val response = updateHttpClient.execute(targetHost, httpPost, httpContext)
+                val statusCode: Int = response.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
 
+                if (statusCategory != 2) {
+                    Option(response.getEntity).map(responseEntity => EntityUtils.toString(responseEntity)) match {
+                        case Some(responseEntityStr) =>
+                            log.error(s"Unable to load file ${elem.path}; triplestore responded with $statusCode: $responseEntityStr")
+                            throw TriplestoreResponseException(s"Unable to load file ${elem.path}; triplestore responded with $statusCode: $responseEntityStr")
+
+                        case None =>
+                            log.error(s"Triplestore responded with HTTP code $statusCode")
+                            throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+                    }
+                }
                 log.debug(s"added: ${elem.name}")
             }
 
@@ -552,6 +569,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             case e: Exception => Failure(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
     }
+
 
     /**
      * Checks connection to the triplestore.
