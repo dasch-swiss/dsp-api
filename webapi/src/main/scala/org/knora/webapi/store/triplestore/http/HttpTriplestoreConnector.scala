@@ -26,7 +26,6 @@ import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.event.LoggingAdapter
-import akka.stream.Materializer
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.AuthCache
@@ -77,7 +76,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private implicit val system: ActorSystem = context.system
     private val settings = KnoraSettings(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-    private implicit val materializer: Materializer = Materializer.matFromSystem(system)
     override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     private val triplestoreType = settings.triplestoreType
