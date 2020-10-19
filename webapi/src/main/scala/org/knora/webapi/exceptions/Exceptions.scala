@@ -171,6 +171,13 @@ case class GravsearchException(message: String) extends RequestRejectedException
  */
 case class InvalidJsonLDException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
+/**
+ * An exception indication that the RDF submitted to the API v2 was invalid.
+ *
+ * @param msg   a description of the error.
+ * @param cause the cause for the error
+ */
+case class InvalidRdfException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 /**
  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.

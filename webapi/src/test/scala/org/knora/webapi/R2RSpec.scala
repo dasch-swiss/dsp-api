@@ -112,11 +112,11 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
     }
 
     protected def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
+        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE, null)
     }
 
     protected def parseRdfXml(rdfXmlStr: String): Model = {
-        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML, null)
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {

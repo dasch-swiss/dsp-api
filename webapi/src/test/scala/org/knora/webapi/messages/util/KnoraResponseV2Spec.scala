@@ -19,28 +19,45 @@
 
 package org.knora.webapi.util
 
-import java.io.File
+import java.io.{File, StringReader}
 
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
-import org.knora.webapi.{ApiV2Complex, CoreSpec, RdfMediaTypes}
-import spray.json._
+import org.eclipse.rdf4j.model.Model
+import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraTurtleResponseV2}
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi._
 
 /**
  * Tests the formatting of Knora API v2 responses.
  */
 class KnoraResponseV2Spec extends CoreSpec {
+
+    /**
+     * A test implementation of [[KnoraTurtleResponseV2]].
+     */
     case class TurtleTestMessage(turtle: String) extends KnoraTurtleResponseV2
 
-    StringFormatter.initForTest()
+    /**
+     * A test implementation of [[KnoraJsonLDResponseV2]].
+     */
+    case class JsonLDTestMessage(jsonLD: String) extends KnoraJsonLDResponseV2 {
+        override protected def toJsonLDDocument(targetSchema: ApiV2Schema,
+                                                settings: KnoraSettingsImpl,
+                                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+            JsonLDUtil.parseJsonLD(jsonLD)
+        }
+    }
 
     "KnoraResponseV2" should {
-        // Ignored because I can't get RDF4J to inline blank nodes in JSON-LD output
-        // (see the comment in RdfResponseFormatter).
-        "convert Turtle to JSON-LD" ignore {
-            val turtle = FileUtil.readTextFile(new File("test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
+        "convert Turtle to JSON-LD" in {
+            // Read a Turtle file representing a resource.
+            val turtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"))
+
+            // Wrap it in a KnoraTurtleResponseV2.
             val turtleTestMessage = TurtleTestMessage(turtle)
 
+            // Ask the KnoraTurtleResponseV2 to convert the content to JSON-LD.
             val jsonLD: String = turtleTestMessage.format(
                 mediaType = RdfMediaTypes.`application/ld+json`,
                 targetSchema = ApiV2Complex,
@@ -48,11 +65,41 @@ class KnoraResponseV2Spec extends CoreSpec {
                 settings = settings
             )
 
-            val expectedJsonLD = FileUtil.readTextFile(new File("test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"))
+            // Parse the JSON-LD to a JsonLDDocument.
+            val parsedJsonLD = JsonLDUtil.parseJsonLD(jsonLD)
 
-            val receivedOutputAsJsValue: JsValue = JsonParser(jsonLD)
-            val expectedOutputAsJsValue: JsValue = JsonParser(expectedJsonLD)
-            receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
+            // Read an isomorphic JSON-LD file and parse it to a JsonLDDocument.
+            val expectedJsonLD = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"))
+            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedJsonLD)
+
+            // Compare the two documents.
+            parsedJsonLD.body should ===(parsedExpectedJsonLD.body)
+        }
+
+        "convert JSON-LD to Turtle" in {
+            // Read a JSON-LD file representing a resource.
+            val jsonLD: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"))
+
+            // Wrap it in a KnoraJsonLDResponseV2.
+            val jsonLDTestMessage = JsonLDTestMessage(jsonLD)
+
+            // Ask the KnoraJsonLDResponseV2 to convert the content to Turtle.
+            val turtle: String = jsonLDTestMessage.format(
+                mediaType = RdfMediaTypes.`text/turtle`,
+                targetSchema = ApiV2Complex,
+                schemaOptions = Set.empty,
+                settings = settings
+            )
+
+            // Parse the Turtle to an RDF4J Model.
+            val parsedTurtle = Rio.parse(new StringReader(turtle), "", RDFFormat.TURTLE, null)
+
+            // Read an isomorphic Turtle file and parse it to an RDF4J Model.
+            val expectedTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"))
+            val parsedExpectedTurtle: Model = Rio.parse(new StringReader(expectedTurtle), "", RDFFormat.TURTLE, null)
+
+            // Compare the two models.
+            parsedTurtle should ===(parsedExpectedTurtle)
         }
     }
 }

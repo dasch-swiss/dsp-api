@@ -1567,7 +1567,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
 
     override def hashCode(): Int = {
         // Ignore the order of predicate objects when generating hash codes for this class.
-        new HashCodeBuilder(17, 37).append(predicateIri).append(objects.toSet).hashCode()
+        new HashCodeBuilder(17, 37).append(predicateIri).append(objects.toSet).toHashCode
     }
 
     override def equals(that: scala.Any): Boolean = {

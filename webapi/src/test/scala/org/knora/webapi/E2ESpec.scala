@@ -140,15 +140,15 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def parseTrig(trigStr: String): Model = {
-        Rio.parse(new StringReader(trigStr), "", RDFFormat.TRIG)
+        Rio.parse(new StringReader(trigStr), "", RDFFormat.TRIG, null)
     }
 
     protected def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
+        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE, null)
     }
 
     protected def parseRdfXml(rdfXmlStr: String): Model = {
-        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML, null)
     }
 
     protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {

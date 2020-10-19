@@ -80,7 +80,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
                 // Some other format. Convert the document to an RDF4J Model,
                 // and return the model in the requested format.
                 RdfResponseFormatter.formatResponse(
-                    model = jsonLDDocument.toModel,
+                    model = jsonLDDocument.toRDF4JModel,
                     mediaType = mediaType
                 )
         }
@@ -117,7 +117,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
 
             case _ =>
                 // Some other format. Parse the Turtle to an RDF4J Model.
-                val model = Rio.parse(new StringReader(turtle), "", RDFFormat.TURTLE)
+                val model = Rio.parse(new StringReader(turtle), "", RDFFormat.TURTLE, null)
 
                 // Return the model in the requested format.
                 RdfResponseFormatter.formatResponse(
@@ -147,7 +147,7 @@ object RdfResponseFormatter {
         mediaType match {
             case RdfMediaTypes.`application/ld+json` =>
                 // Use our own conversion.
-                JsonLDUtil.fromModel(model).toPrettyString
+                JsonLDUtil.fromRDF4JModel(model).toPrettyString
 
             case _ =>
                 // Construct an RDFWriter for the specified format.
