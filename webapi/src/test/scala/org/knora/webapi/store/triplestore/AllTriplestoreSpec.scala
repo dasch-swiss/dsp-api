@@ -49,7 +49,7 @@ object AllTriplestoreSpec {
  *
  * to execute, type 'test' in sbt
  */
-class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config, false) with ImplicitSender {
+class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
