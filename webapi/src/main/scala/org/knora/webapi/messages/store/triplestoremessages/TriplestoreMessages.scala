@@ -349,6 +349,18 @@ case class InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) extends T
 case class InsertTriplestoreContentACK()
 
 /**
+ * Inserts raw RDF data into the repository.
+ *
+ * @param turtle contains graph data.
+ */
+case class InsertGraphDataContentRequest(turtle: String) extends TriplestoreRequest
+
+/**
+ * Sent as a response to [[InsertGraphDataContentRequest]] if the request was processed successfully.
+ */
+case class InsertGraphDataContentResponse()
+
+/**
  * Initialize the repository. This will initiate the (re)creation of the repository and adding data to it.
  *
  * @param rdfDataObject contains a list of [[RdfDataObject]].

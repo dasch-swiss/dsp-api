@@ -546,23 +546,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
                 val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
                 httpPost.setEntity(fileEntity)
-                val response = client.execute(targetHost, httpPost, httpContext)
-                val statusCode: Int = response.getStatusLine.getStatusCode
-                val statusCategory: Int = statusCode / 100
-
-                if (statusCategory != 2) {
-                    Option(response.getEntity).map(responseEntity => EntityUtils.toString(responseEntity)) match {
-                        case Some(responseEntityStr) =>
-                            log.error(s"Unable to load file ${elem.path}; triplestore responded with $statusCode: $responseEntityStr")
-                            throw TriplestoreResponseException(s"Unable to load file ${elem.path}; triplestore responded with $statusCode: $responseEntityStr")
-
-                        case None =>
-                            log.error(s"Triplestore responded with HTTP code $statusCode")
-                            throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
-                    }
-                }
+                doHttpRequest[InsertGraphDataContentResponse](
+                    client = client,
+                    request = httpPost,
+                    context = httpContext,
+                    processResponse = returnInsertGraphDataResponse
+                )
                 log.debug(s"added: ${elem.name}")
-                response.close()
             }
 
             if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -1009,6 +999,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         RepositoryUploadedResponse()
     }
 
+    def returnInsertGraphDataResponse(response: CloseableHttpResponse): InsertGraphDataContentResponse = {
+        InsertGraphDataContentResponse()
+    }
+    
     def writeResponseFile(outputFile: File,
                           maybeGraphIri: Option[IRI] = None,
                           convertToTrig: Boolean = false)(response: CloseableHttpResponse): FileWrittenResponse = {
