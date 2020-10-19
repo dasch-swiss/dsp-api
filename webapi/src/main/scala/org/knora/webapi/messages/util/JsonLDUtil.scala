@@ -1226,7 +1226,16 @@ object JsonLDUtil {
     }
 
     /**
-     * Converts an [[rdf4j.model.Model]] to a [[JsonLDDocument]].
+     * Converts an [[rdf4j.model.Model]] to a [[JsonLDDocument]]. There can be more than one valid
+     * way to nest objects in the converted JSON-LD. This implementation takes the following
+     * approach:
+     *
+     * - Inline blank nodes wherever they are used.
+     * - Nest each entity in the first encountered entity that refers to it, and refer to it by IRI elsewhere.
+     * - Do not nest Knora ontology entities.
+     * - After nesting, if more than one top-level entity remains, wrap them all in a `@graph`.
+     *
+     * An error is returned if more than one entity refers to the same blank node.
      *
      * @param model the model to be read.
      * @return the corresponding [[JsonLDDocument]].
