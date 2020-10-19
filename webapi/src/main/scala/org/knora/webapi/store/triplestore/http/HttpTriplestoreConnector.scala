@@ -32,7 +32,7 @@ import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.HttpRequest
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
+import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost, HttpPut}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.entity.{ContentType, FileEntity, StringEntity}
@@ -189,6 +189,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), updateLuceneIndex(subjectIri), log)
         case DownloadRepositoryRequest(outputFile: File) => try2Message(sender(), downloadRepository(outputFile), log)
         case UploadRepositoryRequest(inputFile: File) => try2Message(sender(), uploadRepository(inputFile), log)
+        case InsertGraphDataContentRequest(graphContent: String, graphName: String) => try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -500,7 +501,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
 
         val httpContext: HttpClientContext = makeHttpContext
-        val updateTimeoutMillisTenFold = settings.defaultTimeout.toMillis.toInt
+
+        //make a client with high time out threshold
+        val updateTimeoutMillisTenFold = settings.triplestoreUpdateTimeout.toMillis.toInt * 10
 
         val requestConfig = RequestConfig.custom()
             .setConnectTimeout(updateTimeoutMillisTenFold)
@@ -522,6 +525,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             }
 
             val completeRdfDataObjectList = if (prependDefaults) {
+                //prepend default data objects like those of knora-base, knora-admin, etc.
                 defaultRdfDataObjectList ++ rdfDataObjects
             } else {
                 rdfDataObjects
@@ -529,6 +533,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             log.debug("insertDataIntoTriplestore - completeRdfDataObjectList: {}", completeRdfDataObjectList)
 
+            // iterate over the list of graphs and try inserting each
             for (elem <- completeRdfDataObjectList) {
                 val graphName: String = elem.name
 
@@ -537,22 +542,26 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
 
                 val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
-                uriBuilder.addParameter("graph", graphName)
+                uriBuilder.addParameter("graph", graphName) //Note: addParameter encodes the graphName URL
+
                 val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
+                //add input file to the body of the request
                 val inputFile = new File(elem.path)
                 if (!inputFile.exists) {
                     throw BadRequestException(s"File ${inputFile.getAbsolutePath} does not exist")
                 }
                 val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
                 httpPost.setEntity(fileEntity)
+                val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(graphName)
+                //execute the post request for the graph
                 doHttpRequest[InsertGraphDataContentResponse](
                     client = client,
                     request = httpPost,
                     context = httpContext,
-                    processResponse = returnInsertGraphDataResponse
+                    processResponse = makeResponse
                 )
-                log.debug(s"added: ${elem.name}")
+                log.debug(s"added: ${graphName}")
             }
 
             if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -561,6 +570,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             }
 
             log.debug("==>> Loading Data End")
+            // return success if all graphs are inserted successfully
             Success(InsertTriplestoreContentACK())
         } catch {
             case e: TriplestoreUnsupportedFeatureException => Failure(e)
@@ -903,6 +913,30 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
+     * Put data graph into repository.
+     *
+     * @param graphContent a data graph in Turtle format to be inserted into the repository.
+     * @param graphName    the name of the graph.
+     */
+    private def insertDataGraphRequest(graphContent: String, graphName: String): Try[InsertGraphDataContentResponse] = {
+        val httpContext: HttpClientContext = makeHttpContext
+
+        val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
+        uriBuilder.addParameter("graph", graphName)
+        val httpPut: HttpPut = new HttpPut(uriBuilder.build())
+
+        val requestEntity = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
+        httpPut.setEntity(requestEntity)
+        val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(graphName)
+        doHttpRequest[InsertGraphDataContentResponse](
+            client = updateHttpClient,
+            request = httpPut,
+            context = httpContext,
+            processResponse = makeResponse
+        )
+    }
+
+    /**
      * Formulate HTTP context.
      *
      * @return httpContext with credentials and authorization
@@ -999,10 +1033,17 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         RepositoryUploadedResponse()
     }
 
-    def returnInsertGraphDataResponse(response: CloseableHttpResponse): InsertGraphDataContentResponse = {
-        InsertGraphDataContentResponse()
+    def returnInsertGraphDataResponse(graphName: String)(response: CloseableHttpResponse): InsertGraphDataContentResponse = {
+        Option(response.getEntity) match {
+            case None =>
+                log.error(s"${graphName} could not be inserted into Triplestore.")
+                throw TriplestoreResponseException(s"${graphName} could not be inserted into Triplestore.")
+            case Some(responseEntity: HttpEntity) =>
+                InsertGraphDataContentResponse()
+        }
+
     }
-    
+
     def writeResponseFile(outputFile: File,
                           maybeGraphIri: Option[IRI] = None,
                           convertToTrig: Boolean = false)(response: CloseableHttpResponse): FileWrittenResponse = {

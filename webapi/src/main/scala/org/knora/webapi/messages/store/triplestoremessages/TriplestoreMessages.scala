@@ -351,9 +351,10 @@ case class InsertTriplestoreContentACK()
 /**
  * Inserts raw RDF data into the repository.
  *
- * @param turtle contains graph data.
+ * @param graphContent contains graph data as turtle.
+ * @param graphName    the name of the graph.
  */
-case class InsertGraphDataContentRequest(turtle: String) extends TriplestoreRequest
+case class InsertGraphDataContentRequest(graphContent: String, graphName: String) extends TriplestoreRequest
 
 /**
  * Sent as a response to [[InsertGraphDataContentRequest]] if the request was processed successfully.
