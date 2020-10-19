@@ -20,6 +20,7 @@
 package org.knora.webapi.store.triplestore.http
 
 import java.io._
+import java.net.URI
 import java.nio.file.{Files, Paths}
 import java.util
 
@@ -100,7 +101,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         .setDefaultRequestConfig(queryRequestConfig)
         .build
 
-    // An update for a bulk import could take a while.
+    // Some updates could take a while.
     private val updateTimeoutMillis = settings.triplestoreUpdateTimeout.toMillis.toInt
 
     private val updateTimeoutConfig = RequestConfig.custom()
@@ -112,6 +113,20 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     private val updateHttpClient: CloseableHttpClient = HttpClients.custom
         .setDefaultCredentialsProvider(credsProvider)
         .setDefaultRequestConfig(updateTimeoutConfig)
+        .build
+
+    // For updates that could take a very long time.
+    private val longTimeoutMillis = settings.triplestoreUpdateTimeout.toMillis.toInt * 10
+
+    private val longRequestConfig = RequestConfig.custom()
+        .setConnectTimeout(longTimeoutMillis)
+        .setConnectionRequestTimeout(longTimeoutMillis)
+        .setSocketTimeout(longTimeoutMillis)
+        .build
+
+    private val longRequestClient: CloseableHttpClient = HttpClients.custom
+        .setDefaultCredentialsProvider(credsProvider)
+        .setDefaultRequestConfig(longRequestConfig)
         .build
 
     private val queryPath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -498,22 +513,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @return [[InsertTriplestoreContentACK]]
      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
-
         val httpContext: HttpClientContext = makeHttpContext
-
-        //make a client with high time out threshold
-        val updateTimeoutMillisTenFold = settings.triplestoreUpdateTimeout.toMillis.toInt * 10
-
-        val requestConfig = RequestConfig.custom()
-            .setConnectTimeout(updateTimeoutMillisTenFold)
-            .setConnectionRequestTimeout(updateTimeoutMillisTenFold)
-            .setSocketTimeout(updateTimeoutMillisTenFold)
-            .build
-
-        val client: CloseableHttpClient = HttpClients.custom
-            .setDefaultCredentialsProvider(credsProvider)
-            .setDefaultRequestConfig(requestConfig)
-            .build
 
         try {
             log.debug("==>> Loading Data Start")
@@ -532,7 +532,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             log.debug("insertDataIntoTriplestore - completeRdfDataObjectList: {}", completeRdfDataObjectList)
 
-            // iterate over the list of graphs and try inserting each
+            // Iterate over the list of graphs and try inserting each one.
             for (elem <- completeRdfDataObjectList) {
                 val graphName: String = elem.name
 
@@ -545,7 +545,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
                 val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
-                //add input file to the body of the request
+                // Add the input file to the body of the request.
                 val inputFile = new File(elem.path)
                 if (!inputFile.exists) {
                     throw BadRequestException(s"File ${inputFile.getAbsolutePath} does not exist")
@@ -553,23 +553,25 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
                 httpPost.setEntity(fileEntity)
                 val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(graphName)
-                //execute the post request for the graph
-                doHttpRequest[InsertGraphDataContentResponse](
-                    client = client,
+
+                // Do the post request for the graph.
+                doHttpRequest(
+                    client = longRequestClient,
                     request = httpPost,
                     context = httpContext,
                     processResponse = makeResponse
                 )
+
                 log.debug(s"added: $graphName")
             }
 
             if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-                /* need to update the lucene index */
                 updateLuceneIndex()
             }
 
             log.debug("==>> Loading Data End")
-            // return success if all graphs are inserted successfully
+
+            // Return success if all graphs are inserted successfully.
             Success(InsertTriplestoreContentACK())
         } catch {
             case e: TriplestoreUnsupportedFeatureException => Failure(e)
@@ -599,7 +601,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         try {
             log.debug("checkFusekiRepository entered")
 
-            // call endpoint returning all datasets
+            // Call an endpoint that returns all datasets.
 
             val context: HttpClientContext = makeHttpContext
 
@@ -672,17 +674,17 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         }
 
         val httpContext: HttpClientContext = makeHttpContext
-
         val httpPost: HttpPost = new HttpPost("/$/datasets")
         val stringEntity = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeApplicationTrig))
         httpPost.setEntity(stringEntity)
 
-        doHttpRequest[RepositoryUploadedResponse](
+        doHttpRequest(
             client = updateHttpClient,
             request = httpPost,
             context = httpContext,
             processResponse = returnUploadResponse
         )
+
         // do the check again
         checkFusekiTriplestore(true)
     }
@@ -745,15 +747,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Requests the contents of a named graph in TriG format, saving the response in a file.
+     * Makes a triplestore URI for downloading a named graph.
      *
-     * @param graphIri   the IRI of the named graph.
-     * @param outputFile the file to be written.
-     * @return a string containing the contents of the graph in TriG format.
+     * @param graphIri the IRI of the named graph.
+     * @return a triplestore-specific URI for downloading the named graph.
      */
-    private def sparqlHttpGraphFile(graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
-        val httpContext: HttpClientContext = makeHttpContext
-
+    private def makeNamedGraphDownloadUri(graphIri: IRI): URI = {
         val uriBuilder: URIBuilder = new URIBuilder(graphPath)
 
         if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -764,10 +763,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
         }
 
-        val httpGet = new HttpGet(uriBuilder.build())
+        uriBuilder.build()
+    }
+
+    /**
+     * Requests the contents of a named graph in TriG format, saving the response in a file.
+     *
+     * @param graphIri   the IRI of the named graph.
+     * @param outputFile the file to be written.
+     * @return a string containing the contents of the graph in TriG format.
+     */
+    private def sparqlHttpGraphFile(graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
+        val httpContext: HttpClientContext = makeHttpContext
+        val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
         httpGet.addHeader("Accept", mimeTypeTextTurtle)
         val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile, Some(graphIri), convertToTrig = true)
-        doHttpRequest[FileWrittenResponse](
+
+        doHttpRequest(
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
@@ -778,32 +790,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Requests the contents of a named graph, returning the response as Turtle.
      *
-     * @param graphIri   the IRI of the named graph.
+     * @param graphIri the IRI of the named graph.
      * @return a string containing the contents of the graph in Turtle format.
      */
     private def sparqlHttpGraphData(graphIri: IRI): Try[NamedGraphDataResponse] = {
         val httpContext: HttpClientContext = makeHttpContext
-
-        val uriBuilder: URIBuilder = new URIBuilder(graphPath)
-
-        if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-            uriBuilder.setParameter("infer", "false").setParameter("context", s"<$graphIri>")
-        } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-            uriBuilder.setParameter("graph", s"$graphIri")
-        } else {
-            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-        }
-
-        val httpGet = new HttpGet(uriBuilder.build())
+        val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
         httpGet.addHeader("Accept", mimeTypeTextTurtle)
         val makeResponse: CloseableHttpResponse => NamedGraphDataResponse = returnGraphDataAsTurtle(graphIri)
-        doHttpRequest[NamedGraphDataResponse](
+
+        doHttpRequest(
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
             processResponse = makeResponse
         )
     }
+
     /**
      * Submits a SPARQL request to the triplestore and returns the response as a string.
      *
@@ -840,7 +843,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             (queryHttpClient, queryHttpPost)
         }
 
-        doHttpRequest[String](
+        doHttpRequest(
             client = httpClient,
             request = httpPost,
             context = httpContext,
@@ -882,7 +885,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             .build
         val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile)
 
-        doHttpRequest[FileWrittenResponse](
+        doHttpRequest(
             client = queryHttpClient,
             request = httpGet,
             context = httpContext,
@@ -898,13 +901,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def uploadRepository(inputFile: File): Try[RepositoryUploadedResponse] = {
         val httpContext: HttpClientContext = makeHttpContext
-
         val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
         val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeApplicationTrig, "UTF-8"))
         httpPost.setEntity(fileEntity)
 
-        doHttpRequest[RepositoryUploadedResponse](
-            client = updateHttpClient,
+        doHttpRequest(
+            client = longRequestClient,
             request = httpPost,
             context = httpContext,
             processResponse = returnUploadResponse
@@ -912,22 +914,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Put data graph into repository.
+     * Puts a data graph into the repository.
      *
      * @param graphContent a data graph in Turtle format to be inserted into the repository.
      * @param graphName    the name of the graph.
      */
     private def insertDataGraphRequest(graphContent: String, graphName: String): Try[InsertGraphDataContentResponse] = {
         val httpContext: HttpClientContext = makeHttpContext
-
         val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
         uriBuilder.addParameter("graph", graphName)
         val httpPut: HttpPut = new HttpPut(uriBuilder.build())
-
         val requestEntity = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
         httpPut.setEntity(requestEntity)
         val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(graphName)
-        doHttpRequest[InsertGraphDataContentResponse](
+
+        doHttpRequest(
             client = updateHttpClient,
             request = httpPut,
             context = httpContext,
