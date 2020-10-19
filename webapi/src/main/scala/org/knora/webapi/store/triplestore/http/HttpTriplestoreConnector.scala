@@ -499,10 +499,19 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
 
-        // check triplestore
-        checkFusekiTriplestore(true)
-
         val httpContext: HttpClientContext = makeHttpContext
+        val updateTimeoutMillisTenFold = settings.defaultTimeout.toMillis.toInt
+
+        val requestConfig = RequestConfig.custom()
+            .setConnectTimeout(updateTimeoutMillisTenFold)
+            .setConnectionRequestTimeout(updateTimeoutMillisTenFold)
+            .setSocketTimeout(updateTimeoutMillisTenFold)
+            .build
+
+        val client: CloseableHttpClient = HttpClients.custom
+            .setDefaultCredentialsProvider(credsProvider)
+            .setDefaultRequestConfig(requestConfig)
+            .build
 
         try {
             log.debug("==>> Loading Data Start")
@@ -528,9 +537,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
 
                 val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
-                //note: addParameter automatically encodes the graphName
                 uriBuilder.addParameter("graph", graphName)
-
                 val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
                 val inputFile = new File(elem.path)
@@ -539,7 +546,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 }
                 val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
                 httpPost.setEntity(fileEntity)
-                val response = updateHttpClient.execute(targetHost, httpPost, httpContext)
+                val response = client.execute(targetHost, httpPost, httpContext)
                 val statusCode: Int = response.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
@@ -555,6 +562,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                     }
                 }
                 log.debug(s"added: ${elem.name}")
+                response.close()
             }
 
             if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -569,7 +577,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             case e: Exception => Failure(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
     }
-
 
     /**
      * Checks connection to the triplestore.

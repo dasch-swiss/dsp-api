@@ -49,7 +49,7 @@ object AllTriplestoreSpec {
  *
  * to execute, type 'test' in sbt
  */
-class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
+class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config, false) with ImplicitSender {
 
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
@@ -349,6 +349,13 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 storeManager ! NamedGraphDataRequest(SharedOntologyTestDataADM.ANYTHING_DATA_IRI)
                 val response = expectMsgType[NamedGraphDataResponse](1.second)
                 response.turtle.length should be >0
+            }
+        }
+
+        "receiving insert data request" should {
+            "insert RDF DataObjects" in {
+                storeManager ! InsertRepositoryContent(rdfDataObjects)
+                expectMsg(5 minutes, InsertTriplestoreContentACK())
             }
         }
     }

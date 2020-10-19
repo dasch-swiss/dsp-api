@@ -66,13 +66,13 @@ object CoreSpec {
     }
 }
 
-abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with AnyWordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
+abstract class CoreSpec(_system: ActorSystem, loadDataFlag: Boolean = true) extends TestKit(_system) with Core with StartupUtils with AnyWordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     /* constructors - individual tests can override the configuration by giving their own */
-    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
-    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
-    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
-    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+    def this(name: String, config: Config, loadDataFlag: Boolean) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))), loadDataFlag)
+    def this(config: Config, loadDataFlag: Boolean) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))), loadDataFlag)
+    def this(name: String, loadDataFlag: Boolean) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())), loadDataFlag)
+    def this(loadDataFlag: Boolean) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())), loadDataFlag)
 
     /* needed by the core trait */
     implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
@@ -107,9 +107,9 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
 
         // waits until knora is up and running
         applicationStateRunning()
-
-        loadTestData(rdfDataObjects)
-
+        if (loadDataFlag) {
+            loadTestData(rdfDataObjects)
+        }
         // memusage()
     }
 
