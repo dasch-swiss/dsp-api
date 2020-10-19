@@ -47,6 +47,7 @@ import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.messages.util.SparqlResultProtocol._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
@@ -559,7 +560,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                     context = httpContext,
                     processResponse = makeResponse
                 )
-                log.debug(s"added: ${graphName}")
+                log.debug(s"added: $graphName")
             }
 
             if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -593,6 +594,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * Checks the connection to a Fuseki triplestore.
      */
     private def checkFusekiTriplestore(afterAutoInit: Boolean = false): Try[CheckTriplestoreResponse] = {
+        import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
 
         try {
             log.debug("checkFusekiRepository entered")
@@ -690,6 +692,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def checkGraphDBTriplestore(): Try[CheckTriplestoreResponse] = {
         // needs to be a local import or other things don't work (spray json black magic)
+        import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
 
         try {
             log.debug("checkGraphDBRepository entered")
@@ -763,7 +766,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         val httpGet = new HttpGet(uriBuilder.build())
         httpGet.addHeader("Accept", mimeTypeTextTurtle)
-        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile, Some(graphIri), true)
+        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile, Some(graphIri), convertToTrig = true)
         doHttpRequest[FileWrittenResponse](
             client = queryHttpClient,
             request = httpGet,
@@ -1016,8 +1019,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): NamedGraphDataResponse = {
         Option(response.getEntity) match {
             case None =>
-                log.error(s"Triplestore returned no content for graph ${graphIri}")
-                throw TriplestoreResponseException(s"Triplestore returned no content for graph ${graphIri}")
+                log.error(s"Triplestore returned no content for graph $graphIri")
+                throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
             case Some(responseEntity: HttpEntity) =>
                 NamedGraphDataResponse(
                     turtle = EntityUtils.toString(responseEntity)
@@ -1032,9 +1035,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     def returnInsertGraphDataResponse(graphName: String)(response: CloseableHttpResponse): InsertGraphDataContentResponse = {
         Option(response.getEntity) match {
             case None =>
-                log.error(s"${graphName} could not be inserted into Triplestore.")
-                throw TriplestoreResponseException(s"${graphName} could not be inserted into Triplestore.")
-            case Some(responseEntity: HttpEntity) =>
+                log.error(s"$graphName could not be inserted into Triplestore.")
+                throw TriplestoreResponseException(s"$graphName could not be inserted into Triplestore.")
+            case Some(_) =>
                 InsertGraphDataContentResponse()
         }
 
