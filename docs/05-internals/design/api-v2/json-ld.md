@@ -129,28 +129,8 @@ otherwise `None`.
 ## Returning a JSON-LD Response
 
 Each API response is represented by a message class that extends
-`KnoraResponseV2`, which has a method `toJsonLDDocument` that specifies
-the target ontology schema:
-
-```scala
-/**
-  *
-  * A trait for Knora API V2 response messages. Any response can be converted into JSON-LD.
-  *
-  */
-trait KnoraResponseV2 {
-
-    /**
-      * Converts the response to a data structure that can be used to generate JSON-LD.
-      *
-      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-      * @return a [[JsonLDDocument]] representing the response.
-      */
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument
-}
-```
-
-The implementation of this method constructs a `JsonLDDocument`,
+`KnoraJsonLDResponseV2`, which has a method `toJsonLDDocument` that specifies
+the target ontology schema. The implementation of this method constructs a `JsonLDDocument`,
 in which all object keys are full IRIs (no prefixes are used), but in which
 the JSON-LD context also specifies the prefixes that will be used when the
 document is returned to the client. The function `JsonLDUtil.makeContext`
@@ -239,6 +219,8 @@ RouteUtilV2.runRdfRouteWithFuture(
 ## Generating Other RDF Formats
 
 `RouteUtilV2.runRdfRouteWithFuture` implements
-[HTTP content negotiation](https://tools.ietf.org/html/rfc7231#section-5.3.2), and converts JSON-LD
-responses into [Turtle](https://www.w3.org/TR/turtle/)
-or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/) as appropriate.
+[HTTP content negotiation](https://tools.ietf.org/html/rfc7231#section-5.3.2). After
+determining the client's preferred format, it asks the `KnoraResponseV2` to convert
+itself into that format. `KnoraResponseV2` has an abstract `format` method, whose implementations
+select the most efficient conversion between the response message's internal
+representation (which could be JSON-LD or Turtle) and the requested format.

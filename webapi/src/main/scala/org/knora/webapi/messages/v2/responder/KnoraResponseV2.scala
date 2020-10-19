@@ -23,10 +23,9 @@ import java.io.{StringReader, StringWriter}
 
 import akka.http.scaladsl.model.MediaType
 import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.model.impl.LinkedHashModel
-import org.eclipse.rdf4j.rio.helpers.{BasicWriterSettings, JSONLDMode, JSONLDSettings, StatementCollector}
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
+import org.eclipse.rdf4j.rio.{RDFFormat, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.OntologyConstants

@@ -20,7 +20,7 @@
 package org.knora.webapi.store.triplestore.http
 
 import java.io._
-import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.{Files, Paths}
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
@@ -31,7 +31,6 @@ import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.HttpRequest
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost, HttpPut}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
@@ -40,22 +39,21 @@ import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpEntity, HttpHost, NameValuePair}
+import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, NameValuePair}
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, TriplestoreConnectionException, TriplestoreResponseException, TriplestoreUnsupportedFeatureException, UnexpectedMessageException, UnsuportedTriplestoreException}
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.exceptions._
+import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.util.FakeTriplestore
+import org.knora.webapi.messages.util.SparqlResultProtocol._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.messages.util.SparqlResultProtocol._
 import org.knora.webapi.util.FileUtil
 import spray.json._
-import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -595,7 +593,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * Checks the connection to a Fuseki triplestore.
      */
     private def checkFusekiTriplestore(afterAutoInit: Boolean = false): Try[CheckTriplestoreResponse] = {
-        import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
 
         try {
             log.debug("checkFusekiRepository entered")
@@ -693,7 +690,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     private def checkGraphDBTriplestore(): Try[CheckTriplestoreResponse] = {
         // needs to be a local import or other things don't work (spray json black magic)
-        import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
 
         try {
             log.debug("checkGraphDBRepository entered")
