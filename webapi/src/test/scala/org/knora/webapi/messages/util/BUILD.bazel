@@ -99,6 +99,25 @@ scala_test(
 )
 
 scala_test(
+    name = "RdfRequestParserSpec",
+    size = "small",
+    srcs = [
+        "RdfRequestParserSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        "@maven//:org_apache_jena_apache_jena_libs"
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
     name = "PermissionUtilADMSpec",
     size = "small",
     srcs = [

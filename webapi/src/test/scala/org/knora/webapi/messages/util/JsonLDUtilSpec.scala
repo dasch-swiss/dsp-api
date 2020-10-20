@@ -169,7 +169,7 @@ class JsonLDUtilSpec extends AnyWordSpecLike with Matchers {
 
         "convert JSON-LD representing a resource to an RDF4J Model" in {
             // Read a JSON-LD file.
-            val inputJsonLD: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"))
+            val inputJsonLD: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
 
             // Parse it to a JsonLDDocument.
             val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
@@ -184,7 +184,7 @@ class JsonLDUtilSpec extends AnyWordSpecLike with Matchers {
             outputModelAsJsonLDDocument should ===(jsonLDDocument)
 
             // Read an isomorphic Turtle file.
-            val expectedTurtle = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"))
+            val expectedTurtle = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
 
             // Parse it to an RDF4J Model.
             val expectedModel = Rio.parse(new StringReader(expectedTurtle), "", RDFFormat.TURTLE, null)
