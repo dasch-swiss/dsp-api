@@ -22,13 +22,14 @@ package org.knora.webapi.responders.v2
 import java.util.UUID
 
 import akka.pattern._
-import org.knora.webapi.IRI
+import org.apache.jena.graph.Graph
+import org.knora.webapi.{IRI, RdfMediaTypes}
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{InsertGraphDataContentRequest, InsertGraphDataContentResponse, NamedGraphDataRequest, NamedGraphDataResponse}
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.{RdfRequestParser, SuccessResponseV2}
 import org.knora.webapi.messages.v2.responder.metadatamessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -89,9 +90,13 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
                         InsertGraphDataContentRequest(graphContent = turtle, graphName = metadataGraphIRI)
                     ).mapTo[InsertGraphDataContentResponse]
 
-                //check if the metadata graph is created
+                //check if the created metadata graph has the same content as given one.
                 createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(projectADM)
-                _ = if (createdMetadata.turtle != turtle) {
+                createdMetadataGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = createdMetadata.turtle,
+                    contentType = RdfMediaTypes.`text/turtle`)
+                expectedMetadataGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = turtle,
+                    contentType = RdfMediaTypes.`text/turtle`)
+                _ = if (!createdMetadataGraph.isIsomorphicWith(expectedMetadataGraph)) {
                     throw BadRequestException("Graph content is not correct.")
                 }
             } yield SuccessResponseV2(s"Metadata Graph $metadataGraphIRI created.")

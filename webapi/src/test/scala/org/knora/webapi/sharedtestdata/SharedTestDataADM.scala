@@ -543,9 +543,15 @@ object SharedTestDataADM {
         groups = Seq.empty[GroupADM],
         projects = Seq(beolProject),
         sessionId = None,
-        permissions = PermissionsDataADM()
+        permissions = PermissionsDataADM( groupsPerProject = Map(
+            BEOL_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)
+        ),
+            administrativePermissionsPerProject = Map(
+                BEOL_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission
+                )
+        ))
     )
-
 
     /** **********************************/
     /** DOKUBIB                        **/
