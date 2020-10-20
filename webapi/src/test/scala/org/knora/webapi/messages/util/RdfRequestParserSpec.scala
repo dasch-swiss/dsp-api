@@ -23,9 +23,9 @@ import java.io.File
 
 import org.apache.jena.graph._
 import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.messages.util.{JsonLDConstants, JsonLDDocument, JsonLDString}
+import org.knora.webapi.messages.util.{JsonLDConstants, JsonLDDocument}
 import org.knora.webapi.messages.v2.responder.RdfRequestParser
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
