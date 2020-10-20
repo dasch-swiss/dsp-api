@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import java.io.StringReader
+import java.io.{StringReader, StringWriter}
 import java.util.UUID
 
 import akka.actor.ActorRef
@@ -40,6 +40,22 @@ import scala.concurrent.{ExecutionContext, Future}
  * A tagging trait for messages that can be sent to Knora API v2 responders.
  */
 trait KnoraRequestV2
+
+/**
+ * A trait for request messages that are constructed as a [[jena.graph.Graph]].
+ */
+trait KnoraGraphRequestV2 {
+    val graph: jena.graph.Graph
+
+    /**
+     * Returns a Turtle representation of the graph.
+     */
+    def toTurtle: String = {
+        val stringWriter = new StringWriter
+        jena.riot.RDFDataMgr.write(stringWriter, graph, jena.riot.Lang.TURTLE)
+        stringWriter.toString
+    }
+}
 
 /**
  * A trait for objects that can generate case class instances based on JSON-LD input.
