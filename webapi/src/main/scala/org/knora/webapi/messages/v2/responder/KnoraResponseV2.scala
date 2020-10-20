@@ -143,13 +143,14 @@ object RdfResponseFormatter {
         // A StringWriter to collect the formatted output.
         val stringWriter = new StringWriter()
 
+        // Which response format was requested?
         mediaType match {
             case RdfMediaTypes.`application/ld+json` =>
-                // Use our own conversion.
+                // JSON-LD. Use JsonLDUtil for the conversion.
                 JsonLDUtil.fromRDF4JModel(model).toPrettyString
 
             case _ =>
-                // Construct an RDFWriter for the specified format.
+                // Some other format. Construct an RDF4J RDFWriter for it.
                 val rdfWriter: RDFWriter = mediaType match {
                     case RdfMediaTypes.`text/turtle` => Rio.createWriter(RDFFormat.TURTLE, stringWriter)
                     case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)

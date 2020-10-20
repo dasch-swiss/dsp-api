@@ -27,6 +27,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
+import org.apache.jena
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -65,12 +66,12 @@ case class MetadataGetResponseV2(turtle: String) extends KnoraTurtleResponseV2
  * for the project, it will be replaced by the metadata in this message. A successful response
  * will be a [[SuccessResponseV2]].
  *
- * @param turtle         the project metadata to be stored.
+ * @param graph          the project metadata to be stored.
  * @param projectADM     the project.
  * @param requestingUser the user making the request.
  * @param apiRequestID   the API request ID.
  */
-case class MetadataPutRequestV2(turtle: String,
+case class MetadataPutRequestV2(graph: jena.graph.Graph,
                                 projectADM: ProjectADM,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends MetadataResponderRequestV2 {

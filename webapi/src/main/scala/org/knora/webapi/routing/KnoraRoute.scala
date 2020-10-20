@@ -22,12 +22,17 @@ package org.knora.webapi.routing
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Route
+import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
@@ -64,4 +69,26 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
      * @return [[Route]]
      */
     def knoraApiPath: Route
+
+    /**
+     * Gets a [[ProjectADM]] corresponding to the specified project IRI.
+     *
+     * @param projectIri     the project IRI.
+     * @param requestingUser the user making the request.
+     * @return the corresponding [[ProjectADM]].
+     */
+    protected def getProjectADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectADM] = {
+        val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI: $projectIri"))
+
+        if (stringFormatter.isKnoraBuiltInProjectIriStr(checkedProjectIri)) {
+            throw BadRequestException(s"Metadata cannot be updated for a built-in project")
+        }
+
+        for {
+            projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+                requestingUser = requestingUser
+            )).mapTo[ProjectGetResponseADM]
+        } yield projectInfoResponse.project
+    }
 }
