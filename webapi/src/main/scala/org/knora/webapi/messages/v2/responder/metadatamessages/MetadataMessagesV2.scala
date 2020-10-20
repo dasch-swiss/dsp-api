@@ -21,6 +21,9 @@ package org.knora.webapi.messages.v2.responder.metadatamessages
 
 import java.util.UUID
 
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
@@ -42,7 +45,13 @@ sealed trait MetadataResponderRequestV2 extends KnoraRequestV2 {
  * @param requestingUser the user making the request.
  */
 case class MetadataGetRequestV2(projectADM: ProjectADM,
-                                requestingUser: UserADM) extends MetadataResponderRequestV2
+                                requestingUser: UserADM) extends MetadataResponderRequestV2 {
+    val projectIri: IRI = projectADM.id
+    // Ensure that the project isn't the system project or the shared ontologies project.
+    if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
+        throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
+    }
+}
 
 /**
  * Represents metadata about a project.
@@ -64,4 +73,17 @@ case class MetadataGetResponseV2(turtle: String) extends KnoraTurtleResponseV2
 case class MetadataPutRequestV2(turtle: String,
                                 projectADM: ProjectADM,
                                 requestingUser: UserADM,
-                                apiRequestID: UUID) extends MetadataResponderRequestV2
+                                apiRequestID: UUID) extends MetadataResponderRequestV2 {
+    val projectIri: IRI = projectADM.id
+    // check if the requesting user is allowed to create project metadata
+    if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+        // not a system or project admin
+        throw ForbiddenException("A new metadata for a project can only be created by a system or project admin.")
+    }
+
+    // Ensure that the project isn't the system project or the shared ontologies project.
+    if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
+        throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
+    }
+}
+
