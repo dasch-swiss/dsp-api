@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder.metadatamessages
 
+import java.io.StringWriter
 import java.util.UUID
 
 import org.knora.webapi.IRI
@@ -74,7 +75,8 @@ case class MetadataGetResponseV2(turtle: String) extends KnoraTurtleResponseV2
 case class MetadataPutRequestV2(graph: jena.graph.Graph,
                                 projectADM: ProjectADM,
                                 requestingUser: UserADM,
-                                apiRequestID: UUID) extends MetadataResponderRequestV2 {
+                                apiRequestID: UUID) extends KnoraGraphRequestV2 with MetadataResponderRequestV2 {
+
     val projectIri: IRI = projectADM.id
     // check if the requesting user is allowed to create project metadata
     if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {

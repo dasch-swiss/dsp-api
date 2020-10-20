@@ -24,7 +24,6 @@ import java.util.UUID
 import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{InsertGraphDataContentRequest, InsertGraphDataContentResponse, NamedGraphDataRequest, NamedGraphDataResponse}
@@ -46,8 +45,10 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      * Receives a message of type [[MetadataResponderRequestV2]], and returns an appropriate response message.
      */
     def receive(msg: MetadataResponderRequestV2) = msg match {
-        case MetadataGetRequestV2(projectADM, requestingUser) => getProjectMetadata(projectADM, requestingUser)
-        case MetadataPutRequestV2(turtle, projectADM, requestingUser, apiRequestID) => putProjectMetdata(turtle, projectADM, requestingUser, apiRequestID)
+        case getRequest: MetadataGetRequestV2 => getProjectMetadata(projectADM = getRequest.projectADM)
+        case putRequest: MetadataPutRequestV2 => putProjectMetdata(turtle = putRequest.toTurtle,
+                                                                    projectADM = putRequest.projectADM,
+                                                                    apiRequestID= putRequest.apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -55,10 +56,9 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      * GET metadata graph of a project.
      *
      * @param projectADM     the project whose metadata is requested.
-     * @param requestingUser the user making the request.
      * @return a [[MetadataGetResponseV2]].
      */
-    def getProjectMetadata(projectADM: ProjectADM, requestingUser: UserADM): Future[MetadataGetResponseV2] = {
+    def getProjectMetadata(projectADM: ProjectADM): Future[MetadataGetResponseV2] = {
 
         val graphIri: IRI =  stringFormatter.projectMetadataNamedGraphV2(projectADM)
         for {
@@ -75,13 +75,12 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      * PUT metadata graph of a project. Every time a new metdata information is given for a project, it overwrites the
      * previous metadata graph.
      *
-     * @param turtle         the metdata information as raw RDF.
+     * @param turtle         the metdata as raw RDF graph.
      * @param projectADM     the project whose metadata is requested.
-     * @param requestingUser the user making the request.
      * @param apiRequestID   the application UUID.
      * @return a [[SuccessResponseV2]].
      */
-    def putProjectMetdata(turtle: String, projectADM: ProjectADM, requestingUser: UserADM, apiRequestID: UUID): Future[SuccessResponseV2] = {
+    def putProjectMetdata(turtle: String, projectADM: ProjectADM, apiRequestID: UUID): Future[SuccessResponseV2] = {
         val metadataGraphIRI: IRI =  stringFormatter.projectMetadataNamedGraphV2(projectADM)
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
@@ -91,8 +90,8 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
                     ).mapTo[InsertGraphDataContentResponse]
 
                 //check if the metadata graph is created
-                createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(projectADM, requestingUser)
-                if (createdMetadata.turtle != turtle) {
+                createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(projectADM)
+                _ = if (createdMetadata.turtle != turtle) {
                     throw BadRequestException("Graph content is not correct.")
                 }
             } yield SuccessResponseV2(s"Metadata Graph $metadataGraphIRI created.")
