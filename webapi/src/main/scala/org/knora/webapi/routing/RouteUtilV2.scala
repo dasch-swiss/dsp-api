@@ -25,11 +25,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
+import org.apache.jena
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, UnexpectedMessageException}
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.JsonLDDocument
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2, RdfRequestParser}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -174,7 +176,7 @@ object RouteUtilV2 {
     }
 
     /**
-     * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotation.
+     * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
      *
      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
      * @param requestContext   the akka-http [[RequestContext]].
@@ -326,6 +328,65 @@ object RouteUtilV2 {
             )
 
         } yield routeResult
+    }
+
+    /**
+     * Parses a request entity to a [[jena.graph.Graph]].
+     *
+     * @param entityStr   the request entity.
+     * @param requestContext the request context.
+     * @return the corresponding [[jena.graph.Graph]].
+     */
+    def requestToJenaGraph(entityStr: String, requestContext: RequestContext): jena.graph.Graph = {
+        RdfRequestParser.requestToJenaGraph(
+            entityStr,
+            getRequestContentType(requestContext)
+        )
+    }
+
+    /**
+     * Parses a request entity to a [[JsonLDDocument]].
+     *
+     * @param entityStr   the request entity.
+     * @param requestContext the request context.
+     * @return the corresponding [[JsonLDDocument]].
+     */
+    def requestToJsonLD(entityStr: String, requestContext: RequestContext): JsonLDDocument = {
+        RdfRequestParser.requestToJsonLD(
+            entityStr,
+            getRequestContentType(requestContext)
+        )
+    }
+
+    /**
+     * Determines the content type of a request according to its `Content-Type` header.
+     *
+     * @param requestContext the request context.
+     * @return a [[MediaType.NonBinary]] representing the submitted content type.
+     */
+    private def getRequestContentType(requestContext: RequestContext): MediaType.NonBinary = {
+        // Does the request contain a Content-Type header?
+        val maybeContentTypeHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "content-type")
+
+        maybeContentTypeHeader match {
+            case Some(contentTypeHeader) =>
+                // Yes. Did the client request a supported content type?
+                val requestedContentType: String = contentTypeHeader.value
+
+                RdfMediaTypes.registry.get(requestedContentType) match {
+                    case Some(mediaType: MediaType) =>
+                        // Yes. Use the requested content type.
+                        RdfMediaTypes.toMostSpecificMediaType(mediaType)
+
+                    case None =>
+                        // No.
+                        throw BadRequestException(s"Unsupported content type: $requestedContentType")
+                }
+
+            case None =>
+                // The request contains no Content-Type header. Default to JSON-LD.
+                RdfMediaTypes.`application/ld+json`
+        }
     }
 
     /**

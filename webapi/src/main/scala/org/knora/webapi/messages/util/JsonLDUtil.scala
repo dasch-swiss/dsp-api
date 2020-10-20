@@ -30,7 +30,6 @@ import javax.json._
 import javax.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.model.Statement
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, InvalidJsonLDException, InvalidRdfException}
 import org.knora.webapi.messages.IriConversions._
@@ -1235,7 +1234,7 @@ object JsonLDUtil {
      * - Do not nest Knora ontology entities.
      * - After nesting, if more than one top-level entity remains, wrap them all in a `@graph`.
      *
-     * An error is returned if more than one entity refers to the same blank node.
+     * An error is returned if the same blank node is used more than once.
      *
      * @param model the model to be read.
      * @return the corresponding [[JsonLDDocument]].
@@ -1291,7 +1290,7 @@ object JsonLDUtil {
                 }
             }
 
-            // Is there more than one top-level entity?
+            // Is there more than one top-level object?
             if (topLevelObjects.size > 1) {
                 // Yes. Make a @graph.
                 JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(topLevelObjects.values.toVector)))
@@ -1338,7 +1337,7 @@ object JsonLDUtil {
         // Make JSON-LD content representing the predicates and their objects.
         val predsAndObjs: Map[IRI, JsonLDValue] = groupedByPred.keySet.map {
             pred: rdf4j.model.IRI =>
-                val predStatements: Set[Statement] = groupedByPred(pred)
+                val predStatements: Set[rdf4j.model.Statement] = groupedByPred(pred)
                 val predIri: IRI = pred.stringValue
 
                 // Is the predicate rdf:type?
