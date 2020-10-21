@@ -214,7 +214,7 @@ object SparqlTransformer {
             case _ => false
         }
 
-        // Replace the knora-base:isDeleted statements with MINUS patterns.
+        // Replace the knora-base:isDeleted statements with FILTER NOT EXISTS patterns.
         val filterPatterns: Seq[FilterNotExistsPattern] = isDeletedPatterns.collect {
             case statementPattern: StatementPattern =>
                 FilterNotExistsPattern(
