@@ -77,6 +77,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val responseString = responseToString(response)
             assert(responseString.contains(s"Project metadata was stored for project <${beolProjectIRI}>."))
         }
+        
         "get the created metadata graph" in {
             val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -87,6 +88,20 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
                 mediaType = RdfMediaTypes.`text/turtle`
             )
             assert(expectedResult.body == responseJSONLD.body)
+        }
+
+        "not return metadata for an invalid project IRI" in {
+            val request = Get(s"$baseApiUrl/v2/metadata/invalid-projectIRI")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status.isFailure())
+        }
+
+        "not create metadata for an invalid project IRI" in {
+            val request = Put(s"$baseApiUrl/v2/metadata/invalid-projectIRI",
+                HttpEntity(RdfMediaTypes.`text/turtle`, metadataContent)
+            ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status.isFailure())
         }
 
     }
