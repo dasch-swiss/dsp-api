@@ -154,14 +154,6 @@ jobs:
           df -h
       - name: run API E2E tests
         run: make test-e2e
-      - name: Add api-client-test-data to release assets (on release only)
-        if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GH_TOKEN }}
-          file: client-test-data.zip
-          tag: ${{ github.ref }}
-          overwrite: true
       - name: Disk Free After
         run: |
           df -h
@@ -360,7 +352,16 @@ jobs:
           npm install --global typedoc
           npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
-      - name: Deploy docs
+      - name: generate api-client-test-data
+        run: make client-test-data
+      - name: add api-client-test-data to release assets
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          file: client-test-data.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -374,7 +375,7 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Disk Free
+      - name: disk Free
         run: |
           df -h
           docker system df
@@ -384,7 +385,7 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: Disk Free After
+      - name: disk Free After
         run: |
           df -h
           docker system df
