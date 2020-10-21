@@ -49,7 +49,7 @@ WHERE {
     ?resource knora-base:attachedToProject <@projectIri> ;
         rdf:type <@resourceClassIri> .
 
-    MINUS {
+    FILTER NOT EXISTS {
         ?resource knora-base:isDeleted true .
     }
 
