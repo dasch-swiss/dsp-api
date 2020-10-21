@@ -49,9 +49,10 @@ sealed trait MetadataResponderRequestV2 extends KnoraRequestV2 {
 case class MetadataGetRequestV2(projectADM: ProjectADM,
                                 requestingUser: UserADM) extends MetadataResponderRequestV2 {
     val projectIri: IRI = projectADM.id
+
     // Ensure that the project isn't the system project or the shared ontologies project.
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-        throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
+        throw BadRequestException(s"Metadata cannot be requested from project <$projectIri>")
     }
 }
 
@@ -76,17 +77,20 @@ case class MetadataPutRequestV2(graph: jena.graph.Graph,
                                 projectADM: ProjectADM,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends KnoraGraphRequestV2 with MetadataResponderRequestV2 {
-
+    /**
+     * The project IRI.
+     */
     val projectIri: IRI = projectADM.id
-    // check if the requesting user is allowed to create project metadata
+
+    // Check if the requesting user is allowed to create project metadata.
     if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
-        // not a system or project admin
-        throw ForbiddenException("A new metadata for a project can only be created by a system or project admin.")
+        // Not a system or project admin, so not allowed.
+        throw ForbiddenException("A new metadata for a project can only be created by a system or project admin")
     }
 
     // Ensure that the project isn't the system project or the shared ontologies project.
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-        throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
+        throw BadRequestException(s"Metadata cannot be created in project <$projectIri>")
     }
 }
 

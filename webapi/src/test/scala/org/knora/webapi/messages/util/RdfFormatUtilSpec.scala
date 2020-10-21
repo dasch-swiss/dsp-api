@@ -23,8 +23,8 @@ import java.io.File
 
 import org.apache.jena.graph._
 import org.knora.webapi.RdfMediaTypes
+import org.knora.webapi.messages.util.RdfFormatUtil
 import org.knora.webapi.messages.util.{JsonLDConstants, JsonLDDocument}
-import org.knora.webapi.messages.v2.responder.RdfRequestParser
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -32,9 +32,9 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import scala.collection.JavaConverters._
 
 /**
- * Tests [[RdfRequestParser]].
+ * Tests [[RdfFormatUtil]].
  */
-class RdfRequestParserSpec extends AnyWordSpecLike with Matchers {
+class RdfFormatUtilSpec extends AnyWordSpecLike with Matchers {
 
     StringFormatter.initForTest()
 
@@ -53,28 +53,28 @@ class RdfRequestParserSpec extends AnyWordSpecLike with Matchers {
         assert(jsonLDDocument.requireString(JsonLDConstants.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
     }
 
-    "RdfRequestParser" should {
+    "RdfFormatUtil" should {
         "parse RDF in Turtle format, producing a Jena Graph" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val graph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = inputTurtle, contentType = RdfMediaTypes.`text/turtle`)
+            val graph: Graph = RdfFormatUtil.parseToJenaGraph(rdfStr = inputTurtle, mediaType = RdfMediaTypes.`text/turtle`)
             checkGraphForRdfTypeBook(graph)
         }
 
         "parse RDF in JSON-LD format, producing a Jena Graph" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val graph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = inputTurtle, contentType = RdfMediaTypes.`application/ld+json`)
+            val graph: Graph = RdfFormatUtil.parseToJenaGraph(rdfStr = inputTurtle, mediaType = RdfMediaTypes.`application/ld+json`)
             checkGraphForRdfTypeBook(graph)
         }
 
         "parse RDF in Turtle format, producing a JsonLDDocument" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val jsonLDDocument: JsonLDDocument = RdfRequestParser.requestToJsonLD(entityStr = inputTurtle, contentType = RdfMediaTypes.`text/turtle`)
+            val jsonLDDocument: JsonLDDocument = RdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, mediaType = RdfMediaTypes.`text/turtle`)
             checkJsonLDDocumentForRdfTypeBook(jsonLDDocument)
         }
 
         "parse RDF in JSON-LD format, producing a JsonLDDocument" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val jsonLDDocument: JsonLDDocument = RdfRequestParser.requestToJsonLD(entityStr = inputTurtle, contentType = RdfMediaTypes.`application/ld+json`)
+            val jsonLDDocument: JsonLDDocument = RdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, mediaType = RdfMediaTypes.`application/ld+json`)
             checkJsonLDDocumentForRdfTypeBook(jsonLDDocument)
         }
     }

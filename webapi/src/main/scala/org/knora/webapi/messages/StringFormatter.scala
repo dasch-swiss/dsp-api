@@ -2424,7 +2424,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
      * @return the IRI of the project's metadata named graph.
      */
     def projectMetadataNamedGraphV2(project: ProjectADM): IRI = {
-        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/metadata"
+        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname + "/metadata"
     }
 
     /**

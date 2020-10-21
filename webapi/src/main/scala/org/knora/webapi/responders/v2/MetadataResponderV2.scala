@@ -19,20 +19,17 @@
 
 package org.knora.webapi.responders.v2
 
-import java.util.UUID
-
 import akka.pattern._
 import org.apache.jena.graph.Graph
-import org.knora.webapi.{IRI, RdfMediaTypes}
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{InsertGraphDataContentRequest, InsertGraphDataContentResponse, NamedGraphDataRequest, NamedGraphDataResponse}
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v2.responder.{RdfRequestParser, SuccessResponseV2}
+import org.knora.webapi.messages.util.{RdfFormatUtil, ResponderData}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.metadatamessages._
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.{IRI, RdfMediaTypes}
 
 import scala.concurrent.Future
 
@@ -47,7 +44,7 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      */
     def receive(msg: MetadataResponderRequestV2) = msg match {
         case getRequest: MetadataGetRequestV2 => getProjectMetadata(projectADM = getRequest.projectADM)
-        case putRequest: MetadataPutRequestV2 => putProjectMetdata(putRequest)
+        case putRequest: MetadataPutRequestV2 => putProjectMetadata(putRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -57,17 +54,12 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      * @param projectADM     the project whose metadata is requested.
      * @return a [[MetadataGetResponseV2]].
      */
-    def getProjectMetadata(projectADM: ProjectADM): Future[MetadataGetResponseV2] = {
-
+    private def getProjectMetadata(projectADM: ProjectADM): Future[MetadataGetResponseV2] = {
         val graphIri: IRI =  stringFormatter.projectMetadataNamedGraphV2(projectADM)
-        for {
 
-            metadataGraph <- (storeManager ?
-                                NamedGraphDataRequest(graphIri = graphIri)
-                            ).mapTo[NamedGraphDataResponse]
-        } yield MetadataGetResponseV2(
-                    turtle = metadataGraph.turtle
-                )
+        for {
+            metadataGraph <- (storeManager ? NamedGraphDataRequest(graphIri)).mapTo[NamedGraphDataResponse]
+        } yield MetadataGetResponseV2(metadataGraph.turtle)
     }
 
     /**
@@ -77,30 +69,37 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      * @param request  the request to put the metadata graph into the triplestore.
      * @return a [[SuccessResponseV2]].
      */
-    def putProjectMetdata(request: MetadataPutRequestV2): Future[SuccessResponseV2] = {
+    private def putProjectMetadata(request: MetadataPutRequestV2): Future[SuccessResponseV2] = {
         val metadataGraphIRI: IRI =  stringFormatter.projectMetadataNamedGraphV2(request.projectADM)
         val graphContent = request.toTurtle
+
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
-                //create the project metadata graph
+                // Create the project metadata graph.
                 _ <- (storeManager ?
-                        InsertGraphDataContentRequest(graphContent = graphContent, graphName = metadataGraphIRI)
+                        InsertGraphDataContentRequest(
+                            graphContent = graphContent,
+                            graphName = metadataGraphIRI
+                        )
                     ).mapTo[InsertGraphDataContentResponse]
 
-                //check if the created metadata graph has the same content as the one in the request.
+                // Check if the created metadata graph has the same content as the one in the request.
                 createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(request.projectADM)
-                createdMetadataGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = createdMetadata.turtle,
-                    contentType = RdfMediaTypes.`text/turtle`)
+
+                createdMetadataGraph: Graph = RdfFormatUtil.parseToJenaGraph(
+                    rdfStr = createdMetadata.turtle,
+                    mediaType = RdfMediaTypes.`text/turtle`
+                )
 
                 _ = if (!createdMetadataGraph.isIsomorphicWith(request.graph)) {
-                    throw BadRequestException("Graph content is not correct.")
+                    throw AssertionException("Project metadata was stored, but is not correct. Please report this a bug.")
                 }
-            } yield SuccessResponseV2(s"Metadata Graph $metadataGraphIRI created.")
+            } yield SuccessResponseV2(s"Project metadata was stored for project <${request.projectIri}>.")
         }
-        for {
 
-            // Create the metadata graph holding an update lock on the graph IRI so that no other graph with the same
-            // name can be created simultaneously.
+        for {
+            // Create the metadata graph holding an update lock on the graph IRI so that no other client can
+            // create or update the same graph simultaneously.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 metadataGraphIRI,

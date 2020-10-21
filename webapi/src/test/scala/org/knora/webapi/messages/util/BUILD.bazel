@@ -99,10 +99,10 @@ scala_test(
 )
 
 scala_test(
-    name = "RdfRequestParserSpec",
+    name = "RdfFormatUtilSpec",
     size = "small",
     srcs = [
-        "RdfRequestParserSpec.scala",
+        "RdfFormatUtilSpec.scala",
     ],
     data = [
         "//knora-ontologies",
