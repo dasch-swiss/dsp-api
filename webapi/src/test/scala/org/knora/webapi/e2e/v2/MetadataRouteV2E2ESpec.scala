@@ -2,8 +2,8 @@ package org.knora.webapi.e2e.v2
 
 import java.net.URLEncoder
 
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{HttpEntity, HttpHeader, HttpResponse, MediaType}
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, RawHeader}
 import org.knora.webapi.messages.util.RdfFormatUtil
 import org.knora.webapi.{E2ESpec, IRI, RdfMediaTypes}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -67,6 +67,45 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
            |<beol> dsp-repo:hasAlternateName "beol" .
            |""".stripMargin
 
+    val metadataAsJsonLD =
+        """
+          |{
+          |    "http://ns.dasch.swiss/repository#hasDateModified": "04.2020",
+          |    "http://ns.dasch.swiss/repository#hasShortcode": "0801",
+          |    "http://ns.dasch.swiss/repository#hasName": "Bernoulli-Euler Online (BEOL)",
+          |    "http://ns.dasch.swiss/repository#hasSpatialCoverage": [
+          |        "Italy",
+          |        "Switzerland",
+          |        "England",
+          |        "France",
+          |        "Russia",
+          |        "Germany",
+          |        "Europe"
+          |    ],
+          |    "http://ns.dasch.swiss/repository#hasFunder": "Schweizerischer Nationalfonds (SNSF)",
+          |    "http://ns.dasch.swiss/repository#hasKeywords": [
+          |        "Leibniz",
+          |        "science",
+          |        "Euler",
+          |        "Bernoulli",
+          |        "mathematics",
+          |        "history of science",
+          |        "Newton",
+          |        "history of mathematics"
+          |    ],
+          |    "http://ns.dasch.swiss/repository#hasEndDate": "2020.01",
+          |    "http://ns.dasch.swiss/repository#hasTemporalCoverage": "17th century and 18th century CE",
+          |    "http://ns.dasch.swiss/repository#hasCategories": "mathematics",
+          |    "http://ns.dasch.swiss/repository#hasDescription": "The project Bernoulli-Euler Online (BEOL) integrates the two edition projects Basler Edition der Bernoulli-Briefwechsel (BEBB) and Leonhardi Euleri Opera Omnia (LEOO) into one digital platform available on the web. In addition, Jacob Bernoulli's scientific notebook Meditationes - a document of outstanding significance for the history of mathematics at its turning point around 1700 - is published for the first time in its entirety on the BEOL platform as a region-based multilayer interactive digital edition providing access to facsimiles, transcriptions, translations, indices, and commentaries. Besides being an edition platform, BEOL is a virtual research environment for the study of early modern mathematics and science as a data graph using sophisticated analysis tools. Currently BEOL is connected to two third-party repositories: The Newton Project and the Briefportal Leibniz, initiating the formation of a network of digital editions of the early modern scientific correspondence data.The goal of BEOL is thus twofold: it focuses on the mathematics influenced by the Bernoulli dynasty and Leonhard Euler and undertakes a methodological effort to present these materials to the public and researchers in a highly functional way.",
+          |    "@type": "http://ns.dasch.swiss/repository#Project",
+          |    "http://ns.dasch.swiss/repository#hasAlternateName": "beol",
+          |    "http://ns.dasch.swiss/repository#hasStartDate": "2016.07",
+          |    "http://ns.dasch.swiss/repository#hasURL": "https://beol.dasch.swiss/",
+          |    "http://ns.dasch.swiss/repository#hasDateCreated": "09.2017",
+          |    "@id": "http://ns.dasch.swiss/beol"
+          |}
+          |""".stripMargin
+
     "The metadata v2 endpoint" should {
         "perform a put request for the metadata of beol project given as Turtle" in {
             val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
@@ -77,17 +116,36 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val responseString = responseToString(response)
             assert(responseString.contains(s"Project metadata was stored for project <${beolProjectIRI}>."))
         }
-        
-        "get the created metadata graph" in {
+
+        "perform a put request for the metadata of beol project given as JSON-LD" in {
+            val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
+                HttpEntity(RdfMediaTypes.`application/json`, metadataAsJsonLD)
+            ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status.isSuccess())
+            val responseString = responseToString(response)
+            assert(responseString.contains(s"Project metadata was stored for project <${beolProjectIRI}>."))
+        }
+
+        "get the created metadata graph as JSON LD" in {
             val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseJSONLD = responseToJsonLDDocument(response)
             assert(response.status.isSuccess())
-            val expectedResult = RdfFormatUtil.parseToJsonLDDocument(
+            val expectedGraphJSONLD = RdfFormatUtil.parseToJsonLDDocument(
                 rdfStr = metadataContent,
                 mediaType = RdfMediaTypes.`text/turtle`
             )
-            assert(expectedResult.body == responseJSONLD.body)
+            assert(expectedGraphJSONLD.body == responseJSONLD.body)
+        }
+
+        "get the created metadata graph as Turtle" in {
+            val turtleType = RdfMediaTypes.`text/turtle`.toString()
+            val header = RawHeader("Accept", turtleType)
+            val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}") ~> addHeader(header)
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status.isSuccess())
+            response.entity.contentType.mediaType.value should be (turtleType)
         }
 
         "not return metadata for an invalid project IRI" in {
