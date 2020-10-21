@@ -76,7 +76,7 @@ class SparqlTransformerSpec extends CoreSpec() {
             generatedQueryVar should ===(QueryVariable("linkingProp1__hasLinkToValue"))
         }
 
-        "move knora-base:isDeleted to the end of a block" in {
+        "optimise knora-base:isDeleted" in {
             val typeStatement = StatementPattern.makeExplicit(subj = QueryVariable("foo"), pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri))
             val isDeletedStatement = StatementPattern.makeExplicit(subj = QueryVariable("foo"), pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
             val linkStatement = StatementPattern.makeExplicit(subj = QueryVariable("foo"), pred = IriRef("http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri), obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
@@ -87,12 +87,20 @@ class SparqlTransformerSpec extends CoreSpec() {
                 linkStatement
             )
 
-            val optimisedPatterns = SparqlTransformer.moveIsDeletedToEnd(patterns)
+            val optimisedPatterns = SparqlTransformer.optimiseIsDeleted(patterns)
 
             val expectedPatterns = Seq(
                 typeStatement,
                 linkStatement,
-                isDeletedStatement
+                MinusPattern(
+                    Seq(
+                        StatementPattern.makeExplicit(
+                            subj = QueryVariable("foo"),
+                            pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
+                            obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+                        )
+                    )
+                )
             )
 
             optimisedPatterns should ===(expectedPatterns)

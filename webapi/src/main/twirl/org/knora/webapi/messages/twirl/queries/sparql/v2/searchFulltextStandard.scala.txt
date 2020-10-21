@@ -93,8 +93,7 @@ WHERE {
     }
 
     OPTIONAL {
-        ?matchingSubject a ?valueObjectType ;
-            knora-base:isDeleted false .
+        ?matchingSubject a ?valueObjectType .
 
         ?valueObjectType rdfs:subClassOf *knora-base:Value .
 
@@ -104,6 +103,10 @@ WHERE {
 
         ?property rdfs:subPropertyOf* knora-base:hasValue .
 
+        MINUS {
+            ?matchingSubject knora-base:isDeleted true .
+        }
+
         # this variable will only be bound if the search matched a value object
         BIND(?matchingSubject AS ?valueObject)
     }
@@ -112,9 +115,7 @@ WHERE {
     # Otherwise, ?matchingSubject is a resource (its rdfs:label matched the search pattern).
     BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
 
-    ?resource a ?resourceClass ;
-        knora-base:isDeleted false .
-
+    ?resource a ?resourceClass .
     ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     @limitToResourceClass match {
@@ -131,6 +132,10 @@ WHERE {
         }
 
         case None => {}
+    }
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
     }
 }
 @if(!countQuery) {
