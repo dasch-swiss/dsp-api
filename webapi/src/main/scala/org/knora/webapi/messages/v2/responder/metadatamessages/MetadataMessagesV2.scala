@@ -52,7 +52,7 @@ case class MetadataGetRequestV2(projectADM: ProjectADM,
 
     // Ensure that the project isn't the system project or the shared ontologies project.
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-        throw BadRequestException(s"Metadata cannot be requested from project <$projectIri>")
+        throw BadRequestException(s"Metadata cannot be requested from project <$projectIri>.")
     }
 }
 
@@ -85,12 +85,12 @@ case class MetadataPutRequestV2(graph: jena.graph.Graph,
     // Check if the requesting user is allowed to create project metadata.
     if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
         // Not a system or project admin, so not allowed.
-        throw ForbiddenException("A new metadata for a project can only be created by a system or project admin")
+        throw ForbiddenException("A new metadata for a project can only be created by a system or project admin.")
     }
 
     // Ensure that the project isn't the system project or the shared ontologies project.
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-        throw BadRequestException(s"Metadata cannot be created in project <$projectIri>")
+        throw BadRequestException(s"Metadata cannot be created in project <$projectIri>.")
     }
 }
 
