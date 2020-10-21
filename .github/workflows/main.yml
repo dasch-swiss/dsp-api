@@ -336,7 +336,7 @@ jobs:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
+        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
