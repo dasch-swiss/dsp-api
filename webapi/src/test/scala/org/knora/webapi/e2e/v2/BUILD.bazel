@@ -71,7 +71,7 @@ scala_test(
 
 scala_test(
     name = "OntologyV2R2RSpec",
-    size = "small",  # 60s
+    size = "medium",  # 300s
     srcs = [
         "OntologyV2R2RSpec.scala",
     ],
