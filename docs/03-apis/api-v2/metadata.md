@@ -32,9 +32,13 @@ the segment of the `PUT` request, as shown below:
 ```
 PUT http://localhost:3333/v2/metadata/<?encodedProjectIRI>
 ``` 
-Only admin users of a project or a system admin can create metadata information for a project. The `Content-Type` of the 
-request must be set to `text/turtle` and the metadata must be given in the body of the request in **Turtle** format, for 
-example as:
+Only admin users of a project or a system admin can create metadata information for a project. The metadata must be 
+given in the body of the request in either **Turtle**, **JSON-LD**, 
+or **RDF/XML** format. The `Content-Type` of the request body must be explicitly specified, for example as
+
+`Content-Type: text/turtle` 
+
+Then the request body containing the metadata information must be in the following form:
 
 ```json
 @prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
@@ -62,7 +66,12 @@ Any user can retrieve the metadata infromation of a project using its IRI throug
 
 `GET http://localhost:3333/v2/metadata/<?encodedProjectIRI>`
 
-Upon success, the API returns the metadata information as JSON-LD in the following form:
+Upon success, the API can return the metadata information in either of Turtle, JSON-LD, or RDF/XML format. The expected 
+response format must be specified in the header of the `GET` request, for example as:
+
+`{"Accept", "text/turtle"}`
+
+Otherwise, by default the metadata is returned in JSON-LD format:
 
 ```json
 {
