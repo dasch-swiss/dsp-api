@@ -19,18 +19,15 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import java.io.{StringReader, StringWriter}
+import java.io.StringReader
 
 import akka.http.scaladsl.model.MediaType
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFWriter, Rio}
+import org.eclipse.rdf4j
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil}
+import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString, RdfFormatUtil}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 
@@ -48,7 +45,7 @@ trait KnoraResponseV2 {
      * @return a formatted string representing this response message.
      */
     def format(mediaType: MediaType.NonBinary,
-               targetSchema: ApiV2Schema,
+               targetSchema: OntologySchema,
                schemaOptions: Set[SchemaOption],
                settings: KnoraSettingsImpl): String
 }
@@ -59,12 +56,17 @@ trait KnoraResponseV2 {
 trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
 
     override def format(mediaType: MediaType.NonBinary,
-                        targetSchema: ApiV2Schema,
+                        targetSchema: OntologySchema,
                         schemaOptions: Set[SchemaOption],
                         settings: KnoraSettingsImpl): String = {
+        val targetApiV2Schema = targetSchema match {
+            case apiV2Schema: ApiV2Schema => apiV2Schema
+            case InternalSchema => throw AssertionException(s"Response cannot be returned in the internal schema")
+        }
+
         // Convert this response message to a JSON-LD document.
         val jsonLDDocument: JsonLDDocument = toJsonLDDocument(
-            targetSchema = targetSchema,
+            targetSchema = targetApiV2Schema,
             settings = settings,
             schemaOptions = schemaOptions
         )
@@ -78,7 +80,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
             case _ =>
                 // Some other format. Convert the document to an RDF4J Model,
                 // and return the model in the requested format.
-                RdfResponseFormatter.formatResponse(
+                RdfFormatUtil.formatRDF4JModel(
                     model = jsonLDDocument.toRDF4JModel,
                     mediaType = mediaType
                 )
@@ -96,7 +98,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
 
 /**
  * A trait for Knora API V2 response messages that are constructed as
- * strings in Turtle format.
+ * strings in Turtle format in the internal schema.
  */
 trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
     /**
@@ -105,9 +107,13 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
     protected val turtle: String
 
     override def format(mediaType: MediaType.NonBinary,
-                        targetSchema: ApiV2Schema,
+                        targetSchema: OntologySchema,
                         schemaOptions: Set[SchemaOption],
                         settings: KnoraSettingsImpl): String = {
+        if (targetSchema != InternalSchema) {
+            throw AssertionException(s"Response can be returned only in the internal schema")
+        }
+
         // Which response format was requested?
         mediaType match {
             case RdfMediaTypes.`text/turtle` =>
@@ -116,54 +122,13 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
 
             case _ =>
                 // Some other format. Parse the Turtle to an RDF4J Model.
-                val model = Rio.parse(new StringReader(turtle), "", RDFFormat.TURTLE, null)
+                val model = rdf4j.rio.Rio.parse(new StringReader(turtle), "", rdf4j.rio.RDFFormat.TURTLE, null)
 
                 // Return the model in the requested format.
-                RdfResponseFormatter.formatResponse(
+                RdfFormatUtil.formatRDF4JModel(
                     model = model,
                     mediaType = mediaType
                 )
-        }
-    }
-}
-
-/**
- * A utility for formatting RDF responses.
- */
-object RdfResponseFormatter {
-    /**
-     * Formats RDF as an API response in the requested media type.
-     *
-     * @param model         an RDF4J model.
-     * @param mediaType     the specific media type selected for the response.
-     * @return the model formatted in the specified format.
-     */
-    def formatResponse(model: Model,
-                       mediaType: MediaType.NonBinary): String = {
-        // A StringWriter to collect the formatted output.
-        val stringWriter = new StringWriter()
-
-        // Which response format was requested?
-        mediaType match {
-            case RdfMediaTypes.`application/ld+json` =>
-                // JSON-LD. Use JsonLDUtil for the conversion.
-                JsonLDUtil.fromRDF4JModel(model).toPrettyString
-
-            case _ =>
-                // Some other format. Construct an RDF4J RDFWriter for it.
-                val rdfWriter: RDFWriter = mediaType match {
-                    case RdfMediaTypes.`text/turtle` => Rio.createWriter(RDFFormat.TURTLE, stringWriter)
-                    case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
-                    case other => throw BadRequestException(s"Unsupported media type: $other")
-                }
-
-                // Configure the RDFWriter.
-                rdfWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
-                    set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
-
-                // Format the RDF.
-                Rio.write(model, rdfWriter)
-                stringWriter.toString
         }
     }
 }

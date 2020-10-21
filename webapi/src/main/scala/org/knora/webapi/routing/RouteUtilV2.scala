@@ -29,9 +29,9 @@ import org.apache.jena
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, UnexpectedMessageException}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.{JsonLDDocument, RdfFormatUtil}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2, RdfRequestParser}
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -193,7 +193,7 @@ object RouteUtilV2 {
                             settings: KnoraSettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
-                            targetSchema: ApiV2Schema,
+                            targetSchema: OntologySchema,
                             schemaOptions: Set[SchemaOption])
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
@@ -312,7 +312,7 @@ object RouteUtilV2 {
                               settings: KnoraSettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
-                              targetSchema: ApiV2Schema,
+                              targetSchema: OntologySchema,
                               schemaOptions: Set[SchemaOption])
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
@@ -338,9 +338,9 @@ object RouteUtilV2 {
      * @return the corresponding [[jena.graph.Graph]].
      */
     def requestToJenaGraph(entityStr: String, requestContext: RequestContext): jena.graph.Graph = {
-        RdfRequestParser.requestToJenaGraph(
-            entityStr,
-            getRequestContentType(requestContext)
+        RdfFormatUtil.parseToJenaGraph(
+            rdfStr = entityStr,
+            mediaType = getRequestContentType(requestContext)
         )
     }
 
@@ -352,9 +352,9 @@ object RouteUtilV2 {
      * @return the corresponding [[JsonLDDocument]].
      */
     def requestToJsonLD(entityStr: String, requestContext: RequestContext): JsonLDDocument = {
-        RdfRequestParser.requestToJsonLD(
-            entityStr,
-            getRequestContentType(requestContext)
+        RdfFormatUtil.parseToJsonLDDocument(
+            rdfStr = entityStr,
+            mediaType = getRequestContentType(requestContext)
         )
     }
 
