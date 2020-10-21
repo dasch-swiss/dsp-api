@@ -199,7 +199,7 @@ object SparqlTransformer {
     }
 
     /**
-     * Optimises a query by replacing `knora-base:isDeleted false` with a `MINUS` pattern
+     * Optimises a query by replacing `knora-base:isDeleted false` with a `FILTER NOT EXISTS` pattern
      * placed at the end of the block.
      *
      * @param patterns the block of patterns to be optimised.
@@ -215,9 +215,9 @@ object SparqlTransformer {
         }
 
         // Replace the knora-base:isDeleted statements with MINUS patterns.
-        val minusPatterns: Seq[MinusPattern] = isDeletedPatterns.collect {
+        val filterPatterns: Seq[FilterNotExistsPattern] = isDeletedPatterns.collect {
             case statementPattern: StatementPattern =>
-                MinusPattern(
+                FilterNotExistsPattern(
                     Seq(
                         StatementPattern.makeExplicit(
                             subj = statementPattern.subj,
@@ -228,7 +228,7 @@ object SparqlTransformer {
                 )
         }
 
-        otherPatterns ++ minusPatterns
+        otherPatterns ++ filterPatterns
     }
 
     /**
@@ -276,12 +276,24 @@ object SparqlTransformer {
                     case _ => false
                 }
 
+                // Don't move statements whose predicate is rdf:subject or rdf:object: their subject
+                // is a link value that needs to be defined first.
+                val statementIsInLinkValue = statementPattern.pred match {
+                    case iriRef: IriRef =>
+                        iriRef.iri.toString match {
+                            case OntologyConstants.Rdf.Subject | OntologyConstants.Rdf.Object => true
+                            case _ => false
+                        }
+
+                    case _ => false
+                }
+
                 val objIsResourceIri = statementPattern.obj match {
                     case iriRef: IriRef if iriRef.iri.isKnoraResourceIri => true
                     case _ => false
                 }
 
-                subjIsResourceIri || objIsResourceIri
+                !statementIsInLinkValue && (subjIsResourceIri || objIsResourceIri)
 
             case _ => false
         }

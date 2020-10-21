@@ -92,7 +92,7 @@ class SparqlTransformerSpec extends CoreSpec() {
             val expectedPatterns = Seq(
                 typeStatement,
                 linkStatement,
-                MinusPattern(
+                FilterNotExistsPattern(
                     Seq(
                         StatementPattern.makeExplicit(
                             subj = QueryVariable("foo"),

@@ -578,7 +578,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
+        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -623,48 +623,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
-
-            val gravsearchQuery =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?page knora-api:isMainResource true .
-                  |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
-                  |
-                  |        ?page incunabula:seqnum ?seqnum .
-                  |    } WHERE {
-                  |
-                  |        ?page a incunabula:page .
-                  |        ?page a knora-api:Resource .
-                  |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
-                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
-                  |
-                  |        <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
-                  |
-                  |        ?page incunabula:seqnum ?seqnum .
-                  |        incunabula:seqnum knora-api:objectType xsd:integer .
-                  |
-                  |        FILTER(?seqnum = 10)
-                  |
-                  |        ?seqnum a xsd:integer .
-                  |
-                  |    }
-                """.stripMargin
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-
-            }
-
-        }
 
         "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum" in {
 
@@ -3442,7 +3400,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value (with type inference)" in {
+        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (with type inference)" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>

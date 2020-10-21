@@ -48,7 +48,6 @@ WHERE {
     ?resource <http://jena.apache.org/text#query> "@searchTerm.generateLiteralForLuceneIndexWithoutExactSequence" .
 
     ?resource a ?resourceClass ;
-        knora-base:isDeleted false ;
         rdfs:label ?label .
 
     ?resourceClass rdfs:subClassOf* knora-base:Resource .
@@ -59,6 +58,10 @@ WHERE {
 
     @if(limitToProject.nonEmpty) {
         ?resource knora-base:attachedToProject <@limitToProject.get>
+    }
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
     }
 }
 @if(!countQuery) {
