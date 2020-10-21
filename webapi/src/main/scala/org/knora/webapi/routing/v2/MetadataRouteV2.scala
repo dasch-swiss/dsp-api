@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import org.apache.jena.graph.Graph
-import org.knora.webapi.InternalSchema
+import org.knora.webapi.{ApiV2Complex, InternalSchema}
 import org.knora.webapi.messages.v2.responder.metadatamessages.{MetadataGetRequestV2, MetadataPutRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
@@ -86,7 +86,7 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        targetSchema = InternalSchema,
+                        targetSchema = ApiV2Complex,
                         schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }

@@ -2,8 +2,9 @@ package org.knora.webapi.e2e.v2
 
 import java.net.URLEncoder
 
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.knora.webapi.messages.util.RdfFormatUtil
 import org.knora.webapi.{E2ESpec, IRI, RdfMediaTypes}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
@@ -14,7 +15,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     private val beolProjectIRI: IRI = SharedTestDataADM.BEOL_PROJECT_IRI
     private val password = SharedTestDataADM.testPass
 
-    private val metdataContent =
+    private val metadataContent =
         s"""
            |@prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
            |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
@@ -69,12 +70,24 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     "The metadata v2 endpoint" should {
         "perform a put request for the metadata of beol project given as Turtle" in {
             val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
-                                HttpEntity(RdfMediaTypes.`text/turtle`, metdataContent)
+                                HttpEntity(RdfMediaTypes.`text/turtle`, metadataContent)
                                 ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
-            val responseAsString = responseToString(response)
-            assert(response.status == StatusCodes.OK, responseAsString)
-
+            assert(response.status.isSuccess())
+            val responseString = responseToString(response)
+            assert(responseString.contains(s"Project metadata was stored for project <${beolProjectIRI}>."))
         }
+        "get the created metadata graph" in {
+            val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseJSONLD = responseToJsonLDDocument(response)
+            assert(response.status.isSuccess())
+            val expectedResult = RdfFormatUtil.parseToJsonLDDocument(
+                rdfStr = metadataContent,
+                mediaType = RdfMediaTypes.`text/turtle`
+            )
+            assert(expectedResult.body == responseJSONLD.body)
+        }
+
     }
 }
