@@ -47,9 +47,7 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      */
     def receive(msg: MetadataResponderRequestV2) = msg match {
         case getRequest: MetadataGetRequestV2 => getProjectMetadata(projectADM = getRequest.projectADM)
-        case putRequest: MetadataPutRequestV2 => putProjectMetdata(turtle = putRequest.toTurtle,
-                                                                    projectADM = putRequest.projectADM,
-                                                                    apiRequestID= putRequest.apiRequestID)
+        case putRequest: MetadataPutRequestV2 => putProjectMetdata(putRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -76,27 +74,25 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      * PUT metadata graph of a project. Every time a new metdata information is given for a project, it overwrites the
      * previous metadata graph.
      *
-     * @param turtle         the metdata as raw RDF graph.
-     * @param projectADM     the project whose metadata is requested.
-     * @param apiRequestID   the application UUID.
+     * @param request  the request to put the metadata graph into the triplestore.
      * @return a [[SuccessResponseV2]].
      */
-    def putProjectMetdata(turtle: String, projectADM: ProjectADM, apiRequestID: UUID): Future[SuccessResponseV2] = {
-        val metadataGraphIRI: IRI =  stringFormatter.projectMetadataNamedGraphV2(projectADM)
+    def putProjectMetdata(request: MetadataPutRequestV2): Future[SuccessResponseV2] = {
+        val metadataGraphIRI: IRI =  stringFormatter.projectMetadataNamedGraphV2(request.projectADM)
+        val graphContent = request.toTurtle
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 //create the project metadata graph
                 _ <- (storeManager ?
-                        InsertGraphDataContentRequest(graphContent = turtle, graphName = metadataGraphIRI)
+                        InsertGraphDataContentRequest(graphContent = graphContent, graphName = metadataGraphIRI)
                     ).mapTo[InsertGraphDataContentResponse]
 
-                //check if the created metadata graph has the same content as given one.
-                createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(projectADM)
+                //check if the created metadata graph has the same content as the one in the request.
+                createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(request.projectADM)
                 createdMetadataGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = createdMetadata.turtle,
                     contentType = RdfMediaTypes.`text/turtle`)
-                expectedMetadataGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = turtle,
-                    contentType = RdfMediaTypes.`text/turtle`)
-                _ = if (!createdMetadataGraph.isIsomorphicWith(expectedMetadataGraph)) {
+
+                _ = if (!createdMetadataGraph.isIsomorphicWith(request.graph)) {
                     throw BadRequestException("Graph content is not correct.")
                 }
             } yield SuccessResponseV2(s"Metadata Graph $metadataGraphIRI created.")
@@ -106,7 +102,7 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
             // Create the metadata graph holding an update lock on the graph IRI so that no other graph with the same
             // name can be created simultaneously.
             taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
+                request.apiRequestID,
                 metadataGraphIRI,
                 () => makeTaskFuture
             )
