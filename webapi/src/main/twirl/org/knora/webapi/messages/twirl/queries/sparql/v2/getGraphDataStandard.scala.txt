@@ -56,7 +56,7 @@ WHERE {
             knora-base:attachedToProject ?nodeProject ;
             knora-base:hasPermissions ?nodePermissions .
 
-        MINUS {
+        FILTER NOT EXISTS {
             ?node knora-base:isDeleted true .
         }
     } else {
