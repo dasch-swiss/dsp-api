@@ -86,7 +86,7 @@ case class MetadataPutRequestV2(graph: jena.graph.Graph,
 
     // Ensure that the project isn't the system project or the shared ontologies project.
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-        throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
+        throw BadRequestException(s"Metadata cannot be created for project <$projectIri>")
     }
 }
 

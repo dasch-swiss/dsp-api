@@ -24,9 +24,8 @@ import java.util.UUID
 import akka.pattern._
 import org.apache.jena.graph.Graph
 import org.knora.webapi.{IRI, RdfMediaTypes}
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.{BadRequestException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{InsertGraphDataContentRequest, InsertGraphDataContentResponse, NamedGraphDataRequest, NamedGraphDataResponse}
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.{RdfRequestParser, SuccessResponseV2}
@@ -61,7 +60,6 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
 
         val graphIri: IRI =  stringFormatter.projectMetadataNamedGraphV2(projectADM)
         for {
-
             metadataGraph <- (storeManager ?
                                 NamedGraphDataRequest(graphIri = graphIri)
                             ).mapTo[NamedGraphDataResponse]
