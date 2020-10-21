@@ -366,12 +366,12 @@ object RouteUtilV2 {
      */
     private def getRequestContentType(requestContext: RequestContext): MediaType.NonBinary = {
         // Does the request contain a Content-Type header?
-        val maybeContentTypeHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "content-type")
+        val maybeContentType: Option[ContentType] = Some(requestContext.request.entity.contentType)
 
-        maybeContentTypeHeader match {
-            case Some(contentTypeHeader) =>
+        maybeContentType match {
+            case Some(contentType) =>
                 // Yes. Did the client request a supported content type?
-                val requestedContentType: String = contentTypeHeader.value
+                val requestedContentType: String = contentType.value
 
                 RdfMediaTypes.registry.get(requestedContentType) match {
                     case Some(mediaType: MediaType) =>
