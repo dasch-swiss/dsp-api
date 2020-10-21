@@ -1,24 +1,19 @@
-package org.knora.webapi.responders.v2
+package org.knora.webapi.e2e.v2
 
-import java.util.UUID
+import java.net.URLEncoder
 
-import akka.testkit.ImplicitSender
-import org.apache.jena.graph.Graph
-import org.knora.webapi.{CoreSpec, IRI, RdfMediaTypes}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.{RdfRequestParser, SuccessResponseV2}
-import org.knora.webapi.messages.v2.responder.metadatamessages.{MetadataGetRequestV2, MetadataGetResponseV2, MetadataPutRequestV2}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.knora.webapi.{E2ESpec, IRI, RdfMediaTypes}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import scala.concurrent.duration._
-/**
- * Tests [[MetadataResponderV2]].
- */
-class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+class MetadataRouteV2E2ESpec extends E2ESpec {
 
-    // The default timeout for receiving reply messages from actors.
-    private val timeout = 10.seconds
+    // Directory path for generated client test data
+    private val beolUserEmail = SharedTestDataADM.beolUser.email
+    private val beolProjectIRI: IRI = SharedTestDataADM.BEOL_PROJECT_IRI
+    private val password = SharedTestDataADM.testPass
+
     private val metdataContent =
         s"""
            |@prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
@@ -71,33 +66,15 @@ class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
            |<beol> dsp-repo:hasAlternateName "beol" .
            |""".stripMargin
 
-    // Parse the request to a Jena Graph.
-    private val requestGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = metdataContent,
-        contentType = RdfMediaTypes.`text/turtle`)
+    "The metadata v2 endpoint" should {
+        "perform a put request for the metadata of beol project given as Turtle" in {
+            val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
+                                HttpEntity(RdfMediaTypes.`text/turtle`, metdataContent)
+                                ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
 
-
-    "The metadata responder v2" should {
-        "put a metadata graph in triplestore" in {
-            responderManager ! MetadataPutRequestV2(
-                graph = requestGraph,
-                projectADM = SharedTestDataADM.beolProject,
-                requestingUser = SharedTestDataADM.beolUser,
-                apiRequestID = UUID.randomUUID
-            )
-            val response = expectMsgType[SuccessResponseV2](timeout)
-            val metadataGraphIRI: IRI = stringFormatter.projectMetadataNamedGraphV2(SharedTestDataADM.beolProject)
-            response.message should be (s"Metadata Graph $metadataGraphIRI created.")
-
-        }
-        
-        "get metadata graph of a project" in {
-            responderManager ! MetadataGetRequestV2(
-                projectADM = SharedTestDataADM.beolProject,
-                requestingUser = SharedTestDataADM.beolUser)
-            val response = expectMsgType[MetadataGetResponseV2](timeout)
-            val receivedGraph: Graph = RdfRequestParser.requestToJenaGraph(entityStr = response.turtle,
-                contentType = RdfMediaTypes.`text/turtle`)
-            assert(receivedGraph.isIsomorphicWith(requestGraph))
         }
     }
 }
