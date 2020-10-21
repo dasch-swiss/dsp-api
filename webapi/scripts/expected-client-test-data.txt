@@ -95,6 +95,12 @@ test-data/admin/users/update-user-status-request.json
 test-data/admin/users/update-user-status-response.json
 test-data/admin/users/update-user-system-admin-membership-request.json
 test-data/admin/users/update-user-system-admin-membership-response.json
+test-data/system/
+test-data/system/health/
+test-data/system/health/maintenance-mode-response.json
+test-data/system/health/response-headers.json
+test-data/system/health/running-response.json
+test-data/system/health/stopped-response.json
 test-data/v2/
 test-data/v2/lists/
 test-data/v2/lists/listnode.json

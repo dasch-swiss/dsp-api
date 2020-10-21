@@ -528,9 +528,11 @@ case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
  *                         update that will create the values.
  * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV2]] objects describing
  *                         the values that should have been created.
+ * @param hasStandoffLink  `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
  */
 case class GenerateSparqlToCreateMultipleValuesResponseV2(insertSparql: String,
-                                                          unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]])
+                                                          unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
+                                                          hasStandoffLink: Boolean)
 
 /**
  * The value of a Knora property in the context of some particular input or output operation.
