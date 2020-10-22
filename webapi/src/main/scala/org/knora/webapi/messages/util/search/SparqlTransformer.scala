@@ -79,7 +79,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveBindToBeginning(optimiseIsDeleted(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
+            moveBindToBeginning(optimiseIsDeletedWithFilter(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -124,7 +124,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveBindToBeginning(optimiseIsDeleted(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
+            moveBindToBeginning(optimiseIsDeletedWithFilter(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -205,7 +205,7 @@ object SparqlTransformer {
      * @param patterns the block of patterns to be optimised.
      * @return the result of the optimisation.
      */
-    def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+    def optimiseIsDeletedWithFilter(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Separate the knora-base:isDeleted statements from the rest of the block.

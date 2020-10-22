@@ -87,7 +87,7 @@ class SparqlTransformerSpec extends CoreSpec() {
                 linkStatement
             )
 
-            val optimisedPatterns = SparqlTransformer.optimiseIsDeleted(patterns)
+            val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithFilter(patterns)
 
             val expectedPatterns = Seq(
                 typeStatement,
