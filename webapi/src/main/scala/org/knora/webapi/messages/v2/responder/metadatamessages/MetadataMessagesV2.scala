@@ -51,7 +51,7 @@ case class MetadataGetRequestV2(projectADM: ProjectADM,
 
     // Ensure that the project isn't the system project or the shared ontologies project.
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-        throw BadRequestException(s"Metadata cannot be requested from project <$projectIri>.")
+        throw BadRequestException(s"Metadata cannot be requested from project <$projectIri>")
     }
 }
 
