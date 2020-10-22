@@ -20,27 +20,38 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 # Metadata Endpoint
 
 ## Endpoint Overview
-The metadata of a project contains information about its scope, content, contributors, funding, etc. modeled with respect 
-to [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies) data model. Metadata information must be available for 
+
+The metadata of a project contains information about its scope, content, contributors, funding, etc. modeled according to
+to the [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies) data model. Metadata information must be available for 
 any [DaSCH](http://dasch.swiss/) project so that researchers can go through the projects and get an idea about every project.
 
-## Creating Project Metadata Graph:
-Currently, the metadata information modeled using [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies) can be 
-stored in the triplestore as raw RDF data. The IRI of the project for which metadata must be created should be given as 
-the segment of the `PUT` request, as shown below:
+## Creating and Updating Project Metadata
+
+Project metadata must correspond to the [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies).
+
+To create or update project metadata for a project, submit it in a `PUT` request, specifying the project
+IRI in the URL path:
 
 ```
-PUT http://localhost:3333/v2/metadata/<?encodedProjectIRI>
-``` 
-Only admin users of a project or a system admin can create metadata information for a project. The metadata must be 
-given in the body of the request in either **Turtle**, **JSON-LD**, 
-or **RDF/XML** format. The `Content-Type` of the request body must be explicitly specified, for example as
+PUT http://host/v2/metadata/PROJECT_IRI
+```
 
-`Content-Type: text/turtle` 
+Currently, all the metadata for a project must be submitted in a single request. The submitted metadata
+replaces any metadata that has already been stored for the project. Only an administrator of the project,
+or a system administrator, can create or update project metadata.
 
-Then the request body containing the metadata information must be in the following form:
+The metadata can be submitted in  **Turtle**, **JSON-LD**, or **RDF/XML** format. The request must
+include a `Content-Type` header with one of the following values:
 
-```json
+| Format  | MIME Type             |
+|---------|-----------------------|
+| JSON-LD | `application/ld+json` |
+| Turtle  | `text/turtle`         |
+| RDF/XML | `application/rdf+xml` |
+
+An example request in Turtle format:
+
+```turtle
 @prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @base <http://ns.dasch.swiss/repository#> .
@@ -55,23 +66,22 @@ Then the request body containing the metadata information must be in the followi
 <beol> dsp-repo:hasStartDate "2016.07" .
 <beol> dsp-repo:hasEndDate "2020.01" .
 <beol> dsp-repo:hasFunder "Schweizerischer Nationalfonds (SNSF)" .
-``` 
-After successful creation of the metadata graph, the API returns a success message containing the IRI of the project. 
-To modify the metadata of a project, the updated metadata must be submitted anew through a `PUT` request which will 
-overwrite the existing metadata. 
+```
 
-## Retrieving Project Metadata Graph:
+After successful creation of the metadata graph, the API returns HTTP 200 with a confirmation message.
 
-Any user can retrieve the metadata infromation of a project using its IRI through a `GET` request as below:
+## Retrieving Project Metadata
 
-`GET http://localhost:3333/v2/metadata/<?encodedProjectIRI>`
+Any user can retrieve the metadata information for a project by providing its IRI in a `GET` request:
 
-Upon success, the API can return the metadata information in either of Turtle, JSON-LD, or RDF/XML format. The expected 
-response format must be specified in the header of the `GET` request, for example as:
+```
+GET http://host/v2/metadata/PROJECT_IRI
+```
 
-`{"Accept", "text/turtle"}`
+The metadata can be returned in any of the formats listed in the previous section. By default, JSON-LD
+is returned. To request another format, specify it in the `Accept` header of the request.
 
-Otherwise, by default the metadata is returned in JSON-LD format:
+An example response in JSON-LD format:
 
 ```json
 {

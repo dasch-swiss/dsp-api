@@ -15,7 +15,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     private val beolProjectIRI: IRI = SharedTestDataADM.BEOL_PROJECT_IRI
     private val password = SharedTestDataADM.testPass
 
-    private val metadataContent =
+    private val metadataContent: String =
         s"""
            |@prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
            |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
@@ -67,7 +67,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
            |<beol> dsp-repo:hasAlternateName "beol" .
            |""".stripMargin
 
-    val metadataAsJsonLD =
+    private val metadataAsJsonLD: String =
         """
           |{
           |    "http://ns.dasch.swiss/repository#hasDateModified": "04.2020",
@@ -109,8 +109,9 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     "The metadata v2 endpoint" should {
         "perform a put request for the metadata of beol project given as Turtle" in {
             val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
-                                HttpEntity(RdfMediaTypes.`text/turtle`, metadataContent)
-                                ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
+                HttpEntity(RdfMediaTypes.`text/turtle`, metadataContent)) ~>
+                addCredentials(BasicHttpCredentials(beolUserEmail, password))
+
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status.isSuccess())
             val responseString = responseToString(response)
@@ -119,8 +120,9 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
 
         "perform a put request for the metadata of beol project given as JSON-LD" in {
             val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
-                HttpEntity(RdfMediaTypes.`application/json`, metadataAsJsonLD)
-            ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
+                HttpEntity(RdfMediaTypes.`application/json`, metadataAsJsonLD)) ~>
+                addCredentials(BasicHttpCredentials(beolUserEmail, password))
+
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status.isSuccess())
             val responseString = responseToString(response)
@@ -132,10 +134,12 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseJSONLD = responseToJsonLDDocument(response)
             assert(response.status.isSuccess())
+
             val expectedGraphJSONLD = RdfFormatUtil.parseToJsonLDDocument(
                 rdfStr = metadataContent,
                 mediaType = RdfMediaTypes.`text/turtle`
             )
+
             assert(expectedGraphJSONLD.body == responseJSONLD.body)
         }
 
@@ -145,7 +149,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}") ~> addHeader(header)
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status.isSuccess())
-            response.entity.contentType.mediaType.value should be (turtleType)
+            response.entity.contentType.mediaType.value should be(turtleType)
         }
 
         "not return metadata for an invalid project IRI" in {
@@ -156,8 +160,9 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
 
         "not create metadata for an invalid project IRI" in {
             val request = Put(s"$baseApiUrl/v2/metadata/invalid-projectIRI",
-                HttpEntity(RdfMediaTypes.`text/turtle`, metadataContent)
-            ) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password))
+                HttpEntity(RdfMediaTypes.`text/turtle`, metadataContent)) ~>
+                addCredentials(BasicHttpCredentials(beolUserEmail, password))
+
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status.isFailure())
         }

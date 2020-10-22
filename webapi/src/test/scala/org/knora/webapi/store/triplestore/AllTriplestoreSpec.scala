@@ -363,11 +363,13 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             }
 
         }
-        "receiving raw Graph data requests" should {
+
+        "receiving named graph data requests" should {
             "put the graph data as turtle" in {
                 storeManager ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
                 expectMsgType[InsertGraphDataContentResponse](10.second)
             }
+
             "read the graph data as turtle" in {
                 storeManager ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
                 val response = expectMsgType[NamedGraphDataResponse](1.second)
