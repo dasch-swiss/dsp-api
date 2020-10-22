@@ -19,16 +19,15 @@
 
 package org.knora.webapi.messages.v2.responder.metadatamessages
 
-import java.io.StringWriter
 import java.util.UUID
 
+import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
-import org.apache.jena
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

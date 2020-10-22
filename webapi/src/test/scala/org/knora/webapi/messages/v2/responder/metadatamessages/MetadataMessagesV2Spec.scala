@@ -48,9 +48,8 @@ class MetadataMessagesV2Spec extends CoreSpec() {
     )
 
     "MetadataPutRequestV2" should {
-        "return 'BadRequest' if the requesting user is not the project or a system admin" in {
-
-            val caught = intercept[ForbiddenException](
+        "return ForbiddenException if the requesting user is not the project admin or a system admin" in {
+            assertThrows[ForbiddenException](
                 MetadataPutRequestV2(
                     graph = requestGraph,
                     projectADM = SharedTestDataADM.anythingProject,
@@ -58,8 +57,6 @@ class MetadataMessagesV2Spec extends CoreSpec() {
                     apiRequestID = UUID.randomUUID()
                 )
             )
-
-            assert(caught.getMessage === "A new metadata for a project can only be created by a system or project admin.")
         }
     }
 }
