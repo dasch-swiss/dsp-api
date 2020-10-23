@@ -1342,7 +1342,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 """.stripMargin
 
     val TransformedQueryWithOptional: SelectQuery = SelectQuery(
-        variables = List(QueryVariable(variableName = "document")),
+        fromClause = None,
+        variables = Vector(QueryVariable(variableName = "document")),
         offset = 0,
         groupBy = Vector(QueryVariable(variableName = "document")),
         orderBy = Vector(OrderCriterion(
@@ -1350,7 +1351,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             isAscending = true
         )),
         whereClause = WhereClause(
-            patterns = ArrayBuffer(
+            patterns = Vector(
                 StatementPattern(
                     subj = QueryVariable(variableName = "document"),
                     pred = IriRef(
@@ -1381,7 +1382,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                     ),
                     namedGraph = None
                 ),
-                OptionalPattern(patterns = ArrayBuffer(
+                OptionalPattern(patterns = Vector(
                     StatementPattern(
                         subj = QueryVariable(variableName = "document"),
                         pred = IriRef(
@@ -1425,18 +1426,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                             value = "false",
                             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
                         ),
-                        namedGraph = Some(IriRef(
-                            iri = "http://www.knora.org/explicit".toSmartIri,
-                            propertyPathOperator = None
-                        ))
-                    ),
-                    StatementPattern(
-                        subj = QueryVariable(variableName = "document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue"),
-                        pred = IriRef(
-                            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject".toSmartIri,
-                            propertyPathOperator = None
-                        ),
-                        obj = QueryVariable(variableName = "document"),
                         namedGraph = Some(IriRef(
                             iri = "http://www.knora.org/explicit".toSmartIri,
                             propertyPathOperator = None
@@ -1496,24 +1485,22 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                     LuceneQueryPattern(
                         subj = QueryVariable(variableName = "familyName"),
                         obj = QueryVariable(variableName = "familyName__valueHasString"),
-                        queryString = LuceneQueryString("Bernoulli"),
-                        literalStatement = Some(
-                            StatementPattern(
-                                subj = QueryVariable(variableName = "familyName"),
-                                pred = IriRef(
-                                    iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
-                                    propertyPathOperator = None
-                                ),
-                                obj = QueryVariable(variableName = "familyName__valueHasString"),
-                                namedGraph = Some(IriRef(
-                                    iri = "http://www.knora.org/explicit".toSmartIri,
-                                    propertyPathOperator = None
-                                ))
+                        queryString = LuceneQueryString(queryString = "Bernoulli"),
+                        literalStatement = Some(StatementPattern(
+                            subj = QueryVariable(variableName = "familyName"),
+                            pred = IriRef(
+                                iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
+                                propertyPathOperator = None
                             ),
-                        )
+                            obj = QueryVariable(variableName = "familyName__valueHasString"),
+                            namedGraph = Some(IriRef(
+                                iri = "http://www.knora.org/explicit".toSmartIri,
+                                propertyPathOperator = None
+                            ))
+                        ))
                     )
-                )
-            )),
+                ))
+            ),
             positiveEntities = Set(),
             querySchema = None
         ),

@@ -47,8 +47,11 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?resource
 WHERE {
     ?resource knora-base:attachedToProject <@projectIri> ;
-        rdf:type <@resourceClassIri> ;
-        knora-base:isDeleted false .
+        rdf:type <@resourceClassIri> .
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
+    }
 
     @maybeOrderByProperty match {
         case Some(orderByProperty) => {
