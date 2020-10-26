@@ -66,7 +66,7 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      * @return `true` if the feature is turned on, `false` otherwise.
      */
     def featureIsOn(featureName: String): Boolean = {
-        // Does we have a setting for this feature?
+        // Do we have a setting for this feature?
         getFeatureToggle(featureName) match {
             case Some(setting) =>
                 // Yes. Return it.
