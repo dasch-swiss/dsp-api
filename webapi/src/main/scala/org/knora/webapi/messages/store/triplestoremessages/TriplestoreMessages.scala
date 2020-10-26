@@ -270,7 +270,20 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExte
  * @param graphIri   the IRI of the named graph.
  * @param outputFile the destination file.
  */
-case class GraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
+case class NamedGraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
+
+/**
+ * Requests a named graph, which will be returned as Turtle. A successful response
+ * will be a [[NamedGraphDataResponse]].
+ *
+ * @param graphIri   the IRI of the named graph.
+ */
+case class NamedGraphDataRequest(graphIri: IRI) extends TriplestoreRequest
+
+/**
+ * A graph of triples in Turtle format.
+ */
+case class NamedGraphDataResponse(turtle: String)
 
 /**
  * Represents a SPARQL Update operation to be performed.
@@ -283,7 +296,6 @@ case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
  * Indicates that the requested SPARQL Update was executed and returned no errors.
  */
 case class SparqlUpdateResponse()
-
 
 /**
  * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
@@ -335,6 +347,19 @@ case class InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) extends T
  * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.
  */
 case class InsertTriplestoreContentACK()
+
+/**
+ * Inserts raw RDF data into the repository.
+ *
+ * @param graphContent contains graph data as turtle.
+ * @param graphName    the name of the graph.
+ */
+case class InsertGraphDataContentRequest(graphContent: String, graphName: String) extends TriplestoreRequest
+
+/**
+ * Sent as a response to [[InsertGraphDataContentRequest]] if the request was processed successfully.
+ */
+case class InsertGraphDataContentResponse()
 
 /**
  * Initialize the repository. This will initiate the (re)creation of the repository and adding data to it.

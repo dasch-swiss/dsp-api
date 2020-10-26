@@ -33,7 +33,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap, ResponderData}
-import org.knora.webapi.messages.v2.responder.KnoraResponseV2
+import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
@@ -51,7 +51,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     /**
      * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
      */
-    def receive(msg: SearchResponderRequestV2): Future[KnoraResponseV2] = msg match {
+    def receive(msg: SearchResponderRequestV2): Future[KnoraJsonLDResponseV2] = msg match {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
         case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser)
         case GravsearchCountRequestV2(query, requestingUser) => gravsearchCountV2(inputQuery = query, requestingUser = requestingUser)

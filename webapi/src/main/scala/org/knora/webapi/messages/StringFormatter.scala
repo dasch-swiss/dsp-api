@@ -2418,6 +2418,16 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
+     * Given the [[ProjectADM]] calculates the project's metadata named graph.
+     *
+     * @param project the project's [[ProjectADM]].
+     * @return the IRI of the project's metadata named graph.
+     */
+    def projectMetadataNamedGraphV2(project: ProjectADM): IRI = {
+        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname + "/metadata"
+    }
+
+    /**
      * Given the project IRI, checks if it is in a valid format.
      *
      * @param iri the project's IRI.

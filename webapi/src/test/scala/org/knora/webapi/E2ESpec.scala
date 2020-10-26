@@ -144,48 +144,16 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
+        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE, null)
     }
 
     protected def parseRdfXml(rdfXmlStr: String): Model = {
-        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML, null)
     }
 
     protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
         val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(10.seconds).map(_.data.toArray)
         Await.result(responseBodyFuture, 10.seconds)
-    }
-
-    protected def getZipContents(responseBytes: Array[Byte]): Set[String] = {
-        val zippedFilenames = collection.mutable.Set.empty[String]
-
-        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-            var zipEntry: ZipEntry = null
-
-            while ( {
-                zipEntry = zipInputStream.getNextEntry
-                zipEntry != null
-            }) {
-                zippedFilenames.add(zipEntry.getName)
-            }
-        }
-
-        zippedFilenames.toSet
-    }
-
-    def unzip(zipFilePath: Path, outputPath: Path): Unit = {
-        val zipFile = new ZipFile(zipFilePath.toFile)
-
-        for (entry <- zipFile.entries.asScala) {
-            val entryPath = outputPath.resolve(entry.getName)
-
-            if (entry.isDirectory) {
-                Files.createDirectories(entryPath)
-            } else {
-                Files.createDirectories(entryPath.getParent)
-                Files.copy(zipFile.getInputStream(entry), entryPath)
-            }
-        }
     }
 
     /**

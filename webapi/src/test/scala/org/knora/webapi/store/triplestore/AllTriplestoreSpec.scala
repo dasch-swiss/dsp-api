@@ -24,6 +24,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.settings.TriplestoreTypes
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -107,6 +108,16 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                               rdf:type sub:Me .
             }
         }
+        """
+
+    val graphDataContent: String =
+        """
+        prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        prefix jedi: <http://jedi.org/#>
+
+        <http://luke> jedi:tries "force for the first time" ;
+                      jedi:hopes "to power the lightsaber" ;
+                      rdf:type jedi:Skywalker .
         """
 
     val checkInsertQuery: String =
@@ -341,6 +352,28 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                             msg.results.bindings.size should ===(1)
                     }
                 }
+            }
+        }
+
+
+        "receiving insert rdf data objects request" should {
+            "insert RDF DataObjects" in {
+                storeManager ! InsertRepositoryContent(rdfDataObjects)
+                expectMsg(5 minutes, InsertTriplestoreContentACK())
+            }
+
+        }
+
+        "receiving named graph data requests" should {
+            "put the graph data as turtle" in {
+                storeManager ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
+                expectMsgType[InsertGraphDataContentResponse](10.second)
+            }
+
+            "read the graph data as turtle" in {
+                storeManager ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
+                val response = expectMsgType[NamedGraphDataResponse](1.second)
+                response.turtle.length should be >0
             }
         }
     }

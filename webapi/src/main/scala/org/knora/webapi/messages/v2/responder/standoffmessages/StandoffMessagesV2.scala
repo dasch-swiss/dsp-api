@@ -31,7 +31,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraJsonLDResponseV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -74,7 +74,7 @@ case class GetRemainingStandoffFromTextValueRequestV2(resourceIri: IRI, valueIri
  */
 case class GetStandoffResponseV2(valueIri: IRI,
                                  standoff: Seq[StandoffTagV2],
-                                 nextOffset: Option[Int]) extends KnoraResponseV2 {
+                                 nextOffset: Option[Int]) extends KnoraJsonLDResponseV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -190,7 +190,7 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
  * @param label      the label describing the mapping.
  * @param projectIri the project the mapping belongs to.
  */
-case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraResponseV2 {
+case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraJsonLDResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 

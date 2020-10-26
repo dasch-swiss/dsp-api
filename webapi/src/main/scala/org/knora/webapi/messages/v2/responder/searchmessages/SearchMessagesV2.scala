@@ -129,7 +129,7 @@ case class SearchResourceByLabelRequestV2(searchValue: String,
 /**
  * Represents the number of resources found by a search query.
  */
-case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
+case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2 {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         JsonLDDocument(
             body = JsonLDObject(Map(

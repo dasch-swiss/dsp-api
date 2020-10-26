@@ -174,7 +174,7 @@ case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
                                  valueCreationDate: Instant,
-                                 projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
+                                 projectADM: ProjectADM) extends KnoraJsonLDResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -355,7 +355,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 case class UpdateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
-                                 projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
+                                 projectADM: ProjectADM) extends KnoraJsonLDResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

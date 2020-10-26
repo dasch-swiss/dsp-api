@@ -420,7 +420,7 @@ case class ProjectADM(id: IRI,
             append(logo).
             append(ontologies.toSet).
             append(status).
-            append(selfjoin).hashCode()
+            append(selfjoin).toHashCode
     }
 }
 

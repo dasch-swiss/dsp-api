@@ -19,21 +19,17 @@
 
 package org.knora.webapi.routing
 
-import java.io.{StringReader, StringWriter}
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
-import org.eclipse.rdf4j.rio._
-import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
+import org.apache.jena
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException, UnexpectedMessageException}
+import org.knora.webapi.exceptions.{BadRequestException, UnexpectedMessageException}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.{JsonLDDocument, RdfFormatUtil}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
@@ -180,7 +176,7 @@ object RouteUtilV2 {
     }
 
     /**
-     * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotation.
+     * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
      *
      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
      * @param requestContext   the akka-http [[RequestContext]].
@@ -197,7 +193,7 @@ object RouteUtilV2 {
                             settings: KnoraSettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
-                            targetSchema: ApiV2Schema,
+                            targetSchema: OntologySchema,
                             schemaOptions: Set[SchemaOption])
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
@@ -224,17 +220,27 @@ object RouteUtilV2 {
             // Choose a media type for the response.
             responseMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
 
-            // Format the response message as an HTTP response.
-            formattedResponse: HttpResponse = formatResponse(
-                knoraResponse = knoraResponse,
-                responseMediaType = responseMediaType,
+            // Find the most specific media type that is compatible with the one requested.
+            specificMediaType: MediaType.NonBinary = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
+
+            // Convert the requested media type to a UTF-8 content type.
+            contentType: ContentType.NonBinary = RdfMediaTypes.toUTF8ContentType(responseMediaType)
+
+            // Format the response message.
+            formattedResponseContent: String = knoraResponse.format(
+                mediaType = specificMediaType,
                 targetSchema = targetSchema,
                 settings = settings,
                 schemaOptions = schemaOptions
             )
+        } yield HttpResponse(
+            status = StatusCodes.OK,
 
-            // The request was successful
-        } yield formattedResponse
+            entity = HttpEntity(
+                contentType,
+                formattedResponseContent
+            )
+        )
 
         requestContext.complete(httpResponse)
     }
@@ -306,7 +312,7 @@ object RouteUtilV2 {
                               settings: KnoraSettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
-                              targetSchema: ApiV2Schema,
+                              targetSchema: OntologySchema,
                               schemaOptions: Set[SchemaOption])
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
@@ -322,6 +328,65 @@ object RouteUtilV2 {
             )
 
         } yield routeResult
+    }
+
+    /**
+     * Parses a request entity to a [[jena.graph.Graph]].
+     *
+     * @param entityStr   the request entity.
+     * @param requestContext the request context.
+     * @return the corresponding [[jena.graph.Graph]].
+     */
+    def requestToJenaGraph(entityStr: String, requestContext: RequestContext): jena.graph.Graph = {
+        RdfFormatUtil.parseToJenaGraph(
+            rdfStr = entityStr,
+            mediaType = getRequestContentType(requestContext)
+        )
+    }
+
+    /**
+     * Parses a request entity to a [[JsonLDDocument]].
+     *
+     * @param entityStr   the request entity.
+     * @param requestContext the request context.
+     * @return the corresponding [[JsonLDDocument]].
+     */
+    def requestToJsonLD(entityStr: String, requestContext: RequestContext): JsonLDDocument = {
+        RdfFormatUtil.parseToJsonLDDocument(
+            rdfStr = entityStr,
+            mediaType = getRequestContentType(requestContext)
+        )
+    }
+
+    /**
+     * Determines the content type of a request according to its `Content-Type` header.
+     *
+     * @param requestContext the request context.
+     * @return a [[MediaType.NonBinary]] representing the submitted content type.
+     */
+    private def getRequestContentType(requestContext: RequestContext): MediaType.NonBinary = {
+        // Does the request contain a Content-Type header?
+        val maybeContentType: Option[ContentType] = Some(requestContext.request.entity.contentType)
+
+        maybeContentType match {
+            case Some(contentType) =>
+                // Yes. Did the client request a supported content type?
+                val requestedContentType: String = contentType.value
+
+                RdfMediaTypes.registry.get(requestedContentType) match {
+                    case Some(mediaType: MediaType) =>
+                        // Yes. Use the requested content type.
+                        RdfMediaTypes.toMostSpecificMediaType(mediaType)
+
+                    case None =>
+                        // No.
+                        throw BadRequestException(s"Unsupported content type: $requestedContentType")
+                }
+
+            case None =>
+                // The request contains no Content-Type header. Default to JSON-LD.
+                RdfMediaTypes.`application/ld+json`
+        }
     }
 
     /**
@@ -372,79 +437,6 @@ object RouteUtilV2 {
                 }
 
             case None => RdfMediaTypes.`application/ld+json`
-        }
-    }
-
-    /**
-     * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
-     *
-     * @param knoraResponse     the response message.
-     * @param responseMediaType the media type selected for the response (must be one of the types in [[RdfMediaTypes]]).
-     * @param targetSchema      the response schema.
-     * @param schemaOptions     the schema options.
-     * @param settings          the application settings.
-     * @return an HTTP response.
-     */
-    private def formatResponse(knoraResponse: KnoraResponseV2,
-                               responseMediaType: MediaType.NonBinary,
-                               targetSchema: ApiV2Schema,
-                               schemaOptions: Set[SchemaOption],
-                               settings: KnoraSettingsImpl): HttpResponse = {
-        // Find the most specific media type that is compatible with the one requested.
-        val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
-
-        // Convert the requested media type to a UTF-8 content type.
-        val contentType = RdfMediaTypes.toUTF8ContentType(responseMediaType)
-
-        // Generate a JSON-LD data structure from the API response message.
-        val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(
-            targetSchema = targetSchema,
-            settings = settings,
-            schemaOptions = schemaOptions
-        )
-
-        // Is the response format JSON or JSON-LD?
-        specificMediaType match {
-            case RdfMediaTypes.`application/ld+json` =>
-                // Yes. Pretty-print the JSON-LD and return it.
-                HttpResponse(
-                    status = StatusCodes.OK,
-                    entity = HttpEntity(
-                        contentType,
-                        jsonLDDocument.toPrettyString
-                    )
-                )
-
-            case _ =>
-                // No, some other format was requested. Convert the JSON-LD to the requested format.
-
-                val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
-                val stringReader = new StringReader(jsonLDDocument.toCompactString)
-                val stringWriter = new StringWriter()
-
-                val rdfWriter: RDFWriter = specificMediaType match {
-                    case RdfMediaTypes.`text/turtle` =>
-                        val turtleWriter = Rio.createWriter(RDFFormat.TURTLE, stringWriter)
-                        turtleWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
-                            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
-                        turtleWriter
-
-                    case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
-
-                    case _ => throw AssertionException(s"Media type $responseMediaType not implemented")
-                }
-
-                rdfParser.setRDFHandler(rdfWriter)
-                rdfParser.parse(stringReader, "")
-
-                HttpResponse(
-                    status = StatusCodes.OK,
-
-                    entity = HttpEntity(
-                        contentType,
-                        stringWriter.toString
-                    )
-                )
         }
     }
 }
