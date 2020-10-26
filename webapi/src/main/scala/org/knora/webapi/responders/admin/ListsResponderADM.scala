@@ -617,13 +617,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 throw BadRequestException(s"The node name ${createListRequest.name.get} is already used by a list inside the project ${createListRequest.projectIri}.")
             }
 
-            maybeShortcode = project.shortcode
-            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
-
             // check the custom IRI; if not given, create an unused IRI
             customListIri: Option[SmartIri] = createListRequest.id.map(iri => iri.toSmartIri)
+            maybeShortcode = project.shortcode
             listIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
+            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
             // Create the new list
             createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewList(
                 dataNamedGraph = dataNamedGraph,
@@ -826,9 +825,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // calculate the data named graph
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            // calculate the new node's IRI
+            // check the custom IRI; if not given, create an unused IRI
+            customListIri: Option[SmartIri] = createChildNodeRequest.id.map(iri => iri.toSmartIri)
             maybeShortcode = project.shortcode
-            newListNodeIri = stringFormatter.makeRandomListIri(maybeShortcode)
+            newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
             // Create the new list node
             createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewListChildNode(

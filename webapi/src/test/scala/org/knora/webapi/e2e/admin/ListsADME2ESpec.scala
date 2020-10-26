@@ -319,6 +319,57 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customListIRI}' already exists, try another one.")
                 invalidIri should be(true)
             }
+
+            "add a child with a custom IRI" in {
+
+                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+
+                val createChildNodeWithCustomIriRequest =  s"""{   "id": "$customChildNodeIRI",
+                                 |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
+                                 |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                                 |    "name": "node with a custom IRI",
+                                 |    "labels": [{ "value": "New List Node", "language": "en"}],
+                                 |    "comments": []
+                                 |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-child-node-with-custom-IRI-request",
+                            fileExtension = "json"
+                        ),
+                        text = createChildNodeWithCustomIriRequest
+                    )
+                )
+
+                val encodedParentNodeUrl = java.net.URLEncoder.encode(SharedTestDataADM.customListIRI, "utf-8")
+
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedParentNodeUrl, HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // println(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+
+                // check correct node info
+                val childNodeInfo = received match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
+                childNodeInfo.id should be (customChildNodeIRI)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "create-child-node-with-custom-IRI-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
         }
 
         "used to modify list information" should {
