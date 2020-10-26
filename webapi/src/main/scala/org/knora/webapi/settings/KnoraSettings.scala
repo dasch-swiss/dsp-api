@@ -34,7 +34,7 @@ import scala.concurrent.duration._
 /**
  * Reads application settings that come from `application.conf`.
  */
-class KnoraSettingsImpl(config: Config) extends Extension {
+class KnoraSettingsImpl(private val config: Config) extends Extension {
 
     // print config
     val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")
@@ -245,6 +245,22 @@ class KnoraSettingsImpl(config: Config) extends Extension {
         None
     }
 
+    /**
+     * Gets a feature toggle configured in the application configuration file.
+     *
+     * @param featureName the name of the feature.
+     * @return the setting of the feature toggle in the application configuration file, or `None` if
+     *         the feature is not configured in that file.
+     */
+    def getFeatureToggle(featureName: String): Option[Boolean] = {
+        val path = s"app.feature.$featureName"
+
+        if (config.hasPath(path)) {
+            Some(config.getBoolean(path))
+        } else {
+            None
+        }
+    }
 }
 
 object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProvider {
