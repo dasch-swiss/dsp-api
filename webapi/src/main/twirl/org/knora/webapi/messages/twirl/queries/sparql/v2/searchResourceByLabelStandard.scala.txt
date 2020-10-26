@@ -104,12 +104,15 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
 
             ?valueObject a ?valueObjectType ;
-                knora-base:isDeleted false ;
                 ?valueObjectProperty ?valueObjectValue .
 
             ?valueObjectType rdfs:subClassOf* knora-base:Value .
 
             FILTER(?valueObjectType != knora-base:LinkValue)
+
+            FILTER NOT EXISTS {
+                ?valueObject knora-base:isDeleted true .
+            }
 
             FILTER NOT EXISTS {
                 ?valueObjectValue a knora-base:StandoffTag .

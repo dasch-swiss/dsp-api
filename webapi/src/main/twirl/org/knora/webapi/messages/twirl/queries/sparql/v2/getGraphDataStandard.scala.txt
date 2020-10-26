@@ -54,8 +54,11 @@ WHERE {
             rdfs:label ?nodeLabel ;
             knora-base:attachedToUser ?nodeCreator ;
             knora-base:attachedToProject ?nodeProject ;
-            knora-base:isDeleted false ;
             knora-base:hasPermissions ?nodePermissions .
+
+        FILTER NOT EXISTS {
+            ?node knora-base:isDeleted true .
+        }
     } else {
         BIND(IRI("@startNodeIri") AS ?startNode) .
 
@@ -77,7 +80,9 @@ WHERE {
                 case None => {}
             }
 
-            ?node knora-base:isDeleted false .
+            FILTER NOT EXISTS {
+                ?node knora-base:isDeleted true .
+            }
 
             ?linkValue a knora-base:LinkValue ;
                 rdf:subject ?startNode ;
@@ -99,7 +104,9 @@ WHERE {
                 case None => {}
             }
 
-            ?node knora-base:isDeleted false .
+            FILTER NOT EXISTS {
+                ?node knora-base:isDeleted true .
+            }
 
             ?linkValue a knora-base:LinkValue ;
                 rdf:subject ?node ;

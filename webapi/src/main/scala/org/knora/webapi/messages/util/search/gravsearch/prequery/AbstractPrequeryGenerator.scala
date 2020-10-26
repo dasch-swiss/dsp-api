@@ -220,14 +220,16 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case other => throw GravsearchException(s"${other.toSparql} cannot be used as a predicate")
         }
 
-        // Add statements that represent the link value's properties for the given linking property
-        // do not check for the predicate because inference would not work
-        // instead, linkValueProp restricts the link value objects to be returned
+        // Add statements that represent the link value's properties for the given linking property.
+        // Do not check for the predicate, because inference would not work.
+        // Instead, linkValueProp restricts the link value objects to be returned.
+        // No need to check rdf:subject, because it has to be linkSource. But we have to check
+        // rdf:object, because there could be different link values representing links from the
+        // same source with the same property but with different targets.
         Seq(
             StatementPattern.makeInferred(subj = linkSource, pred = linkValueProp, obj = linkValueObjVar),
             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)),
             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
-            StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject.toSmartIri), obj = linkSource),
             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object.toSmartIri), obj = linkTarget)
         )
     }

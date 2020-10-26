@@ -79,7 +79,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveBindToBeginning(moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
+            moveBindToBeginning(optimiseIsDeletedWithFilter(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -124,7 +124,7 @@ object SparqlTransformer {
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
         override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveBindToBeginning(moveIsDeletedToEnd(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
+            moveBindToBeginning(optimiseIsDeletedWithFilter(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
         }
 
         override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -199,23 +199,36 @@ object SparqlTransformer {
     }
 
     /**
-     * Optimises a query by moving `knora-base:isDeleted` to the end of a block.
+     * Optimises a query by replacing `knora-base:isDeleted false` with a `FILTER NOT EXISTS` pattern
+     * placed at the end of the block.
      *
      * @param patterns the block of patterns to be optimised.
      * @return the result of the optimisation.
      */
-    def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-        val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-            case statementPattern: StatementPattern =>
-                statementPattern.pred match {
-                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.IsDeleted => true
-                    case _ => false
-                }
+    def optimiseIsDeletedWithFilter(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        // Separate the knora-base:isDeleted statements from the rest of the block.
+        val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case StatementPattern(_, IriRef(SmartIri(OntologyConstants.KnoraBase.IsDeleted), _), XsdLiteral("false", SmartIri(OntologyConstants.Xsd.Boolean)), _) => true
             case _ => false
         }
 
-        otherPatterns ++ isDeletedPatterns
+        // Replace the knora-base:isDeleted statements with FILTER NOT EXISTS patterns.
+        val filterPatterns: Seq[FilterNotExistsPattern] = isDeletedPatterns.collect {
+            case statementPattern: StatementPattern =>
+                FilterNotExistsPattern(
+                    Seq(
+                        StatementPattern.makeExplicit(
+                            subj = statementPattern.subj,
+                            pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
+                            obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+                        )
+                    )
+                )
+        }
+
+        otherPatterns ++ filterPatterns
     }
 
     /**
@@ -263,12 +276,24 @@ object SparqlTransformer {
                     case _ => false
                 }
 
+                // Don't move statements whose predicate is rdf:subject or rdf:object: their subject
+                // is a link value that needs to be defined first.
+                val statementIsInLinkValue = statementPattern.pred match {
+                    case iriRef: IriRef =>
+                        iriRef.iri.toString match {
+                            case OntologyConstants.Rdf.Subject | OntologyConstants.Rdf.Object => true
+                            case _ => false
+                        }
+
+                    case _ => false
+                }
+
                 val objIsResourceIri = statementPattern.obj match {
                     case iriRef: IriRef if iriRef.iri.isKnoraResourceIri => true
                     case _ => false
                 }
 
-                subjIsResourceIri || objIsResourceIri
+                !statementIsInLinkValue && (subjIsResourceIri || objIsResourceIri)
 
             case _ => false
         }
