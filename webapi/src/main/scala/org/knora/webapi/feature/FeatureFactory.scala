@@ -77,8 +77,8 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
     }
 
     /**
-     * Determines whether a feature is turned on. First check the configuration
-     * loaded by this [[FeatureFactoryConfig]]. If a setting for the feature is found,
+     * Determines whether a feature is turned on. First checks the configuration
+     * loaded by this [[FeatureFactoryConfig]]. If a toggle for the feature is found,
      * it is returned. Otherwise, this method delegates to the parent [[FeatureFactoryConfig]].
      *
      * @param featureName the name of the feature.
