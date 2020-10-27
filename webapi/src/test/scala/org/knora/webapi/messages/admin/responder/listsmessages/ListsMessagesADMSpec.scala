@@ -352,7 +352,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when custom iri given to list node is invalid" in {
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when custom iri of the child node is invalid" in {
 
             val payload =
                 s"""

@@ -324,7 +324,9 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
 
-                val createChildNodeWithCustomIriRequest =  s"""{   "id": "$customChildNodeIRI",
+                val createChildNodeWithCustomIriRequest =
+                            s"""
+                                 |{   "id": "$customChildNodeIRI",
                                  |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
                                  |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                                  |    "name": "node with a custom IRI",
