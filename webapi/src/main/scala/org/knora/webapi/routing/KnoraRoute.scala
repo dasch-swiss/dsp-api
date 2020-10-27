@@ -21,12 +21,13 @@ package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Route, RequestContext}
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, RequestContextFeatureFactoryConfig}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -46,10 +47,12 @@ case class KnoraRouteData(system: ActorSystem,
 
 
 /**
- * An abstract class providing values that are commonly used in Knora responders.
+ * An abstract class providing functionality that is commonly used by feature factories that construct
+ * Knora routes.
+ *
+ * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
-abstract class KnoraRoute(routeData: KnoraRouteData) {
-
+abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
     implicit protected val system: ActorSystem = routeData.system
     implicit protected val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
@@ -62,6 +65,21 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
     protected val storeManager: ActorRef = routeData.appActor
     protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+}
+
+
+/**
+ * An abstract class providing functionality that is commonly used in implementing Knora routes.
+ *
+ * @param routeData a [[KnoraRouteData]] providing access to the application.
+ */
+abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) {
+
+    /**
+     * A [[KnoraSettingsFeatureFactoryConfig]] to use as the parent [[FeatureFactoryConfig]].
+     */
+    private val knoraSettingsFeatureFactoryConfig: KnoraSettingsFeatureFactoryConfig = new
+            KnoraSettingsFeatureFactoryConfig(settings, None)
 
     /**
      * Returns the route. Needs to be implemented in each subclass.
@@ -69,6 +87,19 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
      * @return [[Route]]
      */
     def knoraApiPath: Route
+
+    /**
+     * Constructs a [[FeatureFactoryConfig]] for use with feature factories.
+     *
+     * @param requestContext the HTTP request context.
+     * @return the resulting [[FeatureFactoryConfig]].
+     */
+    def makeFeatureFactoryConfig(requestContext: RequestContext): FeatureFactoryConfig = {
+        new RequestContextFeatureFactoryConfig(
+            requestContext = requestContext,
+            maybeParent = Some(knoraSettingsFeatureFactoryConfig)
+        )
+    }
 
     /**
      * Gets a [[ProjectADM]] corresponding to the specified project IRI.

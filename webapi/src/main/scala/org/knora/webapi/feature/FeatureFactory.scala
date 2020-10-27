@@ -25,19 +25,14 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
- * An abstract class for module-specific factories that produce implementations of features.
- *
- * @param featureFactoryConfig the configuration of this feature factory.
+ * A tagging trait for module-specific factories that produce implementations of features.
  */
-abstract class FeatureFactory(protected val featureFactoryConfig: FeatureFactoryConfig) {
-    /**
-     * A convenience method that calls `featureFactoryConfig.featureIsOn`.
-     *
-     * @param featureName the name of a feature.
-     * @return `true` if the feature is turned on.
-     */
-    protected def featureIsOn(featureName: String): Boolean = featureFactoryConfig.featureIsOn(featureName)
-}
+trait FeatureFactory
+
+/**
+ * A tagging trait for classes that implement features returned by feature factories.
+ */
+trait Feature
 
 /**
  * An abstract class representing configuration for a [[FeatureFactory]] from a particular
@@ -56,6 +51,30 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      *         source, or `None` if the source contains no setting for that feature.
      */
     protected def getFeatureToggle(featureName: String): Option[Boolean]
+
+    /**
+     * Each concrete implementation of this class implements this method, which returns
+     * all the feature toggles that are set in this [[FeatureFactoryConfig]]'s
+     * configuration source.
+     *
+     * @return a `Map` of feature names to toggle settings.
+     */
+    protected def getFeatureToggles: Map[String, Boolean]
+
+    /**
+     * Returns a set of the names of all the features that are turned on according
+     * to this [[FeatureFactoryConfig]] and its ancestors.
+     */
+    def getAllActivatedFeatures: Set[String] = {
+        val parentToggles: Map[String, Boolean] = maybeParent match {
+            case Some(parent) => parent.getFeatureToggles
+            case None => Map.empty
+        }
+
+        (parentToggles ++ getFeatureToggles).collect {
+            case (featureName: String, featureIsOn: Boolean) if featureIsOn => featureName
+        }.toSet
+    }
 
     /**
      * Determines whether a feature is turned on. First check the configuration
@@ -97,8 +116,10 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
 class KnoraSettingsFeatureFactoryConfig(private val knoraSettings: KnoraSettingsImpl,
                                         maybeParent: Option[FeatureFactoryConfig]) extends FeatureFactoryConfig(maybeParent) {
     protected def getFeatureToggle(featureName: String): Option[Boolean] = {
-        knoraSettings.getFeatureToggle(featureName)
+        knoraSettings.featureToggles.get(featureName)
     }
+
+    override protected def getFeatureToggles: Map[String, Boolean] = knoraSettings.featureToggles
 }
 
 object RequestContextFeatureFactoryConfig {
@@ -143,4 +164,21 @@ class RequestContextFeatureFactoryConfig(private val requestContext: RequestCont
     protected def getFeatureToggle(featureName: String): Option[Boolean] = {
         featureToggles.get(featureName)
     }
+
+    override protected def getFeatureToggles: Map[String, Boolean] = featureToggles
+}
+
+/**
+ * A [[FeatureFactoryConfig]] with a fixed configuration, to be used in tests.
+ *
+ * @param featuresToActivate the set of toggles that should be turned on.
+ */
+class TestFeatureFactoryConfig(featuresToActivate: Set[String]) extends FeatureFactoryConfig(None) {
+    val featureToggles: Map[String, Boolean] = featuresToActivate.map {
+        featureName: String => featureName -> true
+    }.toMap
+
+    override protected def getFeatureToggle(featureName: String): Option[Boolean] = featureToggles.get(featureName)
+
+    override protected def getFeatureToggles: Map[String, Boolean] = featureToggles
 }

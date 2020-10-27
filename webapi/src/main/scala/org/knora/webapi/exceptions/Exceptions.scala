@@ -460,6 +460,12 @@ case class HttpConfigurationException(message: String) extends ApplicationConfig
  */
 case class TestConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
+/**
+ * Indicates that a feature toggle configuration is incorrect.
+ *
+ * @param message a description of the error.
+ */
+case class FeatureToggleException(message: String) extends ApplicationConfigurationException(message)
 
 /**
  * Helper functions for error handling.

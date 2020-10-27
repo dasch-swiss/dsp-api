@@ -24,8 +24,8 @@ import java.nio.file.{Files, Paths}
 
 import akka.ConfigurationException
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import com.typesafe.config.{Config, ConfigValue}
-import org.knora.webapi.exceptions.FileWriteException
+import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
+import org.knora.webapi.exceptions.{FeatureToggleException, FileWriteException}
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
 import scala.collection.JavaConverters._
@@ -34,7 +34,7 @@ import scala.concurrent.duration._
 /**
  * Reads application settings that come from `application.conf`.
  */
-class KnoraSettingsImpl(private val config: Config) extends Extension {
+class KnoraSettingsImpl(config: Config) extends Extension {
 
     // print config
     val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")
@@ -245,21 +245,17 @@ class KnoraSettingsImpl(private val config: Config) extends Extension {
         None
     }
 
-    /**
-     * Gets a feature toggle configured in the application configuration file.
-     *
-     * @param featureName the name of the feature.
-     * @return the setting of the feature toggle in the application configuration file, or `None` if
-     *         the feature is not configured in that file.
-     */
-    def getFeatureToggle(featureName: String): Option[Boolean] = {
-        val path = s"app.feature.$featureName"
+    val featureToggles: Map[String, Boolean] = {
+        config.getObject("app.feature").entrySet.asScala.map {
+            entry =>
+                val entryKey: String = entry.getKey
+                val entryValue: ConfigValue = entry.getValue
 
-        if (config.hasPath(path)) {
-            Some(config.getBoolean(path))
-        } else {
-            None
-        }
+                entryValue.valueType match {
+                    case ConfigValueType.BOOLEAN => entryKey -> entryValue.render.toBoolean
+                    case _ => throw FeatureToggleException(s"Boolean value required for feature toggle $entryKey (got '${entryValue.render}')")
+                }
+        }.toMap
     }
 }
 
