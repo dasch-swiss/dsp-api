@@ -56,22 +56,22 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
 
     if (projectIri.isEmpty) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
-
+    // Is there any label given?
     if (labels.isEmpty) {
-        // println(this)
+        // No.
         throw BadRequestException(LABEL_MISSING_ERROR)
     } else {
+        // Yes, validate them!
         stringFormatter.validateStringLiterals(labels, throw BadRequestException(LIST_LABEL_VALUE_MISSING))
     }
 
+    // Validate comments!
     stringFormatter.validateStringLiterals(comments, throw BadRequestException(LIST_COMMENT_VALUE_MISSING))
 
     def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
@@ -101,32 +101,31 @@ case class CreateChildNodeApiRequestADM(id: Option[IRI] = None,
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
 
     if (parentNodeIri.isEmpty) {
-        // println(this)
         throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraListIriStr(parentNodeIri)) {
-        // println(this)
         throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
     }
 
     if (projectIri.isEmpty) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
+    // Is there any label given?
     if (labels.isEmpty) {
-        // println(this)
+        // No.
         throw BadRequestException(LABEL_MISSING_ERROR)
     } else {
+        // Yes, are labels valid?
         stringFormatter.validateStringLiterals(labels, throw BadRequestException(LIST_LABEL_VALUE_MISSING))
     }
 
+    // Validate comments!
     stringFormatter.validateStringLiterals(comments, throw BadRequestException(LIST_COMMENT_VALUE_MISSING))
 
 
@@ -165,24 +164,30 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    // If payload contains labels check that it is not empty or invalid
+    // Are there any new labels given?
     if (labels.isDefined) {
+        // Yes.
         val givenLables = labels.get
+        // Is the list of labels empty?
         if (givenLables.isEmpty) {
+            // Yes.
             throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         } else {
-            // Validate given labels
+            // No. Validate given labels!
             stringFormatter.validateStringLiterals(givenLables, throw BadRequestException(LIST_LABEL_VALUE_MISSING))
         }
     }
 
-    // If payload contains comments check that it is not empty or invalid
+    // Are there any new comments given?
     if (comments.isDefined) {
+        // Yes.
         val givenComments = comments.get
+        // Is the list of comments empty?
         if (givenComments.isEmpty) {
+            // Yes.
             throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         } else {
-            // Validate given labels
+            // No. Validate given comments!
             stringFormatter.validateStringLiterals(givenComments, throw BadRequestException(LIST_COMMENT_VALUE_MISSING))
         }
     }
