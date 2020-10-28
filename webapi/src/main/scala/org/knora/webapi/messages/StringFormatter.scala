@@ -38,7 +38,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse, StringLiteralV2}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -3209,5 +3209,12 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
         }
 
         customValueIri
+    }
+
+    def validateStringLiterals(items: Seq[StringLiteralV2], errorFun: => Nothing) = {
+        val invalidItems = items.filter(item => item.language.isDefined && item.value.isEmpty)
+        if (invalidItems.nonEmpty) {
+            errorFun
+        }
     }
 }
