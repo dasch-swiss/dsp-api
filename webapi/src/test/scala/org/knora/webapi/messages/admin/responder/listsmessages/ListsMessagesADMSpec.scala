@@ -262,7 +262,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when list node iri is empty" in {
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when no parent node iri is given" in {
 
             val payload =
                 s"""
@@ -280,7 +280,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when list node iri is invalid" in {
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when parent node iri is invalid" in {
 
             val payload =
                 s"""
@@ -349,6 +349,24 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
 
             thrown.getMessage should equal (LABEL_MISSING_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when custom iri of the child node is invalid" in {
+
+            val payload =
+                s"""
+                   |{   "id": "invalid-list-node-IRI",
+                   |    "parentNodeIri": "$exampleListIri",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+
+            thrown.getMessage should equal ("Invalid list node IRI")
 
         }
 
