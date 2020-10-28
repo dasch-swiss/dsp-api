@@ -63,7 +63,7 @@ docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Doc
 
 .PHONY: docker-build-knora-sipi-image
 docker-build-knora-sipi-image: # build and publish knora-sipi docker image locally
-	@bazel run //docker/knora-sipi:image
+	@bazel run --action_env=PULLER_TIMEOUT=2400 //docker/knora-sipi:image
 
 .PHONY: docker-publish-knora-sipi-image
 docker-publish-knora-sipi-image: # publish knora-sipi image to Dockerhub
