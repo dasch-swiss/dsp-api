@@ -335,7 +335,7 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: install requirements
+      - name: Install requirements
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
@@ -352,21 +352,16 @@ jobs:
           npm install --global typedoc
           npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
-      - name: generate api-client-test-data
+      - name: Generate api-client-test-data
         run: make client-test-data
-      - name: add api-client-test-data to release assets
+      - name: Add api-client-test-data to release assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GH_TOKEN }}
           file: client-test-data.zip
           tag: ${{ github.ref }}
           overwrite: true
-      - name: deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          CUSTOM_DOMAIN: docs.knora.org
-      - name: cache maven artifacts
+      - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
@@ -375,17 +370,22 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: disk Free
+      - name: Disk Free
         run: |
           df -h
           docker system df
           docker system prune --all --force --volumes
           df -h
-      - name: build and publish all images to Dockerhub
+      - name: Build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: disk Free After
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CUSTOM_DOMAIN: docs.knora.org
+      - name: Disk Free After
         run: |
           df -h
           docker system df
