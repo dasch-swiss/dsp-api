@@ -90,6 +90,11 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalatest_scalatest_core_2_12",
+        "@maven//:org_scalatest_scalatest_wordspec_2_12",
+        "@maven//:org_scalatest_scalatest_matchers_core_2_12",
+        "@maven//:org_scalatest_scalatest_shouldmatchers_2_12",
+        "@maven//:org_scalatest_scalatest_compatible",
         "@maven//:org_scalactic_scalactic_2_12",
         # Selenium
         "@maven//:org_seleniumhq_selenium_selenium_support",
