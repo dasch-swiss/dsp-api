@@ -62,9 +62,8 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
-    // Is there any label given?
+    
     if (labels.isEmpty) {
-        // No.
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
 
@@ -110,9 +109,7 @@ case class CreateChildNodeApiRequestADM(id: Option[IRI] = None,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    // Is there any label given?
     if (labels.isEmpty) {
-        // No.
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
 
