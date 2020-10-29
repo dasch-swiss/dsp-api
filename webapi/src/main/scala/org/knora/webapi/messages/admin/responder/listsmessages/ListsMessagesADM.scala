@@ -66,13 +66,7 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     if (labels.isEmpty) {
         // No.
         throw BadRequestException(LABEL_MISSING_ERROR)
-    } else {
-        // Yes, validate them!
-        stringFormatter.validateStringLiterals(labels, throw BadRequestException(LIST_LABEL_VALUE_MISSING))
     }
-
-    // Validate comments!
-    stringFormatter.validateStringLiterals(comments, throw BadRequestException(LIST_COMMENT_VALUE_MISSING))
 
     def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
 }
@@ -120,14 +114,7 @@ case class CreateChildNodeApiRequestADM(id: Option[IRI] = None,
     if (labels.isEmpty) {
         // No.
         throw BadRequestException(LABEL_MISSING_ERROR)
-    } else {
-        // Yes, are labels valid?
-        stringFormatter.validateStringLiterals(labels, throw BadRequestException(LIST_LABEL_VALUE_MISSING))
     }
-
-    // Validate comments!
-    stringFormatter.validateStringLiterals(comments, throw BadRequestException(LIST_COMMENT_VALUE_MISSING))
-
 
     def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
 }
@@ -164,32 +151,13 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    // Are there any new labels given?
-    if (labels.isDefined) {
-        // Yes.
-        val givenLables = labels.get
-        // Is the list of labels empty?
-        if (givenLables.isEmpty) {
-            // Yes.
-            throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
-        } else {
-            // No. Validate given labels!
-            stringFormatter.validateStringLiterals(givenLables, throw BadRequestException(LIST_LABEL_VALUE_MISSING))
-        }
+    // If payload containes label or comments they should not be empty
+    if (labels.exists(_.isEmpty)) {
+        throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
 
-    // Are there any new comments given?
-    if (comments.isDefined) {
-        // Yes.
-        val givenComments = comments.get
-        // Is the list of comments empty?
-        if (givenComments.isEmpty) {
-            // Yes.
-            throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
-        } else {
-            // No. Validate given comments!
-            stringFormatter.validateStringLiterals(givenComments, throw BadRequestException(LIST_COMMENT_VALUE_MISSING))
-        }
+    if (comments.exists(_.isEmpty)) {
+        throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
 
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)

@@ -3210,11 +3210,4 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
 
         customValueIri
     }
-
-    def validateStringLiterals(items: Seq[StringLiteralV2], errorFun: => Nothing) = {
-        val invalidItems = items.filter(item => item.language.isDefined && item.value.isEmpty)
-        if (invalidItems.nonEmpty) {
-            errorFun
-        }
-    }
 }

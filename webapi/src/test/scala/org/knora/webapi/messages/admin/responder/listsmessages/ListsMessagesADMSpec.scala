@@ -193,7 +193,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal (LIST_LABEL_VALUE_MISSING)
+            thrown.getMessage should equal ("String value is missing.")
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when value of a comment is missing" in {
@@ -210,7 +210,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal (LIST_COMMENT_VALUE_MISSING)
+            thrown.getMessage should equal ("String value is missing.")
         }
 
         "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is empty" in {
@@ -309,7 +309,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
 
-            thrown.getMessage should equal (LIST_LABEL_VALUE_MISSING)
+            thrown.getMessage should equal ("String value is missing.")
         }
 
         "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when value of a comment is missing" in {
@@ -325,7 +325,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
 
-            thrown.getMessage should equal (LIST_COMMENT_VALUE_MISSING)
+            thrown.getMessage should equal ("String value is missing.")
         }
 
 
@@ -433,7 +433,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
 
-            thrown.getMessage should equal (LIST_LABEL_VALUE_MISSING)
+            thrown.getMessage should equal ("String value is missing.")
         }
 
         "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when value of a comment is missing" in {
@@ -450,7 +450,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
 
-            thrown.getMessage should equal (LIST_COMMENT_VALUE_MISSING)
+            thrown.getMessage should equal ("String value is missing.")
         }
 
         "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when custom iri of the child node is invalid" in {
