@@ -296,39 +296,6 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
 
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when value of a label is missing" in {
-
-            val payload =
-                s"""
-                   |{
-                   |    "listIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List", "language": "de"}, { "value": "", "language": "en"}]
-                   |}
-                """.stripMargin
-
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
-
-            thrown.getMessage should equal ("String value is missing.")
-        }
-
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when value of a comment is missing" in {
-
-            val payload =
-                s"""
-                   |{
-                   |    "listIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "comments": [{ "value": "", "language": "de"}]
-                   |}
-                """.stripMargin
-
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
-
-            thrown.getMessage should equal ("String value is missing.")
-        }
-
-
         "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when no parent node iri is given" in {
 
             val payload =
@@ -417,40 +384,6 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             thrown.getMessage should equal (LABEL_MISSING_ERROR)
 
-        }
-
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when value of a label is missing" in {
-
-            val payload =
-                s"""
-                   |{
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}, { "value": "", "language": "en"}],
-                   |    "comments": []
-                   |}
-                """.stripMargin
-
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
-
-            thrown.getMessage should equal ("String value is missing.")
-        }
-
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when value of a comment is missing" in {
-
-            val payload =
-                s"""
-                   |{
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": [{ "value": "", "language": "de"}]
-                   |}
-                """.stripMargin
-
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
-
-            thrown.getMessage should equal ("String value is missing.")
         }
 
         "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when custom iri of the child node is invalid" in {
