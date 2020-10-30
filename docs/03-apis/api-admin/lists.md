@@ -27,7 +27,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `GET: /admin/lists/<listIri>` : return complete list with children
 - `POST: /admin/lists` : create new list
 - `PUT: /admin/lists/<listIri>` : update list information
-- `POST: /admin/lists/<nodeIri>` : create new child node under the supplied parent node IRI
+- `POST: /admin/lists/<parentNodeIri>` : create new child node under the supplied parent node IRI
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
 
@@ -83,16 +83,29 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
   - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
     is the listIri, then a new child node is appended to the top level. Children
     are currently only appended.
-  - POST: `/admin/lists/<nodeIri>`
+  - POST: `/admin/lists/<parentNodeIri>`
   - BODY:
   
 ```json
     {
-        "parentNodeIri": "nodeIri",
+        "parentNodeIri": "parentNodeIri",
         "projectIri": "someprojectiri",
         "name": "first",
         "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
         "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
+    }
+```
+
+Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+
+```json
+    {
+        "id": "http://rdfh.ch/lists/0001/a-child-node-with-IRI",
+        "parentNodeIri": "http://rdfh.ch/lists/0001/a-list-with-IRI",
+        "projectIri": "http://rdfh.ch/projects/0001",
+        "name": "child node with a custom IRI",
+        "labels": [{ "value": "New child node with IRI", "language": "en"}],
+        "comments": [{ "value": "New child node comment", "language": "en"}]
     }
 ```
 

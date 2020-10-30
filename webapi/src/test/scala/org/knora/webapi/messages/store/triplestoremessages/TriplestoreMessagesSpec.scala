@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -54,6 +55,15 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
             val converted = json.parseJson.convertTo[StringLiteralV2]
 
             converted should be(string)
+        }
+    }
+
+    "Creating a `StringLiteralV2`" should {
+        "fail when language tag is given but value is missing" in {
+            val caught = intercept[BadRequestException](
+                StringLiteralV2("", Some("de"))
+            )
+            assert(caught.getMessage === "String value is missing.")
         }
     }
 }

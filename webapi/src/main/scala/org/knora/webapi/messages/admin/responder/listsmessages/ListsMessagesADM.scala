@@ -56,17 +56,14 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
 
     if (projectIri.isEmpty) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
-
+    
     if (labels.isEmpty) {
-        // println(this)
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
 
@@ -79,40 +76,40 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
  * is added can be either a root list node or a child list node. At least one label needs to be supplied. If other
  * child nodes exist, the newly created list node will be appended to the end.
  *
- * @param parentNodeIri
- * @param labels
- * @param comments
+ * @param id            the optional custom IRI of the list node.
+ * @param parentNodeIri the IRI of the parent node.
+ * @param projectIri    the IRI of the project.
+ * @param name          the optional name of the list node.
+ * @param labels        labels of the list node.
+ * @param comments      comments of the list node.
  */
-case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
+case class CreateChildNodeApiRequestADM(id: Option[IRI] = None,
+                                        parentNodeIri: IRI,
                                         projectIri: IRI,
                                         name: Option[String],
                                         labels: Seq[StringLiteralV2],
                                         comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+    stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
 
     if (parentNodeIri.isEmpty) {
-        // println(this)
         throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraListIriStr(parentNodeIri)) {
-        // println(this)
         throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
     }
 
     if (projectIri.isEmpty) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
     if (labels.isEmpty) {
-        // println(this)
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
 
@@ -159,6 +156,7 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
     if (comments.exists(_.isEmpty)) {
         throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
+
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
@@ -967,7 +965,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
-    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "id" , "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
