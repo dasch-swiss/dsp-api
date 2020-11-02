@@ -23,6 +23,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.http.version.VersionInfo
 import spray.json.{JsObject, JsString}
 
@@ -44,9 +45,8 @@ trait VersionCheck {
 
     override implicit val timeout: Timeout = 1.second
 
-    protected def versionCheck() = {
-        val result = getVersion()
-        createResponse(result)
+    protected def versionCheck(): HttpResponse = {
+        createResponse(getVersion)
     }
 
     protected def createResponse(result: VersionCheckResult): HttpResponse = {
@@ -66,7 +66,7 @@ trait VersionCheck {
         )
     }
 
-    private def getVersion() = {
+    private def getVersion: VersionCheckResult = {
         var sipiVersion = VersionInfo.sipiVersion
         val sipiIndex = sipiVersion.indexOf(':')
         sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
@@ -94,7 +94,7 @@ class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
         path("version") {
             get {
                 requestContext =>

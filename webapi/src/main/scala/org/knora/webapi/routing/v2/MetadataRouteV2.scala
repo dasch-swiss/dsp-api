@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import org.apache.jena.graph.Graph
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.{ApiV2Complex, InternalSchema}
 import org.knora.webapi.messages.v2.responder.metadatamessages.{MetadataGetRequestV2, MetadataPutRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -24,12 +25,14 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getMetadata ~ setMetadata
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        getMetadata(featureFactoryConfig) ~
+            setMetadata(featureFactoryConfig)
 
     /**
      * Route to get metadata.
      */
-    private def getMetadata: Route = path(MetadataBasePath / Segment) { projectIri =>
+    private def getMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(MetadataBasePath / Segment) { projectIri =>
         get {
             requestContext => {
                 // Make the request message.
@@ -45,6 +48,7 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -58,7 +62,7 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
     /**
      * Route to set a project's metadata, replacing any existing metadata for the project.
      */
-    private def setMetadata: Route = path(MetadataBasePath / Segment) { projectIri =>
+    private def setMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(MetadataBasePath / Segment) { projectIri =>
         put {
             entity(as[String]) { entityStr =>
                 requestContext => {
@@ -83,6 +87,7 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,

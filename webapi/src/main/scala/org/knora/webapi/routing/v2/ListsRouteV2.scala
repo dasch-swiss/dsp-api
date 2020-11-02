@@ -23,6 +23,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
@@ -36,9 +37,11 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getList ~ getNode
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        getList(featureFactoryConfig) ~
+            getNode(featureFactoryConfig)
 
-    private def getList: Route = path("v2" / "lists" / Segment) { lIri: String =>
+    private def getList(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "lists" / Segment) { lIri: String =>
         get {
             /* return a list (a graph with all list nodes) */
             requestContext =>
@@ -50,6 +53,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -59,7 +63,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         }
     }
 
-    private def getNode: Route = path("v2" / "node" / Segment) { nIri: String =>
+    private def getNode(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "node" / Segment) { nIri: String =>
         get {
             /* return a list node */
             requestContext =>
@@ -71,6 +75,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,

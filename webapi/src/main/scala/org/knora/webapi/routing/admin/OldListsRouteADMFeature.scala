@@ -1,16 +1,33 @@
+/*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, NotImplementedException}
-import org.knora.webapi.feature.Feature
+import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
@@ -26,11 +43,19 @@ object OldListsRouteADMFeature {
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
 class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(routeData)
-    with Feature with Authenticator with ListADMJsonProtocol  {
+    with Feature with Authenticator with ListADMJsonProtocol {
+
     import OldListsRouteADMFeature._
 
-    override def knoraApiPath: Route = getLists ~ createList ~ getList ~ updateList ~ createListChildNode ~ deleteListNode ~
-        getListInfo ~ getListNodeInfo
+    def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        getLists(featureFactoryConfig) ~
+            createList(featureFactoryConfig) ~
+            getList(featureFactoryConfig) ~
+            updateList(featureFactoryConfig) ~
+            createListChildNode(featureFactoryConfig) ~
+            deleteListNode(featureFactoryConfig) ~
+            getListInfo(featureFactoryConfig) ~
+            getListNodeInfo(featureFactoryConfig)
 
     /* return all lists optionally filtered by project */
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
@@ -38,7 +63,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* return all lists optionally filtered by project */
-    private def getLists: Route = path(ListsBasePath) {
+    private def getLists(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
         get {
             /* return all lists */
             parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
@@ -50,11 +75,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     } yield ListsGetRequestADM(projectIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -69,7 +95,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def createList: Route = path(ListsBasePath) {
+    private def createList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
         post {
             /* create a list */
             entity(as[CreateListApiRequestADM]) { apiRequest =>
@@ -83,11 +109,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -99,7 +126,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def getList: Route = path(ListsBasePath / Segment) { iri =>
+    private def getList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         get {
             /* return a list (a graph with all list nodes) */
             requestContext =>
@@ -110,37 +137,13 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 } yield ListGetRequestADM(listIri, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
-        }
-    }
-
-    /* get a list */
-    @Path("/{IRI}")
-    @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
-    @ApiResponses(Array(
-        new ApiResponse(code = 500, message = "Internal server error")
-    ))
-    private def newGetListNode: Route = path(ListsBasePath / Segment) { iri =>
-        get {
-            requestContext =>
-                val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-                val dummyResponse: String =
-                    """{ "result": "You are using the new list API" }""".stripMargin
-
-                val httpResponse = FastFuture.successful(HttpResponse(
-                    status = StatusCodes.OK,
-                    entity = HttpEntity(
-                        ContentTypes.`application/json`,
-                        dummyResponse
-                    )
-                ))
-
-                requestContext.complete(httpResponse)
         }
     }
 
@@ -156,7 +159,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def updateList: Route = path(ListsBasePath / Segment) { iri =>
+    private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
             entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
@@ -173,11 +176,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -195,7 +199,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def createListChildNode: Route = path(ListsBasePath / Segment) { iri =>
+    private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
             entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
@@ -212,18 +216,19 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
     }
 
     /* delete list node which should also delete its children */
-    private def deleteListNode: Route = path(ListsBasePath / Segment) { iri =>
+    private def deleteListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         delete {
             /* delete (deactivate) list */
             throw NotImplementedException("Method not implemented.")
@@ -231,7 +236,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
-    private def getListInfo: Route = path(ListsBasePath / "infos" / Segment) { iri =>
+    private def getListInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / "infos" / Segment) { iri =>
         get {
             /* return information about a list (without children) */
             requestContext =>
@@ -242,16 +247,17 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 } yield ListInfoGetRequestADM(listIri, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
 
-    private def getListNodeInfo: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
+    private def getListNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / "nodes" / Segment) { iri =>
         get {
             /* return information about a single node (without children) */
             requestContext =>
@@ -262,11 +268,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         } ~
             put {

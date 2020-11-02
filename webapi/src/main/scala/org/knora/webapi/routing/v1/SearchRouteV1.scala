@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetR
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 
 import scala.language.postfixOps
@@ -184,7 +185,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
         path("v1" / "search" /) {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"

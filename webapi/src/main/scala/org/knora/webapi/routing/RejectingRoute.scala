@@ -20,6 +20,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
 
 import scala.concurrent.Future
@@ -35,7 +36,7 @@ trait AppStateAccess {
 
     override implicit val timeout: Timeout = 2998.millis
 
-    protected def getAppState(): Future[AppState] = for {
+    protected def getAppState: Future[AppState] = for {
 
         state <- (applicationActor ? GetAppState()).mapTo[AppState]
 
@@ -55,7 +56,7 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
         path(Remaining) { wholePath =>
 
@@ -68,10 +69,9 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                 }
             }
 
-            onComplete(getAppState()) {
+            onComplete(getAppState) {
 
-                case Success(appState) => {
-
+                case Success(appState) =>
                     appState match {
                         case AppStates.Running if rejectSeq.flatten.nonEmpty =>
                             // route not allowed. will complete request.
@@ -89,12 +89,10 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                             log.info(msg)
                             complete(StatusCodes.ServiceUnavailable, msg)
                     }
-                }
 
-                case Failure(ex) => {
+                case Failure(ex) =>
                     log.error("RejectingRoute - ex: {}", ex)
                     complete(StatusCodes.ServiceUnavailable, ex.getMessage)
-                }
             }
         }
     }

@@ -33,10 +33,7 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     private val adminRouteFeatureFactory: AdminRouteFeatureFactory = new AdminRouteFeatureFactory(routeData)
 
-    override def knoraApiPath: Route = {
-        requestContext: RequestContext =>
-            val featureFactoryConfig: FeatureFactoryConfig = makeFeatureFactoryConfig(requestContext)
-            val listsRoute: Route = adminRouteFeatureFactory.getListsRoute(featureFactoryConfig)
-            listsRoute(requestContext)
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+        adminRouteFeatureFactory.makeRoute(featureFactoryConfig)
     }
 }

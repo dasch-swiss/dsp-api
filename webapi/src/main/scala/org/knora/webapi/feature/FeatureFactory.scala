@@ -19,7 +19,8 @@
 
 package org.knora.webapi.feature
 
-import akka.http.scaladsl.model.HttpHeader
+import akka.http.scaladsl.model.{HttpHeader, HttpResponse}
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.RequestContext
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
@@ -116,6 +117,10 @@ object FeatureToggle {
     }
 }
 
+object FeatureFactoryConfig {
+    private val RESPONSE_HEADER = "X-Knora-Feature-Toggles-Enabled"
+}
+
 /**
  * An abstract class representing configuration for a [[FeatureFactory]] from a particular
  * configuration source.
@@ -157,6 +162,42 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
         allBaseConfigs.map {
             baseConfig: FeatureToggleBaseConfig => getToggleSetting(baseConfig.featureName)
         }.filter(_.isEnabled)
+    }
+
+    /**
+     * Returns an [[HttpHeader]] indicating which feature toggles are enabled.
+     */
+    def getAllEnabledFeaturesAsHttpHeader: Option[HttpHeader] = {
+        val enabledFeatures: Set[FeatureToggle] = getAllEnabledFeatures.filter(_.isEnabled)
+
+        if (enabledFeatures.nonEmpty) {
+            val headerValue: String = enabledFeatures.map {
+                featureToggle =>
+                    val headerValueBuilder = new StringBuilder
+                    headerValueBuilder.append(featureToggle.featureName)
+
+                    featureToggle.version match {
+                        case Some(definedVersion) => headerValueBuilder.append(" ").append(definedVersion)
+                        case None => ()
+                    }
+
+                    headerValueBuilder.toString
+            }.mkString(",")
+
+            Some(RawHeader(FeatureFactoryConfig.RESPONSE_HEADER, headerValue))
+        } else {
+            None
+        }
+    }
+
+    /**
+     * Adds an [[HttpHeader]] to an [[HttpResponse]] indicating which feature toggles are enabled.
+     */
+    def addFeatureToggleHeaderToHttpResponse(httpResponse: HttpResponse): HttpResponse = {
+        getAllEnabledFeaturesAsHttpHeader match {
+            case Some(header) => httpResponse.withHeaders(header)
+            case None => httpResponse
+        }
     }
 
     /**

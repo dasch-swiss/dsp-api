@@ -65,6 +65,15 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
     protected val storeManager: ActorRef = routeData.appActor
     protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+
+    /**
+     * Constructs a route, either by statically returning a routing function, or by using a feature factory
+     * to construct one dynamically.
+     *
+     * @param featureFactoryConfig the per-request feature factory configuration.
+     * @return a route configured with the features enabled by the feature factory configuration.
+     */
+    def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route
 }
 
 
@@ -82,11 +91,21 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
             KnoraSettingsFeatureFactoryConfig(settings)
 
     /**
-     * Returns the route. Needs to be implemented in each subclass.
+     * Constructs the route by calling `makeRoute` with the per-request feature factory config.
      *
-     * @return [[Route]]
+     * @return a route configured with the features enabled by the feature factory configuration.
      */
-    def knoraApiPath: Route
+    def knoraApiPath: Route = {
+        requestContext: RequestContext =>
+            // Make a per-request feature factory configuration.
+            val featureFactoryConfig: FeatureFactoryConfig = makeFeatureFactoryConfig(requestContext)
+
+            // Construct a routing function using that configuration.
+            val route: Route = makeRoute(featureFactoryConfig)
+
+            // Call the routing function.
+            route(requestContext)
+    }
 
     /**
      * Constructs a [[FeatureFactoryConfig]] for use with feature factories.

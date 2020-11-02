@@ -2,7 +2,7 @@ package org.knora.webapi.app
 
 import akka.actor.SupervisorStrategy._
 import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Stash, Timers}
-import akka.http.scaladsl.Http
+import akka.http.scaladsl.{Http, server}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler, Route}
 import akka.stream.Materializer
@@ -385,7 +385,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     val exceptionHandler: ExceptionHandler = handler.KnoraExceptionHandler(KnoraSettings(system))
 
     // Combining the two handlers for convenience
-    val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+    val handleErrors: server.Directive[Unit] = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
 
     /**
      * All routes composed together and CORS activated based on the

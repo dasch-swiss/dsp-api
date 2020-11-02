@@ -26,6 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
@@ -49,9 +50,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getValue ~ createValue ~ updateValue ~ deleteValue
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        getValue(featureFactoryConfig) ~
+            createValue(featureFactoryConfig) ~
+            updateValue(featureFactoryConfig) ~
+            deleteValue(featureFactoryConfig)
 
-    private def getValue: Route = path(ValuesBasePath / Segment / Segment) { (resourceIriStr: IRI, valueUuidStr: String) =>
+    private def getValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / Segment / Segment) { (resourceIriStr: IRI, valueUuidStr: String) =>
         get {
             requestContext => {
                 val resourceIri: SmartIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
@@ -94,6 +99,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -104,7 +110,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def createValue: Route = path(ValuesBasePath) {
+    private def createValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -126,6 +132,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -137,7 +144,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def updateValue: Route = path(ValuesBasePath) {
+    private def updateValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
         put {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -159,6 +166,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -170,7 +178,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def deleteValue: Route = path(ValuesBasePath / "delete") {
+    private def deleteValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / "delete") {
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -192,6 +200,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,

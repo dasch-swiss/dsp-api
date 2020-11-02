@@ -21,6 +21,7 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraPasswordCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
@@ -33,7 +34,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
         path("v2" / "authentication") {
             get { // authenticate credentials

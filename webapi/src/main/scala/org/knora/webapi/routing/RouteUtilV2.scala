@@ -28,6 +28,7 @@ import akka.util.Timeout
 import org.apache.jena
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, UnexpectedMessageException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.{JsonLDDocument, RdfFormatUtil}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
@@ -178,18 +179,20 @@ object RouteUtilV2 {
     /**
      * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
      *
-     * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-     * @param requestContext   the akka-http [[RequestContext]].
-     * @param settings         the application's settings.
-     * @param responderManager a reference to the responder manager.
-     * @param log              a logging adapter.
-     * @param targetSchema     the API schema that should be used in the response.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param requestMessage       a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+     * @param requestContext       the akka-http [[RequestContext]].
+     * @param featureFactoryConfig the per-request feature factory configuration.
+     * @param settings             the application's settings.
+     * @param responderManager     a reference to the responder manager.
+     * @param log                  a logging adapter.
+     * @param targetSchema         the API schema that should be used in the response.
+     * @param timeout              a timeout for `ask` messages.
+     * @param executionContext     an execution context for futures.
      * @return a [[Future]] containing a [[RouteResult]].
      */
     private def runRdfRoute(requestMessage: KnoraRequestV2,
                             requestContext: RequestContext,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
@@ -233,12 +236,14 @@ object RouteUtilV2 {
                 settings = settings,
                 schemaOptions = schemaOptions
             )
-        } yield HttpResponse(
-            status = StatusCodes.OK,
+        } yield featureFactoryConfig.addFeatureToggleHeaderToHttpResponse(
+            HttpResponse(
+                status = StatusCodes.OK,
 
-            entity = HttpEntity(
-                contentType,
-                formattedResponseContent
+                entity = HttpEntity(
+                    contentType,
+                    formattedResponseContent
+                )
             )
         )
 
@@ -248,18 +253,20 @@ object RouteUtilV2 {
     /**
      * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
      *
-     * @param requestMessageF  a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-     * @param requestContext   the akka-http [[RequestContext]].
-     * @param settings         the application's settings.
-     * @param responderManager a reference to the responder manager.
-     * @param log              a logging adapter.
-     * @param targetSchema     the API schema that should be used in the response.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param requestMessageF      a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+     * @param requestContext       the akka-http [[RequestContext]].
+     * @param featureFactoryConfig the per-request feature factory configuration.
+     * @param settings             the application's settings.
+     * @param responderManager     a reference to the responder manager.
+     * @param log                  a logging adapter.
+     * @param targetSchema         the API schema that should be used in the response.
+     * @param timeout              a timeout for `ask` messages.
+     * @param executionContext     an execution context for futures.
      * @return a [[Future]] containing a [[RouteResult]].
      */
     def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
+                       featureFactoryConfig: FeatureFactoryConfig,
                        settings: KnoraSettingsImpl,
                        responderManager: ActorRef,
                        log: LoggingAdapter,
@@ -282,11 +289,13 @@ object RouteUtilV2 {
             }
 
 
-        } yield HttpResponse(
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                contentType,
-                teiResponse.toXML
+        } yield featureFactoryConfig.addFeatureToggleHeaderToHttpResponse(
+            HttpResponse(
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    contentType,
+                    teiResponse.toXML
+                )
             )
         )
 
@@ -296,19 +305,21 @@ object RouteUtilV2 {
     /**
      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
      *
-     * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-     * @param requestContext   the akka-http [[RequestContext]].
-     * @param settings         the application's settings.
-     * @param responderManager a reference to the responder manager.
-     * @param log              a logging adapter.
-     * @param targetSchema     the API schema that should be used in the response.
-     * @param schemaOptions    the schema options that should be used when processing the request.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param requestMessageF      a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+     * @param requestContext       the akka-http [[RequestContext]].
+     * @param featureFactoryConfig the per-request feature factory configuration.
+     * @param settings             the application's settings.
+     * @param responderManager     a reference to the responder manager.
+     * @param log                  a logging adapter.
+     * @param targetSchema         the API schema that should be used in the response.
+     * @param schemaOptions        the schema options that should be used when processing the request.
+     * @param timeout              a timeout for `ask` messages.
+     * @param executionContext     an execution context for futures.
      * @return a [[Future]] containing a [[RouteResult]].
      */
     def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
                               requestContext: RequestContext,
+                              featureFactoryConfig: FeatureFactoryConfig,
                               settings: KnoraSettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
@@ -320,6 +331,7 @@ object RouteUtilV2 {
             routeResult <- runRdfRoute(
                 requestMessage = requestMessage,
                 requestContext = requestContext,
+                featureFactoryConfig = featureFactoryConfig,
                 settings = settings,
                 responderManager = responderManager,
                 log = log,
@@ -333,7 +345,7 @@ object RouteUtilV2 {
     /**
      * Parses a request entity to a [[jena.graph.Graph]].
      *
-     * @param entityStr   the request entity.
+     * @param entityStr      the request entity.
      * @param requestContext the request context.
      * @return the corresponding [[jena.graph.Graph]].
      */
@@ -347,7 +359,7 @@ object RouteUtilV2 {
     /**
      * Parses a request entity to a [[JsonLDDocument]].
      *
-     * @param entityStr   the request entity.
+     * @param entityStr      the request entity.
      * @param requestContext the request context.
      * @return the corresponding [[JsonLDDocument]].
      */

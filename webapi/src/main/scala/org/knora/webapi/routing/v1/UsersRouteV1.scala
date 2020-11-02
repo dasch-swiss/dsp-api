@@ -26,6 +26,7 @@ import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
@@ -40,7 +41,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
         path("v1" / "users") {
             get {
