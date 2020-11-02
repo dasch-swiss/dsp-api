@@ -11,7 +11,7 @@ filegroup(
 
 # Generates a scala source file that includes version information
 # The generated intermediate file is missing the BUILD_TAG, which is
-# add by the version_info genrule
+# added by the 'version_info_with_build_tag' genrule
 load("//tools/version_info:gen_version_info.bzl", "gen_version_info")
 gen_version_info(
     name = "version_info_without_build_tag",
