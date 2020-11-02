@@ -28,6 +28,7 @@ genrule(
     srcs = [":version_info_without_build_tag"],
     outs = ["version_info.scala"],
     local = 1,
+    stamp = 1,
     tools = [":add_build_tag.sh"],
     cmd = '$(location add_build_tag.sh) bazel-out/volatile-status.txt "$<" > "$@"',
 )

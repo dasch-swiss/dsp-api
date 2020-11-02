@@ -26,7 +26,7 @@ case object VersionInfo {
 
     val name: String = "webapi"
 
-    val version: String = "{BUILD_TAG}"
+    val webapiVersion: String = "{BUILD_TAG}"
 
     val scalaVersion: String = "{SCALA_VERSION}"
 
@@ -38,7 +38,7 @@ case object VersionInfo {
 
     override val toString: String = {
         "name: %s, version: %s, scalaVersion: %s, akkaHttpVersion: %s, sipiVersion: %s, jenaFusekiVersion: %s".format(
-            name, version, scalaVersion, akkaHttpVersion, sipiVersion, jenaFusekiVersion
+            name, webapiVersion, scalaVersion, akkaHttpVersion, sipiVersion, jenaFusekiVersion
         )
     }
 }

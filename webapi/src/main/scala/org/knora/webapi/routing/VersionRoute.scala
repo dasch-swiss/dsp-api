@@ -77,7 +77,7 @@ trait VersionCheck {
 
         VersionCheckResult(
             name = "version",
-            webapi = VersionInfo.version,
+            webapi = VersionInfo.webapiVersion,
             scala = VersionInfo.scalaVersion,
             akkaHttp = VersionInfo.akkaHttpVersion,
             sipi = sipiVersion,
