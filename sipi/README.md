@@ -29,7 +29,7 @@ which there is no corresponding resource inside Knora.
 
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
-$ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and needs only to be used when newer image is available on dockerhub
+$ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
 $ docker-compose up sipi-no-auth
 $ docker-compose down // for cleanup
 ```

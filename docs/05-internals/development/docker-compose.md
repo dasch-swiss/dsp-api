@@ -33,7 +33,7 @@ Per default, GraphDB-SE is started. If GraphDB-Free is needed, because there is 
 then a third environment variable can be set to something like:
 
 ```
-$ export KNORA_GDB_IMAGE=dhlabbasel/graphdb-free:8.3.1 
+$ export KNORA_GDB_IMAGE=daschswiss/graphdb-free:8.3.1 
 ```
 
 To run the whole stack:

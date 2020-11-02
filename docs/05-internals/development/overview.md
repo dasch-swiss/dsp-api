@@ -22,13 +22,13 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 Developing for Knora requires a complete local
 installation of Knora. The different parts are:
 
-1.  The cloned [Knora](https://github.com/dhlab-basel/Knora) Github
+1.  The cloned [Knora](https://github.com/dasch-swiss/knora-api) Github
     repository
 2.  One of the supplied triplestores in the Knora Github repository
     (GraphDB-SE 8 or Fuseki 3).
 3.  Sipi by building from
-    [source](https://github.com/dhlab-basel/Sipi) or using the docker
-    [image](https://hub.docker.com/r/dhlabbasel/sipi/)
+    [source](https://github.com/dasch-swiss/sipi) or using the docker
+    [image](https://hub.docker.com/r/daschswiss/sipi/)
 
 ## Knora Github Repository
 
@@ -67,10 +67,10 @@ steps:
 ```
 $ git clone https://github.com/dhlab-basel/docker-sipi
 (copy the Kakadu distribution ``v7_8-01382N.zip`` to the ``docker-sipi`` directory)
-$ docker build -t dhlabbasel/sipi
-$ docker run --name sipi --rm -it -p 1024:1024 dhlabbasel/sipi
+$ docker build -t daschswiss/sipi
+$ docker run --name sipi --rm -it -p 1024:1024 daschswiss/sipi
 (Ctrl-c out of terminal will stop and delete container)
-$ docker push dhlabbasel/sipi
+$ docker push daschswiss/sipi
 ```
 
 Pushing the image to the docker hub requires prior authentication with
@@ -84,10 +84,10 @@ To use the docker image stored locally or on the docker hub repository
 type:
 
 ```
-$ docker run --name sipi -d -p 1024:1024 dhlabbasel/sipi
+$ docker run --name sipi -d -p 1024:1024 daschswiss/sipi
 ```
 
-This will create and start a docker container with the `dhlabbasel/sipi`
+This will create and start a docker container with the `daschswiss/sipi`
 image in the background. The default behaviour is to start Sipi by
 calling the following command:
 
@@ -102,7 +102,7 @@ another config file:
 $ docker run --name sipi \
              -d \
              -p 1024:1024 \
-             dhlabbasel/sipi \
+             daschswiss/sipi \
              /sipi/local/bin/sipi -config /sipi/config/sipi.config.lua
 ```
 
@@ -114,7 +114,7 @@ $ docker run --name sipi \
              -d \
              -p 1024:1024 \
              -v $PWD:/localdir \
-             dhlabbasel/sipi \
+             daschswiss/sipi \
              /sipi/local/bin/sipi -config /localdir/sipi.knora-test-config.lua
 ```
 
