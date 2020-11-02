@@ -14,6 +14,7 @@ The design here is loosely inspired by the discussion at
   - (in the future) using a web-based user interface to configure a
     feature toggle service that multiple subsystems can access
     
+    
 - Feature implementations should be produced by factory classes,
   so that the code using a feature does not need to know
   about the toggling decision.
@@ -27,15 +28,12 @@ The design here is loosely inspired by the discussion at
 
 - A feature toggle should have metadata such as a description,
   an expiration date, developer contact information, etc.
-  (Not yet included in this design.)
 
 - A feature toggle should have an optional version number, so
   you can get different versions of the same feature.
-  (Not yet included in this design.)
   
 - It should be possible to configure a toggle in `application.conf`
   so that its setting cannot be overridden per request.
-  (Not yet included in this design.)
 
 ## Design
 
@@ -64,13 +62,13 @@ with another. You can also override this setting by sending
 the HTTP header
 
 ```
-X-Knora-Feature-Toggle: new-list-admin-routes=true
+X-Knora-Feature-Toggle: new-list-admin-routes=on
 ```
 
 or
 
 ```
-X-Knora-Feature-Toggle: new-list-admin-routes=false
+X-Knora-Feature-Toggle: new-list-admin-routes=off
 ```
 
 Try it with this URL:

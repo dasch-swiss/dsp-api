@@ -48,7 +48,7 @@ class AdminRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFact
      * @return a lists route.
      */
     def getListsRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-        if (featureFactoryConfig.featureIsOn("new-list-admin-routes")) {
+        if (featureFactoryConfig.getToggleSetting("new-list-admin-routes").isEnabled) {
             newListsRouteADMFeature.knoraApiPath
         } else {
             oldListsRouteADMFeature.knoraApiPath

@@ -79,7 +79,7 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
      * A [[KnoraSettingsFeatureFactoryConfig]] to use as the parent [[FeatureFactoryConfig]].
      */
     private val knoraSettingsFeatureFactoryConfig: KnoraSettingsFeatureFactoryConfig = new
-            KnoraSettingsFeatureFactoryConfig(settings, None)
+            KnoraSettingsFeatureFactoryConfig(settings)
 
     /**
      * Returns the route. Needs to be implemented in each subclass.
@@ -97,7 +97,7 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
     def makeFeatureFactoryConfig(requestContext: RequestContext): FeatureFactoryConfig = {
         new RequestContextFeatureFactoryConfig(
             requestContext = requestContext,
-            maybeParent = Some(knoraSettingsFeatureFactoryConfig)
+            parent = knoraSettingsFeatureFactoryConfig
         )
     }
 

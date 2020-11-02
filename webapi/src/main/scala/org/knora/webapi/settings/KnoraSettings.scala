@@ -21,20 +21,23 @@ package org.knora.webapi.settings
 
 import java.io.File
 import java.nio.file.{Files, Paths}
+import java.time.Instant
 
 import akka.ConfigurationException
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
+import com.typesafe.config.{Config, ConfigObject, ConfigValue}
 import org.knora.webapi.exceptions.{FeatureToggleException, FileWriteException}
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 /**
  * Reads application settings that come from `application.conf`.
  */
 class KnoraSettingsImpl(config: Config) extends Extension {
+    import KnoraSettings._
 
     // print config
     val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")
@@ -245,17 +248,72 @@ class KnoraSettingsImpl(config: Config) extends Extension {
         None
     }
 
-    val featureToggles: Map[String, Boolean] = {
-        config.getObject("app.feature").entrySet.asScala.map {
-            entry =>
-                val entryKey: String = entry.getKey
-                val entryValue: ConfigValue = entry.getValue
-
-                entryValue.valueType match {
-                    case ConfigValueType.BOOLEAN => entryKey -> entryValue.render.toBoolean
-                    case _ => throw FeatureToggleException(s"Boolean value required for feature toggle $entryKey (got '${entryValue.render}')")
+    val featureToggles: Set[FeatureToggleBaseConfig] = Try {
+        config.getObject(featureTogglesPath).asScala.toMap.map {
+            case (featureName: String, featureConfigValue: ConfigValue) =>
+                val featureConfig: Config = featureConfigValue match {
+                    case configObject: ConfigObject => configObject.toConfig
+                    case _ => throw FeatureToggleException(s"The feature toggle configuration '$featureName' must be an object")
                 }
-        }.toMap
+
+                val description: String = featureConfig.getString(descriptionKey)
+
+                val availableVersions: Seq[Int] = if (featureConfig.hasPath(availableVersionsKey)) {
+                    featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector.sorted
+                } else {
+                    Seq.empty
+                }
+
+                val developerEmails: Set[String] = featureConfig.getStringList(developerEmailsKey).asScala.toSet
+
+                val expirationDate: Option[Instant] = if (featureConfig.hasPath(expirationDateKey)) {
+                    val definedExpirationDate: Instant = Instant.parse(featureConfig.getString(expirationDateKey))
+
+                    if (Instant.ofEpochMilli(System.currentTimeMillis).isAfter(definedExpirationDate)) {
+                        throw FeatureToggleException(s"Feature toggle '$featureName' has expired")
+                    } else {
+                        Some(definedExpirationDate)
+                    }
+                } else {
+                    None
+                }
+
+                val enabledByDefault: Boolean = featureConfig.getBoolean(enabledByDefaultKey)
+
+                val defaultVersion: Option[Int] = if (featureConfig.hasPath(defaultVersionKey)) {
+                    Some(featureConfig.getInt(defaultVersionKey))
+                } else {
+                    None
+                }
+
+                if (availableVersions.isEmpty != defaultVersion.isEmpty) {
+                    throw FeatureToggleException(s"In feature toggle '$featureName', available-versions requires default-version and vice versa")
+                }
+
+                if (defaultVersion.exists(version => !availableVersions.contains(version))) {
+                    throw FeatureToggleException(s"The default version of feature '$featureName' is not listed in the available versions")
+                }
+
+                val overrideAllowed: Boolean = featureConfig.getBoolean(overrideAllowedKey)
+
+                FeatureToggleBaseConfig(
+                    featureName = featureName,
+                    description = description,
+                    availableVersions = availableVersions,
+                    developerEmails = developerEmails,
+                    expirationDate = expirationDate,
+                    enabledByDefault = enabledByDefault,
+                    defaultVersion = defaultVersion,
+                    overrideAllowed = overrideAllowed
+                )
+        }.toSet
+    } match {
+        case Success(toggles) => toggles
+        case Failure(ex) =>
+            ex match {
+                case fte: FeatureToggleException => throw fte
+                case other => throw FeatureToggleException(s"Invalid feature toggle configuration: ${other.getMessage}", Some(ex))
+            }
     }
 }
 
@@ -270,4 +328,36 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
      * Java API: retrieve the Settings extension for the given system.
      */
     override def get(system: ActorSystem): KnoraSettingsImpl = super.get(system)
+
+    val featureTogglesPath: String = "app.feature"
+    val descriptionKey: String = "description"
+    val availableVersionsKey: String = "available-versions"
+    val developerEmailsKey: String = "developer-emails"
+    val expirationDateKey: String = "expiration-date"
+    val enabledByDefaultKey: String = "enabled-by-default"
+    val defaultVersionKey: String = "default-version"
+    val overrideAllowedKey: String = "override-allowed"
+
+    /**
+     * Represents the base configuration of a feature toggle.
+     *
+     * @param featureName       the name of the feature.
+     * @param description       a description of the feature.
+     * @param availableVersions the available versions of the feature, sorted in ascending numerical order.
+     * @param developerEmails   one or more email addresses of developers who can be contacted about the feature.
+     * @param expirationDate    the expiration date of the feature.
+     * @param enabledByDefault  `true` if the feature should be enabled by default, `false` if it should be
+     *                          disabled by default.
+     * @param defaultVersion    the version of the feature that should be enabled by default.
+     * @param overrideAllowed   `true` if this configuration can be overridden, e.g. by per-request feature
+     *                          toggle configuration.
+     */
+    case class FeatureToggleBaseConfig(featureName: String,
+                                       description: String,
+                                       availableVersions: Seq[Int],
+                                       developerEmails: Set[String],
+                                       expirationDate: Option[Instant],
+                                       enabledByDefault: Boolean,
+                                       defaultVersion: Option[Int],
+                                       overrideAllowed: Boolean)
 }
