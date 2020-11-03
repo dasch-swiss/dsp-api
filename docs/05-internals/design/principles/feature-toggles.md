@@ -224,3 +224,20 @@ To select different routes according to a feature toggle:
 
 To avoid constructing redundant route instances, each façade route needs its
 own feature factory class.
+
+### Documenting a Feature Toggle
+
+The behaviour of each possible setting of each feature toggle should be
+documented. Feature toggles that are configurable per request should be described
+in the release notes.
+
+### Removing a Feature Toggle
+
+To facilitate removing a feature toggle, each implementation should have:
+
+- a separate file for its source code
+
+- a separate file for its documentation
+
+When the toggle is removed, the files that are no longer needed can be
+deleted.
