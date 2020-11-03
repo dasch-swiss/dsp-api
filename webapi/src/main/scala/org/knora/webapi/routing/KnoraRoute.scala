@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.server.{Route, RequestContext}
+import akka.http.scaladsl.server.{RequestContext, Route, RouteResult}
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
@@ -95,23 +95,29 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
             KnoraSettingsFeatureFactoryConfig(settings)
 
     /**
-     * Constructs the route by calling `makeRoute` with the per-request feature factory config.
-     *
-     * @return a route configured with the features enabled by the feature factory configuration.
+     * Returns a routing function that uses per-request feature factory configuration.
      */
-    def knoraApiPath: Route = {
-        requestContext: RequestContext =>
-            // Make a per-request feature factory configuration.
-            val featureFactoryConfig: FeatureFactoryConfig = new RequestContextFeatureFactoryConfig(
-                requestContext = requestContext,
-                parent = knoraSettingsFeatureFactoryConfig
-            )
+    def knoraApiPath: Route = runRoute
 
-            // Construct a routing function using that configuration.
-            val route: Route = makeRoute(featureFactoryConfig)
+    /**
+     * A routing function that calls `makeRoute`, passing it the per-request feature factory configuration,
+     * and runs the resulting routing function.
+     *
+     * @param requestContext the HTTP request context.
+     * @return the result of running the route.
+     */
+    private def runRoute(requestContext: RequestContext): Future[RouteResult] = {
+        // Make a per-request feature factory configuration.
+        val featureFactoryConfig: FeatureFactoryConfig = new RequestContextFeatureFactoryConfig(
+            requestContext = requestContext,
+            parent = knoraSettingsFeatureFactoryConfig
+        )
 
-            // Call the routing function.
-            route(requestContext)
+        // Construct a routing function using that configuration.
+        val route: Route = makeRoute(featureFactoryConfig)
+
+        // Call the routing function.
+        route(requestContext)
     }
 
     /**
