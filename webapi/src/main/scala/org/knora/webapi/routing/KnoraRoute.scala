@@ -76,7 +76,6 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route
 }
 
-
 /**
  * An abstract class providing functionality that is commonly used in implementing Knora routes.
  *

@@ -37,6 +37,7 @@ import scala.util.{Failure, Success, Try}
  * Reads application settings that come from `application.conf`.
  */
 class KnoraSettingsImpl(config: Config) extends Extension {
+
     import KnoraSettings._
 
     // print config
@@ -248,72 +249,77 @@ class KnoraSettingsImpl(config: Config) extends Extension {
         None
     }
 
-    val featureToggles: Set[FeatureToggleBaseConfig] = Try {
-        config.getObject(featureTogglesPath).asScala.toMap.map {
-            case (featureName: String, featureConfigValue: ConfigValue) =>
-                val featureConfig: Config = featureConfigValue match {
-                    case configObject: ConfigObject => configObject.toConfig
-                    case _ => throw FeatureToggleException(s"The feature toggle configuration '$featureName' must be an object")
-                }
-
-                val description: String = featureConfig.getString(descriptionKey)
-
-                val availableVersions: Seq[Int] = if (featureConfig.hasPath(availableVersionsKey)) {
-                    featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector.sorted
-                } else {
-                    Seq.empty
-                }
-
-                val developerEmails: Set[String] = featureConfig.getStringList(developerEmailsKey).asScala.toSet
-
-                val expirationDate: Option[Instant] = if (featureConfig.hasPath(expirationDateKey)) {
-                    val definedExpirationDate: Instant = Instant.parse(featureConfig.getString(expirationDateKey))
-
-                    if (Instant.ofEpochMilli(System.currentTimeMillis).isAfter(definedExpirationDate)) {
-                        throw FeatureToggleException(s"Feature toggle '$featureName' has expired")
-                    } else {
-                        Some(definedExpirationDate)
+    val featureToggles: Set[FeatureToggleBaseConfig] = if (config.hasPath(featureTogglesPath)) {
+        Try {
+            config.getObject(featureTogglesPath).asScala.toMap.map {
+                case (featureName: String, featureConfigValue: ConfigValue) =>
+                    println(s"Reading base config for feature $featureName")
+                    val featureConfig: Config = featureConfigValue match {
+                        case configObject: ConfigObject => configObject.toConfig
+                        case _ => throw FeatureToggleException(s"The feature toggle configuration '$featureName' must be an object")
                     }
-                } else {
-                    None
+
+                    val description: String = featureConfig.getString(descriptionKey)
+
+                    val availableVersions: Seq[Int] = if (featureConfig.hasPath(availableVersionsKey)) {
+                        featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector.sorted
+                    } else {
+                        Seq.empty
+                    }
+
+                    val developerEmails: Set[String] = featureConfig.getStringList(developerEmailsKey).asScala.toSet
+
+                    val expirationDate: Option[Instant] = if (featureConfig.hasPath(expirationDateKey)) {
+                        val definedExpirationDate: Instant = Instant.parse(featureConfig.getString(expirationDateKey))
+
+                        if (Instant.ofEpochMilli(System.currentTimeMillis).isAfter(definedExpirationDate)) {
+                            throw FeatureToggleException(s"Feature toggle '$featureName' has expired")
+                        } else {
+                            Some(definedExpirationDate)
+                        }
+                    } else {
+                        None
+                    }
+
+                    val enabledByDefault: Boolean = featureConfig.getBoolean(enabledByDefaultKey)
+
+                    val defaultVersion: Option[Int] = if (featureConfig.hasPath(defaultVersionKey)) {
+                        Some(featureConfig.getInt(defaultVersionKey))
+                    } else {
+                        None
+                    }
+
+                    if (availableVersions.isEmpty != defaultVersion.isEmpty) {
+                        throw FeatureToggleException(s"In feature toggle '$featureName', available-versions requires default-version and vice versa")
+                    }
+
+                    if (defaultVersion.exists(version => !availableVersions.contains(version))) {
+                        throw FeatureToggleException(s"The default version of feature '$featureName' is not listed in the available versions")
+                    }
+
+                    val overrideAllowed: Boolean = featureConfig.getBoolean(overrideAllowedKey)
+
+                    FeatureToggleBaseConfig(
+                        featureName = featureName,
+                        description = description,
+                        availableVersions = availableVersions,
+                        developerEmails = developerEmails,
+                        expirationDate = expirationDate,
+                        enabledByDefault = enabledByDefault,
+                        defaultVersion = defaultVersion,
+                        overrideAllowed = overrideAllowed
+                    )
+            }.toSet
+        } match {
+            case Success(toggles) => toggles
+            case Failure(ex) =>
+                ex match {
+                    case fte: FeatureToggleException => throw fte
+                    case other => throw FeatureToggleException(s"Invalid feature toggle configuration: ${other.getMessage}", Some(ex))
                 }
-
-                val enabledByDefault: Boolean = featureConfig.getBoolean(enabledByDefaultKey)
-
-                val defaultVersion: Option[Int] = if (featureConfig.hasPath(defaultVersionKey)) {
-                    Some(featureConfig.getInt(defaultVersionKey))
-                } else {
-                    None
-                }
-
-                if (availableVersions.isEmpty != defaultVersion.isEmpty) {
-                    throw FeatureToggleException(s"In feature toggle '$featureName', available-versions requires default-version and vice versa")
-                }
-
-                if (defaultVersion.exists(version => !availableVersions.contains(version))) {
-                    throw FeatureToggleException(s"The default version of feature '$featureName' is not listed in the available versions")
-                }
-
-                val overrideAllowed: Boolean = featureConfig.getBoolean(overrideAllowedKey)
-
-                FeatureToggleBaseConfig(
-                    featureName = featureName,
-                    description = description,
-                    availableVersions = availableVersions,
-                    developerEmails = developerEmails,
-                    expirationDate = expirationDate,
-                    enabledByDefault = enabledByDefault,
-                    defaultVersion = defaultVersion,
-                    overrideAllowed = overrideAllowed
-                )
-        }.toSet
-    } match {
-        case Success(toggles) => toggles
-        case Failure(ex) =>
-            ex match {
-                case fte: FeatureToggleException => throw fte
-                case other => throw FeatureToggleException(s"Invalid feature toggle configuration: ${other.getMessage}", Some(ex))
-            }
+        }
+    } else {
+        Set.empty
     }
 }
 
@@ -329,7 +335,7 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
      */
     override def get(system: ActorSystem): KnoraSettingsImpl = super.get(system)
 
-    val featureTogglesPath: String = "app.feature"
+    val featureTogglesPath: String = "app.feature-toggles"
     val descriptionKey: String = "description"
     val availableVersionsKey: String = "available-versions"
     val developerEmailsKey: String = "developer-emails"
@@ -360,4 +366,5 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
                                        enabledByDefault: Boolean,
                                        defaultVersion: Option[Int],
                                        overrideAllowed: Boolean)
+
 }

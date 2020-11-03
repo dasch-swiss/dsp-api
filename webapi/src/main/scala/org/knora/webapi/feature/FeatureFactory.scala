@@ -22,7 +22,7 @@ package org.knora.webapi.feature
 import akka.http.scaladsl.model.{HttpHeader, HttpResponse}
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.RequestContext
-import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.{BadRequestException, FeatureToggleException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.settings.KnoraSettings.FeatureToggleBaseConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -40,19 +40,59 @@ trait FeatureFactory
 trait Feature
 
 /**
- * Represents a feature toggle with a configured setting.
+ * A tagging trait for case objects representing feature versions.
+ */
+trait Version
+
+/**
+ * Represents a feature toggle.
  *
  * @param featureName the name of the feature.
- * @param isEnabled   `true` if the configured setting enables the toggle, `false` if it disables the toggle.
- * @param version     if `isEnabled` is `true` and the feature has versions, specifies the configured version
+ * @param isEnabled   `true` if the toggle is enabled.
+ * @param version     if the toggle is enabled and has versions, specifies the configured version
  *                    of the feature.
  */
 case class FeatureToggle(featureName: String,
                          isEnabled: Boolean,
-                         version: Option[Int])
+                         version: Option[Int]) {
+
+    /**
+     * Gets a required version number, checks that it is a supported version, and converts it to
+     * a case object for use in matching.
+     *
+     * @param versions case objects representing the supported versions of the feature.
+     * @tparam T a sealed trait that includes all the case objects that represent supported versions of the feature.
+     * @return the version number.
+     */
+    def checkVersion[T <: Version](versions: T*): T = {
+        val configuredVersion: Int = version.getOrElse(throw FeatureToggleException(s"Feature toggle $featureName requires a version number"))
+
+        if (configuredVersion < 1 || configuredVersion > versions.size) {
+            throw FeatureToggleException(s"Invalid version number $configuredVersion for toggle $featureName")
+        }
+
+        versions(configuredVersion - 1)
+    }
+}
 
 object FeatureToggle {
+    /**
+     * The name of the HTTP request header containing feature toggles.
+     */
+    val REQUEST_HEADER: String = "X-Knora-Feature-Toggles"
+    val REQUEST_HEADER_LOWERCASE: String = REQUEST_HEADER.toLowerCase
+
+    /**
+     * The name of the HTTP response header indicating which feature toggles
+     * are enabled.
+     */
+    val RESPONSE_HEADER: String = "X-Knora-Feature-Toggles-Enabled"
+    val RESPONSE_HEADER_LOWERCASE: String = RESPONSE_HEADER.toLowerCase
+
+    // Strings that we accept as Boolean true values.
     private val TRUE_STRINGS: Set[String] = Set("true", "yes", "on")
+
+    // Strings that we accept as Boolean false values.
     private val FALSE_STRINGS: Set[String] = Set("false", "no", "off")
 
     /**
@@ -84,7 +124,7 @@ object FeatureToggle {
               maybeVersionStr: Option[String],
               baseConfig: FeatureToggleBaseConfig)(implicit stringFormatter: StringFormatter): FeatureToggle = {
         if (!baseConfig.overrideAllowed) {
-            throw BadRequestException(s"Feature toggle '$featureName' cannot be overridden")
+            throw BadRequestException(s"Feature toggle $featureName cannot be overridden")
         }
 
         // Accept the boolean values that are accepted in application.conf.
@@ -98,10 +138,10 @@ object FeatureToggle {
 
         val version: Option[Int] = maybeVersionStr.map {
             versionStr =>
-                val versionInt = stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number in feature toggle $featureName: $versionStr"))
+                val versionInt = stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
 
                 if (!baseConfig.availableVersions.contains(versionInt)) {
-                    throw BadRequestException(s"Feature '$featureName' has no version $versionInt")
+                    throw BadRequestException(s"Feature $featureName has no version $versionInt")
                 }
 
                 versionInt
@@ -117,10 +157,6 @@ object FeatureToggle {
             version = version
         )
     }
-}
-
-object FeatureFactoryConfig {
-    private val RESPONSE_HEADER = "X-Knora-Feature-Toggles-Enabled"
 }
 
 /**
@@ -157,11 +193,14 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      * Returns an [[HttpHeader]] indicating which feature toggles are enabled.
      */
     def getHttpResponseHeader: Option[HttpHeader] = {
+        // Get the set of toggles that are enabled.
         val enabledToggles: Set[FeatureToggle] = getAllBaseConfigs.map {
             baseConfig: FeatureToggleBaseConfig => getToggle(baseConfig.featureName)
         }.filter(_.isEnabled)
 
+        // Are any toggles enabled?
         if (enabledToggles.nonEmpty) {
+            // Yes. Assemble a header value describing them.
             val headerValue: String = enabledToggles.map {
                 featureToggle =>
                     val headerValueBuilder = new StringBuilder
@@ -175,8 +214,9 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
                     headerValueBuilder.toString
             }.mkString(",")
 
-            Some(RawHeader(FeatureFactoryConfig.RESPONSE_HEADER, headerValue))
+            Some(RawHeader(FeatureToggle.RESPONSE_HEADER, headerValue))
         } else {
+            // No. Don't return a header.
             None
         }
     }
@@ -192,11 +232,11 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
     }
 
     /**
-     * Returns a configured feature toggle, taking into account the base configuration
+     * Returns a feature toggle, taking into account the base configuration
      * and the parent configuration.
      *
      * @param featureName the name of the feature.
-     * @return the configured feature toggle.
+     * @return the feature toggle.
      */
     def getToggle(featureName: String): FeatureToggle = {
         // Get the base configuration for the feature.
@@ -274,14 +314,6 @@ abstract class OverridingFeatureFactoryConfig(parent: FeatureFactoryConfig) exte
     }
 }
 
-object RequestContextFeatureFactoryConfig {
-    /**
-     * The name of the HTTP header containing feature toggles.
-     */
-    val FEATURE_TOGGLE_HEADER: String = "X-Knora-Feature-Toggle"
-    val FEATURE_TOGGLE_HEADER_LOWERCASE: String = FEATURE_TOGGLE_HEADER.toLowerCase
-}
-
 /**
  * A [[FeatureFactoryConfig]] that reads configuration from a header in an HTTP request.
  *
@@ -291,14 +323,14 @@ object RequestContextFeatureFactoryConfig {
 class RequestContextFeatureFactoryConfig(private val requestContext: RequestContext,
                                          parent: FeatureFactoryConfig)(implicit stringFormatter: StringFormatter) extends OverridingFeatureFactoryConfig(parent) {
 
-    import RequestContextFeatureFactoryConfig._
+    import FeatureToggle._
 
-    private def invalidHeaderValue: Nothing = throw BadRequestException(s"Invalid value for header $FEATURE_TOGGLE_HEADER")
+    private def invalidHeaderValue: Nothing = throw BadRequestException(s"Invalid value for header $REQUEST_HEADER")
 
     // Read feature toggles from an HTTP header.
     protected override val featureToggles: Map[String, FeatureToggle] = Try {
         // Was the feature toggle header submitted?
-        requestContext.request.headers.find(_.lowercaseName == FEATURE_TOGGLE_HEADER_LOWERCASE) match {
+        requestContext.request.headers.find(_.lowercaseName == REQUEST_HEADER_LOWERCASE) match {
             case Some(featureToggleHeader: HttpHeader) =>
 
                 // Yes. Parse it into comma-separated key-value pairs, each representing a feature toggle.
@@ -334,7 +366,7 @@ class RequestContextFeatureFactoryConfig(private val requestContext: RequestCont
     } match {
         case Success(parsedToggles) => parsedToggles
 
-        case Failure(ex: Exception) =>
+        case Failure(ex) =>
             ex match {
                 case badRequest: BadRequestException => throw badRequest
                 case _ => invalidHeaderValue

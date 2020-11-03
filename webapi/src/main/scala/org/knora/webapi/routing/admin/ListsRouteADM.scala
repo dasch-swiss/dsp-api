@@ -19,7 +19,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.{RequestContext, Route}
+import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
@@ -31,9 +31,9 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
-    private val adminRouteFeatureFactory: AdminRouteFeatureFactory = new AdminRouteFeatureFactory(routeData)
+    private val featureFactory: ListsRouteADMFeatureFactory = new ListsRouteADMFeatureFactory(routeData)
 
     override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-        adminRouteFeatureFactory.makeRoute(featureFactoryConfig)
+        featureFactory.makeRoute(featureFactoryConfig)
     }
 }

@@ -77,8 +77,6 @@ trait LiveManagers extends Managers {
 class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
     this: Managers =>
 
-    private val log = akka.event.Logging(context.system, this.getClass)
-
     logger.debug("entered the ApplicationManager constructor")
 
     implicit val system: ActorSystem = context.system
@@ -102,11 +100,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
      * Timeout definition
      */
     implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
-
-    /**
-     * A user representing the Knora API server, used for initialisation on startup.
-     */
-    private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
      * Route data.

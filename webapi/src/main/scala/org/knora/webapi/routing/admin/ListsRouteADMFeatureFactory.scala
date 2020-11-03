@@ -24,11 +24,11 @@ import org.knora.webapi.feature.{FeatureFactory, FeatureFactoryConfig}
 import org.knora.webapi.routing.{KnoraRouteData, KnoraRouteFactory}
 
 /**
- * A [[FeatureFactory]] that constructs admin API routes.
+ * A [[FeatureFactory]] that constructs list admin routes.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the routes.
  */
-class AdminRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData)
+class ListsRouteADMFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData)
     with FeatureFactory {
 
     /**
@@ -42,7 +42,7 @@ class AdminRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFact
     private val newListsRouteADMFeature = new NewListsRouteADMFeature(routeData)
 
     /**
-     * Returns a [[Route]] reflecting the specified feature factory configuration.
+     * Returns a lists route reflecting the specified feature factory configuration.
      *
      * @param featureFactoryConfig a [[FeatureFactoryConfig]].
      * @return a lists route.
