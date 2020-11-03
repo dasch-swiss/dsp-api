@@ -67,8 +67,13 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     /**
-     * Constructs a route, either by statically returning a routing function, or by using a feature factory
-     * to construct one dynamically.
+     * Constructs a route. This can happen:
+     *
+     * - by statically returning a routing function
+     *
+     * - (if this is a façade route) by using a feature factory to construct one dynamically
+     *
+     * - (if this is a feature factory) by making a choice based on feature factory configuration
      *
      * @param featureFactoryConfig the per-request feature factory configuration.
      * @return a route configured with the features enabled by the feature factory configuration.
@@ -97,26 +102,16 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
     def knoraApiPath: Route = {
         requestContext: RequestContext =>
             // Make a per-request feature factory configuration.
-            val featureFactoryConfig: FeatureFactoryConfig = makeFeatureFactoryConfig(requestContext)
+            val featureFactoryConfig: FeatureFactoryConfig = new RequestContextFeatureFactoryConfig(
+                requestContext = requestContext,
+                parent = knoraSettingsFeatureFactoryConfig
+            )
 
             // Construct a routing function using that configuration.
             val route: Route = makeRoute(featureFactoryConfig)
 
             // Call the routing function.
             route(requestContext)
-    }
-
-    /**
-     * Constructs a [[FeatureFactoryConfig]] for use with feature factories.
-     *
-     * @param requestContext the HTTP request context.
-     * @return the resulting [[FeatureFactoryConfig]].
-     */
-    def makeFeatureFactoryConfig(requestContext: RequestContext): FeatureFactoryConfig = {
-        new RequestContextFeatureFactoryConfig(
-            requestContext = requestContext,
-            parent = knoraSettingsFeatureFactoryConfig
-        )
     }
 
     /**
