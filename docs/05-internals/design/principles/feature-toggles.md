@@ -99,9 +99,12 @@ app {
 ```
 
 All fields are required except `available-versions`, `default-version`, and `expiration-date`.
-If `available-versions` requires `default-version` and vice versa. If `expiration-date` is
-provided, it must be an `xsd:dateTimeStamp`. All feature toggles should have expiration
-dates except for long-lived ops toggles like `fast-bar` above.
+
+If `available-versions` requires `default-version` and vice versa. Version numbers must
+be integers.
+
+If `expiration-date` is provided, it must be an `xsd:dateTimeStamp`. All feature toggles
+should have expiration dates except for long-lived ops toggles like `fast-bar` above.
 
 `KnoraSettingsFeatureFactoryConfig` reads this base configuration on startup. If
 a feature toggle has an expiration date in the past, the application will not start.
