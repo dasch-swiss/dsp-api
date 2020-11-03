@@ -47,8 +47,8 @@ case class KnoraRouteData(system: ActorSystem,
 
 
 /**
- * An abstract class providing functionality that is commonly used by feature factories that construct
- * Knora routes.
+ * An abstract class providing functionality that is commonly used by Knora routes and by
+ * feature factories that construct Knora routes.
  *
  * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
@@ -67,13 +67,15 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     /**
-     * Constructs a route. This can happen:
+     * Constructs a route. This can be done:
      *
-     * - by statically returning a routing function
+     * - by statically returning a routing function (if this is an ordinary route that
+     *   doesn't use a feature factory, or if this is a route feature returned by
+     *   a feature factory)
      *
-     * - (if this is a façade route) by using a feature factory to construct one dynamically
+     * - by asking a feature factory for a routing function (if this is a façade route)
      *
-     * - (if this is a feature factory) by making a choice based on feature factory configuration
+     * - by making a choice based on a feature toggle (if this is a feature factory)
      *
      * @param featureFactoryConfig the per-request feature factory configuration.
      * @return a route configured with the features enabled by the feature factory configuration.
@@ -107,7 +109,7 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
      * @return the result of running the route.
      */
     private def runRoute(requestContext: RequestContext): Future[RouteResult] = {
-        // Make a per-request feature factory configuration.
+        // Construct the per-request feature factory configuration.
         val featureFactoryConfig: FeatureFactoryConfig = new RequestContextFeatureFactoryConfig(
             requestContext = requestContext,
             parent = knoraSettingsFeatureFactoryConfig

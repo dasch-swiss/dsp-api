@@ -27,6 +27,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.settings.KnoraSettings.FeatureToggleBaseConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -240,7 +241,8 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      * @param featureName the name of the feature.
      * @return the feature toggle.
      */
-    def getToggle(featureName: String): FeatureToggle = {
+    @tailrec
+    final def getToggle(featureName: String): FeatureToggle = {
         // Get the base configuration for the feature.
         val baseConfig: FeatureToggleBaseConfig = getBaseConfig(featureName)
 
@@ -334,7 +336,6 @@ class RequestContextFeatureFactoryConfig(private val requestContext: RequestCont
         // Was the feature toggle header submitted?
         requestContext.request.headers.find(_.lowercaseName == REQUEST_HEADER_LOWERCASE) match {
             case Some(featureToggleHeader: HttpHeader) =>
-
                 // Yes. Parse it into comma-separated key-value pairs, each representing a feature toggle.
                 featureToggleHeader.value.split(',').map {
                     headerValueItem: String =>
@@ -363,7 +364,9 @@ class RequestContextFeatureFactoryConfig(private val requestContext: RequestCont
                         }
                 }.toMap
 
-            case None => Map.empty[String, FeatureToggle]
+            case None =>
+                // No feature toggle header was submitted.
+                Map.empty[String, FeatureToggle]
         }
     } match {
         case Success(parsedToggles) => parsedToggles
