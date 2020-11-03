@@ -342,15 +342,7 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
                             case Array(featureNameAndVersionStr: String, enabledStr: String) =>
                                 val featureNameAndVersion: Array[String] = featureNameAndVersionStr.split(':').map(_.trim)
                                 val featureName: String = featureNameAndVersion.head
-
-                                // Does this toggle setting specify a version number?
-                                val maybeVersionStr: Option[String] = if (featureNameAndVersion.length == 2) {
-                                    // Yes.
-                                    Some(featureNameAndVersion.last)
-                                } else {
-                                    // No.
-                                    None
-                                }
+                                val maybeVersionStr: Option[String] = featureNameAndVersion.tail.headOption
 
                                 featureName -> FeatureToggle.parse(
                                     featureName = featureName,
