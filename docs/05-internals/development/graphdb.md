@@ -52,7 +52,7 @@ need to be done beforhand:
 #### Usage
 
 ```
-$ docker run --rm -it -v /path/to/license/folder:/external -p 7200:7200 dhlabbasel/graphdb
+$ docker run --rm -it -v /path/to/license/folder:/external -p 7200:7200 daschswiss/graphdb
 ```
 
   - `--rm` removes the container as soon as you stop it
@@ -69,7 +69,7 @@ create a container that we can stop and start again at a later time,
 follow the following steps:
 
 ```
-$ docker run --name graphdb -d -t -v /path/to/license/folder:/external -p 7200:7200 dhlabbasel/graphdb
+$ docker run --name graphdb -d -t -v /path/to/license/folder:/external -p 7200:7200 daschswiss/graphdb
 
 (to see the console output, attach to the container; to detach press Ctrl-c)
 $ docker attach graphdb
@@ -95,5 +95,5 @@ You can run GraphDB Free locally as described for GraphDB SE above, or
 you can use Knora's pre-built GraphDB Free Docker image:
 
 ```
-$ docker run --rm -p 7200:7200 dhlabbasel/graphdb-free
+$ docker run --rm -p 7200:7200 daschswiss/graphdb-free
 ```

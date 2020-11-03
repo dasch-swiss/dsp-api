@@ -24,14 +24,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 In order to serve files to the client application like the Salsah GUI,
 Sipi must be set up and running. Sipi can be downloaded from its own
 GitHub repository: <https://github.com/dhlab-basel/Sipi> (which requires
-building from source), or the published [docker image](https://hub.docker.com/r/dhlabbasel/sipi/).
+building from source), or the published [docker image](https://hub.docker.com/r/daschswiss/sipi/).
 can be used. To start Sipi, run the following command from inside the `sipi/`
 folder:
 
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
-$ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-config.lua
+$ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.knora-docker-config.lua
 ```
 
 where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora`.
@@ -70,8 +70,8 @@ like this:
 
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
-$ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-test-config.lua
+$ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.knora-docker-test-config.lua
 ```
 
 Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
