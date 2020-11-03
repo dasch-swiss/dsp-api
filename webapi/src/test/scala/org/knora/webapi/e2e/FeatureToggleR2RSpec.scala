@@ -116,13 +116,13 @@ class FeatureToggleR2RSpec extends R2RSpec {
     class FooRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData)
         with FeatureFactory {
 
-        // A trait for 'foo' feature version numbers.
+        // A trait for version numbers of the new 'foo' feature.
         sealed trait NewFooVersion extends Version
 
-        // Represents version 1 of the 'foo' feature.
+        // Represents version 1 of the new 'foo' feature.
         case object NEW_FOO_1 extends NewFooVersion
 
-        // Represents version 2 of the 'foo' feature.
+        // Represents version 2 of the new 'foo' feature.
         case object NEW_FOO_2 extends NewFooVersion
 
         // The old 'foo' feature implementation.
@@ -280,7 +280,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new foo, version 1")
-                assert(enabledToggles(response).contains("new-foo:1"))
+                assert(enabledToggles(response) == Set("new-foo:1", "new-bar"))
             }
         }
 
@@ -289,7 +289,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the old foo")
-                assert(!enabledToggles(response).exists(_.contains("foo")))
+                assert(enabledToggles(response) == Set("new-bar"))
             }
         }
 
@@ -298,7 +298,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new foo, version 2")
-                assert(enabledToggles(response).contains("new-foo:2"))
+                assert(enabledToggles(response) == Set("new-foo:2", "new-bar"))
             }
         }
 
@@ -310,12 +310,28 @@ class FeatureToggleR2RSpec extends R2RSpec {
             }
         }
 
+        "not enable a toggle with a nonexistent version" in {
+            Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo:3=on")) ~> fooRoute ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.BadRequest, responseStr)
+                assert(responseStr.contains("Feature toggle new-foo has no version 3"))
+            }
+        }
+
+        "not accept a version number when disabling a toggle" in {
+            Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo:2=off")) ~> fooRoute ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.BadRequest, responseStr)
+                assert(responseStr.contains("You cannot specify a version number when disabling a feature toggle"))
+            }
+        }
+
         "use a default toggle without a version" in {
             Get(s"/bar") ~> barRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new bar")
-                assert(enabledToggles(response).contains("new-bar"))
+                assert(enabledToggles(response) == Set("new-foo:1", "new-bar"))
             }
         }
 
@@ -324,7 +340,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the old bar")
-                assert(!enabledToggles(response).exists(_.contains("bar")))
+                assert(enabledToggles(response) == Set("new-foo:1"))
             }
         }
 

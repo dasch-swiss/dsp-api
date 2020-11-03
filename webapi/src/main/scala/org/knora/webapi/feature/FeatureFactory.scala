@@ -141,7 +141,7 @@ object FeatureToggle {
                 val versionInt = stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
 
                 if (!baseConfig.availableVersions.contains(versionInt)) {
-                    throw BadRequestException(s"Feature $featureName has no version $versionInt")
+                    throw BadRequestException(s"Feature toggle $featureName has no version $versionInt")
                 }
 
                 versionInt
@@ -149,6 +149,8 @@ object FeatureToggle {
 
         if (isEnabled && version.isEmpty && baseConfig.availableVersions.nonEmpty) {
             throw BadRequestException(s"You must specify a version number to enable feature toggle $featureName")
+        } else if (!isEnabled && version.nonEmpty) {
+            throw BadRequestException(s"You cannot specify a version number when disabling a feature toggle")
         }
 
         FeatureToggle(
