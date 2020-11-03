@@ -236,7 +236,7 @@ object RouteUtilV2 {
                 settings = settings,
                 schemaOptions = schemaOptions
             )
-        } yield featureFactoryConfig.addFeatureToggleHeaderToHttpResponse(
+        } yield featureFactoryConfig.addHeaderToHttpResponse(
             HttpResponse(
                 status = StatusCodes.OK,
 
@@ -289,7 +289,7 @@ object RouteUtilV2 {
             }
 
 
-        } yield featureFactoryConfig.addFeatureToggleHeaderToHttpResponse(
+        } yield featureFactoryConfig.addHeaderToHttpResponse(
             HttpResponse(
                 status = StatusCodes.OK,
                 entity = HttpEntity(

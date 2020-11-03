@@ -48,7 +48,7 @@ class AdminRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFact
      * @return a lists route.
      */
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-        if (featureFactoryConfig.getToggleSetting("new-list-admin-routes").isEnabled) {
+        if (featureFactoryConfig.getToggle("new-list-admin-routes").isEnabled) {
             newListsRouteADMFeature.makeRoute(featureFactoryConfig)
         } else {
             oldListsRouteADMFeature.makeRoute(featureFactoryConfig)

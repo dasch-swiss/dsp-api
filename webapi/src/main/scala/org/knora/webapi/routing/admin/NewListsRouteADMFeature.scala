@@ -135,7 +135,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     """{ "result": "You are using the new list API" }""".stripMargin
 
                 val httpResponse = FastFuture.successful {
-                    featureFactoryConfig.addFeatureToggleHeaderToHttpResponse(
+                    featureFactoryConfig.addHeaderToHttpResponse(
                         HttpResponse(
                             status = StatusCodes.OK,
                             entity = HttpEntity(

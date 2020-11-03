@@ -27,6 +27,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.settings.KnoraSettings.FeatureToggleBaseConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * A tagging trait for module-specific factories that produce implementations of features.
  */
@@ -38,12 +40,12 @@ trait FeatureFactory
 trait Feature
 
 /**
- * Represents a feature toggle.
+ * Represents a feature toggle with a configured setting.
  *
  * @param featureName the name of the feature.
- * @param isEnabled   `true` if the feature should be enabled, `false` if it should be disabled.
- * @param version     the version of the feature that should be enabled, or `None` if the feature
- *                    doesn't have versions.
+ * @param isEnabled   `true` if the configured setting enables the toggle, `false` if it disables the toggle.
+ * @param version     if `isEnabled` is `true` and the feature has versions, specifies the configured version
+ *                    of the feature.
  */
 case class FeatureToggle(featureName: String,
                          isEnabled: Boolean,
@@ -59,7 +61,7 @@ object FeatureToggle {
      * @param baseConfig a feature toggle's base configuration.
      * @return a [[FeatureToggle]] representing the feature's default setting.
      */
-    def fromFeatureToggleBaseConfig(baseConfig: FeatureToggleBaseConfig): FeatureToggle = {
+    def fromBaseConfig(baseConfig: FeatureToggleBaseConfig): FeatureToggle = {
         FeatureToggle(
             featureName = baseConfig.featureName,
             isEnabled = baseConfig.enabledByDefault,
@@ -68,17 +70,17 @@ object FeatureToggle {
     }
 
     /**
-     * Parses the values of a feature toggle from non-base configuration.
+     * Parses the configuration of a feature toggle from non-base configuration.
      *
      * @param featureName     the name of the feature.
-     * @param enabledStr      `true`, `yes`, or `on` if the feature should be enabled; `false`, `no`, or `off`
+     * @param isEnabledStr    `true`, `yes`, or `on` if the feature should be enabled; `false`, `no`, or `off`
      *                        if it should be disabled.
      * @param maybeVersionStr the version of the feature that should be used.
      * @param baseConfig      the base configuration of the toggle.
      * @return a [[FeatureToggle]] for the toggle.
      */
     def parse(featureName: String,
-              enabledStr: String,
+              isEnabledStr: String,
               maybeVersionStr: Option[String],
               baseConfig: FeatureToggleBaseConfig)(implicit stringFormatter: StringFormatter): FeatureToggle = {
         if (!baseConfig.overrideAllowed) {
@@ -86,12 +88,12 @@ object FeatureToggle {
         }
 
         // Accept the boolean values that are accepted in application.conf.
-        val enabled: Boolean = if (TRUE_STRINGS.contains(enabledStr.toLowerCase)) {
+        val isEnabled: Boolean = if (TRUE_STRINGS.contains(isEnabledStr.toLowerCase)) {
             true
-        } else if (FALSE_STRINGS.contains(enabledStr.toLowerCase)) {
+        } else if (FALSE_STRINGS.contains(isEnabledStr.toLowerCase)) {
             false
         } else {
-            throw BadRequestException(s"Invalid boolean '$enabledStr' in feature toggle $featureName")
+            throw BadRequestException(s"Invalid boolean '$isEnabledStr' in feature toggle $featureName")
         }
 
         val version: Option[Int] = maybeVersionStr.map {
@@ -105,13 +107,13 @@ object FeatureToggle {
                 versionInt
         }
 
-        if (version.isEmpty && baseConfig.availableVersions.nonEmpty) {
-            throw BadRequestException(s"You must specify a version number for feature toggle $featureName")
+        if (isEnabled && version.isEmpty && baseConfig.availableVersions.nonEmpty) {
+            throw BadRequestException(s"You must specify a version number to enable feature toggle $featureName")
         }
 
         FeatureToggle(
             featureName = featureName,
-            isEnabled = enabled,
+            isEnabled = isEnabled,
             version = version
         )
     }
@@ -135,49 +137,38 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      * @param featureName the name of the feature.
      * @return the toggle's base configuration.
      */
-    protected[feature] def getToggleBaseConfig(featureName: String): FeatureToggleBaseConfig
+    protected[feature] def getBaseConfig(featureName: String): FeatureToggleBaseConfig
 
     /**
      * Gets the base configurations of all feature toggles.
      */
-    protected[feature] def getAllToggleBaseConfigs: Set[FeatureToggleBaseConfig]
+    protected[feature] def getAllBaseConfigs: Set[FeatureToggleBaseConfig]
 
     /**
-     * Returns the setting of a feature toggle in the local configuration source
-     * of this [[FeatureFactoryConfig]].
+     * Returns a feature toggle in the configuration source of this [[FeatureFactoryConfig]].
      *
      * @param featureName the name of a feature.
-     * @return the setting for that feature in this [[FeatureFactoryConfig]]'s configuration
-     *         source, or `None` if the source contains no setting for that feature.
+     * @return the configuration of the feature toggle in this [[FeatureFactoryConfig]]'s configuration
+     *         source, or `None` if the source contains no configuration for that feature toggle.
      */
-    protected[feature] def getLocalToggleSetting(featureName: String): Option[FeatureToggle]
-
-    /**
-     * Returns the settings of all enabled features, taking into account the base configuration
-     * and the parent configuration.
-     */
-    def getAllEnabledFeatures: Set[FeatureToggle] = {
-        val allBaseConfigs: Set[FeatureToggleBaseConfig] = getAllToggleBaseConfigs
-
-        allBaseConfigs.map {
-            baseConfig: FeatureToggleBaseConfig => getToggleSetting(baseConfig.featureName)
-        }.filter(_.isEnabled)
-    }
+    protected[feature] def getLocalConfig(featureName: String): Option[FeatureToggle]
 
     /**
      * Returns an [[HttpHeader]] indicating which feature toggles are enabled.
      */
-    def getAllEnabledFeaturesAsHttpHeader: Option[HttpHeader] = {
-        val enabledFeatures: Set[FeatureToggle] = getAllEnabledFeatures.filter(_.isEnabled)
+    def getHttpResponseHeader: Option[HttpHeader] = {
+        val enabledToggles: Set[FeatureToggle] = getAllBaseConfigs.map {
+            baseConfig: FeatureToggleBaseConfig => getToggle(baseConfig.featureName)
+        }.filter(_.isEnabled)
 
-        if (enabledFeatures.nonEmpty) {
-            val headerValue: String = enabledFeatures.map {
+        if (enabledToggles.nonEmpty) {
+            val headerValue: String = enabledToggles.map {
                 featureToggle =>
                     val headerValueBuilder = new StringBuilder
                     headerValueBuilder.append(featureToggle.featureName)
 
                     featureToggle.version match {
-                        case Some(definedVersion) => headerValueBuilder.append(" ").append(definedVersion)
+                        case Some(definedVersion) => headerValueBuilder.append(":").append(definedVersion)
                         case None => ()
                     }
 
@@ -193,46 +184,46 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
     /**
      * Adds an [[HttpHeader]] to an [[HttpResponse]] indicating which feature toggles are enabled.
      */
-    def addFeatureToggleHeaderToHttpResponse(httpResponse: HttpResponse): HttpResponse = {
-        getAllEnabledFeaturesAsHttpHeader match {
+    def addHeaderToHttpResponse(httpResponse: HttpResponse): HttpResponse = {
+        getHttpResponseHeader match {
             case Some(header) => httpResponse.withHeaders(header)
             case None => httpResponse
         }
     }
 
     /**
-     * Returns the setting of a feature toggle, taking into account the base configuration
+     * Returns a configured feature toggle, taking into account the base configuration
      * and the parent configuration.
      *
      * @param featureName the name of the feature.
-     * @return the setting of the feature toggle.
+     * @return the configured feature toggle.
      */
-    def getToggleSetting(featureName: String): FeatureToggle = {
+    def getToggle(featureName: String): FeatureToggle = {
         // Get the base configuration for the feature.
-        val baseConfig: FeatureToggleBaseConfig = getToggleBaseConfig(featureName)
+        val baseConfig: FeatureToggleBaseConfig = getBaseConfig(featureName)
 
         // Do we represent the base configuration?
         maybeParent match {
             case None =>
                 // Yes. Return our setting.
-                FeatureToggle.fromFeatureToggleBaseConfig(baseConfig)
+                FeatureToggle.fromBaseConfig(baseConfig)
 
             case Some(parent) =>
                 // No. Can the default setting be overridden?
                 if (baseConfig.overrideAllowed) {
                     // Yes. Do we have a setting for this feature?
-                    getLocalToggleSetting(featureName) match {
+                    getLocalConfig(featureName) match {
                         case Some(setting) =>
                             // Yes. Return our setting.
                             setting
 
                         case None =>
                             // We don't have a setting for this feature. Delegate to the parent.
-                            parent.getToggleSetting(featureName)
+                            parent.getToggle(featureName)
                     }
                 } else {
                     // The default setting can't be overridden. Return it.
-                    FeatureToggle.fromFeatureToggleBaseConfig(baseConfig)
+                    FeatureToggle.fromBaseConfig(baseConfig)
                 }
         }
     }
@@ -249,16 +240,16 @@ class KnoraSettingsFeatureFactoryConfig(private val knoraSettings: KnoraSettings
         baseConfig => baseConfig.featureName -> baseConfig
     }.toMap
 
-    override protected[feature] def getToggleBaseConfig(featureName: String): FeatureToggleBaseConfig = {
+    override protected[feature] def getBaseConfig(featureName: String): FeatureToggleBaseConfig = {
         baseConfigs.getOrElse(featureName, throw BadRequestException(s"No such feature: $featureName"))
     }
 
-    override protected[feature] def getAllToggleBaseConfigs: Set[FeatureToggleBaseConfig] = {
+    override protected[feature] def getAllBaseConfigs: Set[FeatureToggleBaseConfig] = {
         baseConfigs.values.toSet
     }
 
-    override protected[feature] def getLocalToggleSetting(featureName: String): Option[FeatureToggle] = {
-        Some(FeatureToggle.fromFeatureToggleBaseConfig(getToggleBaseConfig(featureName)))
+    override protected[feature] def getLocalConfig(featureName: String): Option[FeatureToggle] = {
+        Some(FeatureToggle.fromBaseConfig(getBaseConfig(featureName)))
     }
 }
 
@@ -270,15 +261,15 @@ class KnoraSettingsFeatureFactoryConfig(private val knoraSettings: KnoraSettings
 abstract class OverridingFeatureFactoryConfig(parent: FeatureFactoryConfig) extends FeatureFactoryConfig(Some(parent)) {
     protected val featureToggles: Map[String, FeatureToggle]
 
-    override protected[feature] def getToggleBaseConfig(featureName: String): FeatureToggleBaseConfig = {
-        parent.getToggleBaseConfig(featureName)
+    override protected[feature] def getBaseConfig(featureName: String): FeatureToggleBaseConfig = {
+        parent.getBaseConfig(featureName)
     }
 
-    override protected[feature] def getAllToggleBaseConfigs: Set[FeatureToggleBaseConfig] = {
-        parent.getAllToggleBaseConfigs
+    override protected[feature] def getAllBaseConfigs: Set[FeatureToggleBaseConfig] = {
+        parent.getAllBaseConfigs
     }
 
-    override protected[feature] def getLocalToggleSetting(featureName: String): Option[FeatureToggle] = {
+    override protected[feature] def getLocalConfig(featureName: String): Option[FeatureToggle] = {
         featureToggles.get(featureName)
     }
 }
@@ -302,58 +293,62 @@ class RequestContextFeatureFactoryConfig(private val requestContext: RequestCont
 
     import RequestContextFeatureFactoryConfig._
 
+    private def invalidHeaderValue: Nothing = throw BadRequestException(s"Invalid value for header $FEATURE_TOGGLE_HEADER")
+
     // Read feature toggles from an HTTP header.
-    protected override val featureToggles: Map[String, FeatureToggle] = {
+    protected override val featureToggles: Map[String, FeatureToggle] = Try {
         // Was the feature toggle header submitted?
         requestContext.request.headers.find(_.lowercaseName == FEATURE_TOGGLE_HEADER_LOWERCASE) match {
             case Some(featureToggleHeader: HttpHeader) =>
+
                 // Yes. Parse it into comma-separated key-value pairs, each representing a feature toggle.
                 featureToggleHeader.value.split(',').map {
                     headerValueItem: String =>
                         headerValueItem.split('=').map(_.trim) match {
-                            case Array(featureName: String, featureToggle: String) =>
-                                val baseConfig = parent.getToggleBaseConfig(featureName)
+                            case Array(featureNameAndVersionStr: String, enabledStr: String) =>
+                                val featureNameAndVersion: Array[String] = featureNameAndVersionStr.split(':').map(_.trim)
+                                val featureName: String = featureNameAndVersion.head
 
                                 // Does this toggle setting specify a version number?
-                                val toggleSetting = featureToggle.split(';').map(_.trim) match {
-                                    case Array(enabledStr: String) =>
-                                        // Yes.
-                                        FeatureToggle.parse(
-                                            featureName = featureName,
-                                            enabledStr = enabledStr,
-                                            maybeVersionStr = None,
-                                            baseConfig = baseConfig
-                                        )
-
-                                    case Array(enabledStr: String, versionStr: String) =>
-                                        // No.
-                                        FeatureToggle.parse(
-                                            featureName = featureName,
-                                            enabledStr = enabledStr,
-                                            maybeVersionStr = Some(versionStr),
-                                            baseConfig = baseConfig
-                                        )
+                                val maybeVersionStr: Option[String] = if (featureNameAndVersion.length == 2) {
+                                    // Yes.
+                                    Some(featureNameAndVersion.last)
+                                } else {
+                                    // No.
+                                    None
                                 }
 
-                                featureName -> toggleSetting
+                                featureName -> FeatureToggle.parse(
+                                    featureName = featureName,
+                                    isEnabledStr = enabledStr,
+                                    maybeVersionStr = maybeVersionStr,
+                                    baseConfig = parent.getBaseConfig(featureName)
+                                )
 
-                            case _ =>
-                                throw BadRequestException(s"Invalid value for header $FEATURE_TOGGLE_HEADER: ${featureToggleHeader.value}")
+                            case _ => invalidHeaderValue
                         }
                 }.toMap
 
-            case None => Map.empty
+            case None => Map.empty[String, FeatureToggle]
         }
+    } match {
+        case Success(parsedToggles) => parsedToggles
+
+        case Failure(ex: Exception) =>
+            ex match {
+                case badRequest: BadRequestException => throw badRequest
+                case _ => invalidHeaderValue
+            }
     }
 }
 
 /**
  * A [[FeatureFactoryConfig]] with a fixed configuration, to be used in tests.
  *
- * @param testSettings the settings to be used.
+ * @param testToggles the toggles to be used.
  */
-class TestFeatureFactoryConfig(testSettings: Set[FeatureToggle], parent: FeatureFactoryConfig) extends OverridingFeatureFactoryConfig(parent) {
-    protected override val featureToggles: Map[String, FeatureToggle] = testSettings.map {
+class TestFeatureFactoryConfig(testToggles: Set[FeatureToggle], parent: FeatureFactoryConfig) extends OverridingFeatureFactoryConfig(parent) {
+    protected override val featureToggles: Map[String, FeatureToggle] = testToggles.map {
         setting => setting.featureName -> setting
     }.toMap
 }

@@ -87,7 +87,7 @@ object RouteUtilADM {
             }
 
             jsonResponse = knoraResponse.toJsValue.asJsObject
-        } yield featureFactoryConfig.addFeatureToggleHeaderToHttpResponse(
+        } yield featureFactoryConfig.addHeaderToHttpResponse(
             HttpResponse(
                 status = StatusCodes.OK,
                 entity = HttpEntity(

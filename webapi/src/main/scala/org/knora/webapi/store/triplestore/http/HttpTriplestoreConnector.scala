@@ -498,8 +498,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         response.recover {
             case t: Exception => throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
         }
-
-        response
     }
 
     /**
@@ -1003,8 +1001,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 log.error(e, s"Failed to connect to triplestore")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
-
-        triplestoreResponseTry
     }
 
     def returnResponseAsString(response: CloseableHttpResponse): String = {
