@@ -279,7 +279,7 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
  * @param knoraSettings a [[KnoraSettingsImpl]] representing the configuration in the application's
  *                      configuration file.
  */
-class KnoraSettingsFeatureFactoryConfig(private val knoraSettings: KnoraSettingsImpl) extends FeatureFactoryConfig(None) {
+class KnoraSettingsFeatureFactoryConfig(knoraSettings: KnoraSettingsImpl) extends FeatureFactoryConfig(None) {
     private val baseConfigs: Map[String, FeatureToggleBaseConfig] = knoraSettings.featureToggles.map {
         baseConfig => baseConfig.featureName -> baseConfig
     }.toMap
