@@ -342,7 +342,7 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
                             case Array(featureNameAndVersionStr: String, enabledStr: String) =>
                                 val featureNameAndVersion: Array[String] = featureNameAndVersionStr.split(':').map(_.trim)
                                 val featureName: String = featureNameAndVersion.head
-                                val maybeVersionStr: Option[String] = featureNameAndVersion.tail.headOption
+                                val maybeVersionStr: Option[String] = featureNameAndVersion.drop(1).headOption
 
                                 featureName -> FeatureToggle.parse(
                                     featureName = featureName,
