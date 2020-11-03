@@ -33,7 +33,7 @@ import kamon.Kamon
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
 import org.knora.webapi.http.handler
-import org.knora.webapi.http.version.ServerVersion.addServerHeader
+import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
@@ -414,7 +414,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
      * The FIRST matching route is used for handling a request.
      */
     private val apiRoutes: Route = logDuration {
-        addServerHeader {
+        ServerVersion.addServerHeader {
             handleErrors {
                 CorsDirectives.cors(CorsSettings(system)) {
                     handleErrors {

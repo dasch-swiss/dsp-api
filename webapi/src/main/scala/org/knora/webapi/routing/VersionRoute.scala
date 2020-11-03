@@ -23,7 +23,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.http.version.VersionInfo
+import org.knora.webapi.http.version.versioninfo.VersionInfo
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._

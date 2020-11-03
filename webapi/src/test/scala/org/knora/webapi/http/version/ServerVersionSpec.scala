@@ -17,11 +17,9 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package webapi.src.test.scala.org.knora.webapi.http.version
+package org.knora.webapi.http.version
 
 import akka.http.scaladsl.model.headers.Server
-import org.knora.webapi.http.version.ServerVersion
-import org.scalatest.PrivateMethodTester
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
