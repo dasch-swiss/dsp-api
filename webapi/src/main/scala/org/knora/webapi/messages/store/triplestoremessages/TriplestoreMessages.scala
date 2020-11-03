@@ -30,7 +30,7 @@ import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle.TurtleParser
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{DataConversionException, InconsistentTriplestoreDataException, NotImplementedException, TriplestoreResponseException}
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException, NotImplementedException, TriplestoreResponseException}
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
 import org.knora.webapi.messages.IriConversions._
@@ -604,7 +604,9 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
  */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
-
+    if(language.isDefined && value.isEmpty) {
+        throw BadRequestException(s"String value is missing.")
+    }
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }
 

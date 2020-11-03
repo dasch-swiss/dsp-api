@@ -56,17 +56,14 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
 
     if (projectIri.isEmpty) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
-
+    
     if (labels.isEmpty) {
-        // println(this)
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
 
@@ -97,27 +94,22 @@ case class CreateChildNodeApiRequestADM(id: Option[IRI] = None,
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
 
     if (parentNodeIri.isEmpty) {
-        // println(this)
         throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraListIriStr(parentNodeIri)) {
-        // println(this)
         throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
     }
 
     if (projectIri.isEmpty) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-        // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
     if (labels.isEmpty) {
-        // println(this)
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
 
@@ -164,6 +156,7 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
     if (comments.exists(_.isEmpty)) {
         throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
+
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 

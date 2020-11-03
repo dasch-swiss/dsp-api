@@ -36,7 +36,7 @@ The following Docker images are published:
   - https://hub.docker.com/r/daschswiss/knora-app-web
 
 Knora's Docker images are published automatically through Github CI each time a
-pull-request is merged into the `develop` branch.
+pull-request is merged into the `main` branch.
 
 Each image is tagged with a version number, where the version is derived by
 using the result of `git describe`. The describe version is built from the

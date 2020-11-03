@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/CI/badge.svg?branch=develop)](https://github.com/dasch-swiss/knora-api/actions)
+[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/CI/badge.svg?branch=main)](https://github.com/dasch-swiss/knora-api/actions)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7e7c734a37ef403a964345e29106b267)](https://app.codacy.com/app/dhlab-basel/Knora?utm_source=github.com&utm_medium=referral&utm_content=dhlab-basel/Knora&utm_campaign=Badge_Grade_Dashboard)
 # Knora
 
@@ -168,7 +168,7 @@ for the change you made.
 ### Documentation
 
 A pull request should include tests and documentation for the changes that were
-made. See the [documentation README](https://github.com/dasch-swiss/knora-api/blob/develop/docs/Readme.md)
+made. See the [documentation README](https://github.com/dasch-swiss/knora-api/blob/main/docs/Readme.md)
 for information on writing Knora documentation.
 
 ## Contact information
