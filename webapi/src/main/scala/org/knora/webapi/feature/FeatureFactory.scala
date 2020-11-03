@@ -324,7 +324,7 @@ abstract class OverridingFeatureFactoryConfig(parent: FeatureFactoryConfig) exte
  * @param requestContext the HTTP request context.
  * @param parent         the parent [[FeatureFactoryConfig]].
  */
-class RequestContextFeatureFactoryConfig(private val requestContext: RequestContext,
+class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
                                          parent: FeatureFactoryConfig)(implicit stringFormatter: StringFormatter) extends OverridingFeatureFactoryConfig(parent) {
 
     import FeatureToggle._
