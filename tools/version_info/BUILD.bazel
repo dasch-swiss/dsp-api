@@ -11,7 +11,8 @@ filegroup(
 )
 
 # the stamp rule extracts the stamped values (from //tools/buildstamp)
-# into easier to use (and depend) separate files
+# into a separate file (see 'bazel-out/darwin-fastbuild/bin/tools/version_info/STAMP_BUILD_SCM_TAG'),
+# onto which other rules can then depend
 stamp(
     name = "build_scm_tag_stamp",
     stamp_keys = ["BUILD_SCM_TAG"],
@@ -34,7 +35,7 @@ gen_version_info(
 genrule(
     name = "version_info_with_build_tag",
     srcs = [
-        ":build_scm_tag_stamp", # order is important for the shell script
+        ":build_scm_tag_stamp",
         ":version_info_without_build_tag"
     ],
     outs = ["version_info.scala"],
