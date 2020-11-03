@@ -209,9 +209,8 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
                     val headerValueBuilder = new StringBuilder
                     headerValueBuilder.append(featureToggle.featureName)
 
-                    featureToggle.version match {
-                        case Some(definedVersion) => headerValueBuilder.append(":").append(definedVersion)
-                        case None => ()
+                    for (definedVersion <- featureToggle.version) {
+                        headerValueBuilder.append(":").append(definedVersion)
                     }
 
                     headerValueBuilder.toString
