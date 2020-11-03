@@ -20,23 +20,21 @@
 package org.knora.webapi.http.version
 
 import akka.http.scaladsl.model.headers.Server
-import akka.http.scaladsl.server.Directives.respondWithHeader
-import akka.http.scaladsl.server.Route
-import org.knora.webapi.http.version.versioninfo.VersionInfo
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
- * This object provides methods that can be used to add the [[Server]] header
- * to an [[akka.http.scaladsl.model.HttpResponse]].
+ * This spec is used to test 'ListAdminMessages'.
  */
-object ServerVersion {
+class ServerVersionSpec extends AnyWordSpecLike with Matchers {
 
-    private val ApiNameAndVersion = s"${VersionInfo.name}/${VersionInfo.webapiVersion}"
-    private val AkkaNameAndVersion = s"akka-http/${VersionInfo.akkaHttpVersion}"
-    private val AllProducts = ApiNameAndVersion + " " + AkkaNameAndVersion
+    "The server version header" should {
 
-    def serverVersionHeader(): Server = Server(products = AllProducts)
-
-    def addServerHeader(route: Route): Route = respondWithHeader(serverVersionHeader) {
-        route
+        "contain the necessary information" in {
+            val header: Server = ServerVersion.serverVersionHeader()
+            header.toString() should include("webapi/")
+            header.toString() should include("akka-http/")
+        }
     }
 }
+

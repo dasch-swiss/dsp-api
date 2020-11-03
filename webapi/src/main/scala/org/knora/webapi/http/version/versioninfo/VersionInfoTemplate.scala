@@ -1,7 +1,7 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2020 the contributors (see Contributors.md).
  *
- *  This file is part of Knora.
+ *  This file is part of the DaSCH Service Platform.
  *
  *  Knora is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published
@@ -17,7 +17,7 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.http.version
+package org.knora.webapi.http.version.versioninfo
 
 import scala.Predef._
 
@@ -26,7 +26,7 @@ case object VersionInfo {
 
     val name: String = "webapi"
 
-    val version: String = "{BUILD_TAG}"
+    val webapiVersion: String = "{BUILD_TAG}"
 
     val scalaVersion: String = "{SCALA_VERSION}"
 
@@ -38,7 +38,7 @@ case object VersionInfo {
 
     override val toString: String = {
         "name: %s, version: %s, scalaVersion: %s, akkaHttpVersion: %s, sipiVersion: %s, jenaFusekiVersion: %s".format(
-            name, version, scalaVersion, akkaHttpVersion, sipiVersion, jenaFusekiVersion
+            name, webapiVersion, scalaVersion, akkaHttpVersion, sipiVersion, jenaFusekiVersion
         )
     }
 }

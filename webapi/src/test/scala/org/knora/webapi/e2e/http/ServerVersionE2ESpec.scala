@@ -1,19 +1,23 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
- * This file is part of Knora.
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2015-2020 the contributors (see Contributors.md).
+ *
+ *  This file is part of the DaSCH Service Platform.
+ *
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.http
+package org.knora.webapi.e2e.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
@@ -43,7 +47,7 @@ class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
         "return the custom 'Server' header with every response" in {
             val request = Get(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
-            response.headers should contain (ServerVersion.getServerVersionHeader())
+            response.headers should contain (ServerVersion.serverVersionHeader())
             response.headers.find(_.name == "Server") match {
                 case Some(serverHeader: HttpHeader) =>
                     serverHeader.value() should include ("webapi/")
