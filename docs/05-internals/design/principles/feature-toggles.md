@@ -162,8 +162,10 @@ you specify overrides the default.
 
 Disabling a toggle means disabling all its versions. When
 a toggle is disabled, you will get the functionality that you would have
-got before the toggle existed. Therefore, a version number cannot
-be given when disabling a toggle.
+got before the toggle existed. A version number cannot
+be given when disabling a toggle, because it would not
+be obvious what this would mean (disable all versions
+or only the specified version).
 
 ## Response Header
 
