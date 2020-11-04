@@ -256,7 +256,7 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                     println(s"Reading base config for feature $featureName")
                     val featureConfig: Config = featureConfigValue match {
                         case configObject: ConfigObject => configObject.toConfig
-                        case _ => throw FeatureToggleException(s"The feature toggle configuration '$featureName' must be an object")
+                        case _ => throw FeatureToggleException(s"The feature toggle configuration $featureName must be an object")
                     }
 
                     val description: String = featureConfig.getString(descriptionKey)
@@ -267,13 +267,17 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                         Seq.empty
                     }
 
+                    for (invalidVersionNumber <- availableVersions.find(version => version < 1)) {
+                        throw FeatureToggleException(s"Invalid version number $invalidVersionNumber for feature toggle $featureName")
+                    }
+
                     val developerEmails: Set[String] = featureConfig.getStringList(developerEmailsKey).asScala.toSet
 
                     val expirationDate: Option[Instant] = if (featureConfig.hasPath(expirationDateKey)) {
                         val definedExpirationDate: Instant = Instant.parse(featureConfig.getString(expirationDateKey))
 
                         if (Instant.ofEpochMilli(System.currentTimeMillis).isAfter(definedExpirationDate)) {
-                            throw FeatureToggleException(s"Feature toggle '$featureName' has expired")
+                            throw FeatureToggleException(s"Feature toggle $featureName has expired")
                         } else {
                             Some(definedExpirationDate)
                         }
@@ -289,12 +293,16 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                         None
                     }
 
+                    for (invalidVersionNumber <- defaultVersion.find(version => version < 1)) {
+                        throw FeatureToggleException(s"Invalid default version number $invalidVersionNumber for feature toggle $featureName")
+                    }
+
                     if (availableVersions.isEmpty != defaultVersion.isEmpty) {
-                        throw FeatureToggleException(s"In feature toggle '$featureName', available-versions requires default-version and vice versa")
+                        throw FeatureToggleException(s"In feature toggle $featureName, available-versions requires default-version and vice versa")
                     }
 
                     if (defaultVersion.exists(version => !availableVersions.contains(version))) {
-                        throw FeatureToggleException(s"The default version of feature '$featureName' is not listed in the available versions")
+                        throw FeatureToggleException(s"The default version of feature toggle $featureName is not listed in the available versions")
                     }
 
                     val overrideAllowed: Boolean = featureConfig.getBoolean(overrideAllowedKey)
