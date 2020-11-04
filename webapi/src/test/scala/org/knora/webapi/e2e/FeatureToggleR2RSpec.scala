@@ -143,23 +143,14 @@ class FeatureToggleR2RSpec extends R2RSpec {
          * @return a route configured with the features enabled by the feature factory configuration.
          */
         def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-            // Is the 'new-foo' feature toggle enabled?
+            // Get the 'new-foo' feature toggle.
             val fooToggle: FeatureToggle = featureFactoryConfig.getToggle("new-foo")
 
-            val route: KnoraRoute = if (fooToggle.isEnabled) {
-                // Yes. Which version is enabled?
-                fooToggle.checkVersion(NEW_FOO_1, NEW_FOO_2) match {
-                    case NEW_FOO_1 =>
-                        // Version 1.
-                        newFoo1
-
-                    case NEW_FOO_2 =>
-                        // Version 2.
-                        newFoo2
-                }
-            } else {
-                // No, the feature is disabled. Use the old implementation.
-                oldFoo
+            // Choose a route according to the toggle state.
+            val route: KnoraRoute = fooToggle.getMatchableState(NEW_FOO_1, NEW_FOO_2) match {
+                case Off => oldFoo
+                case On(NEW_FOO_1) => newFoo1
+                case On(NEW_FOO_2) => newFoo2
             }
 
             // Ask the route implementation for its routing function, and return that function.

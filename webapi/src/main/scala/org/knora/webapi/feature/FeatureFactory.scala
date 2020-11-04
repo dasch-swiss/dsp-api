@@ -53,14 +53,32 @@ sealed trait FeatureToggleState
 /**
  * Indicates that a feature toggle is off.
  */
-case object Off extends FeatureToggleState
+case object ToggleStateOff extends FeatureToggleState
 
 /**
  * Indicates that a feature toggle is on.
  *
  * @param version the configured version of the toggle.
  */
-case class On(version: Int) extends FeatureToggleState
+case class ToggleStateOn(version: Int) extends FeatureToggleState
+
+/**
+ * Represents a feature toggle state, for use in match-case expressions.
+ */
+sealed trait MatchableState[+T]
+
+/**
+ * A matchable object indicating that a feature toggle is off.
+ */
+case object Off extends MatchableState[Nothing]
+
+/**
+ * A matchable object indicating that a feature toggle is on.
+ *
+ * @param versionObj a case object representing the enabled version of the toggle.
+ * @tparam T the type of the case object.
+ */
+case class On[T <: Version](versionObj: T) extends MatchableState[T]
 
 /**
  * Represents a feature toggle.
@@ -70,39 +88,38 @@ case class On(version: Int) extends FeatureToggleState
  */
 case class FeatureToggle(featureName: String,
                          state: FeatureToggleState) {
-
     /**
-     * Returns `true` if this feature toggle is enabled.
+     * Returns `true` if this toggle is enabled.
      */
     def isEnabled: Boolean = {
         state match {
-            case On(_) => true
-            case Off => false
+            case ToggleStateOn(_) => true
+            case ToggleStateOff => false
         }
     }
 
     /**
-     * Gets a required version number, checks that it is a supported version, and converts it to
-     * a case object for use in matching.
+     * Returns a [[MatchableState]] indicating the state of this toggle, for use in match-case expressions.
      *
      * @param versionObjects case objects representing the supported versions of the feature, in ascending
      *                       order by version number.
      * @tparam T a sealed trait implemented by the case objects that represent supported versions of the feature.
-     * @return the version number.
+     * @return one of the objects in `versionObjects`, or [[Off]].
      */
-    def checkVersion[T <: Version](versionObjects: T*): T = {
+    def getMatchableState[T <: Version](versionObjects: T*): MatchableState[T] = {
         state match {
-            case On(version) =>
+            case ToggleStateOn(version) =>
                 if (version < 1 || version > versionObjects.size) {
+                    // Shouldn't happen; this error should have been caught already.
                     throw FeatureToggleException(s"Invalid version number $version for toggle $featureName")
                 }
 
                 // Return the case object whose position in the sequence corresponds to the configured version.
                 // This relies on the fact that version numbers must be an ascending sequence of consecutive
                 // integers starting from 1.
-                versionObjects(version - 1)
+                On(versionObjects(version - 1))
 
-            case Off => throw FeatureToggleException(s"Feature toggle $featureName is not enabled")
+            case ToggleStateOff => Off
         }
     }
 }
@@ -131,9 +148,9 @@ object FeatureToggle {
         FeatureToggle(
             featureName = baseConfig.featureName,
             state = if (baseConfig.enabledByDefault) {
-                On(baseConfig.defaultVersion)
+                ToggleStateOn(baseConfig.defaultVersion)
             } else {
-                Off
+                ToggleStateOff
             }
         )
     }
@@ -162,8 +179,8 @@ object FeatureToggle {
         }
 
         val state: FeatureToggleState = (isEnabled, maybeVersion) match {
-            case (true, Some(definedVersion)) => On(definedVersion)
-            case (false, None) => Off
+            case (true, Some(definedVersion)) => ToggleStateOn(definedVersion)
+            case (false, None) => ToggleStateOff
             case (true, None) => throw BadRequestException(s"You must specify a version number to enable feature toggle $featureName")
             case (false, Some(_)) => throw BadRequestException(s"You cannot specify a version number when disabling feature toggle $featureName")
         }
@@ -215,8 +232,8 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
         }.foldLeft(Set.empty[String]) {
             case (enabledToggles, featureToggle) =>
                 featureToggle.state match {
-                    case On(version) => enabledToggles + s"${featureToggle.featureName}:$version"
-                    case Off => enabledToggles
+                    case ToggleStateOn(version) => enabledToggles + s"${featureToggle.featureName}:$version"
+                    case ToggleStateOff => enabledToggles
                 }
         }
 

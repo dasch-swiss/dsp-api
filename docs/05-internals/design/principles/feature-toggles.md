@@ -167,13 +167,17 @@ each factory method must take a `FeatureFactoryConfig` parameter.
 
 To get a `FeatureToggle`, a feature factory
 calls `featureFactoryConfig.getToggle`, passing the name of the toggle.
-To test if the toggle is enabled, call `isEnabled` on the toggle.
+If a feature toggle has only one version, it is enough to test
+whether test if the toggle is enabled, by calling `isEnabled` on the toggle.
 
-To get the configured version of the toggle, call its `checkVersion`
+If the feature toggle has more than one version, call its `getMatchableState`
 method. To allow the compiler to check that matches on version numbers
 are exhaustive, this method is designed to be used with a sealed trait
 (extending `Version`) that is implemented by case objects representing
-the feature's version numbers. For example:
+the feature's version numbers. The method returns an instance of
+`MatchableState`, which is analogous to `Option`: it is either `Off`
+or `On`, and an instance of `On` contains one of the version objects.
+For example:
 
 ```
 // A trait for version numbers of the new 'foo' feature.
@@ -195,23 +199,14 @@ private val newFoo1 = new NewFooVersion1Feature
 private val newFoo2 = new NewFooVersion2Feature
 
 def makeFoo(featureFactoryConfig: FeatureFactoryConfig): Foo = {
-    // Is the 'new-foo' feature toggle enabled?
+    // Get the 'new-foo' feature toggle.
     val fooToggle: FeatureToggle = featureFactoryConfig.getToggle("new-foo")
     
-    if (fooToggle.isEnabled) {
-        // Yes. Which version is enabled?
-        fooToggle.checkVersion(NEW_FOO_1, NEW_FOO_2) match {
-            case NEW_FOO_1 =>
-                // Version 1.
-                newFoo1
-    
-            case NEW_FOO_2 =>
-                // Version 2.
-                newFoo2
-        }
-    } else {
-        // No, the feature is disabled. Use the old implementation.
-        oldFoo
+    // Choose an implementation according to the toggle state.
+    fooToggle.getMatchableState(NEW_FOO_1, NEW_FOO_2) match {
+        case Off => oldFoo
+        case On(NEW_FOO_1) => newFoo1
+        case On(NEW_FOO_2) => newFoo2
     }
 }
 ```
