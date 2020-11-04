@@ -55,6 +55,13 @@ The design presented here is partly inspired by that article.
 - It should be possible to configure a toggle in `application.conf`
   so that its setting cannot be overridden per request.
 
+- The design of feature toggles should avoid ambiguity and
+  try to prevent situations where clients might be surprised by
+  unexpected functionality. It should be clear what will change
+  when a client requests a particular toggle setting. Therefore,
+  per-request settings should require the client to be explicit
+  about what is being requested.
+
 ## Design
 
 ### Configuration
@@ -82,8 +89,23 @@ app {
             ]
         }
 
-        fast-bar {
-            description = "Replace the slower, more accurate bar route with a faster, less accurate one."
+        new-bar {
+            description = "Replace the old bar routes with new ones."
+
+            available-versions = [ 1, 2, 3 ]
+            default-version = 3
+            enabled-by-default = yes
+            override-allowed = yes
+
+            expiration-date = "2021-12-01T00:00:00Z"
+
+            developer-emails = [
+                "A developer <a.developer@example.org>"
+            ]
+        }
+
+        fast-baz {
+            description = "Replace the slower, more accurate baz route with a faster, less accurate one."
 
             available-versions = [ 1 ]
             default-version = 1
@@ -103,7 +125,7 @@ at least one version number. Version numbers must be an ascending sequence of co
 integers starting from 1.
 
 If `expiration-date` is provided, it must be an [`xsd:dateTimeStamp`](http://www.datypic.com/sc/xsd11/t-xsd_dateTimeStamp.html). All feature toggles
-should have expiration dates except for long-lived ops toggles like `fast-bar` above.
+should have expiration dates except for long-lived ops toggles like `fast-baz` above.
 
 `KnoraSettingsFeatureFactoryConfig` reads this base configuration on startup. If
 a feature toggle has an expiration date in the past, the application will not start.
@@ -123,12 +145,18 @@ toggles. Each toggle consists of:
 Using `on`/`off` is recommended for clarity. For example:
 
 ```
-X-Knora-Feature-Toggles: new-foo:2=on,fast-bar:1=on
+X-Knora-Feature-Toggles: new-foo:2=on,new-bar=off,fast-baz:1=on
 ```
 
-A version number must be given when enabling a toggle.
-It is an error to specify a version number when disabling
-a toggle.
+A version number must be given when enabling a toggle. If a
+toggle is enabled by default, and you want a version
+other than the default version, simply enable the toggle,
+specifying the desired version number.
+
+If you disable a toggle, you disable all its versions. You
+will then get the functionality that you would have got before
+the toggle existed. Therefore, a version number cannot be given
+when disabling a toggle.
 
 ## Response Header
 
@@ -138,7 +166,7 @@ unordered list of toggles that are enabled. The response to the
 example above would be:
 
 ```
-X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-bar:1
+X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-baz:1
 ```
 
 ## Implementation Framework

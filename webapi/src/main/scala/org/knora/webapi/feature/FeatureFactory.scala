@@ -374,7 +374,7 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
         requestContext.request.headers.find(_.lowercaseName == REQUEST_HEADER_LOWERCASE) match {
             case Some(featureToggleHeader: HttpHeader) =>
                 // Yes. Parse it into comma-separated key-value pairs, each representing a feature toggle.
-                featureToggleHeader.value.split(',').map {
+                val featureToggles: Seq[(String, FeatureToggle)] = featureToggleHeader.value.split(',').map {
                     headerValueItem: String =>
                         headerValueItem.split('=').map(_.trim) match {
                             case Array(featureNameAndVersionStr: String, isEnabledStr: String) =>
@@ -403,7 +403,13 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
 
                             case _ => invalidHeaderValue
                         }
-                }.toMap
+                }.toSeq
+
+                if (featureToggles.size > featureToggles.map(_._1).toSet.size) {
+                    throw BadRequestException(s"You cannot set the same feature toggle more than once per request")
+                }
+
+                featureToggles.toMap
 
             case None =>
                 // No feature toggle header was submitted.

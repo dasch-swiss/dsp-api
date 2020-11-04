@@ -56,12 +56,18 @@ toggles. Each toggle consists of:
 Using `on`/`off` is recommended for clarity. For example:
 
 ```
-X-Knora-Feature-Toggles: new-foo:2=on,fast-bar:1=on
+X-Knora-Feature-Toggles: new-foo:2=on,new-bar=off,fast-baz:1=on
 ```
 
-A version number must be given when enabling a toggle.
-It is an error to specify a version number when disabling
-a toggle.
+A version number must be given when enabling a toggle. If a
+toggle is enabled by default, and you want a version
+other than the default version, simply enable the toggle,
+specifying the desired version number.
+
+If you disable a toggle, you disable all its versions. You
+will then get the functionality that you would have got before
+the toggle existed. Therefore, a version number cannot be given
+when disabling a toggle.
 
 ## Response Header
 
@@ -71,5 +77,5 @@ unordered list of toggles that are enabled. The response to the
 example above would be:
 
 ```
-X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-bar:1
+X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-baz:1
 ```

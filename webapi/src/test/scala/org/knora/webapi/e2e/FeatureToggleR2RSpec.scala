@@ -284,7 +284,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
             }
         }
 
-        "enable a toggle" in {
+        "override the default toggle version" in {
             Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo:2=on")) ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
@@ -322,6 +322,14 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.BadRequest, responseStr)
                 assert(responseStr.contains("Feature toggle new-baz cannot be overridden"))
+            }
+        }
+
+        "not accept two settings for the same toggle" in {
+            Get(s"/baz").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo=off,new-foo:2=on")) ~> bazRoute ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.BadRequest, responseStr)
+                assert(responseStr.contains("You cannot set the same feature toggle more than once per request"))
             }
         }
     }
