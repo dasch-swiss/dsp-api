@@ -103,7 +103,7 @@ case class FeatureToggle(featureName: String,
      *
      * @param versionObjects case objects representing the supported versions of the feature, in ascending
      *                       order by version number.
-     * @tparam T a sealed trait implemented by the case objects that represent supported versions of the feature.
+     * @tparam T a sealed trait implemented by the version objects.
      * @return one of the objects in `versionObjects`, or [[Off]].
      */
     def getMatchableState[T <: Version](versionObjects: T*): MatchableState[T] = {
@@ -114,12 +114,12 @@ case class FeatureToggle(featureName: String,
                     throw FeatureToggleException(s"Invalid version number $version for toggle $featureName")
                 }
 
-                if (version > versionObjects.size) {
+                if (versionObjects.size < version) {
                     // The caller didn't pass enough version objects.
                     throw FeatureToggleException(s"Not enough version objects for $featureName")
                 }
 
-                // Return the case object whose position in the sequence corresponds to the configured version.
+                // Return the version object whose position in the sequence corresponds to the configured version.
                 // This relies on the fact that version numbers must be an ascending sequence of consecutive
                 // integers starting from 1.
                 On(versionObjects(version - 1))
