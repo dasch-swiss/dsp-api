@@ -61,8 +61,9 @@ case class FeatureToggle(featureName: String,
      * Gets a required version number, checks that it is a supported version, and converts it to
      * a case object for use in matching.
      *
-     * @param versions case objects representing the supported versions of the feature.
-     * @tparam T a sealed trait that includes all the case objects that represent supported versions of the feature.
+     * @param versions case objects representing the supported versions of the feature, in ascending
+     *                 order by version number.
+     * @tparam T a sealed trait implemented by the case objects that represent supported versions of the feature.
      * @return the version number.
      */
     def checkVersion[T <: Version](versions: T*): T = {
