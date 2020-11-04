@@ -67,6 +67,10 @@ case class FeatureToggle(featureName: String,
      * @return the version number.
      */
     def checkVersion[T <: Version](versions: T*): T = {
+        // Return the case object whose position in the sequence corresponds to the configured version.
+        // This relies on the fact that version numbers must be an ascending sequence of consecutive
+        // integers starting from 1.
+
         val configuredVersion: Int = version.getOrElse(throw FeatureToggleException(s"Feature toggle $featureName requires a version number"))
 
         if (configuredVersion < 1 || configuredVersion > versions.size) {
