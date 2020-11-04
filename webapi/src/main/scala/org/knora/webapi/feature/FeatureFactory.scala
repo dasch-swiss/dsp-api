@@ -46,38 +46,64 @@ trait Feature
 trait Version
 
 /**
+ * A trait representing the state of a feature toggle.
+ */
+sealed trait FeatureToggleState
+
+/**
+ * Indicates that a feature toggle is off.
+ */
+case object Off extends FeatureToggleState
+
+/**
+ * Indicates that a feature toggle is on.
+ *
+ * @param version the configured version of the toggle.
+ */
+case class On(version: Int) extends FeatureToggleState
+
+/**
  * Represents a feature toggle.
  *
- * @param featureName the name of the feature.
- * @param isEnabled   `true` if the toggle is enabled.
- * @param version     if the toggle is enabled and has versions, specifies the configured version
- *                    of the feature.
+ * @param featureName the name of the feature toggle.
+ * @param state       the state of the feature toggle.
  */
 case class FeatureToggle(featureName: String,
-                         isEnabled: Boolean,
-                         version: Option[Int]) {
+                         state: FeatureToggleState) {
+
+    /**
+     * Returns `true` if this feature toggle is enabled.
+     */
+    def isEnabled: Boolean = {
+        state match {
+            case On(_) => true
+            case Off => false
+        }
+    }
 
     /**
      * Gets a required version number, checks that it is a supported version, and converts it to
      * a case object for use in matching.
      *
-     * @param versions case objects representing the supported versions of the feature, in ascending
-     *                 order by version number.
+     * @param versionObjects case objects representing the supported versions of the feature, in ascending
+     *                       order by version number.
      * @tparam T a sealed trait implemented by the case objects that represent supported versions of the feature.
      * @return the version number.
      */
-    def checkVersion[T <: Version](versions: T*): T = {
-        // Return the case object whose position in the sequence corresponds to the configured version.
-        // This relies on the fact that version numbers must be an ascending sequence of consecutive
-        // integers starting from 1.
+    def checkVersion[T <: Version](versionObjects: T*): T = {
+        state match {
+            case Off => throw FeatureToggleException(s"Feature toggle $featureName is not enabled")
 
-        val configuredVersion: Int = version.getOrElse(throw FeatureToggleException(s"Feature toggle $featureName requires a version number"))
+            case On(version) =>
+                if (version < 1 || version > versionObjects.size) {
+                    throw FeatureToggleException(s"Invalid version number $version for toggle $featureName")
+                }
 
-        if (configuredVersion < 1 || configuredVersion > versions.size) {
-            throw FeatureToggleException(s"Invalid version number $configuredVersion for toggle $featureName")
+                // Return the case object whose position in the sequence corresponds to the configured version.
+                // This relies on the fact that version numbers must be an ascending sequence of consecutive
+                // integers starting from 1.
+                versionObjects(version - 1)
         }
-
-        versions(configuredVersion - 1)
     }
 }
 
@@ -110,8 +136,11 @@ object FeatureToggle {
     def fromBaseConfig(baseConfig: FeatureToggleBaseConfig): FeatureToggle = {
         FeatureToggle(
             featureName = baseConfig.featureName,
-            isEnabled = baseConfig.enabledByDefault,
-            version = baseConfig.defaultVersion
+            state = if (baseConfig.enabledByDefault) {
+                On(baseConfig.defaultVersion)
+            } else {
+                Off
+            }
         )
     }
 
@@ -153,16 +182,17 @@ object FeatureToggle {
                 versionInt
         }
 
-        if (isEnabled && version.isEmpty && baseConfig.availableVersions.nonEmpty) {
-            throw BadRequestException(s"You must specify a version number to enable feature toggle $featureName")
-        } else if (!isEnabled && version.nonEmpty) {
-            throw BadRequestException(s"You cannot specify a version number when disabling a feature toggle")
+        val state: FeatureToggleState = (isEnabled, version) match {
+            case (true, Some(definedVersion)) => On(definedVersion)
+            case (false, None) => Off
+            case (true, None) => throw BadRequestException(s"You must specify a version number to enable feature toggle $featureName")
+            case (false, Some(_)) => throw BadRequestException(s"You cannot specify a version number when disabling feature toggle $featureName")
+
         }
 
         FeatureToggle(
             featureName = featureName,
-            isEnabled = isEnabled,
-            version = version
+            state = state
         )
     }
 }
@@ -202,26 +232,20 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      */
     def getHttpResponseHeader: Option[HttpHeader] = {
         // Get the set of toggles that are enabled.
-        val enabledToggles: Set[FeatureToggle] = getAllBaseConfigs.map {
+        val enabledToggles: Set[String] = getAllBaseConfigs.map {
             baseConfig: FeatureToggleBaseConfig => getToggle(baseConfig.featureName)
-        }.filter(_.isEnabled)
+        }.foldLeft(Set.empty[String]) {
+            case (enabledToggles, featureToggle) =>
+                featureToggle.state match {
+                    case On(version) => enabledToggles + s"${featureToggle.featureName}:$version"
+                    case Off => enabledToggles
+                }
+        }
 
         // Are any toggles enabled?
         if (enabledToggles.nonEmpty) {
-            // Yes. Assemble a header value describing them.
-            val headerValue: String = enabledToggles.map {
-                featureToggle =>
-                    val headerValueBuilder = new StringBuilder
-                    headerValueBuilder.append(featureToggle.featureName)
-
-                    for (definedVersion <- featureToggle.version) {
-                        headerValueBuilder.append(":").append(definedVersion)
-                    }
-
-                    headerValueBuilder.toString
-            }.mkString(",")
-
-            Some(RawHeader(FeatureToggle.RESPONSE_HEADER, headerValue))
+            // Yes. Return a header.
+            Some(RawHeader(FeatureToggle.RESPONSE_HEADER, enabledToggles.mkString(",")))
         } else {
             // No. Don't return a header.
             None

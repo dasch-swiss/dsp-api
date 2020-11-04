@@ -35,28 +35,33 @@ At a later date, the feature may be enabled by default, and the release notes
 will indicate that it can still be disabled on a per-request basis by clients
 that are not yet ready to use it.
 
+There may be more than one version of a feature toggle. Every feature
+toggle has at least one version number, which is an integer. The first
+version is 1.
+
 Most feature toggles have an expiration date, after which they will be removed.
 
 ## Request Header
 
 A client can override one or more feature toggles by submitting the HTTP header
 `X-Knora-Feature-Toggles`. Its value is a comma-separated list of
-toggles. Each toggle starts with the name of the feature. Some features
-are available in more than one version; in this case, the feature name
-is followed by a colon and the version number. The toggle ends with an equals sign
-followed by a boolean value, which can be `on`/`off`, `yes`/`no`, or `true`/`false`.
-Using `on`/`off` is recommended for clarity.
+toggles. Each toggle consists of:
 
-For example, to enable version 2 of feature `new-foo`, along with feature `fast-bar`
-(which does not have versions):
+1. its name
+2. a colon
+3. the version number
+4. an equals sign
+5. a boolean value, which can be `on`/`off`, `yes`/`no`, or `true`/`false`
+
+Using `on`/`off` is recommended for clarity. For example:
 
 ```
-X-Knora-Feature-Toggles: new-foo:2=on,fast-bar=on
+X-Knora-Feature-Toggles: new-foo:2=on,fast-bar:1=on
 ```
 
-If a toggle has versions, a version number must be given when enabling it
-in a request. It is an error to specify a version number when disabling
-a toggle in a request.
+A version number must be given when enabling a toggle.
+It is an error to specify a version number when disabling
+a toggle.
 
 ## Response Header
 
@@ -66,5 +71,5 @@ unordered list of toggles that are enabled. The response to the
 example above would be:
 
 ```
-X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-bar
+X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-bar:1
 ```

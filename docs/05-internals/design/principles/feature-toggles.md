@@ -70,38 +70,37 @@ app {
         new-foo {
             description = "Replace the old foo routes with new ones."
 
-            available-versions = [
-                1, 2
-            ]
+            available-versions = [ 1, 2 ]
+            default-version = 1
+            enabled-by-default = yes
+            override-allowed = yes
+
+            expiration-date = "2021-12-01T00:00:00Z"
 
             developer-emails = [
                 "A developer <a.developer@example.org>"
             ]
-
-            expiration-date = "2021-12-01T00:00:00Z"
-            enabled-by-default = yes
-            default-version = 1
-            override-allowed = yes
         }
 
         fast-bar {
             description = "Replace the slower, more accurate bar route with a faster, less accurate one."
 
+            available-versions = [ 1 ]
+            default-version = 1
+            enabled-by-default = no
+            override-allowed = yes
+
             developer-emails = [
                 "A developer <a.developer@example.org>"
             ]
-
-            enabled-by-default = no
-            override-allowed = yes
         }
     }
 }
 ```
 
-All fields are required except `available-versions`, `default-version`, and `expiration-date`.
-
-If `available-versions` is provided, `default-version` is required, and vice versa.
-Version numbers must be an ascending sequence of consecutive integers starting from 1.
+All fields are required except `expiration-date`. Each feature toggle must have
+at least one version number. Version numbers must be an ascending sequence of consecutive
+integers starting from 1.
 
 If `expiration-date` is provided, it must be an [`xsd:dateTimeStamp`](http://www.datypic.com/sc/xsd11/t-xsd_dateTimeStamp.html). All feature toggles
 should have expiration dates except for long-lived ops toggles like `fast-bar` above.
@@ -113,19 +112,23 @@ a feature toggle has an expiration date in the past, the application will not st
 
 A client can override the base configuration by submitting the HTTP header
 `X-Knora-Feature-Toggles`. Its value is a comma-separated list of
-toggles. Each toggle starts with the name of the feature. If a specific
-version is being requested, this is followed by a colon and the version
-number. The toggle ends with an equals sign followed by a boolean
-value, which can be `on`/`off`, `yes`/`no`, or `true`/`false`. Using
-`on`/`off` is recommended for clarity. For example:
+toggles. Each toggle consists of:
+
+1. its name
+2. a colon
+3. the version number
+4. an equals sign
+5. a boolean value, which can be `on`/`off`, `yes`/`no`, or `true`/`false`
+
+Using `on`/`off` is recommended for clarity. For example:
 
 ```
-X-Knora-Feature-Toggles: new-foo:2=on,fast-bar=on
+X-Knora-Feature-Toggles: new-foo:2=on,fast-bar:1=on
 ```
 
-If a toggle has versions, a version number must be given when enabling it
-in a request. It is an error to specify a version number when disabling
-a toggle in a request.
+A version number must be given when enabling a toggle.
+It is an error to specify a version number when disabling
+a toggle.
 
 ## Response Header
 
@@ -135,7 +138,7 @@ unordered list of toggles that are enabled. The response to the
 example above would be:
 
 ```
-X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-bar
+X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-bar:1
 ```
 
 ## Implementation Framework

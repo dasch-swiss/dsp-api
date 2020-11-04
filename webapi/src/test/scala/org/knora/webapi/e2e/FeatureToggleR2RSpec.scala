@@ -43,39 +43,40 @@ class FeatureToggleR2RSpec extends R2RSpec {
           |        new-foo {
           |            description = "Replace the old foo routes with new ones."
           |
-          |            available-versions = [
-          |                1, 2
-          |            ]
+          |            available-versions = [ 1, 2 ]
+          |            default-version = 1
+          |            enabled-by-default = yes
+          |            override-allowed = yes
           |
           |            developer-emails = [
           |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
           |            ]
-          |
-          |            enabled-by-default = yes
-          |            default-version = 1
-          |            override-allowed = yes
           |        }
           |
           |        new-bar {
           |            description = "Replace the old bar routes with new ones."
           |
+          |            available-versions = [ 1 ]
+          |            default-version = 1
+          |            enabled-by-default = yes
+          |            override-allowed = yes
+          |
           |            developer-emails = [
           |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
           |            ]
-          |
-          |            enabled-by-default = yes
-          |            override-allowed = yes
           |        }
           |
           |        new-baz {
           |            description = "Replace the old baz routes with new ones."
           |
+          |            available-versions = [ 1 ]
+          |            default-version = 1
+          |            enabled-by-default = no
+          |            override-allowed = no
+          |
           |            developer-emails = [
           |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
           |            ]
-          |
-          |            enabled-by-default = no
-          |            override-allowed = no
           |        }
           |    }
           |}
@@ -254,7 +255,6 @@ class FeatureToggleR2RSpec extends R2RSpec {
 
     // The façade route instances that we are going to test.
     private val fooRoute = new FooRoute(routeData).knoraApiPath
-    private val barRoute = new BarRoute(routeData).knoraApiPath
     private val bazRoute = new BazRoute(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
@@ -275,34 +275,34 @@ class FeatureToggleR2RSpec extends R2RSpec {
     }
 
     "The feature toggle framework" should {
-        "use a default toggle with a version" in {
+        "use default toggles" in {
             Get(s"/foo") ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new foo, version 1")
-                assert(enabledToggles(response) == Set("new-foo:1", "new-bar"))
+                assert(enabledToggles(response) == Set("new-foo:1", "new-bar:1"))
             }
         }
 
-        "turn off a toggle with a version" in {
+        "turn off a toggle" in {
             Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo=off")) ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the old foo")
-                assert(enabledToggles(response) == Set("new-bar"))
+                assert(enabledToggles(response) == Set("new-bar:1"))
             }
         }
 
-        "enable a toggle version" in {
+        "enable a toggle" in {
             Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo:2=on")) ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new foo, version 2")
-                assert(enabledToggles(response) == Set("new-foo:2", "new-bar"))
+                assert(enabledToggles(response) == Set("new-foo:2", "new-bar:1"))
             }
         }
 
-        "not enable a toggle with a version without specifying the version" in {
+        "not enable a toggle without specifying the version number" in {
             Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo=on")) ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.BadRequest, responseStr)
@@ -310,7 +310,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
             }
         }
 
-        "not enable a toggle with a nonexistent version" in {
+        "not enable a nonexistent version of a toggle" in {
             Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo:3=on")) ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.BadRequest, responseStr)
@@ -322,25 +322,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
             Get(s"/foo").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-foo:2=off")) ~> fooRoute ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.BadRequest, responseStr)
-                assert(responseStr.contains("You cannot specify a version number when disabling a feature toggle"))
-            }
-        }
-
-        "use a default toggle without a version" in {
-            Get(s"/bar") ~> barRoute ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                assert(responseStr == "You are using the new bar")
-                assert(enabledToggles(response) == Set("new-foo:1", "new-bar"))
-            }
-        }
-
-        "turn off a toggle without a version" in {
-            Get(s"/bar").addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-bar=off")) ~> barRoute ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                assert(responseStr == "You are using the old bar")
-                assert(enabledToggles(response) == Set("new-foo:1"))
+                assert(responseStr.contains("You cannot specify a version number when disabling feature toggle new-foo"))
             }
         }
 
