@@ -92,8 +92,6 @@ case class FeatureToggle(featureName: String,
      */
     def checkVersion[T <: Version](versionObjects: T*): T = {
         state match {
-            case Off => throw FeatureToggleException(s"Feature toggle $featureName is not enabled")
-
             case On(version) =>
                 if (version < 1 || version > versionObjects.size) {
                     throw FeatureToggleException(s"Invalid version number $version for toggle $featureName")
@@ -103,6 +101,8 @@ case class FeatureToggle(featureName: String,
                 // This relies on the fact that version numbers must be an ascending sequence of consecutive
                 // integers starting from 1.
                 versionObjects(version - 1)
+
+            case Off => throw FeatureToggleException(s"Feature toggle $featureName is not enabled")
         }
     }
 }
