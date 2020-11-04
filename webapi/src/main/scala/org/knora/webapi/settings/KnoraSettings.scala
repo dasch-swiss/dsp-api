@@ -262,7 +262,7 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                     val description: String = featureConfig.getString(descriptionKey)
 
                     val availableVersions: Seq[Int] = if (featureConfig.hasPath(availableVersionsKey)) {
-                        val versions: Seq[Int] = featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector.sorted
+                        val versions: Seq[Int] = featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector
 
                         for ((version: Int, index: Int) <- versions.zipWithIndex) {
                             if (version != index + 1) {
@@ -363,7 +363,7 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
      *
      * @param featureName       the name of the feature.
      * @param description       a description of the feature.
-     * @param availableVersions the available versions of the feature, sorted in ascending numerical order.
+     * @param availableVersions the available versions of the feature.
      * @param developerEmails   one or more email addresses of developers who can be contacted about the feature.
      * @param expirationDate    the expiration date of the feature.
      * @param enabledByDefault  `true` if the feature should be enabled by default, `false` if it should be
