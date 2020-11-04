@@ -525,7 +525,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
      */
     private def getProjectData(featureFactoryConfig: FeatureFactoryConfig): Route = path(ProjectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
         get {
-            featureFactoryConfig.getHttpResponseHeader match {
+            featureFactoryConfig.makeHttpResponseHeader match {
                 case Some(featureToggleHeader) =>
                     respondWithHeaders(projectDataHeader, featureToggleHeader) {
                         getProjectDataEntity(projectIri)

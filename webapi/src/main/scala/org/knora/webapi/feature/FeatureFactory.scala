@@ -150,7 +150,7 @@ object FeatureToggle {
     def apply(featureName: String,
               isEnabled: Boolean,
               maybeVersion: Option[Int],
-              baseConfig: FeatureToggleBaseConfig)(implicit stringFormatter: StringFormatter): FeatureToggle = {
+              baseConfig: FeatureToggleBaseConfig): FeatureToggle = {
         if (!baseConfig.overrideAllowed) {
             throw BadRequestException(s"Feature toggle $featureName cannot be overridden")
         }
@@ -208,7 +208,7 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
     /**
      * Returns an [[HttpHeader]] indicating which feature toggles are enabled.
      */
-    def getHttpResponseHeader: Option[HttpHeader] = {
+    def makeHttpResponseHeader: Option[HttpHeader] = {
         // Get the set of toggles that are enabled.
         val enabledToggles: Set[String] = getAllBaseConfigs.map {
             baseConfig: FeatureToggleBaseConfig => getToggle(baseConfig.featureName)
@@ -234,7 +234,7 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
      * Adds an [[HttpHeader]] to an [[HttpResponse]] indicating which feature toggles are enabled.
      */
     def addHeaderToHttpResponse(httpResponse: HttpResponse): HttpResponse = {
-        getHttpResponseHeader match {
+        makeHttpResponseHeader match {
             case Some(header) => httpResponse.withHeaders(header)
             case None => httpResponse
         }
