@@ -49,7 +49,7 @@ The design presented here is partly inspired by that article.
 - A feature toggle should have metadata such as a description,
   an expiration date, developer contact information, etc.
 
-- A feature toggle should have an optional version number, so
+- A feature toggle should have a version number, so
   you can get different versions of the same feature.
   
 - It should be possible to configure a toggle in `application.conf`
@@ -120,9 +120,14 @@ app {
 }
 ```
 
-All fields are required except `expiration-date`. Each feature toggle must have
-at least one version number. Version numbers must be an ascending sequence of consecutive
-integers starting from 1.
+All fields are required except `expiration-date`.
+
+Since it may not be possible to predict which toggles will need versions,
+all toggles must have at least one version. (If a toggle could be created
+without versions, and then get versions later, it would not be obvious
+what should happen if a client then requested the toggle without specifying
+a version number.) Version numbers must be an ascending sequence of
+consecutive integers starting from 1.
 
 If `expiration-date` is provided, it must be an [`xsd:dateTimeStamp`](http://www.datypic.com/sc/xsd11/t-xsd_dateTimeStamp.html). All feature toggles
 should have expiration dates except for long-lived ops toggles like `fast-baz` above.
@@ -148,15 +153,17 @@ Using `on`/`off` is recommended for clarity. For example:
 X-Knora-Feature-Toggles: new-foo:2=on,new-bar=off,fast-baz:1=on
 ```
 
-A version number must be given when enabling a toggle. If a
-toggle is enabled by default, and you want a version
+A version number must be given when enabling a toggle.
+Only one version of each toggle can be enabled at a time.
+If a toggle is enabled by default, and you want a version
 other than the default version, simply enable the toggle,
-specifying the desired version number.
+specifying the desired version number. The version number
+you specify overrides the default. 
 
-If you disable a toggle, you disable all its versions. You
-will then get the functionality that you would have got before
-the toggle existed. Therefore, a version number cannot be given
-when disabling a toggle.
+Disabling a toggle means disabling all its versions. When
+a toggle is disabled, you will get the functionality that you would have
+got before the toggle existed. Therefore, a version number cannot
+be given when disabling a toggle.
 
 ## Response Header
 
