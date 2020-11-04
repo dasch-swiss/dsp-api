@@ -262,13 +262,17 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                     val description: String = featureConfig.getString(descriptionKey)
 
                     val availableVersions: Seq[Int] = if (featureConfig.hasPath(availableVersionsKey)) {
-                        featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector.sorted
+                        val versions: Seq[Int] = featureConfig.getIntList(availableVersionsKey).asScala.map(_.intValue).toVector.sorted
+
+                        for ((version: Int, index: Int) <- versions.zipWithIndex) {
+                            if (version != index + 1) {
+                                throw FeatureToggleException(s"The versions of feature toggle $featureName must be an ascending sequence of consecutive integers starting from 1")
+                            }
+                        }
+
+                        versions
                     } else {
                         Seq.empty
-                    }
-
-                    for (invalidVersionNumber <- availableVersions.find(version => version < 1)) {
-                        throw FeatureToggleException(s"Invalid version number $invalidVersionNumber for feature toggle $featureName")
                     }
 
                     val developerEmails: Set[String] = featureConfig.getStringList(developerEmailsKey).asScala.toSet

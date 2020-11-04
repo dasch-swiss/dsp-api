@@ -101,7 +101,7 @@ app {
 All fields are required except `available-versions`, `default-version`, and `expiration-date`.
 
 If `available-versions` is provided, `default-version` is required, and vice versa.
-Version numbers must be integers.
+Version numbers must be an ascending sequence of consecutive integers starting from 1.
 
 If `expiration-date` is provided, it must be an [`xsd:dateTimeStamp`](http://www.datypic.com/sc/xsd11/t-xsd_dateTimeStamp.html). All feature toggles
 should have expiration dates except for long-lived ops toggles like `fast-bar` above.

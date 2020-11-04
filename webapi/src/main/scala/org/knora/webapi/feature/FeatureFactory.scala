@@ -140,7 +140,7 @@ object FeatureToggle {
 
         val version: Option[Int] = maybeVersionStr.map {
             versionStr =>
-                val versionInt = stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
+                val versionInt: Int = stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
 
                 if (!baseConfig.availableVersions.contains(versionInt)) {
                     throw BadRequestException(s"Feature toggle $featureName has no version $versionInt")
