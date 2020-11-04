@@ -103,7 +103,7 @@ All fields are required except `available-versions`, `default-version`, and `exp
 If `available-versions` is provided, `default-version` is required, and vice versa.
 Version numbers must be integers.
 
-If `expiration-date` is provided, it must be an `xsd:dateTimeStamp`. All feature toggles
+If `expiration-date` is provided, it must be an [`xsd:dateTimeStamp`](http://www.datypic.com/sc/xsd11/t-xsd_dateTimeStamp.html). All feature toggles
 should have expiration dates except for long-lived ops toggles like `fast-bar` above.
 
 `KnoraSettingsFeatureFactoryConfig` reads this base configuration on startup. If
