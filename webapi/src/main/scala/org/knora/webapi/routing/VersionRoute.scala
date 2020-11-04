@@ -24,7 +24,7 @@ import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.http.version.VersionInfo
+import org.knora.webapi.http.version.versioninfo.VersionInfo
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
@@ -45,7 +45,7 @@ trait VersionCheck {
 
     override implicit val timeout: Timeout = 1.second
 
-    protected def versionCheck(): HttpResponse = {
+    protected def versionCheck: HttpResponse = {
         createResponse(getVersion)
     }
 
@@ -77,7 +77,7 @@ trait VersionCheck {
 
         VersionCheckResult(
             name = "version",
-            webapi = VersionInfo.version,
+            webapi = VersionInfo.webapiVersion,
             scala = VersionInfo.scalaVersion,
             akkaHttp = VersionInfo.akkaHttpVersion,
             sipi = sipiVersion,
@@ -97,8 +97,7 @@ class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
         path("version") {
             get {
-                requestContext =>
-                    requestContext.complete(versionCheck())
+                requestContext => requestContext.complete(versionCheck)
             }
         }
     }

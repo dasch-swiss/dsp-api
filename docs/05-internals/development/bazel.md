@@ -71,3 +71,46 @@ section in the Bazel documentation.
     ```bash
     $ bazel run //webapi:main_library_repl
     ```
+
+## Build stamping
+
+By default, Bazel tries not to include anything about the system state in build
+outputs. However, released binaries and libraries often want to include
+something like the version they were built at or the branch or tag they came
+from.
+
+To reconcile this, Bazel has an option called the *workspace status command*.
+This command is run outside of any sandboxes on the local machine, so it can
+access anything about your source control, OS, or anything else you might want
+to include. It then dumps its output into `bazel-out/volatile-status.txt`, which
+you can use (and certain language rulesets provide support for accessing from code).
+
+Our *workspace status command* is defined in `//tools/buildstamp/get_workspace_status`.
+To use it on every bazel command, we need to supply it to each Bazel invocation,
+which is done by the following line found in `.bazelrc`:
+```
+build --workspace_status_command=tools/buildstamp/get_workspace_status --stamp=yes
+```
+
+Any line added to `.bazelrc` is invoked on each corresponding command.
+
+The `//tools/buildstamp/get_workspace_status` emits additional values
+to `bazel-out/volatile-status.txt` whereas `BUILD_TIMESTAMP` is emitted by
+Bazel itself:
+
+```
+BUILD_SCM_REVISION 2d6df6c8fe2d56e3712eb26763f9727916a60164
+BUILD_SCM_STATUS Modified
+BUILD_SCM_TAG v13.0.0-rc.21-17-g2d6df6c-dirty
+BUILD_TIMESTAMP 1604401028
+```
+
+The value of `BUILD_SCM_TAG` is used in `//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo`,
+which emits a JAR containing `VersionInfo.scala`. This file is generated based on
+`VersionInfoTemplate.scala` found in the same Bazel package.
+
+In short, the `versioninfo` target producing the JAR library depends on
+the `version_info_with_build_tag` target which emits the `VersionInfo.scala`
+file which has the `{BUILD_TAG}` variable replaced by the current value of
+`BUILD_SCM_TAG`. In an intermediary step, the `version_info_without_build_tag`
+target, replaces variables coming from `//third_party:versions.bzl`.

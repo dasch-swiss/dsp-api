@@ -149,7 +149,6 @@ def dependencies():
     )
 
 ALL_WEBAPI_MAIN_DEPENDENCIES = [
-    "//tools/version_info",
     "//webapi/src/main/scala/org/knora/webapi",
     "//webapi/src/main/scala/org/knora/webapi/app",
     "//webapi/src/main/scala/org/knora/webapi/core",
@@ -157,6 +156,7 @@ ALL_WEBAPI_MAIN_DEPENDENCIES = [
     "//webapi/src/main/scala/org/knora/webapi/feature",
     "//webapi/src/main/scala/org/knora/webapi/http/handler",
     "//webapi/src/main/scala/org/knora/webapi/http/version",
+    "//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo",
     "//webapi/src/main/scala/org/knora/webapi/instrumentation",
     "//webapi/src/main/scala/org/knora/webapi/messages",
     "//webapi/src/main/scala/org/knora/webapi/responders",

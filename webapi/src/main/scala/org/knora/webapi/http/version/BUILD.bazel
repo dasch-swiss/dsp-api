@@ -7,7 +7,7 @@ scala_library(
     srcs = glob(["*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//tools/version_info",
+        "//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
