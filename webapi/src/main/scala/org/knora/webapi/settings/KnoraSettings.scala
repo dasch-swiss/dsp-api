@@ -294,7 +294,7 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                     val defaultVersion: Option[Int] = if (featureConfig.hasPath(defaultVersionKey)) {
                         val definedDefaultVersion = featureConfig.getInt(defaultVersionKey)
 
-                        if (definedDefaultVersion < 1) {
+                        if (!availableVersions.contains(definedDefaultVersion)) {
                             throw FeatureToggleException(s"Invalid default version number $definedDefaultVersion for feature toggle $featureName")
                         }
 
