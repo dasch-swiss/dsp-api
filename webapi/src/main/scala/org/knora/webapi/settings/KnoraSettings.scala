@@ -288,13 +288,15 @@ class KnoraSettingsImpl(config: Config) extends Extension {
                     val enabledByDefault: Boolean = featureConfig.getBoolean(enabledByDefaultKey)
 
                     val defaultVersion: Option[Int] = if (featureConfig.hasPath(defaultVersionKey)) {
-                        Some(featureConfig.getInt(defaultVersionKey))
+                        val definedDefaultVersion = featureConfig.getInt(defaultVersionKey)
+
+                        if (definedDefaultVersion < 1) {
+                            throw FeatureToggleException(s"Invalid default version number $definedDefaultVersion for feature toggle $featureName")
+                        }
+
+                        Some(definedDefaultVersion)
                     } else {
                         None
-                    }
-
-                    for (invalidVersionNumber <- defaultVersion.find(version => version < 1)) {
-                        throw FeatureToggleException(s"Invalid default version number $invalidVersionNumber for feature toggle $featureName")
                     }
 
                     if (availableVersions.isEmpty != defaultVersion.isEmpty) {
