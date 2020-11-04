@@ -109,9 +109,14 @@ case class FeatureToggle(featureName: String,
     def getMatchableState[T <: Version](versionObjects: T*): MatchableState[T] = {
         state match {
             case ToggleStateOn(version) =>
-                if (version < 1 || version > versionObjects.size) {
+                if (version < 1) {
                     // Shouldn't happen; this error should have been caught already.
                     throw FeatureToggleException(s"Invalid version number $version for toggle $featureName")
+                }
+
+                if (version > versionObjects.size) {
+                    // The caller didn't pass enough version objects.
+                    throw FeatureToggleException(s"Not enough version objects for $featureName")
                 }
 
                 // Return the case object whose position in the sequence corresponds to the configured version.
