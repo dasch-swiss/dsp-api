@@ -121,12 +121,6 @@ object FeatureToggle {
     val RESPONSE_HEADER: String = "X-Knora-Feature-Toggles-Enabled"
     val RESPONSE_HEADER_LOWERCASE: String = RESPONSE_HEADER.toLowerCase
 
-    // Strings that we accept as Boolean true values.
-    private val TRUE_STRINGS: Set[String] = Set("true", "yes", "on")
-
-    // Strings that we accept as Boolean false values.
-    private val FALSE_STRINGS: Set[String] = Set("false", "no", "off")
-
     /**
      * Constructs a default [[FeatureToggle]] from a [[FeatureToggleBaseConfig]].
      *
@@ -145,49 +139,33 @@ object FeatureToggle {
     }
 
     /**
-     * Parses the configuration of a feature toggle from non-base configuration.
+     * Constructs a feature toggle from non-base configuration.
      *
-     * @param featureName     the name of the feature.
-     * @param isEnabledStr    `true`, `yes`, or `on` if the feature should be enabled; `false`, `no`, or `off`
-     *                        if it should be disabled.
-     * @param maybeVersionStr the version of the feature that should be used.
-     * @param baseConfig      the base configuration of the toggle.
+     * @param featureName  the name of the feature.
+     * @param isEnabled    `true` if the feature should be enabled.
+     * @param maybeVersion the version of the feature that should be used.
+     * @param baseConfig   the base configuration of the toggle.
      * @return a [[FeatureToggle]] for the toggle.
      */
-    def parse(featureName: String,
-              isEnabledStr: String,
-              maybeVersionStr: Option[String],
+    def apply(featureName: String,
+              isEnabled: Boolean,
+              maybeVersion: Option[Int],
               baseConfig: FeatureToggleBaseConfig)(implicit stringFormatter: StringFormatter): FeatureToggle = {
         if (!baseConfig.overrideAllowed) {
             throw BadRequestException(s"Feature toggle $featureName cannot be overridden")
         }
 
-        // Accept the boolean values that are accepted in application.conf.
-        val isEnabled: Boolean = if (TRUE_STRINGS.contains(isEnabledStr.toLowerCase)) {
-            true
-        } else if (FALSE_STRINGS.contains(isEnabledStr.toLowerCase)) {
-            false
-        } else {
-            throw BadRequestException(s"Invalid boolean '$isEnabledStr' in feature toggle $featureName")
+        for (version: Int <- maybeVersion) {
+            if (!baseConfig.availableVersions.contains(version)) {
+                throw BadRequestException(s"Feature toggle $featureName has no version $version")
+            }
         }
 
-        val version: Option[Int] = maybeVersionStr.map {
-            versionStr =>
-                val versionInt: Int = stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
-
-                if (!baseConfig.availableVersions.contains(versionInt)) {
-                    throw BadRequestException(s"Feature toggle $featureName has no version $versionInt")
-                }
-
-                versionInt
-        }
-
-        val state: FeatureToggleState = (isEnabled, version) match {
+        val state: FeatureToggleState = (isEnabled, maybeVersion) match {
             case (true, Some(definedVersion)) => On(definedVersion)
             case (false, None) => Off
             case (true, None) => throw BadRequestException(s"You must specify a version number to enable feature toggle $featureName")
             case (false, Some(_)) => throw BadRequestException(s"You cannot specify a version number when disabling feature toggle $featureName")
-
         }
 
         FeatureToggle(
@@ -346,6 +324,14 @@ abstract class OverridingFeatureFactoryConfig(parent: FeatureFactoryConfig) exte
     }
 }
 
+object RequestContextFeatureFactoryConfig {
+    // Strings that we accept as Boolean true values.
+    val TRUE_STRINGS: Set[String] = Set("true", "yes", "on")
+
+    // Strings that we accept as Boolean false values.
+    val FALSE_STRINGS: Set[String] = Set("false", "no", "off")
+}
+
 /**
  * A [[FeatureFactoryConfig]] that reads configuration from a header in an HTTP request.
  *
@@ -356,6 +342,7 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
                                          parent: FeatureFactoryConfig)(implicit stringFormatter: StringFormatter) extends OverridingFeatureFactoryConfig(parent) {
 
     import FeatureToggle._
+    import RequestContextFeatureFactoryConfig._
 
     private def invalidHeaderValue: Nothing = throw BadRequestException(s"Invalid value for header $REQUEST_HEADER")
 
@@ -368,15 +355,27 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
                 featureToggleHeader.value.split(',').map {
                     headerValueItem: String =>
                         headerValueItem.split('=').map(_.trim) match {
-                            case Array(featureNameAndVersionStr: String, enabledStr: String) =>
+                            case Array(featureNameAndVersionStr: String, isEnabledStr: String) =>
                                 val featureNameAndVersion: Array[String] = featureNameAndVersionStr.split(':').map(_.trim)
                                 val featureName: String = featureNameAndVersion.head
-                                val maybeVersionStr: Option[String] = featureNameAndVersion.drop(1).headOption
 
-                                featureName -> FeatureToggle.parse(
+                                // Accept the boolean values that are accepted in application.conf.
+                                val isEnabled: Boolean = if (TRUE_STRINGS.contains(isEnabledStr.toLowerCase)) {
+                                    true
+                                } else if (FALSE_STRINGS.contains(isEnabledStr.toLowerCase)) {
+                                    false
+                                } else {
+                                    throw BadRequestException(s"Invalid boolean '$isEnabledStr' in feature toggle $featureName")
+                                }
+
+                                val maybeVersion: Option[Int] = featureNameAndVersion.drop(1).headOption.map {
+                                    versionStr => stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
+                                }
+
+                                featureName -> FeatureToggle(
                                     featureName = featureName,
-                                    isEnabledStr = enabledStr,
-                                    maybeVersionStr = maybeVersionStr,
+                                    isEnabled = isEnabled,
+                                    maybeVersion = maybeVersion,
                                     baseConfig = parent.getBaseConfig(featureName)
                                 )
 
