@@ -1348,7 +1348,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             }
 
             // check if gravsearchFileValueContent represents a text file
-            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain")) {
+            _ = if (gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
                 throw BadRequestException(s"Resource $gravsearchTemplateIri does not have a file value referring to a Gravsearch template")
             }
 
