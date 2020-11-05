@@ -1336,10 +1336,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw BadRequestException(s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)")
             }
 
-            gravsearchFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+            (fileValueIri: IRI, gravsearchFileValueContent: TextFileValueContentV2) = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
-                        case textRepr: TextFileValueContentV2 => textRepr
+                        case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
                         case _ => throw InconsistentTriplestoreDataException(s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
@@ -1349,7 +1349,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             // check if gravsearchFileValueContent represents a text file
             _ = if (gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
-                throw BadRequestException(s"Resource $gravsearchTemplateIri does not have a file value referring to a Gravsearch template")
+                throw BadRequestException(s"Expected $fileValueIri to be a text file referring to a Gravsearch template, but it has MIME type ${gravsearchFileValueContent.fileValue.internalMimeType}")
             }
 
             gravsearchUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
