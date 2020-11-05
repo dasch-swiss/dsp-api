@@ -24,6 +24,7 @@ import com.github.swagger.akka.SwaggerHttpService
 import com.github.swagger.akka.model.Info
 import io.swagger.models.auth.BasicAuthDefinition
 import io.swagger.models.{ExternalDocs, Scheme}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.routing.admin._
 
 /**
@@ -55,14 +56,14 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     override val host: String = settings.externalKnoraApiHostPort // the url of your api, not swagger's json endpoint
     override val basePath = "/" //the basePath for the API you are exposing
     override val apiDocsPath = "api-docs" //where you want the swagger-json endpoint exposed
-    override val info = Info(version = "1.8.0") //provides license and other description details
-    override val externalDocs = Some(new ExternalDocs("Knora Docs", "http://docs.knora.org"))
+    override val info: Info = Info(version = "1.8.0") //provides license and other description details
+    override val externalDocs: Option[ExternalDocs] = Some(new ExternalDocs("Knora Docs", "http://docs.knora.org"))
     override val securitySchemeDefinitions = Map("basicAuth" -> new BasicAuthDefinition())
 
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
         routes
     }
 

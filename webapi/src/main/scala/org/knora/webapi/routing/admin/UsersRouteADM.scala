@@ -27,6 +27,7 @@ import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -51,14 +52,26 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route =
-        getUsers ~
-            addUser ~ getUserByIri ~ getUserByEmail ~ getUserByUsername ~
-            changeUserBasicInformation ~ changeUserPassword ~ changeUserStatus ~ deleteUser ~
-            changeUserSytemAdminMembership ~
-            getUsersProjectMemberships ~ addUserToProjectMembership ~ removeUserFromProjectMembership ~
-            getUsersProjectAdminMemberships ~ addUserToProjectAdminMembership ~ removeUserFromProjectAdminMembership ~
-            getUsersGroupMemberships ~ addUserToGroupMembership ~ removeUserFromGroupMembership
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        getUsers(featureFactoryConfig) ~
+            addUser(featureFactoryConfig) ~
+            getUserByIri(featureFactoryConfig) ~
+            getUserByEmail(featureFactoryConfig) ~
+            getUserByUsername(featureFactoryConfig) ~
+            changeUserBasicInformation(featureFactoryConfig) ~
+            changeUserPassword(featureFactoryConfig) ~
+            changeUserStatus(featureFactoryConfig) ~
+            deleteUser(featureFactoryConfig) ~
+            changeUserSytemAdminMembership(featureFactoryConfig) ~
+            getUsersProjectMemberships(featureFactoryConfig) ~
+            addUserToProjectMembership(featureFactoryConfig) ~
+            removeUserFromProjectMembership(featureFactoryConfig) ~
+            getUsersProjectAdminMemberships(featureFactoryConfig) ~
+            addUserToProjectAdminMembership(featureFactoryConfig) ~
+            removeUserFromProjectAdminMembership(featureFactoryConfig) ~
+            getUsersGroupMemberships(featureFactoryConfig) ~
+            addUserToGroupMembership(featureFactoryConfig) ~
+            removeUserFromGroupMembership(featureFactoryConfig)
 
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
@@ -66,7 +79,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* return all users */
-    def getUsers: Route = path(UsersBasePath) {
+    def getUsers(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
         get {
             requestContext =>
                 val requestMessage: Future[UsersGetRequestADM] = for {
@@ -74,11 +87,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 } yield UsersGetRequestADM(requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -92,7 +106,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* create a new user */
-    def addUser: Route = path(UsersBasePath) {
+    def addUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
         post {
             entity(as[CreateUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -105,11 +119,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -118,7 +133,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * return a single user identified by iri
      */
-    private def getUserByIri: Route = path(UsersBasePath / "iri" / Segment) { value =>
+    private def getUserByIri(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) { value =>
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
@@ -126,11 +141,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 } yield UserGetRequestADM(UserIdentifierADM(maybeIri = Some(value)), UserInformationTypeADM.RESTRICTED, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -138,7 +154,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * return a single user identified by email
      */
-    private def getUserByEmail: Route = path(UsersBasePath / "email" / Segment) { value =>
+    private def getUserByEmail(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "email" / Segment) { value =>
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
@@ -146,11 +162,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 } yield UserGetRequestADM(UserIdentifierADM(maybeEmail = Some(value)), UserInformationTypeADM.RESTRICTED, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -158,7 +175,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * return a single user identified by username
      */
-    private def getUserByUsername: Route = path(UsersBasePath / "username" / Segment) { value =>
+    private def getUserByUsername(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "username" / Segment) { value =>
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
@@ -166,11 +183,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 } yield UserGetRequestADM(UserIdentifierADM(maybeUsername = Some(value)), UserInformationTypeADM.RESTRICTED, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -179,7 +197,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: Change existing user's basic information.
      */
     @ApiMayChange
-    private def changeUserBasicInformation: Route = path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { value =>
+    private def changeUserBasicInformation(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -202,11 +220,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -216,7 +235,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: Change user's password.
      */
     @ApiMayChange
-    private def changeUserPassword: Route = path(UsersBasePath / "iri" / Segment / "Password") { value =>
+    private def changeUserPassword(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "Password") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -239,11 +258,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -253,7 +273,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: Change user's status.
      */
     @ApiMayChange
-    private def changeUserStatus: Route = path(UsersBasePath / "iri" / Segment / "Status") { value =>
+    private def changeUserStatus(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "Status") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -276,21 +296,22 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
     }
-    
+
     /**
      * API MAY CHANGE: delete a user identified by iri (change status to false).
      */
     @ApiMayChange
-    private def deleteUser: Route = path(UsersBasePath / "iri" / Segment) { value =>
+    private def deleteUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) { value =>
         delete {
             requestContext => {
                 val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
@@ -310,11 +331,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
             }
         }
@@ -324,7 +346,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: Change user's SystemAdmin membership.
      */
     @ApiMayChange
-    private def changeUserSytemAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
+    private def changeUserSytemAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -347,11 +369,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }
@@ -361,7 +384,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: get user's project memberships
      */
     @ApiMayChange
-    private def getUsersProjectMemberships: Route = path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
+    private def getUsersProjectMemberships(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -375,11 +398,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -388,7 +412,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: add user to project
      */
     @ApiMayChange
-    private def addUserToProjectMembership: Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+    private def addUserToProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
         post {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -404,11 +428,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -417,7 +442,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: remove user from project (and all groups belonging to this project)
      */
     @ApiMayChange
-    private def removeUserFromProjectMembership: Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+    private def removeUserFromProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
 
         delete {
             requestContext =>
@@ -434,11 +459,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -447,7 +473,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: get user's project admin memberships
      */
     @ApiMayChange
-    private def getUsersProjectAdminMemberships: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
+    private def getUsersProjectAdminMemberships(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -461,11 +487,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -474,7 +501,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: add user to project admin
      */
     @ApiMayChange
-    private def addUserToProjectAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+    private def addUserToProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
         post {
             /*  */
             requestContext =>
@@ -491,11 +518,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -504,7 +532,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: remove user from project admin membership
      */
     @ApiMayChange
-    private def removeUserFromProjectAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+    private def removeUserFromProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
         delete {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -520,11 +548,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -533,7 +562,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: get user's group memberships
      */
     @ApiMayChange
-    private def getUsersGroupMemberships: Route = path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
+    private def getUsersGroupMemberships(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -547,11 +576,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -560,7 +590,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: add user to group
      */
     @ApiMayChange
-    private def addUserToGroupMembership: Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+    private def addUserToGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
         post {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -576,11 +606,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
@@ -589,7 +620,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
      * API MAY CHANGE: remove user from group
      */
     @ApiMayChange
-    private def removeUserFromGroupMembership: Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+    private def removeUserFromGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
         delete {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -605,11 +636,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }

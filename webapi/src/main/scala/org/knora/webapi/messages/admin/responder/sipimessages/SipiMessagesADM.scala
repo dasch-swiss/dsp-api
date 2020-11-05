@@ -22,13 +22,13 @@ package org.knora.webapi.messages.admin.responder.sipimessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import spray.json.{DefaultJsonProtocol, JsValue, NullOptions, RootJsonFormat}
 
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV2`.
  */
-sealed trait SipiResponderRequestADM extends KnoraRequestV1
+sealed trait SipiResponderRequestADM extends KnoraRequestADM
 
 /**
  * A Knora v1 API request message that requests information about a `FileValue`.
@@ -46,8 +46,7 @@ case class SipiFileInfoGetRequestADM(projectID: String, filename: String, reques
  * @param restrictedViewSettings the project's restricted view settings.
  */
 case class SipiFileInfoGetResponseADM(permissionCode: Int,
-                                      restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
-                                     ) extends KnoraResponseV1 {
+                                      restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM]) extends KnoraResponseADM {
     def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
 }
 

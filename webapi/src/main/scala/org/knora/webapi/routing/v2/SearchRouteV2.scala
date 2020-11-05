@@ -23,6 +23,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.searchmessages._
@@ -44,8 +45,15 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = fullTextSearchCount ~ fullTextSearch ~ gravsearchCountGet ~ gravsearchCountPost ~
-        gravsearchGet ~ gravsearchPost ~ searchByLabelCount ~ searchByLabel
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        fullTextSearchCount(featureFactoryConfig) ~
+            fullTextSearch(featureFactoryConfig) ~
+            gravsearchCountGet(featureFactoryConfig) ~
+            gravsearchCountPost(featureFactoryConfig) ~
+            gravsearchGet(featureFactoryConfig) ~
+            gravsearchPost(featureFactoryConfig) ~
+            searchByLabelCount(featureFactoryConfig) ~
+            searchByLabel(featureFactoryConfig)
 
     /**
      * Gets the requested offset. Returns zero if no offset is indicated.
@@ -144,7 +152,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def fullTextSearchCount: Route = path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+    private def fullTextSearchCount(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get {
             requestContext =>
                 val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
@@ -174,6 +182,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -183,7 +192,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def fullTextSearch: Route = path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+    private def fullTextSearch(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get {
             requestContext => {
                 val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
@@ -221,6 +230,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -231,7 +241,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def gravsearchCountGet: Route = path("v2" / "searchextended" / "count" / Segment) { gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
+    private def gravsearchCountGet(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "searchextended" / "count" / Segment) { gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
         get {
             requestContext => {
                 val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
@@ -243,6 +253,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -253,7 +264,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def gravsearchCountPost: Route = path("v2" / "searchextended" / "count") {
+    private def gravsearchCountPost(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "searchextended" / "count") {
         post {
             entity(as[String]) { gravsearchQuery =>
                 requestContext => {
@@ -265,6 +276,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessage,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -276,7 +288,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def gravsearchGet: Route = path("v2" / "searchextended" / Segment) { sparql => // Segment is a URL encoded string representing a Gravsearch query
+    private def gravsearchGet(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "searchextended" / Segment) { sparql => // Segment is a URL encoded string representing a Gravsearch query
         get {
             requestContext => {
                 val constructQuery = GravsearchParser.parseQuery(sparql)
@@ -295,6 +307,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -305,7 +318,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def gravsearchPost: Route = path("v2" / "searchextended") {
+    private def gravsearchPost(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "searchextended") {
         post {
             entity(as[String]) { gravsearchQuery =>
                 requestContext => {
@@ -325,6 +338,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessage,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -336,7 +350,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def searchByLabelCount: Route = path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+    private def searchByLabelCount(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get {
             requestContext => {
 
@@ -364,6 +378,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -374,7 +389,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def searchByLabel: Route = path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+    private def searchByLabel(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get {
             requestContext => {
                 val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
@@ -407,6 +422,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,

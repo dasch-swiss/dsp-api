@@ -57,8 +57,11 @@ import scala.language.postfixOps
 class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     /* needed by the core trait */
-    implicit lazy val _system: ActorSystem = ActorSystem(actorSystemNameFrom(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load()))
+    implicit lazy val _system: ActorSystem = ActorSystem(actorSystemNameFrom(getClass),
+        TestContainers.PortConfig.withFallback(ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())))
+
     implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
+
     lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // override so that we can use our own system

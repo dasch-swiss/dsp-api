@@ -19,13 +19,13 @@
 
 package org.knora.webapi.routing.v2
 
-import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -51,12 +51,26 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = dereferenceOntologyIri ~ getOntologyMetadata ~ updateOntologyMetadata ~ getOntologyMetadataForProjects ~
-        getOntology ~ createClass ~ updateClass ~ addCardinalities ~ replaceCardinalities ~ getClasses ~
-        deleteClass ~ createProperty ~ updateProperty ~ getProperties ~ deleteProperty ~ createOntology ~
-        deleteOntology
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        dereferenceOntologyIri(featureFactoryConfig) ~
+            getOntologyMetadata(featureFactoryConfig) ~
+            updateOntologyMetadata(featureFactoryConfig) ~
+            getOntologyMetadataForProjects(featureFactoryConfig) ~
+            getOntology(featureFactoryConfig) ~
+            createClass(featureFactoryConfig) ~
+            updateClass(featureFactoryConfig) ~
+            addCardinalities(featureFactoryConfig) ~
+            replaceCardinalities(featureFactoryConfig) ~
+            getClasses(featureFactoryConfig) ~
+            deleteClass(featureFactoryConfig) ~
+            createProperty(featureFactoryConfig) ~
+            updateProperty(featureFactoryConfig) ~
+            getProperties(featureFactoryConfig) ~
+            deleteProperty(featureFactoryConfig) ~
+            createOntology(featureFactoryConfig) ~
+            deleteOntology(featureFactoryConfig)
 
-    private def dereferenceOntologyIri: Route = path("ontology" / Segments) { _: List[String] =>
+    private def dereferenceOntologyIri(featureFactoryConfig: FeatureFactoryConfig): Route = path("ontology" / Segments) { _: List[String] =>
         get {
             requestContext => {
                 // This is the route used to dereference an actual ontology IRI. If the URL path looks like it
@@ -97,6 +111,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -107,7 +122,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getOntologyMetadata: Route = path(OntologiesBasePath / "metadata") {
+    private def getOntologyMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "metadata") {
         get {
             requestContext => {
                 val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
@@ -119,6 +134,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -129,7 +145,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def updateOntologyMetadata: Route = path(OntologiesBasePath / "metadata") {
+    private def updateOntologyMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "metadata") {
         put {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -152,6 +168,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -163,7 +180,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getOntologyMetadataForProjects: Route = path(OntologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
+    private def getOntologyMetadataForProjects(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
         get {
             requestContext => {
 
@@ -175,6 +192,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -185,7 +203,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getOntology: Route = path(OntologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
+    private def getOntology(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
         get {
             requestContext => {
                 val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr"))
@@ -210,6 +228,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -220,7 +239,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def createClass: Route = path(OntologiesBasePath / "classes") {
+    private def createClass(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "classes") {
         post {
             // Create a new class.
             entity(as[String]) { jsonRequest =>
@@ -243,6 +262,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -254,7 +274,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def updateClass: Route = path(OntologiesBasePath / "classes") {
+    private def updateClass(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "classes") {
         put {
             // Change the labels or comments of a class.
             entity(as[String]) { jsonRequest =>
@@ -277,6 +297,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -288,7 +309,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def addCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
+    private def addCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "cardinalities") {
         post {
             // Add cardinalities to a class.
             entity(as[String]) { jsonRequest =>
@@ -311,6 +332,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -322,7 +344,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def replaceCardinalities: Route = path(OntologiesBasePath / "cardinalities") {
+    private def replaceCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "cardinalities") {
         put {
             // Change a class's cardinalities.
             entity(as[String]) { jsonRequest =>
@@ -345,6 +367,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -356,7 +379,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getClasses: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
+    private def getClasses(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
         get {
             requestContext => {
 
@@ -405,6 +428,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -415,7 +439,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def deleteClass: Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
+    private def deleteClass(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
         delete {
             requestContext => {
 
@@ -445,6 +469,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -455,7 +480,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def createProperty: Route = path(OntologiesBasePath / "properties") {
+    private def createProperty(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "properties") {
         post {
             // Create a new property.
             entity(as[String]) { jsonRequest =>
@@ -478,6 +503,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -489,7 +515,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def updateProperty: Route = path(OntologiesBasePath / "properties") {
+    private def updateProperty(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "properties") {
         put {
             // Change the labels or comments of a property.
             entity(as[String]) { jsonRequest =>
@@ -512,6 +538,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -523,7 +550,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def getProperties: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
+    private def getProperties(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
         get {
             requestContext => {
 
@@ -572,6 +599,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -582,7 +610,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def deleteProperty: Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
+    private def deleteProperty(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
         delete {
             requestContext => {
 
@@ -612,6 +640,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -622,7 +651,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def createOntology: Route = path(OntologiesBasePath) {
+    private def createOntology(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath) {
         // Create a new, empty ontology.
         post {
             entity(as[String]) { jsonRequest =>
@@ -645,6 +674,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -656,7 +686,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         }
     }
 
-    private def deleteOntology: Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
+    private def deleteOntology(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
         delete {
             requestContext => {
 
@@ -681,6 +711,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,

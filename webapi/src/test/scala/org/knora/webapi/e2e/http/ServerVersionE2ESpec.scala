@@ -22,13 +22,13 @@ package org.knora.webapi.e2e.http
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.version.ServerVersion
 
 
 object ServerVersionE2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -40,14 +40,14 @@ object ServerVersionE2ESpec {
   */
 class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     "The Server" should {
 
         "return the custom 'Server' header with every response" in {
             val request = Get(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
-            response.headers should contain (ServerVersion.serverVersionHeader())
+            response.headers should contain (ServerVersion.serverVersionHeader)
             response.headers.find(_.name == "Server") match {
                 case Some(serverHeader: HttpHeader) =>
                     serverHeader.value() should include ("webapi/")

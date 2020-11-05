@@ -26,6 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -60,11 +61,19 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = createResource ~ updateResourceMetadata ~ getResourcesInProject ~
-        getResourceHistory ~ getResources ~ getResourcesPreview ~ getResourcesTei ~
-        getResourcesGraph ~ deleteResource ~ eraseResource
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        createResource(featureFactoryConfig) ~
+            updateResourceMetadata(featureFactoryConfig) ~
+            getResourcesInProject(featureFactoryConfig) ~
+            getResourceHistory(featureFactoryConfig) ~
+            getResources(featureFactoryConfig) ~
+            getResourcesPreview(featureFactoryConfig) ~
+            getResourcesTei(featureFactoryConfig) ~
+            getResourcesGraph(featureFactoryConfig) ~
+            deleteResource(featureFactoryConfig) ~
+            eraseResource(featureFactoryConfig)
 
-    private def createResource: Route = path(ResourcesBasePath) {
+    private def createResource(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath) {
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -86,6 +95,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -97,7 +107,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def updateResourceMetadata: Route = path(ResourcesBasePath) {
+    private def updateResourceMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath) {
         put {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -119,6 +129,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -130,7 +141,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResourcesInProject: Route = path(ResourcesBasePath) {
+    private def getResourcesInProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath) {
         get {
             requestContext => {
                 val projectIri: SmartIri = RouteUtilV2.getProject(requestContext).getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
@@ -175,11 +186,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
 
                 RouteUtilV2.runRdfRouteWithFuture(
-                    requestMessageFuture,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log,
+                    requestMessageF = requestMessageFuture,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
                     targetSchema = ApiV2Complex,
                     schemaOptions = schemaOptions
                 )
@@ -187,7 +199,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResourceHistory: Route = path(ResourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
+    private def getResourceHistory(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
         get {
             requestContext => {
                 val resourceIri = stringFormatter.validateAndEscapeIri(resourceIriStr, throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
@@ -207,6 +219,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -217,7 +230,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResources: Route = path(ResourcesBasePath / Segments) { resIris: Seq[String] =>
+    private def getResources(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath / Segments) { resIris: Seq[String] =>
         get {
             requestContext => {
 
@@ -260,6 +273,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -270,7 +284,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResourcesPreview: Route = path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
+    private def getResourcesPreview(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
         get {
             requestContext => {
                 if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
@@ -289,6 +303,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -299,7 +314,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResourcesTei: Route = path("v2" / "tei" / Segment) { resIri: String =>
+    private def getResourcesTei(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "tei" / Segment) { resIri: String =>
         get {
             requestContext => {
 
@@ -330,6 +345,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 RouteUtilV2.runTEIXMLRoute(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -339,7 +355,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def getResourcesGraph: Route = path("v2" / "graph" / Segment) { resIriStr: String =>
+    private def getResourcesGraph(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "graph" / Segment) { resIriStr: String =>
         get {
             requestContext => {
                 val resourceIri: IRI = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: <$resIriStr>"))
@@ -378,6 +394,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
                     requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     responderManager = responderManager,
                     log = log,
@@ -388,7 +405,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def deleteResource: Route = path(ResourcesBasePath / "delete") {
+    private def deleteResource(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath / "delete") {
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -410,6 +427,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -421,7 +439,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def eraseResource: Route = path(ResourcesBasePath / "erase") {
+    private def eraseResource(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath / "erase") {
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
@@ -443,6 +461,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -453,6 +472,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             }
         }
     }
+
     /**
      * Gets the Iri of the property that represents the text of the resource.
      *

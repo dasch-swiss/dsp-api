@@ -34,7 +34,7 @@ object ServerVersion {
     private val AkkaNameAndVersion = s"akka-http/${VersionInfo.akkaHttpVersion}"
     private val AllProducts = ApiNameAndVersion + " " + AkkaNameAndVersion
 
-    def serverVersionHeader(): Server = Server(products = AllProducts)
+    def serverVersionHeader: Server = Server(products = AllProducts)
 
     def addServerHeader(route: Route): Route = respondWithHeader(serverVersionHeader) {
         route

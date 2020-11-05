@@ -19,11 +19,10 @@
 
 package org.knora.webapi
 
-import java.io.{ByteArrayInputStream, File, StringReader}
-import java.nio.file.{Files, Path}
-import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
+import java.io.{File, StringReader}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
@@ -43,10 +42,8 @@ import org.knora.webapi.util.{FileUtil, StartupUtils}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
-import resource.managed
 import spray.json._
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
@@ -83,7 +80,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 

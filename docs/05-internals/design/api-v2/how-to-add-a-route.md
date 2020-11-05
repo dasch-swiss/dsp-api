@@ -64,7 +64,7 @@ See the routes in that package for examples. Typically, each route
 route will construct a responder request message and pass it to
 `RouteUtilV2.runRdfRouteWithFuture` to handle the request.
 
-Finally, add your `knoraApiPath` function to the `apiRoutes` member
+Finally, add your route's `knoraApiPath` function to the `apiRoutes` member
 variable in `KnoraService`. Any exception thrown inside the route will
 be handled by the `KnoraExceptionHandler`, so that the correct client
 response (including the HTTP status code) will be returned.
