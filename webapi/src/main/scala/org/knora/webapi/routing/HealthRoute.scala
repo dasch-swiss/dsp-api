@@ -24,6 +24,7 @@ import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
 import spray.json.{JsObject, JsString}
 
@@ -120,7 +121,7 @@ class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
         path("health") {
             get {
                 requestContext =>

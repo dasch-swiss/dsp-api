@@ -25,6 +25,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
 import javax.ws.rs.Path
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
@@ -45,16 +46,16 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route =
-        getAdministrativePermissionForProjectGroup ~
-        getAdministrativePermissionsForProject ~
-        getDefaultObjectAccessPermissionsForProject ~
-        getPermissionsForProject ~
-        createAdministrativePermission ~
-        createDefaultObjectAccessPermission
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+        getAdministrativePermissionForProjectGroup(featureFactoryConfig) ~
+            getAdministrativePermissionsForProject(featureFactoryConfig) ~
+            getDefaultObjectAccessPermissionsForProject(featureFactoryConfig) ~
+            getPermissionsForProject(featureFactoryConfig) ~
+            createAdministrativePermission(featureFactoryConfig) ~
+            createDefaultObjectAccessPermission(featureFactoryConfig)
 
 
-    private def getAdministrativePermissionForProjectGroup: Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
+    private def getAdministrativePermissionForProjectGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
         (projectIri, groupIri) =>
             get {
                 requestContext =>
@@ -63,16 +64,17 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
     }
 
-    private def getAdministrativePermissionsForProject: Route = path(PermissionsBasePath / "ap" / Segment) { projectIri =>
+    private def getAdministrativePermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "ap" / Segment) { projectIri =>
         get {
             requestContext =>
                 val requestMessage = for {
@@ -84,16 +86,17 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
 
-    private def getDefaultObjectAccessPermissionsForProject: Route = path(PermissionsBasePath / "doap" / Segment) { projectIri =>
+    private def getDefaultObjectAccessPermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "doap" / Segment) { projectIri =>
         get {
             requestContext =>
                 val requestMessage = for {
@@ -105,17 +108,18 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 )
 
                 RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
                 )
         }
     }
 
-    private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) {
-        (projectIri) =>
+    private def getPermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / Segment) {
+        projectIri =>
             get {
                 requestContext =>
                     val requestMessage = for {
@@ -127,11 +131,12 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
     }
@@ -139,34 +144,35 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     /**
      * Create a new administrative permission
      */
-    private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
+    private def createAdministrativePermission(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "ap") {
         post {
             /* create a new administrative permission */
-                entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
-                    requestContext =>
-                        val requestMessage = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield AdministrativePermissionCreateRequestADM(
-                            createRequest = apiRequest,
-                            requestingUser = requestingUser,
-                            apiRequestID = UUID.randomUUID()
-                        )
+            entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield AdministrativePermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
 
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
+                    RouteUtilADM.runJsonRoute(
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
+                    )
+            }
         }
     }
 
     /**
      * Create default object access permission
      */
-    private def createDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap") {
+    private def createDefaultObjectAccessPermission(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "doap") {
         post {
             /* create a new default object access permission */
             entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
@@ -180,11 +186,12 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                     )
 
                     RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
                     )
             }
         }

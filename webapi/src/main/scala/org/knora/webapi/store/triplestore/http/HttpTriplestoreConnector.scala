@@ -132,7 +132,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         s"/${settings.triplestoreDatabaseName}/query"
     } else {
-        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
     private val sparqlUpdatePath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -140,7 +140,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         s"/${settings.triplestoreDatabaseName}/update"
     } else {
-        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
     private val checkRepositoryPath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -148,7 +148,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         "/$/server"
     } else {
-        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
     private val graphPath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -156,7 +156,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         s"/${settings.triplestoreDatabaseName}/get"
     } else {
-        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
     private val repositoryDownloadPath = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
@@ -164,7 +164,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         s"/${settings.triplestoreDatabaseName}"
     } else {
-        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
     private val repositoryUploadPath = repositoryDownloadPath
@@ -498,8 +498,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         response.recover {
             case t: Exception => throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
         }
-
-        response
     }
 
     /**
@@ -586,7 +584,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
             checkFusekiTriplestore()
         } else {
-            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+            throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
         }
     }
 
@@ -758,7 +756,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
             uriBuilder.setParameter("graph", s"$graphIri")
         } else {
-            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+            throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
         }
 
         uriBuilder.build()
@@ -864,7 +862,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
             // do nothing
         } else {
-            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+            throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
         }
 
         val httpGet = new HttpGet(uriBuilder.build())
@@ -1003,8 +1001,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 log.error(e, s"Failed to connect to triplestore")
                 throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
-
-        triplestoreResponseTry
     }
 
     def returnResponseAsString(response: CloseableHttpResponse): String = {

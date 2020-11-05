@@ -27,6 +27,7 @@ import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import javax.imageio.ImageIO
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
 
 /**
@@ -37,7 +38,7 @@ class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
         path("v1" / "assets" / Remaining) { assetId =>
             get {

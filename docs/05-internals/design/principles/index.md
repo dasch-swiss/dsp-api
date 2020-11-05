@@ -26,3 +26,4 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Triplestore Updates](triplestore-updates.md)
 - [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
+- [Feature Toggles](feature-toggles.md)

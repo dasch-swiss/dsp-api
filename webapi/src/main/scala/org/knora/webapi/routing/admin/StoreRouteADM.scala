@@ -23,6 +23,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
@@ -41,7 +42,7 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = Route {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = Route {
         path("admin" / "store") {
             get {
                 requestContext =>
@@ -62,11 +63,12 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             val requestMessage = Future.successful(msg)
 
                             RouteUtilADM.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
+                                requestMessageF = requestMessage,
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig,
+                                settings = settings,
+                                responderManager = responderManager,
+                                log = log
                             )(timeout = 479999.milliseconds, executionContext = executionContext)
                     }
 

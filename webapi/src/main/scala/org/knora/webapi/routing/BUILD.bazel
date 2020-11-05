@@ -8,6 +8,7 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/http/status",

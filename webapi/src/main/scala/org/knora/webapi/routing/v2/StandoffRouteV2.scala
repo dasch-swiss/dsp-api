@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.JsonLDUtil
@@ -44,7 +45,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
         path("v2" / "standoff" / Segment / Segment / Segment) { (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
             get {
@@ -79,6 +80,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,
                         requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
@@ -149,6 +151,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         RouteUtilV2.runRdfRouteWithFuture(
                             requestMessageF = requestMessageFuture,
                             requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             responderManager = responderManager,
                             log = log,

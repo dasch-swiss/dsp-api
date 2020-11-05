@@ -21,12 +21,13 @@ package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{RequestContext, Route, RouteResult}
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, RequestContextFeatureFactoryConfig}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -46,10 +47,12 @@ case class KnoraRouteData(system: ActorSystem,
 
 
 /**
- * An abstract class providing values that are commonly used in Knora responders.
+ * An abstract class providing functionality that is commonly used by Knora routes and by
+ * feature factories that construct Knora routes.
+ *
+ * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
-abstract class KnoraRoute(routeData: KnoraRouteData) {
-
+abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
     implicit protected val system: ActorSystem = routeData.system
     implicit protected val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
@@ -64,11 +67,60 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     /**
-     * Returns the route. Needs to be implemented in each subclass.
+     * Constructs a route. This can be done:
      *
-     * @return [[Route]]
+     * - by statically returning a routing function (if this is an ordinary route that
+     *   doesn't use a feature factory, or if this is a route feature returned by
+     *   a feature factory)
+     *
+     * - by asking a feature factory for a routing function (if this is a façade route)
+     *
+     * - by making a choice based on a feature toggle (if this is a feature factory)
+     *
+     * @param featureFactoryConfig the per-request feature factory configuration.
+     * @return a route configured with the features enabled by the feature factory configuration.
      */
-    def knoraApiPath: Route
+    def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route
+}
+
+/**
+ * An abstract class providing functionality that is commonly used in implementing Knora routes.
+ *
+ * @param routeData a [[KnoraRouteData]] providing access to the application.
+ */
+abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) {
+
+    /**
+     * A [[KnoraSettingsFeatureFactoryConfig]] to use as the parent [[FeatureFactoryConfig]].
+     */
+    private val knoraSettingsFeatureFactoryConfig: KnoraSettingsFeatureFactoryConfig = new
+            KnoraSettingsFeatureFactoryConfig(settings)
+
+    /**
+     * Returns a routing function that uses per-request feature factory configuration.
+     */
+    def knoraApiPath: Route = runRoute
+
+    /**
+     * A routing function that calls `makeRoute`, passing it the per-request feature factory configuration,
+     * and runs the resulting routing function.
+     *
+     * @param requestContext the HTTP request context.
+     * @return the result of running the route.
+     */
+    private def runRoute(requestContext: RequestContext): Future[RouteResult] = {
+        // Construct the per-request feature factory configuration.
+        val featureFactoryConfig: FeatureFactoryConfig = new RequestContextFeatureFactoryConfig(
+            requestContext = requestContext,
+            parent = knoraSettingsFeatureFactoryConfig
+        )
+
+        // Construct a routing function using that configuration.
+        val route: Route = makeRoute(featureFactoryConfig)
+
+        // Call the routing function.
+        route(requestContext)
+    }
 
     /**
      * Gets a [[ProjectADM]] corresponding to the specified project IRI.

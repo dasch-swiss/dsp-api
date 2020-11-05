@@ -29,3 +29,5 @@ The Knora APIs include:
   administering projects that use Knora as well as Knora itself.
 * The Knora [Util API](api-util/index.md), which is intended to be used for information retrieval
   about the Knora-stack itself.
+
+Knora API v2 and the admin API support [Feature Toggles](feature-toggles.md).

@@ -432,7 +432,7 @@ object SipiException {
  *
  * @param message a description of the error.
  */
-abstract class ApplicationConfigurationException(message: String) extends Exception(message) with KnoraException
+abstract class ApplicationConfigurationException(message: String, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with KnoraException
 
 object ApplicationConfigurationException {
     // So we can match instances of ApplicationConfigurationException, even though it's an abstract class
@@ -444,7 +444,7 @@ object ApplicationConfigurationException {
  *
  * @param message a description of the error.
  */
-case class UnsuportedTriplestoreException(message: String) extends ApplicationConfigurationException(message)
+case class UnsupportedTriplestoreException(message: String) extends ApplicationConfigurationException(message)
 
 /**
  * Indicates that the HTTP configuration is incorrect.
@@ -460,6 +460,12 @@ case class HttpConfigurationException(message: String) extends ApplicationConfig
  */
 case class TestConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
+/**
+ * Indicates that a feature toggle configuration is incorrect.
+ *
+ * @param message a description of the error.
+ */
+case class FeatureToggleException(message: String, cause: Option[Throwable] = None) extends ApplicationConfigurationException(message)
 
 /**
  * Helper functions for error handling.
