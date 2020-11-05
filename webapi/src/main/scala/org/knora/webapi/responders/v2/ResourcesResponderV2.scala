@@ -1347,8 +1347,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case None => throw InconsistentTriplestoreDataException(s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
-            // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.internalFilename.endsWith(".txt"))) {
+            // check if gravsearchFileValueContent represents a text file
+            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain")) {
                 throw BadRequestException(s"Resource $gravsearchTemplateIri does not have a file value referring to a Gravsearch template")
             }
 
