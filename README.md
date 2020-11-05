@@ -9,7 +9,7 @@ primary sources and data in the humanities.
 It is developed by the [Data and Service Center for the Humanities](https://dasch.swiss)
 at the [University of Basel](https://www.unibas.ch), and is supported by the
 [Swiss Academy of Humanities and Social Sciences](https://www.sagw.ch) and
-the [Swiss National Science Foundation](https://snf.ch).
+the [Swiss National Science Foundation](https://snf.ch) .
 
 Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
 released under the [GNU Affero General Public License](http://www.gnu.org/licenses/agpl-3.0.en.html).
