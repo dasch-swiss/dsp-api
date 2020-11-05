@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.admin
+package org.knora.webapi.routing.admin.lists
 
 import java.util.UUID
 

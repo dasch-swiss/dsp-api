@@ -19,7 +19,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Feature Toggles
 
-Some Knora features can be turned or off on a per-request basis.
+Some Knora features can be turned on or off on a per-request basis.
 This mechanism is based on
 [Feature Toggles (aka Feature Flags)](https://martinfowler.com/articles/feature-toggles.html).
 
@@ -74,10 +74,5 @@ be given when disabling a toggle.
 ## Response Header
 
 Knora API v2 and admin API responses contain the header
-`X-Knora-Feature-Toggles-Enabled`, whose value is a comma-separated,
-unordered list of toggles that are enabled. The response to the
-example above would be:
-
-```
-X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-baz:1
-```
+`X-Knora-Feature-Toggles`. It lists all configured toggles,
+in the same format as the corresponding request header.

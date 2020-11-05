@@ -133,7 +133,8 @@ If `expiration-date` is provided, it must be an [`xsd:dateTimeStamp`](http://www
 should have expiration dates except for long-lived ops toggles like `fast-baz` above.
 
 `KnoraSettingsFeatureFactoryConfig` reads this base configuration on startup. If
-a feature toggle has an expiration date in the past, the application will not start.
+a feature toggle has an expiration date in the past, a warning is logged
+on startup.
 
 ### Per-Request Configuration
 
@@ -170,13 +171,8 @@ or only the specified version).
 ## Response Header
 
 Knora API v2 and admin API responses contain the header
-`X-Knora-Feature-Toggles-Enabled`, whose value is a comma-separated,
-unordered list of toggles that are enabled. The response to the
-example above would be:
-
-```
-X-Knora-Feature-Toggles-Enabled: new-foo:2,fast-baz:1
-```
+`X-Knora-Feature-Toggles`. It lists all configured toggles,
+in the same format as the corresponding request header.
 
 ## Implementation Framework
 

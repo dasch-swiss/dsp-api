@@ -137,11 +137,10 @@ object FeatureToggle {
     val REQUEST_HEADER_LOWERCASE: String = REQUEST_HEADER.toLowerCase
 
     /**
-     * The name of the HTTP response header indicating which feature toggles
-     * are enabled.
+     * The name of the HTTP response header that lists configured feature toggles.
      */
-    val RESPONSE_HEADER: String = "X-Knora-Feature-Toggles-Enabled"
-    val RESPONSE_HEADER_LOWERCASE: String = RESPONSE_HEADER.toLowerCase
+    val RESPONSE_HEADER: String = REQUEST_HEADER
+    val RESPONSE_HEADER_LOWERCASE: String = REQUEST_HEADER_LOWERCASE
 
     /**
      * Constructs a default [[FeatureToggle]] from a [[FeatureToggleBaseConfig]].
@@ -228,18 +227,20 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
     protected[feature] def getLocalConfig(featureName: String): Option[FeatureToggle]
 
     /**
-     * Returns an [[HttpHeader]] indicating which feature toggles are enabled.
+     * Returns an [[HttpHeader]] giving the state of all feature toggles.
      */
     def makeHttpResponseHeader: Option[HttpHeader] = {
-        // Get the set of toggles that are enabled.
+        // Convert each toggle to its string representation.
         val enabledToggles: Set[String] = getAllBaseConfigs.map {
-            baseConfig: FeatureToggleBaseConfig => getToggle(baseConfig.featureName)
-        }.foldLeft(Set.empty[String]) {
-            case (enabledToggles, featureToggle) =>
-                featureToggle.state match {
-                    case ToggleStateOn(version) => enabledToggles + s"${featureToggle.featureName}:$version"
-                    case ToggleStateOff => enabledToggles
+            baseConfig: FeatureToggleBaseConfig =>
+                val featureToggle: FeatureToggle = getToggle(baseConfig.featureName)
+
+                val toggleStateStr: String = featureToggle.state match {
+                    case ToggleStateOn(version) => s":$version=on"
+                    case ToggleStateOff => s"=off"
                 }
+
+                s"${featureToggle.featureName}$toggleStateStr"
         }
 
         // Are any toggles enabled?

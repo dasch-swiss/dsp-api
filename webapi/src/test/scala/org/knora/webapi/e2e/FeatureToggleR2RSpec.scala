@@ -26,7 +26,8 @@ import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.util.FastFuture
-import org.knora.webapi.R2RSpec
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.{R2RSpec, TestContainers}
 import org.knora.webapi.feature._
 import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData, KnoraRouteFactory}
 
@@ -36,6 +37,10 @@ import scala.concurrent.ExecutionContextExecutor
  * Tests feature toggles that replace implementations of API routes.
  */
 class FeatureToggleR2RSpec extends R2RSpec {
+    // Don't take feature toggles from application.conf, just take them from the config in this spec.
+    override implicit lazy val _system: ActorSystem = ActorSystem(actorSystemNameFrom(getClass),
+        TestContainers.PortConfig.withFallback(ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load().withoutPath("app.feature-toggles"))))
+
     // Some feature toggles for testing.
     override def testConfigSource: String =
         """app {
@@ -253,12 +258,12 @@ class FeatureToggleR2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     /**
-     * Parses the HTTP response header indicating which feature toggles are enabled.
+     * Parses the HTTP response header that lists the configured feature toggles.
      *
      * @param response the HTTP response.
-     * @return one string for each feature toggle that is enabled.
+     * @return a string per toggle.
      */
-    private def enabledToggles(response: HttpResponse): Set[String] = {
+    private def parseResponseHeader(response: HttpResponse): Set[String] = {
         response.headers.find(_.lowercaseName == FeatureToggle.RESPONSE_HEADER_LOWERCASE) match {
             case Some(header) => header.value.split(',').toSet
             case None => Set.empty
@@ -271,7 +276,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new foo, version 1")
-                assert(enabledToggles(response) == Set("new-foo:1", "new-bar:1"))
+                assert(parseResponseHeader(response) == Set("new-foo:1=on", "new-bar:1=on", "new-baz=off"))
             }
         }
 
@@ -280,7 +285,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the old foo")
-                assert(enabledToggles(response) == Set("new-bar:1"))
+                assert(parseResponseHeader(response) == Set("new-foo=off", "new-bar:1=on", "new-baz=off"))
             }
         }
 
@@ -289,7 +294,7 @@ class FeatureToggleR2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 assert(responseStr == "You are using the new foo, version 2")
-                assert(enabledToggles(response) == Set("new-foo:2", "new-bar:1"))
+                assert(parseResponseHeader(response) == Set("new-foo:2=on", "new-bar:1=on", "new-baz=off"))
             }
         }
 

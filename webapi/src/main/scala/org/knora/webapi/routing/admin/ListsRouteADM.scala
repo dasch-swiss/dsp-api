@@ -23,6 +23,7 @@ import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.routing.admin.lists.ListsRouteADMFeatureFactory
 import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
 
 /**
