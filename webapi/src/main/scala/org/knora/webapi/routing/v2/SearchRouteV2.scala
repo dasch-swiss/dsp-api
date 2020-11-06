@@ -27,7 +27,7 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 import scala.concurrent.Future
@@ -152,13 +152,17 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def fullTextSearchCount(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+    private def fullTextSearchCount(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "search" / "count" / Segment) { searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get {
             requestContext =>
-                val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+                if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
+                    throw BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route")
+                }
 
-                if (searchString.length < settings.searchValueMinLength) {
-                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                val escapedSearchStr = stringFormatter.toSparqlEncodedString(searchStr, throw BadRequestException(s"Invalid search string: '$searchStr'"))
+
+                if (escapedSearchStr.length < settings.searchValueMinLength) {
+                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}.")
                 }
 
                 val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -172,7 +176,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val requestMessage: Future[FullTextSearchCountRequestV2] = for {
                     requestingUser <- getUserADM(requestContext)
                 } yield FullTextSearchCountRequestV2(
-                    searchValue = searchString,
+                    searchValue = escapedSearchStr,
                     limitToProject = limitToProject,
                     limitToResourceClass = limitToResourceClass,
                     limitToStandoffClass = limitToStandoffClass,
@@ -192,13 +196,17 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def fullTextSearch(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+    private def fullTextSearch(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "search" / Segment) { searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get {
             requestContext => {
-                val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+                if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
+                    throw BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route")
+                }
 
-                if (searchString.length < settings.searchValueMinLength) {
-                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                val escapedSearchStr = stringFormatter.toSparqlEncodedString(searchStr, throw BadRequestException(s"Invalid search string: '$searchStr'"))
+
+                if (escapedSearchStr.length < settings.searchValueMinLength) {
+                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}.")
                 }
 
                 val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -217,7 +225,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val requestMessage: Future[FulltextSearchRequestV2] = for {
                     requestingUser <- getUserADM(requestContext)
                 } yield FulltextSearchRequestV2(
-                    searchValue = searchString,
+                    searchValue = escapedSearchStr,
                     offset = offset,
                     limitToProject = limitToProject,
                     limitToResourceClass = limitToResourceClass,

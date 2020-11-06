@@ -198,6 +198,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "not accept a fulltext query containing http://api.knora.org" in {
+            val invalidSearchString: String = URLEncoder.encode("PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>", "UTF-8")
+
+            Get(s"/v2/search/$invalidSearchString") ~> searchPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.BAD_REQUEST, responseStr)
+                assert(responseStr.contains("It looks like you are submitting a Gravsearch request to a full-text search route"))
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
 

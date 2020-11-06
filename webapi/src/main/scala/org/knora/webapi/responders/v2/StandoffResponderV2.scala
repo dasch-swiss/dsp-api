@@ -173,10 +173,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 throw BadRequestException(s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
             }
 
-            xsltFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+            (fileValueIri: IRI, xsltFileValueContent: TextFileValueContentV2) = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
-                        case textRepr: TextFileValueContentV2 => textRepr
+                        case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
                         case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
@@ -184,9 +184,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
-            // check if xsltFileValue represents an XSL transformation
-            _ = if (!(xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType) && xsltFileValueContent.fileValue.internalFilename.endsWith(".xsl"))) {
-                throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
+            // check if xsltFileValueContent represents an XSL transformation
+            _ = if (!xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType)) {
+                throw BadRequestException(s"Expected $fileValueIri to be an XML file referring to an XSL transformation, but it has MIME type ${xsltFileValueContent.fileValue.internalMimeType}")
             }
 
             xsltUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
