@@ -98,12 +98,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     private def createList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
         post {
             /* create a list */
-            entity(as[CreateListApiRequestADM]) { apiRequest =>
+            entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[ListCreateRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ListCreateRequestADM(
-                        createListRequest = apiRequest,
+                        createRootNode = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -206,10 +206,10 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 requestContext =>
                     val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage: Future[ListNodeCreateRequestADM] = for {
+                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListNodeCreateRequestADM(
-                        createListNodeRequest = apiRequest,
+                    } yield ListChildNodeCreateRequestADM(
+                        createChildNodeRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )

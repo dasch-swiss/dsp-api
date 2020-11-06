@@ -51,7 +51,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
         getLists(featureFactoryConfig) ~
-            createList(featureFactoryConfig) ~
+            createListItem(featureFactoryConfig) ~
             getListNode(featureFactoryConfig) ~
             updateList(featureFactoryConfig) ~
             createListChildNode(featureFactoryConfig) ~
@@ -88,8 +88,8 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
-    /* create a new list (root node) */
-    @ApiOperation(value = "Add new list", nickname = "addList", httpMethod = "POST", response = classOf[ListGetResponseADM])
+    /* create a new list item (root or child node)*/
+    @ApiOperation(value = "Add new list item", nickname = "addListItem", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" to create", required = true,
             dataTypeClass = classOf[CreateListApiRequestADM], paramType = "body")
@@ -97,18 +97,30 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def createList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
+    private def createListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
         post {
-            /* create a list */
-            entity(as[CreateListApiRequestADM]) { apiRequest =>
+            /* create a list item (root or child node) */
+            entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
-                    val requestMessage: Future[ListCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ListCreateRequestADM(
-                        createListRequest = apiRequest,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
+                    val requestMessage = for {
+                                requestingUser <- getUserADM(requestContext)
+                                // Is parent node IRI given in the payload?
+                                createRequest = if (apiRequest.parentNodeIri.isEmpty) {
+                                    // No, create a new list with given information of its root node.
+                                    ListCreateRequestADM(
+                                        createRootNode = apiRequest,
+                                        requestingUser = requestingUser,
+                                        apiRequestID = UUID.randomUUID()
+                                    )
+                                } else {
+                                    // Yes, create a new child and attach it to the parent node.
+                                    ListChildNodeCreateRequestADM(
+                                        createChildNodeRequest = apiRequest,
+                                        requestingUser = requestingUser,
+                                        apiRequestID = UUID.randomUUID()
+                                    )
+                                }
+                            } yield createRequest
 
                     RouteUtilADM.runJsonRoute(
                         requestMessageF = requestMessage,
@@ -207,10 +219,10 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             /* add node to existing list node. the existing list node can be either the root or a child */
             entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
-                    val requestMessage: Future[ListNodeCreateRequestADM] = for {
+                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListNodeCreateRequestADM(
-                        createListNodeRequest = apiRequest,
+                    } yield ListChildNodeCreateRequestADM(
+                        createChildNodeRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )

@@ -71,14 +71,14 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
 }
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new list node.
- * If the IRI of the parent node is given, this node is attached to it as a sublist node. If other
- * child nodes exist, the newly created list node will be appended to the end.
+ * Represents an API request payload that asks the Knora API server to create a new node.
+ * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node. If other
+ * child nodes exist, the newly created list node will be appended to the end of the list of children.
  * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
  * At least one label needs to be supplied.
  *
  * @param id            the optional custom IRI of the list node.
- * @param parentNodeIri the IRI of the parent node.
+ * @param parentNodeIri the optional IRI of the parent node.
  * @param projectIri    the IRI of the project.
  * @param name          the optional name of the list node.
  * @param labels        labels of the list node.
@@ -218,13 +218,19 @@ case class NodePathGetRequestADM(iri: IRI,
 /**
  * Requests the creation of a new list.
  *
- * @param createListRequest the [[CreateListApiRequestADM]] information used for creating the new list.
+ * @param createRootNode    the [[CreateNodeApiRequestADM]] information used for creating the root node of the list.
  * @param requestingUser    the user creating the new list.
  * @param apiRequestID      the ID of the API request.
  */
-case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
+case class ListCreateRequestADM(createRootNode: CreateNodeApiRequestADM,
                                 requestingUser: UserADM,
-                                apiRequestID: UUID) extends ListsResponderRequestADM
+                                apiRequestID: UUID) extends ListsResponderRequestADM {
+    // check if the requesting user is allowed to perform operation
+        if (!requestingUser.permissions.isProjectAdmin(createRootNode.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+            // not project or a system admin
+            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+        }
+}
 
 /**
  * Request updating basic information of an existing list.
@@ -240,17 +246,17 @@ case class ListInfoChangeRequestADM(listIri: IRI,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
- * Request the creation of a new list node.
+ * Request the creation of a new list node, root or child.
  *
- * @param createListNodeRequest  the new node information.
+ * @param createChildNodeRequest  the new node information.
  * @param requestingUser         the user making the request.
  * @param apiRequestID           the ID of the API request.
  */
-case class ListNodeCreateRequestADM(createListNodeRequest: CreateNodeApiRequestADM,
-                                    requestingUser: UserADM,
-                                    apiRequestID: UUID) extends ListsResponderRequestADM {
+case class ListChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRequestADM,
+                                         requestingUser: UserADM,
+                                         apiRequestID: UUID) extends ListsResponderRequestADM {
     // check if the requesting user is allowed to perform operation
-    if (!requestingUser.permissions.isProjectAdmin(createListNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+    if (!requestingUser.permissions.isProjectAdmin(createChildNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
         // not project or a system admin
         throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
     }

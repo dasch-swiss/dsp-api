@@ -170,7 +170,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             "create a list" in {
                 responderManager ! ListCreateRequestADM(
-                    createListRequest = CreateListApiRequestADM(
+                    createRootNode = CreateNodeApiRequestADM(
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("neuelistename"),
                         labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
@@ -199,21 +199,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 // store list IRI for next test
                 newListIri.set(listInfo.id)
-            }
-
-            "return a 'ForbiddenException' if the user creating the list is not project or system admin" in {
-                responderManager ! ListCreateRequestADM(
-                    createListRequest = CreateListApiRequestADM(
-                        projectIri = IMAGES_PROJECT_IRI,
-                        name = None,
-                        labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
-                        comments = Seq.empty[StringLiteralV2]
-                    ),
-                    requestingUser = SharedTestDataADM.imagesUser02,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsg(Failure(ForbiddenException(LIST_CREATE_PERMISSION_ERROR)))
             }
 
             "update basic list information" in {
@@ -292,8 +277,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "add child to list - to the root node" in {
-                responderManager ! ListNodeCreateRequestADM(
-                    createListNodeRequest = CreateNodeApiRequestADM(
+                responderManager ! ListChildNodeCreateRequestADM(
+                    createChildNodeRequest = CreateNodeApiRequestADM(
                         parentNodeIri = Some(newListIri.get),
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("first"),
@@ -335,13 +320,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "add second child to list - to the root node" in {
-                responderManager ! ListNodeCreateRequestADM(
-                       createListNodeRequest = CreateNodeApiRequestADM(
-                       parentNodeIri = Some(newListIri.get),
-                       projectIri = IMAGES_PROJECT_IRI,
-                       name = Some("second"),
-                       labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
-                       comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+                responderManager ! ListChildNodeCreateRequestADM(
+                       createChildNodeRequest = CreateNodeApiRequestADM(
+                           parentNodeIri = Some(newListIri.get),
+                           projectIri = IMAGES_PROJECT_IRI,
+                           name = Some("second"),
+                           labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
+                           comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
                    ),
                    requestingUser = SharedTestDataADM.imagesUser01,
                    apiRequestID = UUID.randomUUID
@@ -379,8 +364,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
            }
 
            "add child to second child node" in {
-               responderManager ! ListNodeCreateRequestADM(
-                   createListNodeRequest = CreateNodeApiRequestADM(
+               responderManager ! ListChildNodeCreateRequestADM(
+                   createChildNodeRequest = CreateNodeApiRequestADM(
                        parentNodeIri = Some(secondChildIri.get),
                        projectIri = IMAGES_PROJECT_IRI,
                        name = Some("third"),

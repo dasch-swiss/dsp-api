@@ -57,9 +57,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         case ListInfoGetRequestADM(listIri, requestingUser) => listInfoGetRequestADM(listIri, requestingUser)
         case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
         case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
-        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => listCreateRequestADM(createListRequest, requestingUser, apiRequestID)
+        case ListCreateRequestADM(createRootNode, requestingUser , apiRequestID) => listCreateRequestADM(createRootNode, apiRequestID)
         case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID)
-        case ListNodeCreateRequestADM(createListNodeRequest, _ , apiRequestID) => listNodeCreateRequestADM(createListNodeRequest, apiRequestID)
+        case ListChildNodeCreateRequestADM(createChildNodeRequest, requestingUser , apiRequestID) => listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -576,70 +576,115 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         } yield NodePathGetResponseADM(elements = makePath(queryNodeIri, nodeMap, parentMap, Nil))
     }
 
+    /**
+     * Creates a node (root or child).
+     *
+     * @param createNodeRequest the new node's information.
+     * @return a [newListNodeIri]
+     */
+    private def createNode(createNodeRequest: CreateNodeApiRequestADM): Future[IRI] = {
+        def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
+            val position = if (children.isEmpty) {
+                0
+            } else {
+                children.size
+            }
+            position
+        }
+
+        def getRootNodeIri(parentListNode: ListNodeADM): IRI = {
+            parentListNode match {
+                case root: ListRootNodeADM => root.id
+                case child: ListChildNodeADM => child.hasRootNode
+            }
+        }
+
+        def getRootNodeAndPositionOfNewChild(parentNodeIri : IRI) = {
+            for {
+                /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
+                maybeParentListNode <- listNodeGetADM(parentNodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+                (parentListNode, children) = maybeParentListNode match {
+                    case Some(node: ListRootNodeADM) => (node.asInstanceOf[ListRootNodeADM], node.children)
+                    case Some(node: ListChildNodeADM) => (node.asInstanceOf[ListChildNodeADM], node.children)
+                    case Some(_) | None => throw BadRequestException(s"List node '$parentNodeIri' not found.")
+                }
+
+                // append child to the end
+                position = getPositionOfNewChild(children)
+
+                /* get the root node, depending on the type of the parent */
+                rootNodeIri = getRootNodeIri(parentListNode)
+
+            } yield (Some(position), Some(rootNodeIri))
+        }
+
+        for {
+                /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
+                maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createNodeRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                project: ProjectADM = maybeProject match {
+                    case Some(project: ProjectADM) => project
+                    case None => throw BadRequestException(s"Project '${createNodeRequest.projectIri}' not found.")
+                }
+
+                /* verify that the list node name is unique for the project */
+                projectUniqueNodeName <- listNodeNameIsProjectUnique(createNodeRequest.projectIri, createNodeRequest.name)
+                _ = if (!projectUniqueNodeName) {
+                    throw BadRequestException(s"The node name ${createNodeRequest.name.get} is already used by a list inside the project ${createNodeRequest.projectIri}.")
+                }
+
+                // if parent node is known, find the root node of the list and the position of the new child node
+                (position, rootNodeIri) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
+                    getRootNodeAndPositionOfNewChild(createNodeRequest.parentNodeIri.get)
+                } else {
+                    Future(None, None)
+                }
+
+                // calculate the data named graph
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+
+                // check the custom IRI; if not given, create an unused IRI
+                customListIri: Option[SmartIri] = createNodeRequest.id.map(iri => iri.toSmartIri)
+                maybeShortcode: String = project.shortcode
+                newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+
+                // Create the new list node
+                createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewListNode(
+                    dataNamedGraph = dataNamedGraph,
+                    triplestore = settings.triplestoreType,
+                    listClassIri = OntologyConstants.KnoraBase.ListNode,
+                    projectIri = createNodeRequest.projectIri,
+                    nodeIri = newListNodeIri,
+                    parentNodeIri = createNodeRequest.parentNodeIri,
+                    rootNodeIri = rootNodeIri,
+                    position = position,
+                    maybeName = createNodeRequest.name,
+                    maybeLabels = createNodeRequest.labels,
+                    maybeComments = createNodeRequest.comments
+                ).toString
+
+                _ <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
+        } yield newListNodeIri
+    }
 
     /**
      * Creates a list.
      *
-     * @param createListRequest the new list's information.
-     * @param requestingUser    the user that is making the request.
+     * @param createRootRequest the new list's information.
      * @param apiRequestID      the unique api request ID.
      * @return a [[ListInfoGetResponseADM]]
-     * @throws ForbiddenException  in the case that the user is not allowed to perform the operation.
-     * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
      */
-    private def listCreateRequestADM(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
+    private def listCreateRequestADM(createRootRequest: CreateNodeApiRequestADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
 
         /**
          * The actual task run with an IRI lock.
          */
-        def listCreateTask(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+        def listCreateTask(createRootRequest: CreateNodeApiRequestADM, apiRequestID: UUID) = for {
 
-            // check if the requesting user is allowed to perform operation
-            _ <- Future(
-                if (!requestingUser.permissions.isProjectAdmin(createListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
-                    // not project or a system admin
-                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-                    throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-                }
-            )
-
-            /* Verify that the project exists. */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createListRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
-            project: ProjectADM = maybeProject match {
-                case Some(project: ProjectADM) => project
-                case None => throw BadRequestException(s"Project '${createListRequest.projectIri}' not found.")
-            }
-
-            /* verify that the list node name is unique for the project */
-            projectUniqueNodeName <- listNodeNameIsProjectUnique(createListRequest.projectIri, createListRequest.name)
-            _ = if (!projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${createListRequest.name.get} is already used by a list inside the project ${createListRequest.projectIri}.")
-            }
-
-            // check the custom IRI; if not given, create an unused IRI
-            customListIri: Option[SmartIri] = createListRequest.id.map(iri => iri.toSmartIri)
-            maybeShortcode = project.shortcode
-            listIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
-
-            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
-            // Create the new list
-            createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewList(
-                dataNamedGraph = dataNamedGraph,
-                triplestore = settings.triplestoreType,
-                listIri = listIri,
-                projectIri = project.id,
-                listClassIri = OntologyConstants.KnoraBase.ListNode,
-                maybeName = createListRequest.name,
-                maybeLabels = createListRequest.labels,
-                maybeComments = createListRequest.comments
-            ).toString
-            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
-
+            listRootIri <- createNode(createRootRequest)
 
             // Verify that the list was created.
-            maybeNewListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
-            newListADM = maybeNewListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not created. Please report this as a possible bug."))
+            maybeNewListADM <- listGetADM(listRootIri, KnoraSystemInstances.Users.SystemUser)
+            newListADM = maybeNewListADM.getOrElse(throw UpdateNotPerformedException(s"List $listRootIri was not created. Please report this as a possible bug."))
 
             // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
 
@@ -650,7 +695,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 LISTS_GLOBAL_LOCK_IRI,
-                () => listCreateTask(createListRequest, requestingUser, apiRequestID)
+                () => listCreateTask(createRootRequest, apiRequestID)
             )
         } yield taskResult
     }
@@ -761,97 +806,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
     /**
-     * Creates a new list node and appends it to an existing list node.
+     * Creates a new child node and appends it to an existing list node.
      *
-     * @param createNodeRequest      the new list node's information.
+     * @param createChildNodeRequest      the new list node's information.
      * @param apiRequestID           the unique api request ID.
      * @return a [[ListNodeInfoGetResponseADM]]
      */
-    private def listNodeCreateRequestADM(createNodeRequest: CreateNodeApiRequestADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
-        def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
-            val position = if (children.isEmpty) {
-                0
-            } else {
-                children.size
-            }
-            position
-        }
-
-        def getRootNodeIri(parentListNode: ListNodeADM): IRI = {
-            parentListNode match {
-                case root: ListRootNodeADM => root.id
-                case child: ListChildNodeADM => child.hasRootNode
-            }
-        }
-
-        def getRootNodeAndPositionOfNewChild(parentNodeIri : IRI) = {
-            for {
-                    /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
-                    maybeParentListNode <- listNodeGetADM(parentNodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
-                    (parentListNode, children) = maybeParentListNode match {
-                        case Some(node: ListRootNodeADM) => (node.asInstanceOf[ListRootNodeADM], node.children)
-                        case Some(node: ListChildNodeADM) => (node.asInstanceOf[ListChildNodeADM], node.children)
-                        case Some(_) | None => throw BadRequestException(s"List node '$parentNodeIri' not found.")
-                    }
-
-                    // append child to the end
-                    position = getPositionOfNewChild(children)
-
-                    /* get the root node, depending on the type of the parent */
-                    rootNodeIri = getRootNodeIri(parentListNode)
-
-            } yield (Some(position), Some(rootNodeIri))
-        }
+    private def listChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRequestADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
         /**
          * The actual task run with an IRI lock.
          */
-        def listChildNodeCreateTask(createNodeRequest: CreateNodeApiRequestADM, apiRequestID: UUID) = for {
-            /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createNodeRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
-            project: ProjectADM = maybeProject match {
-                case Some(project: ProjectADM) => project
-                case None => throw BadRequestException(s"Project '${createNodeRequest.projectIri}' not found.")
-            }
-
-            /* verify that the list node name is unique for the project */
-            projectUniqueNodeName <- listNodeNameIsProjectUnique(createNodeRequest.projectIri, createNodeRequest.name)
-            _ = if (!projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${createNodeRequest.name.get} is already used by a list inside the project ${createNodeRequest.projectIri}.")
-            }
-
-            // if parent node is known, find the root node of the list and the position of the new child node
-            (position, rootNodeIri) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
-                                            getRootNodeAndPositionOfNewChild(createNodeRequest.parentNodeIri.get)
-                                        } else {
-                                            Future(None, None)
-                                        }
-            _=println(position)
-            _=println(rootNodeIri)
-            // calculate the data named graph
-            dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
-
-            // check the custom IRI; if not given, create an unused IRI
-            customListIri: Option[SmartIri] = createNodeRequest.id.map(iri => iri.toSmartIri)
-            maybeShortcode: String = project.shortcode
-            newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
-
-            // Create the new list node
-            createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewListChildNode(
-                dataNamedGraph = dataNamedGraph,
-                triplestore = settings.triplestoreType,
-                listClassIri = OntologyConstants.KnoraBase.ListNode,
-                nodeIri = newListNodeIri,
-                parentNodeIri = createNodeRequest.parentNodeIri,
-                rootNodeIri = rootNodeIri,
-                position = position,
-                maybeName = createNodeRequest.name,
-                maybeLabels = createNodeRequest.labels,
-                maybeComments = createNodeRequest.comments
-            ).toString
-            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
-
-
+        def listChildNodeCreateTask(createChildNodeRequest: CreateNodeApiRequestADM, apiRequestID: UUID) = for {
+            newListNodeIri <- createNode(createChildNodeRequest)
             // Verify that the list node was created.
             maybeNewListNode <- listNodeInfoGetADM(newListNodeIri, KnoraSystemInstances.Users.SystemUser)
             newListNode = maybeNewListNode.getOrElse(throw UpdateNotPerformedException(s"List node $newListNodeIri was not created. Please report this as a possible bug."))
@@ -866,7 +832,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 LISTS_GLOBAL_LOCK_IRI,
-                () => listChildNodeCreateTask(createNodeRequest, apiRequestID)
+                () => listChildNodeCreateTask(createChildNodeRequest, apiRequestID)
             )
         } yield taskResult
 
