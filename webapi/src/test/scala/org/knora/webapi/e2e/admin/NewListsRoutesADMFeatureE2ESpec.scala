@@ -26,6 +26,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.feature.FeatureToggle
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
@@ -37,7 +38,7 @@ import org.knora.webapi.{E2ESpec, IRI}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object ListsADME2ESpec {
+object NewListsRouteADMFeatureE2ESpec {
     val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -48,12 +49,12 @@ object ListsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
     // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
+    private val clientTestDataPath: Seq[String] = Seq("admin", "lists", "toggle_new-list-admin-routes_v1")
 
     // Collects client test data
     private val clientTestDataCollector = new ClientTestDataCollector(settings)
@@ -104,9 +105,9 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
         "used to query information about lists" should {
 
             "return all lists" in {
-                val request = Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Get(baseApiUrl + s"/admin/lists")
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-
                 // println(s"response: ${response.toString}")
 
                 response.status should be(StatusCodes.OK)
@@ -129,7 +130,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "return all lists belonging to the images project" in {
-                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF")
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
 
@@ -154,7 +156,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "return all lists belonging to the anything project" in {
-                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001")
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
 
@@ -179,7 +182,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "return basic list information" in {
-                val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList")
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
 
@@ -204,7 +208,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "return a complete list" in {
-                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList")
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
 
@@ -227,7 +232,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "return node info without children" in {
-                val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01")
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
 
@@ -273,7 +279,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                         text = createListWithCustomIriRequest
                     )
                 )
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest))
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.OK)
 
@@ -311,7 +318,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))  ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.BadRequest)
 
@@ -347,7 +355,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedParentNodeUrl = java.net.URLEncoder.encode(SharedTestDataADM.customListIRI, "utf-8")
 
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedParentNodeUrl, HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/", HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -399,7 +408,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                         text = createListRequest
                     )
                 )
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest))
+                        .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -443,7 +453,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
@@ -462,6 +473,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 """.stripMargin
 
                 val request01 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
+                                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
                 val response01: HttpResponse = singleAwaitingRequest(request01)
                 // println(s"response: ${response01.toString}")
                 response01.status should be(StatusCodes.BadRequest)
@@ -478,6 +490,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 """.stripMargin
 
                 val request02 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
+                                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
                 val response02: HttpResponse = singleAwaitingRequest(request02)
                 // println(s"response: ${response02.toString}")
                 response02.status should be(StatusCodes.BadRequest)
@@ -494,6 +507,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 """.stripMargin
 
                 val request03 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
                 val response03: HttpResponse = singleAwaitingRequest(request03)
                 // println(s"response: ${response03.toString}")
                 response03.status should be(StatusCodes.BadRequest)
@@ -522,7 +536,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 )
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfo)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfo))
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -556,6 +571,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "name": "a totally new name"
                        |}""".stripMargin
+
                 clientTestDataCollector.addFile(
                     TestDataFileContent(
                         filePath = TestDataFilePath(
@@ -568,7 +584,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 )
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListName))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -622,7 +639,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest))
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -662,7 +680,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params))
+                        .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
@@ -683,7 +702,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01))
+                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response01: HttpResponse = singleAwaitingRequest(request01)
                 // log.debug(s"response: ${response.toString}")
                 response01.status should be(StatusCodes.BadRequest)
@@ -699,7 +719,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                    |}
                 """.stripMargin
 
-                val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params02))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response02: HttpResponse = singleAwaitingRequest(request02)
                 // log.debug(s"response: ${response.toString}")
                 response02.status should be(StatusCodes.BadRequest)
@@ -715,7 +736,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params03))
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response03: HttpResponse = singleAwaitingRequest(request03)
                 // log.debug(s"response: ${response.toString}")
                 response03.status should be(StatusCodes.BadRequest)
@@ -748,7 +770,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     )
                 )
 
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToRoot)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToRoot))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -815,7 +838,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                         text = addSecondChildToRoot
                     )
                 )
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
+                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -884,7 +908,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                         text = addChildToSecondChild
                     )
                 )
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToSecondChild)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
+                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
