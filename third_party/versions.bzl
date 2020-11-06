@@ -11,7 +11,7 @@ SIPI_REPOSITORY = "daschswiss/sipi"
 SIPI_VERSION = "3.0.0-rc.9"
 SIPI_TAG = "v" + SIPI_VERSION
 SIPI_IMAGE = SIPI_REPOSITORY + ":" + SIPI_VERSION
-SIPI_IMAGE_DIGEST = "sha256:dce8f37fa9cf758955fb8a40b5341e55edb4ae356349af447e0622299c3f687a"
+SIPI_IMAGE_DIGEST = "sha256:fdb962adb9a08bfcabac0e01b31979c6612e5b59afae34e56d8916b4ca57aa0d"
 
 # Jena Fuseki - digest takes precedence!
 FUSEKI_REPOSITORY = "daschswiss/apache-jena-fuseki"
