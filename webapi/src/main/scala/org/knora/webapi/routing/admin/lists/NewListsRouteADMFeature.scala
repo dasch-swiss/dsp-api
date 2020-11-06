@@ -54,7 +54,6 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             createListItem(featureFactoryConfig) ~
             getListNode(featureFactoryConfig) ~
             updateList(featureFactoryConfig) ~
-            createListChildNode(featureFactoryConfig) ~
             deleteListNode(featureFactoryConfig) ~
             getListInfo(featureFactoryConfig) ~
             getListNodeInfo(featureFactoryConfig)
