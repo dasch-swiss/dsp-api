@@ -89,9 +89,10 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     }
 
     /* create a new list item (root or child node)*/
+    // TODO: fix swagger
     @ApiOperation(value = "Add new list item", nickname = "addListItem", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
-        new ApiImplicitParam(name = "body", value = "\"list\" to create", required = true,
+        new ApiImplicitParam(name = "body", value = "\"list\" item to create", required = true,
             dataTypeClass = classOf[CreateListApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
@@ -186,43 +187,6 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     } yield ListInfoChangeRequestADM(
                         listIri = listIri,
                         changeListRequest = apiRequest,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
-    }
-
-    /**
-     * create a new child node
-     */
-    @Path("/{IRI}")
-    @ApiOperation(value = "Add new node", nickname = "addListNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
-    @ApiImplicitParams(Array(
-        new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
-            dataTypeClass = classOf[CreateNodeApiRequestADM], paramType = "body")
-    ))
-    @ApiResponses(Array(
-        new ApiResponse(code = 500, message = "Internal server error")
-    ))
-    private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
-        post {
-            /* add node to existing list node. the existing list node can be either the root or a child */
-            entity(as[CreateNodeApiRequestADM]) { apiRequest =>
-                requestContext =>
-                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ListChildNodeCreateRequestADM(
-                        createChildNodeRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
