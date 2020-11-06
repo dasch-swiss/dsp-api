@@ -93,9 +93,9 @@
       },
       "post" : {
         "tags" : [ "lists" ],
-        "summary" : "Add new child node",
+        "summary" : "Add new node",
         "description" : "",
-        "operationId" : "addListChildNode",
+        "operationId" : "addListNode",
         "produces" : [ "application/json" ],
         "parameters" : [ {
           "in" : "body",
@@ -103,7 +103,7 @@
           "description" : "\"node\" to create",
           "required" : true,
           "schema" : {
-            "$ref" : "#/definitions/CreateChildNodeApiRequestADM"
+            "$ref" : "#/definitions/CreateNodeApiRequestADM"
           }
         } ],
         "responses" : {
@@ -245,7 +245,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
@@ -279,7 +279,7 @@
     "RootJsonFormatChangeListInfoApiRequestADM" : {
       "type" : "object"
     },
-    "RootJsonFormatCreateChildNodeApiRequestADM" : {
+    "RootJsonFormatCreateNodeApiRequestADM" : {
       "type" : "object"
     },
     "RootJsonFormatCreateListApiRequestADM" : {
@@ -363,7 +363,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
@@ -462,7 +462,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
@@ -501,7 +501,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
@@ -555,7 +555,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
@@ -594,7 +594,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
@@ -622,7 +622,7 @@
         }
       }
     },
-    "CreateChildNodeApiRequestADM" : {
+    "CreateNodeApiRequestADM" : {
       "type" : "object",
       "required" : [ "changeListInfoApiRequestADMFormat", "comments", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "labels", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "parentNodeIri", "projectIri", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
       "properties" : {
@@ -651,7 +651,7 @@
           "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
         },
         "createListNodeApiRequestADMFormat" : {
-          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+          "$ref" : "#/definitions/RootJsonFormatCreateNodeApiRequestADM"
         },
         "changeListInfoApiRequestADMFormat" : {
           "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"

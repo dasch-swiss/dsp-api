@@ -191,10 +191,10 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * create a new child node
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
+    @ApiOperation(value = "Add new node", nickname = "addListNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
-            dataTypeClass = classOf[CreateChildNodeApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[CreateNodeApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -202,15 +202,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
-            entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
+            entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
-                    val parentNodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
+                    val requestMessage: Future[ListNodeCreateRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListChildNodeCreateRequestADM(
-                        parentNodeIri = parentNodeIri,
-                        createChildNodeRequest = apiRequest,
+                    } yield ListNodeCreateRequestADM(
+                        createListNodeRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )

@@ -292,10 +292,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "add child to list - to the root node" in {
-                responderManager ! ListChildNodeCreateRequestADM(
-                    parentNodeIri = newListIri.get,
-                    createChildNodeRequest = CreateChildNodeApiRequestADM(
-                        parentNodeIri = newListIri.get,
+                responderManager ! ListNodeCreateRequestADM(
+                    createListNodeRequest = CreateNodeApiRequestADM(
+                        parentNodeIri = Some(newListIri.get),
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("first"),
                         labels = Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
@@ -336,10 +335,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "add second child to list - to the root node" in {
-                responderManager ! ListChildNodeCreateRequestADM(
-                   parentNodeIri = newListIri.get,
-                   createChildNodeRequest = CreateChildNodeApiRequestADM(
-                       parentNodeIri = newListIri.get,
+                responderManager ! ListNodeCreateRequestADM(
+                       createListNodeRequest = CreateNodeApiRequestADM(
+                       parentNodeIri = Some(newListIri.get),
                        projectIri = IMAGES_PROJECT_IRI,
                        name = Some("second"),
                        labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
@@ -381,10 +379,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
            }
 
            "add child to second child node" in {
-               responderManager ! ListChildNodeCreateRequestADM(
-                   parentNodeIri = secondChildIri.get,
-                   createChildNodeRequest = CreateChildNodeApiRequestADM(
-                       parentNodeIri = secondChildIri.get,
+               responderManager ! ListNodeCreateRequestADM(
+                   createListNodeRequest = CreateNodeApiRequestADM(
+                       parentNodeIri = Some(secondChildIri.get),
                        projectIri = IMAGES_PROJECT_IRI,
                        name = Some("third"),
                        labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),

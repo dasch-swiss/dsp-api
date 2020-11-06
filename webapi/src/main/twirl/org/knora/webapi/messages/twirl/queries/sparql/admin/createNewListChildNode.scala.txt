@@ -37,9 +37,9 @@
   triplestore: String,
   listClassIri: IRI,
   nodeIri: IRI,
-  parentNodeIri: IRI,
-  rootNodeIri: IRI,
-  position: Int,
+  parentNodeIri: Option[IRI],
+  rootNodeIri: Option[IRI],
+  position: Option[Int],
   maybeName: Option[String],
   maybeLabels: Seq[StringLiteralV2],
   maybeComments: Seq[StringLiteralV2]
@@ -56,11 +56,13 @@ INSERT {
     GRAPH ?dataNamedGraph {
         ?nodeIri rdf:type ?listClassIri .
 
-        ?parentNodeIri knora-base:hasSubListNode ?nodeIri .
+        @if(parentNodeIri.nonEmpty) {
+            ?parentNodeIri knora-base:hasSubListNode ?nodeIri .
 
-        ?nodeIri knora-base:hasRootNode ?rootNodeIri .
+            ?nodeIri knora-base:hasRootNode ?rootNodeIri .
 
-        ?nodeIri knora-base:listNodePosition "@position"^^xsd:integer .
+            ?nodeIri knora-base:listNodePosition "@position.get"^^xsd:integer .
+        }
 
         @if(maybeName.nonEmpty) {
             ?nodeIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
@@ -104,8 +106,12 @@ explicit statements in the WHERE clause here.
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@nodeIri") AS ?nodeIri)
-    BIND(IRI("@parentNodeIri") AS ?parentNodeIri)
-    BIND(IRI("@rootNodeIri") AS ?rootNodeIri)
+    @if(parentNodeIri.nonEmpty) {
+        BIND(IRI("@parentNodeIri.get") AS ?parentNodeIri)
+    }
+    @if(rootNodeIri.nonEmpty) {
+        BIND(IRI("@rootNodeIri.get") AS ?rootNodeIri)
+    }
     BIND(IRI("@listClassIri") AS ?listClassIri)
 
     FILTER NOT EXISTS { ?nodeIri rdf:type ?listClassIri . }

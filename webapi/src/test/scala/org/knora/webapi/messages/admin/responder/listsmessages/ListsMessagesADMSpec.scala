@@ -296,7 +296,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when no parent node iri is given" in {
+        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when no parent node iri is given" in {
 
             val payload =
                 s"""
@@ -308,13 +308,13 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal (LIST_NODE_IRI_MISSING_ERROR)
+            thrown.getMessage should equal (LIST_NODE_IRI_INVALID_ERROR)
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when parent node iri is invalid" in {
+        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when parent node iri is invalid" in {
 
             val payload =
                 s"""
@@ -326,13 +326,13 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
             thrown.getMessage should equal (LIST_NODE_IRI_INVALID_ERROR)
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when project iri is empty" in {
+        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when project iri is empty" in {
 
             val payload =
                 s"""
@@ -344,13 +344,13 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
             thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when project iri is invalid" in {
+        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when project iri is invalid" in {
 
             val payload =
                 s"""
@@ -362,13 +362,13 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
             thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when labels are empty" in {
+        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when labels are empty" in {
 
             val payload =
                 s"""
@@ -380,13 +380,13 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
             thrown.getMessage should equal (LABEL_MISSING_ERROR)
 
         }
 
-        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when custom iri of the child node is invalid" in {
+        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when custom iri of the child node is invalid" in {
 
             val payload =
                 s"""
@@ -398,7 +398,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
             thrown.getMessage should equal ("Invalid list node IRI")
 

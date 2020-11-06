@@ -23,7 +23,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -71,10 +71,11 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
 }
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new child list node which will be
- * attached to the list node identified by the supplied listNodeIri, where the list node to which a child list node
- * is added can be either a root list node or a child list node. At least one label needs to be supplied. If other
+ * Represents an API request payload that asks the Knora API server to create a new list node.
+ * If the IRI of the parent node is given, this node is attached to it as a sublist node. If other
  * child nodes exist, the newly created list node will be appended to the end.
+ * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
+ * At least one label needs to be supplied.
  *
  * @param id            the optional custom IRI of the list node.
  * @param parentNodeIri the IRI of the parent node.
@@ -83,21 +84,17 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
  * @param labels        labels of the list node.
  * @param comments      comments of the list node.
  */
-case class CreateChildNodeApiRequestADM(id: Option[IRI] = None,
-                                        parentNodeIri: IRI,
-                                        projectIri: IRI,
-                                        name: Option[String],
-                                        labels: Seq[StringLiteralV2],
-                                        comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+case class CreateNodeApiRequestADM( id: Option[IRI] = None,
+                                    parentNodeIri: Option[IRI] = None,
+                                    projectIri: IRI,
+                                    name: Option[String],
+                                    labels: Seq[StringLiteralV2],
+                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
 
-    if (parentNodeIri.isEmpty) {
-        throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
-    }
-
-    if (!stringFormatter.isKnoraListIriStr(parentNodeIri)) {
+    if (parentNodeIri.nonEmpty && !stringFormatter.isKnoraListIriStr(parentNodeIri.get)) {
         throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
     }
 
@@ -243,17 +240,22 @@ case class ListInfoChangeRequestADM(listIri: IRI,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
- * Request the creation of a new list (child) node.
+ * Request the creation of a new list node.
  *
- * @param parentNodeIri          the IRI of the list node to which we want to attach the newly created node.
- * @param createChildNodeRequest the new node information.
+ * @param createListNodeRequest  the new node information.
  * @param requestingUser         the user making the request.
  * @param apiRequestID           the ID of the API request.
  */
-case class ListChildNodeCreateRequestADM(parentNodeIri: IRI,
-                                         createChildNodeRequest: CreateChildNodeApiRequestADM,
-                                         requestingUser: UserADM,
-                                         apiRequestID: UUID) extends ListsResponderRequestADM
+case class ListNodeCreateRequestADM(createListNodeRequest: CreateNodeApiRequestADM,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM {
+    // check if the requesting user is allowed to perform operation
+    if (!requestingUser.permissions.isProjectAdmin(createListNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        // not project or a system admin
+        throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+    }
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
@@ -965,7 +967,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
-    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "id" , "parentNodeIri", "projectIri", "name", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] = jsonFormat(CreateNodeApiRequestADM, "id" , "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
