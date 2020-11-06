@@ -19,7 +19,9 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import org.knora.webapi.exceptions.BadRequestException
+import java.util.UUID
+
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
@@ -42,7 +44,6 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             val listInfo = ListRootNodeInfoADM (
                 id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
-                name = None,
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
                 comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
             )
@@ -111,6 +112,21 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
             converted.listinfo should be(listInfo)
             converted.children should be(children)
+        }
+
+        "throw 'ForbiddenException' if user requesting `ListCreateApiRequestADM` is not system or project admin" in {
+            val caught = intercept[ForbiddenException](
+                ListCreateRequestADM(
+                    createRootNode = CreateNodeApiRequestADM(
+                        projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
+                        comments = Seq.empty[StringLiteralV2]
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === LIST_CREATE_PERMISSION_ERROR)
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when project IRI is empty" in {
@@ -296,7 +312,23 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
 
-        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when no parent node iri is given" in {
+        "throw 'ForbiddenException' if user requesting `createChildNodeRequest` is not system or project admin" in {
+            val caught = intercept[ForbiddenException](
+                ListChildNodeCreateRequestADM(
+                    createChildNodeRequest = CreateNodeApiRequestADM(
+                        parentNodeIri = Some(exampleListIri),
+                        projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                        labels = Seq(StringLiteralV2(value = "New child node", language = Some("en"))),
+                        comments = Seq.empty[StringLiteralV2]
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === LIST_NODE_CREATE_PERMISSION_ERROR)
+        }
+
+        "throw 'BadRequestException' for `createChildNodeRequest` when no parent node iri is given" in {
 
             val payload =
                 s"""
@@ -314,7 +346,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when parent node iri is invalid" in {
+        "throw 'BadRequestException' for `createChildNodeRequest` when parent node iri is invalid" in {
 
             val payload =
                 s"""
@@ -332,7 +364,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when project iri is empty" in {
+        "throw 'BadRequestException' for `createChildNodeRequest` when project iri is empty" in {
 
             val payload =
                 s"""
@@ -350,7 +382,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when project iri is invalid" in {
+        "throw 'BadRequestException' for `createChildNodeRequest` when project iri is invalid" in {
 
             val payload =
                 s"""
@@ -368,7 +400,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when labels are empty" in {
+        "throw 'BadRequestException' for `createChildNodeRequest` when labels are empty" in {
 
             val payload =
                 s"""
@@ -386,7 +418,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
 
         }
 
-        "throw 'BadRequestException' for `CreateNodeApiRequestADM` when custom iri of the child node is invalid" in {
+        "throw 'BadRequestException' for `createChildNodeRequest` when custom iri of the child node is invalid" in {
 
             val payload =
                 s"""

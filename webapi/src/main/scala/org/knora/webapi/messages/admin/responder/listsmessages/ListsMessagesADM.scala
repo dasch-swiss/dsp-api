@@ -87,7 +87,7 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
 case class CreateNodeApiRequestADM( id: Option[IRI] = None,
                                     parentNodeIri: Option[IRI] = None,
                                     projectIri: IRI,
-                                    name: Option[String],
+                                    name: Option[String] = None,
                                     labels: Seq[StringLiteralV2],
                                     comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
@@ -258,7 +258,7 @@ case class ListChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRe
     // check if the requesting user is allowed to perform operation
     if (!requestingUser.permissions.isProjectAdmin(createChildNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
         // not project or a system admin
-        throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+        throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
     }
 
 }
@@ -373,7 +373,11 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
 
 }
 
-case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) extends ListNodeInfoADM(id, name, labels, comments) {
+case class ListRootNodeInfoADM(id: IRI,
+                               projectIri: IRI,
+                               name: Option[String] = None,
+                               labels: StringLiteralSequenceV2,
+                               comments: StringLiteralSequenceV2) extends ListNodeInfoADM(id, name, labels, comments) {
 
     /**
      * Sorts the whole hierarchy.
