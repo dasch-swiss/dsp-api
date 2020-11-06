@@ -142,23 +142,22 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     ))
     private def getListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         get {
+            /* return a list (a graph with all list nodes) */
             requestContext =>
-                val dummyResponse: String =
-                    """{ "result": "You are using the new list API" }""".stripMargin
+                val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                val httpResponse = FastFuture.successful {
-                    featureFactoryConfig.addHeaderToHttpResponse(
-                        HttpResponse(
-                            status = StatusCodes.OK,
-                            entity = HttpEntity(
-                                ContentTypes.`application/json`,
-                                dummyResponse
-                            )
-                        )
-                    )
-                }
+                val requestMessage: Future[ListGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ListGetRequestADM(listIri, requestingUser)
 
-                requestContext.complete(httpResponse)
+                RouteUtilADM.runJsonRoute(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
+                )
         }
     }
 

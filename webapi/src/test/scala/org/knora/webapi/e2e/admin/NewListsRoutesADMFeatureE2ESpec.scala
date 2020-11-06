@@ -107,6 +107,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
             "return all lists" in {
                 val request = Get(baseApiUrl + s"/admin/lists")
                                 .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
 
@@ -209,7 +210,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
 
             "return a complete list" in {
                 val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList")
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
+                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
 
@@ -353,9 +354,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                     )
                 )
 
-                val encodedParentNodeUrl = java.net.URLEncoder.encode(SharedTestDataADM.customListIRI, "utf-8")
-
-                val request = Post(baseApiUrl + s"/admin/lists/", HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest))
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest))
                             .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
@@ -745,9 +744,6 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
             }
 
             "add child to list - to the root node" in {
-
-                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
-
                 val name = "first"
                 val label = "New First Child List Node Value"
                 val comment = "New First Child List Node Comment"
@@ -770,7 +766,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                     )
                 )
 
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToRoot))
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToRoot))
                             .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
@@ -816,8 +812,6 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
 
             "add second child to list - to the root node" in {
 
-                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
-
                 val name = "second"
                 val label = "New Second Child List Node Value"
                 val comment = "New Second Child List Node Comment"
@@ -838,7 +832,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                         text = addSecondChildToRoot
                     )
                 )
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
                                 .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
@@ -886,8 +880,6 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
 
             "add child to second child node" in {
 
-                val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")
-
                 val name = "third"
                 val label = "New Third Child List Node Value"
                 val comment = "New Third Child List Node Comment"
@@ -908,7 +900,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                         text = addChildToSecondChild
                     )
                 )
-                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
                             .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
