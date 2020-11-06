@@ -7,8 +7,11 @@ scala_library(
     srcs = glob(["**/*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/settings",
+        "@maven//:org_apache_jena_apache_jena_libs",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
