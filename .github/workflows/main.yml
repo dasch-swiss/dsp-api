@@ -60,7 +60,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v1
         with:
-          fetch-depth: 50
+          fetch-depth: 150
       - uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
@@ -315,9 +315,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  # publish on merge to main
+  # publish only on release
   publish:
-    name: Publish (on merge to main)
+    name: Publish (on release only)
     needs: [
       api-unit-tests,
       api-e2e-tests,
@@ -326,7 +326,7 @@ jobs:
       docs-build-test
     ]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v1
         with:
