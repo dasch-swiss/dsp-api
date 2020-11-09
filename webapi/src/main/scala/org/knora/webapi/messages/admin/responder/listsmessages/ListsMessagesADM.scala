@@ -114,15 +114,20 @@ case class CreateNodeApiRequestADM( id: Option[IRI] = None,
 }
 
 /**
- * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
+ * Represents an API request payload that asks the Knora API server to update an existing node's basic information (root or child).
  *
- * @param listIri    the IRI of the list to change.
- * @param projectIri the IRI of the project the list belongs to.
- * @param labels     the labels.
- * @param comments   the comments.
+ * @param listIri       the IRI of the node to change.
+ * @param projectIri    the IRI of the project the list belongs to.
+ * @param hasRootNode  the flag to identify a child node.
+ * @param position      the position of the node, if not a root node.
+ * @param name          the name of the node
+ * @param labels        the labels.
+ * @param comments      the comments.
  */
-case class ChangeListInfoApiRequestADM(listIri: IRI,
+case class ChangeNodeInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
+                                       hasRootNode: Option[IRI] = None,
+                                       position: Option[Int] = None,
                                        name: Option[String] = None,
                                        labels: Option[Seq[StringLiteralV2]] = None,
                                        comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
@@ -130,22 +135,27 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     if (listIri.isEmpty) {
-        throw BadRequestException(LIST_IRI_MISSING_ERROR)
+        throw BadRequestException(s"IRI of list item is missing.")
     }
 
     if (!stringFormatter.isKnoraListIriStr(listIri)) {
-        throw BadRequestException(LIST_IRI_INVALID_ERROR)
+        throw BadRequestException(s"Invalid IRI is given: ${listIri}.")
     }
 
+    // If a root node, check that project Iri is given
     if (projectIri.isEmpty) {
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
+    // Verify the project IRI
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    // If payload containes label or comments they should not be empty
+    if(hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
+        throw BadRequestException(s"Invalid root node IRI is given.")
+    }
+    // If payload contains label or comments they should not be empty
     if (labels.exists(_.isEmpty)) {
         throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
     }
@@ -186,7 +196,7 @@ case class ListGetRequestADM(iri: IRI,
 
 
 /**
- * Request basic information about a list. A successful response will be a [[ListInfoGetResponseADM]]
+ * Request basic information about a list. A successful response will be a [[RootNodeInfoGetResponseADM]]
  *
  * @param iri            the IRI of the list node.
  * @param requestingUser the user making the request.
@@ -195,7 +205,7 @@ case class ListInfoGetRequestADM(iri: IRI,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
- * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseADM]]
+ * Request basic information about a list node. A successful response will be a [[ChildNodeInfoGetResponseADM]]
  *
  * @param iri            the IRI of the list node.
  * @param requestingUser the user making the request.
@@ -233,17 +243,24 @@ case class ListCreateRequestADM(createRootNode: CreateNodeApiRequestADM,
 }
 
 /**
- * Request updating basic information of an existing list.
+ * Request updating basic information of an existing node.
  *
- * @param listIri           the IRI of the list to be updated.
- * @param changeListRequest the data which needs to be update.
+ * @param listIri           the IRI of the node to be updated (root or child ).
+ * @param changeNodeRequest the data which needs to be update.
  * @param requestingUser    the user initiating the request.
  * @param apiRequestID      the ID of the API request.
  */
-case class ListInfoChangeRequestADM(listIri: IRI,
-                                    changeListRequest: ChangeListInfoApiRequestADM,
+case class NodeInfoChangeRequestADM(listIri: IRI,
+                                    changeNodeRequest: ChangeNodeInfoApiRequestADM,
                                     requestingUser: UserADM,
-                                    apiRequestID: UUID) extends ListsResponderRequestADM
+                                    apiRequestID: UUID) extends ListsResponderRequestADM {
+    // check if the requesting user is allowed to perform operation
+    if (!requestingUser.permissions.isProjectAdmin(changeNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        // not project or a system admin
+        throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+    }
+
+}
 
 /**
  * Request the creation of a new list node, root or child.
@@ -285,24 +302,31 @@ case class ListGetResponseADM(list: ListADM) extends KnoraResponseADM with ListA
     def toJsValue = listGetResponseADMFormat.write(this)
 }
 
+/**
+ * Provides basic information about any node (root or child) without it's children.
+ *
+ * @param nodeinfo the basic information about a node.
+ */
+
+
+abstract class NodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol
 
 /**
- * Provides basic information about a list (root) node (without it's children).
+ * Provides basic information about a root node without it's children.
  *
  * @param listinfo the basic information about a list.
  */
-case class ListInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends NodeInfoGetResponseADM(listinfo) {
 
     def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
 }
 
-
 /**
- * Provides basic information about a list (child) node (without it's children).
+ * Provides basic information about a child node without it's children.
  *
  * @param nodeinfo the basic information about a list node.
  */
-case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM(nodeinfo) {
 
     def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
 }
@@ -477,6 +501,9 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
      */
     def sorted: ListNodeADM
 
+    def getName(): Option[String] = name
+    def getLabels(): StringLiteralSequenceV2 = labels
+    def getComments(): StringLiteralSequenceV2 = comments
     /**
      * Gets the label in the user's preferred language.
      *
@@ -978,10 +1005,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] = jsonFormat(CreateNodeApiRequestADM, "id" , "parentNodeIri", "projectIri", "name", "labels", "comments")
-    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(ChangeNodeInfoApiRequestADM, "listIri", "projectIri", "hasRootNode", "position", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
-    implicit val listInfoGetResponseADMFormat: RootJsonFormat[ListInfoGetResponseADM] = jsonFormat(ListInfoGetResponseADM, "listinfo")
-    implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ListNodeInfoGetResponseADM] = jsonFormat(ListNodeInfoGetResponseADM, "nodeinfo")
+    implicit val listInfoGetResponseADMFormat: RootJsonFormat[RootNodeInfoGetResponseADM] = jsonFormat(RootNodeInfoGetResponseADM, "listinfo")
+    implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ChildNodeInfoGetResponseADM] = jsonFormat(ChildNodeInfoGetResponseADM, "nodeinfo")
 }

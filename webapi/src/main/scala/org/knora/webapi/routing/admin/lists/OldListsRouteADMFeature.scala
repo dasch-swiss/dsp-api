@@ -151,10 +151,10 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update list
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[ListInfoGetResponseADM])
+    @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" to update", required = true,
-            dataTypeClass = classOf[ChangeListInfoApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[ChangeNodeInfoApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -162,15 +162,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
-            entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
+            entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage: Future[ListInfoChangeRequestADM] = for {
+                    val requestMessage: Future[NodeInfoChangeRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListInfoChangeRequestADM(
+                    } yield NodeInfoChangeRequestADM(
                         listIri = listIri,
-                        changeListRequest = apiRequest,
+                        changeNodeRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -191,7 +191,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * create a new child node
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Add new node", nickname = "addListNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
+    @ApiOperation(value = "Add new node", nickname = "addListNode", httpMethod = "POST", response = classOf[ChildNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
             dataTypeClass = classOf[CreateNodeApiRequestADM], paramType = "body")

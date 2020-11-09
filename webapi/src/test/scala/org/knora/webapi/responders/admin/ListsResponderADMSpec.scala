@@ -112,7 +112,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
-                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -125,7 +125,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
-                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -138,7 +138,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
 
-                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -202,9 +202,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "update basic list information" in {
-                responderManager ! ListInfoChangeRequestADM(
+                responderManager ! NodeInfoChangeRequestADM(
                     listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
+                    changeNodeRequest = ChangeNodeInfoApiRequestADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("updated name"),
@@ -221,7 +221,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
 
-                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 val listInfo = received.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
@@ -242,9 +242,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "not update basic list information if name is duplicate" in {
-                responderManager ! ListInfoChangeRequestADM(
+                responderManager ! NodeInfoChangeRequestADM(
                     listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
+                    changeNodeRequest = ChangeNodeInfoApiRequestADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("sommer")),
@@ -252,28 +252,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException("The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF.")))
-            }
-
-            "return a 'ForbiddenException' if the user changing the list is not project or system admin" in {
-                responderManager ! ListInfoChangeRequestADM(
-                    listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
-                        listIri = newListIri.get,
-                        projectIri = IMAGES_PROJECT_IRI,
-                        labels = Some(Seq(
-                            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                            StringLiteralV2(value = "Changed list", language = Some("en"))
-                        )),
-                        comments = Some(Seq(
-                            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                            StringLiteralV2(value = "New comment", language = Some("en"))
-                        )
-                    )),
-                    requestingUser = SharedTestDataADM.imagesUser02,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsg(Failure(ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)))
             }
 
             "add child to list - to the root node" in {
@@ -289,7 +267,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
 
-                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
                 val nodeInfo = received.nodeinfo
 
                 // check correct node info
@@ -332,7 +310,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                    apiRequestID = UUID.randomUUID
                )
 
-               val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+               val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
                val nodeInfo = received.nodeinfo
 
                // check correct node info
@@ -376,7 +354,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                    apiRequestID = UUID.randomUUID
                )
 
-               val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+               val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
                val nodeInfo = received.nodeinfo
 
                // check correct node info

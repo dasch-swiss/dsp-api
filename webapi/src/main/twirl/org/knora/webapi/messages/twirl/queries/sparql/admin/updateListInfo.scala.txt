@@ -26,7 +26,7 @@
  * @param dataNamedGraph     the named graph to update.
  * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
                              results from the WHERE clause of the update.
- * @param listIri            the IRI of the list we want to update.
+ * @param nodeIri            the IRI of the list we want to update.
  * @param projectIri         the IRI of the list's project.
  * @param listClassIri       the IRI of the OWL class that the list should belong to.
  * @param hasOldName         the old name of the list.
@@ -36,7 +36,7 @@
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
-  listIri: IRI,
+  nodeIri: IRI,
   projectIri: IRI,
   listClassIri: IRI,
   hasOldName: Boolean,
@@ -55,15 +55,15 @@ DELETE {
     @* Delete current values, for which we have a new one. *@
 
     @if(maybeLabels.nonEmpty) {
-        ?listIri  rdfs:label ?currentLabels .
+        ?nodeIri  rdfs:label ?currentLabels .
     }
 
     @if(hasOldName && maybeName.nonEmpty) {
-        ?listIri knora-base:listNodeName ?currentListName .
+        ?nodeIri knora-base:listNodeName ?currentListName .
     }
 
     @if(maybeComments.nonEmpty) {
-        ?listIri rdfs:comment ?currentComments .
+        ?nodeIri rdfs:comment ?currentComments .
     }
 
 } INSERT {
@@ -71,15 +71,15 @@ DELETE {
     @* Add the new values. *@
 
     @if(maybeName.nonEmpty) {
-        ?listIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
+        ?nodeIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
     }
 
     @if(maybeLabels.nonEmpty) {
         @for(label <- maybeLabels.get) {
             @if(label.language.nonEmpty) {
-                ?listIri rdfs:label """@label.value"""@@@{label.language.get} .
+                ?nodeIri rdfs:label """@label.value"""@@@{label.language.get} .
             } else {
-                ?listIri rdfs:label """@label.value"""^^xsd:string .
+                ?nodeIri rdfs:label """@label.value"""^^xsd:string .
             }
         }
      }
@@ -87,9 +87,9 @@ DELETE {
     @if(maybeComments.nonEmpty) {
         @for(comment <- maybeComments.get) {
             @if(comment.language.nonEmpty) {
-                ?listIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
+                ?nodeIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
             } else {
-                ?listIri rdfs:comment """@comment.value"""^^xsd:string .
+                ?nodeIri rdfs:comment """@comment.value"""^^xsd:string .
             }
         }
     }
@@ -112,16 +112,16 @@ explicit statements in the WHERE clause here.
 }
 
 WHERE {
-    BIND(IRI("@listIri") AS ?listIri)
+    BIND(IRI("@nodeIri") AS ?nodeIri)
     BIND(IRI("@projectIri") AS ?projectIri)
 
     @* Get all current defined values. *@
 
-    ?listIri rdf:type knora-base:ListNode .
+    ?nodeIri rdf:type knora-base:ListNode .
 
-    ?listIri knora-base:attachedToProject ?projectIri .
+    ?nodeIri knora-base:attachedToProject ?projectIri .
 
-    optional {?listIri knora-base:listNodeName ?currentListName .}
+    optional {?nodeIri knora-base:listNodeName ?currentListName .}
 
     optional {?listIri rdfs:label ?currentLabels .}
 

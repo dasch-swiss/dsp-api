@@ -58,7 +58,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
         case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
         case ListCreateRequestADM(createRootNode, requestingUser , apiRequestID) => listCreateRequestADM(createRootNode, apiRequestID)
-        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID)
+        case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, requestingUser, apiRequestID) => nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
         case ListChildNodeCreateRequestADM(createChildNodeRequest, requestingUser , apiRequestID) => listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -173,9 +173,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      *
      * @param listIri        the Iri if the list (root node) to be queried.
      * @param requestingUser the user making the request.
-     * @return a [[ListInfoGetResponseADM]].
+     * @return a [[RootNodeInfoGetResponseADM]].
      */
-    private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
+    private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[RootNodeInfoGetResponseADM] = {
         for {
             listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
 
@@ -189,7 +189,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // _ = log.debug(s"listInfoGetRequestADM - node: {}", MessageUtil.toSource(node))
 
-        } yield ListInfoGetResponseADM(listinfo = listRootNodeInfo)
+        } yield RootNodeInfoGetResponseADM(listinfo = listRootNodeInfo)
     }
 
     /**
@@ -286,18 +286,19 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-     * Retrieves information about a single node (without information about children). The single node can be the
-     * lists root node or child node
+     * Retrieves information about a single node (without information about children). The single node can be a
+     * root node or child node
      *
      * @param nodeIri        the IRI of the list node to be queried.
      * @param requestingUser the user making the request.
-     * @return a [[ListNodeInfoGetResponseADM]].
+     * @return a [[ChildNodeInfoGetResponseADM]].
      */
-    private def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
+    private def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[NodeInfoGetResponseADM] = {
         for {
-            maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(nodeIri, requestingUser)
+            maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri, requestingUser)
             result = maybeListNodeInfoADM match {
-                case Some(nodeInfo) => ListNodeInfoGetResponseADM(nodeinfo = nodeInfo)
+                case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
+                case Some(rootInfo: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(rootInfo)
                 case None => throw NotFoundException(s"List node '$nodeIri' not found")
             }
         } yield result
@@ -671,7 +672,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      *
      * @param createRootRequest the new list's information.
      * @param apiRequestID      the unique api request ID.
-     * @return a [[ListInfoGetResponseADM]]
+     * @return a [[RootNodeInfoGetResponseADM]]
      */
     private def listCreateRequestADM(createRootRequest: CreateNodeApiRequestADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
 
@@ -688,7 +689,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
 
-        } yield ListGetResponseADM(list = newListADM)
+        } yield ListGetResponseADM(newListADM)
 
         for {
             // run list creation with an global IRI lock
@@ -701,105 +702,113 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-     * Changes basic list information stored in the list's root node.
+     * Changes basic node information stored (root or child)
      *
-     * @param listIri           the list's IRI.
-     * @param changeListRequest the new list information.
-     * @param requestingUser    the user that is making the request.
+     * @param nodeIri           the list's IRI.
+     * @param changeNodeRequest the new list information.
      * @param apiRequestID      the unique api request ID.
-     * @return a [[ListInfoGetResponseADM]]
+     * @return a [[RootNodeInfoGetResponseADM]]
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
      * @throws BadRequestException         in the case when the project IRI is missing or invalid.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
-    private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
+    private def nodeInfoChangeRequest(nodeIri: IRI, changeNodeRequest: ChangeNodeInfoApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+        def verifyUpdatedNode(updatedNode: ListNodeADM): Unit = {
+            if (changeNodeRequest.labels.nonEmpty) {
+                if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get).nonEmpty)
+                    throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+            }
 
+            if (changeNodeRequest.comments.nonEmpty) {
+                if (updatedNode.getComments.stringLiterals.diff(changeNodeRequest.comments.get).nonEmpty)
+                    throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+            }
+
+            if (changeNodeRequest.name.nonEmpty) {
+                if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeRequest.name.get)
+                    throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
+            }
+        }
         /**
          * The actual task run with an IRI lock.
          */
-        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = for {
-            // check if listIRI in path and payload match
+        def nodeInfoChangeTask(nodeIri: IRI, changeNodeRequest: ChangeNodeInfoApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+
+            // check if nodeIRI in path and payload match
             _ <- Future(
-                if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
+                if (!nodeIri.equals(changeNodeRequest.listIri)) throw BadRequestException("IRI in path and payload don't match.")
             )
 
-            // check if the requesting user is allowed to perform operation
-            _ = if (!requestingUser.permissions.isProjectAdmin(changeListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
-                    // not project or a system admin
-                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-                    throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-                }
-
-            /* Verify that the list exists. */
-            maybeList <- listGetADM(rootNodeIri = listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            list: ListADM = maybeList match {
-                case Some(list: ListADM) => list
-                case None => throw BadRequestException(s"List '$listIri' not found.")
-            }
-
             /* Get the project information */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(list.listinfo.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(changeNodeRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
-                case None => throw BadRequestException(s"Project '${list.listinfo.projectIri}' not found.")
+                case None => throw BadRequestException(s"Project '${changeNodeRequest.projectIri}' not found.")
             }
 
             /* verify that the list name is unique for the project */
-            nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name)
+            nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name)
             _ = if (!nodeNameUnique) {
-                throw DuplicateValueException(s"The name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
+                throw DuplicateValueException(s"The name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
             }
 
-            hasOldName: Boolean = list.listinfo.name.nonEmpty
+            /* Verify that the node with Iri exists. */
+            maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            node = maybeNode.getOrElse(throw BadRequestException(s"List item with '$nodeIri' not found."))
+
+            hasOldName: Boolean = node.getName.nonEmpty
 
             // get the data graph of the project.
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
             // Update the list
-            changeListInfoSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateListInfo(
+            changeListInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateListInfo(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
-                listIri = listIri,
+                nodeIri = nodeIri,
                 hasOldName = hasOldName,
-                maybeName = changeListRequest.name,
+                maybeName = changeNodeRequest.name,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
-                maybeLabels = changeListRequest.labels,
-                maybeComments = changeListRequest.comments
+                maybeLabels = changeNodeRequest.labels,
+                maybeComments = changeNodeRequest.comments
             ).toString
             // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
             changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
 
 
-            /* Verify that the list was updated */
-            maybeListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
-            updatedList = maybeListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not updated. Please report this as a possible bug."))
+            /* Verify that the node info was updated */
+            maybeNodeADM <- listNodeGetADM(nodeIri = nodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
 
-
-            _ = if (changeListRequest.labels.nonEmpty) {
-                if (updatedList.listinfo.labels.stringLiterals.diff(changeListRequest.labels.get).nonEmpty) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+            response = maybeNodeADM match {
+                case Some(rootNode: ListRootNodeADM) =>
+                        verifyUpdatedNode(rootNode)
+                        RootNodeInfoGetResponseADM(listinfo = ListRootNodeInfoADM(id = rootNode.id,
+                                                                                projectIri = rootNode.projectIri,
+                                                                                name = rootNode.name,
+                                                                                labels = rootNode.labels,
+                                                                                comments = rootNode.comments
+                                                                            ))
+                case Some(childNode: ListChildNodeADM) =>
+                    verifyUpdatedNode(childNode)
+                    ChildNodeInfoGetResponseADM(nodeinfo = ListChildNodeInfoADM(id = childNode.id,
+                                                                                name = childNode.name,
+                                                                                labels = childNode.labels,
+                                                                                comments = childNode.comments,
+                                                                                position = childNode.position,
+                                                                                hasRootNode = childNode.hasRootNode
+                                                                            ))
+                case None => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (changeListRequest.comments.nonEmpty) {
-                if (updatedList.listinfo.comments.stringLiterals.diff(changeListRequest.comments.get).nonEmpty)
-
-                    throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (changeListRequest.name.nonEmpty) {
-                if (updatedList.listinfo.name.get != changeListRequest.name.get)
-                    throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
-            }
-            // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
-
-        } yield ListInfoGetResponseADM(listinfo = updatedList.listinfo)
+        } yield response
 
         for {
             // run list info update with an local IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
-                listIri,
-                () => listInfoChangeTask(listIri, changeListRequest, requestingUser, apiRequestID)
+                nodeIri,
+                () => nodeInfoChangeTask(nodeIri, changeNodeRequest, apiRequestID)
             )
         } yield taskResult
     }
@@ -810,9 +819,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      *
      * @param createChildNodeRequest      the new list node's information.
      * @param apiRequestID           the unique api request ID.
-     * @return a [[ListNodeInfoGetResponseADM]]
+     * @return a [[ChildNodeInfoGetResponseADM]]
      */
-    private def listChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRequestADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
+    private def listChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRequestADM, apiRequestID: UUID): Future[ChildNodeInfoGetResponseADM] = {
         /**
          * The actual task run with an IRI lock.
          */
@@ -820,11 +829,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             newListNodeIri <- createNode(createChildNodeRequest)
             // Verify that the list node was created.
             maybeNewListNode <- listNodeInfoGetADM(newListNodeIri, KnoraSystemInstances.Users.SystemUser)
-            newListNode = maybeNewListNode.getOrElse(throw UpdateNotPerformedException(s"List node $newListNodeIri was not created. Please report this as a possible bug."))
+            newListNode = maybeNewListNode match {
+                case Some(childNode: ListChildNodeInfoADM) => childNode
+                case Some(_: ListRootNodeInfoADM) => throw UpdateNotPerformedException(s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload.")
+                case None => throw UpdateNotPerformedException(s"List node $newListNodeIri was not created. Please report this as a possible bug.")
+            }
 
-            // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
-
-        } yield ListNodeInfoGetResponseADM(nodeinfo = newListNode)
+        } yield ChildNodeInfoGetResponseADM(nodeinfo = newListNode)
 
 
         for {

@@ -21,10 +21,12 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import java.util.UUID
 
+import akka.actor.Status.Failure
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
+import org.knora.webapi.sharedtestdata.SharedTestDataV1.IMAGES_PROJECT_IRI
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -229,7 +231,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             thrown.getMessage should equal ("String value is missing.")
         }
 
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is empty" in {
+        "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when list IRI is empty" in {
 
             val payload =
                 s"""
@@ -241,29 +243,29 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal (LIST_IRI_MISSING_ERROR)
+            thrown.getMessage should equal ("IRI of list item is missing.")
         }
 
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is invalid" in {
-
+        "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when list IRI is invalid" in {
+            val invalidIri = "notvalidIRI"
             val payload =
                 s"""
                    |{
-                   |    "listIri": "notvalidIRI",
+                   |    "listIri": "${invalidIri}",
                    |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
                    |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                    |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal (LIST_IRI_INVALID_ERROR)
+            thrown.getMessage should equal (s"Invalid IRI is given: ${invalidIri}.")
         }
 
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when project IRI is empty" in {
+        "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when project IRI is empty" in {
 
             val payload =
                 s"""
@@ -274,12 +276,12 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
             thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
         }
 
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when project IRI is invalid" in {
+        "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when project IRI is invalid" in {
 
             val payload =
                 s"""
@@ -290,12 +292,12 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
             thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
         }
 
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when labels and comments are empty" in {
+        "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when labels and comments are empty" in {
 
             val payload =
                 s"""
@@ -307,7 +309,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
             thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
@@ -326,6 +328,29 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                 )
             )
             assert(caught.getMessage === LIST_NODE_CREATE_PERMISSION_ERROR)
+        }
+
+        "return a 'ForbiddenException' if the user changing the node info is not project or system admin" in {
+            val caught = intercept[ForbiddenException](
+                NodeInfoChangeRequestADM(
+                    listIri = exampleListIri,
+                    changeNodeRequest = ChangeNodeInfoApiRequestADM(
+                        listIri = exampleListIri,
+                        projectIri = IMAGES_PROJECT_IRI,
+                        labels = Some(Seq(
+                            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                            StringLiteralV2(value = "Changed list", language = Some("en"))
+                        )),
+                        comments = Some(Seq(
+                            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                            StringLiteralV2(value = "New comment", language = Some("en"))
+                        )
+                    )),
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID
+                )
+            )
+            assert(caught.getMessage === LIST_CHANGE_PERMISSION_ERROR)
         }
 
         "throw 'BadRequestException' for `createChildNodeRequest` when no parent node iri is given" in {
