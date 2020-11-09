@@ -756,7 +756,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
             node = maybeNode.getOrElse(throw BadRequestException(s"List item with '$nodeIri' not found."))
 
+            isRootNode = maybeNode match {
+                case Some(_:ListRootNodeADM) => true
+                case Some(_:ListChildNodeADM) => false
+                case None => false
+            }
             hasOldName: Boolean = node.getName.nonEmpty
+
 
             // get the data graph of the project.
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
@@ -767,6 +773,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri,
                 hasOldName = hasOldName,
+                isRootNode = isRootNode,
                 maybeName = changeNodeRequest.name,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -778,7 +785,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             /* Verify that the node info was updated */
-            maybeNodeADM <- listNodeGetADM(nodeIri = nodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeNodeADM <- listNodeGetADM(nodeIri = changeNodeRequest.listIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
 
             response = maybeNodeADM match {
                 case Some(rootNode: ListRootNodeADM) =>

@@ -30,6 +30,7 @@
  * @param projectIri         the IRI of the list's project.
  * @param listClassIri       the IRI of the OWL class that the list should belong to.
  * @param hasOldName         the old name of the list.
+ * @param isRootNode         Flag to identify root or child node.
  * @param maybeName          the new name of the list.
  * @param maybelabels        the new optional label values.
  * @param maybeComments      the new optional comment values.
@@ -40,6 +41,7 @@
   projectIri: IRI,
   listClassIri: IRI,
   hasOldName: Boolean,
+  isRootNode: Boolean,
   maybeName : Option[String],
   maybeLabels: Option[Seq[StringLiteralV2]],
   maybeComments: Option[Seq[StringLiteralV2]])
@@ -113,18 +115,19 @@ explicit statements in the WHERE clause here.
 
 WHERE {
     BIND(IRI("@nodeIri") AS ?nodeIri)
-    BIND(IRI("@projectIri") AS ?projectIri)
+
 
     @* Get all current defined values. *@
 
     ?nodeIri rdf:type knora-base:ListNode .
-
-    ?nodeIri knora-base:attachedToProject ?projectIri .
-
+    @if(isRootNode) {
+        BIND(IRI("@projectIri") AS ?projectIri)
+        ?nodeIri knora-base:attachedToProject ?projectIri .
+    }
     optional {?nodeIri knora-base:listNodeName ?currentListName .}
 
-    optional {?listIri rdfs:label ?currentLabels .}
+    optional {?nodeIri rdfs:label ?currentLabels .}
 
-    optional {?listIri rdfs:comment ?currentComments .}
+    optional {?nodeIri rdfs:comment ?currentComments .}
 
 }
