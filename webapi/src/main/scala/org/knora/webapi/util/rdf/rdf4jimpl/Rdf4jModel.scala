@@ -32,7 +32,7 @@ sealed trait RDF4JNode extends RdfNode {
     def rdf4jValue: rdf4j.model.Value
 }
 
-sealed trait RDF4JResource extends RdfResource {
+sealed trait RDF4JResource extends RDF4JNode with RdfResource {
     def resource: rdf4j.model.Resource
     def rdf4jValue: rdf4j.model.Value = resource
 }
@@ -107,7 +107,7 @@ object RDF4JConversions {
         def asRDF4JIri: rdf4j.model.IRI = {
             self match {
                 case rdf4jIriNode: RDF4JIriNode => rdf4jIriNode.resource
-                case other => throw RdfProcessingException(s"$other is not a RDF4J IRI")
+                case other => throw RdfProcessingException(s"$other is not an RDF4J IRI")
             }
         }
     }
@@ -116,7 +116,7 @@ object RDF4JConversions {
         def asRDF4JValue: rdf4j.model.Value = {
             self match {
                 case rdf4jResource: RDF4JNode => rdf4jResource.rdf4jValue
-                case other => throw RdfProcessingException(s"$other is not a RDF4J value")
+                case other => throw RdfProcessingException(s"$other is not an RDF4J value")
             }
         }
     }
@@ -125,7 +125,7 @@ object RDF4JConversions {
         def asRDF4JStatement: rdf4j.model.Statement = {
             self match {
                 case rdf4JStatement: RDF4JStatement => rdf4JStatement.statement
-                case other => throw RdfProcessingException(s"$other is not a RDF4J statement")
+                case other => throw RdfProcessingException(s"$other is not an RDF4J statement")
             }
         }
     }
@@ -141,47 +141,6 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
     import RDF4JConversions._
 
     private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
-
-    override def makeBlankNode: BlankNode = {
-        RDF4JBlankNode(valueFactory.createBNode)
-    }
-
-    override def makeBlankNodeWithID(id: String): BlankNode = {
-        RDF4JBlankNode(valueFactory.createBNode(id))
-    }
-
-    override def makeIriNode(iri: IRI): IriNode = {
-        RDF4JIriNode(valueFactory.createIRI(iri))
-    }
-
-    override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral = {
-        RDF4JDatatypeLiteral(valueFactory.createLiteral(value, valueFactory.createIRI(datatype)))
-    }
-
-    override def makeStringWithLanguage(value: String, language: String): StringWithLanguage = {
-        RDF4JStringWithLanguage(valueFactory.createLiteral(value, language))
-    }
-
-    override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement = {
-        val statement: rdf4j.model.Statement = context match {
-            case Some(definedContext) =>
-                valueFactory.createStatement(
-                    subj.asRDF4JResource,
-                    pred.asRDF4JIri,
-                    obj.asRDF4JValue,
-                    valueFactory.createIRI(definedContext)
-                )
-
-            case None =>
-                valueFactory.createStatement(
-                    subj.asRDF4JResource,
-                    pred.asRDF4JIri,
-                    obj.asRDF4JValue
-                )
-        }
-
-        RDF4JStatement(statement)
-    }
 
     override def addStatement(statement: Statement): Unit = {
         model.add(statement.asRDF4JStatement)
@@ -247,6 +206,55 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
     }
 }
 
+/**
+ * An implementation of [[RdfNodeFactory]] that creates RDF4J node implementation wrappers.
+ */
+class RDF4JNodeFactory extends RdfNodeFactory {
+    import RDF4JConversions._
+
+    private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
+
+    override def makeBlankNode: BlankNode = {
+        RDF4JBlankNode(valueFactory.createBNode)
+    }
+
+    override def makeBlankNodeWithID(id: String): BlankNode = {
+        RDF4JBlankNode(valueFactory.createBNode(id))
+    }
+
+    override def makeIriNode(iri: IRI): IriNode = {
+        RDF4JIriNode(valueFactory.createIRI(iri))
+    }
+
+    override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral = {
+        RDF4JDatatypeLiteral(valueFactory.createLiteral(value, valueFactory.createIRI(datatype)))
+    }
+
+    override def makeStringWithLanguage(value: String, language: String): StringWithLanguage = {
+        RDF4JStringWithLanguage(valueFactory.createLiteral(value, language))
+    }
+
+    override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement = {
+        val statement: rdf4j.model.Statement = context match {
+            case Some(definedContext) =>
+                valueFactory.createStatement(
+                    subj.asRDF4JResource,
+                    pred.asRDF4JIri,
+                    obj.asRDF4JValue,
+                    valueFactory.createIRI(definedContext)
+                )
+
+            case None =>
+                valueFactory.createStatement(
+                    subj.asRDF4JResource,
+                    pred.asRDF4JIri,
+                    obj.asRDF4JValue
+                )
+        }
+
+        RDF4JStatement(statement)
+    }
+}
 
 /**
  * A factory for creating instances of [[RDF4JModel]].

@@ -86,6 +86,49 @@ trait Statement {
  */
 trait RdfModel {
     /**
+     * Adds a statement to the model.
+     *
+     * @param statement the statement to be added.
+     */
+    def addStatement(statement: Statement): Unit
+
+    /**
+     * Constructs a statement and adds it to the model.
+     *
+     * @param subj    the subject.
+     * @param pred    the predicate.
+     * @param obj     the object.
+     * @param context the IRI of a named graph, or `None` to use the default graph.
+     */
+    def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit
+
+    /**
+     * Removes statements from the model.
+     *
+     * @param subj    the subject, or `None` to match any subject.
+     * @param pred    the predicate, or `None` to match any predicate.
+     * @param obj     the object, or `None` to match any object.
+     * @param context the IRI of a named graph, or `None` to match any graph.
+     */
+    def remove(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Unit
+
+    /**
+     * Returns statements that match a pattern.
+     *
+     * @param subj    the subject, or `None` to match any subject.
+     * @param pred    the predicate, or `None` to match any predicate.
+     * @param obj     the object, or `None` to match any object.
+     * @param context the IRI of a named graph, or `None` to match any graph.
+     * @return the statements matching the pattern.
+     */
+    def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement]
+}
+
+/**
+ * Represents a factory that can create RDF nodes and statements.
+ */
+trait RdfNodeFactory {
+    /**
      * Constructs a blank node.
      */
     def makeBlankNode: BlankNode
@@ -129,42 +172,4 @@ trait RdfModel {
      * @param context the IRI of the named graph, or `None` to use the default graph.
      */
     def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement
-
-    /**
-     * Adds a statement to the model.
-     *
-     * @param statement the statement to be added.
-     */
-    def addStatement(statement: Statement): Unit
-
-    /**
-     * Constructs a statement and adds it to the model.
-     *
-     * @param subj    the subject.
-     * @param pred    the predicate.
-     * @param obj     the object.
-     * @param context the IRI of a named graph, or `None` to use the default graph.
-     */
-    def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit
-
-    /**
-     * Removes statements from the model.
-     *
-     * @param subj    the subject, or `None` to match any subject.
-     * @param pred    the predicate, or `None` to match any predicate.
-     * @param obj     the object, or `None` to match any object.
-     * @param context the IRI of a named graph, or `None` to match any graph.
-     */
-    def remove(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Unit
-
-    /**
-     * Returns statements that match a pattern.
-     *
-     * @param subj    the subject, or `None` to match any subject.
-     * @param pred    the predicate, or `None` to match any predicate.
-     * @param obj     the object, or `None` to match any object.
-     * @param context the IRI of a named graph, or `None` to match any graph.
-     * @return the statements matching the pattern.
-     */
-    def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement]
 }

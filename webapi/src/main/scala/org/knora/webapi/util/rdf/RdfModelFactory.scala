@@ -20,13 +20,18 @@
 package org.knora.webapi.util.rdf
 
 import org.knora.webapi.feature.{FeatureFactory, FeatureFactoryConfig}
-import org.knora.webapi.util.rdf.jenaimpl.JenaModelFactory
-import org.knora.webapi.util.rdf.rdf4jimpl.RDF4JModelFactory
+import org.knora.webapi.util.rdf.jenaimpl.{JenaModelFactory, JenaNodeFactory}
+import org.knora.webapi.util.rdf.rdf4jimpl.{RDF4JModelFactory, RDF4JNodeFactory}
 
 /**
  * A feature factory that creates RDF models.
  */
 class RdfModelFactory extends FeatureFactory {
+    /**
+     * The name of the feature toggle that enables the Jena implementation of the RDF façade.
+     */
+    private val JENA_TOGGLE_NAME = "jena-rdf-library"
+
     /**
      * Creates an empty [[RdfModel]].
      *
@@ -34,10 +39,24 @@ class RdfModelFactory extends FeatureFactory {
      * @return an empty [[RdfModel]].
      */
     def makeRdfModel(featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
-        if (featureFactoryConfig.getToggle("jena-rdf-library").isEnabled) {
+        if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
             JenaModelFactory.makeEmptyModel
         } else {
             RDF4JModelFactory.makeEmptyModel
+        }
+    }
+
+    /**
+     * Creates an [[RdfNodeFactory]].
+     *
+     * @param featureFactoryConfig the feature factory configuration.
+     * @return an [[RdfNodeFactory]].
+     */
+    def makeRdfNodeFactory(featureFactoryConfig: FeatureFactoryConfig): RdfNodeFactory = {
+        if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
+            new JenaNodeFactory
+        } else {
+            new RDF4JNodeFactory
         }
     }
 }

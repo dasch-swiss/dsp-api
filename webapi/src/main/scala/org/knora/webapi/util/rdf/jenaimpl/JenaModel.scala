@@ -111,60 +111,16 @@ object JenaConversions {
             }
         }
     }
-
 }
 
 /**
- * An implementation of [[RdfModel]] that wraps a [[jena.query.Dataset]].
- *
- * @param dataset the underlying Jena dataset.
+ * Generates Jena nodes representing contexts.
  */
-class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel with Feature {
-
-    import JenaConversions._
-
-    private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
-    private val typeMapper = jena.datatypes.TypeMapper.getInstance
-
-    override def makeBlankNode: BlankNode = {
-        JenaBlankNode(jena.graph.NodeFactory.createBlankNode)
-    }
-
-    override def makeBlankNodeWithID(id: String): BlankNode = {
-        JenaBlankNode(jena.graph.NodeFactory.createBlankNode(id))
-    }
-
-    override def makeIriNode(iri: IRI): IriNode = {
-        JenaIriNode(jena.graph.NodeFactory.createURI(iri))
-    }
-
-    override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral = {
-        JenaDatatypeLiteral(jena.graph.NodeFactory.createLiteral(value, typeMapper.getTypeByName(datatype)))
-    }
-
-    override def makeStringWithLanguage(value: String, language: String): StringWithLanguage = {
-        JenaStringWithLanguage(jena.graph.NodeFactory.createLiteral(value, language))
-    }
-
-    override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement = {
-        JenaStatement(
-            new jena.sparql.core.Quad(
-                contextNodeOrDefaultGraph(context),
-                subj.asJenaNode,
-                pred.asJenaNode,
-                obj.asJenaNode
-            )
-        )
-    }
-
-    override def addStatement(statement: Statement): Unit = {
-        datasetGraph.add(statement.asJenaQuad)
-    }
-
+abstract class JenaContextFactory {
     /**
      * Converts a named graph IRI to a [[jena.graph.Node]].
      */
-    private def contextIriToNode(context: IRI): jena.graph.Node = {
+    protected def contextIriToNode(context: IRI): jena.graph.Node = {
         jena.graph.NodeFactory.createURI(context)
     }
 
@@ -172,7 +128,7 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel with F
      * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
      * `None` to the IRI of Jena's default graph.
      */
-    private def contextNodeOrDefaultGraph(context: Option[IRI]): jena.graph.Node = {
+    protected def contextNodeOrDefaultGraph(context: Option[IRI]): jena.graph.Node = {
         context.map(contextIriToNode).getOrElse(jena.sparql.core.Quad.defaultGraphIRI)
     }
 
@@ -180,8 +136,24 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel with F
      * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
      * `None` to a wildcard that will match any graph.
      */
-    private def contextNodeOrWildcard(context: Option[IRI]): jena.graph.Node = {
+    protected def contextNodeOrWildcard(context: Option[IRI]): jena.graph.Node = {
         context.map(contextIriToNode).getOrElse(jena.graph.Node.ANY)
+    }
+}
+
+/**
+ * An implementation of [[RdfModel]] that wraps a [[jena.query.Dataset]].
+ *
+ * @param dataset the underlying Jena dataset.
+ */
+class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFactory with RdfModel with Feature {
+
+    import JenaConversions._
+
+    private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
+
+    override def addStatement(statement: Statement): Unit = {
+        datasetGraph.add(statement.asJenaQuad)
     }
 
     /**
@@ -218,6 +190,47 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel with F
             asJenaNodeOrWildcard(obj)
         ).asScala.map(JenaStatement).toSet
     }
+}
+
+/**
+ * An implementation of [[RdfNodeFactory]] that creates Jena node implementation wrappers.
+ */
+class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
+    import JenaConversions._
+
+    private val typeMapper = jena.datatypes.TypeMapper.getInstance
+
+    override def makeBlankNode: BlankNode = {
+        JenaBlankNode(jena.graph.NodeFactory.createBlankNode)
+    }
+
+    override def makeBlankNodeWithID(id: String): BlankNode = {
+        JenaBlankNode(jena.graph.NodeFactory.createBlankNode(id))
+    }
+
+    override def makeIriNode(iri: IRI): IriNode = {
+        JenaIriNode(jena.graph.NodeFactory.createURI(iri))
+    }
+
+    override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral = {
+        JenaDatatypeLiteral(jena.graph.NodeFactory.createLiteral(value, typeMapper.getTypeByName(datatype)))
+    }
+
+    override def makeStringWithLanguage(value: String, language: String): StringWithLanguage = {
+        JenaStringWithLanguage(jena.graph.NodeFactory.createLiteral(value, language))
+    }
+
+    override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement = {
+        JenaStatement(
+            new jena.sparql.core.Quad(
+                contextNodeOrDefaultGraph(context),
+                subj.asJenaNode,
+                pred.asJenaNode,
+                obj.asJenaNode
+            )
+        )
+    }
+
 }
 
 /**
