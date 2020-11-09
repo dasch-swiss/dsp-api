@@ -928,7 +928,48 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
                     )
                 )
             }
+            "update node information of node that has custom IRI with a new name" in {
+                val newName = "modified third child"
+                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+                val updateNodeName =
+                    s"""{
+                       |    "listIri": "${customChildNodeIRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "name": "${newName}"
+                       |}""".stripMargin
 
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-node-info-name-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+                receivedNodeInfo.name.get should be (newName)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-node-info-name-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
             "add flat nodes" ignore {
 
             }
