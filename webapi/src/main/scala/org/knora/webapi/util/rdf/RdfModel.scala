@@ -24,12 +24,12 @@ import org.knora.webapi.IRI
 /**
  * Represents an RDF subject, predicate, or object.
  */
-sealed trait RdfNode
+trait RdfNode
 
 /**
  * Represents an RDF node that can be used as a subject.
  */
-sealed trait RdfResource extends RdfNode
+trait RdfResource extends RdfNode
 
 /**
  * Represents a blank node.
@@ -48,7 +48,7 @@ trait IriNode extends RdfResource {
 /**
  * Represents an RDF literal.
  */
-sealed trait RdfLiteral extends RdfNode
+trait RdfLiteral extends RdfNode
 
 /**
  * Represents a literal value with a datatype.

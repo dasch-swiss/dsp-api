@@ -22,30 +22,31 @@ package org.knora.webapi.util.rdf.jenaimpl
 import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
+import org.knora.webapi.feature.Feature
 import org.knora.webapi.util.rdf._
 
 import scala.collection.JavaConverters._
 
 
-sealed trait JenaRdfNode {
+sealed trait JenaNode extends RdfNode {
     def node: jena.graph.Node
 }
 
-case class JenaBlankNode(node: jena.graph.Node) extends JenaRdfNode with BlankNode {
+case class JenaBlankNode(node: jena.graph.Node) extends JenaNode with BlankNode {
     override def id: String = node.getBlankNodeId.getLabelString
 }
 
-case class JenaIriNode(node: jena.graph.Node) extends JenaRdfNode with IriNode {
+case class JenaIriNode(node: jena.graph.Node) extends JenaNode with IriNode {
     override def iri: IRI = node.getURI
 }
 
-case class JenaDatatypeLiteral(node: jena.graph.Node) extends JenaRdfNode with DatatypeLiteral {
+case class JenaDatatypeLiteral(node: jena.graph.Node) extends JenaNode with DatatypeLiteral {
     override def value: String = node.getLiteralLexicalForm
 
     override def datatype: IRI = node.getLiteralDatatypeURI
 }
 
-case class JenaStringWithLanguage(node: jena.graph.Node) extends JenaRdfNode with StringWithLanguage {
+case class JenaStringWithLanguage(node: jena.graph.Node) extends JenaNode with StringWithLanguage {
     override def value: String = node.getLiteralLexicalForm
 
     override def language: String = node.getLiteralLanguage
@@ -96,7 +97,7 @@ object JenaConversions {
     implicit class ConvertibleJenaNode(val self: RdfNode) extends AnyVal {
         def asJenaNode: jena.graph.Node = {
             self match {
-                case jenaRdfNode: JenaRdfNode => jenaRdfNode.node
+                case jenaRdfNode: JenaNode => jenaRdfNode.node
                 case other => throw RdfProcessingException(s"$other is not a Jena node")
             }
         }
@@ -118,7 +119,7 @@ object JenaConversions {
  *
  * @param dataset the underlying Jena dataset.
  */
-class JenaRdfModel(dataset: jena.query.Dataset) extends RdfModel {
+class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel with Feature {
 
     import JenaConversions._
 
@@ -217,4 +218,11 @@ class JenaRdfModel(dataset: jena.query.Dataset) extends RdfModel {
             asJenaNodeOrWildcard(obj)
         ).asScala.map(JenaStatement).toSet
     }
+}
+
+/**
+ * A factory for creating instances of [[JenaModel]].
+ */
+object JenaModelFactory {
+    def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
 }
