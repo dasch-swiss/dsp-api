@@ -93,6 +93,17 @@ trait RdfModel {
     def addStatement(statement: Statement): Unit
 
     /**
+     * Adds one or more statements to the model.
+     *
+     * @param statements the statements to be added.
+     */
+    def addStatements(statements: Set[Statement]): Unit = {
+        for (statement <- statements) {
+            addStatement(statement)
+        }
+    }
+
+    /**
      * Constructs a statement and adds it to the model.
      *
      * @param subj    the subject.
@@ -103,7 +114,7 @@ trait RdfModel {
     def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit
 
     /**
-     * Removes statements from the model.
+     * Removes statements that match a pattern.
      *
      * @param subj    the subject, or `None` to match any subject.
      * @param pred    the predicate, or `None` to match any predicate.

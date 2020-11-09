@@ -77,10 +77,10 @@ case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
         } else if (obj.isLiteral) {
             val literal: jena.graph.impl.LiteralLabel = obj.getLiteral
 
-            if (Option(literal.getDatatypeURI).isDefined) {
-                JenaDatatypeLiteral(obj)
-            } else {
+            if (literal.language != "") {
                 JenaStringWithLanguage(obj)
+            } else {
+                JenaDatatypeLiteral(obj)
             }
         } else {
             throw RdfProcessingException(s"Unexpected statement object: $obj")
@@ -174,7 +174,7 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
     }
 
     override def remove(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Unit = {
-        datasetGraph.delete(
+        datasetGraph.deleteAny(
             contextNodeOrWildcard(context),
             asJenaNodeOrWildcard(subj),
             asJenaNodeOrWildcard(pred),

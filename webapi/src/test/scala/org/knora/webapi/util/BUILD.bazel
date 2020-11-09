@@ -12,7 +12,7 @@ filegroup(
         "MutableUserADM.scala",
         "StartupUtils.scala",
         "TestExtractorMethods.scala",
-        "RdfModelSpec.scala",
+        "rdf/RdfModelSpec.scala",
     ],
 )
 
@@ -75,7 +75,7 @@ scala_test(
      name = "JenaModelSpec",
      size = "small",
      srcs = [
-         "JenaModelSpec.scala",
+         "rdf/jenaimpl/JenaModelSpec.scala",
      ],
     data = [
         "//knora-ontologies",
@@ -93,7 +93,7 @@ scala_test(
     name = "RDF4JModelSpec",
     size = "small",
     srcs = [
-        "RDF4JModelSpec.scala",
+        "rdf/rdf4jimpl/RDF4JModelSpec.scala",
     ],
     data = [
         "//knora-ontologies",
