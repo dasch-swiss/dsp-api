@@ -150,20 +150,55 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-     * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
+     * Retrieves a complete node (root or child) with all children from the triplestore and returns it as a [[ListItemGetResponseADM]].
+     * If an IRI of a root node is given, the response is a list with root node info and all chilren of the list.
+     * If an IRI of a child node is given, the response is a node with its information and all children of the sublist.
      *
-     * @param rootNodeIri    the Iri if the root node of the list to be queried.
+     * @param nodeIri    the Iri if the required node.
      * @param requestingUser the user making the request.
-     * @return a [[ListGetResponseADM]].
+     * @return a [[ListItemGetResponseADM]].
      */
-    private def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
+    private def listGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListItemGetResponseADM] = {
+        def getNodeADM(childNode: ListChildNodeADM): Future[ListNodeGetResponseADM] = {
+            for {
+                    maybeNodeInfo <- listNodeInfoGetADM(nodeIri, requestingUser)
+                    nodeinfo = maybeNodeInfo match {
+                        case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
+                        case _ => throw NotFoundException(s"Information not found for node '${nodeIri}'")
+                    }
+                    // make a NodeADM instance
+                    entirenode = ListNodeGetResponseADM(node = NodeADM(nodeinfo = nodeinfo,
+                            children = childNode.children)
+                            )
+            } yield entirenode
+        }
 
         for {
-            maybeListADM <- listGetADM(rootNodeIri, requestingUser)
-            result = maybeListADM match {
-                case Some(list) => ListGetResponseADM(list = list)
-                case None => throw NotFoundException(s"List '$rootNodeIri' not found")
-            }
+                exists <- listRootNodeByIriExists(nodeIri)
+                // Is root node IRI given?
+                result <- if (exists) {
+                    for {
+                        // Yes. Get the entire list
+                        maybeList <- listGetADM(nodeIri, requestingUser)
+                        entireList = maybeList match {
+                            case Some (list) => ListGetResponseADM (list = list)
+                            case None => throw NotFoundException (s"List '$nodeIri' not found")
+                        }
+                    } yield entireList
+                } else {
+                    for {
+                        // No. Get the node and all its sublist children.
+                        // First, get node itself and all children.
+                        maybeNode <- listNodeGetADM(nodeIri, shallow = true, requestingUser)
+                        entireNode <- maybeNode match {
+                            // make sure that it is a child node
+                            case Some (childNode: ListChildNodeADM) =>
+                                // get the info of the child node
+                                getNodeADM(childNode)
+                            case _ => throw NotFoundException (s"Node '$nodeIri' not found")
+                        }
+                    } yield entireNode
+                }
         } yield result
     }
 

@@ -116,6 +116,20 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
             converted.children should be(children)
         }
 
+        "work for a 'NodeADM'" in {
+
+            val nodeInfo = SharedListsTestDataADM.summerNodeInfo
+
+            val children = Seq.empty[ListChildNodeADM]
+
+            val json = NodeADM(nodeInfo, children).toJson.compactPrint
+
+            val converted: NodeADM = json.parseJson.convertTo[NodeADM]
+
+            converted.nodeinfo should be(nodeInfo)
+            converted.children should be(children)
+        }
+
         "throw 'ForbiddenException' if user requesting `ListCreateApiRequestADM` is not system or project admin" in {
             val caught = intercept[ForbiddenException](
                 ListCreateRequestADM(

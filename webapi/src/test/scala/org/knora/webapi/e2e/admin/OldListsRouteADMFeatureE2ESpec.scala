@@ -250,6 +250,28 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
                     )
                 )
             }
+
+            "return a complete node with children" in {
+                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+
+                val receivedNode: NodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[NodeADM]
+                receivedNode.nodeinfo.id should be ("http://rdfh.ch/lists/0001/treeList03")
+                receivedNode.nodeinfo.name should be (Some("Tree list node 03"))
+                receivedNode.children.size should be (2)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-node-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
         }
 
         "given a custom Iri" should {
