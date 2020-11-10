@@ -52,7 +52,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
         getLists(featureFactoryConfig) ~
             createListItem(featureFactoryConfig) ~
-            getListNode(featureFactoryConfig) ~
+            getListORNode(featureFactoryConfig) ~
             updateList(featureFactoryConfig) ~
             deleteListNode(featureFactoryConfig) ~
             getNodeInfo(featureFactoryConfig)
@@ -139,7 +139,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def getListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+    private def getListORNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         get {
             /* return a node, root or child, with all children */
             requestContext =>

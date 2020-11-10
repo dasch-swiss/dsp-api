@@ -186,9 +186,9 @@ case class ListsGetRequestADM(projectIri: Option[IRI] = None,
                               requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
- * Requests a list. A successful response will be a [[ListGetResponseADM]]
+ * Requests a node (root or child). A successful response will be a [[ListItemGetResponseADM]]
  *
- * @param iri            the IRI of the list.
+ * @param iri            the IRI of the node (root or child).
  * @param requestingUser the user making the request.
  */
 case class ListGetRequestADM(iri: IRI,
