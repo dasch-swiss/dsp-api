@@ -55,8 +55,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             getListNode(featureFactoryConfig) ~
             updateList(featureFactoryConfig) ~
             deleteListNode(featureFactoryConfig) ~
-            getListInfo(featureFactoryConfig) ~
-            getListNodeInfo(featureFactoryConfig)
+            getNodeInfo(featureFactoryConfig)
 
     /* return all lists optionally filtered by project */
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
@@ -142,7 +141,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     ))
     private def getListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         get {
-            /* return a list (a graph with all list nodes) */
+            /* return a node, root or child, with all children */
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
@@ -210,30 +209,9 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
-    private def getListInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / "infos" / Segment) { iri =>
+    private def getNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / "infos" / Segment) { iri =>
         get {
-            /* return information about a list (without children) */
-            requestContext =>
-                val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                val requestMessage: Future[ListInfoGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ListInfoGetRequestADM(listIri, requestingUser)
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
-    }
-    // TODO: remove this
-    private def getListNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / "nodes" / Segment) { iri =>
-        get {
-            /* return information about a single node (without children) */
+            /* return information about a node, root or child, without children */
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
@@ -249,16 +227,6 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     responderManager = responderManager,
                     log = log
                 )
-        } ~
-            put {
-                /* update list node */
-                throw NotImplementedException("Method not implemented.")
-                ???
-            } ~
-            delete {
-                /* delete list node */
-                throw NotImplementedException("Method not implemented.")
-                ???
-            }
+        }
     }
 }

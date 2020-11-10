@@ -54,7 +54,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     def receive(msg: ListsResponderRequestADM) = msg match {
         case ListsGetRequestADM(projectIri, requestingUser) => listsGetRequestADM(projectIri, requestingUser)
         case ListGetRequestADM(listIri, requestingUser) => listGetRequestADM(listIri, requestingUser)
-        case ListInfoGetRequestADM(listIri, requestingUser) => listInfoGetRequestADM(listIri, requestingUser)
         case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
         case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
         case ListCreateRequestADM(createRootNode, requestingUser , apiRequestID) => listCreateRequestADM(createRootNode, apiRequestID)
@@ -166,30 +165,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 case None => throw NotFoundException(s"List '$rootNodeIri' not found")
             }
         } yield result
-    }
-
-    /**
-     * Retrieves information about a list (root) node.
-     *
-     * @param listIri        the Iri if the list (root node) to be queried.
-     * @param requestingUser the user making the request.
-     * @return a [[RootNodeInfoGetResponseADM]].
-     */
-    private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[RootNodeInfoGetResponseADM] = {
-        for {
-            listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
-
-            // _ = log.debug(s"listInfoGetRequestADM - listNodeInfo: {}", listNodeInfo)
-
-            listRootNodeInfo = listNodeInfo match {
-                case Some(value: ListRootNodeInfoADM) => value
-                case Some(value: ListChildNodeInfoADM) => throw BadRequestException(s"The supplied IRI $listIri does not belong to a list but to a list child node.")
-                case Some(_) | None => throw NotFoundException(s"List $listIri not found.")
-            }
-
-            // _ = log.debug(s"listInfoGetRequestADM - node: {}", MessageUtil.toSource(node))
-
-        } yield RootNodeInfoGetResponseADM(listinfo = listRootNodeInfo)
     }
 
     /**

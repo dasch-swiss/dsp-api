@@ -107,7 +107,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic list information (anything list)" in {
-                responderManager ! ListInfoGetRequestADM(
+                responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/treeList",
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
@@ -120,7 +120,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic list information (anything other list)" in {
-                responderManager ! ListInfoGetRequestADM(
+                responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/otherTreeList",
                     requestingUser = SharedTestDataADM.anythingUser1
                 )

@@ -241,9 +241,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                val requestMessage: Future[ListInfoGetRequestADM] = for {
+                val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield ListInfoGetRequestADM(listIri, requestingUser)
+                } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,

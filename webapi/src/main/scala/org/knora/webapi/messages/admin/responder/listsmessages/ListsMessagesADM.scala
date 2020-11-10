@@ -194,18 +194,8 @@ case class ListsGetRequestADM(projectIri: Option[IRI] = None,
 case class ListGetRequestADM(iri: IRI,
                              requestingUser: UserADM) extends ListsResponderRequestADM
 
-
 /**
- * Request basic information about a list. A successful response will be a [[RootNodeInfoGetResponseADM]]
- *
- * @param iri            the IRI of the list node.
- * @param requestingUser the user making the request.
- */
-case class ListInfoGetRequestADM(iri: IRI,
-                                 requestingUser: UserADM) extends ListsResponderRequestADM
-
-/**
- * Request basic information about a list node. A successful response will be a [[ChildNodeInfoGetResponseADM]]
+ * Request basic information about a node (root or child). A successful response will be a [[NodeInfoGetResponseADM]]
  *
  * @param iri            the IRI of the list node.
  * @param requestingUser the user making the request.

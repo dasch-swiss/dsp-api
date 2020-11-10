@@ -233,7 +233,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
             }
 
             "return node info without children" in {
-                val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01")
+                val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01")
                                 .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
