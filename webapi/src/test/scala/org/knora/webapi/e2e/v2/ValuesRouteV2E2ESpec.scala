@@ -37,6 +37,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDTool}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
@@ -761,7 +762,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseStr: String = responseToString(response)
             assert(response.status == StatusCodes.OK, responseStr)
-            val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+            val responseJsonDoc: JsonLDDocument = JsonLDTool.parseJsonLD(responseStr)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             intValueIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1387,7 +1388,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseStr = responseToString(response)
             assert(response.status == StatusCodes.OK, responseStr)
-            val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+            val responseJsonDoc: JsonLDDocument = JsonLDTool.parseJsonLD(responseStr)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             textValueWithStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
@@ -3157,7 +3158,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseStr: String = responseToString(response)
             assert(response.status == StatusCodes.OK, responseStr)
-            val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+            val responseJsonDoc: JsonLDDocument = JsonLDTool.parseJsonLD(responseStr)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             intValueIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)

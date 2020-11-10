@@ -3,6 +3,16 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
+filegroup(
+    name = "srcs",
+    srcs = [
+        "rdf/RdfModelSpec.scala",
+        "rdf/RdfFormatToolSpec.scala",
+        "rdf/JsonLDToolSpec.scala",
+        "rdf/KnoraResponseV2Spec.scala",
+    ],
+)
+
 scala_test(
     name = "CalendarDateUtilV2Spec",
     size = "small",
@@ -59,10 +69,10 @@ scala_test(
 )
 
 scala_test(
-    name = "JsonLDUtilSpec",
+    name = "PermissionUtilADMSpec",
     size = "small",
     srcs = [
-        "JsonLDUtilSpec.scala",
+        "PermissionUtilADMSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -73,34 +83,50 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
-        "@maven//:org_eclipse_rdf4j_rdf4j_client"
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON_LD,
-)
-
-scala_test(
-    name = "KnoraResponseV2Spec",
-    size = "small",
-    srcs = [
-        "KnoraResponseV2Spec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-        "@maven//:org_eclipse_rdf4j_rdf4j_client"
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
 scala_test(
-    name = "RdfFormatUtilSpec",
+     name = "JenaModelSpec",
+     size = "small",
+     srcs = [
+         "rdf/jenaimpl/JenaModelSpec.scala",
+     ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+     # unused_dependency_checker_mode = "warn",
+     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+         "//webapi:main_library",
+         "//webapi:test_library",
+     ] + BASE_TEST_DEPENDENCIES,
+)
+
+scala_test(
+    name = "RDF4JModelSpec",
     size = "small",
     srcs = [
-        "RdfFormatUtilSpec.scala",
+        "rdf/rdf4jimpl/RDF4JModelSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+    ] + BASE_TEST_DEPENDENCIES,
+)
+
+scala_test(
+    name = "JenaFormatToolSpec",
+    size = "small",
+    srcs = [
+        "rdf/jenaimpl/JenaFormatToolSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -116,10 +142,10 @@ scala_test(
 )
 
 scala_test(
-    name = "PermissionUtilADMSpec",
+    name = "RDF4JFormatToolSpec",
     size = "small",
     srcs = [
-        "PermissionUtilADMSpec.scala",
+        "rdf/rdf4jimpl/RDF4JFormatToolSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -130,5 +156,82 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
+        "@maven//:org_apache_jena_apache_jena_libs"
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "JenaJsonLDToolSpec",
+    size = "small",
+    srcs = [
+        "rdf/jenaimpl/JenaJsonLDToolSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        "@maven//:org_apache_jena_apache_jena_libs"
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "RDF4JJsonLDToolSpec",
+    size = "small",
+    srcs = [
+        "rdf/rdf4jimpl/RDF4JJsonLDToolSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        "@maven//:org_apache_jena_apache_jena_libs"
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "JenaKnoraResponseV2Spec",
+    size = "small",
+    srcs = [
+        "rdf/jenaimpl/JenaKnoraResponseV2Spec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        "@maven//:org_apache_jena_apache_jena_libs"
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
+
+scala_test(
+    name = "RDF4JKnoraResponseV2Spec",
+    size = "small",
+    srcs = [
+        "rdf/rdf4jimpl/RDF4JKnoraResponseV2Spec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        "@maven//:org_apache_jena_apache_jena_libs"
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )

@@ -30,8 +30,9 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDTool, JsonLDValue}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraJsonLDResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraJsonLDResponseV2, KnoraRequestV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -103,7 +104,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
 
         val body: JsonLDObject = JsonLDObject(contentMap ++ nextOffsetStatement)
 
-        val context: JsonLDObject = JsonLDUtil.makeContext(
+        val context: JsonLDObject = JsonLDTool.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -200,7 +201,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
             JsonLDConstants.ID -> JsonLDString(mappingIri),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
             OntologyConstants.Rdfs.Label -> JsonLDString(label),
-            OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
+            OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDTool.iriToJsonLDObject(projectIri.toString)
         ))
 
         val context = JsonLDObject(Map(
@@ -437,7 +438,7 @@ case class StandoffTagIriAttributeV2(standoffPropertyIri: SmartIri, value: IRI, 
     }
 
     override def toJsonLD: (IRI, JsonLDValue) = {
-        standoffPropertyIri.toString -> JsonLDUtil.iriToJsonLDObject(value)
+        standoffPropertyIri.toString -> JsonLDTool.iriToJsonLDObject(value)
     }
 }
 
@@ -458,7 +459,7 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: Strin
     }
 
     override def toJsonLD: (IRI, JsonLDValue) = {
-        standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
+        standoffPropertyIri.toString -> JsonLDTool.datatypeValueToJsonLDObject(
             value = value,
             datatype = OntologyConstants.Xsd.Uri.toSmartIri
         )
@@ -482,7 +483,7 @@ case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: SmartIri
     }
 
     override def toJsonLD: (IRI, JsonLDValue) = {
-        standoffPropertyIri.toString -> JsonLDUtil.iriToJsonLDObject(value)
+        standoffPropertyIri.toString -> JsonLDTool.iriToJsonLDObject(value)
     }
 }
 
@@ -545,7 +546,7 @@ case class StandoffTagDecimalAttributeV2(standoffPropertyIri: SmartIri, value: B
     }
 
     override def toJsonLD: (IRI, JsonLDValue) = {
-        standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
+        standoffPropertyIri.toString -> JsonLDTool.datatypeValueToJsonLDObject(
             value = value.toString,
             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
         )
@@ -590,7 +591,7 @@ case class StandoffTagTimeAttributeV2(standoffPropertyIri: SmartIri, value: Inst
     }
 
     override def toJsonLD: (IRI, JsonLDValue) = {
-        standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
+        standoffPropertyIri.toString -> JsonLDTool.datatypeValueToJsonLDObject(
             value = value.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
         )

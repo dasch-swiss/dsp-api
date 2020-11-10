@@ -36,7 +36,8 @@ import org.knora.webapi.core.Core
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDTool}
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.util.{FileUtil, StartupUtils}
 import org.scalatest.matchers.should.Matchers
@@ -122,7 +123,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
         val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
         val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
-        JsonLDUtil.parseJsonLD(responseBodyStr)
+        JsonLDTool.parseJsonLD(responseBodyStr)
     }
 
     protected def responseToString(httpResponse: HttpResponse): String = {

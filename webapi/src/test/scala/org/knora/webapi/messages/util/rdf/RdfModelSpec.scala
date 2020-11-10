@@ -23,6 +23,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.{CoreSpec, IRI}
+import org.knora.webapi.messages.util.rdf._
 
 /**
  * Tests implementations of [[RdfModel]].
@@ -36,9 +37,8 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val rdfModelFactory: RdfModelFactory = new RdfModelFactory
-    private val model: RdfModel = rdfModelFactory.makeRdfModel(featureFactoryConfig)
-    private val nodeFactory: RdfNodeFactory = rdfModelFactory.makeRdfNodeFactory(featureFactoryConfig)
+    private val model: RdfModel = RdfToolFactory.makeRdfModel(featureFactoryConfig)
+    private val nodeFactory: RdfNodeFactory = RdfToolFactory.makeRdfNodeFactory(featureFactoryConfig)
 
     /**
      * Adds a statement, then searches for it by subject and predicate.

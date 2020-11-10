@@ -32,6 +32,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDTool, JsonLDValue}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
@@ -1208,7 +1209,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         }
 
         // Make the JSON-LD context.
-        val context = JsonLDUtil.makeContext(
+        val context = JsonLDTool.makeContext(
             fixedPrefixes = Map(
                 OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion,
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
@@ -2066,7 +2067,7 @@ sealed trait ReadEntityInfoV2 {
         val labelObjs: Map[String, String] = entityInfoContent.getPredicateObjectsWithLangs(OntologyConstants.Rdfs.Label.toSmartIri)
 
         val labels: Option[(IRI, JsonLDArray)] = if (labelObjs.nonEmpty) {
-            Some(OntologyConstants.Rdfs.Label -> JsonLDUtil.objectsWithLangsToJsonLDArray(labelObjs))
+            Some(OntologyConstants.Rdfs.Label -> JsonLDTool.objectsWithLangsToJsonLDArray(labelObjs))
         } else {
             None
         }
@@ -2074,12 +2075,12 @@ sealed trait ReadEntityInfoV2 {
         val commentObjs: Map[String, String] = entityInfoContent.getPredicateObjectsWithLangs(OntologyConstants.Rdfs.Comment.toSmartIri)
 
         val comments: Option[(IRI, JsonLDArray)] = if (commentObjs.nonEmpty) {
-            Some(OntologyConstants.Rdfs.Comment -> JsonLDUtil.objectsWithLangsToJsonLDArray(commentObjs))
+            Some(OntologyConstants.Rdfs.Comment -> JsonLDTool.objectsWithLangsToJsonLDArray(commentObjs))
         } else {
             None
         }
 
-        messages.util.JsonLDObject(getNonLanguageSpecific(targetSchema) ++ labels ++ comments)
+        JsonLDObject(getNonLanguageSpecific(targetSchema) ++ labels ++ comments)
     }
 }
 
@@ -2245,7 +2246,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
                 JsonLDObject(Map(
                     JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Restriction),
-                    OntologyConstants.Owl.OnProperty -> JsonLDUtil.iriToJsonLDObject(propertyIri.toString),
+                    OntologyConstants.Owl.OnProperty -> JsonLDTool.iriToJsonLDObject(propertyIri.toString),
                     prop2card
                 ) ++ isInheritedStatement ++ guiOrderStatement)
         }
@@ -2262,7 +2263,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         val jsonRestriction: Map[IRI, JsonLDValue] = entityInfoContent.datatypeInfo match {
             case Some(datatypeInfo: DatatypeInfoV2) =>
                 Map(
-                    OntologyConstants.Owl.OnDatatype -> JsonLDUtil.iriToJsonLDObject(datatypeInfo.onDatatype.toString)
+                    OntologyConstants.Owl.OnDatatype -> JsonLDTool.iriToJsonLDObject(datatypeInfo.onDatatype.toString)
                 ) ++ datatypeInfo.pattern.map {
                     pattern =>
                         OntologyConstants.Owl.WithRestrictions -> JsonLDArray(
@@ -2276,7 +2277,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         val jsonSubClassOf = entityInfoContent.subClassOf.toArray.sorted.map {
-            superClass => JsonLDUtil.iriToJsonLDObject(superClass.toString)
+            superClass => JsonLDTool.iriToJsonLDObject(superClass.toString)
         } ++ owlCardinalities
 
         val jsonSubClassOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubClassOf.nonEmpty) {
@@ -2365,11 +2366,11 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         }
 
         // Make the property's knora-api:subjectType and knora-api:objectType statements.
-        val subjectTypeStatement: Option[(IRI, JsonLDObject)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDUtil.iriToJsonLDObject(subjectTypeObj.toString)))
-        val objectTypeStatement: Option[(IRI, JsonLDObject)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDUtil.iriToJsonLDObject(objectTypeObj.toString)))
+        val subjectTypeStatement: Option[(IRI, JsonLDObject)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDTool.iriToJsonLDObject(subjectTypeObj.toString)))
+        val objectTypeStatement: Option[(IRI, JsonLDObject)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDTool.iriToJsonLDObject(objectTypeObj.toString)))
 
         val jsonSubPropertyOf: Seq[JsonLDObject] = entityInfoContent.subPropertyOf.toSeq.sorted.map {
-            superProperty => JsonLDUtil.iriToJsonLDObject(superProperty.toString)
+            superProperty => JsonLDTool.iriToJsonLDObject(superProperty.toString)
         }
 
         val jsonSubPropertyOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubPropertyOf.nonEmpty) {
@@ -2404,7 +2405,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
 
         val guiElementStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             entityInfoContent.getPredicateIriObject(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri).map {
-                obj => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
+                obj => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDTool.iriToJsonLDObject(obj.toString)
             }
         } else {
             None
@@ -2448,7 +2449,7 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
                         case StringLiteralV2(str, None) => (JsonLDString(str), str)
                         case SmartIriLiteralV2(iri) =>
                             val iriStr = iri.toString
-                            (JsonLDUtil.iriToJsonLDObject(iri.toString), iriStr)
+                            (JsonLDTool.iriToJsonLDObject(iri.toString), iriStr)
                     }.sortBy(_._2).map(_._1) // Sort for determinism in testing.
 
                     acc + (predicateIri.toString -> JsonLDArray(nonLanguageSpecificObjectsAsJson))
@@ -3065,7 +3066,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         val projectIriStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             projectIri.map {
-                definedProjectIri => OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(definedProjectIri.toString)
+                definedProjectIri => OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDTool.iriToJsonLDObject(definedProjectIri.toString)
             }
         } else {
             None
@@ -3094,7 +3095,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         val lastModDateStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             lastModificationDate.map {
                 lastModDate =>
-                    OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                    OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDTool.datatypeValueToJsonLDObject(
                         value = lastModDate.toString,
                         datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
                     )

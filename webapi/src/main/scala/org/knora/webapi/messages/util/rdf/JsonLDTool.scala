@@ -17,10 +17,9 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.util
+package org.knora.webapi.messages.util.rdf
 
 import java.io.{StringReader, StringWriter}
-import java.math.BigInteger
 import java.util
 import java.util.UUID
 
@@ -29,13 +28,12 @@ import com.apicatalog.jsonld.document._
 import javax.json._
 import javax.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.eclipse.rdf4j
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, InvalidJsonLDException, InvalidRdfException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.util.JavaUtil._
 
 import scala.collection.JavaConverters._
 
@@ -155,23 +153,24 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
     /**
      * Recursively adds the contents of this JSON-LD object representing triples (rather than a literal)
-     * to an [[rdf4j.model.Model]].
+     * to an [[RdfModel]].
      *
      * @param model the model being constructed.
      * @return the subject of the contents of this JSON-LD object (an IRI or a blank node).
      */
-    def addToModel(model: rdf4j.model.Model)
-                  (implicit stringFormatter: StringFormatter,
-                   valueFactory: rdf4j.model.ValueFactory): rdf4j.model.Resource = {
+    def addToModel(model: RdfModel)
+                  (implicit stringFormatter: StringFormatter): RdfResource = {
+        val nodeFactory: RdfNodeFactory = model.getNodeFactory
+
         // If this object has an @id, use it as the subject, otherwise generate a blank node ID.
-        val rdfSubj: rdf4j.model.Resource = maybeStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr) match {
+        val rdfSubj: RdfResource = maybeStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr) match {
             case Some(subjectIri: SmartIri) =>
                 // It's an IRI.
-                valueFactory.createIRI(subjectIri.toString)
+                nodeFactory.makeIriNode(subjectIri.toString)
 
             case None =>
                 // Generate a blank node ID.
-                valueFactory.createBNode()
+                nodeFactory.makeBlankNode
         }
 
         // Add rdf:type statements to the model.
@@ -186,7 +185,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         val predicates = value.keySet -- JsonLDConstants.all
 
         for (pred <- predicates) {
-            val rdfPred: rdf4j.model.IRI = valueFactory.createIRI(pred)
+            val rdfPred: IriNode = nodeFactory.makeIriNode(pred)
             val obj: JsonLDValue = value(pred)
 
             addJsonLDValueToModel(
@@ -201,25 +200,26 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Adds `rdf:type` statements to an [[rdf4j.model.Model]] to specify the types of
+     * Adds `rdf:type` statements to an [[RdfModel]] to specify the types of
      * a JSON-LD object that represents triples (rather than a literal).
      *
      * @param model   the model being constructed.
      * @param rdfSubj the subject of this JSON-LD object.
      */
-    private def addRdfTypesToModel(model: rdf4j.model.Model,
-                                   rdfSubj: rdf4j.model.Resource)
-                                  (implicit stringFormatter: StringFormatter,
-                                   valueFactory: rdf4j.model.ValueFactory): Unit = {
+    private def addRdfTypesToModel(model: RdfModel,
+                                   rdfSubj: RdfResource)
+                                  (implicit stringFormatter: StringFormatter): Unit = {
+        val nodeFactory: RdfNodeFactory = model.getNodeFactory
+
         value.get(JsonLDConstants.TYPE) match {
             case Some(rdfTypes: JsonLDValue) =>
                 rdfTypes match {
                     case jsonLDString: JsonLDString =>
                         // It has just one @type.
                         model.add(
-                            rdfSubj,
-                            valueFactory.createIRI(OntologyConstants.Rdf.Type),
-                            valueFactory.createIRI(jsonLDString.value)
+                            subj = rdfSubj,
+                            pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
+                            obj = nodeFactory.makeIriNode(jsonLDString.value)
                         )
 
                     case jsonLDArray: JsonLDArray =>
@@ -228,9 +228,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                             elem match {
                                 case jsonLDString: JsonLDString =>
                                     model.add(
-                                        rdfSubj,
-                                        valueFactory.createIRI(OntologyConstants.Rdf.Type),
-                                        valueFactory.createIRI(jsonLDString.value)
+                                        subj = rdfSubj,
+                                        pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
+                                        obj = nodeFactory.makeIriNode(jsonLDString.value)
                                     )
 
                                 case _ => throw InvalidJsonLDException("The objects of @type must be strings")
@@ -245,13 +245,12 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Adds the contents of `@graph` to an [[rdf4j.model.Model]].
+     * Adds the contents of `@graph` to an [[RdfModel]].
      *
      * @param model the model being constructed.
      */
-    private def addGraphToModel(model: rdf4j.model.Model)
-                               (implicit stringFormatter: StringFormatter,
-                                valueFactory: rdf4j.model.ValueFactory): Unit = {
+    private def addGraphToModel(model: RdfModel)
+                               (implicit stringFormatter: StringFormatter): Unit = {
         value.get(JsonLDConstants.GRAPH) match {
             case Some(graphContents: JsonLDValue) =>
                 graphContents match {
@@ -275,37 +274,38 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Recursively adds a [[JsonLDValue]] to an [[rdf4j.model.Model]], using the specified subject and predicate.
+     * Recursively adds a [[JsonLDValue]] to an [[RdfModel]], using the specified subject and predicate.
      *
      * @param model       the model being constructed.
      * @param rdfSubj     the subject.
      * @param rdfPred     the predicate.
      * @param jsonLDValue the value to be added.
      */
-    private def addJsonLDValueToModel(model: rdf4j.model.Model,
-                                      rdfSubj: rdf4j.model.Resource,
-                                      rdfPred: rdf4j.model.IRI,
+    private def addJsonLDValueToModel(model: RdfModel,
+                                      rdfSubj: RdfResource,
+                                      rdfPred: IriNode,
                                       jsonLDValue: JsonLDValue)
-                                     (implicit stringFormatter: StringFormatter,
-                                      valueFactory: rdf4j.model.ValueFactory): Unit = {
+                                     (implicit stringFormatter: StringFormatter): Unit = {
+        val nodeFactory: RdfNodeFactory = model.getNodeFactory
+
         // Which type of JSON-LD value is this?
         jsonLDValue match {
             case jsonLDObject: JsonLDObject =>
                 // It's a JSON-LD object. What does it represent?
-                val rdfObj: rdf4j.model.Value = if (jsonLDObject.isIri) {
+                val rdfObj: RdfNode = if (jsonLDObject.isIri) {
                     // An IRI.
-                    valueFactory.createIRI(jsonLDObject.requireString(JsonLDConstants.ID))
+                    nodeFactory.makeIriNode(jsonLDObject.requireString(JsonLDConstants.ID))
                 } else if (jsonLDObject.isDatatypeValue) {
                     // A literal.
-                    valueFactory.createLiteral(
-                        jsonLDObject.requireString(JsonLDConstants.VALUE),
-                        valueFactory.createIRI(jsonLDObject.requireString(JsonLDConstants.TYPE))
+                    nodeFactory.makeDatatypeLiteral(
+                        value = jsonLDObject.requireString(JsonLDConstants.VALUE),
+                        datatype = jsonLDObject.requireString(JsonLDConstants.TYPE)
                     )
                 } else if (jsonLDObject.isStringWithLang) {
                     // A string literal with a language tag.
-                    valueFactory.createLiteral(
-                        jsonLDObject.requireString(JsonLDConstants.VALUE),
-                        jsonLDObject.requireString(JsonLDConstants.LANGUAGE)
+                    nodeFactory.makeStringWithLanguage(
+                        value = jsonLDObject.requireString(JsonLDConstants.VALUE),
+                        language = jsonLDObject.requireString(JsonLDConstants.LANGUAGE)
                     )
                 } else {
                     // Triples. Recurse to add its contents to the model.
@@ -314,9 +314,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
                 // Add a triple linking the subject to the object.
                 model.add(
-                    rdfSubj,
-                    rdfPred,
-                    rdfObj
+                    subj = rdfSubj,
+                    pred = rdfPred,
+                    obj = rdfObj
                 )
 
             case jsonLDArray: JsonLDArray =>
@@ -334,9 +334,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case jsonLDString: JsonLDString =>
                 // It's a string literal.
                 model.add(
-                    rdfSubj,
-                    rdfPred,
-                    valueFactory.createLiteral(jsonLDString.value)
+                    subj = rdfSubj,
+                    pred = rdfPred,
+                    obj = nodeFactory.makeStringLiteral(jsonLDString.value)
                 )
 
             case jsonLDBoolean: JsonLDBoolean =>
@@ -344,16 +344,17 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                 model.add(
                     rdfSubj,
                     rdfPred,
-                    valueFactory.createLiteral(jsonLDBoolean.value)
+                    nodeFactory.makeBooleanLiteral(jsonLDBoolean.value)
                 )
 
             case jsonLDInt: JsonLDInt =>
-                // It's an integer literal. Use a BigInteger rather than an Int,
-                // so we get xsd:integer rather than xsd:int.
                 model.add(
-                    rdfSubj,
-                    rdfPred,
-                    valueFactory.createLiteral(new BigInteger(jsonLDInt.value.toString, 10))
+                    subj = rdfSubj,
+                    pred = rdfPred,
+                    obj = nodeFactory.makeDatatypeLiteral(
+                        value = jsonLDInt.value.toString,
+                        datatype = OntologyConstants.Xsd.Integer
+                    )
                 )
         }
     }
@@ -998,26 +999,18 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     }
 
     /**
-     * Converts this JSON-LD document to an [[rdf4j.model.Model]], for conversion to
-     * other RDF formats.
+     * Converts this JSON-LD document to an [[RdfModel]].
      */
-    def toRDF4JModel: rdf4j.model.Model = {
+    def toRdfModel(featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        // Make an RDF4J ValueFactory for constructing RDF4J values.
-        implicit val valueFactory: rdf4j.model.impl.SimpleValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
-
-        // Make an empty RDF4J model.
-        val model = new rdf4j.model.impl.LinkedHashModel()
+        val model: RdfModel = RdfToolFactory.makeRdfModel(featureFactoryConfig)
 
         // Add the prefixes and namespaces from the JSON-LD context to the model.
         for ((prefix: String, namespaceValue: JsonLDValue) <- context.value) {
-            val namespace: rdf4j.model.Namespace = namespaceValue match {
-                case jsonLDString: JsonLDString => new rdf4j.model.impl.SimpleNamespace(prefix, jsonLDString.value)
+            namespaceValue match {
+                case jsonLDString: JsonLDString => model.setNamespace(prefix, jsonLDString.value)
                 case _ => throw InvalidJsonLDException("The keys and values of @context must be strings")
             }
-
-            model.setNamespace(namespace)
         }
 
         // Recursively add the JSON-LD document body to the model.
@@ -1027,9 +1020,9 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
 }
 
 /**
- * Utility functions for working with JSON-LD.
+ * A tool for working with JSON-LD.
  */
-object JsonLDUtil {
+object JsonLDTool {
 
     /**
      * Makes a JSON-LD context containing prefixes for Knora and other ontologies.
@@ -1225,7 +1218,7 @@ object JsonLDUtil {
     }
 
     /**
-     * Converts an [[rdf4j.model.Model]] to a [[JsonLDDocument]]. There can be more than one valid
+     * Converts an [[RdfModel]] to a [[JsonLDDocument]]. There can be more than one valid
      * way to nest objects in the converted JSON-LD. This implementation takes the following
      * approach:
      *
@@ -1236,19 +1229,17 @@ object JsonLDUtil {
      *
      * An error is returned if the same blank node is used more than once.
      *
-     * @param model the model to be read.
+     * @param model the [[RdfModel]] to be read.
      * @return the corresponding [[JsonLDDocument]].
      */
-    def fromRDF4JModel(model: rdf4j.model.Model): JsonLDDocument = {
+    def fromRdfModel(model: RdfModel): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Make a JSON-LD context from the model's namespaces.
-        val namespaces: Set[rdf4j.model.Namespace] = model.getNamespaces.asScala.toSet
-
-        val contextMap: Map[IRI, JsonLDString] = namespaces.map {
-            namespace: rdf4j.model.Namespace =>
-                namespace.getPrefix -> JsonLDString(namespace.getName)
-        }.toMap
+        val contextMap: Map[IRI, JsonLDString] = model.getNamespaces.map {
+            case (prefix, namespace) =>
+                prefix -> JsonLDString(namespace)
+        }
 
         val context = JsonLDObject(contextMap)
 
@@ -1257,32 +1248,30 @@ object JsonLDUtil {
             // Yes. Just make an empty JSON-LD object.
             JsonLDObject(Map.empty)
         } else {
-            // No. Copy the model, so we can modify our copy.
-            val modelCopy = new rdf4j.model.impl.LinkedHashModel(model)
-
             // Get the set of subjects in the model.
-            val subjects: Set[rdf4j.model.Resource] = modelCopy.subjects.asScala.toSet
+            val subjects: Set[RdfResource] = model.getSubjects
+
+            // Make a collection of subjects that have already been processed.
+            val processedSubjects: collection.mutable.Set[RdfResource] = collection.mutable.Set.empty
 
             // Make an empty collection of top-level JSON-LD objects. This is a mutable collection
             // so JSON-LD objects can be added to it and later removed when they are inlined.
-            val topLevelObjects: collection.mutable.Map[rdf4j.model.Resource, JsonLDObject] = collection.mutable.Map.empty
+            val topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject] = collection.mutable.Map.empty
 
             // Make a JSON-LD object for each entity, inlining them as we go along.
-            for (subj: rdf4j.model.Resource <- subjects) {
-                // Get the statements about the entity.
-                val statements: Set[rdf4j.model.Statement] = modelCopy.filter(subj, null, null).asScala.toSet
+            for (subj: RdfResource <- subjects) {
+                // Have we already processed this subject?
+                if (!processedSubjects.contains(subj)) {
+                    // No. Get the statements about it.
+                    val statements: Set[Statement] = model.find(Some(subj), None, None)
 
-                // Have we already processed this entity?
-                if (statements.isEmpty) {
-                    // Yes. Skip it.
-                    ()
-                } else {
-                    // No. Make a JSON-LD object representing the entity and any nested entities.
+                    // Make a JSON-LD object representing the entity and any nested entities.
                     val jsonLDObject = entityToJsonLDObject(
                         subj = subj,
                         statements = statements,
-                        model = modelCopy,
-                        topLevelObjects = topLevelObjects
+                        model = model,
+                        topLevelObjects = topLevelObjects,
+                        processedSubjects = processedSubjects
                     )
 
                     // Add it to the collection of top-level objects.
@@ -1306,83 +1295,81 @@ object JsonLDUtil {
     /**
      * Converts an RDF entity to a [[JsonLDObject]].
      *
-     * @param subj            the subject of the entity.
-     * @param statements      the statements representing the entity.
-     * @param model           the RDF4J model that is being read.
-     * @param topLevelObjects the top-level JSON-LD objects that have been constructed so far.
+     * @param subj              the subject of the entity.
+     * @param statements        the statements representing the entity.
+     * @param model             the [[RdfModel]] that is being read.
+     * @param topLevelObjects   the top-level JSON-LD objects that have been constructed so far.
+     * @param processedSubjects the subjects that have already been processed.
      * @return the JSON-LD object that was constructed.
      */
-    private def entityToJsonLDObject(subj: rdf4j.model.Resource,
-                                     statements: Set[rdf4j.model.Statement],
-                                     model: rdf4j.model.Model,
-                                     topLevelObjects: collection.mutable.Map[rdf4j.model.Resource, JsonLDObject])
+    private def entityToJsonLDObject(subj: RdfResource,
+                                     statements: Set[Statement],
+                                     model: RdfModel,
+                                     topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject],
+                                     processedSubjects: collection.mutable.Set[RdfResource])
                                     (implicit stringFormatter: StringFormatter): JsonLDObject = {
-        // Remove the statements from the model.
-        model.remove(subj, null, null)
+        // Mark the subject as processed.
+        processedSubjects += subj
 
         // Does this entity have an IRI, or is it a blank node?
         val idContent: Map[String, JsonLDValue] = subj match {
-            case iri: rdf4j.model.IRI =>
+            case iriNode: IriNode =>
                 // It has an IRI. Use it for the @id.
-                Map(JsonLDConstants.ID -> JsonLDString(iri.stringValue))
+                Map(JsonLDConstants.ID -> JsonLDString(iriNode.iri))
 
-            case _ =>
+            case _: BlankNode =>
                 // It's a blank node. Don't make an @id.
                 Map.empty[String, JsonLDValue]
         }
 
         // Group the statements by predicate.
-        val groupedByPred: Map[rdf4j.model.IRI, Set[rdf4j.model.Statement]] = statements.groupBy(_.getPredicate)
+        val groupedByPred: Map[IriNode, Set[Statement]] = statements.groupBy(_.pred)
 
         // Make JSON-LD content representing the predicates and their objects.
         val predsAndObjs: Map[IRI, JsonLDValue] = groupedByPred.keySet.map {
-            pred: rdf4j.model.IRI =>
-                val predStatements: Set[rdf4j.model.Statement] = groupedByPred(pred)
-                val predIri: IRI = pred.stringValue
+            pred: IriNode =>
+                val predStatements: Set[Statement] = groupedByPred(pred)
+                val predIri: IRI = pred.iri
 
                 // Is the predicate rdf:type?
-                if (predIri == OntologyConstants.Rdf.Type) {
-                    // Yes. Add @type. Is there just one rdf:type?
-                    val rdfType: JsonLDValue = if (predStatements.size == 1) {
-                        // Yes.
-                        JsonLDString(predStatements.head.getObject.stringValue)
-                    } else {
-                        // No. Make a JSON-LD array.
-                        JsonLDArray(
-                            predStatements.map {
-                                statement => JsonLDString(statement.getObject.stringValue)
-                            }.toVector
-                        )
+                val (jsonLDKey: String, jsonLDObjs: Vector[JsonLDValue]) = if (predIri == OntologyConstants.Rdf.Type) {
+                    // Yes. Add @type.
+                    val typeList: Vector[JsonLDString] = predStatements.map {
+                        statement =>
+                            statement.obj match {
+                                case iriNode: IriNode => JsonLDString(iriNode.iri)
+                                case other => throw InvalidRdfException(s"Unexpected object of rdf:type: $other")
+                            }
+                    }.toVector
 
-                    }
-
-                    JsonLDConstants.TYPE -> rdfType
+                    JsonLDConstants.TYPE -> typeList
                 } else {
                     // The predicate is not rdf:type. Convert its objects.
-                    val objs: Seq[JsonLDValue] = predStatements.map(_.getObject).map {
-                        case resource: rdf4j.model.Resource =>
+                    val objs: Vector[JsonLDValue] = predStatements.map(_.obj).map {
+                        case resource: RdfResource =>
                             // The object is an entity. Recurse to get it.
                             rdf4jResourceToJsonLDValue(
                                 resource = resource,
                                 model = model,
-                                topLevelObjects = topLevelObjects
+                                topLevelObjects = topLevelObjects,
+                                processedSubjects = processedSubjects
                             )
 
-                        case literal: rdf4j.model.Literal => rdf4jLiteralToJsonLDValue(literal)
+                        case literal: RdfLiteral => rdfLiteralToJsonLDValue(literal)
 
-                        case other => throw InvalidRdfException(s"Unexpected RDF value: ${other.stringValue}")
+                        case other => throw InvalidRdfException(s"Unexpected RDF value: $other")
                     }.toVector
 
-                    // Does the predicate have just one object?
-                    val jsonLDValue = if (objs.size == 1) {
-                        // Yes.
-                        objs.head
-                    } else {
-                        // No. Make a JSON-LD array.
-                        JsonLDArray(objs)
-                    }
+                    predIri -> objs
+                }
 
-                    predIri -> jsonLDValue
+                // Does the predicate have just one object?
+                if (jsonLDObjs.size == 1) {
+                    // Yes.
+                    jsonLDKey -> jsonLDObjs.head
+                } else {
+                    // No. Make a JSON-LD array.
+                    jsonLDKey -> JsonLDArray(jsonLDObjs)
                 }
         }.toMap
 
@@ -1390,55 +1377,56 @@ object JsonLDUtil {
     }
 
     /**
-     * Converts an [[rdf4j.model.Literal]] to a [[JsonLDValue]].
+     * Converts an [[RdfLiteral]] to a [[JsonLDValue]].
      *
      * @param literal the literal to be converted.
      * @return the corresponding JSON-LD value.
      */
-    private def rdf4jLiteralToJsonLDValue(literal: rdf4j.model.Literal)
-                                         (implicit stringFormatter: StringFormatter): JsonLDValue = {
-        // Is this a string literal with a language tag?
-        literal.getLanguage.toOption match {
-            case Some(language) =>
-                // Yes.
-                objectWithLangToJsonLDObject(obj = literal.getLabel, lang = language)
+    private def rdfLiteralToJsonLDValue(literal: RdfLiteral)
+                                       (implicit stringFormatter: StringFormatter): JsonLDValue = {
+        literal match {
+            case stringWithLanguage: StringWithLanguage =>
+                objectWithLangToJsonLDObject(obj = stringWithLanguage.value, lang = stringWithLanguage.language)
 
-            case None =>
-                // No. Is there a native JSON-LD type for it?
-                val datatypeIri: IRI = literal.getDatatype.stringValue
+            case datatypeLiteral: DatatypeLiteral =>
+                // Is there a native JSON-LD type for this literal?
+                val datatypeIri: IRI = datatypeLiteral.datatype
+                val datatypeValue: String = datatypeLiteral.value
 
                 datatypeIri match {
                     case OntologyConstants.Xsd.String =>
                         // String.
-                        JsonLDString(literal.stringValue)
+                        JsonLDString(datatypeValue)
 
                     case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer =>
                         // Integer.
-                        JsonLDInt(literal.intValue)
+                        JsonLDInt(datatypeValue.toInt)
 
                     case OntologyConstants.Xsd.Boolean =>
                         // Boolean.
-                        JsonLDBoolean(literal.booleanValue)
+                        JsonLDBoolean(datatypeValue.toBoolean)
 
                     case _ =>
                         // There's no native JSON-LD type for this literal.
                         // Make a JSON-LD object representing a datatype value.
-                        datatypeValueToJsonLDObject(value = literal.getLabel, datatype = datatypeIri.toSmartIri)
+                        datatypeValueToJsonLDObject(value = datatypeValue, datatype = datatypeIri.toSmartIri)
                 }
         }
     }
 
     /**
-     * Converts an [[rdf4j.model.Resource]] to a [[JsonLDValue]].
+     * Converts an [[RdfResource]] to a [[JsonLDValue]].
      *
-     * @param resource        the resource to be converted.
-     * @param model           the RDF4J model that is being read.
-     * @param topLevelObjects the top-level JSON-LD objects that have been constructed so far.
+     * @param resource          the resource to be converted.
+     * @param model             the [[RdfModel]] that is being read.
+     * @param topLevelObjects   the top-level JSON-LD objects that have been constructed so far.
+     * @param processedSubjects the subjects that have already been processed.
      * @return a JSON-LD value representing the resource.
      */
-    private def rdf4jResourceToJsonLDValue(resource: rdf4j.model.Resource,
-                                           model: rdf4j.model.Model,
-                                           topLevelObjects: collection.mutable.Map[rdf4j.model.Resource, JsonLDObject])
+    private def rdf4jResourceToJsonLDValue(resource: RdfResource,
+                                           model: RdfModel,
+                                           topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject],
+                                           processedSubjects: collection.mutable.Set[RdfResource])
                                           (implicit stringFormatter: StringFormatter): JsonLDValue = {
         // Have we already made a top-level JSON-LD object for this entity?
         topLevelObjects.get(resource) match {
@@ -1450,38 +1438,38 @@ object JsonLDUtil {
             case None =>
                 // No. Is it a Knora ontology entity?
                 resource match {
-                    case iri: rdf4j.model.IRI if iri.stringValue.toSmartIri.isKnoraDefinitionIri =>
+                    case iriNode: IriNode if iriNode.iri.toSmartIri.isKnoraDefinitionIri =>
                         // Yes. Just use its IRI, because we don't inline ontology entities.
-                        iriToJsonLDObject(iri.stringValue)
+                        iriToJsonLDObject(iriNode.iri)
 
                     case _ =>
-                        // It's not a Knora ontology entity. Is it still in the model?
-                        if (model.contains(resource, null, null)) {
+                        // It's not a Knora ontology entity. Is it in the model, and have we not processed it yet?
+                        val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
+
+                        if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
                             // Yes. Recurse to get it, and inline it here.
-
-                            val resourceStatements: Set[rdf4j.model.Statement] = model.filter(resource, null, null).asScala.toSet
-
                             entityToJsonLDObject(
                                 subj = resource,
                                 statements = resourceStatements,
                                 model = model,
-                                topLevelObjects = topLevelObjects
+                                topLevelObjects = topLevelObjects,
+                                processedSubjects = processedSubjects
                             )
                         } else {
-                            // It's not in the model. Maybe it was already inlined somewhere else,
-                            // or maybe it wasn't provided in the model. Does it have an IRI?
+                            // No. Maybe it was already inlined somewhere else, or maybe it wasn't provided
+                            // in the model. Does it have an IRI?
                             resource match {
-                                case iri: rdf4j.model.IRI =>
+                                case iriNode: IriNode =>
                                     // Yes. Just use that.
-                                    iriToJsonLDObject(iri.stringValue)
+                                    iriToJsonLDObject(iriNode.iri)
 
-                                case blankNode: rdf4j.model.BNode =>
+                                case blankNode: BlankNode =>
                                     // No, it's a blank node. This shouldn't happen.
-                                    throw InvalidRdfException(s"Blank node ${blankNode.stringValue} was not found or is referenced in more than one place")
+                                    throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place")
 
                                 case _ =>
                                     // Other resource types aren't supported.
-                                    throw InvalidRdfException(s"Unexpected RDF resource: ${resource.stringValue}")
+                                    throw InvalidRdfException(s"Unexpected RDF resource: $resource")
                             }
                         }
                 }

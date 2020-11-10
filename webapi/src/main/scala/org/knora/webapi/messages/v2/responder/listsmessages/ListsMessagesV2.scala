@@ -23,8 +23,9 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraJsonLDResponseV2}
+import org.knora.webapi.messages.util.{rdf, _}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDTool}
+import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraRequestV2}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.{messages, _}
@@ -109,10 +110,10 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
             }
 
             val nodeHasRootNode: Map[IRI, JsonLDObject] = Map(
-                OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil.iriToJsonLDObject(node.hasRootNode)
+                OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDTool.iriToJsonLDObject(node.hasRootNode)
             )
 
-            messages.util.JsonLDObject(
+            JsonLDObject(
                 Map(
                     "@id" -> JsonLDString(node.id),
                     "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString)
@@ -136,10 +137,10 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
         }
 
         val project: Map[IRI, JsonLDObject] = Map(
-            OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil.iriToJsonLDObject(listinfo.projectIri)
+            OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDTool.iriToJsonLDObject(listinfo.projectIri)
         )
 
-        val body = messages.util.JsonLDObject(Map(
+        val body = rdf.JsonLDObject(Map(
             "@id" -> JsonLDString(listinfo.id),
             "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString),
             OntologyConstants.KnoraBase.IsRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDBoolean(true)
@@ -206,7 +207,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
                 val position: Map[IRI, JsonLDInt] = Map(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(child.position))
 
-                val rootNode = Map(OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil.iriToJsonLDObject(child.hasRootNode))
+                val rootNode = Map(OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDTool.iriToJsonLDObject(child.hasRootNode))
 
                 JsonLDObject(
                     Map(

@@ -31,6 +31,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDValue}
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

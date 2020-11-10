@@ -11,6 +11,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/annotation",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_apicatalog_titanium_json_ld",

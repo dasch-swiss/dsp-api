@@ -36,6 +36,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDString, JsonLDTool, JsonLDValue}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -125,18 +126,18 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
             historyEntry: ResourceHistoryEntry =>
                 JsonLDObject(
                     Map(
-                        OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                        OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDTool.datatypeValueToJsonLDObject(
                             value = historyEntry.versionDate.toString,
                             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
                         ),
-                        OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author)
+                        OntologyConstants.KnoraApiV2Complex.Author -> JsonLDTool.iriToJsonLDObject(historyEntry.author)
                     )
                 )
         }
 
         // Make the JSON-LD context.
 
-        val context = JsonLDUtil.makeContext(
+        val context = JsonLDTool.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -362,11 +363,11 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2Complex) {
             val requiredMetadataForComplexSchema: Map[IRI, JsonLDValue] = Map(
-                OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-                OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
+                OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDTool.iriToJsonLDObject(attachedToUser),
+                OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDTool.iriToJsonLDObject(projectADM.id),
                 OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
                 OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
-                OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDTool.datatypeValueToJsonLDObject(
                     value = creationDate.toString,
                     datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
                 )
@@ -379,7 +380,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
             val lastModDateAsJsonLD: Option[(IRI, JsonLDValue)] = lastModificationDate.map {
                 definedLastModDate =>
-                    OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                    OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDTool.datatypeValueToJsonLDObject(
                         value = definedLastModDate.toString,
                         datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
                     )
@@ -389,7 +390,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
             val versionDateAsJsonLD = versionDate.map {
                 definedVersionDate =>
-                    OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                    OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDTool.datatypeValueToJsonLDObject(
                         value = definedVersionDate.toString,
                         datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
                     )
@@ -410,7 +411,7 @@ case class ReadResourceV2(resourceIri: IRI,
         }
 
         val arkUrlAsJsonLD: (IRI, JsonLDObject) =
-            arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
+            arkUrlProp -> JsonLDTool.datatypeValueToJsonLDObject(
                 value = resourceSmartIri.fromResourceIriToArkUrl(),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
@@ -425,12 +426,12 @@ case class ReadResourceV2(resourceIri: IRI,
         val arkTimestamp = versionDate.getOrElse(lastModificationDate.getOrElse(creationDate))
 
         val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
-            versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
+            versionArkUrlProp -> JsonLDTool.datatypeValueToJsonLDObject(
                 value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 
-        messages.util.JsonLDObject(
+        JsonLDObject(
             Map(
                 JsonLDConstants.ID -> JsonLDString(resourceIri),
                 JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
@@ -905,7 +906,7 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
 
         // Make the JSON-LD document.
 
-        val context: JsonLDObject = JsonLDUtil.makeContext(
+        val context: JsonLDObject = JsonLDTool.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -1093,7 +1094,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
         // Make the JSON-LD context.
 
-        val context = JsonLDUtil.makeContext(
+        val context = JsonLDTool.makeContext(
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -1126,10 +1127,10 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
                         val jsonLDNodeEdges: Map[IRI, JsonLDArray] = nodeEdgesGroupedAndSortedByProperty.map {
                             case (propertyIri: SmartIri, propertyEdges: Seq[GraphEdgeV2]) =>
                                 val sortedPropertyEdges = propertyEdges.sortBy(_.target)
-                                propertyIri.toString -> JsonLDArray(sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)))
+                                propertyIri.toString -> JsonLDArray(sortedPropertyEdges.map(propertyEdge => JsonLDTool.iriToJsonLDObject(propertyEdge.target)))
                         }.toMap
 
-                        messages.util.JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
+                        messages.util.rdf.JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
 
                     case None =>
                         // This node isn't the source of any edges.

@@ -17,9 +17,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.rdf
+package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
 
 /**
  * Represents an RDF subject, predicate, or object.
@@ -86,6 +87,11 @@ trait Statement {
  */
 trait RdfModel {
     /**
+     * Returns an [[RdfNodeFactory]] that can be used create nodes for use with this model.
+     */
+    def getNodeFactory: RdfNodeFactory
+
+    /**
      * Adds a statement to the model.
      *
      * @param statement the statement to be added.
@@ -133,6 +139,31 @@ trait RdfModel {
      * @return the statements matching the pattern.
      */
     def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement]
+
+    /**
+     * Returns a set of all the subjects in the model.
+     */
+    def getSubjects: Set[RdfResource]
+
+    /**
+     * Adds a namespace declaration to the model.
+     *
+     * @param prefix the namespace prefix.
+     * @param namespace the namespace.
+     */
+    def setNamespace(prefix: String, namespace: IRI): Unit
+
+    /**
+     * Returns the namespace declarations in the model.
+     *
+     * @return a map of prefixes to namespaces.
+     */
+    def getNamespaces: Map[String, IRI]
+
+    /**
+     * Returns `true` if this model is empty.
+     */
+    def isEmpty: Boolean
 }
 
 /**
@@ -140,7 +171,9 @@ trait RdfModel {
  */
 trait RdfNodeFactory {
     /**
-     * Constructs a blank node.
+     * Constructs a blank node with a generated ID.
+     *
+     * @return a [[BlankNode]].
      */
     def makeBlankNode: BlankNode
 
@@ -148,6 +181,7 @@ trait RdfNodeFactory {
      * Constructs a blank node with the specified ID.
      *
      * @param id the blank node ID.
+     * @return a [[BlankNode]].
      */
     def makeBlankNodeWithID(id: String): BlankNode
 
@@ -155,6 +189,7 @@ trait RdfNodeFactory {
      * Constructs an IRI node.
      *
      * @param iri the IRI.
+     * @return an [[IriNode]].
      */
     def makeIriNode(iri: IRI): IriNode
 
@@ -163,8 +198,19 @@ trait RdfNodeFactory {
      *
      * @param value    the lexical value of the literal.
      * @param datatype the datatype IRI.
+     * @return a [[DatatypeLiteral]].
      */
     def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral
+
+    /**
+     * Creates an `xsd:string`.
+     *
+     * @param value the string value.
+     * @return a [[DatatypeLiteral]].
+     */
+    def makeStringLiteral(value: String): DatatypeLiteral = {
+        makeDatatypeLiteral(value = value, datatype = OntologyConstants.Xsd.String)
+    }
 
     /**
      * Constructs a string with a language tag.
@@ -173,6 +219,16 @@ trait RdfNodeFactory {
      * @param language the language tag.
      */
     def makeStringWithLanguage(value: String, language: String): StringWithLanguage
+
+    /**
+     * Constructs an `xsd:boolean`.
+     *
+     * @param value the boolean value.
+     * @return a [[DatatypeLiteral]].
+     */
+    def makeBooleanLiteral(value: Boolean): DatatypeLiteral = {
+        makeDatatypeLiteral(value = value.toString, datatype = OntologyConstants.Xsd.Boolean)
+    }
 
     /**
      * Constructs a statement.

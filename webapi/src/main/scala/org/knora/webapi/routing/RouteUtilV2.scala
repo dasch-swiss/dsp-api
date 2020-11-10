@@ -30,7 +30,8 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, UnexpectedMessageException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.{JsonLDDocument, RdfFormatUtil}
+import org.knora.webapi.messages.util.RdfFormatUtil
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
@@ -234,6 +235,7 @@ object RouteUtilV2 {
                 mediaType = specificMediaType,
                 targetSchema = targetSchema,
                 settings = settings,
+                featureFactoryConfig = featureFactoryConfig,
                 schemaOptions = schemaOptions
             )
         } yield featureFactoryConfig.addHeaderToHttpResponse(

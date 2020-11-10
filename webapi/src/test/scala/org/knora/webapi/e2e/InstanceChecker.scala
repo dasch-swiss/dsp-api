@@ -26,6 +26,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDTool, JsonLDValue}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
@@ -323,7 +324,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
             case None =>
                 val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
                 val classDefStr: String = knoraRouteGet(urlPath)
-                val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
+                val jsonLDDocument: JsonLDDocument = JsonLDTool.parseJsonLD(classDefStr)
 
                 // If Knora returned an error, get the error message and throw an exception.
                 jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
@@ -351,7 +352,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
             case None =>
                 val urlPath = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
                 val propertyDefStr: String = knoraRouteGet(urlPath)
-                val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
+                val jsonLDDocument: JsonLDDocument = JsonLDTool.parseJsonLD(propertyDefStr)
 
                 // If Knora returned an error, get the error message and throw an exception.
                 jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
@@ -421,7 +422,7 @@ class JsonLDInstanceInspector extends InstanceInspector {
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     override def toElement(response: String): InstanceElement = {
-        jsonLDObjectToElement(JsonLDUtil.parseJsonLD(response).body)
+        jsonLDObjectToElement(JsonLDTool.parseJsonLD(response).body)
     }
 
     private def jsonLDValueToElements(jsonLDValue: JsonLDValue): Vector[InstanceElement] = {

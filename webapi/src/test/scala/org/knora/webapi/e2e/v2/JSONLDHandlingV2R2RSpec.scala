@@ -28,7 +28,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.JsonLDTool
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import spray.json._
 
@@ -65,10 +65,10 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
             val jsonldWithPrefixes = readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
 
             // expand JSON-LD with JSON-LD processor
-            val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
+            val jsonldParsedExpanded = JsonLDTool.parseJsonLD(jsonldWithPrefixes)
 
             // expected result after expansion
-            val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"), writeFile = false))
+            val expectedJsonldExpandedParsed = JsonLDTool.parseJsonLD(readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"), writeFile = false))
 
             compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed, receivedResponse = jsonldParsedExpanded)
 

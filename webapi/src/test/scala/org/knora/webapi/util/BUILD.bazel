@@ -12,7 +12,6 @@ filegroup(
         "MutableUserADM.scala",
         "StartupUtils.scala",
         "TestExtractorMethods.scala",
-        "rdf/RdfModelSpec.scala",
     ],
 )
 
@@ -58,42 +57,6 @@ scala_test(
     size = "small",
     srcs = [
         "StringLiteralSequenceV2Spec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-    ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-     name = "JenaModelSpec",
-     size = "small",
-     srcs = [
-         "rdf/jenaimpl/JenaModelSpec.scala",
-     ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-     # unused_dependency_checker_mode = "warn",
-     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-         "//webapi:main_library",
-         "//webapi:test_library",
-     ] + BASE_TEST_DEPENDENCIES,
-)
-
-scala_test(
-    name = "RDF4JModelSpec",
-    size = "small",
-    srcs = [
-        "rdf/rdf4jimpl/RDF4JModelSpec.scala",
     ],
     data = [
         "//knora-ontologies",

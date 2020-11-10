@@ -36,6 +36,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDTool, JsonLDValue}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -486,7 +487,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val historyResponse: HttpResponse = singleAwaitingRequest(historyRequest)
             val historyResponseAsString = responseToString(historyResponse)
             assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
-            val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
+            val jsonLDDocument: JsonLDDocument = JsonLDTool.parseJsonLD(historyResponseAsString)
             val entries: JsonLDArray = jsonLDDocument.requireArray("@graph")
 
             for (entry: JsonLDValue <- entries.value) {
@@ -528,10 +529,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             assert(response.status == StatusCodes.OK, responseAsString)
-            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+            val parsedReceivedJsonLD = JsonLDTool.parseJsonLD(responseAsString)
 
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphBoth.jsonld"), writeTestDataFiles)
-            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+            val parsedExpectedJsonLD = JsonLDTool.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
         }
@@ -541,10 +542,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+            val parsedReceivedJsonLD = JsonLDTool.parseJsonLD(responseAsString)
 
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphOutbound.jsonld"), writeTestDataFiles)
-            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+            val parsedExpectedJsonLD = JsonLDTool.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
         }
@@ -554,10 +555,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+            val parsedReceivedJsonLD = JsonLDTool.parseJsonLD(responseAsString)
 
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphInbound.jsonld"), writeTestDataFiles)
-            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+            val parsedExpectedJsonLD = JsonLDTool.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
         }
@@ -567,10 +568,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+            val parsedReceivedJsonLD = JsonLDTool.parseJsonLD(responseAsString)
 
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphBothWithExcludedProp.jsonld"), writeTestDataFiles)
-            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+            val parsedExpectedJsonLD = JsonLDTool.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
         }
@@ -580,10 +581,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
-            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+            val parsedReceivedJsonLD = JsonLDTool.parseJsonLD(responseAsString)
 
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("test_data/resourcesR2RV2/ThingGraphBothWithDepth.jsonld"), writeTestDataFiles)
-            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+            val parsedExpectedJsonLD = JsonLDTool.parseJsonLD(expectedAnswerJSONLD)
 
             assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
         }
@@ -773,7 +774,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             // Check that the text value with standoff is correct in the simple schema.
-            val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
+            val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDTool.parseJsonLD(resourceSimpleGetResponseAsString)
             val text: String = resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext")
             assert(text == "this is text with standoff")
         }
@@ -987,7 +988,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceGetResponseAsString = responseToString(resourceGetResponse)
 
             // Get the value from the response.
-            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val resourceGetResponseAsJsonLD = JsonLDTool.parseJsonLD(resourceGetResponseAsString)
             val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
                 requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIRI)
@@ -1040,7 +1041,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceGetResponseAsString = responseToString(resourceGetResponse)
 
             // Get the value from the response.
-            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val resourceGetResponseAsJsonLD = JsonLDTool.parseJsonLD(resourceGetResponseAsString)
             val valueUUID = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
             assert(valueUUID == customValueUUID)
 
@@ -1096,7 +1097,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceGetResponseAsString = responseToString(resourceGetResponse)
 
             // Get the value from the response.
-            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val resourceGetResponseAsJsonLD = JsonLDTool.parseJsonLD(resourceGetResponseAsString)
             val savedCreationDate: Instant = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").requireDatatypeValueInObject(
                 key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -1164,7 +1165,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceGetResponseAsString = responseToString(resourceGetResponse)
 
             // Get the value from the response.
-            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val resourceGetResponseAsJsonLD = JsonLDTool.parseJsonLD(resourceGetResponseAsString)
             val valueIri: IRI = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean").
                 requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(valueIri == customValueIRI)
@@ -1334,7 +1335,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
 
-            val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+            val previewJsonLD = JsonLDTool.parseJsonLD(previewResponseAsString)
             val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
             assert(updatedLabel == newLabel)
             val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
@@ -1401,7 +1402,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
 
-            val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+            val previewJsonLD = JsonLDTool.parseJsonLD(previewResponseAsString)
             val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
             assert(updatedLabel == newLabel)
             val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
@@ -1572,7 +1573,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             // Get the XML from the response.
-            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val resourceGetResponseAsJsonLD = JsonLDTool.parseJsonLD(resourceGetResponseAsString)
             val xmlFromResponse: String = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext").
                 requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
 
@@ -1595,7 +1596,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             // Get the standoff markup separately.
-            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val resourceGetResponseAsJsonLD = JsonLDTool.parseJsonLD(resourceGetResponseAsString)
             val textValue: JsonLDObject = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
             val maybeTextValueAsXml: Option[String] = textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
             assert(maybeTextValueAsXml.isEmpty)
@@ -1730,7 +1731,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             // Check that it has the property knora-api:hasStandoffLinkToValue.
-            val resourceJsonLDDoc = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
+            val resourceJsonLDDoc = JsonLDTool.parseJsonLD(resourceComplexGetResponseAsString)
             assert(resourceJsonLDDoc.body.value.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue))
         }
     }

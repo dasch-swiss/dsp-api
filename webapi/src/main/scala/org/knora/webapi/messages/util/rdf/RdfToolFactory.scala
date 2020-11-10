@@ -17,16 +17,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.rdf
+package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.feature.{FeatureFactory, FeatureFactoryConfig}
-import org.knora.webapi.util.rdf.jenaimpl.{JenaModelFactory, JenaNodeFactory}
-import org.knora.webapi.util.rdf.rdf4jimpl.{RDF4JModelFactory, RDF4JNodeFactory}
+import org.knora.webapi.messages.util.rdf.jenaimpl.{JenaFormatTool, JenaModelFactory, JenaNodeFactory}
+import org.knora.webapi.messages.util.rdf.rdf4jimpl.{RDF4JFormatTool, RDF4JModelFactory, RDF4JNodeFactory}
 
 /**
- * A feature factory that creates RDF models.
+ * A feature factory that creates RDF processing tools.
  */
-class RdfModelFactory extends FeatureFactory {
+object RdfToolFactory extends FeatureFactory {
     /**
      * The name of the feature toggle that enables the Jena implementation of the RDF façade.
      */
@@ -57,6 +57,20 @@ class RdfModelFactory extends FeatureFactory {
             new JenaNodeFactory
         } else {
             new RDF4JNodeFactory
+        }
+    }
+
+    /**
+     * Creates an [[RdfFormatTool]].
+     *
+     * @param featureFactoryConfig the feature factory configuration.
+     * @return an [[RdfFormatTool]].
+     */
+    def makeRdfFormatTool(featureFactoryConfig: FeatureFactoryConfig): RdfFormatTool = {
+        if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
+            new JenaFormatTool
+        } else {
+            new RDF4JFormatTool
         }
     }
 }

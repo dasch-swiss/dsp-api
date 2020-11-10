@@ -28,7 +28,8 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDTool}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
@@ -77,7 +78,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[CreateResourceRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -111,7 +112,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         put {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -409,7 +410,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -443,7 +444,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)

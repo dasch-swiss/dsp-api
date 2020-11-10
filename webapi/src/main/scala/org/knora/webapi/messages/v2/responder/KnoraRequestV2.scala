@@ -27,7 +27,7 @@ import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.jena
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}

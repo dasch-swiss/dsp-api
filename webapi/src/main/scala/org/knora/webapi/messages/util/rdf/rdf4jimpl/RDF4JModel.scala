@@ -17,13 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.rdf.rdf4jimpl
+package org.knora.webapi.messages.util.rdf.rdf4jimpl
 
 import org.eclipse.rdf4j
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
-import org.knora.webapi.util.rdf._
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.JavaUtil._
 
 import scala.collection.JavaConverters._
@@ -35,6 +35,16 @@ sealed trait RDF4JNode extends RdfNode {
 sealed trait RDF4JResource extends RDF4JNode with RdfResource {
     def resource: rdf4j.model.Resource
     def rdf4jValue: rdf4j.model.Value = resource
+}
+
+object RDF4JResource {
+    def fromRDF4J(resource: rdf4j.model.Resource): RDF4JResource = {
+        resource match {
+            case iri: rdf4j.model.IRI => RDF4JIriNode(iri)
+            case blankNode: rdf4j.model.BNode => RDF4JBlankNode(blankNode)
+            case other => throw RdfProcessingException(s"Unexpected resource: $other")
+        }
+    }
 }
 
 case class RDF4JBlankNode(resource: rdf4j.model.BNode) extends RDF4JResource with BlankNode {
@@ -65,8 +75,7 @@ case class RDF4JStringWithLanguage(literal: rdf4j.model.Literal) extends RDF4JLi
 case class RDF4JStatement(statement: rdf4j.model.Statement) extends Statement {
     override def subj: RdfResource = {
         statement.getSubject match {
-            case iri: rdf4j.model.IRI => RDF4JIriNode(iri)
-            case blankNode: rdf4j.model.BNode => RDF4JBlankNode(blankNode)
+            case resource: rdf4j.model.Resource => RDF4JResource.fromRDF4J(resource)
             case other => throw RdfProcessingException(s"Unexpected statement subject: $other")
         }
     }
@@ -75,8 +84,7 @@ case class RDF4JStatement(statement: rdf4j.model.Statement) extends Statement {
 
     override def obj: RdfNode = {
         statement.getObject match {
-            case iri: rdf4j.model.IRI => RDF4JIriNode(iri)
-            case blankNode: rdf4j.model.BNode => RDF4JBlankNode(blankNode)
+            case resource: rdf4j.model.Resource => RDF4JResource.fromRDF4J(resource)
 
             case literal: rdf4j.model.Literal =>
                 if (literal.getLanguage.toOption.isDefined) {
@@ -141,6 +149,14 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
     import RDF4JConversions._
 
     private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
+    private lazy val nodeFactory: RDF4JNodeFactory = new RDF4JNodeFactory
+
+    /**
+     * Returns the underlying [[rdf4j.model.Model]].
+     */
+    def getModel: rdf4j.model.Model = model
+
+    override def getNodeFactory: RdfNodeFactory = nodeFactory
 
     override def addStatement(statement: Statement): Unit = {
         model.add(statement.asRDF4JStatement)
@@ -203,6 +219,22 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
         }
 
         filteredModel.asScala.map(RDF4JStatement).toSet
+    }
+
+    override def setNamespace(prefix: String, namespace: IRI): Unit = {
+        model.setNamespace(new rdf4j.model.impl.SimpleNamespace(prefix, namespace))
+    }
+
+    override def getNamespaces: Map[String, IRI] = {
+        model.getNamespaces.asScala.map {
+            namespace: rdf4j.model.Namespace => namespace.getPrefix -> namespace.getName
+        }.toMap
+    }
+
+    override def isEmpty: Boolean = model.isEmpty
+
+    override def getSubjects: Set[RdfResource] = {
+        model.subjects.asScala.toSet.map(resource => RDF4JResource.fromRDF4J(resource))
     }
 }
 

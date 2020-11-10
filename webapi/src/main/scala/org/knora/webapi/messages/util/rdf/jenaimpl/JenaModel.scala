@@ -17,13 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.rdf.jenaimpl
+package org.knora.webapi.messages.util.rdf.jenaimpl
 
 import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
-import org.knora.webapi.util.rdf._
+import org.knora.webapi.messages.util.rdf._
 
 import scala.collection.JavaConverters._
 
@@ -52,17 +52,22 @@ case class JenaStringWithLanguage(node: jena.graph.Node) extends JenaNode with S
     override def language: String = node.getLiteralLanguage
 }
 
+object JenaResource {
+    def fromJena(node: jena.graph.Node): Option[RdfResource] = {
+        if (node.isURI) {
+            Some(JenaIriNode(node))
+        } else if (node.isBlank) {
+            Some(JenaBlankNode(node))
+        } else {
+            None
+        }
+    }
+}
+
 case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
     override def subj: RdfResource = {
         val subj: jena.graph.Node = quad.getSubject
-
-        if (subj.isURI) {
-            JenaIriNode(quad.getSubject)
-        } else if (subj.isBlank) {
-            JenaBlankNode(quad.getSubject)
-        } else {
-            throw RdfProcessingException(s"Unexpected statement subject: $subj")
-        }
+        JenaResource.fromJena(subj).getOrElse(throw RdfProcessingException(s"Unexpected statement subject: $subj"))
     }
 
     override def pred: IriNode = JenaIriNode(quad.getPredicate)
@@ -70,20 +75,21 @@ case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
     override def obj: RdfNode = {
         val obj: jena.graph.Node = quad.getObject
 
-        if (obj.isURI) {
-            JenaIriNode(quad.getSubject)
-        } else if (obj.isBlank) {
-            JenaBlankNode(quad.getSubject)
-        } else if (obj.isLiteral) {
-            val literal: jena.graph.impl.LiteralLabel = obj.getLiteral
+        JenaResource.fromJena(obj) match {
+            case Some(rdfResource) => rdfResource
 
-            if (literal.language != "") {
-                JenaStringWithLanguage(obj)
-            } else {
-                JenaDatatypeLiteral(obj)
-            }
-        } else {
-            throw RdfProcessingException(s"Unexpected statement object: $obj")
+            case None =>
+                if (obj.isLiteral) {
+                    val literal: jena.graph.impl.LiteralLabel = obj.getLiteral
+
+                    if (literal.language != "") {
+                        JenaStringWithLanguage(obj)
+                    } else {
+                        JenaDatatypeLiteral(obj)
+                    }
+                } else {
+                    throw RdfProcessingException(s"Unexpected statement object: $obj")
+                }
         }
     }
 
@@ -151,6 +157,14 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
     import JenaConversions._
 
     private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
+    private lazy val nodeFactory: JenaNodeFactory = new JenaNodeFactory
+
+    /**
+     * Returns the underlying [[jena.query.Dataset]].
+     */
+    def getDataset: jena.query.Dataset = dataset
+
+    override def getNodeFactory: RdfNodeFactory = nodeFactory
 
     override def addStatement(statement: Statement): Unit = {
         datasetGraph.add(statement.asJenaQuad)
@@ -189,6 +203,35 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
             asJenaNodeOrWildcard(pred),
             asJenaNodeOrWildcard(obj)
         ).asScala.map(JenaStatement).toSet
+    }
+
+    override def setNamespace(prefix: String, namespace: IRI): Unit = {
+        // Add the namespace to all the graphs in the dataset.
+        for (graphNode: jena.graph.Node <- datasetGraph.listGraphNodes.asScala) {
+            val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
+            val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
+            prefixMapping.setNsPrefix(prefix, namespace)
+        }
+    }
+
+    override def getNamespaces: Map[String, IRI] = {
+        // Combine the namespaces used in all the graphs in the dataset.
+        datasetGraph.listGraphNodes.asScala.flatMap {
+            graphNode: jena.graph.Node =>
+                val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
+                val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
+                prefixMapping.getNsPrefixMap.asScala
+        }.toMap
+    }
+
+    override def isEmpty: Boolean = dataset.isEmpty
+
+    override def getSubjects: Set[RdfResource] = {
+        datasetGraph.find.asScala.map {
+            quad: jena.sparql.core.Quad =>
+                val subj: jena.graph.Node = quad.getSubject
+                JenaResource.fromJena(subj).getOrElse(throw RdfProcessingException(s"Unexpected statement subject: $subj"))
+        }.toSet
     }
 }
 

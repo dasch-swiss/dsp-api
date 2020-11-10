@@ -27,7 +27,8 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDTool}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -150,7 +151,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             entity(as[String]) { jsonRequest =>
                 requestContext => {
 
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -247,7 +248,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[CreateClassRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -282,7 +283,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -317,7 +318,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[AddCardinalitiesToClassRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -352,7 +353,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[ChangeCardinalitiesRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage: ChangeCardinalitiesRequestV2 <- ChangeCardinalitiesRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -488,7 +489,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -523,7 +524,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -659,7 +660,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestMessageFuture: Future[CreateOntologyRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
                         requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,

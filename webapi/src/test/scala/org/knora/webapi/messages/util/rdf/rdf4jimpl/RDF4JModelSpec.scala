@@ -17,12 +17,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.rdf.jenaimpl
+package org.knora.webapi.util.rdf.rdf4jimpl
 
 import org.knora.webapi.feature._
 import org.knora.webapi.util.rdf.RdfModelSpec
 
 /**
- * Tests [[org.knora.webapi.util.rdf.jenaimpl.JenaModel]].
+ * Tests [[org.knora.webapi.messages.util.rdf.rdf4jimpl.RDF4JModel]].
  */
-class JenaModelSpec extends RdfModelSpec(FeatureToggle("jena-rdf-library", ToggleStateOn(1)))
+class RDF4JModelSpec extends RdfModelSpec(FeatureToggle("jena-rdf-library", ToggleStateOff))

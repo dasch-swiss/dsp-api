@@ -29,7 +29,8 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDTool}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -114,7 +115,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[CreateValueRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -148,7 +149,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         put {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[UpdateValueRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -182,7 +183,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         post {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                    val requestDoc: JsonLDDocument = JsonLDTool.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[DeleteValueRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
