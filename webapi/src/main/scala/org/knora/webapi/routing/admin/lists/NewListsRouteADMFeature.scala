@@ -134,9 +134,9 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
-    /* get a list */
+    /* get a node (root or child) */
     @Path("/{IRI}")
-    @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
+    @ApiOperation(value = "Get a list node", nickname = "getlistNode", httpMethod = "GET", response = classOf[ListGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))

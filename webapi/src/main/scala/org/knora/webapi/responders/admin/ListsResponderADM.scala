@@ -299,7 +299,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             result = maybeListNodeInfoADM match {
                 case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
                 case Some(rootInfo: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(rootInfo)
-                case None => throw NotFoundException(s"List node '$nodeIri' not found")
+                case _ => throw NotFoundException(s"List node '$nodeIri' not found")
             }
         } yield result
     }
@@ -713,7 +713,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
     private def nodeInfoChangeRequest(nodeIri: IRI, changeNodeRequest: ChangeNodeInfoApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
-        def verifyUpdatedNode(updatedNode: ListNodeADM): Unit = {
+        def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
             if (changeNodeRequest.labels.nonEmpty) {
                 if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get).nonEmpty)
                     throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
@@ -759,7 +759,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             isRootNode = maybeNode match {
                 case Some(_:ListRootNodeADM) => true
                 case Some(_:ListChildNodeADM) => false
-                case None => false
+                case _ => false
             }
             hasOldName: Boolean = node.getName.nonEmpty
 
@@ -785,27 +785,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             /* Verify that the node info was updated */
-            maybeNodeADM <- listNodeGetADM(nodeIri = changeNodeRequest.listIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeNodeADM <- listNodeInfoGetADM(nodeIri = changeNodeRequest.listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
 
             response = maybeNodeADM match {
-                case Some(rootNode: ListRootNodeADM) =>
+                case Some(rootNode: ListRootNodeInfoADM) =>
                         verifyUpdatedNode(rootNode)
-                        RootNodeInfoGetResponseADM(listinfo = ListRootNodeInfoADM(id = rootNode.id,
-                                                                                projectIri = rootNode.projectIri,
-                                                                                name = rootNode.name,
-                                                                                labels = rootNode.labels,
-                                                                                comments = rootNode.comments
-                                                                            ))
-                case Some(childNode: ListChildNodeADM) =>
+                        RootNodeInfoGetResponseADM(listinfo = rootNode)
+                case Some(childNode: ListChildNodeInfoADM) =>
                     verifyUpdatedNode(childNode)
-                    ChildNodeInfoGetResponseADM(nodeinfo = ListChildNodeInfoADM(id = childNode.id,
-                                                                                name = childNode.name,
-                                                                                labels = childNode.labels,
-                                                                                comments = childNode.comments,
-                                                                                position = childNode.position,
-                                                                                hasRootNode = childNode.hasRootNode
-                                                                            ))
-                case None => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
+                    ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                case _ => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
             }
 
         } yield response
@@ -839,7 +828,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             newListNode = maybeNewListNode match {
                 case Some(childNode: ListChildNodeInfoADM) => childNode
                 case Some(_: ListRootNodeInfoADM) => throw UpdateNotPerformedException(s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload.")
-                case None => throw UpdateNotPerformedException(s"List node $newListNodeIri was not created. Please report this as a possible bug.")
+                case _ => throw UpdateNotPerformedException(s"List node $newListNodeIri was not created. Please report this as a possible bug.")
             }
 
         } yield ChildNodeInfoGetResponseADM(nodeinfo = newListNode)

@@ -377,6 +377,10 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
      */
     def sorted: ListNodeInfoADM
 
+    def getName(): Option[String] = name
+    def getLabels(): StringLiteralSequenceV2 = labels
+    def getComments(): StringLiteralSequenceV2 = comments
+
     /**
      * Gets the label in the user's preferred language.
      *
