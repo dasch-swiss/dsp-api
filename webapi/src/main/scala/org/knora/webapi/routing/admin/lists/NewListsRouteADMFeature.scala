@@ -209,7 +209,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
-    private def getNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / "infos" / Segment) { iri =>
+    private def getNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "INFO") { iri =>
         get {
             /* return information about a node, root or child, without children */
             requestContext =>
