@@ -37,7 +37,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
     /**
      * A test implementation of [[KnoraTurtleResponseV2]].

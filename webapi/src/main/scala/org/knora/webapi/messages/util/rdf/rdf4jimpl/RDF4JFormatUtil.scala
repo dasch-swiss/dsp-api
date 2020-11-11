@@ -22,7 +22,6 @@ package org.knora.webapi.messages.util.rdf.rdf4jimpl
 import java.io.{StringReader, StringWriter}
 
 import org.eclipse.rdf4j
-import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
@@ -30,16 +29,19 @@ import org.knora.webapi.messages.util.rdf._
  * An implementation of [[RdfFormatUtil]] that uses the RDF4J API.
  */
 class RDF4JFormatUtil extends RdfFormatUtil with Feature {
-    private def rdfFormatToRDF4JFormat(rdfFormat: RdfFormat): rdf4j.rio.RDFFormat = {
+    private lazy val modelFactory: RDF4JModelFactory = new RDF4JModelFactory
+
+    override def getRdfModelFactory: RdfModelFactory = modelFactory
+
+    private def rdfFormatToRDF4JFormat(rdfFormat: NonJsonLD): rdf4j.rio.RDFFormat = {
         rdfFormat match {
-            case JsonLD => rdf4j.rio.RDFFormat.JSONLD
             case Turtle => rdf4j.rio.RDFFormat.TURTLE
             case TriG => rdf4j.rio.RDFFormat.TRIG
             case RdfXml => rdf4j.rio.RDFFormat.RDFXML
         }
     }
 
-    override def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel = {
+    protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
         new RDF4JModel(
             rdf4j.rio.Rio.parse(
                 new StringReader(rdfStr),
@@ -53,7 +55,7 @@ class RDF4JFormatUtil extends RdfFormatUtil with Feature {
     override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
         import RDF4JConversions._
 
-        val stringWriter = new StringWriter()
+        val stringWriter = new StringWriter
 
         val rdfWriter: rdf4j.rio.RDFWriter = rdfFormat match {
             case Turtle => rdf4j.rio.Rio.createWriter(rdf4j.rio.RDFFormat.TURTLE, stringWriter)

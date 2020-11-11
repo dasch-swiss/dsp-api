@@ -32,45 +32,55 @@ object RdfFeatureFactory extends FeatureFactory {
      */
     private val JENA_TOGGLE_NAME = "jena-rdf-library"
 
+    // Jena factory instances.
+    private val jenaModelFactory = new JenaModelFactory
+    private val jenaNodeFactory = new JenaNodeFactory
+    private val jenaFormatUtil = new JenaFormatUtil
+
+    // RDF4J factory instances.
+    private val rdf4jModelFactory = new RDF4JModelFactory
+    private val rdf4jNodeFactory = new RDF4JNodeFactory
+    private val rdf4jFormatUtil = new RDF4JFormatUtil
+
     /**
-     * Creates an empty [[RdfModel]].
+     * Returns an [[RdfModelFactory]].
      *
      * @param featureFactoryConfig the feature factory configuration.
-     * @return an empty [[RdfModel]].
+     * @return an [[RdfModelFactory]].
      */
-    def makeRdfModel(featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
+    def getRdfModelFactory(featureFactoryConfig: FeatureFactoryConfig): RdfModelFactory = {
         if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-            JenaModelFactory.makeEmptyModel
+            jenaModelFactory
         } else {
-            RDF4JModelFactory.makeEmptyModel
+            rdf4jModelFactory
         }
     }
 
     /**
-     * Creates an [[RdfNodeFactory]].
+     * Returns an [[RdfNodeFactory]].
      *
      * @param featureFactoryConfig the feature factory configuration.
      * @return an [[RdfNodeFactory]].
      */
-    def makeRdfNodeFactory(featureFactoryConfig: FeatureFactoryConfig): RdfNodeFactory = {
+    def getRdfNodeFactory(featureFactoryConfig: FeatureFactoryConfig): RdfNodeFactory = {
         if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-            new JenaNodeFactory
+            jenaNodeFactory
         } else {
-            new RDF4JNodeFactory
+            rdf4jNodeFactory
         }
     }
 
     /**
-     * Creates an [[RdfFormatUtil]].
+     * Returns an [[RdfFormatUtil]].
      *
      * @param featureFactoryConfig the feature factory configuration.
      * @return an [[RdfFormatUtil]].
      */
-    def makeRdfFormatUtil(featureFactoryConfig: FeatureFactoryConfig): RdfFormatUtil = {
+    def getRdfFormatUtil(featureFactoryConfig: FeatureFactoryConfig): RdfFormatUtil = {
         if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-            new JenaFormatUtil
+            jenaFormatUtil
         } else {
-            new RDF4JFormatUtil
+            rdf4jFormatUtil
         }
     }
 }

@@ -23,13 +23,13 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDKeywords, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDUtil, JsonLDValue}
 
 object ResponseCheckerV2 {
 
     private val numberOfItemsMember: IRI = "http://schema.org/numberOfItems"
 
-    private val noPropertyKeys: Set[IRI] = Set(JsonLDConstants.ID, JsonLDConstants.TYPE, OntologyConstants.Rdfs.Label)
+    private val noPropertyKeys: Set[IRI] = Set(JsonLDKeywords.ID, JsonLDKeywords.TYPE, OntologyConstants.Rdfs.Label)
 
 
     /**
@@ -72,26 +72,26 @@ object ResponseCheckerV2 {
             // Sort by the value object IRI if available, otherwise sort by the value itself.
 
             val sortedElements = values.value.sortBy {
-                case jsonLDObj: JsonLDObject => jsonLDObj.value(JsonLDConstants.ID)
+                case jsonLDObj: JsonLDObject => jsonLDObj.value(JsonLDKeywords.ID)
                 case other => other
             }
 
             JsonLDArray(sortedElements)
         }
 
-        assert(expectedResource.value(JsonLDConstants.ID) == receivedResource.value(JsonLDConstants.ID), s"Received resource Iri ${receivedResource.value(JsonLDConstants.ID)} does not match expected Iri ${expectedResource.value(JsonLDConstants.ID)}")
+        assert(expectedResource.value(JsonLDKeywords.ID) == receivedResource.value(JsonLDKeywords.ID), s"Received resource Iri ${receivedResource.value(JsonLDKeywords.ID)} does not match expected Iri ${expectedResource.value(JsonLDKeywords.ID)}")
 
-        assert(expectedResource.value(JsonLDConstants.TYPE) == receivedResource.value(JsonLDConstants.TYPE), s"Received resource type ${receivedResource.value(JsonLDConstants.TYPE)} does not match expected type ${expectedResource.value(JsonLDConstants.TYPE)}")
+        assert(expectedResource.value(JsonLDKeywords.TYPE) == receivedResource.value(JsonLDKeywords.TYPE), s"Received resource type ${receivedResource.value(JsonLDKeywords.TYPE)} does not match expected type ${expectedResource.value(JsonLDKeywords.TYPE)}")
 
-        assert(expectedResource.value(OntologyConstants.Rdfs.Label) == receivedResource.value(OntologyConstants.Rdfs.Label), s"rdfs:label did not match for ${receivedResource.value(JsonLDConstants.ID)}")
+        assert(expectedResource.value(OntologyConstants.Rdfs.Label) == receivedResource.value(OntologyConstants.Rdfs.Label), s"rdfs:label did not match for ${receivedResource.value(JsonLDKeywords.ID)}")
 
-        assert(expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource.value(JsonLDConstants.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}")
+        assert(expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource.value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}")
 
         (expectedResource.value -- noPropertyKeys).foreach {
             case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>
 
                 // make sure that the property Iri exists in the received resource
-                assert(receivedResource.value.contains(propIri), s"Property $propIri not found in received resource ${receivedResource.value(JsonLDConstants.ID)}")
+                assert(receivedResource.value.contains(propIri), s"Property $propIri not found in received resource ${receivedResource.value(JsonLDKeywords.ID)}")
 
                 val sortedExpectedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(expectedValuesForProp))
                 val sortedReceivedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(receivedResource.value(propIri)))
@@ -119,10 +119,10 @@ object ResponseCheckerV2 {
     def compareParsedJSONLDForResourcesResponse(expectedResponse: JsonLDDocument, receivedResponse: JsonLDDocument): Unit = {
 
         // returns a list even if there is only one element
-        val expectedResourcesAsArray: JsonLDArray = elementToArray(expectedResponse.body.value.getOrElse(JsonLDConstants.GRAPH, expectedResponse.body))
+        val expectedResourcesAsArray: JsonLDArray = elementToArray(expectedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, expectedResponse.body))
 
         // returns a list even if there is only one element
-        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedResponse.body.value.getOrElse(JsonLDConstants.GRAPH, receivedResponse.body))
+        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedResponse.body))
 
         // check that the actual amount of resources returned is correct
         // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
@@ -180,7 +180,7 @@ object ResponseCheckerV2 {
       */
     def checkSearchResponseNumberOfResults(receivedJSONLD: String, expectedNumber: Int): Unit = {
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
-        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedJsonLDDocument.body.value.getOrElse(JsonLDConstants.GRAPH, receivedJsonLDDocument.body))
+        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedJsonLDDocument.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedJsonLDDocument.body))
         val numberOfResultsReceived = receivedResourcesAsArray.value.size
         assert(numberOfResultsReceived == expectedNumber, s"Expected $expectedNumber results, received $numberOfResultsReceived")
     }

@@ -176,6 +176,15 @@ trait RdfModel {
      * Returns the IRIs of the named graphs in the model.
      */
     def getContexts: Set[IRI]
+
+    override def hashCode(): Int = super.hashCode()
+
+    override def equals(obj: Any): Boolean = {
+        obj match {
+            case thatRdfModel: RdfModel => isIsomorphicWith(thatRdfModel)
+            case _ => false
+        }
+    }
 }
 
 /**
@@ -251,4 +260,11 @@ trait RdfNodeFactory {
      * @param context the IRI of the named graph, or `None` to use the default graph.
      */
     def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement
+}
+
+/**
+ * A factory that creates [[RdfModel]] instances.
+ */
+trait RdfModelFactory {
+    def makeEmptyModel: RdfModel
 }

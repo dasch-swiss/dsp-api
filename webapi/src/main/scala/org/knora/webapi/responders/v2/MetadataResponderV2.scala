@@ -87,7 +87,7 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check if the created metadata graph has the same content as the one in the request.
                 createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(request.projectADM)
 
-                rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(request.featureFactoryConfig)
+                rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(request.featureFactoryConfig)
 
                 savedModel: RdfModel = rdfFormatUtil.parseToRdfModel(
                     rdfStr = createdMetadata.turtle,

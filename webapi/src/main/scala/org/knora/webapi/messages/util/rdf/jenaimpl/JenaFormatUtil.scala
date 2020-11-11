@@ -22,18 +22,24 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 import java.io.{StringReader, StringWriter}
 
 import org.apache.jena
+import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
+
+import scala.collection.JavaConverters._
 
 /**
  * An implementation of [[RdfFormatUtil]] that uses the Jena API.
  */
 class JenaFormatUtil extends RdfFormatUtil with Feature {
-    override def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel = {
-        val jenaModel: JenaModel = JenaModelFactory.makeEmptyModel
+    private lazy val modelFactory: JenaModelFactory = new JenaModelFactory
+
+    override def getRdfModelFactory: RdfModelFactory = modelFactory
+
+    override def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
+        val jenaModel: JenaModel = modelFactory.makeEmptyModel
 
         val parsingLang: jena.riot.Lang = rdfFormat match {
-            case JsonLD => jena.riot.RDFLanguages.JSONLD
             case Turtle => jena.riot.RDFLanguages.TURTLE
             case TriG => jena.riot.RDFLanguages.TRIG
             case RdfXml => jena.riot.RDFLanguages.RDFXML
@@ -51,31 +57,38 @@ class JenaFormatUtil extends RdfFormatUtil with Feature {
     override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
         import JenaConversions._
 
-        val jenaFormat: jena.riot.RDFFormat = rdfFormat match {
+        val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
+        val stringWriter: StringWriter = new StringWriter
+
+        rdfFormat match {
             case Turtle =>
-                if (prettyPrint) {
+                val rdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
                     jena.riot.RDFFormat.TURTLE_PRETTY
                 } else {
                     jena.riot.RDFFormat.TURTLE_FLAT
                 }
 
+                jena.riot.RDFDataMgr.write(stringWriter, datasetGraph.getDefaultGraph, rdfFormat)
+
             case TriG =>
-                if (prettyPrint) {
+                val rdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
                     jena.riot.RDFFormat.TRIG_PRETTY
                 } else {
                     jena.riot.RDFFormat.TRIG_FLAT
                 }
 
+                jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, rdfFormat)
+
             case RdfXml =>
-                if (prettyPrint) {
+                val rdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
                     jena.riot.RDFFormat.RDFXML_PRETTY
                 } else {
                     jena.riot.RDFFormat.RDFXML_PLAIN
                 }
+
+                jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, rdfFormat)
         }
 
-        val stringWriter: StringWriter = new StringWriter
-        jena.riot.RDFDataMgr.write(stringWriter, rdfModel.asJenaDataset, jenaFormat)
         stringWriter.toString
     }
 }

@@ -4,12 +4,12 @@ import java.net.URLEncoder
 
 import akka.http.scaladsl.model.headers.{BasicHttpCredentials, RawHeader}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, RdfFeatureFactory, RdfFormatUtil, Turtle}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.{E2ESpec, IRI, RdfMediaTypes}
+import org.knora.webapi._
 
 class MetadataRouteV2E2ESpec extends E2ESpec {
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(defaultFeatureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
     private val beolUserEmail = SharedTestDataADM.beolUser.email
     private val beolProjectIRI: IRI = SharedTestDataADM.BEOL_PROJECT_IRI
@@ -129,7 +129,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             assert(responseString.contains(s"Project metadata was stored for project <$beolProjectIRI>."))
         }
 
-        "get the created metadata graph as JSON LD" in {
+        "get the created metadata graph as JSON-LD" in {
             val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseJSONLD = responseToJsonLDDocument(response)

@@ -24,9 +24,9 @@ import java.util.UUID
 import akka.testkit.ImplicitSender
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, RdfModel, Turtle}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.metadatamessages.{MetadataGetRequestV2, MetadataGetResponseV2, MetadataPutRequestV2}
+import org.knora.webapi.messages.v2.responder.metadatamessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
@@ -36,7 +36,7 @@ import scala.concurrent.duration._
  */
 class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(defaultFeatureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
@@ -102,7 +102,6 @@ class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
     "The metadata responder v2" should {
 
         "save a metadata graph in the triplestore" in {
-
             responderManager ! MetadataPutRequestV2(
                 rdfModel = requestModel,
                 projectADM = SharedTestDataADM.beolProject,
@@ -113,7 +112,6 @@ class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val response = expectMsgType[SuccessResponseV2](timeout)
             assert(response.message.contains(s"<${SharedTestDataADM.beolProject.id}>"))
-
         }
         
         "get the metadata graph of a project" in {

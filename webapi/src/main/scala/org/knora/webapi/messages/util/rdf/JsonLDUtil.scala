@@ -30,7 +30,6 @@ import javax.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, InvalidJsonLDException, InvalidRdfException}
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
@@ -48,9 +47,9 @@ reading data from Knora API requests and constructing Knora API responses.
 */
 
 /**
- * Constant strings used in JSON-LD.
+ * Constant keywords used in JSON-LD.
  */
-object JsonLDConstants {
+object JsonLDKeywords {
     val CONTEXT: String = "@context"
 
     val ID: String = "@id"
@@ -63,7 +62,10 @@ object JsonLDConstants {
 
     val VALUE: String = "@value"
 
-    val all: Set[String] = Set(CONTEXT, ID, TYPE, GRAPH, LANGUAGE, VALUE)
+    /**
+     * The set of JSON-LD keywords that are supported by [[JsonLDUtil]].
+     */
+    val allSupported: Set[String] = Set(CONTEXT, ID, TYPE, GRAPH, LANGUAGE, VALUE)
 }
 
 /**
@@ -163,7 +165,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         val nodeFactory: RdfNodeFactory = model.getNodeFactory
 
         // If this object has an @id, use it as the subject, otherwise generate a blank node ID.
-        val rdfSubj: RdfResource = maybeStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr) match {
+        val rdfSubj: RdfResource = maybeStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr) match {
             case Some(subjectIri: SmartIri) =>
                 // It's an IRI.
                 nodeFactory.makeIriNode(subjectIri.toString)
@@ -182,7 +184,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
         // Add the IRI predicates and their objects.
 
-        val predicates = value.keySet -- JsonLDConstants.all
+        val predicates = value.keySet -- JsonLDKeywords.allSupported
 
         for (pred <- predicates) {
             val rdfPred: IriNode = nodeFactory.makeIriNode(pred)
@@ -211,7 +213,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                                   (implicit stringFormatter: StringFormatter): Unit = {
         val nodeFactory: RdfNodeFactory = model.getNodeFactory
 
-        value.get(JsonLDConstants.TYPE) match {
+        value.get(JsonLDKeywords.TYPE) match {
             case Some(rdfTypes: JsonLDValue) =>
                 rdfTypes match {
                     case jsonLDString: JsonLDString =>
@@ -251,7 +253,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
      */
     private def addGraphToModel(model: RdfModel)
                                (implicit stringFormatter: StringFormatter): Unit = {
-        value.get(JsonLDConstants.GRAPH) match {
+        value.get(JsonLDKeywords.GRAPH) match {
             case Some(graphContents: JsonLDValue) =>
                 graphContents match {
                     case jsonLDArray: JsonLDArray =>
@@ -294,18 +296,18 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                 // It's a JSON-LD object. What does it represent?
                 val rdfObj: RdfNode = if (jsonLDObject.isIri) {
                     // An IRI.
-                    nodeFactory.makeIriNode(jsonLDObject.requireString(JsonLDConstants.ID))
+                    nodeFactory.makeIriNode(jsonLDObject.requireString(JsonLDKeywords.ID))
                 } else if (jsonLDObject.isDatatypeValue) {
                     // A literal.
                     nodeFactory.makeDatatypeLiteral(
-                        value = jsonLDObject.requireString(JsonLDConstants.VALUE),
-                        datatype = jsonLDObject.requireString(JsonLDConstants.TYPE)
+                        value = jsonLDObject.requireString(JsonLDKeywords.VALUE),
+                        datatype = jsonLDObject.requireString(JsonLDKeywords.TYPE)
                     )
                 } else if (jsonLDObject.isStringWithLang) {
                     // A string literal with a language tag.
                     nodeFactory.makeStringWithLanguage(
-                        value = jsonLDObject.requireString(JsonLDConstants.VALUE),
-                        language = jsonLDObject.requireString(JsonLDConstants.LANGUAGE)
+                        value = jsonLDObject.requireString(JsonLDKeywords.VALUE),
+                        language = jsonLDObject.requireString(JsonLDKeywords.LANGUAGE)
                     )
                 } else {
                     // Triples. Recurse to add its contents to the model.
@@ -364,21 +366,21 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
      * Returns `true` if this JSON-LD object represents an IRI value.
      */
     def isIri: Boolean = {
-        value.keySet == Set(JsonLDConstants.ID)
+        value.keySet == Set(JsonLDKeywords.ID)
     }
 
     /**
      * Returns `true` if this JSON-LD object represents a string literal with a language tag.
      */
     def isStringWithLang: Boolean = {
-        value.keySet == Set(JsonLDConstants.VALUE, JsonLDConstants.LANGUAGE)
+        value.keySet == Set(JsonLDKeywords.VALUE, JsonLDKeywords.LANGUAGE)
     }
 
     /**
      * Returns `true` if this JSON-LD object represents a datatype value.
      */
     def isDatatypeValue: Boolean = {
-        value.keySet == Set(JsonLDConstants.TYPE, JsonLDConstants.VALUE)
+        value.keySet == Set(JsonLDKeywords.TYPE, JsonLDKeywords.VALUE)
     }
 
     /**
@@ -391,7 +393,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
      */
     def toIri[T](validationFun: (String, => Nothing) => T): T = {
         if (isIri) {
-            val id: IRI = requireString(JsonLDConstants.ID)
+            val id: IRI = requireString(JsonLDKeywords.ID)
             validationFun(id, throw BadRequestException(s"Invalid IRI: $id"))
         } else {
             throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
@@ -409,13 +411,13 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
      */
     def toDatatypeValueLiteral[T](expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T = {
         if (isDatatypeValue) {
-            val datatype: IRI = requireString(JsonLDConstants.TYPE)
+            val datatype: IRI = requireString(JsonLDKeywords.TYPE)
 
             if (datatype != expectedDatatype.toString) {
                 throw BadRequestException(s"Expected datatype value of type <$expectedDatatype>, found <$datatype>")
             }
 
-            val value: String = requireString(JsonLDConstants.VALUE)
+            val value: String = requireString(JsonLDKeywords.VALUE)
             validationFun(value, throw BadRequestException(s"Invalid datatype value literal: $value"))
         } else {
             throw BadRequestException(s"This JSON-LD object does not represent a datatype value: $this")
@@ -674,7 +676,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def requireIDAsKnoraDataIri: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val iri = requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val iri = requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
 
         if (!iri.isKnoraDataIri) {
             throw BadRequestException(s"Invalid Knora data IRI: $iri")
@@ -691,7 +693,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def maybeIDAsKnoraDataIri: Option[SmartIri] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val maybeIri: Option[SmartIri] = maybeStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val maybeIri: Option[SmartIri] = maybeStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
 
         maybeIri.foreach {
             iri =>
@@ -721,7 +723,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def requireTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val typeIri = requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+        val typeIri = requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
 
         if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2Complex))) {
             throw BadRequestException(s"Invalid Knora API v2 complex type IRI: $typeIri")
@@ -739,7 +741,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def requireResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDConstants.ID - JsonLDConstants.TYPE
+        val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDKeywords.ID - JsonLDKeywords.TYPE
 
         if (resourceProps.isEmpty) {
             throw BadRequestException("No value submitted")
@@ -813,13 +815,13 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
-                val lang = obj.requireStringWithValidation(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
+                val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, stringFormatter.toSparqlEncodedString)
 
                 if (!LanguageCodes.SupportedLanguageCodes(lang)) {
                     throw BadRequestException(s"Unsupported language code: $lang")
                 }
 
-                val text = obj.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
+                val text = obj.requireStringWithValidation(JsonLDKeywords.VALUE, stringFormatter.toSparqlEncodedString)
                 StringLiteralV2(text, Some(lang))
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
@@ -1000,10 +1002,12 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
 
     /**
      * Converts this JSON-LD document to an [[RdfModel]].
+     *
+     * @param modelFactory an [[RdfModelFactory]].
      */
-    def toRdfModel(featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
+    def toRdfModel(modelFactory: RdfModelFactory): RdfModel = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val model: RdfModel = RdfFeatureFactory.makeRdfModel(featureFactoryConfig)
+        val model: RdfModel = modelFactory.makeEmptyModel
 
         // Add the prefixes and namespaces from the JSON-LD context to the model.
         for ((prefix: String, namespaceValue: JsonLDValue) <- context.value) {
@@ -1091,7 +1095,7 @@ object JsonLDUtil {
      * @return the JSON-LD representation of the IRI as an object value.
      */
     def iriToJsonLDObject(iri: IRI): JsonLDObject = {
-        JsonLDObject(Map(JsonLDConstants.ID -> JsonLDString(iri)))
+        JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(iri)))
     }
 
     /**
@@ -1103,8 +1107,8 @@ object JsonLDUtil {
      */
     def objectWithLangToJsonLDObject(obj: String, lang: String): JsonLDObject = {
         JsonLDObject(Map(
-            JsonLDConstants.VALUE -> JsonLDString(obj),
-            JsonLDConstants.LANGUAGE -> JsonLDString(lang)
+            JsonLDKeywords.VALUE -> JsonLDString(obj),
+            JsonLDKeywords.LANGUAGE -> JsonLDString(lang)
         ))
     }
 
@@ -1125,8 +1129,8 @@ object JsonLDUtil {
         }
 
         JsonLDObject(Map(
-            JsonLDConstants.VALUE -> JsonLDString(strValue),
-            JsonLDConstants.TYPE -> JsonLDString(datatype.toString)
+            JsonLDKeywords.VALUE -> JsonLDString(strValue),
+            JsonLDKeywords.TYPE -> JsonLDString(datatype.toString)
         ))
     }
 
@@ -1195,7 +1199,12 @@ object JsonLDUtil {
 
                 case jsonObject: JsonObject =>
                     val content: Map[IRI, JsonLDValue] = jsonObject.keySet.asScala.toSet.map {
-                        key: IRI => key -> jsonValueToJsonLDValue(jsonObject.get(key))
+                        key: IRI =>
+                            if (key.startsWith("@") && !JsonLDKeywords.allSupported.contains(key)) {
+                                throw BadRequestException(s"JSON-LD keyword $key is not supported")
+                            }
+
+                            key -> jsonValueToJsonLDValue(jsonObject.get(key))
                     }.toMap
 
                     JsonLDObject(content)
@@ -1233,6 +1242,10 @@ object JsonLDUtil {
      * @return the corresponding [[JsonLDDocument]].
      */
     def fromRdfModel(model: RdfModel): JsonLDDocument = {
+        if (model.getContexts.nonEmpty) {
+            throw BadRequestException("Named graphs in JSON-LD are not supported")
+        }
+
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Make a JSON-LD context from the model's namespaces.
@@ -1282,7 +1295,7 @@ object JsonLDUtil {
             // Is there more than one top-level object?
             if (topLevelObjects.size > 1) {
                 // Yes. Make a @graph.
-                JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(topLevelObjects.values.toVector)))
+                JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(topLevelObjects.values.toVector)))
             } else {
                 // No. Use the single top-level object as the body of the document.
                 topLevelObjects.values.head
@@ -1315,7 +1328,7 @@ object JsonLDUtil {
         val idContent: Map[String, JsonLDValue] = subj match {
             case iriNode: IriNode =>
                 // It has an IRI. Use it for the @id.
-                Map(JsonLDConstants.ID -> JsonLDString(iriNode.iri))
+                Map(JsonLDKeywords.ID -> JsonLDString(iriNode.iri))
 
             case _: BlankNode =>
                 // It's a blank node. Don't make an @id.
@@ -1342,13 +1355,13 @@ object JsonLDUtil {
                             }
                     }.toVector
 
-                    JsonLDConstants.TYPE -> typeList
+                    JsonLDKeywords.TYPE -> typeList
                 } else {
                     // The predicate is not rdf:type. Convert its objects.
                     val objs: Vector[JsonLDValue] = predStatements.map(_.obj).map {
                         case resource: RdfResource =>
                             // The object is an entity. Recurse to get it.
-                            rdf4jResourceToJsonLDValue(
+                            rdfResourceToJsonLDValue(
                                 resource = resource,
                                 model = model,
                                 topLevelObjects = topLevelObjects,
@@ -1423,11 +1436,11 @@ object JsonLDUtil {
      * @param processedSubjects the subjects that have already been processed.
      * @return a JSON-LD value representing the resource.
      */
-    private def rdf4jResourceToJsonLDValue(resource: RdfResource,
-                                           model: RdfModel,
-                                           topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject],
-                                           processedSubjects: collection.mutable.Set[RdfResource])
-                                          (implicit stringFormatter: StringFormatter): JsonLDValue = {
+    private def rdfResourceToJsonLDValue(resource: RdfResource,
+                                         model: RdfModel,
+                                         topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject],
+                                         processedSubjects: collection.mutable.Set[RdfResource])
+                                        (implicit stringFormatter: StringFormatter): JsonLDValue = {
         // Have we already made a top-level JSON-LD object for this entity?
         topLevelObjects.get(resource) match {
             case Some(jsonLDObject) =>

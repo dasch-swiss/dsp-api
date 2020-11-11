@@ -37,7 +37,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -186,8 +186,8 @@ case class CreateValueResponseV2(valueIri: IRI,
         JsonLDDocument(
             body = JsonLDObject(
                 Map(
-                    JsonLDConstants.ID -> JsonLDString(valueIri),
-                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+                    JsonLDKeywords.ID -> JsonLDString(valueIri),
+                    JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
                     OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
                     OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                         value = valueCreationDate.toString,
@@ -287,8 +287,8 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                     // contain knora-api:hasPermissions?
 
                     val otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
-                        JsonLDConstants.ID,
-                        JsonLDConstants.TYPE,
+                        JsonLDKeywords.ID,
+                        JsonLDKeywords.TYPE,
                         OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                         OntologyConstants.KnoraApiV2Complex.NewValueVersionIri
                     )
@@ -296,7 +296,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                     if (otherValuePredicates == Set(OntologyConstants.KnoraApiV2Complex.HasPermissions)) {
                         // Yes. This is a request to change the value's permissions.
 
-                        val valueType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                        val valueType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
                         val permissions = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
 
                         FastFuture.successful(
@@ -367,8 +367,8 @@ case class UpdateValueResponseV2(valueIri: IRI,
         JsonLDDocument(
             body = JsonLDObject(
                 Map(
-                    JsonLDConstants.ID -> JsonLDString(valueIri),
-                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+                    JsonLDKeywords.ID -> JsonLDString(valueIri),
+                    JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
                     OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
                 )
             ),
@@ -564,8 +564,8 @@ case class DeletionInfo(deleteDate: Instant,
             OntologyConstants.KnoraApiV2Complex.IsDeleted -> JsonLDBoolean(true),
             OntologyConstants.KnoraApiV2Complex.DeleteDate -> JsonLDObject(
                 Map(
-                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
-                    JsonLDConstants.VALUE -> JsonLDString(deleteDate.toString)
+                    JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+                    JsonLDKeywords.VALUE -> JsonLDString(deleteDate.toString)
                 )
             )
         ) ++ maybeDeleteCommentStatement
@@ -657,8 +657,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
                         val valueSmartIri = valueIri.toSmartIri
 
                         val requiredMetadata = Map(
-                            JsonLDConstants.ID -> JsonLDString(valueIri),
-                            JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
+                            JsonLDKeywords.ID -> JsonLDString(valueIri),
+                            JsonLDKeywords.TYPE -> JsonLDString(valueContent.valueType.toString),
                             OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
                             OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
                             OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
@@ -1076,7 +1076,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
+            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr))
 
             valueContent: ValueContentV2 <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2Complex.TextValue =>

@@ -49,7 +49,7 @@ trait KnoraRdfModelRequestV2 {
      * Returns a Turtle representation of the graph.
      */
     def toTurtle(featureFactoryConfig: FeatureFactoryConfig): String = {
-        RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig).format(rdfModel, Turtle)
+        RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig).format(rdfModel, Turtle)
     }
 }
 

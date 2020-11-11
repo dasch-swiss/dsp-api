@@ -36,7 +36,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -148,7 +148,7 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
 
         // Make the JSON-LD document.
 
-        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(historyAsJsonLD)))
+        val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(historyAsJsonLD)))
 
         JsonLDDocument(body = body, context = context)
     }
@@ -433,8 +433,8 @@ case class ReadResourceV2(resourceIri: IRI,
 
         JsonLDObject(
             Map(
-                JsonLDConstants.ID -> JsonLDString(resourceIri),
-                JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
+                JsonLDKeywords.ID -> JsonLDString(resourceIri),
+                JsonLDKeywords.TYPE -> JsonLDString(resourceClassIri.toString),
                 OntologyConstants.Rdfs.Label -> JsonLDString(label)
             ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema + arkUrlAsJsonLD + versionArkUrlAsJsonLD
         )
@@ -592,8 +592,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
             propertyIriStrs: Set[IRI] = jsonLDDocument.body.value.keySet --
                 Set(
-                    JsonLDConstants.ID,
-                    JsonLDConstants.TYPE,
+                    JsonLDKeywords.ID,
+                    JsonLDKeywords.TYPE,
                     OntologyConstants.Rdfs.Label,
                     OntologyConstants.KnoraApiV2Complex.AttachedToProject,
                     OntologyConstants.KnoraApiV2Complex.AttachedToUser,
@@ -929,7 +929,7 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
 
         val body = JsonLDObject(
             Map(
-                JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
+                JsonLDKeywords.GRAPH -> JsonLDArray(resourcesJsonObjects)
             ) ++ mayHaveMoreResultsStatement
         )
 
@@ -1112,8 +1112,8 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
             node: GraphNodeV2 =>
                 // Convert the node to JSON-LD.
                 val jsonLDNodeMap = Map(
-                    JsonLDConstants.ID -> JsonLDString(node.resourceIri),
-                    JsonLDConstants.TYPE -> JsonLDString(node.resourceClassIri.toString),
+                    JsonLDKeywords.ID -> JsonLDString(node.resourceIri),
+                    JsonLDKeywords.TYPE -> JsonLDString(node.resourceClassIri.toString),
                     OntologyConstants.Rdfs.Label -> JsonLDString(node.resourceLabel)
                 )
 
@@ -1140,7 +1140,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
         // Make the JSON-LD document.
 
-        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(nodesWithEdges)))
+        val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(nodesWithEdges)))
 
         JsonLDDocument(body = body, context = context)
     }

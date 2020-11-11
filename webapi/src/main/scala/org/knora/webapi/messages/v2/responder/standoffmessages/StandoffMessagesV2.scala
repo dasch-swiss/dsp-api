@@ -30,7 +30,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraJsonLDResponseV2, KnoraRequestV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
@@ -95,7 +95,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
 
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
-            JsonLDConstants.GRAPH -> JsonLDArray(standoffAsJsonLD)
+            JsonLDKeywords.GRAPH -> JsonLDArray(standoffAsJsonLD)
         )
 
         val nextOffsetStatement: Option[(IRI, JsonLDInt)] = nextOffset.map {
@@ -198,8 +198,8 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val body = JsonLDObject(Map(
-            JsonLDConstants.ID -> JsonLDString(mappingIri),
-            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
+            JsonLDKeywords.ID -> JsonLDString(mappingIri),
+            JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
             OntologyConstants.Rdfs.Label -> JsonLDString(label),
             OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
         ))
@@ -646,7 +646,7 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
         val attributesAsJsonLD: Map[IRI, JsonLDValue] = attributes.map(_.toJsonLD).toMap
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
-            JsonLDConstants.TYPE -> JsonLDString(standoffTagClassIri.toString),
+            JsonLDKeywords.TYPE -> JsonLDString(standoffTagClassIri.toString),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart -> JsonLDInt(startPosition),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd -> JsonLDInt(endPosition),

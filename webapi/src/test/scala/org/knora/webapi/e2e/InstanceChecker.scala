@@ -430,16 +430,16 @@ class JsonLDInstanceInspector extends InstanceInspector {
             case jsonLDObject: JsonLDObject =>
                 if (jsonLDObject.isStringWithLang) {
                     // This object represents a string with a language tag.
-                    val literalContent = jsonLDObject.requireString(JsonLDConstants.VALUE)
+                    val literalContent = jsonLDObject.requireString(JsonLDKeywords.VALUE)
                     Vector(InstanceElement(elementType = OntologyConstants.Xsd.String, literalContent = Some(literalContent)))
                 } else if (jsonLDObject.isDatatypeValue) {
                     // This object represents a JSON-LD datatype value.
-                    val datatype = jsonLDObject.requireString(JsonLDConstants.TYPE)
-                    val literalContent = jsonLDObject.requireString(JsonLDConstants.VALUE)
+                    val datatype = jsonLDObject.requireString(JsonLDKeywords.TYPE)
+                    val literalContent = jsonLDObject.requireString(JsonLDKeywords.VALUE)
                     Vector(InstanceElement(elementType = datatype, literalContent = Some(literalContent)))
                 } else if (jsonLDObject.isIri) {
                     // This object represents an IRI.
-                    val literalContent = jsonLDObject.requireString(JsonLDConstants.ID)
+                    val literalContent = jsonLDObject.requireString(JsonLDKeywords.ID)
                     Vector(InstanceElement(elementType = OntologyConstants.Xsd.Uri, literalContent = Some(literalContent)))
                 } else {
                     // This object represents a class instance.
@@ -467,11 +467,11 @@ class JsonLDInstanceInspector extends InstanceInspector {
     }
 
     private def jsonLDObjectToElement(jsonLDObject: JsonLDObject): InstanceElement = {
-        val elementType = jsonLDObject.requireString(JsonLDConstants.TYPE)
+        val elementType = jsonLDObject.requireString(JsonLDKeywords.TYPE)
 
         val propertyObjects: Map[String, Vector[InstanceElement]] = jsonLDObject.value.map {
             case (key, jsonLDValue: JsonLDValue) => key -> jsonLDValueToElements(jsonLDValue)
-        } - JsonLDConstants.ID - JsonLDConstants.TYPE
+        } - JsonLDKeywords.ID - JsonLDKeywords.TYPE
 
         InstanceElement(elementType = elementType, propertyObjects = propertyObjects)
     }

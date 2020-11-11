@@ -37,7 +37,8 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+    private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
 
     StringFormatter.initForTest()
 
@@ -134,7 +135,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
 
             // Convert that document to an RDF4J Model.
-            val outputModel: RdfModel = jsonLDDocument.toRdfModel(featureFactoryConfig)
+            val outputModel: RdfModel = jsonLDDocument.toRdfModel(rdfModelFactory)
 
             // Read an isomorphic Turtle file.
             val expectedTurtle: String = FileUtil.readTextFile(new File("test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
@@ -157,7 +158,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             val outputJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(inputModel)
 
             // Convert the JsonLDDocument back to an RDF4J Model.
-            val jsonLDOutputModel: RdfModel = outputJsonLD.toRdfModel(featureFactoryConfig)
+            val jsonLDOutputModel: RdfModel = outputJsonLD.toRdfModel(rdfModelFactory)
 
             // Compare the generated model with the original one.
             jsonLDOutputModel should ===(inputModel)
@@ -180,7 +181,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
 
             // Convert the document to an RDF4J Model.
-            val outputModel: RdfModel = jsonLDDocument.toRdfModel(featureFactoryConfig)
+            val outputModel: RdfModel = jsonLDDocument.toRdfModel(rdfModelFactory)
 
             // Convert the model back to a JsonLDDocument.
             val outputModelAsJsonLDDocument: JsonLDDocument = JsonLDUtil.fromRdfModel(outputModel)
@@ -209,7 +210,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             val outputJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(inputModel)
 
             // Convert the JsonLDDocument back to an RDF4J Model.
-            val jsonLDOutputModel: RdfModel = outputJsonLD.toRdfModel(featureFactoryConfig)
+            val jsonLDOutputModel: RdfModel = outputJsonLD.toRdfModel(rdfModelFactory)
 
             // Compare the generated model with the original one.
             jsonLDOutputModel should ===(inputModel)

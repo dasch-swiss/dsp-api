@@ -36,49 +36,75 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig)
-    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.makeRdfNodeFactory(featureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+    private val rdfNodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+    private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
 
     StringFormatter.initForTest()
 
     private def checkModelForRdfTypeBook(rdfModel: RdfModel): Unit = {
         val statements: Set[Statement] = rdfModel.find(
-            subj = Some(nodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
-            pred = Some(nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
+            subj = Some(rdfNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
+            pred = Some(rdfNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
             obj = None
         )
 
         assert(statements.size == 1)
-        assert(statements.head.obj == nodeFactory.makeIriNode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"))
+        assert(statements.head.obj == rdfNodeFactory.makeIriNode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"))
     }
 
     private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Unit = {
-        assert(jsonLDDocument.requireString(JsonLDConstants.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
+        assert(jsonLDDocument.requireString(JsonLDKeywords.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
     }
 
     "RdfFormatUtil" should {
-        "parse RDF in Turtle format, producing an RdfModel" in {
+        "parse RDF in Turtle format, producing an RdfModel, then format it as Turtle again" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
-            checkModelForRdfTypeBook(rdfModel)
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
+            checkModelForRdfTypeBook(inputModel)
+
+            val outputTurtle: String = rdfFormatUtil.format(rdfModel = inputModel, rdfFormat = Turtle)
+            val outputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = outputTurtle, rdfFormat = Turtle)
+            checkModelForRdfTypeBook(outputModel)
+            assert(outputModel == inputModel)
         }
 
-        "parse RDF in JSON-LD format, producing an RdfModel" in {
+        "parse RDF in JSON-LD format, producing an RdfModel, then format it as JSON-LD again" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = JsonLD)
-            checkModelForRdfTypeBook(rdfModel)
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = JsonLD)
+            checkModelForRdfTypeBook(inputModel)
+
+            val outputTurtle: String = rdfFormatUtil.format(rdfModel = inputModel, rdfFormat = JsonLD)
+            val outputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = outputTurtle, rdfFormat = JsonLD)
+            checkModelForRdfTypeBook(outputModel)
+            assert(outputModel == inputModel)
         }
 
-        "parse RDF in Turtle format, producing a JsonLDDocument" in {
+        "parse RDF in Turtle format, producing a JsonLDDocument, then format it as Turtle again" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val jsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = Turtle)
-            checkJsonLDDocumentForRdfTypeBook(jsonLDDocument)
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
+            val inputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = Turtle)
+            checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
+
+            val jsonLDOutputModel: RdfModel = inputJsonLDDocument.toRdfModel(rdfModelFactory)
+            checkModelForRdfTypeBook(jsonLDOutputModel)
+            assert(jsonLDOutputModel == inputModel)
+
+            val outputTurtle: String = rdfFormatUtil.format(rdfModel = jsonLDOutputModel, rdfFormat = Turtle)
+            val turtleOutputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = outputTurtle, rdfFormat = Turtle)
+            checkModelForRdfTypeBook(turtleOutputModel)
+            assert(turtleOutputModel == inputModel)
         }
 
-        "parse RDF in JSON-LD format, producing a JsonLDDocument" in {
+        "parse RDF in JSON-LD format, producing a JsonLDDocument, then format it as JSON-LD again" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val jsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)
-            checkJsonLDDocumentForRdfTypeBook(jsonLDDocument)
+            val inputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)
+            checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
+
+            val outputJsonLD: String = inputJsonLDDocument.toPrettyString
+            val outputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = outputJsonLD, rdfFormat = JsonLD)
+            checkJsonLDDocumentForRdfTypeBook(outputJsonLDDocument)
+            assert(inputJsonLDDocument == outputJsonLDDocument)
         }
     }
 }

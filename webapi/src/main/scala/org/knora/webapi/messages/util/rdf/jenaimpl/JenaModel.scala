@@ -245,13 +245,21 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
     }
 
     override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
+        // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
+
         val thatDatasetGraph: jena.sparql.core.DatasetGraph = otherRdfModel.asJenaDataset.asDatasetGraph
 
-        val thisModelGraphs: Set[jena.graph.Node] = datasetGraph.listGraphNodes.asScala.toSet
-        val thatModelGraphs: Set[jena.graph.Node] = thatDatasetGraph.listGraphNodes.asScala.toSet
+        // Get the IRIs of the named graphs.
+        val thisModelNamedGraphIris: Set[jena.graph.Node] = datasetGraph.listGraphNodes.asScala.toSet
+        val thatModelNamedGraphIris: Set[jena.graph.Node] = thatDatasetGraph.listGraphNodes.asScala.toSet
 
-        thisModelGraphs == thatModelGraphs &&
-            thisModelGraphs.forall {
+        // The two models are isomorphic if:
+        // - They have the same set of named graph IRIs.
+        // - The default graphs are isomorphic.
+        // - The named graphs with the same IRIs are isomorphic.
+        thisModelNamedGraphIris == thatModelNamedGraphIris &&
+            datasetGraph.getDefaultGraph.isIsomorphicWith(thatDatasetGraph.getDefaultGraph) &&
+            thisModelNamedGraphIris.forall {
                 node => datasetGraph.getGraph(node).isIsomorphicWith(thatDatasetGraph.getGraph(node))
             }
     }
@@ -259,7 +267,7 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
     override def getContexts: Set[IRI] = {
         datasetGraph.listGraphNodes.asScala.toSet.map {
             node: jena.graph.Node => node.getURI
-        } - jena.sparql.core.Quad.defaultGraphIRI.getURI
+        }
     }
 }
 
@@ -308,6 +316,6 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 /**
  * A factory for creating instances of [[JenaModel]].
  */
-object JenaModelFactory {
-    def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
+class JenaModelFactory extends RdfModelFactory {
+    override def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
 }

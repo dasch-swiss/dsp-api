@@ -350,7 +350,7 @@ object RouteUtilV2 {
      * @return the corresponding [[RdfModel]].
      */
     def requestToRdfModel(entityStr: String, requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
-        RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig).parseToRdfModel(
+        RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig).parseToRdfModel(
             rdfStr = entityStr,
             rdfFormat = RdfFormat.fromMediaType(getRequestContentType(requestContext))
         )
@@ -364,7 +364,7 @@ object RouteUtilV2 {
      * @return the corresponding [[JsonLDDocument]].
      */
     def requestToJsonLD(entityStr: String, requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig): JsonLDDocument = {
-        RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig).parseToJsonLDDocument(
+        RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig).parseToJsonLDDocument(
             rdfStr = entityStr,
             rdfFormat = RdfFormat.fromMediaType(getRequestContentType(requestContext))
         )

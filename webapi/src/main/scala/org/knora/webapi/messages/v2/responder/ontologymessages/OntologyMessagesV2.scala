@@ -32,7 +32,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
@@ -1247,12 +1247,12 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         }.toVector
 
         val allEntities = jsonClasses ++ jsonProperties ++ jsonIndividuals
-        val allEntitiesSorted = allEntities.sortBy(_.value(JsonLDConstants.ID))
+        val allEntitiesSorted = allEntities.sortBy(_.value(JsonLDKeywords.ID))
 
         // Assemble the JSON-LD document.
 
         val body = JsonLDObject(
-            ontologyMetadata.toJsonLD(targetSchema) + (JsonLDConstants.GRAPH -> JsonLDArray(allEntitiesSorted))
+            ontologyMetadata.toJsonLD(targetSchema) + (JsonLDKeywords.GRAPH -> JsonLDArray(allEntitiesSorted))
         )
 
         JsonLDDocument(body = body, context = context)
@@ -1360,7 +1360,7 @@ object InputOntologyV2 {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val ontologyObj: JsonLDObject = jsonLDDocument.body
-        val externalOntologyIri: SmartIri = ontologyObj.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val externalOntologyIri: SmartIri = ontologyObj.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
 
         if (!(externalOntologyIri.isKnoraApiV2DefinitionIri && externalOntologyIri.isKnoraOntologyIri)) {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
@@ -1386,14 +1386,14 @@ object InputOntologyV2 {
             lastModificationDate = lastModificationDate
         )
 
-        val maybeGraph: Option[JsonLDArray] = ontologyObj.maybeArray(JsonLDConstants.GRAPH)
+        val maybeGraph: Option[JsonLDArray] = ontologyObj.maybeArray(JsonLDKeywords.GRAPH)
 
         maybeGraph match {
             case Some(graph) =>
                 // Make a list of (entity definition, entity type IRI)
                 val entitiesWithTypes: Seq[(JsonLDObject, SmartIri)] = graph.value.map {
                     case jsonLDObj: JsonLDObject =>
-                        val entityType = jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                        val entityType = jsonLDObj.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
                         (jsonLDObj, entityType)
 
                     case _ => throw BadRequestException("@graph must contain only JSON-LD objects")
@@ -1481,7 +1481,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
         val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(ontology => JsonLDObject(ontology.toJsonLD(targetSchema)))
 
         val body = JsonLDObject(Map(
-            JsonLDConstants.GRAPH -> JsonLDArray(ontologiesJson)
+            JsonLDKeywords.GRAPH -> JsonLDArray(ontologiesJson)
         ))
 
         JsonLDDocument(body = body, context = context)
@@ -1926,14 +1926,14 @@ object EntityInfoContentV2 {
     def predicatesFromJsonLDObject(jsonLDObject: JsonLDObject): Map[SmartIri, PredicateInfoV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val entityType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+        val entityType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
 
         val rdfType: (SmartIri, PredicateInfoV2) = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
             objects = Seq(SmartIriLiteralV2(entityType))
         )
 
-        val predicates = jsonLDObject.value - JsonLDConstants.ID - JsonLDConstants.TYPE - OntologyConstants.Rdfs.SubClassOf - OntologyConstants.Rdfs.SubPropertyOf - OntologyConstants.Owl.WithRestrictions
+        val predicates = jsonLDObject.value - JsonLDKeywords.ID - JsonLDKeywords.TYPE - OntologyConstants.Rdfs.SubClassOf - OntologyConstants.Rdfs.SubPropertyOf - OntologyConstants.Owl.WithRestrictions
 
         predicates.map {
             case (predicateIriStr: IRI, predicateValue: JsonLDValue) =>
@@ -2245,7 +2245,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                 }
 
                 JsonLDObject(Map(
-                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Restriction),
+                    JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Owl.Restriction),
                     OntologyConstants.Owl.OnProperty -> JsonLDUtil.iriToJsonLDObject(propertyIri.toString),
                     prop2card
                 ) ++ isInheritedStatement ++ guiOrderStatement)
@@ -2311,8 +2311,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         Map(
-            JsonLDConstants.ID -> JsonLDString(entityInfoContent.classIri.toString),
-            JsonLDConstants.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
+            JsonLDKeywords.ID -> JsonLDString(entityInfoContent.classIri.toString),
+            JsonLDKeywords.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
             isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement ++ jsonRestriction
     }
@@ -2423,8 +2423,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         }
 
         Map(
-            JsonLDConstants.ID -> JsonLDString(entityInfoContent.propertyIri.toString),
-            JsonLDConstants.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
+            JsonLDKeywords.ID -> JsonLDString(entityInfoContent.propertyIri.toString),
+            JsonLDKeywords.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
         ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++
             isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++
             isLinkPropertyStatement ++ guiElementStatement ++ guiAttributeStatement
@@ -2459,7 +2459,7 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
         }
 
         Map(
-            JsonLDConstants.ID -> JsonLDString(entityInfoContent.individualIri.toString)
+            JsonLDKeywords.ID -> JsonLDString(entityInfoContent.individualIri.toString)
         ) ++ jsonLDPredicates
     }
 }
@@ -2586,8 +2586,8 @@ object ClassInfoContentV2 {
 
     // The predicates that are allowed in a class definition that is read from JSON-LD representing client input.
     private val AllowedJsonLDClassPredicatesInClientInput = Set(
-        JsonLDConstants.ID,
-        JsonLDConstants.TYPE,
+        JsonLDKeywords.ID,
+        JsonLDKeywords.TYPE,
         OntologyConstants.Rdfs.SubClassOf,
         OntologyConstants.Rdfs.Label,
         OntologyConstants.Rdfs.Comment
@@ -2595,7 +2595,7 @@ object ClassInfoContentV2 {
 
     // The predicates that are allowed in an owl:Restriction that is read from JSON-LD representing client input.
     private val AllowedJsonLDRestrictionPredicatesInClientInput = Set(
-        JsonLDConstants.TYPE,
+        JsonLDKeywords.TYPE,
         OntologyConstants.Owl.Cardinality,
         OntologyConstants.Owl.MinCardinality,
         OntologyConstants.Owl.MaxCardinality,
@@ -2613,7 +2613,7 @@ object ClassInfoContentV2 {
     def fromJsonLDObject(jsonLDClassDef: JsonLDObject, parsingMode: InputOntologyParsingModeV2): ClassInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
         // Parse differently depending on parsing mode.
@@ -2657,7 +2657,7 @@ object ClassInfoContentV2 {
                         if (jsonLDObj.isIri) {
                             false
                         } else {
-                            jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr).toString == OntologyConstants.Owl.Restriction
+                            jsonLDObj.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr).toString == OntologyConstants.Owl.Restriction
                         }
                 }
 
@@ -2869,8 +2869,8 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
 object PropertyInfoContentV2 {
     // The predicates allowed in a property definition that is read from JSON-LD representing client input.
     private val AllowedJsonLDPropertyPredicatesInClientInput = Set(
-        JsonLDConstants.ID,
-        JsonLDConstants.TYPE,
+        JsonLDKeywords.ID,
+        JsonLDKeywords.TYPE,
         OntologyConstants.KnoraApiV2Simple.SubjectType,
         OntologyConstants.KnoraApiV2Simple.ObjectType,
         OntologyConstants.KnoraApiV2Complex.SubjectType,
@@ -2892,7 +2892,7 @@ object PropertyInfoContentV2 {
     def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, parsingMode: InputOntologyParsingModeV2): PropertyInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val propertyIri: SmartIri = jsonLDPropertyDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val propertyIri: SmartIri = jsonLDPropertyDef.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = propertyIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid property IRI: $propertyIri"))
 
         // Parse differently depending on the parsing mode.
@@ -2982,7 +2982,7 @@ object IndividualInfoContentV2 {
     def fromJsonLDObject(jsonLDIndividualDef: JsonLDObject): IndividualInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val individualIri: SmartIri = jsonLDIndividualDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val individualIri: SmartIri = jsonLDIndividualDef.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = individualIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid named individual IRI: $individualIri"))
 
         IndividualInfoContentV2(
@@ -3104,8 +3104,8 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             None
         }
 
-        Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
-            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
+        Map(JsonLDKeywords.ID -> JsonLDString(ontologyIri.toString),
+            JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
         ) ++ projectIriStatement ++ labelStatement ++ commentStatement ++ lastModDateStatement ++ isSharedStatement ++ isBuiltInStatement
     }
 }

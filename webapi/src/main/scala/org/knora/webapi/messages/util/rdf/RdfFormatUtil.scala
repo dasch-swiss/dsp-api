@@ -21,12 +21,20 @@ package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
 import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.exceptions.InvalidRdfException
+import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException, RdfProcessingException}
 
 /**
  * A trait for supported RDF formats.
  */
 sealed trait RdfFormat {
+    /**
+     * `true` if this format supports named graphs.
+     */
+    val supportsNamedGraphs: Boolean
+
+    /**
+     * The [[MediaType]] that represents this format.
+     */
     val toMediaType: MediaType
 }
 
@@ -57,28 +65,45 @@ object RdfFormat {
  * Represents JSON-LD format.
  */
 case object JsonLD extends RdfFormat {
+    override def toString: String = "JSON-LD"
+
     override val toMediaType: MediaType = RdfMediaTypes.`application/ld+json`
+
+    // We don't support named graphs in JSON-LD.
+    override val supportsNamedGraphs: Boolean = false
 }
 
 /**
  * Represents Turtle format.
  */
 case object Turtle extends NonJsonLD {
+    override def toString: String = "Turtle"
+
     override val toMediaType: MediaType = RdfMediaTypes.`text/turtle`
+
+    override val supportsNamedGraphs: Boolean = false
 }
 
 /**
  * Represents TriG format.
  */
 case object TriG extends NonJsonLD {
+    override def toString: String = "TriG"
+
     override val toMediaType: MediaType = RdfMediaTypes.`application/trig`
+
+    override val supportsNamedGraphs: Boolean = true
 }
 
 /**
  * Represents RDF-XML format.
  */
 case object RdfXml extends NonJsonLD {
+    override def toString: String = "RDF/XML"
+
     override val toMediaType: MediaType = RdfMediaTypes.`application/rdf+xml`
+
+    override val supportsNamedGraphs: Boolean = false
 }
 
 /**
@@ -86,13 +111,29 @@ case object RdfXml extends NonJsonLD {
  */
 trait RdfFormatUtil {
     /**
+     * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+     */
+    def getRdfModelFactory: RdfModelFactory
+
+    /**
      * Parses an RDF string to an [[RdfModel]].
      *
      * @param rdfStr    the RDF string to be parsed.
      * @param rdfFormat the format of the string.
      * @return the corresponding [[RdfModel]].
      */
-    def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel
+    def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel = {
+        rdfFormat match {
+            case JsonLD =>
+                // Use JsonLDUtil to parse JSON-LD, and to convert the
+                // resulting JsonLDDocument to an RdfModel.
+                JsonLDUtil.parseJsonLD(rdfStr).toRdfModel(getRdfModelFactory)
+
+            case nonJsonLD: NonJsonLD =>
+                // Use an implementation-specific function to parse other formats.
+                parseNonJsonLDToRdfModel(rdfStr = rdfStr, rdfFormat = nonJsonLD)
+        }
+    }
 
     /**
      * Parses an RDF string to a [[JsonLDDocument]].
@@ -107,10 +148,10 @@ trait RdfFormatUtil {
                 // Use JsonLDUtil to parse JSON-LD.
                 JsonLDUtil.parseJsonLD(rdfStr)
 
-            case _ =>
+            case nonJsonLD: NonJsonLD =>
                 // Use an implementation-specific function to parse other formats to an RdfModel.
                 // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
-                JsonLDUtil.fromRdfModel(parseToRdfModel(rdfStr, rdfFormat))
+                JsonLDUtil.fromRdfModel(parseNonJsonLDToRdfModel(rdfStr, nonJsonLD))
         }
     }
 
@@ -135,10 +176,23 @@ trait RdfFormatUtil {
                 }
 
             case nonJsonLD: NonJsonLD =>
+                if (rdfModel.getContexts.nonEmpty && !nonJsonLD.supportsNamedGraphs) {
+                    throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
+                }
+
                 // Use an implementation-specific function to convert to other formats.
                 formatNonJsonLD(rdfModel, nonJsonLD, prettyPrint)
         }
     }
+
+    /**
+     * Parses RDF in a format other than JSON-LD to an [[RdfModel]].
+     *
+     * @param rdfStr    the RDF string to be parsed.
+     * @param rdfFormat the format of the string.
+     * @return the corresponding [[RdfModel]].
+     */
+    protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel
 
     /**
      * Converts an [[RdfModel]] to a string in a format other than JSON-LD.

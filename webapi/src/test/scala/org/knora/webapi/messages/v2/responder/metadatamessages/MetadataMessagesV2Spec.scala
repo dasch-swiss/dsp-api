@@ -30,7 +30,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
  * Tests [[MetadataPutRequestV2]].
  */
 class MetadataMessagesV2Spec extends CoreSpec() {
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(defaultFeatureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
     private val graphDataContent: String =
         """

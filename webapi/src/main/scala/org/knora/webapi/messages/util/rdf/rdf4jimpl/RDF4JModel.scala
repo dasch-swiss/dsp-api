@@ -251,7 +251,7 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
     }
 
     override def getContexts: Set[IRI] = {
-        model.contexts.asScala.toSet.map {
+        model.contexts.asScala.toSet.filter(_ != null).map {
             context: rdf4j.model.Resource => context.stringValue
         }
     }
@@ -310,6 +310,6 @@ class RDF4JNodeFactory extends RdfNodeFactory {
 /**
  * A factory for creating instances of [[RDF4JModel]].
  */
-object RDF4JModelFactory {
-    def makeEmptyModel: RDF4JModel = new RDF4JModel(new rdf4j.model.impl.LinkedHashModel)
+class RDF4JModelFactory extends RdfModelFactory {
+    override def makeEmptyModel: RDF4JModel = new RDF4JModel(new rdf4j.model.impl.LinkedHashModel)
 }
