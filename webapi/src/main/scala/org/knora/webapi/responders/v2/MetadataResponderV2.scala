@@ -20,17 +20,16 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import org.apache.jena.graph.Graph
-
+import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.{InsertGraphDataContentRequest, InsertGraphDataContentResponse, NamedGraphDataRequest, NamedGraphDataResponse}
-import org.knora.webapi.messages.util.{RdfFormatUtil, ResponderData}
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, RdfModel, Turtle}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.metadatamessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.{IRI, RdfMediaTypes}
 
 import scala.concurrent.Future
 
@@ -73,7 +72,7 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
      */
     private def putProjectMetadata(request: MetadataPutRequestV2): Future[SuccessResponseV2] = {
         val metadataGraphIRI: IRI =  stringFormatter.projectMetadataNamedGraphV2(request.projectADM)
-        val graphContent = request.toTurtle
+        val graphContent: String = request.toTurtle(request.featureFactoryConfig)
 
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
@@ -88,12 +87,14 @@ class MetadataResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check if the created metadata graph has the same content as the one in the request.
                 createdMetadata: MetadataGetResponseV2 <- getProjectMetadata(request.projectADM)
 
-                createdMetadataGraph: Graph = RdfFormatUtil.parseToJenaGraph(
+                rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(request.featureFactoryConfig)
+
+                savedModel: RdfModel = rdfFormatUtil.parseToRdfModel(
                     rdfStr = createdMetadata.turtle,
-                    mediaType = RdfMediaTypes.`text/turtle`
+                    rdfFormat = Turtle
                 )
 
-                _ = if (!createdMetadataGraph.isIsomorphicWith(request.graph)) {
+                _ = if (!savedModel.isIsomorphicWith(request.rdfModel)) {
                     throw AssertionException("Project metadata was stored, but is not correct. Please report this a bug.")
                 }
             } yield SuccessResponseV2(s"Project metadata was stored for project <${request.projectIri}>.")

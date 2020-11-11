@@ -30,7 +30,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.rdf.JsonLDTool
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffPageRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
@@ -128,7 +128,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         val requestMessageFuture: Future[CreateMappingRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             allParts: Map[Name, String] <- allPartsFuture
-                            jsonldDoc = JsonLDTool.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
+                            jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
 
                             metadata: CreateMappingRequestMetadataV2 <- CreateMappingRequestMetadataV2.fromJsonLD(
                                 jsonLDDocument = jsonldDoc,

@@ -20,13 +20,13 @@
 package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.feature.{FeatureFactory, FeatureFactoryConfig}
-import org.knora.webapi.messages.util.rdf.jenaimpl.{JenaFormatTool, JenaModelFactory, JenaNodeFactory}
-import org.knora.webapi.messages.util.rdf.rdf4jimpl.{RDF4JFormatTool, RDF4JModelFactory, RDF4JNodeFactory}
+import org.knora.webapi.messages.util.rdf.jenaimpl.{JenaFormatUtil, JenaModelFactory, JenaNodeFactory}
+import org.knora.webapi.messages.util.rdf.rdf4jimpl.{RDF4JFormatUtil, RDF4JModelFactory, RDF4JNodeFactory}
 
 /**
  * A feature factory that creates RDF processing tools.
  */
-object RdfToolFactory extends FeatureFactory {
+object RdfFeatureFactory extends FeatureFactory {
     /**
      * The name of the feature toggle that enables the Jena implementation of the RDF façade.
      */
@@ -61,16 +61,16 @@ object RdfToolFactory extends FeatureFactory {
     }
 
     /**
-     * Creates an [[RdfFormatTool]].
+     * Creates an [[RdfFormatUtil]].
      *
      * @param featureFactoryConfig the feature factory configuration.
-     * @return an [[RdfFormatTool]].
+     * @return an [[RdfFormatUtil]].
      */
-    def makeRdfFormatTool(featureFactoryConfig: FeatureFactoryConfig): RdfFormatTool = {
+    def makeRdfFormatUtil(featureFactoryConfig: FeatureFactoryConfig): RdfFormatUtil = {
         if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-            new JenaFormatTool
+            new JenaFormatUtil
         } else {
-            new RDF4JFormatTool
+            new RDF4JFormatUtil
         }
     }
 }

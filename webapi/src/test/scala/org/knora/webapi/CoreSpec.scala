@@ -28,6 +28,7 @@ import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.app.{ApplicationActor, LiveManagers}
 import org.knora.webapi.core.Core
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
@@ -95,6 +96,11 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     val responderData: ResponderData = ResponderData(
         system = system,
         appActor = appActor
+    )
+
+    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+        testToggles = Set.empty,
+        parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
     final override def beforeAll() {

@@ -25,13 +25,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
-import org.apache.jena
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, UnexpectedMessageException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.RdfFormatUtil
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, RdfFeatureFactory, RdfFormat, RdfModel}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
@@ -232,7 +230,7 @@ object RouteUtilV2 {
 
             // Format the response message.
             formattedResponseContent: String = knoraResponse.format(
-                mediaType = specificMediaType,
+                rdfFormat = RdfFormat.fromMediaType(specificMediaType),
                 targetSchema = targetSchema,
                 settings = settings,
                 featureFactoryConfig = featureFactoryConfig,
@@ -345,16 +343,16 @@ object RouteUtilV2 {
     }
 
     /**
-     * Parses a request entity to a [[jena.graph.Graph]].
+     * Parses a request entity to an [[RdfModel]].
      *
      * @param entityStr      the request entity.
      * @param requestContext the request context.
-     * @return the corresponding [[jena.graph.Graph]].
+     * @return the corresponding [[RdfModel]].
      */
-    def requestToJenaGraph(entityStr: String, requestContext: RequestContext): jena.graph.Graph = {
-        RdfFormatUtil.parseToJenaGraph(
+    def requestToRdfModel(entityStr: String, requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
+        RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig).parseToRdfModel(
             rdfStr = entityStr,
-            mediaType = getRequestContentType(requestContext)
+            rdfFormat = RdfFormat.fromMediaType(getRequestContentType(requestContext))
         )
     }
 
@@ -365,10 +363,10 @@ object RouteUtilV2 {
      * @param requestContext the request context.
      * @return the corresponding [[JsonLDDocument]].
      */
-    def requestToJsonLD(entityStr: String, requestContext: RequestContext): JsonLDDocument = {
-        RdfFormatUtil.parseToJsonLDDocument(
+    def requestToJsonLD(entityStr: String, requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig): JsonLDDocument = {
+        RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig).parseToJsonLDDocument(
             rdfStr = entityStr,
-            mediaType = getRequestContentType(requestContext)
+            rdfFormat = RdfFormat.fromMediaType(getRequestContentType(requestContext))
         )
     }
 

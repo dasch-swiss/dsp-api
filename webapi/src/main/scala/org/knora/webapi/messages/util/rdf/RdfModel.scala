@@ -164,6 +164,18 @@ trait RdfModel {
      * Returns `true` if this model is empty.
      */
     def isEmpty: Boolean
+
+    /**
+     * Returns `true` if this model is isomorphic with another RDF model.
+     *
+     * @param otherRdfModel another [[RdfModel]].
+     */
+    def isIsomorphicWith(otherRdfModel: RdfModel): Boolean
+
+    /**
+     * Returns the IRIs of the named graphs in the model.
+     */
+    def getContexts: Set[IRI]
 }
 
 /**

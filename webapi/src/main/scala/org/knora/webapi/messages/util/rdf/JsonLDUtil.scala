@@ -1003,7 +1003,7 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
      */
     def toRdfModel(featureFactoryConfig: FeatureFactoryConfig): RdfModel = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val model: RdfModel = RdfToolFactory.makeRdfModel(featureFactoryConfig)
+        val model: RdfModel = RdfFeatureFactory.makeRdfModel(featureFactoryConfig)
 
         // Add the prefixes and namespaces from the JSON-LD context to the model.
         for ((prefix: String, namespaceValue: JsonLDValue) <- context.value) {
@@ -1022,7 +1022,7 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
 /**
  * A tool for working with JSON-LD.
  */
-object JsonLDTool {
+object JsonLDUtil {
 
     /**
      * Makes a JSON-LD context containing prefixes for Knora and other ontologies.

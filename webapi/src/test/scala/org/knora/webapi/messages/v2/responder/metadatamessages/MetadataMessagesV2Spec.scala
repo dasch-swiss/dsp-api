@@ -21,16 +21,17 @@ package org.knora.webapi.messages.v2.responder.metadatamessages
 
 import java.util.UUID
 
-import org.apache.jena.graph.Graph
-import org.knora.webapi.{CoreSpec, RdfMediaTypes}
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.messages.util.RdfFormatUtil
+import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, RdfModel, Turtle}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * Tests [[MetadataPutRequestV2]].
  */
 class MetadataMessagesV2Spec extends CoreSpec() {
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(defaultFeatureFactoryConfig)
+
     private val graphDataContent: String =
         """
         @prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
@@ -41,18 +42,19 @@ class MetadataMessagesV2Spec extends CoreSpec() {
         <anything> dsp-repo:hasShortcode "0001" .
         """
 
-    // Parse the request to a Jena Graph.
-    private val requestGraph: Graph = RdfFormatUtil.parseToJenaGraph(
+    // Parse the request to an RdfModel.
+    private val requestModel: RdfModel = rdfFormatUtil.parseToRdfModel(
         rdfStr = graphDataContent,
-        mediaType = RdfMediaTypes.`text/turtle`
+        rdfFormat = Turtle
     )
 
     "MetadataPutRequestV2" should {
         "return ForbiddenException if the requesting user is not the project admin or a system admin" in {
             assertThrows[ForbiddenException](
                 MetadataPutRequestV2(
-                    graph = requestGraph,
+                    rdfModel = requestModel,
                     projectADM = SharedTestDataADM.anythingProject,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser2,
                     apiRequestID = UUID.randomUUID()
                 )

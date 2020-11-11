@@ -84,7 +84,7 @@ case object RdfXml extends NonJsonLD {
 /**
  * Formats and parses RDF.
  */
-trait RdfFormatTool {
+trait RdfFormatUtil {
     /**
      * Parses an RDF string to an [[RdfModel]].
      *
@@ -104,13 +104,13 @@ trait RdfFormatTool {
     def parseToJsonLDDocument(rdfStr: String, rdfFormat: RdfFormat): JsonLDDocument = {
         rdfFormat match {
             case JsonLD =>
-                // Use JsonLDTool to parse JSON-LD.
-                JsonLDTool.parseJsonLD(rdfStr)
+                // Use JsonLDUtil to parse JSON-LD.
+                JsonLDUtil.parseJsonLD(rdfStr)
 
             case _ =>
                 // Use an implementation-specific function to parse other formats to an RdfModel.
-                // Use JsonLDTool to convert the resulting model to a JsonLDDocument.
-                JsonLDTool.fromRdfModel(parseToRdfModel(rdfStr, rdfFormat))
+                // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
+                JsonLDUtil.fromRdfModel(parseToRdfModel(rdfStr, rdfFormat))
         }
     }
 
@@ -125,8 +125,8 @@ trait RdfFormatTool {
     def format(rdfModel: RdfModel, rdfFormat: RdfFormat, prettyPrint: Boolean = true): String = {
         rdfFormat match {
             case JsonLD =>
-                // Use JsonLDTool to convert to JSON-LD.
-                val jsonLDDocument: JsonLDDocument = JsonLDTool.fromRdfModel(rdfModel)
+                // Use JsonLDUtil to convert to JSON-LD.
+                val jsonLDDocument: JsonLDDocument = JsonLDUtil.fromRdfModel(rdfModel)
 
                 if (prettyPrint) {
                     jsonLDDocument.toPrettyString

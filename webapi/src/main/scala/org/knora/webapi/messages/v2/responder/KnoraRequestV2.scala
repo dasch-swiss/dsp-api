@@ -19,15 +19,14 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import java.io.StringWriter
 import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
-import org.apache.jena
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, RdfFeatureFactory, RdfModel, Turtle}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,21 +37,19 @@ import scala.concurrent.{ExecutionContext, Future}
 trait KnoraRequestV2
 
 /**
- * A trait for request messages that are constructed as a [[jena.graph.Graph]].
+ * A trait for request messages that are constructed as an [[RdfModel]].
  */
-trait KnoraGraphRequestV2 {
+trait KnoraRdfModelRequestV2 {
     /**
-     * A [[jena.graph.Graph]] representing the request.
+     * An [[RdfModel]] representing the request.
      */
-    val graph: jena.graph.Graph
+    val rdfModel: RdfModel
 
     /**
      * Returns a Turtle representation of the graph.
      */
-    def toTurtle: String = {
-        val stringWriter = new StringWriter
-        jena.riot.RDFDataMgr.write(stringWriter, graph, jena.riot.Lang.TURTLE)
-        stringWriter.toString
+    def toTurtle(featureFactoryConfig: FeatureFactoryConfig): String = {
+        RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig).format(rdfModel, Turtle)
     }
 }
 

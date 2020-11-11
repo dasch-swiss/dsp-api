@@ -20,9 +20,9 @@
 package org.knora.webapi.util.rdf.jenaimpl
 
 import org.knora.webapi.feature.{FeatureToggle, ToggleStateOn}
-import org.knora.webapi.util.rdf.JsonLDToolSpec
+import org.knora.webapi.util.rdf.JsonLDUtilSpec
 
 /**
- * Tests [[org.knora.webapi.messages.util.rdf.JsonLDTool]] using the Jena RDF API.
+ * Tests [[org.knora.webapi.messages.util.rdf.JsonLDUtil]] using the Jena RDF API.
  */
-class JenaJsonLDToolSpec extends JsonLDToolSpec(FeatureToggle("jena-rdf-library", ToggleStateOn(1)))
+class JenaJsonLDUtilSpec extends JsonLDUtilSpec(FeatureToggle("jena-rdf-library", ToggleStateOn(1)))

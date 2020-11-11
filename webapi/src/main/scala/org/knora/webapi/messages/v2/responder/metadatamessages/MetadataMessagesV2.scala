@@ -24,9 +24,11 @@ import java.util.UUID
 import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.v2.responder._
 
 /**
@@ -42,10 +44,12 @@ sealed trait MetadataResponderRequestV2 extends KnoraRequestV2 {
 /**
  * Requests metadata about a project. A successful response will be a [[MetadataGetResponseV2]].
  *
- * @param projectADM     the project for which metadata is requested.
- * @param requestingUser the user making the request.
+ * @param projectADM           the project for which metadata is requested.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class MetadataGetRequestV2(projectADM: ProjectADM,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM) extends MetadataResponderRequestV2 {
     val projectIri: IRI = projectADM.id
 
@@ -67,15 +71,17 @@ case class MetadataGetResponseV2(turtle: String) extends KnoraTurtleResponseV2
  * for the project, it will be replaced by the metadata in this message. A successful response
  * will be a [[SuccessResponseV2]].
  *
- * @param graph          the project metadata to be stored.
- * @param projectADM     the project.
- * @param requestingUser the user making the request.
- * @param apiRequestID   the API request ID.
+ * @param rdfModel             the project metadata to be stored.
+ * @param projectADM           the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the API request ID.
  */
-case class MetadataPutRequestV2(graph: jena.graph.Graph,
+case class MetadataPutRequestV2(rdfModel: RdfModel,
                                 projectADM: ProjectADM,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
-                                apiRequestID: UUID) extends KnoraGraphRequestV2 with MetadataResponderRequestV2 {
+                                apiRequestID: UUID) extends KnoraRdfModelRequestV2 with MetadataResponderRequestV2 {
     /**
      * The project IRI.
      */
@@ -91,5 +97,9 @@ case class MetadataPutRequestV2(graph: jena.graph.Graph,
     if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
         throw BadRequestException(s"Metadata cannot be created in project <$projectIri>")
     }
-}
 
+    // Don't allow named graphs.
+    if (rdfModel.getContexts.nonEmpty) {
+        throw BadRequestException("A project metadata request cannot contain named graphs")
+    }
+}

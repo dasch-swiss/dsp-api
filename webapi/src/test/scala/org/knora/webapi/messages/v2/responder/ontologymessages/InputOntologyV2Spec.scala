@@ -25,7 +25,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
-import org.knora.webapi.messages.util.rdf.JsonLDTool
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.{ApiV2Complex, CoreSpec}
 
@@ -87,7 +87,7 @@ class InputOntologyV2Spec extends CoreSpec {
                   |}
                 """.stripMargin
 
-            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDTool.parseJsonLD(params)).unescape
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
             paramsAsInput should ===(PropertyDef)
         }
 
@@ -133,7 +133,7 @@ class InputOntologyV2Spec extends CoreSpec {
                    |}
             """.stripMargin
 
-            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDTool.parseJsonLD(params)).unescape
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
             paramsAsInput should ===(ClassDef)
         }
 
@@ -180,7 +180,7 @@ class InputOntologyV2Spec extends CoreSpec {
             """.stripMargin
 
             assertThrows[BadRequestException] {
-                InputOntologyV2.fromJsonLD(JsonLDTool.parseJsonLD(params))
+                InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
             }
         }
     }

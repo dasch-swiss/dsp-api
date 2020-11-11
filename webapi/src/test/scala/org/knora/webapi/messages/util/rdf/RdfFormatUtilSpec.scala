@@ -28,16 +28,16 @@ import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.util.FileUtil
 
 /**
- * Tests implementations of [[RdfFormatTool]].
+ * Tests implementations of [[RdfFormatUtil]].
  */
-abstract class RdfFormatToolSpec(featureToggle: FeatureToggle) extends CoreSpec {
+abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
     private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
         testToggles = Set(featureToggle),
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val rdfFormatTool: RdfFormatTool = RdfToolFactory.makeRdfFormatTool(featureFactoryConfig)
-    private val nodeFactory: RdfNodeFactory = RdfToolFactory.makeRdfNodeFactory(featureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig)
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.makeRdfNodeFactory(featureFactoryConfig)
 
     StringFormatter.initForTest()
 
@@ -59,25 +59,25 @@ abstract class RdfFormatToolSpec(featureToggle: FeatureToggle) extends CoreSpec 
     "RdfFormatUtil" should {
         "parse RDF in Turtle format, producing an RdfModel" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val rdfModel: RdfModel = rdfFormatTool.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
+            val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
             checkModelForRdfTypeBook(rdfModel)
         }
 
         "parse RDF in JSON-LD format, producing an RdfModel" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val rdfModel: RdfModel = rdfFormatTool.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = JsonLD)
+            val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = JsonLD)
             checkModelForRdfTypeBook(rdfModel)
         }
 
         "parse RDF in Turtle format, producing a JsonLDDocument" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val jsonLDDocument: JsonLDDocument = rdfFormatTool.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = Turtle)
+            val jsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = Turtle)
             checkJsonLDDocumentForRdfTypeBook(jsonLDDocument)
         }
 
         "parse RDF in JSON-LD format, producing a JsonLDDocument" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val jsonLDDocument: JsonLDDocument = rdfFormatTool.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)
+            val jsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)
             checkJsonLDDocumentForRdfTypeBook(jsonLDDocument)
         }
     }

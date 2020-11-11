@@ -37,7 +37,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val rdfFormatTool: RdfFormatTool = RdfToolFactory.makeRdfFormatTool(featureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(featureFactoryConfig)
 
     /**
      * A test implementation of [[KnoraTurtleResponseV2]].
@@ -51,7 +51,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         override protected def toJsonLDDocument(targetSchema: ApiV2Schema,
                                                 settings: KnoraSettingsImpl,
                                                 schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-            JsonLDTool.parseJsonLD(jsonLD)
+            JsonLDUtil.parseJsonLD(jsonLD)
         }
     }
 
@@ -73,11 +73,11 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             )
 
             // Parse the JSON-LD to a JsonLDDocument.
-            val parsedJsonLD: JsonLDDocument = JsonLDTool.parseJsonLD(jsonLD)
+            val parsedJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLD)
 
             // Read an isomorphic JSON-LD file and parse it to a JsonLDDocument.
             val expectedJsonLD: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
-            val parsedExpectedJsonLD: JsonLDDocument = JsonLDTool.parseJsonLD(expectedJsonLD)
+            val parsedExpectedJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedJsonLD)
 
             // Compare the two documents.
             parsedJsonLD.body should ===(parsedExpectedJsonLD.body)
@@ -100,11 +100,11 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             )
 
             // Parse the Turtle to an RDF4J Model.
-            val parsedTurtle: RdfModel = rdfFormatTool.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+            val parsedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
             // Read an isomorphic Turtle file and parse it to an RDF4J Model.
             val expectedTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
-            val parsedExpectedTurtle: RdfModel = rdfFormatTool.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
+            val parsedExpectedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
 
             // Compare the two models.
             parsedTurtle should ===(parsedExpectedTurtle)

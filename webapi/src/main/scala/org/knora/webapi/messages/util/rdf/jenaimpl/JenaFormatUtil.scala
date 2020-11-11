@@ -22,14 +22,13 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 import java.io.{StringReader, StringWriter}
 
 import org.apache.jena
-import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
 /**
- * An implementation of [[RdfFormatTool]] that uses the Jena API.
+ * An implementation of [[RdfFormatUtil]] that uses the Jena API.
  */
-class JenaFormatTool extends RdfFormatTool with Feature {
+class JenaFormatUtil extends RdfFormatUtil with Feature {
     override def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel = {
         val jenaModel: JenaModel = JenaModelFactory.makeEmptyModel
 
@@ -50,10 +49,7 @@ class JenaFormatTool extends RdfFormatTool with Feature {
     }
 
     override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
-        val jenaModel: JenaModel = rdfModel match {
-            case model: JenaModel => model
-            case other => throw RdfProcessingException(s"${other.getClass.getName} is not a Jena RDF model")
-        }
+        import JenaConversions._
 
         val jenaFormat: jena.riot.RDFFormat = rdfFormat match {
             case Turtle =>
@@ -79,7 +75,7 @@ class JenaFormatTool extends RdfFormatTool with Feature {
         }
 
         val stringWriter: StringWriter = new StringWriter
-        jena.riot.RDFDataMgr.write(stringWriter, jenaModel.getDataset, jenaFormat)
+        jena.riot.RDFDataMgr.write(stringWriter, rdfModel.asJenaDataset, jenaFormat)
         stringWriter.toString
     }
 }

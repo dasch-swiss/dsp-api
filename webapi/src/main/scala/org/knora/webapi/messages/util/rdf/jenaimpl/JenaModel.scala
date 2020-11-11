@@ -117,6 +117,16 @@ object JenaConversions {
             }
         }
     }
+
+    implicit class ConvertibleJenaModel(val self: RdfModel) extends AnyVal {
+        def asJenaDataset: jena.query.Dataset = {
+            self match {
+                case model: JenaModel => model.getDataset
+                case other => throw RdfProcessingException(s"${other.getClass.getName} is not a Jena RDF model")
+            }
+        }
+    }
+
 }
 
 /**
@@ -233,12 +243,31 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
                 JenaResource.fromJena(subj).getOrElse(throw RdfProcessingException(s"Unexpected statement subject: $subj"))
         }.toSet
     }
+
+    override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
+        val thatDatasetGraph: jena.sparql.core.DatasetGraph = otherRdfModel.asJenaDataset.asDatasetGraph
+
+        val thisModelGraphs: Set[jena.graph.Node] = datasetGraph.listGraphNodes.asScala.toSet
+        val thatModelGraphs: Set[jena.graph.Node] = thatDatasetGraph.listGraphNodes.asScala.toSet
+
+        thisModelGraphs == thatModelGraphs &&
+            thisModelGraphs.forall {
+                node => datasetGraph.getGraph(node).isIsomorphicWith(thatDatasetGraph.getGraph(node))
+            }
+    }
+
+    override def getContexts: Set[IRI] = {
+        datasetGraph.listGraphNodes.asScala.toSet.map {
+            node: jena.graph.Node => node.getURI
+        } - jena.sparql.core.Quad.defaultGraphIRI.getURI
+    }
 }
 
 /**
  * An implementation of [[RdfNodeFactory]] that creates Jena node implementation wrappers.
  */
 class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
+
     import JenaConversions._
 
     private val typeMapper = jena.datatypes.TypeMapper.getInstance

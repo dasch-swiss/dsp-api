@@ -27,9 +27,9 @@ import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
 /**
- * An implementation of [[RdfFormatTool]] that uses the RDF4J API.
+ * An implementation of [[RdfFormatUtil]] that uses the RDF4J API.
  */
-class RDF4JFormatTool extends RdfFormatTool with Feature {
+class RDF4JFormatUtil extends RdfFormatUtil with Feature {
     private def rdfFormatToRDF4JFormat(rdfFormat: RdfFormat): rdf4j.rio.RDFFormat = {
         rdfFormat match {
             case JsonLD => rdf4j.rio.RDFFormat.JSONLD
@@ -51,6 +51,8 @@ class RDF4JFormatTool extends RdfFormatTool with Feature {
     }
 
     override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
+        import RDF4JConversions._
+
         val stringWriter = new StringWriter()
 
         val rdfWriter: rdf4j.rio.RDFWriter = rdfFormat match {
@@ -64,13 +66,8 @@ class RDF4JFormatTool extends RdfFormatTool with Feature {
             set[java.lang.Boolean](rdf4j.rio.helpers.BasicWriterSettings.INLINE_BLANK_NODES, true).
             set[java.lang.Boolean](rdf4j.rio.helpers.BasicWriterSettings.PRETTY_PRINT, true)
 
-        val rdf4JModel: RDF4JModel = rdfModel match {
-            case model: RDF4JModel => model
-            case other => throw RdfProcessingException(s"${other.getClass.getName} is not an RDF4J model")
-        }
-
         // Format the RDF.
-        rdf4j.rio.Rio.write(rdf4JModel.getModel, rdfWriter)
+        rdf4j.rio.Rio.write(rdfModel.asRDF4JModel, rdfWriter)
         stringWriter.toString
     }
 }

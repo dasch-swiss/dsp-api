@@ -38,8 +38,8 @@ import org.knora.webapi.http.handler
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDTool}
-import org.knora.webapi.messages.util.{JsonLDDocument, KnoraSystemInstances}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
@@ -112,7 +112,7 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
         val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
         val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
-        JsonLDTool.parseJsonLD(responseBodyStr)
+        JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 
     protected def parseTurtle(turtleStr: String): Model = {

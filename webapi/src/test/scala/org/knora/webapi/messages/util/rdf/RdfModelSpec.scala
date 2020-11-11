@@ -37,8 +37,8 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-    private val model: RdfModel = RdfToolFactory.makeRdfModel(featureFactoryConfig)
-    private val nodeFactory: RdfNodeFactory = RdfToolFactory.makeRdfNodeFactory(featureFactoryConfig)
+    private val model: RdfModel = RdfFeatureFactory.makeRdfModel(featureFactoryConfig)
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.makeRdfNodeFactory(featureFactoryConfig)
 
     /**
      * Adds a statement, then searches for it by subject and predicate.

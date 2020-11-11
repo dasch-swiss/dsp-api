@@ -23,7 +23,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDTool, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDUtil, JsonLDValue}
 
 object ResponseCheckerV2 {
 
@@ -147,8 +147,8 @@ object ResponseCheckerV2 {
       */
     def compareJSONLDForResourcesResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
 
-        val expectedJsonLDDocument = JsonLDTool.parseJsonLD(expectedJSONLD)
-        val receivedJsonLDDocument = JsonLDTool.parseJsonLD(receivedJSONLD)
+        val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonLDDocument, receivedResponse = receivedJsonLDDocument)
 
@@ -163,7 +163,7 @@ object ResponseCheckerV2 {
       */
     def checkCountResponse(receivedJSONLD: String, expectedNumber: Int): Unit = {
 
-        val receivedJsonLDDocument = JsonLDTool.parseJsonLD(receivedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         // make sure the indicated amount of results is correct
         val receivedNumber = receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value
@@ -179,7 +179,7 @@ object ResponseCheckerV2 {
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
     def checkSearchResponseNumberOfResults(receivedJSONLD: String, expectedNumber: Int): Unit = {
-        val receivedJsonLDDocument = JsonLDTool.parseJsonLD(receivedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
         val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedJsonLDDocument.body.value.getOrElse(JsonLDConstants.GRAPH, receivedJsonLDDocument.body))
         val numberOfResultsReceived = receivedResourcesAsArray.value.size
         assert(numberOfResultsReceived == expectedNumber, s"Expected $expectedNumber results, received $numberOfResultsReceived")
@@ -192,8 +192,8 @@ object ResponseCheckerV2 {
       * @param receivedJSONLD the received response as JSON-LD.
       */
     def compareJSONLDForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
-        val expectedJsonLDDocument = JsonLDTool.parseJsonLD(expectedJSONLD)
-        val receivedJsonLDDocument = JsonLDTool.parseJsonLD(receivedJSONLD)
+        val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         assert(expectedJsonLDDocument == receivedJsonLDDocument, "Mapping creation response did not match expected response")
     }
@@ -205,8 +205,8 @@ object ResponseCheckerV2 {
       * @param receivedJSONLD the received response as JSON-LD.
       */
     def compareJSONLDForResourceHistoryResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
-        val expectedJsonLDDocument = JsonLDTool.parseJsonLD(expectedJSONLD)
-        val receivedJsonLDDocument = JsonLDTool.parseJsonLD(receivedJSONLD)
+        val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         assert(expectedJsonLDDocument == receivedJsonLDDocument, "Resource history response did not match expected response")
     }

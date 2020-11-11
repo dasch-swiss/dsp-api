@@ -4,11 +4,11 @@ import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import org.apache.jena.graph.Graph
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.{ApiV2Complex, InternalSchema}
+import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.v2.responder.metadatamessages.{MetadataGetRequestV2, MetadataPutRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
+import org.knora.webapi.{ApiV2Complex, InternalSchema}
 
 import scala.concurrent.Future
 
@@ -41,6 +41,7 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     project <- getProjectADM(projectIri, requestingUser)
                 } yield MetadataGetRequestV2(
                     projectADM = project,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -67,9 +68,10 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             entity(as[String]) { entityStr =>
                 requestContext => {
                     // Parse the request to a Jena Graph.
-                    val requestGraph: Graph = RouteUtilV2.requestToJenaGraph(
+                    val requestModel: RdfModel = RouteUtilV2.requestToRdfModel(
                         entityStr = entityStr,
-                        requestContext = requestContext
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
                     )
 
                     // Make the request message.
@@ -77,8 +79,9 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         requestingUser <- getUserADM(requestContext)
                         project <- getProjectADM(projectIri, requestingUser)
                     } yield MetadataPutRequestV2(
-                        graph = requestGraph,
+                        rdfModel = requestModel,
                         projectADM = project,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID
                     )

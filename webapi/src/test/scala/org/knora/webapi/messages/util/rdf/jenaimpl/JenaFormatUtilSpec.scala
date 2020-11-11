@@ -17,12 +17,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.rdf.rdf4jimpl
+package org.knora.webapi.util.rdf.jenaimpl
 
-import org.knora.webapi.feature.{FeatureToggle, ToggleStateOff}
-import org.knora.webapi.util.rdf.JsonLDToolSpec
+import org.knora.webapi.feature.{FeatureToggle, ToggleStateOn}
+import org.knora.webapi.util.rdf.RdfFormatUtilSpec
 
 /**
- * Tests [[org.knora.webapi.messages.util.rdf.JsonLDTool]] using the RDF4J API.
+ * Tests [[org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil]].
  */
-class RDF4JJsonLDToolSpec extends JsonLDToolSpec(FeatureToggle("jena-rdf-library", ToggleStateOff))
+class JenaFormatUtilSpec extends RdfFormatUtilSpec(FeatureToggle("jena-rdf-library", ToggleStateOn(1)))

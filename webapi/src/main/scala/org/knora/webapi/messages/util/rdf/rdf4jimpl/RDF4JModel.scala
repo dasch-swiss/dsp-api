@@ -137,6 +137,15 @@ object RDF4JConversions {
             }
         }
     }
+
+    implicit class ConvertibleRDF4JModel(val self: RdfModel) extends AnyVal {
+        def asRDF4JModel: rdf4j.model.Model = {
+            self match {
+                case rdf4JModel: RDF4JModel => rdf4JModel.getModel
+                case other => throw RdfProcessingException(s"${other.getClass.getName} is not an RDF4J model")
+            }
+        }
+    }
 }
 
 /**
@@ -235,6 +244,16 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
 
     override def getSubjects: Set[RdfResource] = {
         model.subjects.asScala.toSet.map(resource => RDF4JResource.fromRDF4J(resource))
+    }
+
+    override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
+        model == otherRdfModel.asRDF4JModel
+    }
+
+    override def getContexts: Set[IRI] = {
+        model.contexts.asScala.toSet.map {
+            context: rdf4j.model.Resource => context.stringValue
+        }
     }
 }
 

@@ -2,15 +2,15 @@ package org.knora.webapi.e2e.v2
 
 import java.net.URLEncoder
 
-import akka.http.scaladsl.model.{HttpEntity, HttpHeader, HttpResponse, MediaType}
 import akka.http.scaladsl.model.headers.{BasicHttpCredentials, RawHeader}
-import org.knora.webapi.messages.util.RdfFormatUtil
-import org.knora.webapi.{E2ESpec, IRI, RdfMediaTypes}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, RdfFeatureFactory, RdfFormatUtil, Turtle}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.{E2ESpec, IRI, RdfMediaTypes}
 
 class MetadataRouteV2E2ESpec extends E2ESpec {
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.makeRdfFormatUtil(defaultFeatureFactoryConfig)
 
-    // Directory path for generated client test data
     private val beolUserEmail = SharedTestDataADM.beolUser.email
     private val beolProjectIRI: IRI = SharedTestDataADM.BEOL_PROJECT_IRI
     private val password = SharedTestDataADM.testPass
@@ -115,7 +115,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status.isSuccess())
             val responseString = responseToString(response)
-            assert(responseString.contains(s"Project metadata was stored for project <${beolProjectIRI}>."))
+            assert(responseString.contains(s"Project metadata was stored for project <$beolProjectIRI>."))
         }
 
         "perform a put request for the metadata of beol project given as JSON-LD" in {
@@ -126,7 +126,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status.isSuccess())
             val responseString = responseToString(response)
-            assert(responseString.contains(s"Project metadata was stored for project <${beolProjectIRI}>."))
+            assert(responseString.contains(s"Project metadata was stored for project <$beolProjectIRI>."))
         }
 
         "get the created metadata graph as JSON LD" in {
@@ -135,9 +135,9 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
             val responseJSONLD = responseToJsonLDDocument(response)
             assert(response.status.isSuccess())
 
-            val expectedGraphJSONLD = RdfFormatUtil.parseToJsonLDDocument(
+            val expectedGraphJSONLD: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(
                 rdfStr = metadataContent,
-                mediaType = RdfMediaTypes.`text/turtle`
+                rdfFormat = Turtle
             )
 
             assert(expectedGraphJSONLD.body == responseJSONLD.body)
