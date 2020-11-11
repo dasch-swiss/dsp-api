@@ -21,7 +21,7 @@ package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
 import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException, RdfProcessingException}
+import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
 
 /**
  * A trait for supported RDF formats.

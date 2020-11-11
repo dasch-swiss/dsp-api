@@ -63,7 +63,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             requestContext =>
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield GroupsGetRequestADM(requestingUser)
+                } yield GroupsGetRequestADM(
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -88,6 +91,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                         requestingUser <- getUserADM(requestContext)
                     } yield GroupCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -115,7 +119,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield GroupGetRequestADM(checkedGroupIri, requestingUser)
+                } yield GroupGetRequestADM(
+                    groupIri = checkedGroupIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -152,6 +160,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     } yield GroupChangeRequestADM(
                         groupIri = checkedGroupIri,
                         changeGroupRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -195,6 +204,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     } yield GroupChangeStatusRequestADM(
                         groupIri = checkedGroupIri,
                         changeGroupRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -225,6 +235,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                 } yield GroupChangeStatusRequestADM(
                     groupIri = checkedGroupIri,
                     changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -251,7 +262,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield GroupMembersGetRequestADM(groupIri = checkedGroupIri, requestingUser = requestingUser)
+                } yield GroupMembersGetRequestADM(
+                    groupIri = checkedGroupIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,

@@ -26,6 +26,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -215,7 +216,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case Some(permissions: String) =>
                         // Yes. Validate them.
                         for {
-                            validatedCustomPermissions <- PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
+                            validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
+                                permissionLiteral = permissions,
+                                featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                                responderManager = responderManager
+                            )
 
                             // Is the requesting user a system admin, or an admin of this project?
                             _ = if (!(createValueRequest.requestingUser.permissions.isProjectAdmin(createValueRequest.requestingUser.id) || createValueRequest.requestingUser.permissions.isSystemAdmin)) {
@@ -877,7 +882,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
          * @param updateValuePermissionsV2 the update request.
          * @return an [[UpdateValueResponseV2]].
          */
-        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2): Future[UpdateValueResponseV2] = {
+        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2,
+                                                   featureFactoryConfig: FeatureFactoryConfig): Future[UpdateValueResponseV2] = {
             for {
                 // Do the initial checks, and get information about the resource, the property, and the value.
                 resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
@@ -894,7 +900,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Validate and reformat the submitted permissions.
 
-                newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(permissionLiteral = updateValuePermissionsV2.permissions, responderManager = responderManager)
+                newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(
+                    permissionLiteral = updateValuePermissionsV2.permissions,
+                    featureFactoryConfig = featureFactoryConfig,
+                    responderManager = responderManager
+                )
 
                 // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
                 // different from the current ones.
@@ -964,7 +974,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
          * @param updateValueContentV2 the update request.
          * @return an [[UpdateValueResponseV2]].
          */
-        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2): Future[UpdateValueResponseV2] = {
+        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2,
+                                               featureFactoryConfig: FeatureFactoryConfig): Future[UpdateValueResponseV2] = {
             for {
                 // Do the initial checks, and get information about the resource, the property, and the value.
                 resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
@@ -984,7 +995,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 newValueVersionPermissionLiteral <- updateValueContentV2.permissions match {
                     case Some(permissions) =>
                         // Yes. Validate them.
-                        PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
+                        PermissionUtilADM.validatePermissions(
+                            permissionLiteral = permissions,
+                            featureFactoryConfig = featureFactoryConfig,
+                            responderManager = responderManager
+                        )
 
                     case None =>
                         // No. Use the permissions on the current version of the value.
@@ -1125,7 +1140,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = IriLocker.runWithIriLock(
                         updateValueRequest.apiRequestID,
                         updateValueContentV2.resourceIri,
-                        () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
+                        () => makeTaskFutureToUpdateValueContent(
+                            updateValueContentV2 = updateValueContentV2,
+                            featureFactoryConfig = updateValueRequest.featureFactoryConfig
+                        )
                     )
 
                     ResourceUtilV2.doSipiPostUpdate(
@@ -1142,7 +1160,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     IriLocker.runWithIriLock(
                         updateValueRequest.apiRequestID,
                         updateValuePermissionsV2.resourceIri,
-                        () => makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2)
+                        () => makeTaskFutureToUpdateValuePermissions(
+                            updateValuePermissionsV2 = updateValuePermissionsV2,
+                            featureFactoryConfig = updateValueRequest.featureFactoryConfig
+                        )
                     )
             }
         }

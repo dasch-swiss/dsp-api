@@ -22,11 +22,8 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 import java.io.{StringReader, StringWriter}
 
 import org.apache.jena
-import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
-
-import scala.collection.JavaConverters._
 
 /**
  * An implementation of [[RdfFormatUtil]] that uses the Jena API.

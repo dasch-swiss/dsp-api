@@ -1254,7 +1254,7 @@ object JsonLDUtil {
                 prefix -> JsonLDString(namespace)
         }
 
-        val context = JsonLDObject(contextMap)
+        val context: JsonLDObject = JsonLDObject(contextMap)
 
         // Is the model empty?
         val body: JsonLDObject = if (model.isEmpty) {

@@ -46,7 +46,12 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                         requestingUser <- getUserADM(requestContext)
                         projectID = stringFormatter.validateProjectShortcode(projectIDAndFile.head, throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
                         filename = stringFormatter.toSparqlEncodedString(projectIDAndFile(1), throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'"))
-                    } yield SipiFileInfoGetRequestADM(projectID = projectID, filename = filename, requestingUser = requestingUser)
+                    } yield SipiFileInfoGetRequestADM(
+                        projectID = projectID,
+                        filename = filename,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilADM.runJsonRoute(
                         requestMessageF = requestMessage,

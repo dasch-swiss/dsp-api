@@ -221,14 +221,20 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         }
 
-        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, userADM: UserADM): Future[ResourceCreateRequestV1] = {
+        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1,
+                                             featureFactoryConfig: FeatureFactoryConfig,
+                                             userADM: UserADM): Future[ResourceCreateRequestV1] = {
             val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
             for {
                 projectShortcode: String <- for {
-                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                        ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = userADM
+                    )).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
                 file: Option[FileValueV1] <- apiRequest.file match {
@@ -313,7 +319,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             )
         }
 
-        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserADM): Future[MultipleResourceCreateRequestV1] = {
+        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1],
+                                             projectId: IRI,
+                                             apiRequestID: UUID,
+                                             featureFactoryConfig: FeatureFactoryConfig,
+                                             userProfile: UserADM): Future[MultipleResourceCreateRequestV1] = {
             // Make sure there are no duplicate client resource IDs.
 
             val duplicateClientIDs: immutable.Iterable[String] = resourceRequest.map(_.client_id).groupBy(identity).collect { case (clientID, occurrences) if occurrences.size > 1 => clientID }
@@ -324,7 +334,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
             for {
                 projectShortcode: String <- for {
-                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectId)), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                        identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = userProfile
+                    )).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
                 resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] = resourceRequest.map {
@@ -948,7 +962,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestContext =>
                         val requestMessageFuture = for {
                             userProfile <- getUserADM(requestContext)
-                            request <- makeCreateResourceRequestMessage(apiRequest = apiRequest, userADM = userProfile)
+                            request <- makeCreateResourceRequestMessage(
+                                apiRequest = apiRequest,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userADM = userProfile
+                            )
                         } yield request
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -1140,7 +1158,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                             // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
                             apiRequestID: UUID = UUID.randomUUID
-                            updateRequest: MultipleResourceCreateRequestV1 <- makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userADM)
+
+                            updateRequest: MultipleResourceCreateRequestV1 <- makeMultiResourcesRequestMessage(
+                                resourceRequest = resourcesToCreate,
+                                projectId = projectId,
+                                apiRequestID = apiRequestID,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfile = userADM
+                            )
                         } yield updateRequest
 
                         RouteUtilV1.runJsonRouteWithFuture(

@@ -21,7 +21,6 @@ package org.knora.webapi.messages.v2.responder.metadatamessages
 
 import java.util.UUID
 
-import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.FeatureFactoryConfig

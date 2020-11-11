@@ -126,6 +126,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                         requestingUser <- getUserADM(requestContext)
                     } yield PermissionsForProjectGetRequestADM(
                         projectIri = projectIri,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -153,6 +154,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                         requestingUser <- getUserADM(requestContext)
                     } yield AdministrativePermissionCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -181,6 +183,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                         requestingUser <- getUserADM(requestContext)
                     } yield DefaultObjectAccessPermissionCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )

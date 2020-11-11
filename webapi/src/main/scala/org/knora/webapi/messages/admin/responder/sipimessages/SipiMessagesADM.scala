@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.admin.responder.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -33,11 +34,15 @@ sealed trait SipiResponderRequestADM extends KnoraRequestADM
 /**
  * A Knora v1 API request message that requests information about a `FileValue`.
  *
- * @param projectID      the project shortcode.
- * @param filename       the name of the file belonging to the file value to be queried.
- * @param requestingUser the profile of the user making the request.
+ * @param projectID            the project shortcode.
+ * @param filename             the name of the file belonging to the file value to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the profile of the user making the request.
  */
-case class SipiFileInfoGetRequestADM(projectID: String, filename: String, requestingUser: UserADM) extends SipiResponderRequestADM
+case class SipiFileInfoGetRequestADM(projectID: String,
+                                     filename: String,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM) extends SipiResponderRequestADM
 
 /**
  * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.

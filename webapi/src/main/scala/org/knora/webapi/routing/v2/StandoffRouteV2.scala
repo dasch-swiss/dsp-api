@@ -136,6 +136,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                featureFactoryConfig = featureFactoryConfig,
                                 settings = settings,
                                 log = log
                             )

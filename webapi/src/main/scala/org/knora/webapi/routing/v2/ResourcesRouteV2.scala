@@ -87,6 +87,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )
@@ -121,6 +122,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )
@@ -419,6 +421,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )
@@ -453,6 +456,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )

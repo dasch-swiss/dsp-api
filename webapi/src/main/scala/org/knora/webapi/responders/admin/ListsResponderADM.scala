@@ -25,6 +25,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
@@ -53,14 +54,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
      */
     def receive(msg: ListsResponderRequestADM) = msg match {
-        case ListsGetRequestADM(projectIri, requestingUser) => listsGetRequestADM(projectIri, requestingUser)
-        case ListGetRequestADM(listIri, requestingUser) => listGetRequestADM(listIri, requestingUser)
-        case ListInfoGetRequestADM(listIri, requestingUser) => listInfoGetRequestADM(listIri, requestingUser)
-        case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
+        case ListsGetRequestADM(projectIri, featureFactoryConfig, requestingUser) => listsGetRequestADM(projectIri, featureFactoryConfig, requestingUser)
+        case ListGetRequestADM(listIri, featureFactoryConfig, requestingUser) => listGetRequestADM(listIri, featureFactoryConfig, requestingUser)
+        case ListInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser) => listInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser)
+        case ListNodeInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser) => listNodeInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser)
         case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
-        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => listCreateRequestADM(createListRequest, requestingUser, apiRequestID)
-        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID)
-        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID)
+        case ListCreateRequestADM(createListRequest, featureFactoryConfig, requestingUser, apiRequestID) => listCreateRequestADM(createListRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        case ListInfoChangeRequestADM(listIri, changeListRequest, featureFactoryConfig, requestingUser, apiRequestID) => listInfoChangeRequest(listIri, changeListRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, featureFactoryConfig, requestingUser, apiRequestID) => listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, featureFactoryConfig, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -70,11 +71,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * (as lists can be very large), we only return the head of the list, i.e. the root node without
      * any children.
      *
-     * @param projectIri     the IRI of the project the list belongs to.
-     * @param requestingUser the user making the request.
+     * @param projectIri           the IRI of the project the list belongs to.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[ListsGetResponseADM]].
      */
-    private def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
+    private def listsGetRequestADM(projectIri: Option[IRI],
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -84,7 +88,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 maybeProjectIri = projectIri
             ).toString())
 
-            listsResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+            listsResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = sparqlQuery,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
 
@@ -115,11 +122,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
      *
-     * @param rootNodeIri    the Iri if the root node of the list to be queried.
-     * @param requestingUser the user making the request.
+     * @param rootNodeIri          the Iri if the root node of the list to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a optional [[ListADM]].
      */
-    private def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
+    private def listGetADM(rootNodeIri: IRI,
+                           featureFactoryConfig: FeatureFactoryConfig,
+                           requestingUser: UserADM): Future[Option[ListADM]] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -130,9 +140,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeList: Option[ListADM] <- if (exists) {
                 for {
                     // here we know that the list exists and it is fine if children is an empty list
-                    children: Seq[ListChildNodeADM] <- getChildren(rootNodeIri, shallow = false, KnoraSystemInstances.Users.SystemUser)
+                    children: Seq[ListChildNodeADM] <- getChildren(
+                        ofNodeIri = rootNodeIri,
+                        shallow = false,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                    )
 
-                    maybeRootNodeInfo <- listNodeInfoGetADM(rootNodeIri, KnoraSystemInstances.Users.SystemUser)
+                    maybeRootNodeInfo <- listNodeInfoGetADM(
+                        nodeIri = rootNodeIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                    )
 
                     // _ = log.debug(s"listGetADM - maybeRootNodeInfo: {}", maybeRootNodeInfo)
 
@@ -154,14 +173,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
      *
-     * @param rootNodeIri    the Iri if the root node of the list to be queried.
-     * @param requestingUser the user making the request.
+     * @param rootNodeIri          the Iri if the root node of the list to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[ListGetResponseADM]].
      */
-    private def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
+    private def listGetRequestADM(rootNodeIri: IRI,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  requestingUser: UserADM): Future[ListGetResponseADM] = {
 
         for {
-            maybeListADM <- listGetADM(rootNodeIri, requestingUser)
+            maybeListADM <- listGetADM(
+                rootNodeIri = rootNodeIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )
+
             result = maybeListADM match {
                 case Some(list) => ListGetResponseADM(list = list)
                 case None => throw NotFoundException(s"List '$rootNodeIri' not found")
@@ -172,13 +199,20 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Retrieves information about a list (root) node.
      *
-     * @param listIri        the Iri if the list (root node) to be queried.
-     * @param requestingUser the user making the request.
+     * @param listIri              the Iri if the list (root node) to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[ListInfoGetResponseADM]].
      */
-    private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
+    private def listInfoGetRequestADM(listIri: IRI,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
         for {
-            listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
+            listNodeInfo <- listNodeInfoGetADM(
+                nodeIri = listIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )
 
             // _ = log.debug(s"listInfoGetRequestADM - listNodeInfo: {}", listNodeInfo)
 
@@ -197,11 +231,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * Retrieves information about a single node (without information about children). The single node can be the
      * lists root node or child node
      *
-     * @param nodeIri        the Iri if the list node to be queried.
-     * @param requestingUser the user making the request.
+     * @param nodeIri              the Iri if the list node to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a optional [[ListNodeInfoADM]].
      */
-    private def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
+    private def listNodeInfoGetADM(nodeIri: IRI,
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
             sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -210,7 +247,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
 
-            listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+            listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = sparqlQuery,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
 
@@ -290,13 +330,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * Retrieves information about a single node (without information about children). The single node can be the
      * lists root node or child node
      *
-     * @param nodeIri        the IRI of the list node to be queried.
-     * @param requestingUser the user making the request.
+     * @param nodeIri              the IRI of the list node to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[ListNodeInfoGetResponseADM]].
      */
-    private def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
+    private def listNodeInfoGetRequestADM(nodeIri: IRI,
+                                          featureFactoryConfig: FeatureFactoryConfig,
+                                          requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
         for {
-            maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(nodeIri, requestingUser)
+            maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(
+                nodeIri = nodeIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )
+
             result = maybeListNodeInfoADM match {
                 case Some(nodeInfo) => ListNodeInfoGetResponseADM(nodeinfo = nodeInfo)
                 case None => throw NotFoundException(s"List node '$nodeIri' not found")
@@ -308,12 +356,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Retrieves a complete node including children. The node can be the lists root node or child node.
      *
-     * @param nodeIri        the IRI of the list node to be queried.
-     * @param shallow        denotes if all children or only the immediate children will be returned.
-     * @param requestingUser the user making the request.
+     * @param nodeIri              the IRI of the list node to be queried.
+     * @param shallow              denotes if all children or only the immediate children will be returned.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a optional [[ListNodeADM]]
      */
-    private def listNodeGetADM(nodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Option[ListNodeADM]] = {
+    private def listNodeGetADM(nodeIri: IRI,
+                               shallow: Boolean,
+                               featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM): Future[Option[ListNodeADM]] = {
         for {
             // this query will give us only the information about the root node.
             sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
@@ -321,14 +373,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 nodeIri = nodeIri
             ).toString())
 
-            listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+            listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = sparqlQuery,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
 
             maybeListNode: Option[ListNodeADM] <- if (listInfoResponse.statements.nonEmpty) {
                 for {
                     // here we know that the list exists and it is fine if children is an empty list
-                    children: Seq[ListChildNodeADM] <- getChildren(nodeIri, shallow, requestingUser)
+                    children: Seq[ListChildNodeADM] <- getChildren(
+                        ofNodeIri = nodeIri,
+                        shallow = shallow,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     // _ = log.debug(s"listGetADM - children count: {}", children.size)
 
@@ -407,12 +467,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * Retrieves the child nodes from the triplestore. If shallow is true, then only the immediate children will be
      * returned, otherwise all children and their children's children will be returned.
      *
-     * @param ofNodeIri      the IRI of the node for which children are to be returned.
-     * @param shallow        denotes if all children or only the immediate children will be returned.
-     * @param requestingUser the user making the request.
+     * @param ofNodeIri            the IRI of the node for which children are to be returned.
+     * @param shallow              denotes if all children or only the immediate children will be returned.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a sequence of [[ListChildNodeADM]].
      */
-    private def getChildren(ofNodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Seq[ListChildNodeADM]] = {
+    private def getChildren(ofNodeIri: IRI,
+                            shallow: Boolean,
+                            featureFactoryConfig: FeatureFactoryConfig,
+                            requestingUser: UserADM): Future[Seq[ListChildNodeADM]] = {
 
         /**
          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
@@ -463,13 +527,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         for {
-            nodeChildrenQuery <- Future {
+            nodeChildrenQuery: String <- Future {
                 org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNodeWithChildren(
                     triplestore = settings.triplestoreType,
                     startNodeIri = ofNodeIri
                 ).toString()
             }
-            nodeWithChildrenResponse <- (storeManager ? SparqlExtendedConstructRequest(nodeChildrenQuery)).mapTo[SparqlExtendedConstructResponse]
+            nodeWithChildrenResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = nodeChildrenQuery,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
@@ -581,19 +648,24 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Creates a list.
      *
-     * @param createListRequest the new list's information.
-     * @param requestingUser    the user that is making the request.
-     * @param apiRequestID      the unique api request ID.
+     * @param createListRequest    the new list's information.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user that is making the request.
+     * @param apiRequestID         the unique api request ID.
      * @return a [[ListInfoGetResponseADM]]
      * @throws ForbiddenException  in the case that the user is not allowed to perform the operation.
      * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
      */
-    private def listCreateRequestADM(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
+    private def listCreateRequestADM(createListRequest: CreateListApiRequestADM,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM,
+                                     apiRequestID: UUID): Future[ListGetResponseADM] = {
 
         /**
          * The actual task run with an IRI lock.
          */
-        def listCreateTask(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+        def listCreateTask(createListRequest: CreateListApiRequestADM,
+                           requestingUser: UserADM, apiRequestID: UUID) = for {
 
             // check if the requesting user is allowed to perform operation
             _ <- Future(
@@ -605,7 +677,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
 
             /* Verify that the project exists. */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createListRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(createListRequest.projectIri)),
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Option[ProjectADM]]
+
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${createListRequest.projectIri}' not found.")
@@ -639,7 +716,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             // Verify that the list was created.
-            maybeNewListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
+            maybeNewListADM <- listGetADM(
+                rootNodeIri = listIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             newListADM = maybeNewListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not created. Please report this as a possible bug."))
 
             // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
@@ -659,21 +741,27 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Changes basic list information stored in the list's root node.
      *
-     * @param listIri           the list's IRI.
-     * @param changeListRequest the new list information.
-     * @param requestingUser    the user that is making the request.
-     * @param apiRequestID      the unique api request ID.
+     * @param listIri              the list's IRI.
+     * @param changeListRequest    the new list information.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user that is making the request.
+     * @param apiRequestID         the unique api request ID.
      * @return a [[ListInfoGetResponseADM]]
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
      * @throws BadRequestException         in the case when the project IRI is missing or invalid.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
-    private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
+    private def listInfoChangeRequest(listIri: IRI,
+                                      changeListRequest: ChangeListInfoApiRequestADM,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM,
+                                      apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
 
         /**
          * The actual task run with an IRI lock.
          */
-        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = for {
+        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM,
+                               requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = for {
             // check if listIRI in path and payload match
             _ <- Future(
                 if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
@@ -681,20 +769,30 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // check if the requesting user is allowed to perform operation
             _ = if (!requestingUser.permissions.isProjectAdmin(changeListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
-                    // not project or a system admin
-                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-                    throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-                }
+                // not project or a system admin
+                // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+                throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
 
             /* Verify that the list exists. */
-            maybeList <- listGetADM(rootNodeIri = listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeList <- listGetADM(
+                rootNodeIri = listIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             list: ListADM = maybeList match {
                 case Some(list: ListADM) => list
                 case None => throw BadRequestException(s"List '$listIri' not found.")
             }
 
             /* Get the project information */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(list.listinfo.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(list.listinfo.projectIri)),
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Option[ProjectADM]]
+
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${list.listinfo.projectIri}' not found.")
@@ -728,7 +826,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             /* Verify that the list was updated */
-            maybeListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
+            maybeListADM <- listGetADM(
+                rootNodeIri = listIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             updatedList = maybeListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not updated. Please report this as a possible bug."))
 
 
@@ -766,11 +869,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      *
      * @param parentNodeIri          the existing list node to which we want to append.
      * @param createChildNodeRequest the new list node's information.
+     * @param featureFactoryConfig   the feature factory configuration.
      * @param requestingUser         the user making the request.
      * @param apiRequestID           the unique api request ID.
      * @return a [[ListNodeInfoGetResponseADM]]
      */
-    private def listChildNodeCreateRequestADM(parentNodeIri: IRI, createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
+    private def listChildNodeCreateRequestADM(parentNodeIri: IRI,
+                                              createChildNodeRequest: CreateChildNodeApiRequestADM,
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              requestingUser: UserADM,
+                                              apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
 
         /**
          * The actual task run with an IRI lock.
@@ -789,7 +897,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             _ = if (!parentNodeIri.equals(createChildNodeRequest.parentNodeIri)) throw BadRequestException("List node IRI in path and payload don't match.")
 
             /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
-            maybeParentListNode <- listNodeGetADM(parentNodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeParentListNode <- listNodeGetADM(
+                nodeIri = parentNodeIri,
+                shallow = true,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             (parentListNode, children) = maybeParentListNode match {
                 case Some(node: ListRootNodeADM) => (node.asInstanceOf[ListRootNodeADM], node.children)
                 case Some(node: ListChildNodeADM) => (node.asInstanceOf[ListChildNodeADM], node.children)
@@ -810,7 +924,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createChildNodeRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(createChildNodeRequest.projectIri)),
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Option[ProjectADM]]
+
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${createChildNodeRequest.projectIri}' not found.")
@@ -848,7 +967,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 
             // Verify that the list node was created.
-            maybeNewListNode <- listNodeInfoGetADM(newListNodeIri, KnoraSystemInstances.Users.SystemUser)
+            maybeNewListNode <- listNodeInfoGetADM(
+                nodeIri = newListNodeIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             newListNode = maybeNewListNode.getOrElse(throw UpdateNotPerformedException(s"List node $newListNodeIri was not created. Please report this as a possible bug."))
 
             // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")

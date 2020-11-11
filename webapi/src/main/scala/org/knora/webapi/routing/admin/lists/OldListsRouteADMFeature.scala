@@ -72,7 +72,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
                     val requestMessage: Future[ListsGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListsGetRequestADM(projectIri, requestingUser)
+                    } yield ListsGetRequestADM(
+                        projectIri = projectIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilADM.runJsonRoute(
                         requestMessageF = requestMessage,
@@ -104,6 +108,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                         requestingUser <- getUserADM(requestContext)
                     } yield ListCreateRequestADM(
                         createListRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -134,7 +139,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
                 val requestMessage: Future[ListGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield ListGetRequestADM(listIri, requestingUser)
+                } yield ListGetRequestADM(
+                    iri = listIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -171,6 +180,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     } yield ListInfoChangeRequestADM(
                         listIri = listIri,
                         changeListRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -211,6 +221,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     } yield ListChildNodeCreateRequestADM(
                         parentNodeIri = parentNodeIri,
                         createChildNodeRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -244,7 +255,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
                 val requestMessage: Future[ListInfoGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield ListInfoGetRequestADM(listIri, requestingUser)
+                } yield ListInfoGetRequestADM(
+                    iri = listIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -265,7 +280,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
                 val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
+                } yield ListNodeInfoGetRequestADM(
+                    iri = listIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,

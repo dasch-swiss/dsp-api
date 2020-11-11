@@ -113,6 +113,11 @@ object OntologyConstants {
         val Int: IRI = XsdPrefixExpansion + "int"
         val Integer: IRI = XsdPrefixExpansion + "integer"
         val NonNegativeInteger: IRI = XsdPrefixExpansion + "nonNegativeInteger"
+
+        lazy val integerTypes: Set[IRI] = Set(
+            Int, Integer, NonNegativeInteger
+        )
+
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"

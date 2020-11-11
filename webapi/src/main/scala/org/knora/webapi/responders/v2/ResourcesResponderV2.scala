@@ -27,6 +27,7 @@ import akka.pattern._
 import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -583,6 +584,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
      *                                   have custom permissions. This is a map of property IRIs to permission strings.
      * @param creationDate               the versionDate to be attached to the resource and its values.
+     * @param featureFactoryConfig       the feature factory configuration.
      * @param requestingUser             the user making the request.
      * @return a [[ResourceReadyToCreate]].
      */
@@ -594,6 +596,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                               defaultResourcePermissions: String,
                                               defaultPropertyPermissions: Map[SmartIri, String],
                                               creationDate: Instant,
+                                              featureFactoryConfig: FeatureFactoryConfig,
                                               requestingUser: UserADM): Future[ResourceReadyToCreate] = {
         val resourceIDForErrorMsg: String = clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
@@ -653,7 +656,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourcePermissions: String <- internalCreateResource.permissions match {
                 case Some(permissionStr) =>
                     for {
-                        validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+                        validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
+                            permissionLiteral = permissionStr,
+                            featureFactoryConfig = featureFactoryConfig,
+                            responderManager = responderManager
+                        )
 
                         // Is the requesting user a system admin, or an admin of this project?
                         _ = if (!(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id) || requestingUser.permissions.isSystemAdmin)) {
@@ -683,6 +690,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 values = internalCreateResource.values,
                 defaultPropertyPermissions = defaultPropertyPermissions,
                 resourceIDForErrorMsg = resourceIDForErrorMsg,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -914,6 +922,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                   values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                                                   defaultPropertyPermissions: Map[SmartIri, String],
                                                   resourceIDForErrorMsg: String,
+                                                  featureFactoryConfig: FeatureFactoryConfig,
                                                   requestingUser: UserADM): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
         val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[GenerateSparqlForValueInNewResourceV2]]] = values.map {
             case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
@@ -924,7 +933,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                             case Some(permissionStr: String) =>
                                 // Yes. Validate and reformat them.
                                 for {
-                                    validatedCustomPermissions <- PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+                                    validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
+                                        permissionLiteral = permissionStr,
+                                        featureFactoryConfig = featureFactoryConfig,
+                                        responderManager = responderManager
+                                    )
 
                                     // Is the requesting user a system admin, or an admin of this project?
                                     _ = if (!(requestingUser.permissions.isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)) {

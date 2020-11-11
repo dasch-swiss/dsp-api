@@ -27,10 +27,11 @@ import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDDocument, JsonLDInt, JsonLDKeywords, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraJsonLDResponseV2, KnoraRequestV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
@@ -145,6 +146,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
         Future {

@@ -30,11 +30,14 @@ import scala.collection.JavaConverters._
 
 sealed trait RDF4JNode extends RdfNode {
     def rdf4jValue: rdf4j.model.Value
+
+    override def stringValue: String = rdf4jValue.stringValue
 }
 
 sealed trait RDF4JResource extends RDF4JNode with RdfResource {
     def resource: rdf4j.model.Resource
-    def rdf4jValue: rdf4j.model.Value = resource
+
+    override def rdf4jValue: rdf4j.model.Value = resource
 }
 
 object RDF4JResource {
@@ -57,7 +60,8 @@ case class RDF4JIriNode(resource: rdf4j.model.IRI) extends RDF4JResource with Ir
 
 sealed trait RDF4JLiteral extends RDF4JNode with RdfLiteral {
     def literal: rdf4j.model.Literal
-    def rdf4jValue: rdf4j.model.Value = literal
+
+    override def rdf4jValue: rdf4j.model.Value = literal
 }
 
 case class RDF4JDatatypeLiteral(literal: rdf4j.model.Literal) extends RDF4JLiteral with DatatypeLiteral {
@@ -146,6 +150,7 @@ object RDF4JConversions {
             }
         }
     }
+
 }
 
 /**
@@ -166,6 +171,8 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
     def getModel: rdf4j.model.Model = model
 
     override def getNodeFactory: RdfNodeFactory = nodeFactory
+
+    override def getStatements: Set[Statement] = model.asScala.toSet.map(RDF4JStatement)
 
     override def addStatement(statement: Statement): Unit = {
         model.add(statement.asRDF4JStatement)
@@ -207,6 +214,15 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
                     obj.map(_.asRDF4JValue).orNull,
                 )
         }
+    }
+
+    override def removeStatement(statement: Statement): Unit = {
+        remove(
+            Some(statement.subj),
+            Some(statement.pred),
+            Some(statement.obj),
+            statement.context
+        )
     }
 
     override def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement] = {
@@ -261,6 +277,7 @@ class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Fea
  * An implementation of [[RdfNodeFactory]] that creates RDF4J node implementation wrappers.
  */
 class RDF4JNodeFactory extends RdfNodeFactory {
+
     import RDF4JConversions._
 
     private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance

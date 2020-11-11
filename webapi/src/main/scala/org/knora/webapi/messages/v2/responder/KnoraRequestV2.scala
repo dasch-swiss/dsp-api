@@ -62,15 +62,14 @@ trait KnoraJsonLDRequestReaderV2[C] {
     /**
      * Converts JSON-LD input into a case class instance.
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -78,6 +77,7 @@ trait KnoraJsonLDRequestReaderV2[C] {
                    requestingUser: UserADM,
                    responderManager: ActorRef,
                    storeManager: ActorRef,
+                   featureFactoryConfig: FeatureFactoryConfig,
                    settings: KnoraSettingsImpl,
                    log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

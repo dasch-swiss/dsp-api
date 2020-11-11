@@ -28,11 +28,12 @@ import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DataConversionException, InconsistentTriplestoreDataException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDDocument, JsonLDInt, JsonLDKeywords, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
@@ -84,14 +85,14 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     /**
      * Converts JSON-LD input into a [[CreateOntologyRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[CreateOntologyRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -99,6 +100,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] = {
         Future {
@@ -358,14 +360,14 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
     /**
      * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[CreatePropertyRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -373,6 +375,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] = {
         Future {
@@ -452,21 +455,22 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     /**
      * Converts a JSON-LD request to a [[CreateClassRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[CreateClassRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            storeManager: ActorRef,
                             responderManager: ActorRef,
+                            storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] = {
         Future {
@@ -527,14 +531,14 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
     /**
      * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -542,6 +546,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] = {
         Future {
@@ -596,14 +601,14 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     /**
      * Converts JSON-LD input into a [[ChangeCardinalitiesRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -611,6 +616,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] = {
         Future {
@@ -704,14 +710,14 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
     /**
      * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -719,6 +725,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] = {
         Future {
@@ -776,14 +783,14 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
     /**
      * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -791,6 +798,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] = {
         Future {
@@ -848,14 +856,14 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     /**
      * Converts a JSON-LD request to a [[ChangeOntologyMetadataRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -863,6 +871,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] = {
         Future {

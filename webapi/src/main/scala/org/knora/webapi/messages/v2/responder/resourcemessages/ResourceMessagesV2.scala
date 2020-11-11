@@ -30,13 +30,14 @@ import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDKeywords, JsonLDDocument, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -501,11 +502,13 @@ case class CreateResourceV2(resourceIri: Option[SmartIri],
 /**
  * Represents a request to create a resource.
  *
- * @param createResource the resource to be created.
- * @param requestingUser the user making the request.
- * @param apiRequestID   the API request ID.
+ * @param createResource       the resource to be created.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the API request ID.
  */
 case class CreateResourceRequestV2(createResource: CreateResourceV2,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV2
 
@@ -513,14 +516,14 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
     /**
      * Converts JSON-LD input to a [[CreateResourceRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -528,6 +531,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
 
@@ -547,7 +551,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
             projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
 
@@ -662,6 +667,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                 permissions = permissions,
                 creationDate = creationDate
             ),
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
             apiRequestID = apiRequestID
         )
@@ -691,15 +697,14 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     /**
      * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -707,6 +712,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] = {
         Future {
@@ -785,15 +791,14 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
     /**
      * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -801,6 +806,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] = {
         Future {

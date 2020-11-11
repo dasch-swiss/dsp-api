@@ -34,22 +34,30 @@ sealed trait JenaNode extends RdfNode {
 
 case class JenaBlankNode(node: jena.graph.Node) extends JenaNode with BlankNode {
     override def id: String = node.getBlankNodeId.getLabelString
+
+    override def stringValue: String = id
 }
 
 case class JenaIriNode(node: jena.graph.Node) extends JenaNode with IriNode {
     override def iri: IRI = node.getURI
+
+    override def stringValue: String = iri
 }
 
 case class JenaDatatypeLiteral(node: jena.graph.Node) extends JenaNode with DatatypeLiteral {
     override def value: String = node.getLiteralLexicalForm
 
     override def datatype: IRI = node.getLiteralDatatypeURI
+
+    override def stringValue: String = value
 }
 
 case class JenaStringWithLanguage(node: jena.graph.Node) extends JenaNode with StringWithLanguage {
     override def value: String = node.getLiteralLexicalForm
 
     override def language: String = node.getLiteralLanguage
+
+    override def stringValue: String = value
 }
 
 object JenaResource {
@@ -180,6 +188,8 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
         datasetGraph.add(statement.asJenaQuad)
     }
 
+    override def getStatements: Set[Statement] = datasetGraph.find.asScala.map(JenaStatement).toSet
+
     /**
      * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
      * `None` to a wildcard that will match any node.
@@ -204,6 +214,10 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
             asJenaNodeOrWildcard(pred),
             asJenaNodeOrWildcard(obj)
         )
+    }
+
+    override def removeStatement(statement: Statement): Unit = {
+        datasetGraph.delete(statement.asJenaQuad)
     }
 
     override def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement] = {

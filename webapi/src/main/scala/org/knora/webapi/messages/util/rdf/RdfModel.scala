@@ -22,10 +22,17 @@ package org.knora.webapi.messages.util.rdf
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 
+import scala.util.control.Exception.allCatch
+
 /**
  * Represents an RDF subject, predicate, or object.
  */
-trait RdfNode
+trait RdfNode {
+    /**
+     * The lexical representation of this node.
+     */
+    def stringValue: String
+}
 
 /**
  * Represents an RDF node that can be used as a subject.
@@ -55,9 +62,57 @@ trait RdfLiteral extends RdfNode
  * Represents a literal value with a datatype.
  */
 trait DatatypeLiteral extends RdfLiteral {
+    /**
+     * The lexical value of this literal.
+     */
     def value: String
 
+    /**
+     * The datatype IRI of this literal.
+     */
     def datatype: IRI
+
+    /**
+     * The boolean value of this literal.
+     *
+     * @param errorFun a function that throws an exception. It will
+     *                 be called if this literal is not a boolean.
+     */
+    def booleanValue(errorFun: => Nothing): Boolean = {
+        if (datatype == OntologyConstants.Xsd.Boolean) {
+            allCatch.opt(value.toBoolean).getOrElse(errorFun)
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+     * The integer value of this literal.
+     *
+     * @param errorFun a function that throws an exception. It will
+     *                 be called if this literal is not an integer.
+     */
+    def integerValue(errorFun: => Nothing): BigInt = {
+        if (OntologyConstants.Xsd.integerTypes.contains(datatype)) {
+            allCatch.opt(BigInt(value)).getOrElse(errorFun)
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+     * The decimal value of this literal.
+     *
+     * @param errorFun a function that throws an exception. It will
+     *                 be called if this literal is not a decimal.
+     */
+    def decimalValue(errorFun: => Nothing): BigDecimal = {
+        if (datatype == OntologyConstants.Xsd.Decimal) {
+            allCatch.opt(BigDecimal(value)).getOrElse(errorFun)
+        } else {
+            errorFun
+        }
+    }
 }
 
 /**
@@ -128,6 +183,16 @@ trait RdfModel {
      * @param context the IRI of a named graph, or `None` to match any graph.
      */
     def remove(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Unit
+
+    /**
+     * Removes a statement from the model.
+     */
+    def removeStatement(statement: Statement): Unit
+
+    /**
+     * Returns the set of all statements in the model.
+     */
+    def getStatements: Set[Statement]
 
     /**
      * Returns statements that match a pattern.

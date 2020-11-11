@@ -38,7 +38,12 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                 // Make the request message.
                 val requestMessageFuture: Future[MetadataGetRequestV2] = for {
                     requestingUser <- getUserADM(requestContext)
-                    project <- getProjectADM(projectIri, requestingUser)
+
+                    project <- getProjectADM(
+                        projectIri = projectIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
                 } yield MetadataGetRequestV2(
                     projectADM = project,
                     featureFactoryConfig = featureFactoryConfig,
@@ -77,7 +82,12 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     // Make the request message.
                     val requestMessageFuture: Future[MetadataPutRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                        project <- getProjectADM(projectIri, requestingUser)
+
+                        project <- getProjectADM(
+                            projectIri = projectIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )
                     } yield MetadataPutRequestV2(
                         rdfModel = requestModel,
                         projectADM = project,
