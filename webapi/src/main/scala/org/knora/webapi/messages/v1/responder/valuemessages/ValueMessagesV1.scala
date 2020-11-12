@@ -339,13 +339,15 @@ case class UnverifiedValueV1(newValueIri: IRI, value: UpdateValueV1)
 /**
  * Requests verification that new values were created.
  *
- * @param resourceIri      the IRI of the resource in which the values should have been created.
- * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedValueV1]] objects
- *                         describing the values that should have been created for each property.
- * @param userProfile      the profile of the user making the request.
+ * @param resourceIri          the IRI of the resource in which the values should have been created.
+ * @param unverifiedValues     a [[Map]] of property IRIs to [[UnverifiedValueV1]] objects
+ *                             describing the values that should have been created for each property.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
 case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
                                                 unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]],
+                                                featureFactoryConfig: FeatureFactoryConfig,
                                                 userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
@@ -389,6 +391,7 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
  * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
  *                                         in values) to the IRIs that will be used for those resources.
  * @param creationDate                     an xsd:dateTimeStamp that will be attached to the values.
+ * @param featureFactoryConfig             the feature factory configuration.
  * @param userProfile                      the user that is creating the values.
  */
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
@@ -398,6 +401,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
                                                          clientResourceIDsToResourceIris: Map[String, IRI],
                                                          creationDate: Instant,
+                                                         featureFactoryConfig: FeatureFactoryConfig,
                                                          userProfile: UserADM,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 

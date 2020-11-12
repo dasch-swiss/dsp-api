@@ -183,6 +183,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     limitToProject = limitToProject,
                     limitToResourceClass = limitToResourceClass,
                     limitToStandoffClass = limitToStandoffClass,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -236,6 +237,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     limitToProject = limitToProject,
                     limitToResourceClass = limitToResourceClass,
                     limitToStandoffClass,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     targetSchema = targetSchema,
                     schemaOptions = schemaOptions
@@ -265,7 +267,11 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         requestContext = requestContext,
                         featureFactoryConfig = featureFactoryConfig
                     )
-                } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                } yield GravsearchCountRequestV2(
+                    constructQuery = constructQuery,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
@@ -291,7 +297,11 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             requestContext = requestContext,
                             featureFactoryConfig = featureFactoryConfig
                         )
-                    } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                    } yield GravsearchCountRequestV2(
+                        constructQuery = constructQuery,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessage,
@@ -324,6 +334,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     constructQuery = constructQuery,
                     targetSchema = targetSchema,
                     schemaOptions = schemaOptions,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -358,6 +369,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         constructQuery = constructQuery,
                         targetSchema = targetSchema,
                         schemaOptions = schemaOptions,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser
                     )
 
@@ -401,6 +413,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     searchValue = searchString,
                     limitToProject = limitToProject,
                     limitToResourceClass = limitToResourceClass,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -448,6 +461,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     limitToProject = limitToProject,
                     limitToResourceClass = limitToResourceClass,
                     targetSchema = targetSchema,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 

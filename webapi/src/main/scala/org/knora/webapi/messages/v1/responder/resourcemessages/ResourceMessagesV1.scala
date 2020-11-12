@@ -158,37 +158,51 @@ sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1
 /**
  * Requests a description of a resource. A successful response will be a [[ResourceInfoResponseV1]].
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userProfile the profile of the user making the request.
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class ResourceInfoGetRequestV1(iri: IRI,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests a full description of a resource, along with its properties, their values, incoming references, and other
  * information. A successful response will be a [[ResourceFullResponseV1]].
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userADM     the profile of the user making the request.
- * @param getIncoming if `true`, information about incoming references will be included in the response.
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
+ * @param getIncoming          if `true`, information about incoming references will be included in the response.
  */
-case class ResourceFullGetRequestV1(iri: IRI, userADM: UserADM, getIncoming: Boolean = true) extends ResourcesResponderRequestV1
+case class ResourceFullGetRequestV1(iri: IRI,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    userADM: UserADM,
+                                    getIncoming: Boolean = true) extends ResourcesResponderRequestV1
 
 /**
  * Requests a [[ResourceContextResponseV1]] describing the context of a resource (i.e. the resources that are part of it).
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userProfile the profile of the user making the request.
- * @param resinfo     if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param resinfo              if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
  */
-case class ResourceContextGetRequestV1(iri: IRI, userProfile: UserADM, resinfo: Boolean) extends ResourcesResponderRequestV1
+case class ResourceContextGetRequestV1(iri: IRI,
+                                       featureFactoryConfig: FeatureFactoryConfig,
+                                       userProfile: UserADM,
+                                       resinfo: Boolean) extends ResourcesResponderRequestV1
 
 /**
  * Requests the permissions for the current user on the given resource. A successful response will be a [[ResourceRightsResponseV1]].
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userProfile the profile of the user making the request.
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class ResourceRightsGetRequestV1(iri: IRI,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests a search for resources matching the given string.
@@ -280,11 +294,15 @@ case class OneOfMultipleResourcesCreateResponseV1(clientResourceID: String, reso
  * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
  * internally by Knora, and is not part of Knora API v1. A successful response will be a [[ResourceCheckClassResponseV1]].
  *
- * @param resourceIri the IRI of the resource.
- * @param owlClass    the IRI of the OWL class to compare the resource's class to.
- * @param userProfile the profile of the user making the request.
+ * @param resourceIri          the IRI of the resource.
+ * @param owlClass             the IRI of the OWL class to compare the resource's class to.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class ResourceCheckClassRequestV1(resourceIri: IRI,
+                                       owlClass: IRI,
+                                       featureFactoryConfig: FeatureFactoryConfig,
+                                       userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests that a resource is marked as deleted. A successful response will be a [[ResourceDeleteResponseV1]].
@@ -394,9 +412,12 @@ case class ResourceCreateResponseV1(res_id: IRI,
 /**
  * Requests the properties of a given resource.
  *
- * @param iri the iri of the given resource.
+ * @param iri                  the iri of the given resource.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class PropertiesGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class PropertiesGetRequestV1(iri: IRI,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  userProfile: UserADM) extends ResourcesResponderRequestV1
 
 
 // TODO: refactor PropertiesGetResponseV1 (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)

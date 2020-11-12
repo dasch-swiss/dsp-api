@@ -79,10 +79,32 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             val validResIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: $resIri"))
 
             requestType match {
-                case "info" => ResourceInfoGetRequestV1(iri = validResIri, userProfile = userADM)
-                case "rights" => ResourceRightsGetRequestV1(validResIri, userADM)
-                case "context" => ResourceContextGetRequestV1(validResIri, userADM, resinfo)
-                case "" => ResourceFullGetRequestV1(validResIri, userADM)
+                case "info" => ResourceInfoGetRequestV1(
+                    iri = validResIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userADM
+                )
+
+                case "rights" => ResourceRightsGetRequestV1(
+                    iri = validResIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userADM
+                )
+
+                case "context" => ResourceContextGetRequestV1(
+                    iri = validResIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userADM,
+                    resinfo = resinfo
+                )
+
+                case "" =>
+                    ResourceFullGetRequestV1(
+                        iri = validResIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        userADM = userADM
+                    )
+
                 case other => throw BadRequestException(s"Invalid request type: $other")
             }
         }
@@ -129,6 +151,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                 mappingIri = mappingIri,
                                                 acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
                                                 userProfile = userProfile,
+                                                featureFactoryConfig = featureFactoryConfig,
                                                 settings = settings,
                                                 responderManager = responderManager,
                                                 log = log
@@ -362,7 +385,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         def makeGetPropertiesRequestMessage(resIri: IRI, userADM: UserADM): PropertiesGetRequestV1 = {
-            PropertiesGetRequestV1(resIri, userADM)
+            PropertiesGetRequestV1(
+                iri = resIri,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userADM
+            )
         }
 
         def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userADM: UserADM): ResourceDeleteRequestV1 = {
@@ -1045,7 +1072,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                     featureFactoryConfig = featureFactoryConfig
                                 )
                                 resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
-                            } yield ResourceFullGetRequestV1(resIri, userADM)
+                            } yield ResourceFullGetRequestV1(
+                                iri = resIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userADM = userADM
+                            )
                         case other => throw BadRequestException(s"Invalid request type: $other")
                     }
 

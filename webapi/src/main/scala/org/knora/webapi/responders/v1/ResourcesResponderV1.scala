@@ -65,16 +65,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
      */
     def receive(msg: ResourcesResponderRequestV1) = msg match {
-        case ResourceInfoGetRequestV1(resourceIri, userProfile) => getResourceInfoResponseV1(resourceIri, userProfile)
-        case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => getFullResponseV1(resourceIri, userProfile, getIncoming)
-        case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => getContextResponseV1(resourceIri, userProfile, resinfo)
-        case ResourceRightsGetRequestV1(resourceIri, userProfile) => getRightsResponseV1(resourceIri, userProfile)
+        case ResourceInfoGetRequestV1(resourceIri, featureFactoryConfig, userProfile) => getResourceInfoResponseV1(resourceIri, featureFactoryConfig, userProfile)
+        case ResourceFullGetRequestV1(resourceIri, featureFactoryConfig, userProfile, getIncoming) => getFullResponseV1(resourceIri, featureFactoryConfig, userProfile, getIncoming)
+        case ResourceContextGetRequestV1(resourceIri, featureFactoryConfig, userProfile, resinfo) => getContextResponseV1(resourceIri, featureFactoryConfig, userProfile, resinfo)
+        case ResourceRightsGetRequestV1(resourceIri, featureFactoryConfig, userProfile) => getRightsResponseV1(resourceIri, featureFactoryConfig, userProfile)
         case graphDataGetRequest: GraphDataGetRequestV1 => getGraphDataResponseV1(graphDataGetRequest)
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, file, projectIri, featureFactoryConfig, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, file, projectIri, featureFactoryConfig, userProfile, apiRequestID)
         case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, featureFactoryConfig, userProfile, apiRequestID) => createMultipleNewResources(resourcesToCreate, projectIri, featureFactoryConfig, userProfile, apiRequestID)
-        case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => checkResourceClass(resourceIri, owlClass, userProfile)
-        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile)
+        case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, featureFactoryConfig, userProfile: UserADM) => checkResourceClass(resourceIri, owlClass, featureFactoryConfig, userProfile)
+        case PropertiesGetRequestV1(resourceIri: IRI, featureFactoryConfig, userProfile: UserADM) => getPropertiesV1(resourceIri = resourceIri, featureFactoryConfig = featureFactoryConfig, userProfile = userProfile)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => deleteResourceV1(resourceDeleteRequest)
         case ChangeResourceLabelRequestV1(resourceIri, label, featureFactoryConfig, userProfile, apiRequestID) => changeResourceLabelV1(resourceIri, label, apiRequestID, featureFactoryConfig, userProfile)
         case UnexpectedMessageRequest() => makeFutureOfUnit
@@ -406,10 +406,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param userProfile the profile of the user making the request.
      * @return a [[ResourceInfoResponseV1]] containing a representation of the resource.
      */
-    private def getResourceInfoResponseV1(resourceIri: IRI, userProfile: UserADM): Future[ResourceInfoResponseV1] = {
+    private def getResourceInfoResponseV1(resourceIri: IRI,
+                                          featureFactoryConfig: FeatureFactoryConfig,
+                                          userProfile: UserADM): Future[ResourceInfoResponseV1] = {
         for {
             (userPermissions, resInfo) <- getResourceInfoV1(
                 resourceIri = resourceIri,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile,
                 queryOntology = true
             )
@@ -433,7 +436,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param getIncoming if `true` (the default), queries the resource's inconing references.
      * @return a [[ResourceFullResponseV1]].
      */
-    private def getFullResponseV1(resourceIri: IRI, userProfile: UserADM, getIncoming: Boolean = true): Future[ResourceFullResponseV1] = {
+    private def getFullResponseV1(resourceIri: IRI,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  userProfile: UserADM,
+                                  getIncoming: Boolean = true): Future[ResourceFullResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
         // Query resource info, resource properties, and incoming references in parallel.
@@ -445,6 +451,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         // Get a resource info containing basic information about the resource. Do not query the ontology here, because we will query it below.
         val resourceInfoFuture = getResourceInfoV1(
             resourceIri = resourceIri,
+            featureFactoryConfig = featureFactoryConfig,
             userProfile = userProfile,
             queryOntology = false
         )
@@ -504,7 +511,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             val rowsForResInfo = rows.filterNot(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                             for {
-                                (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(incomingIri, rowsForResInfo, userProfile, queryOntology = false)
+                                (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(
+                                    resourceIri = incomingIri,
+                                    resInfoResponseRows = rowsForResInfo,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    userProfile = userProfile,
+                                    queryOntology = false
+                                )
 
                                 // Does the user have permission to see the referring resource?
                                 incomingV1s: Vector[IncomingV1] <- incomingResPermission match {
@@ -530,6 +543,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                         valueProps = linkValueProps,
                                                         projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
                                                         responderManager = responderManager,
+                                                        featureFactoryConfig = featureFactoryConfig,
                                                         userProfile = userProfile
                                                     )
 
@@ -654,6 +668,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 propertyInfoMap = entityInfoResponse.propertyInfoMap,
                 resourceEntityInfoMap = entityInfoResponse.resourceClassInfoMap,
                 propsAndCardinalities = propsAndCardinalities,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile
             )
 
@@ -739,12 +754,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Returns an instance of [[ResourceContextResponseV1]] describing the context of a resource, in Knora API v1 format.
      *
-     * @param resourceIri the IRI of the resource to be queried.
-     * @param userProfile the profile of the user making the request.
-     * @param resinfo     a flag if resinfo should be retrieved or not.
+     * @param resourceIri          the IRI of the resource to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
+     * @param resinfo              a flag if resinfo should be retrieved or not.
      * @return a [[ResourceContextResponseV1]] describing the context of the resource.
      */
-    private def getContextResponseV1(resourceIri: IRI, userProfile: UserADM, resinfo: Boolean): Future[ResourceContextResponseV1] = {
+    private def getContextResponseV1(resourceIri: IRI,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     userProfile: UserADM,
+                                     resinfo: Boolean): Future[ResourceContextResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
         /**
@@ -863,6 +882,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Get the resource info even if the user didn't ask for it, so we can check its permissions.
             (userPermission, resInfoV1) <- getResourceInfoV1(
                 resourceIri = resourceIri,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile,
                 queryOntology = true
             )
@@ -887,6 +907,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     for {
                         (containingResourcePermissionCode, resInfoV1) <- getResourceInfoV1(
                             resourceIri = containingResourceIri,
+                            featureFactoryConfig = featureFactoryConfig,
                             userProfile = userProfile,
                             queryOntology = true
                         )
@@ -998,6 +1019,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 propsV1: Seq[PropertyV1] <- getResourceProperties(
                                     resourceIri = regionIri,
                                     maybeResourceTypeIri = Some(resClass),
+                                    featureFactoryConfig = featureFactoryConfig,
                                     userProfile = userProfile
                                 )
 
@@ -1088,9 +1110,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param userProfile the profile of the user making the request.
      * @return a [[ResourceRightsResponseV1]] describing the permissions on the resource.
      */
-    private def getRightsResponseV1(resourceIri: IRI, userProfile: UserADM): Future[ResourceRightsResponseV1] = {
+    private def getRightsResponseV1(resourceIri: IRI,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    userProfile: UserADM): Future[ResourceRightsResponseV1] = {
         for {
-            (userPermission, _) <- getResourceInfoV1(resourceIri, userProfile, queryOntology = false)
+            (userPermission, _) <- getResourceInfoV1(
+                resourceIri = resourceIri,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile,
+                queryOntology = false
+            )
 
             // Construct an API response.
             rightsResponse = ResourceRightsResponseV1(rights = userPermission)
@@ -1402,6 +1431,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             values = resourceCreateRequest.values,
                             convertedFile = resourceCreateRequest.file,
                             clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
+                            featureFactoryConfig = featureFactoryConfig,
                             userProfile = requestingUser
                         )
 
@@ -1435,6 +1465,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                             creationDate = creationDate,
                             fileValues = fileValues,
+                            featureFactoryConfig = featureFactoryConfig,
                             userProfile = requestingUser,
                             apiRequestID = apiRequestID
                         )
@@ -1525,6 +1556,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      *                                           be generated for links to missing resources.
      * @param convertedFile                      an already converted file to be attached to the resource.
      * @param clientResourceIDsToResourceClasses for each client resource ID, the IRI of the resource's class. Used only if `linkTargetsAlreadyExist` is false.
+     * @param featureFactoryConfig               the feature factory configuration.
      * @param userProfile                        the profile of the user making the request.
      * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
      */
@@ -1538,6 +1570,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                                   errorFun = { errorMsg => throw BadRequestException(errorMsg) }
                               ),
+                              featureFactoryConfig: FeatureFactoryConfig,
                               userProfile: UserADM): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
         for {
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
@@ -1578,6 +1611,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             checkTargetClassResponse <- checkResourceClass(
                                                 resourceIri = linkUpdate.targetResourceIri,
                                                 owlClass = propertyObjectClassConstraint,
+                                                featureFactoryConfig = featureFactoryConfig,
                                                 userProfile = userProfile
                                             ).mapTo[ResourceCheckClassResponseV1]
 
@@ -1656,6 +1690,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
      *                                         in values passed to this method) to the IRIs that will be used for
      *                                         those resources.
+     * @param featureFactoryConfig             the feature factory configuration.
      * @param userProfile                      the profile of the user making the request.
      * @param apiRequestID                     the the ID of the API request.
      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]] returns response of generation of SPARQL for multiple values.
@@ -1668,6 +1703,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
                                              clientResourceIDsToResourceIris: Map[String, IRI],
                                              creationDate: Instant,
+                                             featureFactoryConfig: FeatureFactoryConfig,
                                              userProfile: UserADM,
                                              apiRequestID: UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         for {
@@ -1680,6 +1716,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 values = values ++ fileValues,
                 clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                 creationDate = creationDate,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             ))
@@ -1716,6 +1753,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param createNewResourceSparql         Sparql query to create the resource .
      * @param generateSparqlForValuesResponse Sparql statement for creation of values of resource.
      * @param projectADM                      the project in which the resource was created.
+     * @param featureFactoryConfig            the feature factory configuration.
      * @param userProfile                     the profile of the user making the request.
      * @return a [[ResourceCreateResponseV1]] containing information about the created resource .
      */
@@ -1724,6 +1762,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                               createNewResourceSparql: String,
                               generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
                               projectADM: ProjectADM,
+                              featureFactoryConfig: FeatureFactoryConfig,
                               userProfile: UserADM): Future[ResourceCreateResponseV1] = {
         // Verify that the resource was created.
         for {
@@ -1743,6 +1782,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                 resourceIri = resourceIri,
                 unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile
             )
 
@@ -1771,16 +1811,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Does pre-update checks, creates a resource, and verifies that it was created.
      *
-     * @param resourceClassIri the IRI of the resource class.
-     * @param projectADM       the project in which the resource should be created.
-     * @param label            the `rdfs:label` of the resource to be created.
-     * @param resourceIri      the IRI of the resource to be created.
-     * @param values           the values to be attached to the resource.
-     * @param file             a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
-     * @param creatorIri       the creator of the resource to be created.
-     * @param namedGraph       the named graph the resource belongs to.
-     * @param requestingUser   the user making the request.
-     * @param apiRequestID     the request ID used for locking the resource.
+     * @param resourceClassIri     the IRI of the resource class.
+     * @param projectADM           the project in which the resource should be created.
+     * @param label                the `rdfs:label` of the resource to be created.
+     * @param resourceIri          the IRI of the resource to be created.
+     * @param values               the values to be attached to the resource.
+     * @param file                 a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
+     * @param creatorIri           the creator of the resource to be created.
+     * @param namedGraph           the named graph the resource belongs to.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
+     * @param apiRequestID         the request ID used for locking the resource.
      * @return a [[ResourceCreateResponseV1]] containing information about the created resource.
      */
     def createResourceAndCheck(resourceClassIri: IRI,
@@ -1791,6 +1832,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                file: Option[FileValueV1],
                                creatorIri: IRI,
                                namedGraph: IRI,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         val fileValueContent: Option[FileValueContentV2] = file.map(_.toFileValueContentV2)
@@ -1850,6 +1892,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 propertyInfoMap = propertyInfoMap,
                 values = values,
                 convertedFile = file,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = requestingUser
             )
 
@@ -1867,6 +1910,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 fileValues = fileValues,
                 clientResourceIDsToResourceIris = Map.empty[String, IRI],
                 creationDate = creationDate,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = requestingUser,
                 apiRequestID = apiRequestID
             )
@@ -1898,6 +1942,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 createNewResourceSparql = createNewResourceSparql,
                 generateSparqlForValuesResponse = generateSparqlForValuesResponse,
                 projectADM = projectADM,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = requestingUser
             )
         } yield apiResponse
@@ -1993,6 +2038,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     file = file,
                     creatorIri = userIri,
                     namedGraph = namedGraph,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = userProfile,
                     apiRequestID = apiRequestID
                 )
@@ -2011,7 +2057,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         def makeTaskFuture(userIri: IRI): Future[ResourceDeleteResponseV1] = {
             for {
                 // Check that the user has permission to delete the resource.
-                (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userADM, queryOntology = false)
+                (permissionCode, resourceInfo) <- getResourceInfoV1(
+                    resourceIri = resourceDeleteRequest.resourceIri,
+                    featureFactoryConfig = resourceDeleteRequest.featureFactoryConfig,
+                    userProfile = resourceDeleteRequest.userADM,
+                    queryOntology = false
+                )
 
                 _ = if (!PermissionUtilADM.impliesPermissionCodeV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
@@ -2077,16 +2128,25 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Checks whether a resource belongs to a certain OWL class or to a subclass of that class.
      *
-     * @param resourceIri the IRI of the resource to be checked.
-     * @param owlClass    the IRI of the OWL class to compare the resource's class to.
-     * @param userProfile the profile of the user making the request.
+     * @param resourceIri          the IRI of the resource to be checked.
+     * @param owlClass             the IRI of the OWL class to compare the resource's class to.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
      * @return a [[ResourceCheckClassResponseV1]].
      */
-    private def checkResourceClass(resourceIri: IRI, owlClass: IRI, userProfile: UserADM): Future[ResourceCheckClassResponseV1] = {
+    private def checkResourceClass(resourceIri: IRI,
+                                   owlClass: IRI,
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   userProfile: UserADM): Future[ResourceCheckClassResponseV1] = {
 
         for {
             // Check that the user has permission to view the resource.
-            (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
+            (permissionCode, resourceInfo) <- getResourceInfoV1(
+                resourceIri = resourceIri,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile,
+                queryOntology = false
+            )
 
             _ = if (!PermissionUtilADM.impliesPermissionCodeV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)) {
                 throw ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri")
@@ -2122,7 +2182,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             for {
                 // get the resource's permissions
-                (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
+                (permissionCode, resourceInfo) <- getResourceInfoV1(
+                    resourceIri = resourceIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userProfile,
+                    queryOntology = false
+                )
 
                 // check if the given user may change its label
                 _ = if (!PermissionUtilADM.impliesPermissionCodeV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
@@ -2201,14 +2266,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Returns a [[ResourceInfoV1]] describing a resource.
      *
-     * @param resourceIri   the IRI of the resource to be queried.
-     * @param userProfile   the user that is making the request.
-     * @param queryOntology if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
-     *                      will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
-     *                      will be empty.
+     * @param resourceIri          the IRI of the resource to be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the user that is making the request.
+     * @param queryOntology        if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
+     *                             will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
+     *                             will be empty.
      * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
      */
-    private def getResourceInfoV1(resourceIri: IRI, userProfile: UserADM, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
+    private def getResourceInfoV1(resourceIri: IRI,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  userProfile: UserADM,
+                                  queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
         for {
             sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourceInfo(
                 triplestore = settings.triplestoreType,
@@ -2216,7 +2285,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             ).toString())
             resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             resInfoResponseRows = resInfoResponse.results.bindings
-            resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
+
+            resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(
+                resourceIri = resourceIri,
+                resInfoResponseRows = resInfoResponseRows,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile,
+                queryOntology = queryOntology
+            )
         } yield resInfo
     }
 
@@ -2224,11 +2300,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      *
      * Queries the properties for the given resource.
      *
-     * @param resourceIri the IRI of the given resource.
-     * @param userProfile the profile of the user making the request.
+     * @param resourceIri          the IRI of the given resource.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
      * @return a [[PropertiesGetResponseV1]] representing the properties of the given resource.
      */
-    private def getPropertiesV1(resourceIri: IRI, userProfile: UserADM): Future[PropertiesGetResponseV1] = {
+    private def getPropertiesV1(resourceIri: IRI,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                userProfile: UserADM): Future[PropertiesGetResponseV1] = {
 
         for {
             // get resource class of the specified resource
@@ -2241,7 +2320,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
             resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
 
-            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
+            properties: Seq[PropertyV1] <- getResourceProperties(
+                resourceIri = resourceIri,
+                maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")),
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
 
             propertiesGetV1: Seq[PropertyGetV1] = properties.map {
                 prop => convertPropertyV1toPropertyGetV1(prop)
@@ -2259,10 +2343,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param maybeResourceTypeIri an optional IRI representing the resource's class. If provided, an additional query will be done
      *                             to get ontology-based information, such as labels and cardinalities, which will be included in
      *                             the returned [[PropertyV1]] objects.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param userProfile          the profile of the user making the request.
      * @return a [[Seq]] of [[PropertyV1]] objects representing the properties that have values for the resource.
      */
-    private def getResourceProperties(resourceIri: IRI, maybeResourceTypeIri: Option[IRI], userProfile: UserADM): Future[Seq[PropertyV1]] = {
+    private def getResourceProperties(resourceIri: IRI,
+                                      maybeResourceTypeIri: Option[IRI],
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      userProfile: UserADM): Future[Seq[PropertyV1]] = {
         for {
 
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
@@ -2300,6 +2388,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 propertyInfoMap = propertyInfoMap,
                 resourceEntityInfoMap = resourceEntityInfoMap,
                 propsAndCardinalities = propsAndCardinalities,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile
             )
         } yield queryResult
@@ -2309,15 +2398,20 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * Converts a SPARQL query result into a [[ResourceInfoV1]]. Expects the query result to contain columns called `p` (predicate),
      * `o` (object), `objPred` (file value predicate, if `o` is a file value), and `objObj` (file value object).
      *
-     * @param resourceIri         the IRI of the resource.
-     * @param resInfoResponseRows the SPARQL query result.
-     * @param userProfile         the user that is making the request.
-     * @param queryOntology       if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
-     *                            will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
-     *                            will be empty.
+     * @param resourceIri          the IRI of the resource.
+     * @param resInfoResponseRows  the SPARQL query result.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the user that is making the request.
+     * @param queryOntology        if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
+     *                             will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
+     *                             will be empty.
      * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
      */
-    private def makeResourceInfoV1(resourceIri: IRI, resInfoResponseRows: Seq[VariableResultsRow], userProfile: UserADM, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
+    private def makeResourceInfoV1(resourceIri: IRI,
+                                   resInfoResponseRows: Seq[VariableResultsRow],
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   userProfile: UserADM,
+                                   queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
         if (resInfoResponseRows.isEmpty) {
@@ -2360,6 +2454,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 valueProps = fileValueProps,
                                 projectShortcode = projectShortcode,
                                 responderManager = responderManager,
+                                featureFactoryConfig = featureFactoryConfig,
                                 userProfile = userProfile
                             )
 
@@ -2478,6 +2573,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      *                                ontology-based information for linking properties in the returned [[PropertyV1]] objects.
      * @param propsAndCardinalities   a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
      *                                empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
+     * @param featureFactoryConfig    the feature factory configuration.
      * @param userProfile             the profile of the user making the request.
      * @return a [[Seq]] of [[PropertyV1]] objects.
      */
@@ -2487,6 +2583,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                          propertyInfoMap: Map[IRI, PropertyInfoV1],
                                          resourceEntityInfoMap: Map[IRI, ClassInfoV1],
                                          propsAndCardinalities: Map[IRI, KnoraCardinalityInfo],
+                                         featureFactoryConfig: FeatureFactoryConfig,
                                          userProfile: UserADM): Future[Seq[PropertyV1]] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
@@ -2564,6 +2661,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 valueProps = valueProps,
                                 projectShortcode = projectShortcode,
                                 responderManager = responderManager,
+                                featureFactoryConfig = featureFactoryConfig,
                                 userProfile = userProfile
                             )
 
@@ -2682,6 +2780,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                     valueProps = linkValueProps,
                                     projectShortcode = projectShortcode,
                                     responderManager = responderManager,
+                                    featureFactoryConfig = featureFactoryConfig,
                                     userProfile = userProfile
                                 )
 

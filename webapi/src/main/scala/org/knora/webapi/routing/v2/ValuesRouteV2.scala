@@ -96,6 +96,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     valueUuid = Some(valueUuid),
                     versionDate = versionDate,
                     targetSchema = targetSchema,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 

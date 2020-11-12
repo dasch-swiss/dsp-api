@@ -875,6 +875,7 @@ object ConstructResponseUtilV2 {
      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
      * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
      * @param responderManager          the Knora responder manager.
+     * @param featureFactoryConfig      the feature factory configuration.
      * @param requestingUser            the user making the request.
      * @return a [[TextValueContentV2]].
      */
@@ -885,6 +886,7 @@ object ConstructResponseUtilV2 {
                                        mappings: Map[IRI, MappingAndXSLTransformation],
                                        queryStandoff: Boolean,
                                        responderManager: ActorRef,
+                                       featureFactoryConfig: FeatureFactoryConfig,
                                        requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         // Any knora-base:TextValue may have a language
         val valueLanguageOption: Option[String] = valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
@@ -914,7 +916,12 @@ object ConstructResponseUtilV2 {
                     // concatenated together and returned in a GetStandoffResponseV2.
 
                     for {
-                        standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.subjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
+                        standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(
+                            resourceIri = resourceIri,
+                            valueIri = valueObject.subjectIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )).mapTo[GetStandoffResponseV2]
                     } yield standoff ++ standoffResponse.standoff
                 } else {
                     // We're not supposed to get any more standoff here, either because we have all of it already,
@@ -1108,6 +1115,7 @@ object ConstructResponseUtilV2 {
                     mappings = mappings,
                     queryStandoff = queryStandoff,
                     responderManager = responderManager,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 

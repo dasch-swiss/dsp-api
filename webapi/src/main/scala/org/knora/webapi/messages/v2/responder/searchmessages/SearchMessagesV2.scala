@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder.searchmessages
 
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
 import org.knora.webapi.messages.util.search.ConstructQuery
@@ -41,12 +42,14 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
  * @param searchValue          the values to search for.
  * @param limitToProject       limit search to given project.
  * @param limitToResourceClass limit search to given resource class.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class FullTextSearchCountRequestV2(searchValue: String,
                                         limitToProject: Option[IRI],
                                         limitToResourceClass: Option[SmartIri],
                                         limitToStandoffClass: Option[SmartIri],
+                                        featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -58,6 +61,7 @@ case class FullTextSearchCountRequestV2(searchValue: String,
  * @param limitToResourceClass limit search to given resource class.
  * @param targetSchema         the target API schema.
  * @param schemaOptions        the schema options submitted with the request.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class FulltextSearchRequestV2(searchValue: String,
@@ -67,6 +71,7 @@ case class FulltextSearchRequestV2(searchValue: String,
                                    limitToStandoffClass: Option[SmartIri],
                                    targetSchema: ApiV2Schema,
                                    schemaOptions: Set[SchemaOption],
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM) extends SearchResponderRequestV2
 
 
@@ -74,25 +79,29 @@ case class FulltextSearchRequestV2(searchValue: String,
  *
  * Requests the amount of results (resources count) of a given Gravsearch query. A successful response will be a [[ResourceCountV2]].
  *
- * @param constructQuery a Sparql construct query provided by the client.
- * @param requestingUser the user making the request.
+ * @param constructQuery       a Sparql construct query provided by the client.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 
 case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
+                                    featureFactoryConfig: FeatureFactoryConfig,
                                     requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
  *
  * Performs a Gravsearch query. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
  *
- * @param constructQuery a Sparql construct query provided by the client.
- * @param targetSchema   the target API schema.
- * @param schemaOptions  the schema options submitted with the request.
- * @param requestingUser the user making the request.
+ * @param constructQuery       a Sparql construct query provided by the client.
+ * @param targetSchema         the target API schema.
+ * @param schemaOptions        the schema options submitted with the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class GravsearchRequestV2(constructQuery: ConstructQuery,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM) extends SearchResponderRequestV2
 
 
@@ -102,11 +111,13 @@ case class GravsearchRequestV2(constructQuery: ConstructQuery,
  * @param searchValue          the values to search for.
  * @param limitToProject       limit search to given project.
  * @param limitToResourceClass limit search to given resource class.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class SearchResourceByLabelCountRequestV2(searchValue: String,
                                                limitToProject: Option[IRI],
                                                limitToResourceClass: Option[SmartIri],
+                                               featureFactoryConfig: FeatureFactoryConfig,
                                                requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -117,6 +128,7 @@ case class SearchResourceByLabelCountRequestV2(searchValue: String,
  * @param limitToProject       limit search to given project.
  * @param limitToResourceClass limit search to given resource class.
  * @param targetSchema         the schema of the response.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class SearchResourceByLabelRequestV2(searchValue: String,
@@ -124,6 +136,7 @@ case class SearchResourceByLabelRequestV2(searchValue: String,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
                                           targetSchema: ApiV2Schema,
+                                          featureFactoryConfig: FeatureFactoryConfig,
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -145,13 +158,14 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2
 /**
  * Requests resources of the specified class from the specified project.
  *
- * @param projectIri      the IRI of the project.
- * @param resourceClass   the IRI of the resource class, in the complex schema.
- * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
- * @param page            the page number of the results page to be returned.
- * @param targetSchema    the schema of the response.
- * @param schemaOptions   the schema options submitted with the request.
- * @param requestingUser  the user making the request.
+ * @param projectIri           the IRI of the project.
+ * @param resourceClass        the IRI of the resource class, in the complex schema.
+ * @param orderByProperty      the IRI of the property that the resources are to be ordered by, in the complex schema.
+ * @param page                 the page number of the results page to be returned.
+ * @param targetSchema         the schema of the response.
+ * @param schemaOptions        the schema options submitted with the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
                                                      resourceClass: SmartIri,
@@ -159,4 +173,5 @@ case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
                                                      page: Int,
                                                      targetSchema: ApiV2Schema,
                                                      schemaOptions: Set[SchemaOption],
+                                                     featureFactoryConfig: FeatureFactoryConfig,
                                                      requestingUser: UserADM) extends SearchResponderRequestV2

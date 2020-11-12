@@ -56,8 +56,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
     private val imagesProject = SharedTestDataADM.imagesProject
     private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
-    private val imagesProjectAdminGroup = SharedTestDataADM.imagesProjectAdminGroup
-    private val imagesProjectMemberGroup = SharedTestDataADM.imagesProjectMemberGroup
 
     private val rootUser = SharedTestDataADM.rootUser
 
@@ -65,7 +63,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         "asked about all groups" should {
             "return a list" in {
-                responderManager ! GroupsGetRequestADM(SharedTestDataADM.rootUser)
+                responderManager ! GroupsGetRequestADM(
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+
                 val response = expectMsgType[GroupsGetResponseADM](timeout)
                 // println(response.users)
                 response.groups.nonEmpty should be (true)
@@ -75,11 +77,20 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
-                responderManager ! GroupGetRequestADM(imagesReviewerGroup.id, rootUser)
+                responderManager ! GroupGetRequestADM(
+                    groupIri = imagesReviewerGroup.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = rootUser
+                )
+
                 expectMsg(GroupGetResponseADM(imagesReviewerGroup))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                responderManager ! GroupGetRequestADM("http://rdfh.ch/groups/notexisting", rootUser)
+                responderManager ! GroupGetRequestADM(
+                    groupIri = "http://rdfh.ch/groups/notexisting",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = rootUser
+                )
 
                 expectMsgPF(timeout) {
                     case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -99,8 +110,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                         project = SharedTestDataADM.IMAGES_PROJECT_IRI,
                         status = true,
                         selfjoin = false),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
 
                 val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
@@ -124,8 +136,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                         project = SharedTestDataADM.IMAGES_PROJECT_IRI,
                         status = true,
                         selfjoin = false),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
 
                 expectMsgPF(timeout) {
@@ -143,8 +156,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                         project = SharedTestDataADM.IMAGES_PROJECT_IRI,
                         status = true,
                         selfjoin = false),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Group name cannot be empty")))
 
@@ -156,18 +170,20 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                         project = "",
                         status = true,
                         selfjoin = false),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
             }
 
             "UPDATE a group" in {
                 responderManager ! GroupChangeRequestADM(
-                    newGroupIri.get,
-                    ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("""UpdatedDescription with "quotes" and <html tag>""")),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    groupIri = newGroupIri.get,
+                    changeGroupRequest = ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("""UpdatedDescription with "quotes" and <html tag>""")),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
 
                 val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
@@ -184,8 +200,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 responderManager ! GroupChangeRequestADM(
                     groupIri = "http://rdfh.ch/groups/notexisting",
                     ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
 
                 expectMsgPF(timeout) {
@@ -195,10 +212,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "return 'BadRequest' if the new group name already exists inside the project" in {
                 responderManager ! GroupChangeRequestADM(
-                    newGroupIri.get,
-                    ChangeGroupApiRequestADM(Some("Image reviewer"), Some("UpdatedDescription")),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    groupIri = newGroupIri.get,
+                    changeGroupRequest = ChangeGroupApiRequestADM(Some("Image reviewer"), Some("UpdatedDescription")),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
 
                 expectMsgPF(timeout) {
@@ -217,6 +235,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             "return all members of a group identified by IRI" in {
                 responderManager ! GroupMembersGetRequestADM(
                     groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.rootUser
                 )
 
@@ -231,6 +250,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             "remove all members when group is deactivated" in {
                 responderManager ! GroupMembersGetRequestADM(
                     groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.rootUser
                 )
 
@@ -239,9 +259,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
                 responderManager ! GroupChangeStatusRequestADM(
                     groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-                    ChangeGroupApiRequestADM(status = Some(false)),
-                    SharedTestDataADM.imagesUser01,
-                    UUID.randomUUID
+                    changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
                 )
 
                 val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
@@ -250,6 +271,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
                 responderManager ! GroupMembersGetRequestADM(
                     groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.rootUser
                 )
 
@@ -259,6 +281,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             "return 'NotFound' when the group IRI is unknown" in {
                 responderManager ! GroupMembersGetRequestADM(
                     groupIri = "http://rdfh.ch/groups/notexisting",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.rootUser
                 )
 

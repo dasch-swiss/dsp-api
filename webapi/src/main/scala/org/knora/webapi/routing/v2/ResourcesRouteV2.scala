@@ -193,6 +193,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     page = page,
                     targetSchema = targetSchema,
                     schemaOptions = schemaOptions,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -227,6 +228,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     resourceIri = resourceIri,
                     startDate = startDate,
                     endDate = endDate,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -284,6 +286,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     versionDate = versionDate,
                     targetSchema = targetSchema,
                     schemaOptions = schemaOptions,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -318,7 +321,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         requestContext = requestContext,
                         featureFactoryConfig = featureFactoryConfig
                     )
-                } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, targetSchema = targetSchema, requestingUser = requestingUser)
+                } yield ResourcesPreviewGetRequestV2(
+                    resourceIris = resourceIris,
+                    targetSchema = targetSchema,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessageFuture,
@@ -362,6 +370,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     mappingIri = mappingIri,
                     gravsearchTemplateIri = gravsearchTemplateIri,
                     headerXSLTIri = headerXSLTIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 

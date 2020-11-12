@@ -10,6 +10,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/http/handler",
         "//webapi/src/main/scala/org/knora/webapi/http/version",
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",

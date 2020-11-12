@@ -77,6 +77,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         valueIri = valueIri.toString,
                         offset = offset,
                         targetSchema = targetSchema,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser
                     )
 
@@ -94,7 +95,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             }
         } ~ path("v2" / "mapping") {
             post {
-                entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
+                entity(as[Multipart.FormData]) { formData: Multipart.FormData =>
                     requestContext =>
 
                         val JSON_PART = "json"
@@ -104,7 +105,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         val apiRequestID = UUID.randomUUID
 
                         // collect all parts of the multipart as it arrives into a map
-                        val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
+                        val allPartsFuture: Future[Map[Name, String]] = formData.parts.mapAsync[(Name, String)](1) {
                             case b: BodyPart if b.name == JSON_PART =>
                                 //loggingAdapter.debug(s"inside allPartsFuture - processing $JSON_PART")
                                 b.toStrict(2.seconds).map { strict =>
@@ -151,6 +152,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         } yield CreateMappingRequestV2(
                             metadata = metadata,
                             xml = CreateMappingRequestXMLV2(xml),
+                            featureFactoryConfig = featureFactoryConfig,
                             requestingUser = requestingUser,
                             apiRequestID = apiRequestID
                         )

@@ -58,15 +58,14 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
-                            case b: BodyPart if b.name == JSON_PART => {
+                            case b: BodyPart if b.name == JSON_PART =>
                                 //loggingAdapter.debug(s"inside allPartsFuture - processing $JSON_PART")
                                 b.toStrict(2.seconds).map { strict =>
                                     //loggingAdapter.debug(strict.entity.data.utf8String)
                                     (b.name, strict.entity.data.utf8String)
                                 }
 
-                            }
-                            case b: BodyPart if b.name == XML_PART => {
+                            case b: BodyPart if b.name == XML_PART =>
                                 //loggingAdapter.debug(s"inside allPartsFuture - processing $XML_PART")
 
                                 b.toStrict(2.seconds).map {
@@ -75,7 +74,6 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                                         (b.name, strict.entity.data.utf8String)
                                 }
 
-                            }
                             case b: BodyPart if b.name.isEmpty => throw BadRequestException("part of HTTP multipart request has no name")
                             case b: BodyPart => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
                             case _ => throw BadRequestException("multipart request could not be handled")
@@ -101,13 +99,13 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                             }
 
                             xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
-
                         } yield CreateMappingRequestV1(
-                            projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, throw BadRequestException("invalid project IRI")),
                             xml = xml,
-                            userProfile = userProfile,
                             label = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label, throw BadRequestException("'label' contains invalid characters")),
+                            projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, throw BadRequestException("invalid project IRI")),
                             mappingName = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.mappingName, throw BadRequestException("'mappingName' contains invalid characters")),
+                            featureFactoryConfig = featureFactoryConfig,
+                            userProfile = userProfile,
                             apiRequestID = UUID.randomUUID
                         )
 

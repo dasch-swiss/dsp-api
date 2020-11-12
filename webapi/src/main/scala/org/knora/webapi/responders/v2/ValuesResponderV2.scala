@@ -125,6 +125,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
                     resourceIri = createValueRequest.createValue.resourceIri,
                     propertyInfo = adjustedInternalPropertyInfo,
+                    featureFactoryConfig = createValueRequest.featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
@@ -163,6 +164,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ <- checkPropertyObjectClassConstraint(
                     propertyInfo = adjustedInternalPropertyInfo,
                     valueContent = submittedInternalValueContent,
+                    featureFactoryConfig = createValueRequest.featureFactoryConfig,
                     requestingUser = createValueRequest.requestingUser
                 )
 
@@ -198,7 +200,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // and that the user has permission to see them.
 
                 _ <- submittedInternalValueContent match {
-                    case textValueContent: TextValueContentV2 => checkResourceIris(textValueContent.standoffLinkTagTargetResourceIris, createValueRequest.requestingUser)
+                    case textValueContent: TextValueContentV2 =>
+                        checkResourceIris(
+                            targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
+                            featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                            requestingUser = createValueRequest.requestingUser
+                        )
+
                     case _ => FastFuture.successful(())
                 }
 
@@ -270,6 +278,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceIri = createValueRequest.createValue.resourceIri,
                     propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
+                    featureFactoryConfig = createValueRequest.featureFactoryConfig,
                     requestingUser = createValueRequest.requestingUser
                 )
             } yield CreateValueResponseV2(
@@ -847,6 +856,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
                     resourceIri = resourceIri,
                     propertyInfo = adjustedInternalPropertyInfo,
+                    featureFactoryConfig = updateValueRequest.featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
@@ -882,8 +892,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
          * @param updateValuePermissionsV2 the update request.
          * @return an [[UpdateValueResponseV2]].
          */
-        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2,
-                                                   featureFactoryConfig: FeatureFactoryConfig): Future[UpdateValueResponseV2] = {
+        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2): Future[UpdateValueResponseV2] = {
             for {
                 // Do the initial checks, and get information about the resource, the property, and the value.
                 resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
@@ -902,7 +911,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(
                     permissionLiteral = updateValuePermissionsV2.permissions,
-                    featureFactoryConfig = featureFactoryConfig,
+                    featureFactoryConfig = updateValueRequest.featureFactoryConfig,
                     responderManager = responderManager
                 )
 
@@ -958,6 +967,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceIri = resourceInfo.resourceIri,
                     propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
+                    featureFactoryConfig = updateValueRequest.featureFactoryConfig,
                     requestingUser = updateValueRequest.requestingUser
                 )
             } yield UpdateValueResponseV2(
@@ -974,8 +984,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
          * @param updateValueContentV2 the update request.
          * @return an [[UpdateValueResponseV2]].
          */
-        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2,
-                                               featureFactoryConfig: FeatureFactoryConfig): Future[UpdateValueResponseV2] = {
+        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2): Future[UpdateValueResponseV2] = {
             for {
                 // Do the initial checks, and get information about the resource, the property, and the value.
                 resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
@@ -997,7 +1006,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                         // Yes. Validate them.
                         PermissionUtilADM.validatePermissions(
                             permissionLiteral = permissions,
-                            featureFactoryConfig = featureFactoryConfig,
+                            featureFactoryConfig = updateValueRequest.featureFactoryConfig,
                             responderManager = responderManager
                         )
 
@@ -1034,6 +1043,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ <- checkPropertyObjectClassConstraint(
                     propertyInfo = adjustedInternalPropertyInfo,
                     valueContent = submittedInternalValueContent,
+                    featureFactoryConfig = updateValueRequest.featureFactoryConfig,
                     requestingUser = updateValueRequest.requestingUser
                 )
 
@@ -1064,7 +1074,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case textValueContent: TextValueContentV2 =>
                         // This is a text value. Check that the resources pointed to by any standoff link tags exist
                         // and that the user has permission to see them.
-                        checkResourceIris(textValueContent.standoffLinkTagTargetResourceIris, updateValueRequest.requestingUser)
+                        checkResourceIris(
+                            textValueContent.standoffLinkTagTargetResourceIris,
+                            featureFactoryConfig = updateValueRequest.featureFactoryConfig,
+                            updateValueRequest.requestingUser
+                        )
 
                     case _: LinkValueContentV2 =>
                         // We're updating a link. This means deleting an existing link and creating a new one, so
@@ -1121,6 +1135,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceIri = updateValueContentV2.resourceIri,
                     propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
+                    featureFactoryConfig = updateValueRequest.featureFactoryConfig,
                     requestingUser = updateValueRequest.requestingUser
                 )
             } yield UpdateValueResponseV2(
@@ -1140,10 +1155,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = IriLocker.runWithIriLock(
                         updateValueRequest.apiRequestID,
                         updateValueContentV2.resourceIri,
-                        () => makeTaskFutureToUpdateValueContent(
-                            updateValueContentV2 = updateValueContentV2,
-                            featureFactoryConfig = updateValueRequest.featureFactoryConfig
-                        )
+                        () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
                     )
 
                     ResourceUtilV2.doSipiPostUpdate(
@@ -1160,10 +1172,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     IriLocker.runWithIriLock(
                         updateValueRequest.apiRequestID,
                         updateValuePermissionsV2.resourceIri,
-                        () => makeTaskFutureToUpdateValuePermissions(
-                            updateValuePermissionsV2 = updateValuePermissionsV2,
-                            featureFactoryConfig = updateValueRequest.featureFactoryConfig
-                        )
+                        () => makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2)
                     )
             }
         }
@@ -1458,6 +1467,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
                     resourceIri = deleteValueRequest.resourceIri,
                     propertyInfo = adjustedInternalPropertyInfo,
+                    featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
@@ -1783,10 +1793,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * Given a set of resource IRIs, checks that they point to Knora resources.
      * If not, throws an exception.
      *
-     * @param targetResourceIris the IRIs to be checked.
-     * @param requestingUser     the user making the request.
+     * @param targetResourceIris   the IRIs to be checked.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      */
-    private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
+    private def checkResourceIris(targetResourceIris: Set[IRI],
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  requestingUser: UserADM): Future[Unit] = {
         if (targetResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
@@ -1795,6 +1808,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     ResourcesPreviewGetRequestV2(
                         resourceIris = targetResourceIris.toSeq,
                         targetSchema = ApiV2Complex,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser
                     )
                 )
@@ -1812,13 +1826,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * If the property's object type is `knora-base:TextValue`, the result will contain any objects of the property (text values), as well metadata
      * for any resources that are objects of `knora-base:hasStandoffLinkTo`.
      *
-     * @param resourceIri    the resource IRI.
-     * @param propertyInfo   the property definition (in the internal schema). If the caller wants to query a link, this must be the link property,
-     *                       not the link value property.
-     * @param requestingUser the user making the request.
+     * @param resourceIri          the resource IRI.
+     * @param propertyInfo         the property definition (in the internal schema). If the caller wants to query a link, this must be the link property,
+     *                             not the link value property.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
      */
-    private def getResourceWithPropertyValues(resourceIri: IRI, propertyInfo: ReadPropertyInfoV2, requestingUser: UserADM): Future[ReadResourceV2] = {
+    private def getResourceWithPropertyValues(resourceIri: IRI,
+                                              propertyInfo: ReadPropertyInfoV2,
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              requestingUser: UserADM): Future[ReadResourceV2] = {
         for {
             // Get the property's object class constraint.
             objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
@@ -1846,22 +1864,26 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 constructQuery = parsedGravsearchQuery,
                 targetSchema = ApiV2Complex,
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )).mapTo[ReadResourcesSequenceV2]
         } yield searchResponse.toResource(resourceIri)
     }
 
     /**
      * Verifies that a value was written correctly to the triplestore.
      *
-     * @param resourceIri     the IRI of the resource that the value belongs to.
-     * @param propertyIri     the internal IRI of the property that points to the value. If the value is a link value,
-     *                        this is the link value property.
-     * @param unverifiedValue the value that should have been written to the triplestore.
-     * @param requestingUser  the user making the request.
+     * @param resourceIri          the IRI of the resource that the value belongs to.
+     * @param propertyIri          the internal IRI of the property that points to the value. If the value is a link value,
+     *                             this is the link value property.
+     * @param unverifiedValue      the value that should have been written to the triplestore.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      */
     private def verifyValue(resourceIri: IRI,
                             propertyIri: SmartIri,
                             unverifiedValue: UnverifiedValueV2,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM): Future[VerifiedValueV2] = {
         val verifiedValueFuture: Future[VerifiedValueV2] = for {
             resourcesRequest <- Future {
@@ -1871,6 +1893,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     versionDate = Some(unverifiedValue.creationDate),
                     targetSchema = ApiV2Complex,
                     schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
             }
@@ -1913,9 +1936,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param linkPropertyIri       the IRI of the link property.
      * @param objectClassConstraint the object class constraint of the link property.
      * @param linkValueContent      the link value.
+     * @param featureFactoryConfig  the feature factory configuration.
      * @param requestingUser        the user making the request.
      */
-    private def checkLinkPropertyObjectClassConstraint(linkPropertyIri: SmartIri, objectClassConstraint: SmartIri, linkValueContent: LinkValueContentV2, requestingUser: UserADM): Future[Unit] = {
+    private def checkLinkPropertyObjectClassConstraint(linkPropertyIri: SmartIri,
+                                                       objectClassConstraint: SmartIri,
+                                                       linkValueContent: LinkValueContentV2,
+                                                       featureFactoryConfig: FeatureFactoryConfig,
+                                                       requestingUser: UserADM): Future[Unit] = {
         for {
             // Get a preview of the target resource, because we only need to find out its class and whether the user has permission to view it.
 
@@ -1923,6 +1951,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 ResourcesPreviewGetRequestV2(
                     resourceIris = Seq(linkValueContent.referredResourceIri),
                     targetSchema = ApiV2Complex,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
             )
@@ -1986,11 +2015,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * Checks that a value to be updated has the correct type for the `knora-base:objectClassConstraint` of
      * the property that is supposed to point to it.
      *
-     * @param propertyInfo   the property whose object class constraint is to be checked. If the value is a link value, this is the link property.
-     * @param valueContent   the value to be updated.
-     * @param requestingUser the user making the request.
+     * @param propertyInfo         the property whose object class constraint is to be checked. If the value is a link value, this is the link property.
+     * @param valueContent         the value to be updated.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      */
-    private def checkPropertyObjectClassConstraint(propertyInfo: ReadPropertyInfoV2, valueContent: ValueContentV2, requestingUser: UserADM): Future[Unit] = {
+    private def checkPropertyObjectClassConstraint(propertyInfo: ReadPropertyInfoV2,
+                                                   valueContent: ValueContentV2,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
+                                                   requestingUser: UserADM): Future[Unit] = {
         for {
             objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
 
@@ -2008,6 +2041,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                         linkPropertyIri = propertyInfo.entityInfoContent.propertyIri,
                         objectClassConstraint = objectClassConstraint,
                         linkValueContent = linkValueContent,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser
                     )
 

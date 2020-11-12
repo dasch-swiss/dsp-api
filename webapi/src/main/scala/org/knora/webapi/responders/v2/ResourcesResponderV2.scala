@@ -76,9 +76,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
      */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser)
-        case ResourcesPreviewGetRequestV2(resIris, targetSchema, requestingUser) => getResourcePreviewV2(resIris, targetSchema, requestingUser)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, featureFactoryConfig, requestingUser) => getResourcesV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, featureFactoryConfig, requestingUser)
+        case ResourcesPreviewGetRequestV2(resIris, targetSchema, featureFactoryConfig, requestingUser) => getResourcePreviewV2(resIris, targetSchema, featureFactoryConfig, requestingUser)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, featureFactoryConfig, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, featureFactoryConfig, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteOrEraseResourceRequestV2: DeleteOrEraseResourceRequestV2 => deleteOrEraseResourceV2(deleteOrEraseResourceRequestV2)
@@ -109,13 +109,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Check link targets and list nodes that should exist.
 
-                _ <- checkStandoffLinkTargets(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
+                _ <- checkStandoffLinkTargets(
+                    values = internalCreateResource.flatValues,
+                    featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
+                    requestingUser = createResourceRequestV2.requestingUser
+                )
+
                 _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
                 // Get the class IRIs of all the link targets in the request.
                 linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
                     resourceIri: IRI,
                     internalCreateResources = Seq(internalCreateResource),
+                    featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
 
@@ -173,6 +179,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     defaultResourcePermissions = defaultResourcePermissions,
                     defaultPropertyPermissions = defaultPropertyPermissions,
                     creationDate = creationDate,
+                    featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
 
@@ -195,6 +202,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
                     resourceReadyToCreate = resourceReadyToCreate,
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
+                    featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
             } yield previewOfCreatedResource
@@ -271,6 +279,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                     targetSchema = ApiV2Complex,
+                    featureFactoryConfig = updateResourceMetadataRequestV2.featureFactoryConfig,
                     requestingUser = updateResourceMetadataRequestV2.requestingUser
                 )
 
@@ -327,6 +336,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                     targetSchema = ApiV2Complex,
+                    featureFactoryConfig = updateResourceMetadataRequestV2.featureFactoryConfig,
                     requestingUser = updateResourceMetadataRequestV2.requestingUser
                 )
 
@@ -406,6 +416,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(deleteResourceV2.resourceIri),
                     targetSchema = ApiV2Complex,
+                    featureFactoryConfig = deleteResourceV2.featureFactoryConfig,
                     requestingUser = deleteResourceV2.requestingUser
                 )
 
@@ -493,6 +504,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(eraseResourceV2.resourceIri),
                     targetSchema = ApiV2Complex,
+                    featureFactoryConfig = eraseResourceV2.featureFactoryConfig,
                     requestingUser = eraseResourceV2.requestingUser
                 )
 
@@ -722,10 +734,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * to be created.
      *
      * @param internalCreateResources the resources to be created.
+     * @param featureFactoryConfig    the feature factory configuration.
      * @param requestingUser          the user making the request.
      * @return a map of resource IRIs to class IRIs.
      */
-    private def getLinkTargetClasses(resourceIri: IRI, internalCreateResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
+    private def getLinkTargetClasses(resourceIri: IRI,
+                                     internalCreateResources: Seq[CreateResourceV2],
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM): Future[Map[IRI, SmartIri]] = {
         // Get the IRIs of the new and existing resources that are targets of links.
         val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) = internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
             case ((accExisting: Set[IRI], accNew: Set[IRI]), valueToCreate: CreateValueInNewResourceV2) =>
@@ -751,6 +767,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                 resourceIris = existingTargetIris.toSeq,
                 targetSchema = ApiV2Complex,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -871,10 +888,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * values. For each link, if the target is expected to exist, checks that it exists and that the user has
      * permission to see it.
      *
-     * @param values         the values to be checked.
-     * @param requestingUser the user making the request.
+     * @param values               the values to be checked.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      */
-    private def checkStandoffLinkTargets(values: Iterable[CreateValueInNewResourceV2], requestingUser: UserADM): Future[Unit] = {
+    private def checkStandoffLinkTargets(values: Iterable[CreateValueInNewResourceV2],
+                                         featureFactoryConfig: FeatureFactoryConfig,
+                                         requestingUser: UserADM): Future[Unit] = {
         val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
                 valueToCreate.valueContent match {
@@ -883,7 +903,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
         }
 
-        getResourcePreviewV2(standoffLinkTargetsThatShouldExist.toSeq, targetSchema = ApiV2Complex, requestingUser).map(_ => ())
+        getResourcePreviewV2(
+            resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
+            targetSchema = ApiV2Complex,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+        ).map(_ => ())
     }
 
     /**
@@ -1041,11 +1066,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      *
      * @param resourceReadyToCreate the resource that should have been created.
      * @param projectIri            the IRI of the project in which the resource should have been created.
+     * @param featureFactoryConfig  the feature factory configuration.
      * @param requestingUser        the user that attempted to create the resource.
      * @return a preview of the resource that was created.
      */
     private def verifyResource(resourceReadyToCreate: ResourceReadyToCreate,
                                projectIri: IRI,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
@@ -1054,6 +1081,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceIris = Seq(resourceIri),
                 requestingUser = requestingUser,
                 targetSchema = ApiV2Complex,
+                featureFactoryConfig = featureFactoryConfig,
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues
             )
 
@@ -1158,13 +1186,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /**
      * Gets the requested resources from the triplestore.
      *
-     * @param resourceIris  the Iris of the requested resources.
-     * @param preview       `true` if a preview of the resource is requested.
-     * @param propertyIri   if defined, requests only the values of the specified explicit property.
-     * @param valueUuid     if defined, requests only the value with the specified UUID.
-     * @param versionDate   if defined, requests the state of the resources at the specified time in the past.
-     *                      Cannot be used in conjunction with `preview`.
-     * @param queryStandoff `true` if standoff should be queried.
+     * @param resourceIris         the Iris of the requested resources.
+     * @param preview              `true` if a preview of the resource is requested.
+     * @param propertyIri          if defined, requests only the values of the specified explicit property.
+     * @param valueUuid            if defined, requests only the value with the specified UUID.
+     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+     *                             Cannot be used in conjunction with `preview`.
+     * @param queryStandoff        `true` if standoff should be queried.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a map of resource IRIs to RDF data.
      */
     private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
@@ -1173,6 +1202,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             valueUuid: Option[UUID],
                                             versionDate: Option[Instant],
                                             queryStandoff: Boolean,
+                                            featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1200,7 +1230,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             // _ = println(resourceRequestSparql)
 
-            resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
+            resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = resourceRequestSparql,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
             mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
@@ -1214,13 +1247,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /**
      * Get one or several resources and return them as a sequence.
      *
-     * @param resourceIris   the IRIs of the resources to be queried.
-     * @param propertyIri    if defined, requests only the values of the specified explicit property.
-     * @param valueUuid      if defined, requests only the value with the specified UUID.
-     * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
-     * @param targetSchema   the target API schema.
-     * @param schemaOptions  the schema options submitted with the request.
-     * @param requestingUser the user making the request.
+     * @param resourceIris         the IRIs of the resources to be queried.
+     * @param propertyIri          if defined, requests only the values of the specified explicit property.
+     * @param valueUuid            if defined, requests only the value with the specified UUID.
+     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+     * @param targetSchema         the target API schema.
+     * @param schemaOptions        the schema options submitted with the request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[ReadResourcesSequenceV2]].
      */
     private def getResourcesV2(resourceIris: Seq[IRI],
@@ -1229,6 +1263,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                versionDate: Option[Instant] = None,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1246,12 +1281,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 valueUuid = valueUuid,
                 versionDate = versionDate,
                 queryStandoff = queryStandoff,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, requestingUser)
+                getMappingsFromQueryResultsSeparated(
+                    queryResultsSeparated = mainResourcesAndValueRdfData.resources,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
@@ -1267,6 +1307,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -1291,11 +1332,15 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /**
      * Get the preview of a resource.
      *
-     * @param resourceIris   the resource to query for.
-     * @param requestingUser the the client making the request.
+     * @param resourceIris         the resource to query for.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the the user making the request.
      * @return a [[ReadResourcesSequenceV2]].
      */
-    private def getResourcePreviewV2(resourceIris: Seq[IRI], targetSchema: ApiV2Schema, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreviewV2(resourceIris: Seq[IRI],
+                                     targetSchema: ApiV2Schema,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1308,6 +1353,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 valueUuid = None,
                 versionDate = None,
                 queryStandoff = false, // This has no effect, because we are not querying values.
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -1322,6 +1368,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -1336,13 +1383,23 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * Obtains a Gravsearch template from Sipi.
      *
      * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
+     * @param featureFactoryConfig  the feature factory configuration.
      * @param requestingUser        the user making the request.
      * @return the Gravsearch template.
      */
-    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
+    private def getGravsearchTemplate(gravsearchTemplateIri: IRI,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), targetSchema = ApiV2Complex, schemaOptions = Set(MarkupAsStandoff), requestingUser = requestingUser)
+            resources: ReadResourcesSequenceV2 <- getResourcesV2(
+                resourceIris = Vector(gravsearchTemplateIri),
+                targetSchema = ApiV2Complex,
+                schemaOptions = Set(MarkupAsStandoff),
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )
+
             resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
@@ -1394,10 +1451,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
      * @param mappingIri            the Iri of the mapping to be used to convert standoff to XML, if a custom mapping is provided. The mapping is expected to contain an XSL transformation.
      * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header. The resource Iri is expected to be represented by the placeholder '$resourceIri' in a BIND.
      * @param headerXSLTIri         the Iri of the XSL template to convert the metadata properties to the TEI header.
+     * @param featureFactoryConfig  the feature factory configuration.
      * @param requestingUser        the user making the request.
      * @return a [[ResourceTEIGetResponseV2]].
      */
-    private def getResourceAsTeiV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    private def getResourceAsTeiV2(resourceIri: IRI,
+                                   textProperty: SmartIri,
+                                   mappingIri: Option[IRI],
+                                   gravsearchTemplateIri: Option[IRI],
+                                   headerXSLTIri: Option[String],
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
         /**
          * Extract the text value to be converted to TEI/XML.
@@ -1482,7 +1546,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get the template
-                    template <- getGravsearchTemplate(gravsearchTemplateIri.get, requestingUser)
+                    template <- getGravsearchTemplate(
+                        gravsearchTemplateIri = gravsearchTemplateIri.get,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     // insert actual resource Iri, replacing the placeholder
                     gravsearchQuery = template.replace("$resourceIri", resourceIri)
@@ -1495,7 +1563,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         constructQuery = constructQuery,
                         targetSchema = ApiV2Complex,
                         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                        requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )).mapTo[ReadResourcesSequenceV2]
                 } yield gravSearchResponse.toResource(resourceIri)
 
             } else {
@@ -1510,8 +1580,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIris = Vector(resourceIri),
                         targetSchema = ApiV2Complex,
                         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                        requestingUser = requestingUser).map(_.toResource(resourceIri))
-
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    ).map(_.toResource(resourceIri))
                 } yield resource
             }
 
@@ -1529,7 +1600,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // get the XSL transformation for the TEI header
             headerXSLT: Option[String] <- headerXSLTIri match {
                 case Some(headerIri) =>
-                    val teiHeaderXsltRequest = GetXSLTransformationRequestV2(xsltTextRepresentationIri = headerIri, requestingUser = requestingUser)
+                    val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
+                        xsltTextRepresentationIri = headerIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     for {
                         xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiHeaderXsltRequest).mapTo[GetXSLTransformationResponseV2]
@@ -1550,7 +1625,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             }
 
             // get mapping to convert standoff markup to TEI/XML
-            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, requestingUser = requestingUser)).mapTo[GetMappingResponseV2]
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
+                mappingIri = mappingToBeApplied,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )).mapTo[GetMappingResponseV2]
 
             // get XSLT from mapping for the TEI body
             bodyXslt: String <- teiMapping.mappingIri match {
@@ -1568,7 +1647,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                     case Some(xslTransformationIri) =>
                         // get XSLT for the TEI body.
-                        val teiBodyXsltRequest = GetXSLTransformationRequestV2(xsltTextRepresentationIri = xslTransformationIri, requestingUser = requestingUser)
+                        val teiBodyXsltRequest = GetXSLTransformationRequestV2(
+                            xsltTextRepresentationIri = xslTransformationIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )
 
                         for {
                             xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiBodyXsltRequest).mapTo[GetXSLTransformationResponseV2]
@@ -1907,6 +1990,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                 resourceIris = Seq(resourceHistoryRequest.resourceIri),
                 targetSchema = ApiV2Complex,
+                featureFactoryConfig = resourceHistoryRequest.featureFactoryConfig,
                 requestingUser = resourceHistoryRequest.requestingUser
             )
 

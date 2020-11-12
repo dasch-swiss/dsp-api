@@ -113,6 +113,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                     mappingIri = mappingIri,
                                     acceptStandoffLinksToClientIDs = false,
                                     userProfile = userADM,
+                                    featureFactoryConfig = featureFactoryConfig,
                                     settings = settings,
                                     responderManager = responderManager,
                                     log = log
@@ -220,6 +221,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                     mappingIri = mappingIri,
                                     acceptStandoffLinksToClientIDs = false,
                                     userProfile = userADM,
+                                    featureFactoryConfig = featureFactoryConfig,
                                     settings = settings,
                                     responderManager = responderManager,
                                     log = log
@@ -499,7 +501,13 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                 featureFactoryConfig = featureFactoryConfig
                             )
                             resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
-                            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
+
+                            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
+                                iri = resourceIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfile = userADM
+                            )).mapTo[ResourceInfoResponseV1]
+
                             projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
 
                             request <- makeChangeFileValueRequest(
