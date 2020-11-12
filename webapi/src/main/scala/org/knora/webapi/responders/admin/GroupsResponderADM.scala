@@ -274,7 +274,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
 
             maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map {
-                userIri => (responderManager ? UserGetADM(UserIdentifierADM(maybeIri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(
+                    UserIdentifierADM(maybeIri = Some(userIri)),
+                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
             users: Seq[UserADM] = maybeUsers.flatten
@@ -763,7 +768,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 )
 
                 seqOfFutures: Seq[Future[UserOperationResponseADM]] = members.map { user: UserADM =>
-                    (responderManager ? UserGroupMembershipRemoveRequestADM(userIri = user.id, groupIri = changedGroup.id, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID = apiRequestID)).mapTo[UserOperationResponseADM]
+                    (responderManager ? UserGroupMembershipRemoveRequestADM(
+                        userIri = user.id,
+                        groupIri = changedGroup.id,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        apiRequestID = apiRequestID
+                    )).mapTo[UserOperationResponseADM]
                 }
                 userOperationResults: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
 

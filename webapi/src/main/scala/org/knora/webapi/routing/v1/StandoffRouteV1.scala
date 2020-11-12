@@ -83,7 +83,10 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
                         val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-                            userProfile <- getUserADM(requestContext)
+                            userProfile <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
 
                             allParts: Map[Name, String] <- allPartsFuture
 

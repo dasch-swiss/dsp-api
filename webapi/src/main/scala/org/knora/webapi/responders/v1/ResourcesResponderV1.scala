@@ -26,6 +26,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
@@ -70,12 +71,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         case ResourceRightsGetRequestV1(resourceIri, userProfile) => getRightsResponseV1(resourceIri, userProfile)
         case graphDataGetRequest: GraphDataGetRequestV1 => getGraphDataResponseV1(graphDataGetRequest)
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile)
-        case ResourceCreateRequestV1(resourceTypeIri, label, values, file, projectIri, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, file, projectIri, userProfile, apiRequestID)
-        case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID)
+        case ResourceCreateRequestV1(resourceTypeIri, label, values, file, projectIri, featureFactoryConfig, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, file, projectIri, featureFactoryConfig, userProfile, apiRequestID)
+        case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, featureFactoryConfig, userProfile, apiRequestID) => createMultipleNewResources(resourcesToCreate, projectIri, featureFactoryConfig, userProfile, apiRequestID)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => checkResourceClass(resourceIri, owlClass, userProfile)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => deleteResourceV1(resourceDeleteRequest)
-        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile)
+        case ChangeResourceLabelRequestV1(resourceIri, label, featureFactoryConfig, userProfile, apiRequestID) => changeResourceLabelV1(resourceIri, label, apiRequestID, featureFactoryConfig, userProfile)
         case UnexpectedMessageRequest() => makeFutureOfUnit
         case InternalServerExceptionMessageRequest() => makeInternalServerException
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -1218,14 +1219,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Create multiple resources and attach the given values to them.
      *
-     * @param resourcesToCreate collection of ResourceRequests .
-     * @param projectIri        IRI of the project .
-     * @param apiRequestID      the the ID of the API request.
-     * @param requestingUser    the user making the request.
+     * @param resourcesToCreate    collection of ResourceRequests .
+     * @param projectIri           IRI of the project .
+     * @param apiRequestID         the the ID of the API request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[MultipleResourceCreateResponseV1]] informing the client about the new resources.
      */
     private def createMultipleNewResources(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri: IRI,
+                                           featureFactoryConfig: FeatureFactoryConfig,
                                            requestingUser: UserADM,
                                            apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
         // Convert all the image metadata in the request to FileValueContentV2 instances, so we
@@ -1248,6 +1251,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             projectInfoResponse <- {
                 responderManager ? ProjectGetRequestADM(
                     identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
             }.mapTo[ProjectGetResponseADM]
@@ -1908,12 +1912,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     /**
      * Creates a new resource and attaches the given values to it.
      *
-     * @param resourceClassIri the resource type of the resource to be created.
-     * @param values           the values to be attached to the resource.
-     * @param file             a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
-     * @param projectIri       the project the resource belongs to.
-     * @param userProfile      the user that is creating the resource
-     * @param apiRequestID     the ID of this API request.
+     * @param resourceClassIri     the resource type of the resource to be created.
+     * @param values               the values to be attached to the resource.
+     * @param file                 a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
+     * @param projectIri           the project the resource belongs to.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the user that is creating the resource
+     * @param apiRequestID         the ID of this API request.
      * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
      */
     private def createNewResource(resourceClassIri: IRI,
@@ -1921,6 +1926,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                   values: Map[IRI, Seq[CreateValueV1WithComment]],
                                   file: Option[FileValueV1] = None,
                                   projectIri: IRI,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   userProfile: UserADM,
                                   apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         for {
@@ -1942,6 +1948,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             projectResponse <- {
                 responderManager ? ProjectGetRequestADM(
                     identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = userProfile
                 )
             }.mapTo[ProjectGetResponseADM]
@@ -2012,8 +2019,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 projectInfoResponse <- {
                     responderManager ? ProjectInfoByIRIGetRequestV1(
-                        resourceInfo.project_id,
-                        None
+                        iri = resourceInfo.project_id,
+                        featureFactoryConfig = resourceDeleteRequest.featureFactoryConfig,
+                        userProfileV1 = None
                     )
                 }.mapTo[ProjectInfoResponseV1]
 
@@ -2104,7 +2112,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @param userProfile  the profile of the user making the request.
      * @return a [[ChangeResourceLabelResponseV1]].
      */
-    private def changeResourceLabelV1(resourceIri: IRI, label: String, apiRequestID: UUID, userProfile: UserADM): Future[ChangeResourceLabelResponseV1] = {
+    private def changeResourceLabelV1(resourceIri: IRI,
+                                      label: String,
+                                      apiRequestID: UUID,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      userProfile: UserADM): Future[ChangeResourceLabelResponseV1] = {
 
         def makeTaskFuture(userIri: IRI): Future[ChangeResourceLabelResponseV1] = {
 
@@ -2119,8 +2131,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 projectInfoResponse <- {
                     responderManager ? ProjectInfoByIRIGetRequestV1(
-                        resourceInfo.project_id,
-                        None
+                        iri = resourceInfo.project_id,
+                        featureFactoryConfig = featureFactoryConfig,
+                        userProfileV1 = None
                     )
                 }.mapTo[ProjectInfoResponseV1]
 

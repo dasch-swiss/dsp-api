@@ -68,7 +68,10 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
                     val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield GetStandoffPageRequestV2(
                         resourceIri = resourceIri.toString,
                         valueIri = valueIri.toString,
@@ -126,7 +129,10 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
                         val requestMessageFuture: Future[CreateMappingRequestV2] = for {
-                            requestingUser <- getUserADM(requestContext)
+                            requestingUser <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             allParts: Map[Name, String] <- allPartsFuture
                             jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
 

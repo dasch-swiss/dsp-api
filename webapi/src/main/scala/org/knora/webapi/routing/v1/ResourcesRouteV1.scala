@@ -272,6 +272,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 projectIri = projectIri,
                 values = valuesToBeCreated.toMap,
                 file = file,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userADM,
                 apiRequestID = UUID.randomUUID
             )
@@ -354,19 +355,21 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             } yield MultipleResourceCreateRequestV1(
                 resourcesToCreate = resToCreateCollection,
                 projectIri = projectId,
+                featureFactoryConfig = featureFactoryConfig,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )
         }
 
-        def makeGetPropertiesRequestMessage(resIri: IRI, userADM: UserADM) = {
+        def makeGetPropertiesRequestMessage(resIri: IRI, userADM: UserADM): PropertiesGetRequestV1 = {
             PropertiesGetRequestV1(resIri, userADM)
         }
 
-        def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userADM: UserADM) = {
+        def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userADM: UserADM): ResourceDeleteRequestV1 = {
             ResourceDeleteRequestV1(
                 resourceIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: $resIri")),
                 deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))),
+                featureFactoryConfig = featureFactoryConfig,
                 userADM = userADM,
                 apiRequestID = UUID.randomUUID
             )
@@ -914,7 +917,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
 
                     val requestMessage = for {
-                        userProfile <- getUserADM(requestContext)
+                        userProfile <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         params = requestContext.request.uri.query().toMap
                         searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
 
@@ -961,7 +967,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 entity(as[CreateResourceApiRequestV1]) { apiRequest =>
                     requestContext =>
                         val requestMessageFuture = for {
-                            userProfile <- getUserADM(requestContext)
+                            userProfile <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             request <- makeCreateResourceRequestMessage(
                                 apiRequest = apiRequest,
                                 featureFactoryConfig = featureFactoryConfig,
@@ -985,7 +994,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                         val requestMessage =
                             for {
-                                userADM <- getUserADM(requestContext)
+                                userADM <- getUserADM(
+                                    requestContext = requestContext,
+                                    featureFactoryConfig = featureFactoryConfig
+                                )
                                 requestType = reqtypeParam.getOrElse("")
                                 resinfo = resinfoParam.getOrElse(false)
                             } yield makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userADM = userADM)
@@ -1003,7 +1015,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestContext =>
 
                         val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+                            userADM <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                         } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -1025,7 +1040,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     val requestMessage = requestType match {
                         case "properties" =>
                             for {
-                                userADM <- getUserADM(requestContext)
+                                userADM <- getUserADM(
+                                    requestContext = requestContext,
+                                    featureFactoryConfig = featureFactoryConfig
+                                )
                                 resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
                             } yield ResourceFullGetRequestV1(resIri, userADM)
                         case other => throw BadRequestException(s"Invalid request type: $other")
@@ -1044,7 +1062,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             get {
                 requestContext =>
                     val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
+                        userADM <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
                     } yield makeGetPropertiesRequestMessage(resIri, userADM)
 
@@ -1062,13 +1083,17 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest =>
                     requestContext =>
                         val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+                            userADM <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
                             label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
                         } yield ChangeResourceLabelRequestV1(
                             resourceIri = resIri,
                             label = label,
                             apiRequestID = UUID.randomUUID,
+                            featureFactoryConfig = featureFactoryConfig,
                             userADM = userADM
                         )
 
@@ -1086,7 +1111,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 parameters("depth".as[Int].?) { depth =>
                     requestContext =>
                         val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+                            userADM <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             resourceIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
                         } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
 
@@ -1124,7 +1152,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 entity(as[String]) { xml =>
                     requestContext =>
                         val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+                            userADM <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
 
                             _ = if (userADM.isAnonymousUser) {
                                 throw ForbiddenException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
@@ -1192,7 +1223,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {
                     requestContext =>
                         val httpResponseFuture: Future[HttpResponse] = for {
-                            userProfile <- getUserADM(requestContext)
+                            userProfile <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(
                                 internalOntologyIri = internalOntologyIri,
                                 userProfile = userProfile

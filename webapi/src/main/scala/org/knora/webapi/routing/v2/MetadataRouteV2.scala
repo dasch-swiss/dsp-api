@@ -15,6 +15,7 @@ import scala.concurrent.Future
 object MetadataRouteV2 {
     val MetadataBasePath: PathMatcher[Unit] = PathMatcher("v2" / "metadata")
 }
+
 /**
  * Provides a routing function for API v2 routes that deal with metadata.
  */
@@ -37,7 +38,10 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             requestContext => {
                 // Make the request message.
                 val requestMessageFuture: Future[MetadataGetRequestV2] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
 
                     project <- getProjectADM(
                         projectIri = projectIri,
@@ -81,7 +85,10 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
                     // Make the request message.
                     val requestMessageFuture: Future[MetadataPutRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
 
                         project <- getProjectADM(
                             projectIri = projectIri,

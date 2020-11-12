@@ -25,6 +25,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{ApplicationCacheException, ForbiddenException, NotFoundException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -55,10 +56,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         case UsersGetV1(userProfile) => usersGetV1(userProfile)
         case UsersGetRequestV1(userProfileV1) => usersGetRequestV1(userProfileV1)
         case UserDataByIriGetV1(userIri, short) => userDataByIriGetV1(userIri, short)
-        case UserProfileByIRIGetV1(userIri, profileType) => userProfileByIRIGetV1(userIri, profileType)
-        case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => userProfileByIRIGetRequestV1(userIri, profileType, userProfile)
-        case UserProfileByEmailGetV1(email, profileType) => userProfileByEmailGetV1(email, profileType)
-        case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => userProfileByEmailGetRequestV1(email, profileType, userProfile)
+        case UserProfileByIRIGetV1(userIri, profileType, featureFactoryConfig) => userProfileByIRIGetV1(userIri, profileType, featureFactoryConfig)
+        case UserProfileByIRIGetRequestV1(userIri, profileType, featureFactoryConfig, userProfile) => userProfileByIRIGetRequestV1(userIri, profileType, featureFactoryConfig, userProfile)
+        case UserProfileByEmailGetV1(email, profileType, featureFactoryConfig) => userProfileByEmailGetV1(email, profileType, featureFactoryConfig)
+        case UserProfileByEmailGetRequestV1(email, profileType, featureFactoryConfig, userProfile) => userProfileByEmailGetRequestV1(email, profileType, featureFactoryConfig, userProfile)
         case UserProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => userProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
         case UserProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => userProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
         case UserGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => userGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
@@ -160,11 +161,14 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
      * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the
      * user profile from cache. If not, it retrieves it from the triplestore and writes it to the cache.
      *
-     * @param userIri     the IRI of the user.
-     * @param profileType the type of the requested profile (restricted of full).
+     * @param userIri              the IRI of the user.
+     * @param profileType          the type of the requested profile (restricted of full).
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a [[UserProfileV1]] describing the user.
      */
-    private def userProfileByIRIGetV1(userIri: IRI, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
+    private def userProfileByIRIGetV1(userIri: IRI,
+                                      profileType: UserProfileType,
+                                      featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
         // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
 
         CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
@@ -184,7 +188,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
                     userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-                    maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(userDataQueryResponse)
+                    maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
+                        userDataQueryResponse = userDataQueryResponse,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
 
                     _ = if (maybeUserProfileV1.nonEmpty) {
                         writeUserProfileV1ToCache(maybeUserProfileV1.get)
@@ -200,19 +207,28 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     /**
      * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
      *
-     * @param userIRI     the IRI of the user.
-     * @param profileType the type of the requested profile (restriced or full).
-     * @param userProfile the requesting user's profile.
+     * @param userIRI              the IRI of the user.
+     * @param profileType          the type of the requested profile (restriced or full).
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the requesting user's profile.
      * @return a [[UserProfileResponseV1]]
      */
-    private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+    private def userProfileByIRIGetRequestV1(userIRI: IRI,
+                                             profileType: UserProfileType,
+                                             featureFactoryConfig: FeatureFactoryConfig,
+                                             userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
             _ <- Future(
                 if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
                     throw ForbiddenException("SystemAdmin permissions are required.")
                 }
             )
-            maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
+            maybeUserProfileToReturn <- userProfileByIRIGetV1(
+                userIri = userIRI,
+                profileType = profileType,
+                featureFactoryConfig = featureFactoryConfig
+            )
+
             result = maybeUserProfileToReturn match {
                 case Some(up) => UserProfileResponseV1(up)
                 case None => throw NotFoundException(s"User '$userIRI' not found")
@@ -224,11 +240,14 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
      * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the user profile
      * from cache. If not, it retrieves it from the triplestore and writes it to the cache.
      *
-     * @param email       the email of the user.
-     * @param profileType the type of the requested profile (restricted or full).
+     * @param email                the email of the user.
+     * @param profileType          the type of the requested profile (restricted or full).
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a [[UserProfileV1]] describing the user.
      */
-    private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
+    private def userProfileByEmailGetV1(email: String,
+                                        profileType: UserProfileType,
+                                        featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
         // log.debug(s"userProfileByEmailGetV1: username = '{}', type = '{}'", email, profileType)
 
         CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, email) match {
@@ -248,7 +267,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                     userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
                     //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
-                    maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(userDataQueryResponse)
+                    maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
+                        userDataQueryResponse = userDataQueryResponse,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
 
                     _ = if (maybeUserProfileV1.nonEmpty) {
                         writeUserProfileV1ToCache(maybeUserProfileV1.get)
@@ -267,15 +289,24 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     /**
      * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
      *
-     * @param email       the email of the user.
-     * @param profileType the type of the requested profile (restricted or full).
-     * @param userProfile the requesting user's profile.
+     * @param email                the email of the user.
+     * @param profileType          the type of the requested profile (restricted or full).
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the requesting user's profile.
      * @return a [[UserProfileResponseV1]]
      * @throws NotFoundException if the user with the supplied email is not found.
      */
-    private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+    private def userProfileByEmailGetRequestV1(email: String,
+                                               profileType: UserProfileType,
+                                               featureFactoryConfig: FeatureFactoryConfig,
+                                               userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            maybeUserProfileToReturn <- userProfileByEmailGetV1(email, profileType)
+            maybeUserProfileToReturn <- userProfileByEmailGetV1(
+                email = email,
+                profileType = profileType,
+                featureFactoryConfig = featureFactoryConfig
+            )
+
             result = maybeUserProfileToReturn match {
                 case Some(up: UserProfileV1) => UserProfileResponseV1(up)
                 case None => throw NotFoundException(s"User '$email' not found")
@@ -434,9 +465,11 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
      * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
      *
      * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
+     * @param featureFactoryConfig  the feature factory configuration.
      * @return a [[UserProfileV1]] containing the user's data.
      */
-    private def userDataQueryResponse2UserProfileV1(userDataQueryResponse: SparqlSelectResponse): Future[Option[UserProfileV1]] = {
+    private def userDataQueryResponse2UserProfileV1(userDataQueryResponse: SparqlSelectResponse,
+                                                    featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
 
         // log.debug("userDataQueryResponse2UserProfileV1 - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
 
@@ -494,11 +527,17 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                     groupIris = groupIris,
                     isInProjectAdminGroups = isInProjectAdminGroups,
                     isInSystemAdminGroup = isInSystemAdminGroup,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )).mapTo[PermissionsDataADM]
 
                 maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map {
-                    projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[Option[ProjectInfoV1]]
+                    projectIri =>
+                        (responderManager ? ProjectInfoByIRIGetV1(
+                            iri = projectIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            userProfileV1 = None
+                        )).mapTo[Option[ProjectInfoV1]]
                 }
 
                 maybeProjectInfos: Seq[Option[ProjectInfoV1]] <- Future.sequence(maybeProjectInfoFutures)

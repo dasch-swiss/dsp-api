@@ -1191,14 +1191,17 @@ object ConstructResponseUtilV2 {
 
                 targetSchema match {
                     case ApiV2Simple => for {
-                        nodeResponse <- (responderManager ? NodeGetRequestV2(listNodeIri, requestingUser)).mapTo[NodeGetResponseV2]
+                        nodeResponse <- (responderManager ? NodeGetRequestV2(
+                            nodeIri = listNodeIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )).mapTo[NodeGetResponseV2]
                     } yield listNode.copy(
                         listNodeLabel = nodeResponse.node.getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
                     )
 
                     case ApiV2Complex => FastFuture.successful(listNode)
                 }
-
 
             case OntologyConstants.KnoraBase.IntervalValue =>
                 FastFuture.successful(IntervalValueContentV2(

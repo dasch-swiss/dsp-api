@@ -87,7 +87,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
                 val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield ResourcesGetRequestV2(
                     resourceIris = Seq(resourceIri.toString),
                     valueUuid = Some(valueUuid),
@@ -117,7 +120,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[CreateValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
                             requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -152,7 +158,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[UpdateValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
                             requestDoc,
                             apiRequestID = UUID.randomUUID,
@@ -187,7 +196,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[DeleteValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
                             requestDoc,
                             apiRequestID = UUID.randomUUID,

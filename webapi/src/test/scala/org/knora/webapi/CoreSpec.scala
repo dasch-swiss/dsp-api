@@ -34,7 +34,7 @@ import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowRel
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
@@ -63,7 +63,7 @@ object CoreSpec {
             case -1 ⇒ s
             case z ⇒ s drop (z + 1)
         }
-        reduced.head.replaceFirst( """.*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
+        reduced.head.replaceFirst(""".*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
     }
 }
 
@@ -71,9 +71,13 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
 
     /* constructors - individual tests can override the configuration by giving their own */
     def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+
     def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+
     def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+
     /* needed by the core trait */
     implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
     implicit val materializer: Materializer = Materializer.matFromSystem(system)
@@ -127,7 +131,12 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
         logger.info("Loading test data started ...")
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
-        Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
+
+        Await.result(appActor ? LoadOntologiesRequestV2(
+            featureFactoryConfig = defaultFeatureFactoryConfig,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+        ), 1 minute)
+
         Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
         logger.info("... loading test data done.")
     }

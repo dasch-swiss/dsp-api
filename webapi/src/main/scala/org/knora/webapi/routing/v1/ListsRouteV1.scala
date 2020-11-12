@@ -44,7 +44,10 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                 requestContext =>
 
                     val requestMessageFuture = for {
-                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                        userProfile <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        ).map(_.asUserProfileV1)
                         listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                         requestMessage = requestContext.request.uri.query().get("reqtype") match {
@@ -68,7 +71,10 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                 get {
                     requestContext =>
                         val requestMessageFuture = for {
-                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                            userProfile <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            ).map(_.asUserProfileV1)
                             selIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                             requestMessage = requestContext.request.uri.query().get("reqtype") match {

@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotImplementedException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
@@ -221,21 +222,29 @@ sealed trait ValuesResponderRequestV1 extends KnoraRequestV1
 /**
  * Represents a request for a (current) value. A successful response will be a [[ValueGetResponseV1]].
  *
- * @param valueIri    the IRI of the value requested.
- * @param userProfile the profile of the user making the request.
+ * @param valueIri             the IRI of the value requested.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ValueGetRequestV1(valueIri: IRI, userProfile: UserADM) extends ValuesResponderRequestV1
+case class ValueGetRequestV1(valueIri: IRI,
+                             featureFactoryConfig: FeatureFactoryConfig,
+                             userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
  * Represents a request for the details of a reification node describing a direct link between two resources.
  * A successful response will be a [[ValueGetResponseV1]] containing a [[LinkValueV1]].
  *
- * @param subjectIri   the IRI of the resource that is the source of the link.
- * @param predicateIri the IRI of the property that links the two resources.
- * @param objectIri    the IRI of the resource that is the target of the link.
- * @param userProfile  the profile of the user making the request.
+ * @param subjectIri           the IRI of the resource that is the source of the link.
+ * @param predicateIri         the IRI of the property that links the two resources.
+ * @param objectIri            the IRI of the resource that is the target of the link.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM) extends ValuesResponderRequestV1
+case class LinkValueGetRequestV1(subjectIri: IRI,
+                                 predicateIri: IRI,
+                                 objectIri: IRI,
+                                 featureFactoryConfig: FeatureFactoryConfig,
+                                 userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
  * Provides details of a Knora value. A successful response will be a [[ValueGetResponseV1]].
@@ -284,19 +293,21 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) 
  * Represents a request to add a new value of a resource property (as opposed to a new version of an existing value). A
  * successful response will be an [[CreateValueResponseV1]].
  *
- * @param resourceIndex the index of the resource
- * @param resourceIri   the IRI of the resource to which the value should be added.
- * @param propertyIri   the IRI of the property that should receive the value.
- * @param value         the value to be added.
- * @param comment       an optional comment on the value.
- * @param userProfile   the profile of the user making the request.
- * @param apiRequestID  the ID of this API request.
+ * @param resourceIndex        the index of the resource
+ * @param resourceIri          the IRI of the resource to which the value should be added.
+ * @param propertyIri          the IRI of the property that should receive the value.
+ * @param value                the value to be added.
+ * @param comment              an optional comment on the value.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of this API request.
  */
 case class CreateValueRequestV1(resourceIndex: Int = 0,
                                 resourceIri: IRI,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,
                                 comment: Option[String] = None,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 userProfile: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
@@ -411,28 +422,32 @@ case class GenerateSparqlToCreateMultipleValuesResponseV1(insertSparql: String,
  * Represents a request to change the value of a property (by updating its version history). A successful response will
  * be a [[ChangeValueResponseV1]].
  *
- * @param valueIri     the IRI of the current value.
- * @param value        the new value, or [[None]] if only the value's comment is being changed.
- * @param comment      an optional comment on the value.
- * @param userProfile  the profile of the user making the request.
- * @param apiRequestID the ID of this API request.
+ * @param valueIri             the IRI of the current value.
+ * @param value                the new value, or [[None]] if only the value's comment is being changed.
+ * @param comment              an optional comment on the value.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of this API request.
  */
 case class ChangeValueRequestV1(valueIri: IRI,
                                 value: UpdateValueV1,
                                 comment: Option[String] = None,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 userProfile: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
  * Represents a request to change the comment on a value. A successful response will be a [[ChangeValueResponseV1]].
  *
- * @param valueIri     the IRI of the current value.
- * @param comment      the comment to be added to the new version of the value.
- * @param userProfile  the profile of the user making the request.
- * @param apiRequestID the ID of this API request.
+ * @param valueIri             the IRI of the current value.
+ * @param comment              the comment to be added to the new version of the value.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of this API request.
  */
 case class ChangeCommentRequestV1(valueIri: IRI,
                                   comment: Option[String],
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   userProfile: UserADM,
                                   apiRequestID: UUID) extends ValuesResponderRequestV1
 
@@ -453,13 +468,15 @@ case class ChangeValueResponseV1(value: ApiValueV1,
 /**
  * Represents a request to mark a value as deleted.
  *
- * @param valueIri      the IRI of the value to be marked as deleted.
- * @param deleteComment an optional comment explaining why the value is being deleted.
- * @param userProfile   the profile of the user making the request.
- * @param apiRequestID  the ID of this API request.
+ * @param valueIri             the IRI of the value to be marked as deleted.
+ * @param deleteComment        an optional comment explaining why the value is being deleted.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of this API request.
  */
 case class DeleteValueRequestV1(valueIri: IRI,
                                 deleteComment: Option[String] = None,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 userProfile: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
@@ -479,10 +496,15 @@ case class DeleteValueResponseV1(id: IRI) extends KnoraResponseV1 {
  * Represents a request to change (update) the file value(s) of a given resource.
  * In case of an image, two file valueshave to be changed: thumbnail and full quality.
  *
- * @param resourceIri the resource whose files value(s) should be changed.
- * @param file        a file that has been uploaded to Sipi's temporary storage.
+ * @param resourceIri          the resource whose files value(s) should be changed.
+ * @param file                 a file that has been uploaded to Sipi's temporary storage.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class ChangeFileValueRequestV1(resourceIri: IRI, file: FileValueV1, apiRequestID: UUID, userProfile: UserADM) extends ValuesResponderRequestV1
+case class ChangeFileValueRequestV1(resourceIri: IRI,
+                                    file: FileValueV1,
+                                    apiRequestID: UUID,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
  * Represents a response to a [[ChangeFileValueRequestV1]].
@@ -1638,7 +1660,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         def write(calendarV1Value: KnoraCalendarV1.Value): JsValue = JsString(calendarV1Value.toString)
     }
 
-    /**å
+    /** å
      * Converts between [[KnoraPrecisionV1]] objects and [[JsValue]] objects.
      */
     implicit object KnoraPrecisionV1JsonFormat extends JsonFormat[KnoraPrecisionV1.Value] {

@@ -580,6 +580,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                         requestingUser = requestingUser,
                         requestedUserIri = attachedToUserIri.toString,
                         projectIri = projectIri.toString,
+                        featureFactoryConfig = featureFactoryConfig,
                         responderManager = responderManager
                     )
             }

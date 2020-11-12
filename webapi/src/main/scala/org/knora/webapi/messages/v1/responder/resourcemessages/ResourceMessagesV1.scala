@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException, InvalidApiJsonException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -203,19 +204,21 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
 /**
  * Requests the creation of a new resource of the given type with the given properties.
  *
- * @param resourceTypeIri the type of the new resource.
- * @param label           the rdfs:label of the resource.
- * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
- * @param file            a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
- * @param projectIri      the IRI of the project the resources is added to.
- * @param userProfile     the profile of the user making the request.
- * @param apiRequestID    the ID of the API request.
+ * @param resourceTypeIri      the type of the new resource.
+ * @param label                the rdfs:label of the resource.
+ * @param values               the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
+ * @param file                 a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
+ * @param projectIri           the IRI of the project the resources is added to.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    label: String,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
                                    file: Option[FileValueV1] = None,
                                    projectIri: IRI,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -240,13 +243,15 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
 /**
  * Requests the creation of multiple new resources.
  *
- * @param resourcesToCreate the collection of requests for creation of new resources.
- * @param projectIri        the IRI of the project the resources are added to.
- * @param userProfile       the profile of the user making the request.
- * @param apiRequestID      the ID of the API request.
+ * @param resourcesToCreate    the collection of requests for creation of new resources.
+ * @param projectIri           the IRI of the project the resources are added to.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri: IRI,
+                                           featureFactoryConfig: FeatureFactoryConfig,
                                            userProfile: UserADM,
                                            apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -284,13 +289,15 @@ case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProf
 /**
  * Requests that a resource is marked as deleted. A successful response will be a [[ResourceDeleteResponseV1]].
  *
- * @param resourceIri   the IRI of the resource to be marked as deleted.
- * @param deleteComment an optional comment explaining why the resource is being marked as deleted.
- * @param userADM       the profile of the user making the request.
- * @param apiRequestID  the ID of the API request.
+ * @param resourceIri          the IRI of the resource to be marked as deleted.
+ * @param deleteComment        an optional comment explaining why the resource is being marked as deleted.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ResourceDeleteRequestV1(resourceIri: IRI,
                                    deleteComment: Option[String],
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    userADM: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -373,9 +380,9 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
 /**
  * Describes the answer to a newly created resource [[ResourceCreateRequestV1]].
  *
- * @param res_id  the IRI ow the new resource.
- * @param results the values that have been attached to the resource. The key in the Map refers
- *                to the property IRI and the Seq contains all instances of values of this type.
+ * @param res_id     the IRI ow the new resource.
+ * @param results    the values that have been attached to the resource. The key in the Map refers
+ *                   to the property IRI and the Seq contains all instances of values of this type.
  * @param projectADM the project in which the resource is to be created.
  */
 case class ResourceCreateResponseV1(res_id: IRI,
@@ -406,13 +413,18 @@ case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponse
 /**
  * Requests the label of a resource to be changed.
  *
- * @param resourceIri  the IRI of the resource whose label should be changed.
- * @param label        the new value of the label.
- * @param userADM      the profile of the user making the request.
- * @param apiRequestID the ID of the API request.
+ * @param resourceIri          the IRI of the resource whose label should be changed.
+ * @param label                the new value of the label.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  *
  */
-case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userADM: UserADM, apiRequestID: UUID) extends ResourcesResponderRequestV1
+case class ChangeResourceLabelRequestV1(resourceIri: IRI,
+                                        label: String,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        userADM: UserADM,
+                                        apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
  * Represents the answer to a [[ChangeResourceLabelRequestV1]].

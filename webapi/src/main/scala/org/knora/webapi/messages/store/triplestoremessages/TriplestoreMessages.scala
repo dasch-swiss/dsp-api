@@ -124,7 +124,7 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
  * [[SparqlConstructResponse]].
  *
- * @param sparql the SPARQL string.
+ * @param sparql               the SPARQL string.
  * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlConstructRequest(sparql: String,
@@ -153,11 +153,11 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
  * [[SparqlExtendedConstructResponse]].
  *
- * @param sparql the SPARQL string.
+ * @param sparql               the SPARQL string.
  * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlExtendedConstructRequest(sparql: String,
-                                         featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
+                                          featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
@@ -173,9 +173,9 @@ object SparqlExtendedConstructResponse {
     /**
      * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
      *
-     * @param turtleStr the Turtle document.
+     * @param turtleStr     the Turtle document.
      * @param rdfFormatUtil an [[RdfFormatUtil]].
-     * @param log       a [[LoggingAdapter]].
+     * @param log           a [[LoggingAdapter]].
      * @return a [[SparqlExtendedConstructResponse]] representing the document.
      */
     def parseTurtleResponse(turtleStr: String, rdfFormatUtil: RdfFormatUtil, log: LoggingAdapter): Try[SparqlExtendedConstructResponse] = {
@@ -277,7 +277,7 @@ case class NamedGraphFileRequest(graphIri: IRI,
  * Requests a named graph, which will be returned as Turtle. A successful response
  * will be a [[NamedGraphDataResponse]].
  *
- * @param graphIri   the IRI of the named graph.
+ * @param graphIri the IRI of the named graph.
  */
 case class NamedGraphDataRequest(graphIri: IRI) extends TriplestoreRequest
 
@@ -605,9 +605,11 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
  */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
-    if(language.isDefined && value.isEmpty) {
+
+    if (language.isDefined && value.isEmpty) {
         throw BadRequestException(s"String value is missing.")
     }
+
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }
 

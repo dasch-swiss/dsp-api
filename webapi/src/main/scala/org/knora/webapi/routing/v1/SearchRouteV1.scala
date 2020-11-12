@@ -192,7 +192,10 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             get {
                 requestContext => {
                     val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
+                        userADM <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
                     } yield makeExtendedSearchRequestMessage(userADM, params)
 
@@ -210,7 +213,10 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 get {
                     requestContext => {
                         val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+                            userADM <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             params: Map[String, String] = requestContext.request.uri.query().toMap
                         } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 

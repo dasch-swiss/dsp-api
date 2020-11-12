@@ -19,7 +19,6 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import java.io
 import java.time.Instant
 import java.util.UUID
 
@@ -27,19 +26,18 @@ import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DataConversionException, InconsistentTriplestoreDataException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDDocument, JsonLDInt, JsonLDKeywords, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.{messages, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -55,20 +53,23 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
  * starts, before it accepts any API requests. A successful response will be a [[SuccessResponseV2]].
  *
- * @param requestingUser the user making the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
-case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class LoadOntologiesRequestV2(featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
  *
- * @param ontologyName   the name of the ontology to be created.
- * @param projectIri     the IRI of the project that the ontology will belong to.
- * @param isShared       the flag that shows if an ontology is a shared one.
- * @param label          the label of the ontology.
- * @param comment        the optional comment that described the ontology to be created.
- * @param apiRequestID   the ID of the API request.
- * @param requestingUser the user making the request.
+ * @param ontologyName         the name of the ontology to be created.
+ * @param projectIri           the IRI of the project that the ontology will belong to.
+ * @param isShared             the flag that shows if an ontology is a shared one.
+ * @param label                the label of the ontology.
+ * @param comment              the optional comment that described the ontology to be created.
+ * @param apiRequestID         the ID of the API request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class CreateOntologyRequestV2(ontologyName: String,
                                    projectIri: SmartIri,
@@ -76,6 +77,7 @@ case class CreateOntologyRequestV2(ontologyName: String,
                                    label: String,
                                    comment: Option[String] = None,
                                    apiRequestID: UUID,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -107,6 +109,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
@@ -114,6 +117,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 
     private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
                                apiRequestID: UUID,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): CreateOntologyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -130,6 +134,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
             label = label,
             comment = comment,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -146,6 +151,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 case class DeleteOntologyRequestV2(ontologyIri: SmartIri,
                                    lastModificationDate: Instant,
                                    apiRequestID: UUID,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -351,6 +357,7 @@ object OntologyUpdateHelper {
 case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
                                    lastModificationDate: Instant,
                                    apiRequestID: UUID,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -382,6 +389,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
@@ -389,6 +397,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
     private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
                                apiRequestID: UUID,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): CreatePropertyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -430,6 +439,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             propertyInfoContent = propertyInfoContent,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -446,6 +456,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 case class CreateClassRequestV2(classInfoContent: ClassInfoContentV2,
                                 lastModificationDate: Instant,
                                 apiRequestID: UUID,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -477,12 +488,14 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
     }
 
-    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): CreateClassRequestV2 = {
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM): CreateClassRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Get the class definition and the ontology's last modification date from the JSON-LD.
@@ -506,6 +519,7 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
             classInfoContent = classInfoContent,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -522,6 +536,7 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
 case class AddCardinalitiesToClassRequestV2(classInfoContent: ClassInfoContentV2,
                                             lastModificationDate: Instant,
                                             apiRequestID: UUID,
+                                            featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -553,12 +568,14 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
     }
 
-    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): AddCardinalitiesToClassRequestV2 = {
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM): AddCardinalitiesToClassRequestV2 = {
         // Get the class definition and the ontology's last modification date from the JSON-LD.
 
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -576,6 +593,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
             classInfoContent = classInfoContent,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -592,6 +610,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 case class ChangeCardinalitiesRequestV2(classInfoContent: ClassInfoContentV2,
                                         lastModificationDate: Instant,
                                         apiRequestID: UUID,
+                                        featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -623,12 +642,14 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
     }
 
-    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): ChangeCardinalitiesRequestV2 = {
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM): ChangeCardinalitiesRequestV2 = {
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
         val classInfoContent = classUpdateInfo.classInfoContent
@@ -638,6 +659,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
             classInfoContent = classInfoContent,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -654,6 +676,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
 case class DeleteClassRequestV2(classIri: SmartIri,
                                 lastModificationDate: Instant,
                                 apiRequestID: UUID,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -667,6 +690,7 @@ case class DeleteClassRequestV2(classIri: SmartIri,
 case class DeletePropertyRequestV2(propertyIri: SmartIri,
                                    lastModificationDate: Instant,
                                    apiRequestID: UUID,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -699,6 +723,7 @@ case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
                                                    newObjects: Seq[StringLiteralV2],
                                                    lastModificationDate: Instant,
                                                    apiRequestID: UUID,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
                                                    requestingUser: UserADM) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
 
 /**
@@ -732,6 +757,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
@@ -739,6 +765,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
 
     private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
                                apiRequestID: UUID,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): ChangePropertyLabelsOrCommentsRequestV2 = {
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
@@ -754,6 +781,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
             },
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -774,6 +802,7 @@ case class ChangeClassLabelsOrCommentsRequestV2(classIri: SmartIri,
                                                 newObjects: Seq[StringLiteralV2],
                                                 lastModificationDate: Instant,
                                                 apiRequestID: UUID,
+                                                featureFactoryConfig: FeatureFactoryConfig,
                                                 requestingUser: UserADM) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
 
 /**
@@ -805,6 +834,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
@@ -812,6 +842,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
 
     private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
                                apiRequestID: UUID,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): ChangeClassLabelsOrCommentsRequestV2 = {
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
@@ -827,6 +858,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
             },
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -847,6 +879,7 @@ case class ChangeOntologyMetadataRequestV2(ontologyIri: SmartIri,
                                            comment: Option[String] = None,
                                            lastModificationDate: Instant,
                                            apiRequestID: UUID,
+                                           featureFactoryConfig: FeatureFactoryConfig,
                                            requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
@@ -878,6 +911,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
@@ -885,6 +919,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
 
     private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
                                apiRequestID: UUID,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): ChangeOntologyMetadataRequestV2 = {
         val inputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val inputMetadata = inputOntologyV2.ontologyMetadata
@@ -899,6 +934,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
             comment = comment,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
         )
     }
@@ -908,11 +944,13 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
  * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
  * [[EntityInfoGetResponseV2]].
  *
- * @param classIris      the IRIs of the class entities to be queried.
- * @param propertyIris   the IRIs of the property entities to be queried.
- * @param requestingUser the user making the request.
+ * @param classIris            the IRIs of the class entities to be queried.
+ * @param propertyIris         the IRIs of the property entities to be queried.
+ * @param requestingUser       the user making the request.
  */
-case class EntityInfoGetRequestV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class EntityInfoGetRequestV2(classIris: Set[SmartIri] = Set.empty[SmartIri],
+                                  propertyIris: Set[SmartIri] = Set.empty[SmartIri],
+                                  requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Represents assertions about one or more ontology entities (resource classes and/or properties).
@@ -931,7 +969,9 @@ case class EntityInfoGetResponseV2(classInfoMap: Map[SmartIri, ReadClassInfoV2],
  * @param standoffPropertyIris the IRIs of the property entities to be queried.
  * @param requestingUser       the user making the request.
  */
-case class StandoffEntityInfoGetRequestV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class StandoffEntityInfoGetRequestV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
+                                          standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
+                                          requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Represents assertions about one or more ontology entities (resource classes and/or properties).
@@ -946,7 +986,7 @@ case class StandoffEntityInfoGetResponseV2(standoffClassInfoMap: Map[SmartIri, R
  * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
  * [[StandoffClassesWithDataTypeGetResponseV2]].
  *
- * @param requestingUser the user making the request.
+ * @param requestingUser       the user making the request.
  */
 case class StandoffClassesWithDataTypeGetRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
@@ -961,7 +1001,7 @@ case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[Sm
  * Requests information about all standoff property entities. A successful response will be an
  * [[StandoffAllPropertyEntitiesGetResponseV2]].
  *
- * @param requestingUser the user making the request.
+ * @param requestingUser       the user making the request.
  */
 case class StandoffAllPropertyEntitiesGetRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
@@ -979,7 +1019,9 @@ case class StandoffAllPropertyEntitiesGetResponseV2(standoffAllPropertiesEntityI
  * @param subClassIri   the IRI of the subclass.
  * @param superClassIri the IRI of the superclass.
  */
-case class CheckSubClassRequestV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class CheckSubClassRequestV2(subClassIri: SmartIri,
+                                  superClassIri: SmartIri,
+                                  requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Represents a response to a [[CheckSubClassRequestV2]].
@@ -995,7 +1037,8 @@ case class CheckSubClassResponseV2(isSubClass: Boolean)
  * @param resourceClassIri the IRI of the given resource class.
  * @param requestingUser   the user making the request.
  */
-case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class SubClassesGetRequestV2(resourceClassIri: SmartIri,
+                                  requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Provides information about the subclasses of a Knora resource class.
@@ -1009,55 +1052,61 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
  * Request information about the Knora entities (Knora resource classes, standoff class, resource properties, and standoff properties) of a named graph.
  * A successful response will be a [[OntologyKnoraEntitiesIriInfoV2]].
  *
- * @param ontologyIri    the IRI of the named graph.
- * @param requestingUser the user making the request.
+ * @param ontologyIri          the IRI of the named graph.
+ * @param requestingUser       the user making the request.
  */
-case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri,
+                                               requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by project.
  *
- * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
- *                       about all ontologies is returned.
- * @param requestingUser the user making the request.
+ * @param projectIris          the IRIs of the projects for which ontologies should be returned. If this set is empty, information
+ *                             about all ontologies is returned.
+ * @param requestingUser       the user making the request.
  */
-case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri],
+                                                 requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by ontology IRI.
  *
- * @param ontologyIris   the IRIs of the ontologies to be queried. If this set is empty, information
- *                       about all ontologies is returned.
- * @param requestingUser the user making the request.
+ * @param ontologyIris         the IRIs of the ontologies to be queried. If this set is empty, information
+ *                             about all ontologies is returned.
+ * @param requestingUser       the user making the request.
  */
-case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri],
+                                             requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests entity definitions for the given ontology.
  *
- * @param ontologyIri    the ontology to query for.
- * @param allLanguages   true if information in all available languages should be returned.
- * @param requestingUser the user making the request.
+ * @param ontologyIri          the ontology to query for.
+ * @param allLanguages         true if information in all available languages should be returned.
+ * @param requestingUser       the user making the request.
  */
-case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean,
+                                        requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologyV2]].
  *
- * @param classIris      the IRIs of the classes to be queried.
- * @param allLanguages   true if information in all available languages should be returned.
- * @param requestingUser the user making the request.
+ * @param classIris            the IRIs of the classes to be queried.
+ * @param allLanguages         true if information in all available languages should be returned.
+ * @param requestingUser       the user making the request.
  */
-case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean,
+                               requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologyV2]].
  *
- * @param propertyIris   the IRIs of the properties to be queried.
- * @param allLanguages   true if information in all available languages should be returned.
- * @param requestingUser the user making the request.
+ * @param propertyIris         the IRIs of the properties to be queried.
+ * @param allLanguages         true if information in all available languages should be returned.
+ * @param requestingUser       the user making the request.
  */
-case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean,
+                                  requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Represents the contents of an ontology to be returned in an API response.

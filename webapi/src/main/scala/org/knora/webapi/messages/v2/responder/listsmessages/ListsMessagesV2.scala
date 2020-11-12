@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -39,10 +40,12 @@ sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 /**
  * Requests a list. A successful response will be a [[ListGetResponseV2]]
  *
- * @param listIri        the IRI of the list (Iri of the list's root node).
- * @param requestingUser the user making the request.
+ * @param listIri              the IRI of the list (Iri of the list's root node).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListGetRequestV2(listIri: IRI,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM) extends ListsResponderRequestV2
 
 
@@ -161,9 +164,11 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 /**
  * Requests a list node. A successful response will be a [[NodeGetResponseV2]]
  *
- * @param nodeIri the IRI of the node to retrieve.
+ * @param nodeIri              the IRI of the node to retrieve.
+ * @param featureFactoryConfig the feature factory configuration.
  */
 case class NodeGetRequestV2(nodeIri: IRI,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM) extends ListsResponderRequestV2
 
 /**

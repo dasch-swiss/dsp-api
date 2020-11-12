@@ -59,7 +59,12 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 entity(as[Seq[RdfDataObject]]) { apiRequest =>
                     parameter('prependdefaults.as[Boolean] ? true) { prependDefaults =>
                         requestContext =>
-                            val msg = ResetTriplestoreContentRequestADM(apiRequest, prependDefaults)
+                            val msg = ResetTriplestoreContentRequestADM(
+                                rdfDataObjects = apiRequest,
+                                prependDefaults = prependDefaults,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
+
                             val requestMessage = Future.successful(msg)
 
                             RouteUtilADM.runJsonRoute(

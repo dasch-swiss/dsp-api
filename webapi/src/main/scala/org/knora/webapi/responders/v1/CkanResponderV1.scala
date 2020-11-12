@@ -25,6 +25,7 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
@@ -57,11 +58,15 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
      * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
      */
     def receive(msg: CkanResponderRequestV1) = msg match {
-        case CkanRequestV1(projects, limit, info, userProfile) => getCkanResponseV1(projects, limit, info, userProfile)
+        case CkanRequestV1(projects, limit, info, featureFactoryConfig, userProfile) => getCkanResponseV1(projects, limit, info, featureFactoryConfig, userProfile)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
-    private def getCkanResponseV1(project: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserADM): Future[CkanResponseV1] = {
+    private def getCkanResponseV1(project: Option[Seq[String]],
+                                  limit: Option[Int],
+                                  info: Boolean,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  userProfile: UserADM): Future[CkanResponseV1] = {
 
 
         log.debug("Ckan Endpoint:")
@@ -75,11 +80,19 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
             case Some(projectList) =>
                 // look up resources only for these projects if allowed
                 val allowedProjects = projectList.filter(defaultProjectList.contains(_))
-                getProjectInfos(allowedProjects, userProfile)
+                getProjectInfos(
+                    projectNames = allowedProjects,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userProfile
+                )
 
             case None =>
                 // return our default project map, containing all projects that we want to serve over the Ckan endpoint
-                getProjectInfos(defaultProjectList, userProfile)
+                getProjectInfos(
+                    projectNames = defaultProjectList,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userProfile
+                )
         }
 
         for {
@@ -304,16 +317,25 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
      * Get detailed information about the projects
      *
      * @param projectNames
+     * @param featureFactoryConfig the feature factory configuration.
      * @param userProfile
      * @return
      */
-    private def getProjectInfos(projectNames: Seq[String], userProfile: UserADM): Future[Seq[(String, ProjectInfoV1)]] = {
+    private def getProjectInfos(projectNames: Seq[String],
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                userProfile: UserADM): Future[Seq[(String, ProjectInfoV1)]] = {
         Future.sequence {
             for {
                 pName <- projectNames
-                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile.asUserProfileV1))).mapTo[ProjectInfoResponseV1]
+
+                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(
+                    shortname = pName,
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfileV1 = Some(userProfile.asUserProfileV1)
+                )).mapTo[ProjectInfoResponseV1]
+
                 result = projectInfoResponseFuture.map(_.project_info) map {
-                    case pInfo => (pName, pInfo)
+                    pInfo => (pName, pInfo)
                 }
             } yield result
         }

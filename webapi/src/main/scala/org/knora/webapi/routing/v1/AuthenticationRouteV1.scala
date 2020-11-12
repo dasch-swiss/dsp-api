@@ -38,7 +38,10 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
             get {
                 requestContext => {
                     requestContext.complete {
-                        doAuthenticateV1(requestContext)
+                        doAuthenticateV1(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     }
                 }
             }
@@ -50,16 +53,25 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
                         if (params.contains("logout")) {
                             doLogoutV2(requestContext)
                         } else if (params.contains("login")) {
-                            doLoginV1(requestContext)
+                            doLoginV1(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                         } else {
-                            doAuthenticateV1(requestContext)
+                            doAuthenticateV1(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                         }
                     }
                 }
             } ~ post {
                 requestContext => {
                     requestContext.complete {
-                        doLoginV1(requestContext)
+                        doLoginV1(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     }
                 }
             } ~ delete {
