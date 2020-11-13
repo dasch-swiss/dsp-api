@@ -79,7 +79,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
 
             case nonJsonLD: NonJsonLD =>
                 // Some other format. Convert the JSON-LD document to an RDF model.
-                val rdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+                val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
                 val rdfModel: RdfModel = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
 
                 // Convert the model to the requested format.
