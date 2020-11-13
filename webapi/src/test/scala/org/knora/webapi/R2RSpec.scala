@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import java.io.{File, StringReader}
+import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
@@ -30,8 +30,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{ApplicationActor, LiveManagers}
 import org.knora.webapi.core.Core
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
@@ -40,7 +38,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
@@ -121,12 +119,14 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 
-    protected def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE, null)
+    protected def parseTurtle(turtleStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
     }
 
-    protected def parseRdfXml(rdfXmlStr: String): Model = {
-        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML, null)
+    protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {

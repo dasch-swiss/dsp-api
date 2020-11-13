@@ -26,10 +26,10 @@ import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.routing.v2.ListsRouteV2
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
@@ -122,8 +122,8 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         "perform a request for a list in Turtle" in {
             Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.ttl")))
-                val responseTurtle: Model = parseTurtle(responseAs[String])
+                val expectedAnswerTurtle: RdfModel = parseTurtle(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.ttl")))
+                val responseTurtle: RdfModel = parseTurtle(responseAs[String])
                 assert(responseTurtle == expectedAnswerTurtle)
             }
         }
@@ -131,8 +131,8 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         "perform a request for a list in RDF/XML" in {
             Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerRdfXml: Model = parseRdfXml(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.rdf")))
-                val responseRdfXml: Model = parseRdfXml(responseAs[String])
+                val expectedAnswerRdfXml: RdfModel = parseRdfXml(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.rdf")))
+                val responseRdfXml: RdfModel = parseRdfXml(responseAs[String])
                 assert(responseRdfXml == expectedAnswerRdfXml)
             }
         }
@@ -170,8 +170,8 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         "perform a request for a node in Turtle" in {
             Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.ttl")))
-                val responseTurtle: Model = parseTurtle(responseAs[String])
+                val expectedAnswerTurtle: RdfModel = parseTurtle(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.ttl")))
+                val responseTurtle: RdfModel = parseTurtle(responseAs[String])
                 assert(responseTurtle == expectedAnswerTurtle)
             }
         }
@@ -179,8 +179,8 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         "perform a request for a node in RDF/XML" in {
             Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerRdfXml: Model = parseRdfXml(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.rdf")))
-                val responseRdfXml: Model = parseRdfXml(responseAs[String])
+                val expectedAnswerRdfXml: RdfModel = parseRdfXml(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.rdf")))
+                val responseRdfXml: RdfModel = parseRdfXml(responseAs[String])
                 assert(responseRdfXml == expectedAnswerRdfXml)
             }
         }
