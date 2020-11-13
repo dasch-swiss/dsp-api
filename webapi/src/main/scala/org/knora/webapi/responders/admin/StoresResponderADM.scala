@@ -27,7 +27,7 @@ import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceFlushDB, CacheServiceFlushDBACK}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK}
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesResponse
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -78,7 +78,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequestV2(
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = systemUser
-            )).mapTo[LoadOntologiesResponse]
+            )).mapTo[SuccessResponseV2]
             _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
             redisFlushDB <- (storeManager ? CacheServiceFlushDB(systemUser)).mapTo[CacheServiceFlushDBACK]
