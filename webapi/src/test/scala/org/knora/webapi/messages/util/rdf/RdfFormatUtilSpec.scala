@@ -21,7 +21,7 @@ package org.knora.webapi.util.rdf
 
 import java.io.File
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.{CoreSpec, IRI}
 import org.knora.webapi.feature.{FeatureFactoryConfig, FeatureToggle, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
@@ -121,6 +121,29 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             val outputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = outputJsonLD, rdfFormat = JsonLD)
             checkJsonLDDocumentForRdfTypeBook(outputJsonLDDocument)
             assert(inputJsonLDDocument == outputJsonLDDocument)
+        }
+
+        "use prefixes and custom datatypes" in {
+            val inputJsonLD: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"))
+            val inputJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
+            val outputModel: RdfModel = inputJsonLDDocument.toRdfModel(rdfModelFactory)
+
+            // Add namespaces, which were removed by compacting the JSON-LD document when parsing it.
+
+            val namespaces: Map[String, IRI] = Map(
+                "incunabula" -> "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#",
+                "knora-api" -> "http://api.knora.org/ontology/knora-api/simple/v2#",
+                "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
+                "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+            )
+
+            for ((prefix, namespace) <- namespaces) {
+                outputModel.setNamespace(prefix, namespace)
+            }
+
+            val outputTurtle: String = rdfFormatUtil.format(rdfModel = outputModel, rdfFormat = Turtle)
+            assert(outputTurtle.contains("\"JULIAN:1481 CE\"^^knora-api:Date"))
         }
     }
 }
