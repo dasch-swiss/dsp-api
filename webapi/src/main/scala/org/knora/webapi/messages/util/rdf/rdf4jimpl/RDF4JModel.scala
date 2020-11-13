@@ -104,6 +104,10 @@ case class RDF4JStatement(statement: rdf4j.model.Statement) extends Statement {
     override def context: Option[IRI] = Option(statement.getContext).map(_.stringValue)
 }
 
+/**
+ * Provides extension methods for converting between Knora RDF API classes and RDF4J classes
+ * (see <https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods>).
+ */
 object RDF4JConversions {
 
     implicit class ConvertibleRDF4JResource(val self: RdfResource) extends AnyVal {

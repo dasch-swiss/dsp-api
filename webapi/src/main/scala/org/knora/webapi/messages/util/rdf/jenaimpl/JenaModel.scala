@@ -107,6 +107,10 @@ case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
     }
 }
 
+/**
+ * Provides extension methods for converting between Knora RDF API classes and Jena classes
+ * (see <https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods>).
+ */
 object JenaConversions {
 
     implicit class ConvertibleJenaNode(val self: RdfNode) extends AnyVal {

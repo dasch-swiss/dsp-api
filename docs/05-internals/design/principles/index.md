@@ -23,6 +23,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Futures with Akka](futures-with-akka.md)
 - [HTTP Module](http-module.md)
 - [Store Module](store-module.md)
+- [RDF Processing API](rdf-api.md)
 - [Triplestore Updates](triplestore-updates.md)
 - [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
