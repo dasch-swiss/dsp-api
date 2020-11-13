@@ -31,8 +31,8 @@ import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDat
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[OntologyResponderV1]].
-  */
+ * Static data for testing [[OntologyResponderV1]].
+ */
 object OntologyResponderV1Spec {
 
     // A test user that prefers responses in German.
@@ -45,8 +45,8 @@ object OntologyResponderV1Spec {
 
 
 /**
-  * Tests [[OntologyResponderV1]].
-  */
+ * Tests [[OntologyResponderV1]].
+ */
 class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // The default timeout for receiving reply messages from actors.
@@ -1070,6 +1070,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "get all the vocabularies" in {
             responderManager ! NamedGraphsGetRequestV1(
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
@@ -1082,6 +1083,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "get all the resource classes with their property types for incunabula named graph" in {
             responderManager ! ResourceTypesForNamedGraphGetRequestV1(
                 namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
@@ -1095,6 +1097,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "get all the properties for the named graph incunabula" in {
             responderManager ! PropertyTypesForNamedGraphGetRequestV1(
                 namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
@@ -1107,6 +1110,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "get all the properties for all vocabularies" in {
             responderManager ! PropertyTypesForNamedGraphGetRequestV1(
                 namedGraph = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 

@@ -38,8 +38,8 @@ object SipiResponderADMSpec {
 }
 
 /**
-  * Tests [[SipiResponderADM]].
-  */
+ * Tests [[SipiResponderADM]].
+ */
 class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
 
     override lazy val rdfDataObjects = List(
@@ -53,9 +53,10 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with Im
         "return details of a full quality file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestADM(
-                requestingUser = SharedTestDataADM.incunabulaMemberUser,
                 projectID = "0803",
-                filename = "incunabula_0000003328.jp2"
+                filename = "incunabula_0000003328.jp2",
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                requestingUser = SharedTestDataADM.incunabulaMemberUser
             )
 
             expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 6, None))
@@ -64,12 +65,13 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with Im
         "return details of a restricted view file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestADM(
-                requestingUser = SharedTestDataADM.anonymousUser,
                 projectID = "0803",
-                filename = "incunabula_0000003328.jp2"
+                filename = "incunabula_0000003328.jp2",
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                requestingUser = SharedTestDataADM.anonymousUser
             )
 
-            expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 1, Some(ProjectRestrictedViewSettingsADM(size=Some("!512,512"), watermark = Some("path_to_image")))))
+            expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 1, Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))))
         }
     }
 }

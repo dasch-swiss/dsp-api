@@ -24,12 +24,11 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status.Failure
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
@@ -59,7 +58,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return information for every project" in {
 
-                responderManager ! ProjectsGetRequestV1(Some(rootUserProfileV1))
+                responderManager ! ProjectsGetRequestV1(
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    userProfile = Some(rootUserProfileV1)
+                )
                 val received = expectMsgType[ProjectsResponseV1](timeout)
 
                 assert(received.projects.contains(SharedTestDataV1.imagesProjectInfo))
@@ -70,41 +72,56 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
                 /* Incunabula project */
                 responderManager ! ProjectInfoByIRIGetRequestV1(
-                    SharedTestDataV1.incunabulaProjectInfo.id,
-                    Some(SharedTestDataV1.rootUser)
+                    iri = SharedTestDataV1.incunabulaProjectInfo.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    userProfileV1 = Some(SharedTestDataV1.rootUser)
                 )
                 expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
 
                 /* Images project */
                 responderManager ! ProjectInfoByIRIGetRequestV1(
-                    SharedTestDataV1.imagesProjectInfo.id,
-                    Some(SharedTestDataV1.rootUser)
+                    iri = SharedTestDataV1.imagesProjectInfo.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    userProfileV1 = Some(SharedTestDataV1.rootUser)
                 )
                 expectMsg(ProjectInfoResponseV1(SharedTestDataV1.imagesProjectInfo))
 
                 /* 'SystemProject' */
                 responderManager ! ProjectInfoByIRIGetRequestV1(
-                    SharedTestDataV1.systemProjectInfo.id,
-                    Some(SharedTestDataV1.rootUser)
+                    iri = SharedTestDataV1.systemProjectInfo.id,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    userProfileV1 = Some(SharedTestDataV1.rootUser)
                 )
                 expectMsg(ProjectInfoResponseV1(SharedTestDataV1.systemProjectInfo))
 
             }
 
             "return information about a project identified by shortname" in {
-                responderManager ! ProjectInfoByShortnameGetRequestV1(SharedTestDataV1.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
+                responderManager ! ProjectInfoByShortnameGetRequestV1(
+                    SharedTestDataV1.incunabulaProjectInfo.shortname,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    Some(rootUserProfileV1)
+                )
                 expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
             }
 
             "return 'NotFoundException' when the project IRI is unknown" in {
 
-                responderManager ! ProjectInfoByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", Some(rootUserProfileV1))
+                responderManager ! ProjectInfoByIRIGetRequestV1(
+                    iri = "http://rdfh.ch/projects/notexisting",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    userProfileV1 = Some(rootUserProfileV1)
+                )
                 expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
 
             }
 
             "return 'NotFoundException' when the project shortname unknown " in {
-                responderManager ! ProjectInfoByShortnameGetRequestV1("projectwrong", Some(rootUserProfileV1))
+                responderManager ! ProjectInfoByShortnameGetRequestV1(
+                    shortname = "projectwrong",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    userProfileV1 = Some(rootUserProfileV1)
+                )
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
         }

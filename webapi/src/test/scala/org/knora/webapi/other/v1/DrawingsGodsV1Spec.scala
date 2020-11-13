@@ -17,21 +17,21 @@ package org.knora.webapi.other.v1
 
 import java.util.UUID
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.util.MutableUserADM
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 
 import scala.concurrent.duration._
 
 object DrawingsGodsV1Spec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -39,8 +39,8 @@ object DrawingsGodsV1Spec {
 }
 
 /**
-  * Test specification for testing a complex permissions structure of the drawings-gods-project.
-  */
+ * Test specification for testing a complex permissions structure of the drawings-gods-project.
+ */
 class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
 
     private val timeout = 5.seconds
@@ -55,10 +55,10 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     )
 
     /**
-      * issues:
-      * - https://github.com/dhlab-basel/Knora/issues/416
-      * - https://github.com/dhlab-basel/Knora/issues/610
-      */
+     * issues:
+     * - https://github.com/dhlab-basel/Knora/issues/416
+     * - https://github.com/dhlab-basel/Knora/issues/610
+     */
     "Using the DrawingsGods project data" should {
 
         val drawingsGodsProjectIri = "http://rdfh.ch/projects/0105"
@@ -71,13 +71,31 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         val ddd2 = new MutableUserADM
 
         "retrieve the drawings gods user's profile" in {
-            responderManager ! UserGetADM(UserIdentifierADM(maybeIri = Some(rootUserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(
+                identifier = UserIdentifierADM(maybeIri = Some(rootUserIri)),
+                userInformationTypeADM = UserInformationTypeADM.FULL,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             rootUser.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserGetADM(UserIdentifierADM(maybeIri = Some(ddd1UserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(
+                identifier = UserIdentifierADM(maybeIri = Some(ddd1UserIri)),
+                userInformationTypeADM = UserInformationTypeADM.FULL,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             ddd1.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserGetADM(UserIdentifierADM(maybeIri = Some(ddd2UserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(
+                maybeIri = Some(ddd2UserIri)),
+                userInformationTypeADM = UserInformationTypeADM.FULL,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+
             ddd2.set(expectMsgType[Option[UserADM]](timeout).get)
         }
 
@@ -129,6 +147,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
                 projectIri = drawingsGodsProjectIri,
                 values = valuesToBeCreated,
                 file = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = ddd1.get,
                 apiRequestID = UUID.randomUUID
             )
@@ -136,7 +155,11 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             val createResponse = expectMsgType[ResourceCreateResponseV1](timeout)
             val resourceIri = createResponse.res_id
 
-            responderManager ! ResourceFullGetRequestV1(iri = resourceIri, userADM = ddd1.get)
+            responderManager ! ResourceFullGetRequestV1(
+                iri = resourceIri,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                userADM = ddd1.get
+            )
 
             val getResponse = expectMsgType[ResourceFullResponseV1](timeout)
 
@@ -164,6 +187,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
                 projectIri = drawingsGodsProjectIri,
                 values = valuesToBeCreated,
                 file = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = rootUser.get,
                 apiRequestID = UUID.randomUUID
             )
