@@ -36,10 +36,9 @@ class MetadataMessagesV2Spec extends CoreSpec() {
         """
         @prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
         @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-        @prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 
-        <anything> dsp-repo:hasDescription "A project to test Knora functionalities" .
-        <anything> dsp-repo:hasShortcode "0001" .
+        dsp-repo:anything dsp-repo:hasDescription "A project to test Knora functionalities" .
+        dsp-repo:anything dsp-repo:hasShortcode "0001" .
         """
 
     // Parse the request to an RdfModel.
