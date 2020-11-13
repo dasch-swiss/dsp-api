@@ -46,8 +46,7 @@ class RDF4JFormatUtil extends RdfFormatUtil with Feature {
             rdf4j.rio.Rio.parse(
                 new StringReader(rdfStr),
                 "",
-                rdfFormatToRDF4JFormat(rdfFormat),
-                null
+                rdfFormatToRDF4JFormat(rdfFormat)
             )
         )
     }

@@ -23,6 +23,7 @@ import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 import scala.collection.JavaConverters._
@@ -230,22 +231,39 @@ class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFact
     }
 
     override def setNamespace(prefix: String, namespace: IRI): Unit = {
-        // Add the namespace to all the graphs in the dataset.
-        for (graphNode: jena.graph.Node <- datasetGraph.listGraphNodes.asScala) {
-            val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
+        def setNamespacesInGraph(graph: jena.graph.Graph): Unit = {
             val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
             prefixMapping.setNsPrefix(prefix, namespace)
+        }
+
+        // Add the namespace to the default graph.
+        setNamespacesInGraph(datasetGraph.getDefaultGraph)
+
+        // Add the namespace to all the named graphs in the dataset.
+        for (graphNode: jena.graph.Node <- datasetGraph.listGraphNodes.asScala) {
+            val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
+            setNamespacesInGraph(graph)
         }
     }
 
     override def getNamespaces: Map[String, IRI] = {
-        // Combine the namespaces used in all the graphs in the dataset.
-        datasetGraph.listGraphNodes.asScala.flatMap {
+        def getNamespacesFromGraph(graph: jena.graph.Graph): Map[String, IRI] = {
+            val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
+            prefixMapping.getNsPrefixMap.asScala.toMap
+        }
+
+        // Get the namespaces from the default graph.
+        val defaultGraphNamespaces: Map[String, IRI] = getNamespacesFromGraph(datasetGraph.getDefaultGraph)
+
+        // Get the namespaces used in all the named graphs in the dataset.
+        val namedGraphNamespaces: Map[String, IRI] = datasetGraph.listGraphNodes.asScala.flatMap {
             graphNode: jena.graph.Node =>
                 val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
                 val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
                 prefixMapping.getNsPrefixMap.asScala
         }.toMap
+
+        defaultGraphNamespaces ++ namedGraphNamespaces
     }
 
     override def isEmpty: Boolean = dataset.isEmpty
@@ -292,7 +310,33 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 
     import JenaConversions._
 
+    /**
+     * Represents a custom Knora datatype (used in the simple schema), for registration
+     * with Jena's TypeMapper.
+     *
+     * @param iri the IRI of the datatype.
+     */
+    private class KnoraDatatype(iri: IRI)  extends jena.datatypes.BaseDatatype(iri) {
+        override def unparse(value: java.lang.Object): String = {
+            value.toString
+        }
+
+        override def parse(lexicalForm: String): java.lang.Object = {
+            lexicalForm
+        }
+
+        override def isEqual(value1: jena.graph.impl.LiteralLabel, value2: jena.graph.impl.LiteralLabel): Boolean = {
+            value1.getDatatype == value2.getDatatype && value1.getValue.equals(value2.getValue)
+        }
+    }
+
+    // Jena's registry of datatypes.
     private val typeMapper = jena.datatypes.TypeMapper.getInstance
+
+    // Register Knora's custom datatypes.
+    for (knoraDatatypeIri <- OntologyConstants.KnoraApiV2Simple.KnoraDatatypes) {
+        typeMapper.registerDatatype(new KnoraDatatype(knoraDatatypeIri))
+    }
 
     override def makeBlankNode: BlankNode = {
         JenaBlankNode(jena.graph.NodeFactory.createBlankNode)
