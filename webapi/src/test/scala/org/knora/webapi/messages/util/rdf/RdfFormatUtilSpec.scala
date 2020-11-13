@@ -96,6 +96,22 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             assert(turtleOutputModel == inputModel)
         }
 
+        "parse RDF in RDF/XML format, producing a JsonLDDocument, then format it as RDF/XML again" in {
+            val inputRdfXml: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"))
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputRdfXml, rdfFormat = RdfXml)
+            val inputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputRdfXml, rdfFormat = RdfXml)
+            checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
+
+            val jsonLDOutputModel: RdfModel = inputJsonLDDocument.toRdfModel(rdfModelFactory)
+            checkModelForRdfTypeBook(jsonLDOutputModel)
+            assert(jsonLDOutputModel == inputModel)
+
+            val outputRdfXml: String = rdfFormatUtil.format(rdfModel = jsonLDOutputModel, rdfFormat = RdfXml)
+            val rdfXmlOutputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = outputRdfXml, rdfFormat = RdfXml)
+            checkModelForRdfTypeBook(rdfXmlOutputModel)
+            assert(rdfXmlOutputModel == inputModel)
+        }
+
         "parse RDF in JSON-LD format, producing a JsonLDDocument, then format it as JSON-LD again" in {
             val inputTurtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
             val inputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)

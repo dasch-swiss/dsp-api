@@ -216,7 +216,10 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
         if (headerXSLT.nonEmpty) {
 
-            val headerJSONLD = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+            val headerJSONLD: JsonLDDocument = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+
+            // TODO: Change the XSLT transformation used here to handle rdf:Description, so we can use RdfFormatUtil
+            // here instead of RDF4J.
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
             val stringReader = new StringReader(headerJSONLD.toCompactString)
@@ -228,9 +231,7 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
             rdfParser.parse(stringReader, "")
 
             val teiHeaderInfos = stringWriter.toString
-
             XMLUtil.applyXSLTransformation(teiHeaderInfos, headerXSLT.get)
-
 
         } else {
             s"""

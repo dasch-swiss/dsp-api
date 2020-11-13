@@ -67,20 +67,20 @@ class JenaFormatUtil extends RdfFormatUtil with Feature {
 
                 jena.riot.RDFDataMgr.write(stringWriter, datasetGraph.getDefaultGraph, rdfFormat)
 
-            case TriG =>
-                val rdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
-                    jena.riot.RDFFormat.TRIG_PRETTY
-                } else {
-                    jena.riot.RDFFormat.TRIG_FLAT
-                }
-
-                jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, rdfFormat)
-
             case RdfXml =>
                 val rdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
                     jena.riot.RDFFormat.RDFXML_PRETTY
                 } else {
                     jena.riot.RDFFormat.RDFXML_PLAIN
+                }
+
+                jena.riot.RDFDataMgr.write(stringWriter, datasetGraph.getDefaultGraph, rdfFormat)
+
+            case TriG =>
+                val rdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
+                    jena.riot.RDFFormat.TRIG_PRETTY
+                } else {
+                    jena.riot.RDFFormat.TRIG_FLAT
                 }
 
                 jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, rdfFormat)
