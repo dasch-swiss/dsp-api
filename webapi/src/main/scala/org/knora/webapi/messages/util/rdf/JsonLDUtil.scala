@@ -29,20 +29,22 @@ import javax.json._
 import javax.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, InvalidJsonLDException, InvalidRdfException}
+import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.collection.JavaConverters._
+import scala.util.control.Exception._
 
 /*
 
-The classes in this file provide a Scala API for formatting and parsing JSON-LD. The implementation
-uses the javax.json API and a Java implementation of the JSON-LD API <https://www.w3.org/TR/json-ld11-api/>
-(currently <https://github.com/filip26/titanium-json-ld>). This shields the rest of Knora from the details
-of the JSON-LD implementation. These classes also provide Knora-specific JSON-LD functionality to facilitate
-reading data from Knora API requests and constructing Knora API responses.
+The classes in this file provide a Scala API for formatting and parsing JSON-LD, and for converting
+between JSON-LD documents and RDF models. These classes also provide Knora-specific JSON-LD functionality
+to facilitate reading data from Knora API requests and constructing Knora API responses.
+
+The implementation uses the javax.json API and a Java implementation of the JSON-LD API
+<https://www.w3.org/TR/json-ld11-api/> (currently <https://github.com/filip26/titanium-json-ld>).
 
 */
 
@@ -154,8 +156,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Recursively adds the contents of this JSON-LD object representing triples (rather than a literal)
-     * to an [[RdfModel]].
+     * Recursively adds the contents of a JSON-LD entity to an [[RdfModel]].
      *
      * @param model the model being constructed.
      * @return the subject of the contents of this JSON-LD object (an IRI or a blank node).
@@ -202,8 +203,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-     * Adds `rdf:type` statements to an [[RdfModel]] to specify the types of
-     * a JSON-LD object that represents triples (rather than a literal).
+     * Adds `rdf:type` statements to an [[RdfModel]] to specify the types of a JSON-LD entity.
      *
      * @param model   the model being constructed.
      * @param rdfSubj the subject of this JSON-LD object.
@@ -213,36 +213,40 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                                   (implicit stringFormatter: StringFormatter): Unit = {
         val nodeFactory: RdfNodeFactory = model.getNodeFactory
 
+        def addRdfType(typeIri: JsonLDString): Unit = {
+            model.add(
+                subj = rdfSubj,
+                pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
+                obj = nodeFactory.makeIriNode(typeIri.value)
+            )
+        }
+
+        def invalidType: Nothing = throw InvalidJsonLDException("The objects of @type must be strings")
+
+        // Does this JSON-LD object have a @type?
         value.get(JsonLDKeywords.TYPE) match {
             case Some(rdfTypes: JsonLDValue) =>
+                // Yes. How many types does it have?
                 rdfTypes match {
-                    case jsonLDString: JsonLDString =>
-                        // It has just one @type.
-                        model.add(
-                            subj = rdfSubj,
-                            pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
-                            obj = nodeFactory.makeIriNode(jsonLDString.value)
-                        )
+                    case typeIri: JsonLDString =>
+                        // Just one.
+                        addRdfType(typeIri)
 
                     case jsonLDArray: JsonLDArray =>
-                        // It has more than one @type.
+                        // More than one.
                         for (elem <- jsonLDArray.value) {
                             elem match {
-                                case jsonLDString: JsonLDString =>
-                                    model.add(
-                                        subj = rdfSubj,
-                                        pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
-                                        obj = nodeFactory.makeIriNode(jsonLDString.value)
-                                    )
-
-                                case _ => throw InvalidJsonLDException("The objects of @type must be strings")
+                                case typeIri: JsonLDString => addRdfType(typeIri)
+                                case _ => invalidType
                             }
                         }
 
-                    case _ => throw InvalidJsonLDException("The objects of @type must be strings")
+                    case _ => invalidType
                 }
 
-            case None => ()
+            case None =>
+                // This JSON-LD object doesn't have a @type.
+                ()
         }
     }
 
@@ -253,25 +257,28 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
      */
     private def addGraphToModel(model: RdfModel)
                                (implicit stringFormatter: StringFormatter): Unit = {
+        def invalidGraph: Nothing = throw InvalidJsonLDException("The object of @graph must be a JSON-LD array of JSON-LD objects")
+
+        // Does this JSON-LD object have a @graph?
         value.get(JsonLDKeywords.GRAPH) match {
             case Some(graphContents: JsonLDValue) =>
+                // Yes. The object of @graph should be an array.
                 graphContents match {
                     case jsonLDArray: JsonLDArray =>
+                        // Add each of the array's elements to the model.
                         for (elem <- jsonLDArray.value) {
                             elem match {
-                                case jsonLDObject: JsonLDObject =>
-                                    jsonLDObject.addToModel(model)
-
-                                case _ =>
-                                    throw InvalidJsonLDException("The object of @graph must be a JSON-LD array of JSON-LD objects")
+                                case jsonLDObject: JsonLDObject => jsonLDObject.addToModel(model)
+                                case _ => invalidGraph
                             }
                         }
 
-                    case _ =>
-                        throw InvalidJsonLDException("The object of @graph must be a JSON-LD array of JSON-LD objects")
+                    case _ => invalidGraph
                 }
 
-            case None => ()
+            case None =>
+                // This JSON-LD object doesn't have a @graph.
+                ()
         }
     }
 
@@ -1250,8 +1257,7 @@ object JsonLDUtil {
 
         // Make a JSON-LD context from the model's namespaces.
         val contextMap: Map[IRI, JsonLDString] = model.getNamespaces.map {
-            case (prefix, namespace) =>
-                prefix -> JsonLDString(namespace)
+            case (prefix, namespace) => prefix -> JsonLDString(namespace)
         }
 
         val context: JsonLDObject = JsonLDObject(contextMap)
@@ -1264,12 +1270,12 @@ object JsonLDUtil {
             // Get the set of subjects in the model.
             val subjects: Set[RdfResource] = model.getSubjects
 
-            // Make a collection of subjects that have already been processed.
+            // Make a Set to collect the subjects that have already been processed.
             val processedSubjects: collection.mutable.Set[RdfResource] = collection.mutable.Set.empty
 
-            // Make an empty collection of top-level JSON-LD objects. This is a mutable collection
-            // so JSON-LD objects can be added to it and later removed when they are inlined.
-            val topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject] = collection.mutable.Map.empty
+            // Make a Map to collect the top-level entities. Entities will be added to this set
+            // and later removed when they are inlined.
+            val topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject] = collection.mutable.Map.empty
 
             // Make a JSON-LD object for each entity, inlining them as we go along.
             for (subj: RdfResource <- subjects) {
@@ -1278,27 +1284,27 @@ object JsonLDUtil {
                     // No. Get the statements about it.
                     val statements: Set[Statement] = model.find(Some(subj), None, None)
 
-                    // Make a JSON-LD object representing the entity and any nested entities.
-                    val jsonLDObject = entityToJsonLDObject(
+                    // Make a JsonLDObject representing the entity and any nested entities.
+                    val jsonLDObject: JsonLDObject = entityToJsonLDObject(
                         subj = subj,
                         statements = statements,
                         model = model,
-                        topLevelObjects = topLevelObjects,
+                        topLevelEntities = topLevelEntities,
                         processedSubjects = processedSubjects
                     )
 
-                    // Add it to the collection of top-level objects.
-                    topLevelObjects += (subj -> jsonLDObject)
+                    // Add it to the collection of top-level entities.
+                    topLevelEntities += (subj -> jsonLDObject)
                 }
             }
 
-            // Is there more than one top-level object?
-            if (topLevelObjects.size > 1) {
-                // Yes. Make a @graph.
-                JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(topLevelObjects.values.toVector)))
+            // Is there just one top-level entity?
+            if (topLevelEntities.size == 1) {
+                // Yes. Use it as the body of the document.
+                topLevelEntities.values.head
             } else {
-                // No. Use the single top-level object as the body of the document.
-                topLevelObjects.values.head
+                // No. Make a @graph.
+                JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(topLevelEntities.values.toVector)))
             }
         }
 
@@ -1311,14 +1317,14 @@ object JsonLDUtil {
      * @param subj              the subject of the entity.
      * @param statements        the statements representing the entity.
      * @param model             the [[RdfModel]] that is being read.
-     * @param topLevelObjects   the top-level JSON-LD objects that have been constructed so far.
+     * @param topLevelEntities  the top-level entities that have been constructed so far.
      * @param processedSubjects the subjects that have already been processed.
      * @return the JSON-LD object that was constructed.
      */
     private def entityToJsonLDObject(subj: RdfResource,
                                      statements: Set[Statement],
                                      model: RdfModel,
-                                     topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject],
+                                     topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
                                      processedSubjects: collection.mutable.Set[RdfResource])
                                     (implicit stringFormatter: StringFormatter): JsonLDObject = {
         // Mark the subject as processed.
@@ -1364,13 +1370,11 @@ object JsonLDUtil {
                             rdfResourceToJsonLDValue(
                                 resource = resource,
                                 model = model,
-                                topLevelObjects = topLevelObjects,
+                                topLevelEntities = topLevelEntities,
                                 processedSubjects = processedSubjects
                             )
 
                         case literal: RdfLiteral => rdfLiteralToJsonLDValue(literal)
-
-                        case other => throw InvalidRdfException(s"Unexpected RDF value: $other")
                     }.toVector
 
                     predIri -> objs
@@ -1407,17 +1411,13 @@ object JsonLDUtil {
                 val datatypeValue: String = datatypeLiteral.value
 
                 datatypeIri match {
-                    case OntologyConstants.Xsd.String =>
-                        // String.
-                        JsonLDString(datatypeValue)
+                    case OntologyConstants.Xsd.String => JsonLDString(datatypeValue)
 
                     case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer =>
-                        // Integer.
-                        JsonLDInt(datatypeValue.toInt)
+                        JsonLDInt(allCatch.opt(datatypeValue.toInt).getOrElse(throw InvalidRdfException(s"Invalid integer: $datatypeValue")))
 
                     case OntologyConstants.Xsd.Boolean =>
-                        // Boolean.
-                        JsonLDBoolean(datatypeValue.toBoolean)
+                        JsonLDBoolean(allCatch.opt(datatypeValue.toBoolean).getOrElse(throw InvalidRdfException(s"Invalid boolean: $datatypeValue")))
 
                     case _ =>
                         // There's no native JSON-LD type for this literal.
@@ -1432,20 +1432,20 @@ object JsonLDUtil {
      *
      * @param resource          the resource to be converted.
      * @param model             the [[RdfModel]] that is being read.
-     * @param topLevelObjects   the top-level JSON-LD objects that have been constructed so far.
+     * @param topLevelEntities  the top-level entities that have been constructed so far.
      * @param processedSubjects the subjects that have already been processed.
      * @return a JSON-LD value representing the resource.
      */
     private def rdfResourceToJsonLDValue(resource: RdfResource,
                                          model: RdfModel,
-                                         topLevelObjects: collection.mutable.Map[RdfResource, JsonLDObject],
+                                         topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
                                          processedSubjects: collection.mutable.Set[RdfResource])
                                         (implicit stringFormatter: StringFormatter): JsonLDValue = {
         // Have we already made a top-level JSON-LD object for this entity?
-        topLevelObjects.get(resource) match {
+        topLevelEntities.get(resource) match {
             case Some(jsonLDObject) =>
                 // Yes. Remove it from the top level and inline it here.
-                topLevelObjects -= resource
+                topLevelEntities -= resource
                 jsonLDObject
 
             case None =>
@@ -1465,7 +1465,7 @@ object JsonLDUtil {
                                 subj = resource,
                                 statements = resourceStatements,
                                 model = model,
-                                topLevelObjects = topLevelObjects,
+                                topLevelEntities = topLevelEntities,
                                 processedSubjects = processedSubjects
                             )
                         } else {
@@ -1479,10 +1479,6 @@ object JsonLDUtil {
                                 case blankNode: BlankNode =>
                                     // No, it's a blank node. This shouldn't happen.
                                     throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place")
-
-                                case _ =>
-                                    // Other resource types aren't supported.
-                                    throw InvalidRdfException(s"Unexpected RDF resource: $resource")
                             }
                         }
                 }
