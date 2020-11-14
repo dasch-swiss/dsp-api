@@ -28,9 +28,7 @@ import org.knora.webapi.messages.util.rdf._
 /**
  * An implementation of [[RdfFormatUtil]] that uses the RDF4J API.
  */
-class RDF4JFormatUtil extends RdfFormatUtil with Feature {
-    private lazy val modelFactory: RDF4JModelFactory = new RDF4JModelFactory
-
+class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory) extends RdfFormatUtil with Feature {
     override def getRdfModelFactory: RdfModelFactory = modelFactory
 
     private def rdfFormatToRDF4JFormat(rdfFormat: NonJsonLD): rdf4j.rio.RDFFormat = {

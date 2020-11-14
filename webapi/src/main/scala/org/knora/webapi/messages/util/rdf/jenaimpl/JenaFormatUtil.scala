@@ -28,9 +28,7 @@ import org.knora.webapi.messages.util.rdf._
 /**
  * An implementation of [[RdfFormatUtil]] that uses the Jena API.
  */
-class JenaFormatUtil extends RdfFormatUtil with Feature {
-    private lazy val modelFactory: JenaModelFactory = new JenaModelFactory
-
+class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfFormatUtil with Feature {
     override def getRdfModelFactory: RdfModelFactory = modelFactory
 
     override def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {

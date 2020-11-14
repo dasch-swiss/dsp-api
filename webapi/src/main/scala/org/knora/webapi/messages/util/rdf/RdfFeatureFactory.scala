@@ -35,12 +35,12 @@ object RdfFeatureFactory extends FeatureFactory {
     // Jena factory instances.
     private val jenaModelFactory = new JenaModelFactory
     private val jenaNodeFactory = new JenaNodeFactory
-    private val jenaFormatUtil = new JenaFormatUtil
+    private val jenaFormatUtil = new JenaFormatUtil(jenaModelFactory)
 
     // RDF4J factory instances.
     private val rdf4jModelFactory = new RDF4JModelFactory
     private val rdf4jNodeFactory = new RDF4JNodeFactory
-    private val rdf4jFormatUtil = new RDF4JFormatUtil
+    private val rdf4jFormatUtil = new RDF4JFormatUtil(rdf4jModelFactory)
 
     /**
      * Returns an [[RdfModelFactory]].

@@ -106,7 +106,7 @@ case class RDF4JStatement(statement: rdf4j.model.Statement) extends Statement {
 
 /**
  * Provides extension methods for converting between Knora RDF API classes and RDF4J classes
- * (see <https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods>).
+ * (see [[https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods Extension Methods]]).
  */
 object RDF4JConversions {
 
