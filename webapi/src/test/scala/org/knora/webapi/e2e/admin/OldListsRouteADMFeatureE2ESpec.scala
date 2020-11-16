@@ -616,7 +616,6 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
             "update node name" in {
                 val updateNodeName =
                     s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "name": "updated root node name"
                        |}""".stripMargin
                 clientTestDataCollector.addFile(
@@ -656,7 +655,6 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
             "update node labels" in {
                 val updateNodeLabels =
                     s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{"language": "se", "value": "nya märkningen"}]
                        |}""".stripMargin
                 clientTestDataCollector.addFile(
@@ -698,7 +696,6 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
             "update node comments" in {
                 val updateCommentsLabels =
                     s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "comments": [{"language": "se", "value": "nya kommentarer"}]
                        |}""".stripMargin
                 clientTestDataCollector.addFile(
@@ -1122,7 +1119,6 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
                 val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
                 val updateNodeName =
                     s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "name": "${newName}"
                        |}""".stripMargin
 
@@ -1163,7 +1159,6 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
                 val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
                 val updateNodeLabels =
                     s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{"language": "se", "value": "nya märkningen för nod"}]
                        |}""".stripMargin
 
@@ -1207,7 +1202,6 @@ class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ES
                 val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
                 val updateNodeComments =
                     s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "comments": [{"language": "se", "value": "nya kommentarer för nod"}]
                        |}""".stripMargin
 

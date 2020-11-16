@@ -57,11 +57,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
         case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
         case ListCreateRequestADM(createRootNode, requestingUser , apiRequestID) => listCreateRequestADM(createRootNode, apiRequestID)
-        case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, requestingUser, apiRequestID) => nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
-        case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) => nodeNameChangeRequest(nodeIri, changeNodeNameRequest, apiRequestID)
-        case NodeLabelsChangeRequestADM(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID) => nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, apiRequestID)
-        case NodeCommentsChangeRequestADM(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID) => nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, apiRequestID)
         case ListChildNodeCreateRequestADM(createChildNodeRequest, requestingUser , apiRequestID) => listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
+        case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, requestingUser, apiRequestID) => nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
+        case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) => nodeNameChangeRequest(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
+        case NodeLabelsChangeRequestADM(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID) => nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest,requestingUser, apiRequestID)
+        case NodeCommentsChangeRequestADM(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID) => nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -823,7 +823,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
-    private def nodeNameChangeRequest(nodeIri: IRI, changeNodeNameRequest: ChangeNodeNameApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+    private def nodeNameChangeRequest(nodeIri: IRI, changeNodeNameRequest: ChangeNodeNameApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
         def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
             if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeNameRequest.name)
                 throw UpdateNotPerformedException("Node's 'name' was not updated. Please report this as a possible bug.")
@@ -832,12 +832,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
          * The actual task run with an IRI lock.
          */
-        def nodeNameChangeTask(nodeIri: IRI, changeNodeNameRequest: ChangeNodeNameApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+        def nodeNameChangeTask(nodeIri: IRI, changeNodeNameRequest: ChangeNodeNameApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+            projectIri <- getProjectIriFromNode(nodeIri)
+            // check if the requesting user is allowed to perform operation
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
 
             changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
                 ChangeNodeInfoApiRequestADM(
                     listIri = nodeIri,
-                    projectIri = changeNodeNameRequest.projectIri,
+                    projectIri = projectIri,
                     name= Some(changeNodeNameRequest.name)))
             changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeNameSparqlString)).mapTo[SparqlUpdateResponse]
             /* Verify that the node info was updated */
@@ -857,7 +863,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 nodeIri,
-                () => nodeNameChangeTask(nodeIri, changeNodeNameRequest, apiRequestID)
+                () => nodeNameChangeTask(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
             )
         } yield taskResult
     }
@@ -867,12 +873,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      *
      * @param nodeIri                   the node's IRI.
      * @param changeNodeLabelsRequest   the new node labels.
+     * @param requestingUser            the requesting user.
      * @param apiRequestID              the unique api request ID.
      * @return a [[NodeInfoGetResponseADM]]
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
-    private def nodeLabelsChangeRequest(nodeIri: IRI, changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+    private def nodeLabelsChangeRequest(nodeIri: IRI, changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
         def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
             if (updatedNode.getLabels.stringLiterals.diff(changeNodeLabelsRequest.labels).nonEmpty)
                 throw UpdateNotPerformedException("Node's 'labels' where not updated. Please report this as a possible bug.")
@@ -882,12 +889,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
          * The actual task run with an IRI lock.
          */
-        def nodeLabelsChangeTask(nodeIri: IRI, changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
-
+        def nodeLabelsChangeTask(nodeIri: IRI, changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+            projectIri <- getProjectIriFromNode(nodeIri)
+            // check if the requesting user is allowed to perform operation
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
             changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
                 ChangeNodeInfoApiRequestADM(
                     listIri = nodeIri,
-                    projectIri = changeNodeLabelsRequest.projectIri,
+                    projectIri = projectIri,
                     labels= Some(changeNodeLabelsRequest.labels)))
             changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeLabelsSparqlString)).mapTo[SparqlUpdateResponse]
             /* Verify that the node info was updated */
@@ -907,7 +919,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 nodeIri,
-                () => nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, apiRequestID)
+                () => nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID)
             )
         } yield taskResult
     }
@@ -917,12 +929,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      *
      * @param nodeIri                       the node's IRI.
      * @param changeNodeCommentsRequest     the new node comments.
+     * @param requestingUser                the requesting user.
      * @param apiRequestID                  the unique api request ID.
      * @return a [[NodeInfoGetResponseADM]]
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
-    private def nodeCommentsChangeRequest(nodeIri: IRI, changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+    private def nodeCommentsChangeRequest(nodeIri: IRI, changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
         def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
             if (updatedNode.getComments.stringLiterals.diff(changeNodeCommentsRequest.comments).nonEmpty)
                 throw UpdateNotPerformedException("Node's 'comments' where not updated. Please report this as a possible bug.")
@@ -932,12 +945,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
          * The actual task run with an IRI lock.
          */
-        def nodeCommentsChangeTask(nodeIri: IRI, changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
-
+        def nodeCommentsChangeTask(nodeIri: IRI, changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+            projectIri <- getProjectIriFromNode(nodeIri)
             changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
                 ChangeNodeInfoApiRequestADM(
                     listIri = nodeIri,
-                    projectIri = changeNodeCommentsRequest.projectIri,
+                    projectIri = projectIri,
                     comments= Some(changeNodeCommentsRequest.comments)))
             changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
             /* Verify that the node info was updated */
@@ -957,7 +970,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 nodeIri,
-                () => nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, apiRequestID)
+                () => nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID)
             )
         } yield taskResult
     }
@@ -993,40 +1006,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         for {
             askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri).toString)
             // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
-
-            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = askResponse.result
-
-        } yield result
-    }
-
-    /**
-     * Helper method for checking if a list node identified by IRI exists.
-     *
-     * @param listNodeIri the IRI of the project.
-     * @return a [[Boolean]].
-     */
-    private def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
-        for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri).toString)
-            //_ = log.debug("listNodeByIriExists - query: {}", askString)
-
-            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = askResponse.result
-
-        } yield result
-    }
-
-    /**
-     * Helper method for checking if a list node identified by name exists.
-     *
-     * @param name the name of the list.
-     * @return a [[Boolean]].
-     */
-    private def listNodeByNameExists(name: String): Future[Boolean] = {
-        for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
-            //_ = log.debug("listNodeByNameExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = askResponse.result
@@ -1101,4 +1080,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeComments = changeNodeInfoRequest.comments
         ).toString
     } yield changeNodeInfoSparqlString
+
+    private def getProjectIriFromNode (nodeIri: IRI):Future[IRI] = for {
+        maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+        projectIri <- maybeNode match {
+            case Some(rootNode: ListRootNodeADM) =>
+                Future(rootNode.projectIri)
+            case Some(childNode: ListChildNodeADM) =>
+                for {
+                    maybeRoot <- listNodeGetADM(nodeIri = childNode.hasRootNode, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+                    rootProjectIri = maybeRoot match {
+                        case Some(rootNode: ListRootNodeADM) => rootNode.projectIri
+                        case _ => throw BadRequestException(s"Root node of $nodeIri was not found. Please verify the given IRI.")
+                    }
+                } yield rootProjectIri
+            case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
+        }
+    } yield projectIri
 }
