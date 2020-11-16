@@ -151,7 +151,7 @@ trait RdfFormatUtil {
             case nonJsonLD: NonJsonLD =>
                 // Use an implementation-specific function to parse other formats to an RdfModel.
                 // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
-                JsonLDUtil.fromRdfModel(parseNonJsonLDToRdfModel(rdfStr, nonJsonLD))
+                JsonLDUtil.fromRdfModel(parseNonJsonLDToRdfModel(rdfStr = rdfStr, rdfFormat = nonJsonLD))
         }
     }
 
@@ -176,12 +176,17 @@ trait RdfFormatUtil {
                 }
 
             case nonJsonLD: NonJsonLD =>
+                // Some formats can't represent named graphs.
                 if (rdfModel.getContexts.nonEmpty && !nonJsonLD.supportsNamedGraphs) {
                     throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
                 }
 
                 // Use an implementation-specific function to convert to other formats.
-                formatNonJsonLD(rdfModel, nonJsonLD, prettyPrint)
+                formatNonJsonLD(
+                    rdfModel = rdfModel,
+                    rdfFormat = nonJsonLD,
+                    prettyPrint = prettyPrint
+                )
         }
     }
 
@@ -202,5 +207,5 @@ trait RdfFormatUtil {
      * @param prettyPrint if `true`, the output should be pretty-printed.
      * @return a string representation of the RDF model.
      */
-    protected def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean = true): String
+    protected def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String
 }
