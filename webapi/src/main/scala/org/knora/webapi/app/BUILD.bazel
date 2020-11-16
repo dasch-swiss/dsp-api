@@ -55,6 +55,8 @@ scala_binary(
         "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:org_slf4j_log4j_over_slf4j",
+        "@maven//:org_glassfish_jakarta_json",
+        "@maven//:org_scala_lang_modules_scala_java8_compat_2_12",
     ],
 )
 

@@ -10,8 +10,8 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
-        "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/feature",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_apicatalog_titanium_json_ld",
@@ -35,14 +35,10 @@ scala_library(
         "@maven//:org_apache_jena_apache_jena_libs",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_jodd_jodd",
-        "@maven//:org_scala_lang_modules_scala_java8_compat_2_12",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_scala_lang_scala_library",
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_security_spring_security_core",
-        # The following dependency is needed even though Bazel says they are unncessary.
-        # Please don't remove them!
-        "@maven//:org_glassfish_jakarta_json",
     ],
 )

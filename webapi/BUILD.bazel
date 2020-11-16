@@ -2,7 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_repl", "scala_test")
 
-
 # alias added for convenience. To call, use: bazel run //webapi:GenerateContributorsFile
 alias(
     name = "GenerateContributorsFile",
@@ -168,7 +167,6 @@ scala_library(
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
@@ -176,9 +174,7 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_scalactic_scalactic_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_scalatest_scalatest_core_2_12",
         "@maven//:org_scalatest_scalatest_wordspec_2_12",
         "@maven//:org_scalatest_scalatest_matchers_core_2_12",
@@ -237,7 +233,6 @@ scala_library(
         "@maven//:org_scala_lang_scala_library",
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_scalactic_scalactic_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:org_scalatest_scalatest_core_2_12",
         "@maven//:org_scalatest_scalatest_wordspec_2_12",
         "@maven//:org_scalatest_scalatest_matchers_core_2_12",
