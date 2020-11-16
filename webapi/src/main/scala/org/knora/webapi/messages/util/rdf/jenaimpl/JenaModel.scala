@@ -235,18 +235,18 @@ class JenaModel(private val dataset: jena.query.Dataset,
     }
 
     override def setNamespace(prefix: String, namespace: IRI): Unit = {
-        def setNamespacesInGraph(graph: jena.graph.Graph): Unit = {
+        def setNamespaceInGraph(graph: jena.graph.Graph): Unit = {
             val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
             prefixMapping.setNsPrefix(prefix, namespace)
         }
 
         // Add the namespace to the default graph.
-        setNamespacesInGraph(datasetGraph.getDefaultGraph)
+        setNamespaceInGraph(datasetGraph.getDefaultGraph)
 
         // Add the namespace to all the named graphs in the dataset.
         for (graphNode: jena.graph.Node <- datasetGraph.listGraphNodes.asScala) {
             val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
-            setNamespacesInGraph(graph)
+            setNamespaceInGraph(graph)
         }
     }
 
