@@ -58,6 +58,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
         case ListCreateRequestADM(createRootNode, requestingUser , apiRequestID) => listCreateRequestADM(createRootNode, apiRequestID)
         case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, requestingUser, apiRequestID) => nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
+        case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) => nodeNameChangeRequest(nodeIri, changeNodeNameRequest, apiRequestID)
+        case NodeLabelsChangeRequestADM(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID) => nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, apiRequestID)
+        case NodeCommentsChangeRequestADM(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID) => nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, apiRequestID)
         case ListChildNodeCreateRequestADM(createChildNodeRequest, requestingUser , apiRequestID) => listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -226,8 +229,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // _ = log.debug(s"listNodeInfoGetADM - statements: {}", statements)
 
             maybeListNodeInfo = if (statements.nonEmpty) {
-
-                // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
 
                 val nodeInfo: ListNodeInfoADM = statements.head match {
                     case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
@@ -715,11 +716,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * Changes basic node information stored (root or child)
      *
      * @param nodeIri           the list's IRI.
-     * @param changeNodeRequest the new list information.
+     * @param changeNodeRequest the new node information.
      * @param apiRequestID      the unique api request ID.
-     * @return a [[RootNodeInfoGetResponseADM]]
+     * @return a [[NodeInfoGetResponseADM]]
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-     * @throws BadRequestException         in the case when the project IRI is missing or invalid.
+     * @throws BadRequestException         in the case when the list IRI given in the path does not match with the one given in the payload.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
     private def nodeInfoChangeRequest(nodeIri: IRI, changeNodeRequest: ChangeNodeInfoApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
@@ -749,53 +750,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 if (!nodeIri.equals(changeNodeRequest.listIri)) throw BadRequestException("IRI in path and payload don't match.")
             )
 
-            /* Get the project information */
-            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(changeNodeRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
-            project: ProjectADM = maybeProject match {
-                case Some(project: ProjectADM) => project
-                case None => throw BadRequestException(s"Project '${changeNodeRequest.projectIri}' not found.")
-            }
-
-            /* verify that the list name is unique for the project */
-            nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name)
-            _ = if (!nodeNameUnique) {
-                throw DuplicateValueException(s"The name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
-            }
-
-            /* Verify that the node with Iri exists. */
-            maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            node = maybeNode.getOrElse(throw BadRequestException(s"List item with '$nodeIri' not found."))
-
-            isRootNode = maybeNode match {
-                case Some(_:ListRootNodeADM) => true
-                case Some(_:ListChildNodeADM) => false
-                case _ => false
-            }
-            hasOldName: Boolean = node.getName.nonEmpty
-
-
-            // get the data graph of the project.
-            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
-
-            // Update the list
-            changeListInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateListInfo(
-                dataNamedGraph = dataNamedGraph,
-                triplestore = settings.triplestoreType,
-                nodeIri = nodeIri,
-                hasOldName = hasOldName,
-                isRootNode = isRootNode,
-                maybeName = changeNodeRequest.name,
-                projectIri = project.id,
-                listClassIri = OntologyConstants.KnoraBase.ListNode,
-                maybeLabels = changeNodeRequest.labels,
-                maybeComments = changeNodeRequest.comments
-            ).toString
-            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
-            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
-
+            changeNodeInfoSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
+            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeInfoSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the node info was updated */
-            maybeNodeADM <- listNodeInfoGetADM(nodeIri = changeNodeRequest.listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
 
             response = maybeNodeADM match {
                 case Some(rootNode: ListRootNodeInfoADM) =>
@@ -818,7 +777,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
         } yield taskResult
     }
-
 
     /**
      * Creates a new child node and appends it to an existing list node.
@@ -855,6 +813,155 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     }
 
+    /**
+     * Changes name of the node (root or child)
+     *
+     * @param nodeIri               the node's IRI.
+     * @param changeNodeNameRequest the new node name.
+     * @param apiRequestID          the unique api request ID.
+     * @return a [[NodeInfoGetResponseADM]]
+     * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+     * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+     */
+    private def nodeNameChangeRequest(nodeIri: IRI, changeNodeNameRequest: ChangeNodeNameApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+        def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
+            if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeNameRequest.name)
+                throw UpdateNotPerformedException("Node's 'name' was not updated. Please report this as a possible bug.")
+        }
+
+        /**
+         * The actual task run with an IRI lock.
+         */
+        def nodeNameChangeTask(nodeIri: IRI, changeNodeNameRequest: ChangeNodeNameApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+
+            changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
+                ChangeNodeInfoApiRequestADM(
+                    listIri = nodeIri,
+                    projectIri = changeNodeNameRequest.projectIri,
+                    name= Some(changeNodeNameRequest.name)))
+            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeNameSparqlString)).mapTo[SparqlUpdateResponse]
+            /* Verify that the node info was updated */
+            maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            response = maybeNodeADM match {
+                case Some(rootNode: ListRootNodeInfoADM) =>
+                    verifyUpdatedNode(rootNode)
+                    RootNodeInfoGetResponseADM(listinfo = rootNode)
+                case Some(childNode: ListChildNodeInfoADM) =>
+                    verifyUpdatedNode(childNode)
+                    ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                case _ => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
+            }
+        } yield response
+        for {
+            // run list info update with an local IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                nodeIri,
+                () => nodeNameChangeTask(nodeIri, changeNodeNameRequest, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    /**
+     * Changes labels of the node (root or child)
+     *
+     * @param nodeIri                   the node's IRI.
+     * @param changeNodeLabelsRequest   the new node labels.
+     * @param apiRequestID              the unique api request ID.
+     * @return a [[NodeInfoGetResponseADM]]
+     * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+     * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+     */
+    private def nodeLabelsChangeRequest(nodeIri: IRI, changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+        def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
+            if (updatedNode.getLabels.stringLiterals.diff(changeNodeLabelsRequest.labels).nonEmpty)
+                throw UpdateNotPerformedException("Node's 'labels' where not updated. Please report this as a possible bug.")
+
+        }
+
+        /**
+         * The actual task run with an IRI lock.
+         */
+        def nodeLabelsChangeTask(nodeIri: IRI, changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+
+            changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
+                ChangeNodeInfoApiRequestADM(
+                    listIri = nodeIri,
+                    projectIri = changeNodeLabelsRequest.projectIri,
+                    labels= Some(changeNodeLabelsRequest.labels)))
+            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeLabelsSparqlString)).mapTo[SparqlUpdateResponse]
+            /* Verify that the node info was updated */
+            maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            response = maybeNodeADM match {
+                case Some(rootNode: ListRootNodeInfoADM) =>
+                    verifyUpdatedNode(rootNode)
+                    RootNodeInfoGetResponseADM(listinfo = rootNode)
+                case Some(childNode: ListChildNodeInfoADM) =>
+                    verifyUpdatedNode(childNode)
+                    ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                case _ => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
+            }
+        } yield response
+        for {
+            // run list info update with an local IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                nodeIri,
+                () => nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    /**
+     * Changes comments of the node (root or child)
+     *
+     * @param nodeIri                       the node's IRI.
+     * @param changeNodeCommentsRequest     the new node comments.
+     * @param apiRequestID                  the unique api request ID.
+     * @return a [[NodeInfoGetResponseADM]]
+     * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+     * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+     */
+    private def nodeCommentsChangeRequest(nodeIri: IRI, changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
+        def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
+            if (updatedNode.getComments.stringLiterals.diff(changeNodeCommentsRequest.comments).nonEmpty)
+                throw UpdateNotPerformedException("Node's 'comments' where not updated. Please report this as a possible bug.")
+
+        }
+
+        /**
+         * The actual task run with an IRI lock.
+         */
+        def nodeCommentsChangeTask(nodeIri: IRI, changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM, apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+
+            changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
+                ChangeNodeInfoApiRequestADM(
+                    listIri = nodeIri,
+                    projectIri = changeNodeCommentsRequest.projectIri,
+                    comments= Some(changeNodeCommentsRequest.comments)))
+            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
+            /* Verify that the node info was updated */
+            maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            response = maybeNodeADM match {
+                case Some(rootNode: ListRootNodeInfoADM) =>
+                    verifyUpdatedNode(rootNode)
+                    RootNodeInfoGetResponseADM(listinfo = rootNode)
+                case Some(childNode: ListChildNodeInfoADM) =>
+                    verifyUpdatedNode(childNode)
+                    ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                case _ => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
+            }
+        } yield response
+        for {
+            // run list info update with an local IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                nodeIri,
+                () => nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, apiRequestID)
+            )
+        } yield taskResult
+    }
+
     ////////////////////
     // Helper Methods //
     ////////////////////
@@ -867,7 +974,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString)
             //_ = log.debug("projectByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -884,7 +991,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri).toString)
             // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -901,7 +1008,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri).toString)
             //_ = log.debug("listNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -950,4 +1057,48 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             case None => FastFuture.successful(true)
         }
     }
+
+    private def getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest: ChangeNodeInfoApiRequestADM): Future[String] = for {
+        /* Get the project information */
+        maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(changeNodeInfoRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+        project: ProjectADM = maybeProject match {
+            case Some(project: ProjectADM) => project
+            case None => throw BadRequestException(s"Project '${changeNodeInfoRequest.projectIri}' not found.")
+        }
+
+        /* verify that the list name is unique for the project */
+        nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeNodeInfoRequest.projectIri, changeNodeInfoRequest.name)
+        _ = if (!nodeNameUnique) {
+            throw DuplicateValueException(s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri}.")
+        }
+
+        /* Verify that the node with Iri exists. */
+        maybeNode <- listNodeGetADM(nodeIri = changeNodeInfoRequest.listIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+        node = maybeNode.getOrElse(throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found."))
+
+        isRootNode = maybeNode match {
+            case Some(_:ListRootNodeADM) => true
+            case Some(_:ListChildNodeADM) => false
+            case _ => false
+        }
+        hasOldName: Boolean = node.getName.nonEmpty
+
+
+        // get the data graph of the project.
+        dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
+
+        // Update the list
+        changeNodeInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateListInfo(
+            dataNamedGraph = dataNamedGraph,
+            triplestore = settings.triplestoreType,
+            nodeIri = changeNodeInfoRequest.listIri,
+            hasOldName = hasOldName,
+            isRootNode = isRootNode,
+            maybeName = changeNodeInfoRequest.name,
+            projectIri = project.id,
+            listClassIri = OntologyConstants.KnoraBase.ListNode,
+            maybeLabels = changeNodeInfoRequest.labels,
+            maybeComments = changeNodeInfoRequest.comments
+        ).toString
+    } yield changeNodeInfoSparqlString
 }

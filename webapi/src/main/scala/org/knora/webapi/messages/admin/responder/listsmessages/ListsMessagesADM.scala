@@ -142,7 +142,7 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(s"Invalid IRI is given: ${listIri}.")
     }
 
-    // If a root node, check that project Iri is given
+    // Check that project Iri is given
     if (projectIri.isEmpty) {
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
@@ -167,6 +167,68 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
+/**
+ * Represents an API request payload that asks the Knora API server to update an existing node's name (root or child).
+ *
+ * @param projectIri    the IRI of the project node/list belongs to.
+ * @param name          the new name of the node.
+ */
+case class ChangeNodeNameApiRequestADM(projectIri: IRI, name: String) extends ListADMJsonProtocol {
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    // Check that project Iri is given
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    // Verify the project IRI
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+    def toJsValue: JsValue = changeNodeNameApiRequestADMFormat.write(this)
+}
+
+/**
+ * Represents an API request payload that asks the Knora API server to update an existing node's labels (root or child).
+ *
+ * @param projectIri      the IRI of the project node/list belongs to.
+ * @param labels          the new labels of the node
+ */
+case class ChangeNodeLabelsApiRequestADM(projectIri: IRI, labels: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    // Check that project Iri is given
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    // Verify the project IRI
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+    def toJsValue: JsValue = changeNodeLabelsApiRequestADMFormat.write(this)
+}
+
+/**
+ * Represents an API request payload that asks the Knora API server to update an existing node's comments (root or child).
+ *
+ * @param projectIri        the IRI of the project node/list belongs to.
+ * @param comments          the new comments of the node.
+ */
+case class ChangeNodeCommentsApiRequestADM(projectIri: IRI, comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    // Check that project Iri is given
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    // Verify the project IRI
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+    def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -270,6 +332,62 @@ case class ListChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRe
 
 }
 
+/**
+ * Request updating the name of an existing node.
+ * @param nodeIri               the IRI of the node whose name should be updated.
+ * @param changeNodeNameRequest the payload containing the new name.
+ * @param requestingUser        the user initiating the request.
+ * @param apiRequestID          the ID of the API request.
+ */
+case class NodeNameChangeRequestADM(nodeIri: IRI,
+                                    changeNodeNameRequest: ChangeNodeNameApiRequestADM,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM {
+    // check if the requesting user is allowed to perform operation
+    if (!requestingUser.permissions.isProjectAdmin(changeNodeNameRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        // not project or a system admin
+        throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+    }
+
+}
+
+/**
+ * Request updating the labels of an existing node.
+ * @param nodeIri                   the IRI of the node whose name should be updated.
+ * @param changeNodeLabelsRequest   the payload containing the new labels.
+ * @param requestingUser            the user initiating the request.
+ * @param apiRequestID              the ID of the API request.
+ */
+case class NodeLabelsChangeRequestADM(nodeIri: IRI,
+                                        changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
+                                        requestingUser: UserADM,
+                                        apiRequestID: UUID) extends ListsResponderRequestADM {
+    // check if the requesting user is allowed to perform operation
+    if (!requestingUser.permissions.isProjectAdmin(changeNodeLabelsRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        // not project or a system admin
+        throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+    }
+
+}
+
+/**
+ * Request updating the comments of an existing node.
+ * @param nodeIri                       the IRI of the node whose name should be updated.
+ * @param changeNodeCommentsRequest     the payload containing the new comments.
+ * @param requestingUser                the user initiating the request.
+ * @param apiRequestID                  the ID of the API request.
+ */
+case class NodeCommentsChangeRequestADM(nodeIri: IRI,
+                                      changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+                                      requestingUser: UserADM,
+                                      apiRequestID: UUID) extends ListsResponderRequestADM {
+    // check if the requesting user is allowed to perform operation
+    if (!requestingUser.permissions.isProjectAdmin(changeNodeCommentsRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        // not project or a system admin
+        throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+    }
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
@@ -1069,4 +1187,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val listNodeGetResponseADMFormat: RootJsonFormat[ListNodeGetResponseADM] = jsonFormat(ListNodeGetResponseADM, "node")
     implicit val listInfoGetResponseADMFormat: RootJsonFormat[RootNodeInfoGetResponseADM] = jsonFormat(RootNodeInfoGetResponseADM, "listinfo")
     implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ChildNodeInfoGetResponseADM] = jsonFormat(ChildNodeInfoGetResponseADM, "nodeinfo")
+    implicit val changeNodeNameApiRequestADMFormat: RootJsonFormat[ChangeNodeNameApiRequestADM] = jsonFormat(ChangeNodeNameApiRequestADM, "projectIri", "name")
+    implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "projectIri", "labels")
+    implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "projectIri", "comments")
 }
