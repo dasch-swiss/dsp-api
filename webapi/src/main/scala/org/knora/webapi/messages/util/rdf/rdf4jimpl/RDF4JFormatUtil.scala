@@ -28,7 +28,8 @@ import org.knora.webapi.messages.util.rdf._
 /**
  * An implementation of [[RdfFormatUtil]] that uses the RDF4J API.
  */
-class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory) extends RdfFormatUtil with Feature {
+class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
+                      private val nodeFactory: RDF4JNodeFactory) extends RdfFormatUtil with Feature {
     override def getRdfModelFactory: RdfModelFactory = modelFactory
 
     private def rdfFormatToRDF4JFormat(rdfFormat: NonJsonLD): rdf4j.rio.RDFFormat = {
@@ -41,11 +42,12 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory) extends RdfFo
 
     protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
         new RDF4JModel(
-            rdf4j.rio.Rio.parse(
+            model = rdf4j.rio.Rio.parse(
                 new StringReader(rdfStr),
                 "",
                 rdfFormatToRDF4JFormat(rdfFormat)
-            )
+            ),
+            nodeFactory = nodeFactory
         )
     }
 

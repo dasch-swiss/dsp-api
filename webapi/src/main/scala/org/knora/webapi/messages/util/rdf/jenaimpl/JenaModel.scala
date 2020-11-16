@@ -175,12 +175,12 @@ abstract class JenaContextFactory {
  *
  * @param dataset the underlying Jena dataset.
  */
-class JenaModel(private val dataset: jena.query.Dataset) extends JenaContextFactory with RdfModel with Feature {
+class JenaModel(private val dataset: jena.query.Dataset,
+                private val nodeFactory: JenaNodeFactory) extends JenaContextFactory with RdfModel with Feature {
 
     import JenaConversions._
 
     private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
-    private lazy val nodeFactory: JenaNodeFactory = new JenaNodeFactory
 
     /**
      * Returns the underlying [[jena.query.Dataset]].
@@ -378,6 +378,9 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 /**
  * A factory for creating instances of [[JenaModel]].
  */
-class JenaModelFactory extends RdfModelFactory {
-    override def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
+class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfModelFactory {
+    override def makeEmptyModel: JenaModel = new JenaModel(
+        dataset = jena.query.DatasetFactory.create,
+        nodeFactory = nodeFactory
+    )
 }

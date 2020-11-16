@@ -32,15 +32,15 @@ object RdfFeatureFactory extends FeatureFactory {
      */
     private val JENA_TOGGLE_NAME = "jena-rdf-library"
 
-    // Jena factory instances.
-    private val jenaModelFactory = new JenaModelFactory
+    // Jena factory singletons.
     private val jenaNodeFactory = new JenaNodeFactory
+    private val jenaModelFactory = new JenaModelFactory(jenaNodeFactory)
     private val jenaFormatUtil = new JenaFormatUtil(jenaModelFactory)
 
-    // RDF4J factory instances.
-    private val rdf4jModelFactory = new RDF4JModelFactory
+    // RDF4J factory singletons.
     private val rdf4jNodeFactory = new RDF4JNodeFactory
-    private val rdf4jFormatUtil = new RDF4JFormatUtil(rdf4jModelFactory)
+    private val rdf4jModelFactory = new RDF4JModelFactory(rdf4jNodeFactory)
+    private val rdf4jFormatUtil = new RDF4JFormatUtil(modelFactory = rdf4jModelFactory, nodeFactory = rdf4jNodeFactory)
 
     /**
      * Returns an [[RdfModelFactory]].

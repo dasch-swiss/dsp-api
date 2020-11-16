@@ -162,12 +162,12 @@ object RDF4JConversions {
  *
  * @param model the underlying RDF4J model.
  */
-class RDF4JModel(private val model: rdf4j.model.Model) extends RdfModel with Feature {
+class RDF4JModel(private val model: rdf4j.model.Model,
+                 private val nodeFactory: RDF4JNodeFactory) extends RdfModel with Feature {
 
     import RDF4JConversions._
 
     private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
-    private lazy val nodeFactory: RDF4JNodeFactory = new RDF4JNodeFactory
 
     /**
      * Returns the underlying [[rdf4j.model.Model]].
@@ -331,6 +331,9 @@ class RDF4JNodeFactory extends RdfNodeFactory {
 /**
  * A factory for creating instances of [[RDF4JModel]].
  */
-class RDF4JModelFactory extends RdfModelFactory {
-    override def makeEmptyModel: RDF4JModel = new RDF4JModel(new rdf4j.model.impl.LinkedHashModel)
+class RDF4JModelFactory(private val nodeFactory: RDF4JNodeFactory) extends RdfModelFactory {
+    override def makeEmptyModel: RDF4JModel = new RDF4JModel(
+        model = new rdf4j.model.impl.LinkedHashModel,
+        nodeFactory = nodeFactory
+    )
 }
