@@ -276,7 +276,10 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                 ))
             ))
 
-            assert(outputJsonLD.body == expectedWithFoo2AtTopLevel || outputJsonLD.body == expectedWithFoo1AtTopLevel)
+            assert(
+                outputJsonLD.body == expectedWithFoo1AtTopLevel ||
+                outputJsonLD.body == expectedWithFoo2AtTopLevel
+            )
         }
     }
 }
