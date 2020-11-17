@@ -95,7 +95,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
             case JsonLD =>
                 // JSON-LD. Did the client request flat JSON-LD?
                 if (SchemaOptions.returnFlatJsonLD(schemaOptions)) {
-                    // Yes. Flatten the structure by converting it to an RdfModel, then
+                    // Yes. Convert the JsonLDDocument to an RdfModel, then
                     // format the RdfModel as flat JSON-LD.
                     formatViaRdfModel(jsonLDDocument = jsonLDDocument, rdfFormat = JsonLD)
                 } else {
@@ -147,6 +147,8 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
                 // Some other format. Parse the Turtle to an RdfModel.
                 val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
                 val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+
+                println(s"KnoraTurtleResponseV2: got schema options $schemaOptions")
 
                 // Return the model in the requested format.
                 rdfFormatUtil.format(

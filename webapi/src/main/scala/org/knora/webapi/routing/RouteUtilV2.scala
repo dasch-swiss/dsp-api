@@ -177,7 +177,7 @@ object RouteUtilV2 {
             }
         }
 
-        requestContext.request.headers.find(_.lowercaseName == MARKUP_HEADER).map {
+        requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map {
             header => nameToJsonLDRendering(header.value)
         }
     }

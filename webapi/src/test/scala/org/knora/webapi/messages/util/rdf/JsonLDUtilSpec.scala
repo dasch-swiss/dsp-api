@@ -299,11 +299,11 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                   |
                   |<http://rdfh.ch/foo2> a foo:Foo;
                   |  rdfs:label "foo 2";
+                  |  foo:hasIndex "3"^^xsd:integer;
                   |  foo:hasBar [
                   |    a foo:Bar;
                   |    rdfs:label "bar 2"
-                  |  ];
-                  |  foo:hasIndex "3"^^xsd:integer.
+                  |  ].
                   |""".stripMargin
 
             // Parse it to an RDF4J Model.
@@ -321,14 +321,14 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                 )),
                 "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
                 "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-                    "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
-                        "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
-                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
-                    )),
                     "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
                     "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
                     "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-                    "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3)
+                    "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                    "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                        "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
+                    ))
                 ))
             ))
 
