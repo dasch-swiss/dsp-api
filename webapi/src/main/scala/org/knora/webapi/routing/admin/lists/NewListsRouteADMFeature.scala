@@ -50,18 +50,25 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
         getLists(featureFactoryConfig) ~
             createListItem(featureFactoryConfig) ~
-            getListORNode(featureFactoryConfig) ~
-            updateList(featureFactoryConfig) ~
-            deleteListNode(featureFactoryConfig) ~
+            getListItem(featureFactoryConfig) ~
+            updateListItem(featureFactoryConfig) ~
+            deleteListItem(featureFactoryConfig) ~
             getNodeInfo(featureFactoryConfig) ~
             updateNodeName(featureFactoryConfig) ~
             updateNodeLabels(featureFactoryConfig) ~
             updateNodeComments(featureFactoryConfig)
 
     /* return all lists optionally filtered by project */
-    @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
+    @Path("/{IRI}")
+    @ApiOperation(httpMethod = "GET", response = classOf[ListsGetResponseADM], value = "Get lists", nickname = "newGetLists")
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header"),
+        new ApiImplicitParam(name = "projectIri", value = "IRI of the project", required = true,
+            dataType = "string", paramType = "query")
     ))
     /* return all lists optionally filtered by project */
     private def getLists(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
@@ -88,11 +95,12 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     }
 
     /* create a new list item (root or child node)*/
-    // TODO: fix swagger
-    @ApiOperation(value = "Add new list item", nickname = "addListItem", httpMethod = "POST", response = classOf[ListGetResponseADM])
+    @ApiOperation(value = "Add new list item", nickname = "newAddListItem", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" item to create", required = true,
-            dataTypeClass = classOf[CreateListApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[CreateListApiRequestADM], paramType = "body"),
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -136,11 +144,14 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
     /* get a node (root or child) */
     @Path("/{IRI}")
-    @ApiOperation(value = "Get a list node", nickname = "getlistNode", httpMethod = "GET", response = classOf[ListGetResponseADM])
+    @ApiOperation(value = "Get a list item", nickname = "newGetlistItem", httpMethod = "GET", response = classOf[ListGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def getListORNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")))
+    private def getListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         get {
             /* return a node, root or child, with all children */
             requestContext =>
@@ -165,15 +176,17 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update list
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
+    @ApiOperation(value = "Update basic node information", nickname = "newPutListItem", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
-        new ApiImplicitParam(name = "body", value = "\"list\" to update", required = true,
-            dataTypeClass = classOf[ChangeNodeInfoApiRequestADM], paramType = "body")
+        new ApiImplicitParam(name = "body", value = "\"list\" item to update", required = true,
+            dataTypeClass = classOf[ChangeNodeInfoApiRequestADM], paramType = "body"),
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+    private def updateListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
             entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest =>
@@ -202,14 +215,21 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     }
 
     /* delete list node which should also delete its children */
-    private def deleteListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+    private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         delete {
             /* delete (deactivate) list */
             throw NotImplementedException("Method not implemented.")
             ???
         }
     }
-
+    @Path("/{IRI}/INFO")
+    @ApiOperation(value = "Get basic node information", nickname = "newGetNodeInfo", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
     private def getNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "INFO") { iri =>
         get {
             /* return information about a node, root or child, without children */
@@ -234,10 +254,12 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update node name
      */
     @Path("/{IRI}/name")
-    @ApiOperation(value = "Update Node Name", nickname = "putNodeName", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiOperation(value = "Update Node Name", nickname = "newPutNodeName", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node name\" to update", required = true,
-            dataTypeClass = classOf[ChangeNodeNameApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[ChangeNodeNameApiRequestADM], paramType = "body"),
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -273,10 +295,12 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update node labels
      */
     @Path("/{IRI}/labels")
-    @ApiOperation(value = "Update Node Labels", nickname = "putNodeLabels", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiOperation(value = "Update Node Labels", nickname = "newPutNodeLabels", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node labels\" to update", required = true,
-            dataTypeClass = classOf[ChangeNodeLabelsApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[ChangeNodeLabelsApiRequestADM], paramType = "body"),
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -312,10 +336,12 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update node comments
      */
     @Path("/{IRI}/comments")
-    @ApiOperation(value = "Update Node Comments", nickname = "putNodeComments", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiOperation(value = "Update Node Comments", nickname = "newPutNodeComments", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node comments\" to update", required = true,
-            dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM], paramType = "body"),
+        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
+            dataType = "string", paramType = "header")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
