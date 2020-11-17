@@ -468,6 +468,14 @@ case class TestConfigurationException(message: String) extends ApplicationConfig
 case class FeatureToggleException(message: String, cause: Option[Throwable] = None) extends ApplicationConfigurationException(message)
 
 /**
+ * Indicates that RDF processing failed.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
+case class RdfProcessingException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message)
+
+/**
  * Helper functions for error handling.
  */
 object ExceptionUtil {
@@ -482,7 +490,7 @@ object ExceptionUtil {
             SerializationUtils.serialize(e)
             true
         } catch {
-            case serEx: SerializationException => false
+            case _: SerializationException => false
         }
     }
 

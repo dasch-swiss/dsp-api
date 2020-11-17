@@ -40,16 +40,14 @@ import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, Cl
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, NameValuePair}
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.eclipse.rdf4j.model.{Resource, Statement}
-import org.eclipse.rdf4j.rio.turtle._
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
+import org.eclipse.rdf4j
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.messages.util.SparqlResultProtocol._
+import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, RdfModel, Statement, Turtle}
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
@@ -57,6 +55,7 @@ import org.knora.webapi.util.FileUtil
 import spray.json._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
@@ -186,8 +185,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      */
     def receive: PartialFunction[Any, Unit] = {
         case SparqlSelectRequest(sparql: String) => try2Message(sender(), sparqlHttpSelect(sparql), log)
-        case SparqlConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpConstruct(sparql), log)
-        case SparqlExtendedConstructRequest(sparql: String) => try2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
+        case sparqlConstructRequest: SparqlConstructRequest => try2Message(sender(), sparqlHttpConstruct(sparqlConstructRequest), log)
+        case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest => try2Message(sender(), sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest), log)
         case SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpConstructFile(sparql, graphIri, outputFile), log)
         case NamedGraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
         case NamedGraphDataRequest(graphIri: IRI) => try2Message(sender(), sparqlHttpGraphData(graphIri), log)
@@ -248,58 +247,31 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             responseMessage <- parseJsonResponse(sparql, resultStr)
         } yield responseMessage
     }
-
     /**
      * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
      *
-     * @param sparql the SPARQL CONSTRUCT query string.
+     * @param sparqlConstructRequest the request message.
      * @return a [[SparqlConstructResponse]]
      */
-    private def sparqlHttpConstruct(sparql: String): Try[SparqlConstructResponse] = {
+    private def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Try[SparqlConstructResponse] = {
         // println(logDelimiter + sparql)
 
-        /**
-         * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
-         */
-        class ConstructResponseTurtleHandler extends RDFHandler {
-            /**
-             * A collection of all the statements in the input file, grouped and sorted by subject IRI.
-             */
-            private var statements = Map.empty[IRI, Seq[(IRI, String)]]
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(sparqlConstructRequest.featureFactoryConfig)
 
-            override def handleComment(comment: IRI): Unit = {}
-
-            /**
-             * Adds a statement to the collection `statements`.
-             *
-             * @param st the statement to be added.
-             */
-            override def handleStatement(st: Statement): Unit = {
-                val subjectIri = st.getSubject.stringValue
-                val predicateIri = st.getPredicate.stringValue
-                val objectIri = st.getObject.stringValue
-                val currentStatementsForSubject: Seq[(IRI, String)] = statements.getOrElse(subjectIri, Vector.empty[(IRI, String)])
-                statements += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
-            }
-
-            override def endRDF(): Unit = {}
-
-            override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
-
-            override def startRDF(): Unit = {}
-
-            def getConstructResponse: SparqlConstructResponse = {
-                SparqlConstructResponse(statements)
-            }
-        }
-
-        def parseTurtleResponse(sparql: String, turtleStr: String): Try[SparqlConstructResponse] = {
+        def parseTurtleResponse(sparql: String, turtleStr: String, rdfFormatUtil: RdfFormatUtil): Try[SparqlConstructResponse] = {
             val parseTry = Try {
-                val turtleParser = new TurtleParser()
-                val handler = new ConstructResponseTurtleHandler
-                turtleParser.setRDFHandler(handler)
-                turtleParser.parse(new StringReader(turtleStr), "")
-                handler.getConstructResponse
+                val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+                val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
+
+                for (st: Statement <- rdfModel.getStatements) {
+                    val subjectIri = st.subj.stringValue
+                    val predicateIri = st.pred.stringValue
+                    val objectIri = st.obj.stringValue
+                    val currentStatementsForSubject: Seq[(IRI, String)] = statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
+                    statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
+                }
+
+                SparqlConstructResponse(statementMap.toMap)
             }
 
             parseTry match {
@@ -311,8 +283,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         }
 
         for {
-            turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
-            response <- parseTurtleResponse(sparql, turtleStr)
+            turtleStr <- getSparqlHttpResponse(sparqlConstructRequest.sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
+
+            response <- parseTurtleResponse(
+                sparql = sparqlConstructRequest.sparql,
+                turtleStr = turtleStr,
+                rdfFormatUtil = rdfFormatUtil
+            )
         } yield response
     }
 
@@ -320,11 +297,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * Adds a named graph to CONSTRUCT query results.
      *
      * @param graphIri  the IRI of the named graph.
-     * @param rdfWriter an [[RDFWriter]] for writing the result.
+     * @param rdfWriter an [[rdf4j.rio.RDFWriter]] for writing the result.
      */
-    private class ConstructToGraphHandler(graphIri: IRI, rdfWriter: RDFWriter) extends RDFHandler {
-        private val valueFactory: SimpleValueFactory = SimpleValueFactory.getInstance()
-        private val context: Resource = valueFactory.createIRI(graphIri)
+    private class ConstructToGraphHandler(graphIri: IRI, rdfWriter: rdf4j.rio.RDFWriter) extends rdf4j.rio.RDFHandler {
+        private val valueFactory: rdf4j.model.impl.SimpleValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance()
+        private val context: rdf4j.model.Resource = valueFactory.createIRI(graphIri)
 
         override def startRDF(): Unit = rdfWriter.startRDF()
 
@@ -332,7 +309,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         override def handleNamespace(prefix: IRI, uri: IRI): Unit = rdfWriter.handleNamespace(prefix, uri)
 
-        override def handleStatement(st: Statement): Unit = {
+        override def handleStatement(st: rdf4j.model.Statement): Unit = {
             val outputStatement = valueFactory.createStatement(
                 st.getSubject,
                 st.getPredicate,
@@ -353,12 +330,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @param outputFile the output file.
      */
     private def turtleToTrig(input: Reader, graphIri: IRI, outputFile: File): Unit = {
+        // TODO: Provide a streaming API in RdfFormatUtil for this.
+
         var maybeBufferedFileWriter: Option[BufferedWriter] = None
 
         try {
             maybeBufferedFileWriter = Some(new BufferedWriter(new FileWriter(outputFile)))
-            val turtleParser = Rio.createParser(RDFFormat.TURTLE)
-            val trigFileWriter: RDFWriter = Rio.createWriter(RDFFormat.TRIG, maybeBufferedFileWriter.get)
+            val turtleParser = rdf4j.rio.Rio.createParser(rdf4j.rio.RDFFormat.TURTLE)
+            val trigFileWriter: rdf4j.rio.RDFWriter = rdf4j.rio.Rio.createWriter(rdf4j.rio.RDFFormat.TRIG, maybeBufferedFileWriter.get)
             val constructToGraphHandler = new ConstructToGraphHandler(graphIri = graphIri, rdfWriter = trigFileWriter)
             turtleParser.setRDFHandler(constructToGraphHandler)
             turtleParser.parse(input, "")
@@ -384,17 +363,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlExtendedConstructResponse]].
+     * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
      *
-     * @param sparql the SPARQL CONSTRUCT query string.
+     * @param sparqlExtendedConstructRequest the request message.
      * @return a [[SparqlExtendedConstructResponse]]
      */
-    private def sparqlHttpExtendedConstruct(sparql: String): Try[SparqlExtendedConstructResponse] = {
+    private def sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest: SparqlExtendedConstructRequest): Try[SparqlExtendedConstructResponse] = {
         // println(sparql)
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(sparqlExtendedConstructRequest.featureFactoryConfig)
 
         val parseTry = for {
-            turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
-            response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log)
+            turtleStr <- getSparqlHttpResponse(sparqlExtendedConstructRequest.sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
+
+            response <- SparqlExtendedConstructResponse.parseTurtleResponse(
+                turtleStr = turtleStr,
+                rdfFormatUtil = rdfFormatUtil,
+                log = log
+            )
         } yield response
 
         parseTry match {
@@ -1051,6 +1036,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                     throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
                 }
             case Some(responseEntity: HttpEntity) =>
+                // TODO: Provide a streaming API in RdfFormatUtil for this.
+
                 // Stream the HTTP entity to the output file.
                 if (convertToTrig) {
                     // Stream the HTTP entity to the temporary .ttl file.

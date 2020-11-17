@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v1
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetRequestADM, ProjectsGetResponseADM}
@@ -51,14 +52,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
      * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message.
      */
     def receive(msg: OntologyResponderRequestV1) = msg match {
-        case LoadOntologiesRequest(userProfile) => loadOntologies(userProfile)
+        case LoadOntologiesRequestV1(featureFactoryConfig, userProfile) => loadOntologies(featureFactoryConfig, userProfile)
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => getEntityInfoResponseV1(resourceIris, propertyIris, userProfile)
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => getResourceTypeResponseV1(resourceTypeIri, userProfile)
         case checkSubClassRequest: CheckSubClassRequestV1 => checkSubClass(checkSubClassRequest)
         case subClassesGetRequest: SubClassesGetRequestV1 => getSubClasses(subClassesGetRequest)
-        case NamedGraphsGetRequestV1(projectIris, userProfile) => getNamedGraphs(projectIris, userProfile)
-        case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => getResourceTypesForNamedGraph(namedGraphIri, userProfile)
-        case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => getPropertyTypesForNamedGraph(namedGraphIri, userProfile)
+        case NamedGraphsGetRequestV1(projectIris, featureFactoryConfig, userProfile) => getNamedGraphs(projectIris, featureFactoryConfig, userProfile)
+        case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, featureFactoryConfig, userProfile) => getResourceTypesForNamedGraph(namedGraphIri, featureFactoryConfig, userProfile)
+        case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, featureFactoryConfig, userProfile) => getPropertyTypesForNamedGraph(namedGraphIri, featureFactoryConfig, userProfile)
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => getPropertyTypesForResourceType(restypeId, userProfile)
         case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile)
         case StandoffClassesWithDataTypeGetRequestV1(userProfile) => getStandoffStandoffClassesWithDataTypeV1(userProfile)
@@ -70,15 +71,19 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Loads and caches all ontology information.
      *
-     * @param userProfile the profile of the user making the request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
      * @return a [[LoadOntologiesResponse]].
      */
-    private def loadOntologies(userProfile: UserADM): Future[LoadOntologiesResponse] = {
+    private def loadOntologies(featureFactoryConfig: FeatureFactoryConfig,
+                               userProfile: UserADM): Future[LoadOntologiesResponse] = {
 
         for {
             // forward the request to the v2 ontologies responder
-            _: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[SuccessResponseV2]
-
+            _: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = userProfile
+            )).mapTo[SuccessResponseV2]
         } yield LoadOntologiesResponse()
     }
 
@@ -251,15 +256,23 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-     * Returns all the existing named graphs as a [[NamedGraphsResponseV1]].
+     * Returns information about ontology named graphs as a [[NamedGraphsResponseV1]].
      *
-     * @param userProfile the profile of the user making the request.
+     * @param projectIris          the IRIs of the projects whose named graphs should be returned.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
      * @return a [[NamedGraphsResponseV1]].
      */
-    private def getNamedGraphs(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM): Future[NamedGraphsResponseV1] = {
+    private def getNamedGraphs(projectIris: Set[IRI] = Set.empty[IRI],
+                               featureFactoryConfig: FeatureFactoryConfig,
+                               userProfile: UserADM): Future[NamedGraphsResponseV1] = {
 
         for {
-            projectsResponse <- (responderManager ? ProjectsGetRequestADM(userProfile)).mapTo[ProjectsGetResponseADM]
+            projectsResponse <- (responderManager ? ProjectsGetRequestADM(
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = userProfile
+            )).mapTo[ProjectsGetResponseADM]
+
             readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = userProfile)).mapTo[ReadOntologyMetadataV2]
 
             projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map {
@@ -316,11 +329,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Gets all the resource classes and their properties for a named graph.
      *
-     * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
-     * @param userProfile         the profile of the user making the request.
+     * @param namedGraphIriOption  the IRI of the named graph or None if all the named graphs should be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
      * @return [[ResourceTypesForNamedGraphResponseV1]].
      */
-    private def getResourceTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserADM): Future[ResourceTypesForNamedGraphResponseV1] = {
+    private def getResourceTypesForNamedGraph(namedGraphIriOption: Option[IRI],
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              userProfile: UserADM): Future[ResourceTypesForNamedGraphResponseV1] = {
 
         // get the resource types for a named graph
         def getResourceTypes(namedGraphIri: IRI): Future[Seq[ResourceTypeV1]] = {
@@ -331,7 +347,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
 
                 // get resinfo for each resource class in namedGraphEntityInfo
                 resInfosForNamedGraphFuture: Set[Future[(String, ResourceTypeResponseV1)]] = namedGraphEntityInfo.resourceClasses.map {
-                    (resClassIri) =>
+                    resClassIri =>
                         for {
                             resInfo <- getResourceTypeResponseV1(resClassIri, userProfile)
                         } yield (resClassIri, resInfo)
@@ -343,7 +359,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                     case (resClassIri, resInfo) =>
 
                         val properties = resInfo.restype_info.properties.map {
-                            (prop) =>
+                            prop =>
                                 PropertyTypeV1(
                                     id = prop.id,
                                     label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
@@ -369,7 +385,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
 
             case None => // map over all named graphs and collect the resource types
                 for {
-                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile = userProfile)
+                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(
+                        featureFactoryConfig = featureFactoryConfig,
+                        userProfile = userProfile
+                    )
+
                     projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
                     resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris.map(iri => getResourceTypes(iri))
                     resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
@@ -381,11 +401,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
      *
-     * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
-     * @param userProfile         the profile of the user making the request.
+     * @param namedGraphIriOption  the IRI of the named graph or None if all the named graphs should be queried.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user making the request.
      * @return a [[PropertyTypesForNamedGraphResponseV1]].
      */
-    private def getPropertyTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserADM): Future[PropertyTypesForNamedGraphResponseV1] = {
+    private def getPropertyTypesForNamedGraph(namedGraphIriOption: Option[IRI],
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              userProfile: UserADM): Future[PropertyTypesForNamedGraphResponseV1] = {
 
         def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserADM): Future[Seq[PropertyDefinitionInNamedGraphV1]] = {
             for {
@@ -442,7 +465,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
 
                 for {
-                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile = userProfile)
+                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(
+                        featureFactoryConfig = featureFactoryConfig,
+                        userProfile = userProfile
+                    )
+
                     projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
                     propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris.map(iri => getPropertiesForNamedGraph(iri, userProfile))
                     propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)

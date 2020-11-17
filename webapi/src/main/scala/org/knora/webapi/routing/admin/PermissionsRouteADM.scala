@@ -60,7 +60,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             get {
                 requestContext =>
                     val requestMessage = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
@@ -78,7 +81,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         get {
             requestContext =>
                 val requestMessage = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield AdministrativePermissionsForProjectGetRequestADM(
                     projectIri = projectIri,
                     requestingUser = requestingUser,
@@ -100,7 +106,10 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         get {
             requestContext =>
                 val requestMessage = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield DefaultObjectAccessPermissionsForProjectGetRequestADM(
                     projectIri = projectIri,
                     requestingUser = requestingUser,
@@ -123,9 +132,13 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             get {
                 requestContext =>
                     val requestMessage = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield PermissionsForProjectGetRequestADM(
                         projectIri = projectIri,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -150,9 +163,13 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield AdministrativePermissionCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -178,9 +195,13 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield DefaultObjectAccessPermissionCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )

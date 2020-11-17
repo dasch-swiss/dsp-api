@@ -23,6 +23,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, GravsearchException, InconsistentTriplestoreDataException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -52,12 +53,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
      */
     def receive(msg: SearchResponderRequestV2): Future[KnoraJsonLDResponseV2] = msg match {
-        case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
-        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser)
-        case GravsearchCountRequestV2(query, requestingUser) => gravsearchCountV2(inputQuery = query, requestingUser = requestingUser)
-        case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) => gravsearchV2(inputQuery = query, targetSchema = targetSchema, schemaOptions = schemaOptions, requestingUser = requestingUser)
-        case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser)
-        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
+        case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, featureFactoryConfig, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, featureFactoryConfig, requestingUser)
+        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, featureFactoryConfig, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, featureFactoryConfig, requestingUser)
+        case GravsearchCountRequestV2(query, featureFactoryConfig, requestingUser) => gravsearchCountV2(inputQuery = query, featureFactoryConfig = featureFactoryConfig, requestingUser = requestingUser)
+        case GravsearchRequestV2(query, targetSchema, schemaOptions, featureFactoryConfig, requestingUser) => gravsearchV2(inputQuery = query, targetSchema = targetSchema, schemaOptions = schemaOptions, featureFactoryConfig = featureFactoryConfig, requestingUser = requestingUser)
+        case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, featureFactoryConfig, requestingUser) => searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, featureFactoryConfig, requestingUser)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, featureFactoryConfig, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, featureFactoryConfig, requestingUser)
         case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -71,6 +72,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param searchValue          the values to search for.
      * @param limitToProject       limit search to given project.
      * @param limitToResourceClass limit search to given resource class.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param requestingUser       the the client making the request.
      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
      */
@@ -78,6 +80,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                       limitToProject: Option[IRI],
                                       limitToResourceClass: Option[SmartIri],
                                       limitToStandoffClass: Option[SmartIri],
+                                      featureFactoryConfig: FeatureFactoryConfig,
                                       requestingUser: UserADM): Future[ResourceCountV2] = {
 
         val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
@@ -118,6 +121,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param limitToResourceClass limit search to given resource class.
      * @param targetSchema         the target API schema.
      * @param schemaOptions        the schema options submitted with the request.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param requestingUser       the the client making the request.
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
@@ -128,6 +132,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                  limitToStandoffClass: Option[SmartIri],
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption],
+                                 featureFactoryConfig: FeatureFactoryConfig,
                                  requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
 
@@ -216,7 +221,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 // println(triplestoreSpecificQuery.toSparql)
 
                 for {
-                    searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlExtendedConstructResponse]
+                    searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                        sparql = triplestoreSpecificQuery.toSparql,
+                        featureFactoryConfig = featureFactoryConfig
+                    )).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and value objects
                     queryResultsSep: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
@@ -235,7 +243,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, requestingUser)
+                getMappingsFromQueryResultsSeparated(
+                    queryResultsSeparated = mainResourcesAndValueRdfData.resources,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
@@ -253,6 +265,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -263,11 +276,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     /**
      * Performs a count query for a Gravsearch query provided by the user.
      *
-     * @param inputQuery     a Gravsearch query provided by the client.
-     * @param requestingUser the the client making the request.
+     * @param inputQuery           a Gravsearch query provided by the client.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the the client making the request.
      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
      */
-    private def gravsearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def gravsearchCountV2(inputQuery: ConstructQuery,
+                                  apiSchema: ApiV2Schema = ApiV2Simple,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  requestingUser: UserADM): Future[ResourceCountV2] = {
 
         // make sure that OFFSET is 0
         if (inputQuery.offset != 0) throw GravsearchException(s"OFFSET must be 0 for a count query, but ${inputQuery.offset} given")
@@ -340,15 +357,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     /**
      * Performs a search using a Gravsearch query provided by the client.
      *
-     * @param inputQuery     a Gravsearch query provided by the client.
-     * @param targetSchema   the target API schema.
-     * @param schemaOptions  the schema options submitted with the request.
-     * @param requestingUser the the client making the request.
+     * @param inputQuery           a Gravsearch query provided by the client.
+     * @param targetSchema         the target API schema.
+     * @param schemaOptions        the schema options submitted with the request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the the client making the request.
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
     private def gravsearchV2(inputQuery: ConstructQuery,
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
+                             featureFactoryConfig: FeatureFactoryConfig,
                              requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
@@ -494,7 +513,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 log.debug(triplestoreSpecificMainQuerySparql)
 
                 for {
-                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificMainQuerySparql)).mapTo[SparqlExtendedConstructResponse]
+                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                        sparql = triplestoreSpecificMainQuerySparql,
+                        featureFactoryConfig = featureFactoryConfig,
+                    )).mapTo[SparqlExtendedConstructResponse]
 
                     // Filter out values that the user doesn't have permission to see.
                     queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
@@ -527,7 +549,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(mainQueryResults.resources, requestingUser)
+                getMappingsFromQueryResultsSeparated(
+                    queryResultsSeparated = mainQueryResults.resources,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
             } else {
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
@@ -543,6 +569,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 
@@ -653,14 +680,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                     // _ = println(resourceRequestSparql)
 
-                    resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
+                    resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                        sparql = resourceRequestSparql,
+                        featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig
+                    )).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and values
                     mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
 
                     // If we're querying standoff, get XML-to standoff mappings.
                     mappings: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
-                        getMappingsFromQueryResultsSeparated(mainResourcesAndValueRdfData.resources, resourcesInProjectGetRequestV2.requestingUser)
+                        getMappingsFromQueryResultsSeparated(
+                            mainResourcesAndValueRdfData.resources,
+                            featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig,
+                            resourcesInProjectGetRequestV2.requestingUser
+                        )
                     } else {
                         FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
                     }
@@ -677,6 +711,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         responderManager = responderManager,
                         targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
+                        featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
                     )
                 } yield readResourcesSequence
@@ -692,10 +727,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param searchValue          the values to search for.
      * @param limitToProject       limit search to given project.
      * @param limitToResourceClass limit search to given resource class.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param requestingUser       the the client making the request.
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def searchResourcesByLabelCountV2(searchValue: String,
+                                              limitToProject: Option[IRI],
+                                              limitToResourceClass: Option[SmartIri],
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              requestingUser: UserADM): Future[ResourceCountV2] = {
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
         for {
@@ -735,6 +775,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param limitToProject       limit search to given project.
      * @param limitToResourceClass limit search to given resource class.
      * @param targetSchema         the schema of the response.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param requestingUser       the the client making the request.
      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
      */
@@ -743,6 +784,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                          limitToProject: Option[IRI],
                                          limitToResourceClass: Option[SmartIri],
                                          targetSchema: ApiV2Schema,
+                                         featureFactoryConfig: FeatureFactoryConfig,
                                          requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
@@ -760,7 +802,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(searchResourceByLabelSparql)
 
-            searchResourceByLabelResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlExtendedConstructResponse]
+            searchResourceByLabelResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = searchResourceByLabelSparql,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             // collect the IRIs of main resources returned
             mainResourceIris: Set[IRI] = searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
@@ -800,6 +845,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
 

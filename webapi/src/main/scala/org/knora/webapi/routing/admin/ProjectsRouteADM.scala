@@ -86,8 +86,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private def getProjects(featureFactoryConfig: FeatureFactoryConfig): Route = path(ProjectsBasePath) {
         get { requestContext =>
             val requestMessage: Future[ProjectsGetRequestADM] = for {
-                requestingUser <- getUserADM(requestContext)
-            } yield ProjectsGetRequestADM(requestingUser = requestingUser)
+                requestingUser <- getUserADM(
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig
+                )
+            } yield ProjectsGetRequestADM(
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )
 
             RouteUtilADM.runJsonRoute(
                 requestMessageF = requestMessage,
@@ -114,9 +120,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             entity(as[CreateProjectApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[ProjectCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield ProjectCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -138,8 +148,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ProjectsKeywordsGetRequestADM(requestingUser = requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield ProjectsKeywordsGetRequestADM(
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -159,8 +175,15 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 val requestMessage: Future[ProjectKeywordsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ProjectKeywordsGetRequestADM(projectIri = checkedProjectIri, requestingUser = requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield ProjectKeywordsGetRequestADM(
+                    projectIri = checkedProjectIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -180,10 +203,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)), requestingUser = requestingUser)
+                } yield ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -203,10 +233,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
-                } yield ProjectGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(shortNameDec)), requestingUser = requestingUser)
+                } yield ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortname = Some(shortNameDec)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -226,10 +263,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
-                } yield ProjectGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)), requestingUser = requestingUser)
+                } yield ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -254,10 +298,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     /* the api request is already checked at time of creation. see case class. */
 
                     val requestMessage: Future[ProjectChangeRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield ProjectChangeRequestADM(
                         projectIri = checkedProjectIri,
                         changeProjectRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -284,10 +332,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 val requestMessage: Future[ProjectChangeRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield ProjectChangeRequestADM(
                     projectIri = checkedProjectIri,
                     changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -312,10 +364,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
             requestContext =>
                 val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectMembersGetRequestADM(ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)), requestingUser = requestingUser)
+                } yield ProjectMembersGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -336,10 +395,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
-                } yield ProjectMembersGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(shortNameDec)), requestingUser = requestingUser)
+                } yield ProjectMembersGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortname = Some(shortNameDec)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -361,10 +427,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
             requestContext =>
                 val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
-                } yield ProjectMembersGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)), requestingUser = requestingUser)
+                } yield ProjectMembersGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -385,10 +458,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)), requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -409,10 +489,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedShortname = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(checkedShortname)), requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortname = Some(checkedShortname)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -433,10 +520,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     checkedShortcode = stringFormatter.validateProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)), requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -457,9 +551,16 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
 
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(maybeIri = Some(value)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(value)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -480,10 +581,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
 
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(shortNameDec)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortname = Some(shortNameDec)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -504,8 +612,15 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         get {
             requestContext =>
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(value)), requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield ProjectRestrictedViewSettingsGetRequestADM(
+                    identifier = ProjectIdentifierADM(maybeShortcode = Some(value)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -528,25 +643,40 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             featureFactoryConfig.makeHttpResponseHeader match {
                 case Some(featureToggleHeader) =>
                     respondWithHeaders(projectDataHeader, featureToggleHeader) {
-                        getProjectDataEntity(projectIri)
+                        getProjectDataEntity(
+                            projectIri = projectIri,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     }
 
                 case None =>
                     respondWithHeaders(projectDataHeader) {
-                        getProjectDataEntity(projectIri)
+                        getProjectDataEntity(
+                            projectIri = projectIri,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     }
             }
 
         }
     }
 
-    private def getProjectDataEntity(projectIri: IRI): Route = {
+    private def getProjectDataEntity(projectIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Route = {
         requestContext =>
             val projectIdentifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
 
             val httpEntityFuture: Future[HttpEntity.Chunked] = for {
-                requestingUser <- getUserADM(requestContext)
-                requestMessage = ProjectDataGetRequestADM(projectIdentifier, requestingUser)
+                requestingUser <- getUserADM(
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig
+                )
+
+                requestMessage = ProjectDataGetRequestADM(
+                    projectIdentifier = projectIdentifier,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
+
                 responseMessage <- (responderManager ? requestMessage).mapTo[ProjectDataGetResponseADM]
 
                 // Stream the output file back to the client, then delete the file.

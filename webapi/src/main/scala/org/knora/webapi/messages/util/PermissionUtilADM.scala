@@ -34,6 +34,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlExt
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import GroupedProps.{ValueLiterals, ValueProps}
+import org.knora.webapi.feature.FeatureFactoryConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -677,12 +678,14 @@ object PermissionUtilADM extends LazyLogging {
      * Given a permission literal, checks that it refers to valid permissions and groups.
      *
      * @param permissionLiteral the permission literal.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param responderManager  a reference to the responder manager.
      * @param timeout           a timeout for `ask` messages.
      * @param executionContext  an execution context for futures.
      * @return the validated permission literal, normalised and reformatted.
      */
     def validatePermissions(permissionLiteral: String,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             responderManager: ActorRef)
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
         val stringFormatter = StringFormatter.getGeneralInstance
@@ -697,7 +700,11 @@ object PermissionUtilADM extends LazyLogging {
             validatedProjectSpecificGroupIris: Set[IRI] = projectSpecificGroupIris.map(iri => stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri")))
 
             // Check that those groups exist.
-            _ <- (responderManager ? MultipleGroupsGetRequestADM(groupIris = validatedProjectSpecificGroupIris, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Set[GroupGetResponseADM]]
+            _ <- (responderManager ? MultipleGroupsGetRequestADM(
+                groupIris = validatedProjectSpecificGroupIris,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Set[GroupGetResponseADM]]
 
             // Reformat the permission literal.
             permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap {

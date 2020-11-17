@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException, InvalidApiJsonException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -157,37 +158,51 @@ sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1
 /**
  * Requests a description of a resource. A successful response will be a [[ResourceInfoResponseV1]].
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userProfile the profile of the user making the request.
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class ResourceInfoGetRequestV1(iri: IRI,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests a full description of a resource, along with its properties, their values, incoming references, and other
  * information. A successful response will be a [[ResourceFullResponseV1]].
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userADM     the profile of the user making the request.
- * @param getIncoming if `true`, information about incoming references will be included in the response.
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
+ * @param getIncoming          if `true`, information about incoming references will be included in the response.
  */
-case class ResourceFullGetRequestV1(iri: IRI, userADM: UserADM, getIncoming: Boolean = true) extends ResourcesResponderRequestV1
+case class ResourceFullGetRequestV1(iri: IRI,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    userADM: UserADM,
+                                    getIncoming: Boolean = true) extends ResourcesResponderRequestV1
 
 /**
  * Requests a [[ResourceContextResponseV1]] describing the context of a resource (i.e. the resources that are part of it).
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userProfile the profile of the user making the request.
- * @param resinfo     if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param resinfo              if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
  */
-case class ResourceContextGetRequestV1(iri: IRI, userProfile: UserADM, resinfo: Boolean) extends ResourcesResponderRequestV1
+case class ResourceContextGetRequestV1(iri: IRI,
+                                       featureFactoryConfig: FeatureFactoryConfig,
+                                       userProfile: UserADM,
+                                       resinfo: Boolean) extends ResourcesResponderRequestV1
 
 /**
  * Requests the permissions for the current user on the given resource. A successful response will be a [[ResourceRightsResponseV1]].
  *
- * @param iri         the IRI of the resource to be queried.
- * @param userProfile the profile of the user making the request.
+ * @param iri                  the IRI of the resource to be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class ResourceRightsGetRequestV1(iri: IRI,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests a search for resources matching the given string.
@@ -203,19 +218,21 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
 /**
  * Requests the creation of a new resource of the given type with the given properties.
  *
- * @param resourceTypeIri the type of the new resource.
- * @param label           the rdfs:label of the resource.
- * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
- * @param file            a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
- * @param projectIri      the IRI of the project the resources is added to.
- * @param userProfile     the profile of the user making the request.
- * @param apiRequestID    the ID of the API request.
+ * @param resourceTypeIri      the type of the new resource.
+ * @param label                the rdfs:label of the resource.
+ * @param values               the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
+ * @param file                 a file that has been uploaded to Sipi's temporary storage and should be attached to the resource.
+ * @param projectIri           the IRI of the project the resources is added to.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    label: String,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
                                    file: Option[FileValueV1] = None,
                                    projectIri: IRI,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -240,13 +257,15 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
 /**
  * Requests the creation of multiple new resources.
  *
- * @param resourcesToCreate the collection of requests for creation of new resources.
- * @param projectIri        the IRI of the project the resources are added to.
- * @param userProfile       the profile of the user making the request.
- * @param apiRequestID      the ID of the API request.
+ * @param resourcesToCreate    the collection of requests for creation of new resources.
+ * @param projectIri           the IRI of the project the resources are added to.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri: IRI,
+                                           featureFactoryConfig: FeatureFactoryConfig,
                                            userProfile: UserADM,
                                            apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -275,22 +294,28 @@ case class OneOfMultipleResourcesCreateResponseV1(clientResourceID: String, reso
  * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
  * internally by Knora, and is not part of Knora API v1. A successful response will be a [[ResourceCheckClassResponseV1]].
  *
- * @param resourceIri the IRI of the resource.
- * @param owlClass    the IRI of the OWL class to compare the resource's class to.
- * @param userProfile the profile of the user making the request.
+ * @param resourceIri          the IRI of the resource.
+ * @param owlClass             the IRI of the OWL class to compare the resource's class to.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile          the profile of the user making the request.
  */
-case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class ResourceCheckClassRequestV1(resourceIri: IRI,
+                                       owlClass: IRI,
+                                       featureFactoryConfig: FeatureFactoryConfig,
+                                       userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests that a resource is marked as deleted. A successful response will be a [[ResourceDeleteResponseV1]].
  *
- * @param resourceIri   the IRI of the resource to be marked as deleted.
- * @param deleteComment an optional comment explaining why the resource is being marked as deleted.
- * @param userADM       the profile of the user making the request.
- * @param apiRequestID  the ID of the API request.
+ * @param resourceIri          the IRI of the resource to be marked as deleted.
+ * @param deleteComment        an optional comment explaining why the resource is being marked as deleted.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ResourceDeleteRequestV1(resourceIri: IRI,
                                    deleteComment: Option[String],
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    userADM: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -373,9 +398,9 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
 /**
  * Describes the answer to a newly created resource [[ResourceCreateRequestV1]].
  *
- * @param res_id  the IRI ow the new resource.
- * @param results the values that have been attached to the resource. The key in the Map refers
- *                to the property IRI and the Seq contains all instances of values of this type.
+ * @param res_id     the IRI ow the new resource.
+ * @param results    the values that have been attached to the resource. The key in the Map refers
+ *                   to the property IRI and the Seq contains all instances of values of this type.
  * @param projectADM the project in which the resource is to be created.
  */
 case class ResourceCreateResponseV1(res_id: IRI,
@@ -387,9 +412,12 @@ case class ResourceCreateResponseV1(res_id: IRI,
 /**
  * Requests the properties of a given resource.
  *
- * @param iri the iri of the given resource.
+ * @param iri                  the iri of the given resource.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class PropertiesGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class PropertiesGetRequestV1(iri: IRI,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  userProfile: UserADM) extends ResourcesResponderRequestV1
 
 
 // TODO: refactor PropertiesGetResponseV1 (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
@@ -406,13 +434,18 @@ case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponse
 /**
  * Requests the label of a resource to be changed.
  *
- * @param resourceIri  the IRI of the resource whose label should be changed.
- * @param label        the new value of the label.
- * @param userADM      the profile of the user making the request.
- * @param apiRequestID the ID of the API request.
+ * @param resourceIri          the IRI of the resource whose label should be changed.
+ * @param label                the new value of the label.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
+ * @param apiRequestID         the ID of the API request.
  *
  */
-case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userADM: UserADM, apiRequestID: UUID) extends ResourcesResponderRequestV1
+case class ChangeResourceLabelRequestV1(resourceIri: IRI,
+                                        label: String,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        userADM: UserADM,
+                                        apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
  * Represents the answer to a [[ChangeResourceLabelRequestV1]].

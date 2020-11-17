@@ -21,21 +21,26 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import java.util.UUID
 
-import akka.actor.Status.Failure
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.IMAGES_PROJECT_IRI
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 
+object ListsMessagesADMSpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJsonProtocol {
+class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with ListADMJsonProtocol {
 
     val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
@@ -138,6 +143,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                         labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
                         comments = Seq.empty[StringLiteralV2]
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -337,6 +343,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                         labels = Seq(StringLiteralV2(value = "New child node", language = Some("en"))),
                         comments = Seq.empty[StringLiteralV2]
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -360,6 +367,7 @@ class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with ListADMJso
                             StringLiteralV2(value = "New comment", language = Some("en"))
                         )
                     )),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID
                 )

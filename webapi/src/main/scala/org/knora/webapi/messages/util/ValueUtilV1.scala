@@ -24,6 +24,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotImplementedException, OntologyConstraintException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.util.GroupedProps._
@@ -48,15 +49,20 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     /**
      * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
      *
-     * @param valueProps a [[GroupedProps.ValueProps]] resulting from querying the `Value`, in which the keys are RDF predicates,
-     *                   and the values are lists of the objects of each predicate.
+     * @param valueProps           a [[GroupedProps.ValueProps]] resulting from querying the `Value`, in which the keys are RDF predicates,
+     *                             and the values are lists of the objects of each predicate.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a [[ApiValueV1]] representing the `Value`.
      */
-    def makeValueV1(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    def makeValueV1(valueProps: ValueProps,
+                    projectShortcode: String,
+                    responderManager: ActorRef,
+                    featureFactoryConfig: FeatureFactoryConfig,
+                    userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
         valueTypeIri match {
-            case OntologyConstants.KnoraBase.TextValue => makeTextValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.TextValue => makeTextValue(valueProps, responderManager, featureFactoryConfig, userProfile)
             case OntologyConstants.KnoraBase.IntValue => makeIntValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.DecimalValue => makeDecimalValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.BooleanValue => makeBooleanValue(valueProps, responderManager, userProfile)
@@ -556,13 +562,19 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     /**
      * Creates a [[TextValueWithStandoffV1]] from the given string and the standoff nodes.
      *
-     * @param utf8str          the string representation.
-     * @param valueProps       the properties of the TextValue with standoff.
-     * @param responderManager the responder manager.
-     * @param userProfile      the client that is making the request.
+     * @param utf8str              the string representation.
+     * @param valueProps           the properties of the TextValue with standoff.
+     * @param responderManager     the responder manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the client that is making the request.
      * @return a [[TextValueWithStandoffV1]].
      */
-    private def makeTextValueWithStandoff(utf8str: String, language: Option[String] = None, valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
+    private def makeTextValueWithStandoff(utf8str: String,
+                                          language: Option[String] = None,
+                                          valueProps: ValueProps,
+                                          responderManager: ActorRef,
+                                          featureFactoryConfig: FeatureFactoryConfig,
+                                          userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
 
         // get the IRI of the mapping
         val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
@@ -571,7 +583,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
             // get the mapping and the related standoff entities
             // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
-            mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = userProfile)).mapTo[GetMappingResponseV2]
+            mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
+                mappingIri = mappingIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = userProfile
+            )).mapTo[GetMappingResponseV2]
 
             standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(
                 standoffAssertions = valueProps.standoff,
@@ -605,10 +621,14 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     /**
      * Converts a [[ValueProps]] into a [[TextValueV1]].
      *
-     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @param valueProps           a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a [[TextValueV1]].
      */
-    private def makeTextValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeTextValue(valueProps: ValueProps,
+                              responderManager: ActorRef,
+                              featureFactoryConfig: FeatureFactoryConfig,
+                              userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
 
         val valueHasString: String = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
@@ -616,7 +636,14 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
         if (valueProps.standoff.nonEmpty) {
             // there is standoff markup
-            makeTextValueWithStandoff(valueHasString, valueHasLanguage, valueProps, responderManager, userProfile)
+            makeTextValueWithStandoff(
+                utf8str = valueHasString,
+                language = valueHasLanguage,
+                valueProps = valueProps,
+                responderManager = responderManager,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
 
         } else {
             // there is no standoff markup

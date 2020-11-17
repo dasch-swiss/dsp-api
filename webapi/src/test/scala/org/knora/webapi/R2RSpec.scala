@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import java.io.{File, StringReader}
+import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
@@ -30,16 +30,16 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{ApplicationActor, LiveManagers}
 import org.knora.webapi.core.Core
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import org.knora.webapi.http.handler
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil, KnoraSystemInstances}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.util.{FileUtil, StartupUtils}
@@ -52,8 +52,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
 /**
-  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
-  */
+ * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
+ */
 class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     /* needed by the core trait */
@@ -61,6 +61,11 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
         TestContainers.PortConfig.withFallback(ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())))
 
     implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
+
+    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+        testToggles = Set.empty,
+        parent = new KnoraSettingsFeatureFactoryConfig(settings)
+    )
 
     lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
@@ -114,28 +119,34 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 
-    protected def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE, null)
+    protected def parseTurtle(turtleStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
     }
 
-    protected def parseRdfXml(rdfXmlStr: String): Model = {
-        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML, null)
+    protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
-        Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
+
+        Await.result(appActor ? LoadOntologiesRequestV2(
+            featureFactoryConfig = defaultFeatureFactoryConfig,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+        ), 30 seconds)
     }
 
     /**
-      * Reads or writes a test data file.
-      *
-      * @param responseAsString the API response received from Knora.
-      * @param file             the file in which the expected API response is stored.
-      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-      * @return the expected response.
-      */
+     * Reads or writes a test data file.
+     *
+     * @param responseAsString the API response received from Knora.
+     * @param file             the file in which the expected API response is stored.
+     * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+     * @return the expected response.
+     */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
             // Per default only read access is allowed in the bazel sandbox.

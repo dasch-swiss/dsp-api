@@ -24,6 +24,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -62,7 +63,7 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
-    
+
     if (labels.isEmpty) {
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
@@ -208,28 +209,34 @@ sealed trait ListsResponderRequestADM extends KnoraRequestADM
 /**
  * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
  *
- * @param projectIri     the IRI of the project.
- * @param requestingUser the user making the request.
+ * @param projectIri           the IRI of the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListsGetRequestADM(projectIri: Option[IRI] = None,
+                              featureFactoryConfig: FeatureFactoryConfig,
                               requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Requests a node (root or child). A successful response will be a [[ListItemGetResponseADM]]
  *
- * @param iri            the IRI of the node (root or child).
- * @param requestingUser the user making the request.
+ * @param iri                  the IRI of the node (root or child).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListGetRequestADM(iri: IRI,
+                             featureFactoryConfig: FeatureFactoryConfig,
                              requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Request basic information about a node (root or child). A successful response will be a [[NodeInfoGetResponseADM]]
  *
- * @param iri            the IRI of the list node.
- * @param requestingUser the user making the request.
+ * @param iri                  the IRI of the list node.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListNodeInfoGetRequestADM(iri: IRI,
+                                     featureFactoryConfig: FeatureFactoryConfig,
                                      requestingUser: UserADM) extends ListsResponderRequestADM
 
 
@@ -238,9 +245,11 @@ case class ListNodeInfoGetRequestADM(iri: IRI,
  * a [[NodePathGetResponseADM]].
  *
  * @param iri            the IRI of the node.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser the user making the request.
  */
 case class NodePathGetRequestADM(iri: IRI,
+                                 featureFactoryConfig: FeatureFactoryConfig,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 
@@ -248,10 +257,12 @@ case class NodePathGetRequestADM(iri: IRI,
  * Requests the creation of a new list.
  *
  * @param createRootNode    the [[CreateNodeApiRequestADM]] information used for creating the root node of the list.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser    the user creating the new list.
  * @param apiRequestID      the ID of the API request.
  */
 case class ListCreateRequestADM(createRootNode: CreateNodeApiRequestADM,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ListsResponderRequestADM {
     // check if the requesting user is allowed to perform operation
@@ -266,11 +277,13 @@ case class ListCreateRequestADM(createRootNode: CreateNodeApiRequestADM,
  *
  * @param listIri           the IRI of the node to be updated (root or child ).
  * @param changeNodeRequest the data which needs to be update.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser    the user initiating the request.
  * @param apiRequestID      the ID of the API request.
  */
 case class NodeInfoChangeRequestADM(listIri: IRI,
                                     changeNodeRequest: ChangeNodeInfoApiRequestADM,
+                                    featureFactoryConfig: FeatureFactoryConfig,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM {
     // check if the requesting user is allowed to perform operation
@@ -284,11 +297,14 @@ case class NodeInfoChangeRequestADM(listIri: IRI,
 /**
  * Request the creation of a new list node, root or child.
  *
+
  * @param createChildNodeRequest  the new node information.
+ * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user making the request.
  * @param apiRequestID           the ID of the API request.
  */
 case class ListChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRequestADM,
+                                         featureFactoryConfig: FeatureFactoryConfig,
                                          requestingUser: UserADM,
                                          apiRequestID: UUID) extends ListsResponderRequestADM {
     // check if the requesting user is allowed to perform operation
@@ -303,11 +319,13 @@ case class ListChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRe
  * Request updating the name of an existing node.
  * @param nodeIri               the IRI of the node whose name should be updated.
  * @param changeNodeNameRequest the payload containing the new name.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser        the user initiating the request.
  * @param apiRequestID          the ID of the API request.
  */
 case class NodeNameChangeRequestADM(nodeIri: IRI,
                                     changeNodeNameRequest: ChangeNodeNameApiRequestADM,
+                                    featureFactoryConfig: FeatureFactoryConfig,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
@@ -315,25 +333,29 @@ case class NodeNameChangeRequestADM(nodeIri: IRI,
  * Request updating the labels of an existing node.
  * @param nodeIri                   the IRI of the node whose name should be updated.
  * @param changeNodeLabelsRequest   the payload containing the new labels.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser            the user initiating the request.
  * @param apiRequestID              the ID of the API request.
  */
 case class NodeLabelsChangeRequestADM(nodeIri: IRI,
-                                        changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
-                                        requestingUser: UserADM,
-                                        apiRequestID: UUID) extends ListsResponderRequestADM
+                                      changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM,
+                                      apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
  * Request updating the comments of an existing node.
  * @param nodeIri                       the IRI of the node whose name should be updated.
  * @param changeNodeCommentsRequest     the payload containing the new comments.
+ * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser                the user initiating the request.
  * @param apiRequestID                  the ID of the API request.
  */
 case class NodeCommentsChangeRequestADM(nodeIri: IRI,
-                                      changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
-                                      requestingUser: UserADM,
-                                      apiRequestID: UUID) extends ListsResponderRequestADM
+                                        changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        requestingUser: UserADM,
+                                        apiRequestID: UUID) extends ListsResponderRequestADM
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses

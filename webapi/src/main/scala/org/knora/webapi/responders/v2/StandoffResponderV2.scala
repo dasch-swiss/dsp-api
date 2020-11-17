@@ -30,6 +30,7 @@ import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -73,9 +74,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     def receive(msg: StandoffResponderRequestV2) = msg match {
         case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
         case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 => getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
-        case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid)
-        case GetMappingRequestV2(mappingIri, requestingUser) => getMappingV2(mappingIri, requestingUser)
-        case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => getXSLTransformation(xsltTextReprIri, requestingUser)
+        case CreateMappingRequestV2(metadata, xml, featureFactoryConfig, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, featureFactoryConfig, requestingUser, uuid)
+        case GetMappingRequestV2(mappingIri, featureFactoryConfig, requestingUser) => getMappingV2(mappingIri, featureFactoryConfig, requestingUser)
+        case GetXSLTransformationRequestV2(xsltTextReprIri, featureFactoryConfig, requestingUser) => getXSLTransformation(xsltTextReprIri, featureFactoryConfig, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -103,7 +104,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             // standoffPageStartTime = System.currentTimeMillis()
 
-            resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
+            resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = resourceRequestSparql,
+                featureFactoryConfig = getStandoffRequestV2.featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             // standoffPageEndTime = System.currentTimeMillis()
 
@@ -123,6 +127,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 responderManager = responderManager,
                 targetSchema = getStandoffRequestV2.targetSchema,
                 settings = settings,
+                featureFactoryConfig = getStandoffRequestV2.featureFactoryConfig,
                 requestingUser = getStandoffRequestV2.requestingUser
             )
 
@@ -156,17 +161,23 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
      * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
      *
      * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
+     * @param featureFactoryConfig the feature factory configuration.
      * @param requestingUser       the user making the request.
      * @return a [[GetXSLTransformationResponseV2]].
      */
-    private def getXSLTransformation(xslTransformationIri: IRI, requestingUser: UserADM): Future[GetXSLTransformationResponseV2] = {
+    private def getXSLTransformation(xslTransformationIri: IRI,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM): Future[GetXSLTransformationResponseV2] = {
 
         val xsltUrlFuture = for {
 
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
                 resourceIris = Vector(xslTransformationIri),
                 targetSchema = ApiV2Complex,
-                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )).mapTo[ReadResourcesSequenceV2]
+
             resource = textRepresentationResponseV2.toResource(xslTransformationIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
@@ -227,10 +238,17 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
      * Creates a mapping between XML elements and attributes to standoff classes and properties.
      * The mapping is used to convert XML documents to texts with standoff and back.
      *
-     * @param xml            the provided mapping.
-     * @param requestingUser the client that made the request.
+     * @param xml                  the provided mapping.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the client that made the request.
      */
-    private def createMappingV2(xml: String, label: String, projectIri: SmartIri, mappingName: String, requestingUser: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV2] = {
+    private def createMappingV2(xml: String,
+                                label: String,
+                                projectIri: SmartIri,
+                                mappingName: String,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                requestingUser: UserADM,
+                                apiRequestID: UUID): Future[CreateMappingResponseV2] = {
 
         def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, requestingUser: UserADM): Future[CreateMappingResponseV2] = {
 
@@ -262,7 +280,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
                         // try to obtain the XSL transformation to make sure that it really exists
                         for {
-                            transform: GetXSLTransformationResponseV2 <- getXSLTransformation(transIri, requestingUser)
+                            transform: GetXSLTransformationResponseV2 <- getXSLTransformation(
+                                xslTransformationIri = transIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = requestingUser
+                            )
                         } yield Some(transIri)
                     case _ => Future(None)
                 }
@@ -363,7 +385,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                     triplestore = settings.triplestoreType,
                     mappingIri = mappingIri
                 ).toString()
-                existingMappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(getExistingMappingSparql)).mapTo[SparqlConstructResponse]
+
+                existingMappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(
+                    sparql = getExistingMappingSparql,
+                    featureFactoryConfig = featureFactoryConfig
+                )).mapTo[SparqlConstructResponse]
 
                 _ = if (existingMappingResponse.statements.nonEmpty) {
                     throw BadRequestException(s"mapping IRI $mappingIri already exists")
@@ -382,7 +408,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 createResourceResponse: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(createNewMappingSparql)).mapTo[SparqlUpdateResponse]
 
                 // check if the mapping has been created
-                newMappingResponse <- (storeManager ? SparqlConstructRequest(getExistingMappingSparql)).mapTo[SparqlConstructResponse]
+                newMappingResponse <- (storeManager ? SparqlConstructRequest(
+                    sparql = getExistingMappingSparql,
+                    featureFactoryConfig = featureFactoryConfig
+                )).mapTo[SparqlConstructResponse]
 
                 _ = if (newMappingResponse.statements.isEmpty) {
                     log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse")
@@ -390,9 +419,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 }
 
                 // get the mapping from the triplestore and cache it thereby
-                _ = getMappingFromTriplestore(mappingIri, requestingUser)
-
-
+                _ = getMappingFromTriplestore(
+                    mappingIri = mappingIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
             } yield {
                 CreateMappingResponseV2(
                     mappingIri = mappingIri,
@@ -426,7 +457,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             // check if the given project IRI represents an actual project
             projectInfoMaybe: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )).mapTo[Option[ProjectADM]]
 
@@ -579,11 +611,14 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /**
      * Gets a mapping either from the cache or by making a request to the triplestore.
      *
-     * @param mappingIri     the IRI of the mapping to retrieve.
-     * @param requestingUser the user making the request.
+     * @param mappingIri           the IRI of the mapping to retrieve.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[MappingXMLtoStandoff]].
      */
-    private def getMappingV2(mappingIri: IRI, requestingUser: UserADM): Future[GetMappingResponseV2] = {
+    private def getMappingV2(mappingIri: IRI,
+                             featureFactoryConfig: FeatureFactoryConfig,
+                             requestingUser: UserADM): Future[GetMappingResponseV2] = {
 
         val mappingFuture: Future[GetMappingResponseV2] = CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
             case Some(mapping: MappingXMLtoStandoff) =>
@@ -601,7 +636,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             case None =>
 
                 for {
-                    mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, requestingUser)
+                    mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(
+                        mappingIri = mappingIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
@@ -627,11 +666,14 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
      *
      * Gets a mapping from the triplestore.
      *
-     * @param mappingIri     the IRI of the mapping to retrieve.
-     * @param requestingUser the user making the request.
+     * @param mappingIri           the IRI of the mapping to retrieve.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[MappingXMLtoStandoff]].
      */
-    private def getMappingFromTriplestore(mappingIri: IRI, requestingUser: UserADM): Future[MappingXMLtoStandoff] = {
+    private def getMappingFromTriplestore(mappingIri: IRI,
+                                          featureFactoryConfig: FeatureFactoryConfig,
+                                          requestingUser: UserADM): Future[MappingXMLtoStandoff] = {
 
         val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getMapping(
             triplestore = settings.triplestoreType,
@@ -640,7 +682,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         for {
 
-            mappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(getMappingSparql)).mapTo[SparqlConstructResponse]
+            mappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(
+                sparql = getMappingSparql,
+                featureFactoryConfig = featureFactoryConfig,
+            )).mapTo[SparqlConstructResponse]
 
             // if the result is empty, the mapping does not exist
             _ = if (mappingResponse.statements.isEmpty) {
@@ -849,14 +894,16 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /**
      * A task that gets a page of standoff from a text value.
      *
-     * @param resourceIri    the IRI of the resource containing the value.
-     * @param valueIri       the IRI of the value.
-     * @param offset         the start index of the first standoff tag to be returned.
-     * @param requestingUser the user making the request.
+     * @param resourceIri          the IRI of the resource containing the value.
+     * @param valueIri             the IRI of the value.
+     * @param offset               the start index of the first standoff tag to be returned.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      */
     case class GetStandoffTask(resourceIri: IRI,
                                valueIri: IRI,
                                offset: Int,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM) extends Task[StandoffTaskUnderlyingResult] {
         override def runTask(previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[StandoffTaskUnderlyingResult]] = {
             for {
@@ -867,7 +914,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                         valueIri = valueIri,
                         offset = offset,
                         targetSchema = ApiV2Complex,
-                        requestingUser = requestingUser)
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
                 )
 
                 // Add it to the standoff that has already been collected.
@@ -904,6 +953,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
             valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
             offset = settings.standoffPerPage, // the offset of the second page
+            featureFactoryConfig = getRemainingStandoffFromTextValueRequestV2.featureFactoryConfig,
             requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
         )
 

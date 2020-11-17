@@ -26,7 +26,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.exceptions.{InternalServerException, RequestRejectedException}
 import org.knora.webapi.http.status.{ApiStatusCodesV1, ApiStatusCodesV2}
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDObject, JsonLDString}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
 

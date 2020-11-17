@@ -25,6 +25,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
@@ -57,12 +58,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      * Receives a message extending [[PermissionsResponderRequestADM]], and returns an appropriate response message.
      */
     def receive(msg: PermissionsResponderRequestADM) = msg match {
-        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser)
+        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, featureFactoryConfig, requestingUser) => permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, featureFactoryConfig, requestingUser)
         case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID)
         case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, featureFactoryConfig, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, featureFactoryConfig, requestingUser, apiRequestID)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
         case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
@@ -70,8 +71,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
-        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID)
-        case PermissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser) => permissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser)
+        case DefaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        case PermissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser) => permissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -87,12 +88,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      * @param groupIris              the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
      * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
      * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
+     * @param featureFactoryConfig   the feature factory configuration.
      * @return
      */
     private def permissionsDataGetADM(projectIris: Seq[IRI],
                                       groupIris: Seq[IRI],
                                       isInProjectAdminGroups: Seq[IRI],
                                       isInSystemAdminGroup: Boolean,
+                                      featureFactoryConfig: FeatureFactoryConfig,
                                       requestingUser: UserADM): Future[PermissionsDataADM] = {
         // find out which project each group belongs to
         //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
@@ -101,7 +104,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             groupIris.map {
                 groupIri =>
                     for {
-                        maybeGroup <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
+                        maybeGroup <- (responderManager ? GroupGetADM(
+                            groupIri = groupIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )).mapTo[Option[GroupADM]]
+
                         group = maybeGroup.getOrElse(throw InconsistentTriplestoreDataException(s"Cannot find information for group: '$groupIri'. Please report as possible bug."))
                         res = (group.project.id, groupIri)
                     } yield res
@@ -194,7 +202,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             for {
                 /* Get administrative permissions for the knora-base:ProjectAdmin group */
-                administrativePermissionsOnProjectAdminGroup: Set[PermissionADM] <- administrativePermissionForGroupsGeADM(projectIri, List(OntologyConstants.KnoraAdmin.ProjectAdmin))
+                administrativePermissionsOnProjectAdminGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(projectIri, List(OntologyConstants.KnoraAdmin.ProjectAdmin))
                 _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
                     if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)) {
                         permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
@@ -207,7 +215,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 administrativePermissionsOnCustomGroups: Set[PermissionADM] <- {
                     val customGroups = extendedUserGroups diff List(OntologyConstants.KnoraAdmin.KnownUser, OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)
                     if (customGroups.nonEmpty) {
-                        administrativePermissionForGroupsGeADM(projectIri, customGroups)
+                        administrativePermissionForGroupsGetADM(projectIri, customGroups)
                     } else {
                         Future(Set.empty[PermissionADM])
                     }
@@ -221,7 +229,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
 
                 /* Get administrative permissions for the knora-base:ProjectMember group */
-                administrativePermissionsOnProjectMemberGroup: Set[PermissionADM] <- administrativePermissionForGroupsGeADM(projectIri, List(OntologyConstants.KnoraAdmin.ProjectMember))
+                administrativePermissionsOnProjectMemberGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(projectIri, List(OntologyConstants.KnoraAdmin.ProjectMember))
                 _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
                     if (permissionsListBuffer.isEmpty) {
                         if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember)) {
@@ -233,7 +241,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
 
                 /* Get administrative permissions for the knora-base:KnownUser group */
-                administrativePermissionsOnKnownUserGroup: Set[PermissionADM] <- administrativePermissionForGroupsGeADM(projectIri, List(OntologyConstants.KnoraAdmin.KnownUser))
+                administrativePermissionsOnKnownUserGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(projectIri, List(OntologyConstants.KnoraAdmin.KnownUser))
                 _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
                     if (permissionsListBuffer.isEmpty) {
                         if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
@@ -284,9 +292,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      * @param groups     the list of groups for which administrative permissions are retrieved and combined.
      * @return a set of [[PermissionADM]].
      */
-    private def administrativePermissionForGroupsGeADM(projectIri: IRI,
-                                                       groups: Seq[IRI]
-                                                      ): Future[Set[PermissionADM]] = {
+    private def administrativePermissionForGroupsGetADM(projectIri: IRI,
+                                                        groups: Seq[IRI]): Future[Set[PermissionADM]] = {
 
         /* Get administrative permissions for each group and combine them */
         val gpf: Seq[Future[Seq[PermissionADM]]] = for {
@@ -326,7 +333,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      *
      * @param projectIRI     the IRI of the project.
      * @param requestingUser the [[UserADM]] of the requesting user.
-     * @param apiRequestID    the API request ID.
+     * @param apiRequestID   the API request ID.
      * @return a list of IRIs of [[AdministrativePermissionADM]] objects.
      */
     private def administrativePermissionsForProjectGetRequestADM(projectIRI: IRI,
@@ -418,9 +425,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Gets a single administrative permission identified by project and group.
      *
-     * @param projectIri        the project.
-     * @param groupIri          the group.
-     * @param requestingUser    the requesting user.
+     * @param projectIri     the project.
+     * @param groupIri       the group.
+     * @param requestingUser the requesting user.
      * @return an option containing an [[AdministrativePermissionADM]]
      */
     private def administrativePermissionForProjectGroupGetADM(projectIri: IRI,
@@ -466,9 +473,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Gets a single administrative permission identified by project and group.
      *
-     * @param projectIri        the project.
-     * @param groupIri          the group.
-     * @param requestingUser    the requesting user.
+     * @param projectIri     the project.
+     * @param groupIri       the group.
+     * @param requestingUser the requesting user.
      * @return an [[AdministrativePermissionForProjectGroupGetResponseADM]]
      */
     private def administrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
@@ -488,15 +495,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Adds a new administrative permission (internal use).
      *
-     * @param createRequest     the administrative permission to add.
-     * @param requestingUser    the requesting user.
-     * @param apiRequestID      the API request ID.
+     * @param createRequest        the administrative permission to add.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the requesting user.
+     * @param apiRequestID         the API request ID.
      * @return an optional [[AdministrativePermissionADM]]
      */
     private def administrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
-                                                  requestingUser: UserADM,
-                                                  apiRequestID: UUID
-                                                 ): Future[AdministrativePermissionCreateResponseADM] = {
+                                                         featureFactoryConfig: FeatureFactoryConfig,
+                                                         requestingUser: UserADM,
+                                                         apiRequestID: UUID): Future[AdministrativePermissionCreateResponseADM] = {
         log.debug("administrativePermissionCreateRequestADM")
 
         /**
@@ -520,16 +528,18 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 // get project
                 maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
                     identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser)
-                    ).mapTo[Option[ProjectADM]]
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )).mapTo[Option[ProjectADM]]
 
                 // if it doesnt exist then throw an error
                 project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
                 // get group
                 maybeGroup <- (responderManager ? GroupGetADM(
-                    createRequest.forGroup,
-                    KnoraSystemInstances.Users.SystemUser
+                    groupIri = createRequest.forGroup,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                 )).mapTo[Option[GroupADM]]
 
                 // if it does not exist then throw an error
@@ -554,7 +564,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 _ <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
 
                 // try to retrieve the newly created permission
-                maybePermission <- administrativePermissionForIriGetRequestADM( administrativePermissionIri = newPermissionIri,
+                maybePermission <- administrativePermissionForIriGetRequestADM(administrativePermissionIri = newPermissionIri,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID)
                 newAdminPermission: AdministrativePermissionADM = maybePermission.administrativePermission
@@ -578,8 +588,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Gets all permissions attached to the resource.
      *
-     * @param resourceIri the IRI of the resource.
-     * @param requestingUser    the requesting user.
+     * @param resourceIri    the IRI of the resource.
+     * @param requestingUser the requesting user.
      * @return a sequence of [[PermissionADM]]
      */
     private def objectAccessPermissionsForResourceGetADM(resourceIri: IRI,
@@ -618,8 +628,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Gets all permissions attached to the value.
      *
-     * @param valueIri          the IRI of the value.
-     * @param requestingUser    the requesting user.
+     * @param valueIri       the IRI of the value.
+     * @param requestingUser the requesting user.
      * @return a sequence of [[PermissionADM]]
      */
     private def objectAccessPermissionsForValueGetADM(valueIri: IRI,
@@ -663,9 +673,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Gets all IRI's of all default object access permissions defined inside a project.
      *
-     * @param projectIri        the IRI of the project.
-     * @param requestingUser    the [[UserADM]] of the requesting user.
-     * @param apiRequestID      the API request ID.
+     * @param projectIri     the IRI of the project.
+     * @param requestingUser the [[UserADM]] of the requesting user.
+     * @param apiRequestID   the API request ID.
      * @return a list of IRIs of [[DefaultObjectAccessPermissionADM]] objects.
      */
     private def defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI,
@@ -710,9 +720,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /**
      * Gets a single default object access permission identified by its IRI.
      *
-     * @param permissionIri     the IRI of the default object access permission.
-     * @param requestingUser    the [[UserADM]] of the requesting user.
-     * @param apiRequestID      the API request ID.
+     * @param permissionIri  the IRI of the default object access permission.
+     * @param requestingUser the [[UserADM]] of the requesting user.
+     * @param apiRequestID   the API request ID.
      * @return a single [[DefaultObjectAccessPermissionADM]] object.
      */
     private def defaultObjectAccessPermissionForIriGetRequestADM(permissionIri: IRI,
@@ -1196,86 +1206,92 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
 
-    private def defaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
+    private def defaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
+                                                              featureFactoryConfig: FeatureFactoryConfig,
+                                                              requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
 
-            /**
-             * The actual change project task run with an IRI lock.
-             */
-            def createPermissionTask(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-                                     requestingUser: UserADM): Future[DefaultObjectAccessPermissionCreateResponseADM] =
-                for {
-                    checkResult <- defaultObjectAccessPermissionGetADM(
-                        createRequest.forProject,
-                        createRequest.forGroup,
-                        createRequest.forResourceClass,
-                        createRequest.forProperty)
-
-                    _ = checkResult match {
-                        case Some(doap) => throw DuplicateValueException(s"Default object access permission already exists.")
-                        case None => ()
-                    }
-
-                    // get project
-                    maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                        identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                        requestingUser = KnoraSystemInstances.Users.SystemUser)
-                        ).mapTo[Option[ProjectADM]]
-
-                    // if it doesnt exist then throw an error
-                    project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
-
-                    customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-                    newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri, stringFormatter.makeRandomPermissionIri(project.shortcode))
-
-                    // Create the default object access permission.
-                    createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewDefaultObjectAccessPermission(
-                        adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                        triplestore = settings.triplestoreType,
-                        permissionIri = newPermissionIri,
-                        permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-                        projectIri = project.id,
-                        maybeGroupIri = createRequest.forGroup,
-                        maybeResourceClassIri = createRequest.forResourceClass,
-                        maybePropertyIri = createRequest.forProperty,
-                        permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.OAP)
-                    ).toString
-
-                    _ <- (storeManager ? SparqlUpdateRequest(createNewDefaultObjectAccessPermissionSparqlString)).mapTo[SparqlUpdateResponse]
-
-                    // try to retrieve the newly created permission
-                    maybePermission <- defaultObjectAccessPermissionGetADM(
-                        createRequest.forProject,
-                        createRequest.forGroup,
-                        createRequest.forResourceClass,
-                        createRequest.forProperty)
-
-                    newDefaultObjectAcessPermission: DefaultObjectAccessPermissionADM = maybePermission.getOrElse(throw
-                        BadRequestException("Requested default object access permission could not be created, report this as a possible bug."))
-
-                } yield DefaultObjectAccessPermissionCreateResponseADM(
-                    defaultObjectAccessPermission = newDefaultObjectAcessPermission)
+        /**
+         * The actual change project task run with an IRI lock.
+         */
+        def createPermissionTask(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
+                                 requestingUser: UserADM): Future[DefaultObjectAccessPermissionCreateResponseADM] =
             for {
-                // run the task with an IRI lock
-                taskResult <- IriLocker.runWithIriLock(
-                    apiRequestID,
-                    PERMISSIONS_GLOBAL_LOCK_IRI,
-                    () => createPermissionTask(createRequest, requestingUser)
-                )
-            } yield taskResult
+                checkResult <- defaultObjectAccessPermissionGetADM(
+                    createRequest.forProject,
+                    createRequest.forGroup,
+                    createRequest.forResourceClass,
+                    createRequest.forProperty)
+
+                _ = checkResult match {
+                    case Some(doap) => throw DuplicateValueException(s"Default object access permission already exists.")
+                    case None => ()
+                }
+
+                // get project
+                maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
+                    identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )).mapTo[Option[ProjectADM]]
+
+                // if it doesnt exist then throw an error
+                project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
+
+                customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+                newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri, stringFormatter.makeRandomPermissionIri(project.shortcode))
+
+                // Create the default object access permission.
+                createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewDefaultObjectAccessPermission(
+                    adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                    triplestore = settings.triplestoreType,
+                    permissionIri = newPermissionIri,
+                    permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
+                    projectIri = project.id,
+                    maybeGroupIri = createRequest.forGroup,
+                    maybeResourceClassIri = createRequest.forResourceClass,
+                    maybePropertyIri = createRequest.forProperty,
+                    permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.OAP)
+                ).toString
+
+                _ <- (storeManager ? SparqlUpdateRequest(createNewDefaultObjectAccessPermissionSparqlString)).mapTo[SparqlUpdateResponse]
+
+                // try to retrieve the newly created permission
+                maybePermission <- defaultObjectAccessPermissionGetADM(
+                    createRequest.forProject,
+                    createRequest.forGroup,
+                    createRequest.forResourceClass,
+                    createRequest.forProperty)
+
+                newDefaultObjectAcessPermission: DefaultObjectAccessPermissionADM = maybePermission.getOrElse(throw
+                    BadRequestException("Requested default object access permission could not be created, report this as a possible bug."))
+
+            } yield DefaultObjectAccessPermissionCreateResponseADM(
+                defaultObjectAccessPermission = newDefaultObjectAcessPermission)
+
+        for {
+            // run the task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                PERMISSIONS_GLOBAL_LOCK_IRI,
+                () => createPermissionTask(createRequest, requestingUser)
+            )
+        } yield taskResult
     }
 
     /**
      * Gets all permissions defined inside a project.
      *
-     * @param projectIRI     the IRI of the project.
-     * @param requestingUser the [[UserADM]] of the requesting user.
-     * @param apiRequestID    the API request ID.
+     * @param projectIRI           the IRI of the project.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the [[UserADM]] of the requesting user.
+     * @param apiRequestID         the API request ID.
      * @return a list of of [[PermissionInfoADM]] objects.
      */
     private def permissionsForProjectGetRequestADM(projectIRI: IRI,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID
-                                                    ): Future[PermissionsForProjectGetResponseADM] = {
+                                                   featureFactoryConfig: FeatureFactoryConfig,
+                                                   requestingUser: UserADM,
+                                                   apiRequestID: UUID
+                                                  ): Future[PermissionsForProjectGetResponseADM] = {
 
         for {
             sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjectPermissions(
@@ -1283,7 +1299,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 projectIri = projectIRI
             ).toString())
 
-            permissionsQueryResponse <- (storeManager ? SparqlConstructRequest(sparqlQueryString)).mapTo[SparqlConstructResponse]
+            permissionsQueryResponse <- (storeManager ? SparqlConstructRequest(
+                sparql = sparqlQueryString,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlConstructResponse]
 
             /* extract response statements */
             permissionsQueryResponseStatements: Map[IRI, Seq[(IRI, String)]] = permissionsQueryResponse.statements
@@ -1292,10 +1311,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             permissionsInfo: Set[PermissionInfoADM] = if (permissionsQueryResponseStatements.isEmpty) {
                 throw NotFoundException(s"No permission could be found for $projectIRI.")
             } else {
-                permissionsQueryResponseStatements.map{ statement =>
-                        val permissionIri = statement._1
-                        val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
-                        PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
+                permissionsQueryResponseStatements.map { statement =>
+                    val permissionIri = statement._1
+                    val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
+                    PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
                 }.toSet
             }
 

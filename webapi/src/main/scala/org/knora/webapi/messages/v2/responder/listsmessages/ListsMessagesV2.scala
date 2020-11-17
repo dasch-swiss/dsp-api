@@ -19,12 +19,14 @@
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraJsonLDResponseV2}
+import org.knora.webapi.messages.util.{rdf, _}
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString, JsonLDUtil}
+import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraRequestV2}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.{messages, _}
@@ -38,10 +40,12 @@ sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 /**
  * Requests a list. A successful response will be a [[ListGetResponseV2]]
  *
- * @param listIri        the IRI of the list (Iri of the list's root node).
- * @param requestingUser the user making the request.
+ * @param listIri              the IRI of the list (Iri of the list's root node).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListGetRequestV2(listIri: IRI,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM) extends ListsResponderRequestV2
 
 
@@ -112,7 +116,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
                 OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil.iriToJsonLDObject(node.hasRootNode)
             )
 
-            messages.util.JsonLDObject(
+            JsonLDObject(
                 Map(
                     "@id" -> JsonLDString(node.id),
                     "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString)
@@ -139,7 +143,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
             OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil.iriToJsonLDObject(listinfo.projectIri)
         )
 
-        val body = messages.util.JsonLDObject(Map(
+        val body = rdf.JsonLDObject(Map(
             "@id" -> JsonLDString(listinfo.id),
             "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString),
             OntologyConstants.KnoraBase.IsRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDBoolean(true)
@@ -160,9 +164,11 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 /**
  * Requests a list node. A successful response will be a [[NodeGetResponseV2]]
  *
- * @param nodeIri the IRI of the node to retrieve.
+ * @param nodeIri              the IRI of the node to retrieve.
+ * @param featureFactoryConfig the feature factory configuration.
  */
 case class NodeGetRequestV2(nodeIri: IRI,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM) extends ListsResponderRequestV2
 
 /**

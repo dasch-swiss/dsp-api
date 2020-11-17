@@ -44,16 +44,16 @@ import spray.json.JsValue
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[ResourcesResponderV1]].
-  */
+ * Static data for testing [[ResourcesResponderV1]].
+ */
 object ResourcesResponderV1Spec {
-    val config: Config = ConfigFactory.parseString(
+    private val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 
-    val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
+    private val ReiseInsHeiligelandThreeValues: ResourceSearchResponseV1 = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
             id = "http://rdfh.ch/0803/2a6221216701",
             value = Vector("Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius"),
@@ -61,7 +61,7 @@ object ResourcesResponderV1Spec {
         ))
     )
 
-    val ReiseInsHeiligelandOneValueRestrictedToBook = ResourceSearchResponseV1(
+    private val ReiseInsHeiligelandOneValueRestrictedToBook: ResourceSearchResponseV1 = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
             id = "http://rdfh.ch/0803/2a6221216701",
             value = Vector("Reise ins Heilige Land"),
@@ -616,9 +616,10 @@ object ResourcesResponderV1Spec {
 
 
 /**
-  * Tests [[ResourcesResponderV1]].
-  */
+ * Tests [[ResourcesResponderV1]].
+ */
 class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
+
     import ResourcesResponderV1Spec._
 
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -855,7 +856,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", featureFactoryConfig = defaultFeatureFactoryConfig, userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -864,7 +865,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75", featureFactoryConfig = defaultFeatureFactoryConfig, userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -873,16 +874,16 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?reqtype=context&resinfo=true
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", resinfo = true, featureFactoryConfig = defaultFeatureFactoryConfig, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
-            response should be (ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
+            response should be(ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
         }
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75?reqtype=context&resinfo=true
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75", resinfo = true, featureFactoryConfig = defaultFeatureFactoryConfig, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
@@ -1021,6 +1022,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Misc",
                 projectIri = "http://rdfh.ch/projects/0803",
                 values = valuesToBeCreated,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1059,6 +1061,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Book",
                 projectIri = "http://rdfh.ch/projects/0803",
                 values = valuesToBeCreated,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1112,6 +1115,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Book with reference to nonexistent resource",
                 projectIri = "http://rdfh.ch/projects/0803",
                 values = valuesToBeCreated,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1158,7 +1162,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val publoc = TextValueSimpleV1("Entenhausen")
 
             val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
-            val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", era1="CE",era2="CE", calendar = KnoraCalendarV1.GREGORIAN)
+            val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", era1 = "CE", era2 = "CE", calendar = KnoraCalendarV1.GREGORIAN)
 
             val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
                 "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
@@ -1185,6 +1189,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Book",
                 projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1204,7 +1209,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
 
             // See if we can query the resource.
-            responderManager ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userADM = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, featureFactoryConfig = defaultFeatureFactoryConfig, userADM = SharedTestDataADM.incunabulaProjectAdminUser)
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
             }
@@ -1250,6 +1255,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
                 file = Some(fileValue),
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1272,6 +1278,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val pageGetContext = ResourceContextGetRequestV1(
                 iri = resIri,
                 resinfo = true,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
@@ -1289,6 +1296,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val resourceDeleteRequest = ResourceDeleteRequestV1(
                 resourceIri = newPageResourceIri.get,
                 deleteComment = Some("This page was deleted as a test"),
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userADM = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1298,7 +1306,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get))
 
             // Check that the resource is marked as deleted.
-            responderManager ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceInfoGetRequestV1(
+                iri = newPageResourceIri.get,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                userProfile = SharedTestDataADM.incunabulaProjectAdminUser
+            )
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -1312,8 +1324,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "get the properties of a resource" in {
 
             val propertiesGetRequest = PropertiesGetRequestV1(
-                "http://rdfh.ch/0803/021ec18f1735",
-                SharedTestDataADM.incunabulaProjectAdminUser
+                iri = "http://rdfh.ch/0803/021ec18f1735",
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                userProfile = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
             responderManager ! propertiesGetRequest
@@ -1325,7 +1338,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "get the regions of a page pointed to by regions" in {
 
-            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/9d626dc76c03", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            val resourceContextPage = ResourceContextGetRequestV1(
+                iri = "http://rdfh.ch/0803/9d626dc76c03",
+                resinfo = true,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                userProfile = SharedTestDataADM.incunabulaProjectAdminUser
+            )
 
             responderManager ! resourceContextPage
 
@@ -1337,7 +1355,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourceFullGetRequestV1(
+                iri = "http://rdfh.ch/0001/project-thing-2",
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                userADM = SharedTestDataADM.anythingUser1
+            )
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1348,7 +1370,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser2)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", featureFactoryConfig = defaultFeatureFactoryConfig, userADM = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1360,7 +1382,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", featureFactoryConfig = defaultFeatureFactoryConfig, userADM = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1376,7 +1398,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser2)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", featureFactoryConfig = defaultFeatureFactoryConfig, userADM = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1393,7 +1415,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show a contained resource in a context request only if the user has permission to see the containing resource, the contained resource, and the link value" in {
             // The owner of the resources and the link should see two contained resources.
 
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, featureFactoryConfig = defaultFeatureFactoryConfig, userProfile = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1405,7 +1427,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // Another user in the project, who doesn't have permission to see the second link, should see only one contained resource.
 
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser2)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, featureFactoryConfig = defaultFeatureFactoryConfig, userProfile = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1414,7 +1436,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // A user who's not in the project shouldn't see any contained resources.
 
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, featureFactoryConfig = defaultFeatureFactoryConfig, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1429,6 +1451,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = "http://rdfh.ch/projects/0803",
                 values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
                 file = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1445,6 +1468,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = "http://rdfh.ch/projects/0803",
                 values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
                 file = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1461,6 +1485,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
                 values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
                 file = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.superUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1476,6 +1501,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             responderManager ! ChangeResourceLabelRequestV1(
                 resourceIri = "http://rdfh.ch/0803/c5058f3a",
                 label = myNewLabel,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userADM = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -1498,6 +1524,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = "http://rdfh.ch/projects/0001",
                 values = valuesToBeCreated,
                 file = None,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 userProfile = SharedTestDataADM.anythingUser1,
                 apiRequestID = UUID.randomUUID
             )

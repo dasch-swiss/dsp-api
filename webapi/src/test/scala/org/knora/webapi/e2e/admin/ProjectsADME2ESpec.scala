@@ -28,18 +28,17 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.eclipse.rdf4j.model.Model
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, IRI}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
@@ -708,8 +707,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 assert(response.status === StatusCodes.OK)
                 val trigStrFuture: Future[String] = Unmarshal(response.entity).to[String]
                 val trigStr: String = Await.result(trigStrFuture, Timeout(5.seconds).duration)
-                val parsedTrig: Model = parseTrig(trigStr)
-                val contextIris: Set[IRI] = parsedTrig.contexts.asScala.map(_.stringValue).toSet
+                val parsedTrig: RdfModel = parseTrig(trigStr)
+                val contextIris: Set[IRI] = parsedTrig.getContexts
 
                 assert(contextIris == Set(
                     "http://www.knora.org/ontology/0001/something",

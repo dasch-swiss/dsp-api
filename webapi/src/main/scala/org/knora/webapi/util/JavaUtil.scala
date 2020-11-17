@@ -47,19 +47,17 @@ object JavaUtil {
         (a: A, b: B) => f(a, b)
 
     /**
-     * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
+     * Helps turn matches for optional regular expression groups, which can be null, into Scala [[Option]] objects. See
      * [[https://stackoverflow.com/a/18794646]].
      */
     object Optional {
-        def unapply[T](a: T): Some[Option[T]] = if (null == a) Some(None) else Some(Some(a))
+        def unapply[T](group: T): Some[Option[T]] = if (group == null) Some(None) else Some(Some(group))
     }
 
     /**
      * Wraps a Java `Optional` and converts it to a Scala [[Option]].
      */
-    class JavaOptional[T](opt: java.util.Optional[T]) {
-        def toOption: Option[T] = if (opt.isPresent) Some(opt.get()) else None
+    implicit class ConvertibleJavaOptional[T](val self: java.util.Optional[T]) extends AnyVal {
+        def toOption: Option[T] = if (self.isPresent) Some(self.get) else None
     }
-
-    implicit def toJavaOptional[T](optional: java.util.Optional[T]): JavaOptional[T] = new JavaOptional[T](optional)
 }

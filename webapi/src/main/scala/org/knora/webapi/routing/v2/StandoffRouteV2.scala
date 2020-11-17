@@ -30,7 +30,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffPageRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
@@ -68,12 +68,16 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
                     val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield GetStandoffPageRequestV2(
                         resourceIri = resourceIri.toString,
                         valueIri = valueIri.toString,
                         offset = offset,
                         targetSchema = targetSchema,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser
                     )
 
@@ -91,7 +95,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             }
         } ~ path("v2" / "mapping") {
             post {
-                entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
+                entity(as[Multipart.FormData]) { formData: Multipart.FormData =>
                     requestContext =>
 
                         val JSON_PART = "json"
@@ -101,7 +105,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         val apiRequestID = UUID.randomUUID
 
                         // collect all parts of the multipart as it arrives into a map
-                        val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
+                        val allPartsFuture: Future[Map[Name, String]] = formData.parts.mapAsync[(Name, String)](1) {
                             case b: BodyPart if b.name == JSON_PART =>
                                 //loggingAdapter.debug(s"inside allPartsFuture - processing $JSON_PART")
                                 b.toStrict(2.seconds).map { strict =>
@@ -126,7 +130,10 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
                         val requestMessageFuture: Future[CreateMappingRequestV2] = for {
-                            requestingUser <- getUserADM(requestContext)
+                            requestingUser <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
                             allParts: Map[Name, String] <- allPartsFuture
                             jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
 
@@ -136,6 +143,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                featureFactoryConfig = featureFactoryConfig,
                                 settings = settings,
                                 log = log
                             )
@@ -144,6 +152,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         } yield CreateMappingRequestV2(
                             metadata = metadata,
                             xml = CreateMappingRequestXMLV2(xml),
+                            featureFactoryConfig = featureFactoryConfig,
                             requestingUser = requestingUser,
                             apiRequestID = apiRequestID
                         )

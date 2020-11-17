@@ -30,12 +30,14 @@ import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -59,13 +61,14 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 /**
  * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
  *
- * @param resourceIris   the IRIs of the resources to be queried.
- * @param propertyIri    if defined, requests only the values of the specified explicit property.
- * @param valueUuid      if defined, requests only the value with the specified UUID.
- * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
- * @param targetSchema   the target API schema.
- * @param schemaOptions  the schema options submitted with the request.
- * @param requestingUser the user making the request.
+ * @param resourceIris         the IRIs of the resources to be queried.
+ * @param propertyIri          if defined, requests only the values of the specified explicit property.
+ * @param valueUuid            if defined, requests only the value with the specified UUID.
+ * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+ * @param targetSchema         the target API schema.
+ * @param schemaOptions        the schema options submitted with the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
@@ -73,26 +76,36 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  versionDate: Option[Instant] = None,
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption] = Set.empty,
+                                 featureFactoryConfig: FeatureFactoryConfig,
                                  requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
  * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
  *
- * @param resourceIris   the IRIs of the resources to obtain a preview for.
- * @param targetSchema   the schema of the response.
- * @param requestingUser the user making the request.
+ * @param resourceIris         the IRIs of the resources to obtain a preview for.
+ * @param targetSchema         the schema of the response.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
-case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], targetSchema: ApiV2Schema, requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI],
+                                        targetSchema: ApiV2Schema,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
  * Requests the version history of the values of a resource.
  *
- * @param resourceIri    the IRI of the resource.
- * @param startDate      the start of the time period to return, inclusive.
- * @param endDate        the end of the time period to return, exclusive.
- * @param requestingUser the user making the request.
+ * @param resourceIri          the IRI of the resource.
+ * @param startDate            the start of the time period to return, inclusive.
+ * @param endDate              the end of the time period to return, exclusive.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
-case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI, startDate: Option[Instant], endDate: Option[Instant], requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
+                                              startDate: Option[Instant],
+                                              endDate: Option[Instant],
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
  * Represents an item in the version history of a resource.
@@ -147,7 +160,7 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
 
         // Make the JSON-LD document.
 
-        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(historyAsJsonLD)))
+        val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(historyAsJsonLD)))
 
         JsonLDDocument(body = body, context = context)
     }
@@ -161,9 +174,16 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
  * @param mappingIri            the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
  * @param gravsearchTemplateIri the gravsearch template to query the metadata for the TEI header, if provided.
  * @param headerXSLTIri         the IRI of the XSL transformation to convert the resource's metadata to the TEI header.
+ * @param featureFactoryConfig  the feature factory configuration.
  * @param requestingUser        the user making the request.
  */
-case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourceTEIGetRequestV2(resourceIri: IRI,
+                                   textProperty: SmartIri,
+                                   mappingIri: Option[IRI],
+                                   gravsearchTemplateIri: Option[IRI],
+                                   headerXSLTIri: Option[IRI],
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
  * Represents a Knora resource as TEI/XML.
@@ -196,7 +216,10 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
         if (headerXSLT.nonEmpty) {
 
-            val headerJSONLD = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+            val headerJSONLD: JsonLDDocument = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+
+            // TODO: Change the XSLT transformation used here to handle rdf:Description, so we can use RdfFormatUtil
+            // here instead of RDF4J.
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
             val stringReader = new StringReader(headerJSONLD.toCompactString)
@@ -208,9 +231,7 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
             rdfParser.parse(stringReader, "")
 
             val teiHeaderInfos = stringWriter.toString
-
             XMLUtil.applyXSLTransformation(teiHeaderInfos, headerXSLT.get)
-
 
         } else {
             s"""
@@ -430,10 +451,10 @@ case class ReadResourceV2(resourceIri: IRI,
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 
-        messages.util.JsonLDObject(
+        JsonLDObject(
             Map(
-                JsonLDConstants.ID -> JsonLDString(resourceIri),
-                JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
+                JsonLDKeywords.ID -> JsonLDString(resourceIri),
+                JsonLDKeywords.TYPE -> JsonLDString(resourceClassIri.toString),
                 OntologyConstants.Rdfs.Label -> JsonLDString(label)
             ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema + arkUrlAsJsonLD + versionArkUrlAsJsonLD
         )
@@ -500,11 +521,13 @@ case class CreateResourceV2(resourceIri: Option[SmartIri],
 /**
  * Represents a request to create a resource.
  *
- * @param createResource the resource to be created.
- * @param requestingUser the user making the request.
- * @param apiRequestID   the API request ID.
+ * @param createResource       the resource to be created.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the API request ID.
  */
 case class CreateResourceRequestV2(createResource: CreateResourceV2,
+                                   featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV2
 
@@ -512,14 +535,14 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
     /**
      * Converts JSON-LD input to a [[CreateResourceRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -527,6 +550,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
 
@@ -546,7 +570,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
             projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
 
@@ -574,6 +599,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                         requestingUser = requestingUser,
                         requestedUserIri = attachedToUserIri.toString,
                         projectIri = projectIri.toString,
+                        featureFactoryConfig = featureFactoryConfig,
                         responderManager = responderManager
                     )
             }
@@ -591,8 +617,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
             propertyIriStrs: Set[IRI] = jsonLDDocument.body.value.keySet --
                 Set(
-                    JsonLDConstants.ID,
-                    JsonLDConstants.TYPE,
+                    JsonLDKeywords.ID,
+                    JsonLDKeywords.TYPE,
                     OntologyConstants.Rdfs.Label,
                     OntologyConstants.KnoraApiV2Complex.AttachedToProject,
                     OntologyConstants.KnoraApiV2Complex.AttachedToUser,
@@ -618,6 +644,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                     requestingUser = requestingUser,
                                     responderManager = responderManager,
                                     storeManager = storeManager,
+                                    featureFactoryConfig = featureFactoryConfig,
                                     settings = settings,
                                     log = log
                                 )
@@ -661,6 +688,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                 permissions = permissions,
                 creationDate = creationDate
             ),
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
             apiRequestID = apiRequestID
         )
@@ -676,6 +704,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
  * @param maybeLabel                the resource's new `rdfs:label`, if any.
  * @param maybePermissions          the resource's new permissions, if any.
  * @param maybeNewModificationDate  the resource's new last modification date, if any.
+ * @param featureFactoryConfig      the feature factory configuration.
  */
 case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
                                            resourceClassIri: SmartIri,
@@ -683,6 +712,7 @@ case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
                                            maybeLabel: Option[String] = None,
                                            maybePermissions: Option[String] = None,
                                            maybeNewModificationDate: Option[Instant] = None,
+                                           featureFactoryConfig: FeatureFactoryConfig,
                                            requestingUser: UserADM,
                                            apiRequestID: UUID) extends ResourcesResponderRequestV2
 
@@ -690,15 +720,14 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     /**
      * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -706,18 +735,23 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] = {
         Future {
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser,
                 apiRequestID = apiRequestID
             )
         }
     }
 
-    def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): UpdateResourceMetadataRequestV2 = {
+    def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                       featureFactoryConfig: FeatureFactoryConfig,
+                       requestingUser: UserADM,
+                       apiRequestID: UUID): UpdateResourceMetadataRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
@@ -754,6 +788,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
             maybeLabel = maybeLabel,
             maybePermissions = maybePermissions,
             maybeNewModificationDate = maybeNewModificationDate,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = apiRequestID
         )
@@ -770,6 +805,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
  *                                  the current time will be used.
  * @param maybeLastModificationDate the resource's last modification date, if any.
  * @param erase                     if `true`, the resource will be erased from the triplestore, otherwise it will be marked as deleted.
+ * @param featureFactoryConfig      the feature factory configuration.
  */
 case class DeleteOrEraseResourceRequestV2(resourceIri: IRI,
                                           resourceClassIri: SmartIri,
@@ -777,6 +813,7 @@ case class DeleteOrEraseResourceRequestV2(resourceIri: IRI,
                                           maybeDeleteDate: Option[Instant] = None,
                                           maybeLastModificationDate: Option[Instant] = None,
                                           erase: Boolean = false,
+                                          featureFactoryConfig: FeatureFactoryConfig,
                                           requestingUser: UserADM,
                                           apiRequestID: UUID) extends ResourcesResponderRequestV2
 
@@ -784,15 +821,14 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
     /**
      * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -800,18 +836,23 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] = {
         Future {
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser,
                 apiRequestID = apiRequestID
             )
         }
     }
 
-    def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): DeleteOrEraseResourceRequestV2 = {
+    def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                       featureFactoryConfig: FeatureFactoryConfig,
+                       requestingUser: UserADM,
+                       apiRequestID: UUID): DeleteOrEraseResourceRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
@@ -842,6 +883,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
             maybeDeleteComment = maybeDeleteComment,
             maybeDeleteDate = maybeDeleteDate,
             maybeLastModificationDate = maybeLastModificationDate,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = apiRequestID
         )
@@ -928,7 +970,7 @@ case class ReadResourcesSequenceV2(resources: Seq[ReadResourceV2],
 
         val body = JsonLDObject(
             Map(
-                JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
+                JsonLDKeywords.GRAPH -> JsonLDArray(resourcesJsonObjects)
             ) ++ mayHaveMoreResultsStatement
         )
 
@@ -1111,8 +1153,8 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
             node: GraphNodeV2 =>
                 // Convert the node to JSON-LD.
                 val jsonLDNodeMap = Map(
-                    JsonLDConstants.ID -> JsonLDString(node.resourceIri),
-                    JsonLDConstants.TYPE -> JsonLDString(node.resourceClassIri.toString),
+                    JsonLDKeywords.ID -> JsonLDString(node.resourceIri),
+                    JsonLDKeywords.TYPE -> JsonLDString(node.resourceClassIri.toString),
                     OntologyConstants.Rdfs.Label -> JsonLDString(node.resourceLabel)
                 )
 
@@ -1129,7 +1171,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
                                 propertyIri.toString -> JsonLDArray(sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)))
                         }.toMap
 
-                        messages.util.JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
+                        messages.util.rdf.JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
 
                     case None =>
                         // This node isn't the source of any edges.
@@ -1139,7 +1181,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
         // Make the JSON-LD document.
 
-        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(nodesWithEdges)))
+        val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(nodesWithEdges)))
 
         JsonLDDocument(body = body, context = context)
     }

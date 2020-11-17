@@ -19,15 +19,12 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import java.io.StringReader
-
-import akka.http.scaladsl.model.MediaType
-import org.eclipse.rdf4j
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDObject, JsonLDString, RdfFormatUtil}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 
@@ -38,15 +35,17 @@ trait KnoraResponseV2 {
     /**
      * Returns this response message in the requested format.
      *
-     * @param mediaType     the specific media type selected for the response.
-     * @param targetSchema  the response schema.
-     * @param schemaOptions the schema options.
-     * @param settings      the application settings.
+     * @param rdfFormat            the RDF format selected for the response.
+     * @param targetSchema         the response schema.
+     * @param schemaOptions        the schema options.
+     * @param settings             the application settings.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a formatted string representing this response message.
      */
-    def format(mediaType: MediaType.NonBinary,
+    def format(rdfFormat: RdfFormat,
                targetSchema: OntologySchema,
                schemaOptions: Set[SchemaOption],
+               featureFactoryConfig: FeatureFactoryConfig,
                settings: KnoraSettingsImpl): String
 }
 
@@ -55,9 +54,10 @@ trait KnoraResponseV2 {
  */
 trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
 
-    override def format(mediaType: MediaType.NonBinary,
+    override def format(rdfFormat: RdfFormat,
                         targetSchema: OntologySchema,
                         schemaOptions: Set[SchemaOption],
+                        featureFactoryConfig: FeatureFactoryConfig,
                         settings: KnoraSettingsImpl): String = {
         val targetApiV2Schema = targetSchema match {
             case apiV2Schema: ApiV2Schema => apiV2Schema
@@ -72,17 +72,20 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
         )
 
         // Which response format was requested?
-        mediaType match {
-            case RdfMediaTypes.`application/ld+json` =>
-                // JSON-LD. Convert the document to a string in JSON-LD format.
+        rdfFormat match {
+            case JsonLD =>
+                // JSON-LD. Use the JsonLDDocument to generate the formatted text.
                 jsonLDDocument.toPrettyString
 
-            case _ =>
-                // Some other format. Convert the document to an RDF4J Model,
-                // and return the model in the requested format.
-                RdfFormatUtil.formatRDF4JModel(
-                    model = jsonLDDocument.toRDF4JModel,
-                    mediaType = mediaType
+            case nonJsonLD: NonJsonLD =>
+                // Some other format. Convert the JSON-LD document to an RDF model.
+                val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+                val rdfModel: RdfModel = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
+
+                // Convert the model to the requested format.
+                rdfFormatUtil.format(
+                    rdfModel = rdfModel,
+                    rdfFormat = nonJsonLD
                 )
         }
     }
@@ -106,28 +109,30 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
      */
     protected val turtle: String
 
-    override def format(mediaType: MediaType.NonBinary,
+    override def format(rdfFormat: RdfFormat,
                         targetSchema: OntologySchema,
                         schemaOptions: Set[SchemaOption],
+                        featureFactoryConfig: FeatureFactoryConfig,
                         settings: KnoraSettingsImpl): String = {
         if (targetSchema != InternalSchema) {
             throw AssertionException(s"Response can be returned only in the internal schema")
         }
 
         // Which response format was requested?
-        mediaType match {
-            case RdfMediaTypes.`text/turtle` =>
+        rdfFormat match {
+            case Turtle =>
                 // Turtle. Return the Turtle string as is.
                 turtle
 
             case _ =>
-                // Some other format. Parse the Turtle to an RDF4J Model.
-                val model = rdf4j.rio.Rio.parse(new StringReader(turtle), "", rdf4j.rio.RDFFormat.TURTLE, null)
+                // Some other format. Parse the Turtle to an RdfModel.
+                val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+                val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
                 // Return the model in the requested format.
-                RdfFormatUtil.formatRDF4JModel(
-                    model = model,
-                    mediaType = mediaType
+                rdfFormatUtil.format(
+                    rdfModel = rdfModel,
+                    rdfFormat = rdfFormat
                 )
         }
     }

@@ -25,6 +25,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
@@ -97,7 +98,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
      */
     def receive(msg: OntologiesResponderRequestV2) = msg match {
-        case LoadOntologiesRequestV2(requestingUser) => loadOntologies(requestingUser)
+        case LoadOntologiesRequestV2(featureFactoryConfig, requestingUser) => loadOntologies(featureFactoryConfig, requestingUser)
         case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
         case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser)
         case StandoffClassesWithDataTypeGetRequestV2(requestingUser) => getStandoffStandoffClassesWithDataTypeV2(requestingUser)
@@ -135,10 +136,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     /**
      * Loads and caches all ontology information.
      *
-     * @param requestingUser the user making the request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return a [[SuccessResponseV2]].
      */
-    private def loadOntologies(requestingUser: UserADM): Future[SuccessResponseV2] = {
+    private def loadOntologies(featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM): Future[SuccessResponseV2] = {
         for {
             _ <- Future {
                 if (!(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)) {
@@ -166,7 +169,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         ontologyGraph = ontologyIri
                     ).toString
 
-                    (storeManager ? SparqlExtendedConstructRequest(ontologyGraphConstructQuery)).mapTo[SparqlExtendedConstructResponse].map {
+                    (storeManager ? SparqlExtendedConstructRequest(
+                        sparql = ontologyGraphConstructQuery,
+                        featureFactoryConfig = featureFactoryConfig
+                    )).mapTo[SparqlExtendedConstructResponse].map {
                         response => OntologyGraph(ontologyIri = ontologyIri, constructResponse = response)
                     }
             }
@@ -1604,10 +1610,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     /**
      * Reads an ontology's metadata.
      *
-     * @param internalOntologyIri the ontology's internal IRI.
+     * @param internalOntologyIri  the ontology's internal IRI.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
      */
-    private def loadOntologyMetadata(internalOntologyIri: SmartIri): Future[Option[OntologyMetadataV2]] = {
+    private def loadOntologyMetadata(internalOntologyIri: SmartIri,
+                                     featureFactoryConfig: FeatureFactoryConfig): Future[Option[OntologyMetadataV2]] = {
         for {
             _ <- Future {
                 if (!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
@@ -1620,7 +1628,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 ontologyIri = internalOntologyIri
             ).toString()
 
-            getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(getOntologyInfoSparql)).mapTo[SparqlConstructResponse]
+            getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(
+                sparql = getOntologyInfoSparql,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlConstructResponse]
 
             metadata: Option[OntologyMetadataV2] = if (getOntologyInfoResponse.statements.isEmpty) {
                 None
@@ -1704,7 +1715,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 cacheData <- getCacheData
 
                 // Make sure the ontology doesn't already exist.
-                existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+                existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
+                    internalOntologyIri = internalOntologyIri,
+                    featureFactoryConfig = createOntologyRequest.featureFactoryConfig
+                )
 
                 _ = if (existingOntologyMetadata.nonEmpty) {
                     throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be created, because it already exists")
@@ -1747,7 +1761,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     lastModificationDate = Some(currentTime)
                 ).unescape
 
-                maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+                maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
+                    internalOntologyIri = internalOntologyIri,
+                    featureFactoryConfig = createOntologyRequest.featureFactoryConfig
+                )
 
                 _ = maybeLoadedOntologyMetadata match {
                     case Some(loadedOntologyMetadata) =>
@@ -1779,7 +1796,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
             // Get project info for the shortcode.
-            projectInfo: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri.toString)), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
+            projectInfo: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+                featureFactoryConfig = createOntologyRequest.featureFactoryConfig,
+                requestingUser = requestingUser
+            )).mapTo[ProjectGetResponseADM]
 
             // Check that the ontology name is valid.
             validOntologyName = stringFormatter.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName, throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
@@ -1814,7 +1835,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate)
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
+                    featureFactoryConfig = changeOntologyMetadataRequest.featureFactoryConfig
+                )
 
                 // get the metadata of the ontology.
                 oldMetadata: OntologyMetadataV2 = cacheData.ontologies(internalOntologyIri).ontologyMetadata
@@ -1857,7 +1882,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     lastModificationDate = Some(currentTime)
                 ).unescape
 
-                maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+                maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
+                    internalOntologyIri = internalOntologyIri,
+                    featureFactoryConfig = changeOntologyMetadataRequest.featureFactoryConfig
+                )
 
                 _ = maybeLoadedOntologyMetadata match {
                     case Some(loadedOntologyMetadata) =>
@@ -1905,7 +1933,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
                     internalOntologyIri = internalOntologyIri,
-                    expectedLastModificationDate = createClassRequest.lastModificationDate
+                    expectedLastModificationDate = createClassRequest.lastModificationDate,
+                    featureFactoryConfig = createClassRequest.featureFactoryConfig
                 )
 
                 // Check that the class's rdf:type is owl:Class.
@@ -2007,11 +2036,18 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = createClassRequest.featureFactoryConfig
+                )
 
                 // Check that the data that was saved corresponds to the data that was submitted.
 
-                loadedClassDef <- loadClassDefinition(internalClassIri)
+                loadedClassDef <- loadClassDefinition(
+                    classIri = internalClassIri,
+                    featureFactoryConfig = createClassRequest.featureFactoryConfig
+                )
 
                 _ = if (loadedClassDef != unescapedClassDefWithLinkValueProps) {
                     throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedClassDefWithLinkValueProps, but $loadedClassDef was saved")
@@ -2266,7 +2302,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
                     internalOntologyIri = internalOntologyIri,
-                    expectedLastModificationDate = addCardinalitiesRequest.lastModificationDate
+                    expectedLastModificationDate = addCardinalitiesRequest.lastModificationDate,
+                    featureFactoryConfig = addCardinalitiesRequest.featureFactoryConfig
                 )
 
                 // Check that the class's rdf:type is owl:Class.
@@ -2374,11 +2411,18 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = addCardinalitiesRequest.featureFactoryConfig
+                )
 
                 // Check that the data that was saved corresponds to the data that was submitted.
 
-                loadedClassDef <- loadClassDefinition(internalClassIri)
+                loadedClassDef <- loadClassDefinition(
+                    classIri = internalClassIri,
+                    featureFactoryConfig = addCardinalitiesRequest.featureFactoryConfig
+                )
 
                 _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
                     throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
@@ -2449,7 +2493,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
                     internalOntologyIri = internalOntologyIri,
-                    expectedLastModificationDate = changeCardinalitiesRequest.lastModificationDate
+                    expectedLastModificationDate = changeCardinalitiesRequest.lastModificationDate,
+                    featureFactoryConfig = changeCardinalitiesRequest.featureFactoryConfig
                 )
 
                 // Check that the class's rdf:type is owl:Class.
@@ -2541,11 +2586,18 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = changeCardinalitiesRequest.featureFactoryConfig
+                )
 
                 // Check that the data that was saved corresponds to the data that was submitted.
 
-                loadedClassDef <- loadClassDefinition(internalClassIri)
+                loadedClassDef <- loadClassDefinition(
+                    classIri = internalClassIri,
+                    featureFactoryConfig = changeCardinalitiesRequest.featureFactoryConfig
+                )
 
                 _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
                     throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
@@ -2615,7 +2667,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
                     internalOntologyIri = internalOntologyIri,
-                    expectedLastModificationDate = deleteClassRequest.lastModificationDate
+                    expectedLastModificationDate = deleteClassRequest.lastModificationDate,
+                    featureFactoryConfig = deleteClassRequest.featureFactoryConfig
                 )
 
                 // Check that the class exists.
@@ -2650,7 +2703,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = deleteClassRequest.featureFactoryConfig
+                )
 
                 // Update the cache.
 
@@ -2716,7 +2773,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
                     internalOntologyIri = internalOntologyIri,
-                    expectedLastModificationDate = deletePropertyRequest.lastModificationDate
+                    expectedLastModificationDate = deletePropertyRequest.lastModificationDate,
+                    featureFactoryConfig = deletePropertyRequest.featureFactoryConfig
                 )
 
                 // Check that the property exists.
@@ -2769,7 +2827,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = deletePropertyRequest.featureFactoryConfig
+                )
 
                 // Update the cache.
 
@@ -2834,7 +2896,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
                     internalOntologyIri = internalOntologyIri,
-                    expectedLastModificationDate = deleteOntologyRequest.lastModificationDate
+                    expectedLastModificationDate = deleteOntologyRequest.lastModificationDate,
+                    featureFactoryConfig = deleteOntologyRequest.featureFactoryConfig
                 )
 
                 // Check that none of the entities in the ontology are used in data or in other ontologies.
@@ -2869,7 +2932,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology has been deleted.
 
-                maybeOntologyMetadata <- loadOntologyMetadata(internalOntologyIri)
+                maybeOntologyMetadata <- loadOntologyMetadata(
+                    internalOntologyIri = internalOntologyIri,
+                    featureFactoryConfig = deleteOntologyRequest.featureFactoryConfig
+                )
 
                 _ = if (maybeOntologyMetadata.nonEmpty) {
                     throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not deleted. Please report this as a possible bug.")
@@ -2933,7 +2999,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
-                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = createPropertyRequest.lastModificationDate)
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = createPropertyRequest.lastModificationDate,
+                    featureFactoryConfig = createPropertyRequest.featureFactoryConfig
+                )
 
                 // Check that the property's rdf:type is owl:ObjectProperty.
 
@@ -3102,19 +3172,34 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = createPropertyRequest.featureFactoryConfig
+                )
 
                 // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
                 // we have to undo the SPARQL-escaping of the input.
 
-                loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
+                loadedPropertyDef <- loadPropertyDefinition(
+                    propertyIri = internalPropertyIri,
+                    featureFactoryConfig = createPropertyRequest.featureFactoryConfig
+                )
+
                 unescapedInputPropertyDef = internalPropertyDef.unescape
 
                 _ = if (loadedPropertyDef != unescapedInputPropertyDef) {
                     throw InconsistentTriplestoreDataException(s"Attempted to save property definition $unescapedInputPropertyDef, but $loadedPropertyDef was saved")
                 }
 
-                maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeLinkValuePropertyDef.map(linkValuePropertyDef => loadPropertyDefinition(linkValuePropertyDef.propertyIri))
+                maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeLinkValuePropertyDef.map {
+                    linkValuePropertyDef =>
+                        loadPropertyDefinition(
+                            propertyIri = linkValuePropertyDef.propertyIri,
+                            featureFactoryConfig = createPropertyRequest.featureFactoryConfig
+                        )
+                }
+
                 maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
                 maybeUnescapedNewLinkValuePropertyDef = maybeLinkValuePropertyDef.map(_.unescape)
 
@@ -3212,7 +3297,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 currentReadPropertyInfo: ReadPropertyInfoV2 = ontology.properties.getOrElse(internalPropertyIri, throw NotFoundException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
-                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate)
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate,
+                    featureFactoryConfig = changePropertyLabelsOrCommentsRequest.featureFactoryConfig
+                )
 
                 // Check that the new labels/comments are different from the current ones.
 
@@ -3254,12 +3343,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = changePropertyLabelsOrCommentsRequest.featureFactoryConfig
+                )
 
                 // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
                 // we have to undo the SPARQL-escaping of the input.
 
-                loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
+                loadedPropertyDef <- loadPropertyDefinition(
+                    propertyIri = internalPropertyIri,
+                    featureFactoryConfig = changePropertyLabelsOrCommentsRequest.featureFactoryConfig
+                )
 
                 unescapedNewLabelOrCommentPredicate: PredicateInfoV2 = PredicateInfoV2(
                     predicateIri = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
@@ -3275,7 +3371,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
 
                 maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeCurrentLinkValueReadPropertyInfo.map {
-                    linkValueReadPropertyInfo => loadPropertyDefinition(linkValueReadPropertyInfo.entityInfoContent.propertyIri)
+                    linkValueReadPropertyInfo =>
+                        loadPropertyDefinition(
+                            propertyIri = linkValueReadPropertyInfo.entityInfoContent.propertyIri,
+                            featureFactoryConfig = changePropertyLabelsOrCommentsRequest.featureFactoryConfig
+                        )
                 }
 
                 maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
@@ -3373,7 +3473,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 currentReadClassInfo: ReadClassInfoV2 = ontology.classes.getOrElse(internalClassIri, throw NotFoundException(s"Class ${changeClassLabelsOrCommentsRequest.classIri} not found"))
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
-                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate)
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
+                    featureFactoryConfig = changeClassLabelsOrCommentsRequest.featureFactoryConfig
+                )
 
                 // Check that the new labels/comments are different from the current ones.
 
@@ -3405,12 +3509,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // Check that the ontology's last modification date was updated.
 
-                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+                _ <- checkOntologyLastModificationDateAfterUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = currentTime,
+                    featureFactoryConfig = changeClassLabelsOrCommentsRequest.featureFactoryConfig
+                )
 
                 // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
                 // we have to undo the SPARQL-escaping of the input.
 
-                loadedClassDef: ClassInfoContentV2 <- loadClassDefinition(internalClassIri)
+                loadedClassDef: ClassInfoContentV2 <- loadClassDefinition(
+                    classIri = internalClassIri,
+                    featureFactoryConfig = changeClassLabelsOrCommentsRequest.featureFactoryConfig
+                )
 
                 unescapedNewLabelOrCommentPredicate = PredicateInfoV2(
                     predicateIri = changeClassLabelsOrCommentsRequest.predicateToUpdate,
@@ -3504,16 +3615,21 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
      *
      * @param propertyIri the IRI of the property to be loaded.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a [[PropertyInfoContentV2]] representing the property definition.
      */
-    private def loadPropertyDefinition(propertyIri: SmartIri): Future[PropertyInfoContentV2] = {
+    private def loadPropertyDefinition(propertyIri: SmartIri,
+                                       featureFactoryConfig: FeatureFactoryConfig): Future[PropertyInfoContentV2] = {
         for {
             sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getPropertyDefinition(
                 triplestore = settings.triplestoreType,
                 propertyIri = propertyIri
             ).toString())
 
-            constructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparql)).mapTo[SparqlExtendedConstructResponse]
+            constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = sparql,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
         } yield constructResponseToPropertyDefinition(
             propertyIri = propertyIri,
             constructResponse = constructResponse
@@ -3664,16 +3780,21 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
      *
      * @param classIri the IRI of the class to be loaded.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a [[ClassInfoContentV2]] representing the class definition.
      */
-    private def loadClassDefinition(classIri: SmartIri): Future[ClassInfoContentV2] = {
+    private def loadClassDefinition(classIri: SmartIri,
+                                    featureFactoryConfig: FeatureFactoryConfig): Future[ClassInfoContentV2] = {
         for {
             sparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getClassDefinition(
                 triplestore = settings.triplestoreType,
                 classIri = classIri
             ).toString())
 
-            constructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparql)).mapTo[SparqlExtendedConstructResponse]
+            constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = sparql,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
         } yield constructResponseToClassDefinition(
             classIri = classIri,
             constructResponse = constructResponse
@@ -3871,12 +3992,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      *
      * @param internalOntologyIri          the internal IRI of the ontology.
      * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a failed Future if the expected last modification date is not found.
      */
-    private def checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant): Future[Unit] = {
+    private def checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri: SmartIri,
+                                                              expectedLastModificationDate: Instant,
+                                                              featureFactoryConfig: FeatureFactoryConfig): Future[Unit] = {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
             expectedLastModificationDate = expectedLastModificationDate,
+            featureFactoryConfig = featureFactoryConfig,
             errorFun = throw EditConflictException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again.")
         )
     }
@@ -3886,12 +4011,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      *
      * @param internalOntologyIri          the internal IRI of the ontology.
      * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a failed Future if the expected last modification date is not found.
      */
-    private def checkOntologyLastModificationDateAfterUpdate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant): Future[Unit] = {
+    private def checkOntologyLastModificationDateAfterUpdate(internalOntologyIri: SmartIri,
+                                                             expectedLastModificationDate: Instant,
+                                                             featureFactoryConfig: FeatureFactoryConfig): Future[Unit] = {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
             expectedLastModificationDate = expectedLastModificationDate,
+            featureFactoryConfig = featureFactoryConfig,
             errorFun = throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug.")
         )
     }
@@ -3901,12 +4030,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      *
      * @param internalOntologyIri          the internal IRI of the ontology.
      * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
+     * @param featureFactoryConfig the feature factory configuration.
      * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
      * @return a failed Future if the expected last modification date is not found.
      */
-    private def checkOntologyLastModificationDate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant, errorFun: => Nothing): Future[Unit] = {
+    private def checkOntologyLastModificationDate(internalOntologyIri: SmartIri,
+                                                  expectedLastModificationDate: Instant,
+                                                  featureFactoryConfig: FeatureFactoryConfig,
+                                                  errorFun: => Nothing): Future[Unit] = {
         for {
-            existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+            existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
+                internalOntologyIri = internalOntologyIri,
+                featureFactoryConfig = featureFactoryConfig
+            )
 
             _ = existingOntologyMetadata match {
                 case Some(metadata) =>

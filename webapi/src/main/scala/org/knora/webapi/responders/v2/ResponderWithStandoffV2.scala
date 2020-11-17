@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi.IRI
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ResponderData}
@@ -38,10 +39,13 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
      * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
      *
      * @param queryResultsSeparated query results referring to mappings.
+     * @param featureFactoryConfig  the feature factory configuration.
      * @param requestingUser        the user making the request.
      * @return the referred mappings.
      */
-    protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData], requestingUser: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
+    protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
+                                                       featureFactoryConfig: FeatureFactoryConfig,
+                                                       requestingUser: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
         // collect the Iris of the mappings referred to in the resources' text values
         val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
@@ -53,7 +57,11 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
         val mappingResponsesFuture: Vector[Future[GetMappingResponseV2]] = mappingIris.map {
             mappingIri: IRI =>
                 for {
-                    mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = requestingUser)).mapTo[GetMappingResponseV2]
+                    mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
+                        mappingIri = mappingIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )).mapTo[GetMappingResponseV2]
                 } yield mappingResponse
         }.toVector
 
@@ -68,7 +76,11 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
                         // if given, get the default XSL transformation
                         xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
                             for {
-                                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(mapping.mapping.defaultXSLTransformation.get, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
+                                    mapping.mapping.defaultXSLTransformation.get,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = requestingUser
+                                )).mapTo[GetXSLTransformationResponseV2]
                             } yield Some(xslTransformation.xslt)
                         } else {
                             Future(None)

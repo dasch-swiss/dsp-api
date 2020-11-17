@@ -21,12 +21,14 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM, StoreResponderRequestADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceFlushDB, CacheServiceFlushDBACK}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK}
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
@@ -48,7 +50,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
      * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
      */
     def receive(msg: StoreResponderRequestADM) = msg match {
-        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => resetTriplestoreContent(rdfDataObjects, prependDefaults)
+        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean, featureFactoryConfig: FeatureFactoryConfig) => resetTriplestoreContent(rdfDataObjects, prependDefaults, featureFactoryConfig)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -58,7 +60,9 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
      * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
      * @return a future containing a [[ResetTriplestoreContentResponseADM]].
      */
-    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Future[ResetTriplestoreContentResponseADM] = {
+    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject],
+                                        prependDefaults: Boolean = true,
+                                        featureFactoryConfig: FeatureFactoryConfig): Future[ResetTriplestoreContentResponseADM] = {
 
         log.debug(s"resetTriplestoreContent - called")
 
@@ -71,7 +75,10 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
             resetResponse <- (storeManager ? ResetRepositoryContent(rdfDataObjects, prependDefaults)).mapTo[ResetRepositoryContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
-            loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
+            loadOntologiesResponse <- (responderManager ? LoadOntologiesRequestV2(
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = systemUser
+            )).mapTo[SuccessResponseV2]
             _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
             redisFlushDB <- (storeManager ? CacheServiceFlushDB(systemUser)).mapTo[CacheServiceFlushDBACK]

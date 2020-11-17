@@ -26,17 +26,17 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{DuplicateValueException, ForbiddenException}
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.exceptions.{DuplicateValueException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
+
 /**
-  * Static data for testing [[ListsResponderADM]].
-  */
+ * Static data for testing [[ListsResponderADM]].
+ */
 object ListsResponderADMSpec {
     val config: Config = ConfigFactory.parseString(
         """
@@ -46,12 +46,12 @@ object ListsResponderADMSpec {
 }
 
 /**
-  * Tests [[ListsResponderADM]].
-  */
+ * Tests [[ListsResponderADM]].
+ */
 class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with ImplicitSender {
 
     // The default timeout for receiving reply messages from actors.
-    implicit val timeout = 5.seconds
+    implicit private val timeout = 5.seconds
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -64,22 +64,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     private val otherTreeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.otherTreeListInfo
 
-    private val keywordChildNodes: Seq[ListNodeADM] = Seq.empty[ListNodeADM]
-
     private val treeListChildNodes: Seq[ListNodeADM] = SharedListsTestDataADM.treeListChildNodes
-
-    private val imageCategory = Seq.empty[ListNodeADM]
-
-    private val season = SharedListsTestDataADM.seasonListNodes
-
-    private val nodePath = SharedListsTestDataADM.nodePath
 
     "The Lists Responder" when {
 
         "used to query information about lists" should {
 
             "return all lists" in {
-                responderManager ! ListsGetRequestADM(requestingUser = SharedTestDataADM.imagesUser01)
+                responderManager ! ListsGetRequestADM(
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -87,7 +82,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return all lists belonging to the images project" in {
-                responderManager ! ListsGetRequestADM(projectIri = Some(IMAGES_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
+                responderManager ! ListsGetRequestADM(
+                    projectIri = Some(IMAGES_PROJECT_IRI),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -97,7 +96,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return all lists belonging to the anything project" in {
-                responderManager ! ListsGetRequestADM(projectIri = Some(ANYTHING_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
+                responderManager ! ListsGetRequestADM(
+                    projectIri = Some(ANYTHING_PROJECT_IRI),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01
+                )
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -109,6 +112,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return basic list information (anything list)" in {
                 responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/treeList",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
@@ -122,6 +126,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return basic list information (anything other list)" in {
                 responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/otherTreeList",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
@@ -135,6 +140,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return basic node information (images list - sommer)" in {
                 responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/526f26ed04",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
 
@@ -148,6 +154,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return a full list response" in {
                 responderManager ! ListGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/treeList",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
@@ -176,6 +183,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                         labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
                         comments = Seq.empty[StringLiteralV2]
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
@@ -183,19 +191,19 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
 
                 val listInfo = received.list.listinfo
-                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+                listInfo.projectIri should be(IMAGES_PROJECT_IRI)
 
-                listInfo.name should be (Some("neuelistename"))
+                listInfo.name should be(Some("neuelistename"))
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.head should be (StringLiteralV2(value = "Neue Liste", language = Some("de")))
+                labels.size should be(1)
+                labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
                 val comments = received.list.listinfo.comments.stringLiterals
-                comments.isEmpty should be (true)
+                comments.isEmpty should be(true)
 
                 val children = received.list.children
-                children.size should be (0)
+                children.size should be(0)
 
                 // store list IRI for next test
                 newListIri.set(listInfo.id)
@@ -216,7 +224,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
                         )
-                    )),
+                        )),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
@@ -224,18 +233,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 val listInfo = received.listinfo
-                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
-                listInfo.name should be (Some("updated name"))
+                listInfo.projectIri should be(IMAGES_PROJECT_IRI)
+                listInfo.name should be(Some("updated name"))
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-                labels.size should be (2)
-                labels.sorted should be (Seq(
+                labels.size should be(2)
+                labels.sorted should be(Seq(
                     StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                     StringLiteralV2(value = "Changed list", language = Some("en"))
                 ).sorted)
 
                 val comments = listInfo.comments.stringLiterals
-                comments.size should be (2)
-                comments.sorted should be (Seq(
+                comments.size should be(2)
+                comments.sorted should be(Seq(
                     StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                     StringLiteralV2(value = "New comment", language = Some("en"))
                 ).sorted)
@@ -248,6 +257,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("sommer")),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
@@ -263,6 +273,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                         labels = Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
                         comments = Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
@@ -278,21 +289,21 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+                labels.size should be(1)
+                labels.sorted should be(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
-                comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                comments.size should be(1)
+                comments.sorted should be(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
-                position should be (0)
+                position should be(0)
 
                 // check has root node
                 val rootNode = childNodeInfo.hasRootNode
-                rootNode should be (newListIri.get)
+                rootNode should be(newListIri.get)
 
                 firstChildIri.set(childNodeInfo.id)
             }
@@ -305,9 +316,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                            name = Some("second"),
                            labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
                            comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
-                   ),
-                   requestingUser = SharedTestDataADM.imagesUser01,
-                   apiRequestID = UUID.randomUUID
+                       ),
+                        featureFactoryConfig = defaultFeatureFactoryConfig,
+                        requestingUser = SharedTestDataADM.imagesUser01,
+                        apiRequestID = UUID.randomUUID
                )
 
                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
@@ -321,22 +333,22 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                // check labels
                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-               labels.size should be (1)
-               labels.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+               labels.size should be(1)
+               labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
 
 
                // check comments
                val comments = childNodeInfo.comments.stringLiterals
-               comments.size should be (1)
-               comments.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+               comments.size should be(1)
+               comments.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
 
                // check position
                val position = childNodeInfo.position
-               position should be (1)
+               position should be(1)
 
                // check has root node
                val rootNode = childNodeInfo.hasRootNode
-               rootNode should be (newListIri.get)
+               rootNode should be(newListIri.get)
 
                secondChildIri.set(childNodeInfo.id)
            }
@@ -350,6 +362,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                        labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
                        comments = Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
                    ),
+                   featureFactoryConfig = defaultFeatureFactoryConfig,
                    requestingUser = SharedTestDataADM.imagesUser01,
                    apiRequestID = UUID.randomUUID
                )
@@ -365,22 +378,22 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                // check labels
                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-               labels.size should be (1)
-               labels.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+               labels.size should be(1)
+               labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
 
 
                // check comments
                val comments = childNodeInfo.comments.stringLiterals
-               comments.size should be (1)
-               comments.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+               comments.size should be(1)
+               comments.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
 
                // check position
                val position = childNodeInfo.position
-               position should be (0)
+               position should be(0)
 
                // check has root node
                val rootNode = childNodeInfo.hasRootNode
-               rootNode should be (newListIri.get)
+               rootNode should be(newListIri.get)
 
                thirdChildIri.set(childNodeInfo.id)
            }
@@ -393,7 +406,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
            "delete node if not in use" ignore {
 
            }
-
         }
     }
 }

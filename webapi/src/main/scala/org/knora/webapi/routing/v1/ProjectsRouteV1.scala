@@ -30,9 +30,6 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 
 class ProjectsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectV1JsonProtocol {
 
-    private val schemes = Array("http", "https")
-    private val urlValidator = new UrlValidator(schemes)
-
     /**
      * Returns the route.
      */
@@ -43,9 +40,14 @@ class ProjectsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                 /* returns all projects */
                 requestContext =>
                     val requestMessage = for {
-                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                    } yield ProjectsGetRequestV1(Some(userProfile))
-
+                        userProfile <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        ).map(_.asUserProfileV1)
+                    } yield ProjectsGetRequestV1(
+                        featureFactoryConfig = featureFactoryConfig,
+                        userProfile = Some(userProfile)
+                    )
 
                     RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
@@ -64,13 +66,27 @@ class ProjectsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         val requestMessage = if (identifier != "iri") { // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             for {
-                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                            } yield ProjectInfoByShortnameGetRequestV1(shortNameDec, Some(userProfile))
+                                userProfile <- getUserADM(
+                                    requestContext = requestContext,
+                                    featureFactoryConfig = featureFactoryConfig
+                                ).map(_.asUserProfileV1)
+                            } yield ProjectInfoByShortnameGetRequestV1(
+                                shortname = shortNameDec,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfileV1 = Some(userProfile)
+                            )
                         } else { // identify project by iri. this is the default case.
                             val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             for {
-                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                            } yield ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
+                                userProfile <- getUserADM(
+                                    requestContext = requestContext,
+                                    featureFactoryConfig = featureFactoryConfig
+                                ).map(_.asUserProfileV1)
+                            } yield ProjectInfoByIRIGetRequestV1(
+                                iri = checkedProjectIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfileV1 = Some(userProfile)
+                            )
                         }
 
                         RouteUtilV1.runJsonRouteWithFuture(

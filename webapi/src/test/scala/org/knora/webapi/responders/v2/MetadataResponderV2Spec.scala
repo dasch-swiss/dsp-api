@@ -22,13 +22,12 @@ package org.knora.webapi.responders.v2
 import java.util.UUID
 
 import akka.testkit.ImplicitSender
-import org.apache.jena.graph.Graph
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.RdfFormatUtil
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.metadatamessages.{MetadataGetRequestV2, MetadataGetResponseV2, MetadataPutRequestV2}
+import org.knora.webapi.messages.v2.responder.metadatamessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.{CoreSpec, RdfMediaTypes}
 
 import scala.concurrent.duration._
 
@@ -37,6 +36,7 @@ import scala.concurrent.duration._
  */
 class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
@@ -93,42 +93,42 @@ class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
            |<beol> dsp-repo:hasAlternateName "beol" .
            |""".stripMargin
 
-    // Parse the request to a Jena Graph.
-    private val requestGraph: Graph = RdfFormatUtil.parseToJenaGraph(
+    // Parse the request to an RdfModel.
+    private val requestModel: RdfModel = rdfFormatUtil.parseToRdfModel(
         rdfStr = metadataContent,
-        mediaType = RdfMediaTypes.`text/turtle`
+        rdfFormat = Turtle
     )
 
     "The metadata responder v2" should {
 
         "save a metadata graph in the triplestore" in {
-
             responderManager ! MetadataPutRequestV2(
-                graph = requestGraph,
+                rdfModel = requestModel,
                 projectADM = SharedTestDataADM.beolProject,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.beolUser,
                 apiRequestID = UUID.randomUUID
             )
 
             val response = expectMsgType[SuccessResponseV2](timeout)
             assert(response.message.contains(s"<${SharedTestDataADM.beolProject.id}>"))
-
         }
         
         "get the metadata graph of a project" in {
             responderManager ! MetadataGetRequestV2(
                 projectADM = SharedTestDataADM.beolProject,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.beolUser
             )
 
             val response = expectMsgType[MetadataGetResponseV2](timeout)
 
-            val receivedGraph: Graph = RdfFormatUtil.parseToJenaGraph(
+            val receivedModel: RdfModel = rdfFormatUtil.parseToRdfModel(
                 rdfStr = response.turtle,
-                mediaType = RdfMediaTypes.`text/turtle`
+                rdfFormat = Turtle
             )
 
-            assert(receivedGraph.isIsomorphicWith(requestGraph))
+            assert(receivedModel.isIsomorphicWith(requestModel))
         }
     }
 }

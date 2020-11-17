@@ -29,14 +29,16 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, NotImplementedException, SipiException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -54,12 +56,14 @@ sealed trait ValuesResponderRequestV2 extends KnoraRequestV2
 /**
  * Requests the creation of a value.
  *
- * @param createValue    a [[CreateValueV2]] representing the value to be created. A successful response will be
- *                       a [[CreateValueResponseV2]].
- * @param requestingUser the user making the request.
- * @param apiRequestID   the API request ID.
+ * @param createValue          a [[CreateValueV2]] representing the value to be created. A successful response will be
+ *                             a [[CreateValueResponseV2]].
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the API request ID.
  */
 case class CreateValueRequestV2(createValue: CreateValueV2,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
@@ -71,14 +75,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
     /**
      * Converts JSON-LD input to a [[CreateValueRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -86,6 +90,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -112,6 +117,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                featureFactoryConfig = featureFactoryConfig,
                                 settings = settings,
                                 log = log
                             )
@@ -155,6 +161,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             }
         } yield CreateValueRequestV2(
             createValue = createValue,
+            featureFactoryConfig = featureFactoryConfig,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
         )
@@ -185,8 +192,8 @@ case class CreateValueResponseV2(valueIri: IRI,
         JsonLDDocument(
             body = JsonLDObject(
                 Map(
-                    JsonLDConstants.ID -> JsonLDString(valueIri),
-                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+                    JsonLDKeywords.ID -> JsonLDString(valueIri),
+                    JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
                     OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
                     OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                         value = valueCreationDate.toString,
@@ -206,12 +213,14 @@ case class CreateValueResponseV2(valueIri: IRI,
 /**
  * Requests an update to a value, i.e. the creation of a new version of an existing value.
  *
- * @param updateValue    an [[UpdateValueV2]] representing the new version of the value. A successful response will be
- *                       an [[UpdateValueResponseV2]].
- * @param requestingUser the user making the request.
- * @param apiRequestID   the API request ID.
+ * @param updateValue          an [[UpdateValueV2]] representing the new version of the value. A successful response will be
+ *                             an [[UpdateValueResponseV2]].
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the API request ID.
  */
 case class UpdateValueRequestV2(updateValue: UpdateValueV2,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
@@ -222,14 +231,14 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
     /**
      * Converts JSON-LD input to a [[CreateValueRequestV2]].
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -237,6 +246,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -286,8 +296,8 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                     // contain knora-api:hasPermissions?
 
                     val otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
-                        JsonLDConstants.ID,
-                        JsonLDConstants.TYPE,
+                        JsonLDKeywords.ID,
+                        JsonLDKeywords.TYPE,
                         OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                         OntologyConstants.KnoraApiV2Complex.NewValueVersionIri
                     )
@@ -295,7 +305,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                     if (otherValuePredicates == Set(OntologyConstants.KnoraApiV2Complex.HasPermissions)) {
                         // Yes. This is a request to change the value's permissions.
 
-                        val valueType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                        val valueType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
                         val permissions = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
 
                         FastFuture.successful(
@@ -319,6 +329,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 settings = settings,
                                 log = log
                             )
@@ -338,6 +349,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
             }
         } yield UpdateValueRequestV2(
             updateValue = updateValue,
+            featureFactoryConfig = featureFactoryConfig,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
         )
@@ -366,8 +378,8 @@ case class UpdateValueResponseV2(valueIri: IRI,
         JsonLDDocument(
             body = JsonLDObject(
                 Map(
-                    JsonLDConstants.ID -> JsonLDString(valueIri),
-                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+                    JsonLDKeywords.ID -> JsonLDString(valueIri),
+                    JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
                     OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
                 )
             ),
@@ -383,16 +395,17 @@ case class UpdateValueResponseV2(valueIri: IRI,
 /**
  * Requests that a value is marked as deleted. A successful response will be a [[SuccessResponseV2]].
  *
- * @param resourceIri      the IRI of the containing resource.
- * @param resourceClassIri the IRI of the resource class.
- * @param propertyIri      the IRI of the property pointing to the value to be marked as deleted.
- * @param valueIri         the IRI of the value to be marked as deleted.
- * @param valueTypeIri     the IRI of the value class.
- * @param deleteComment    an optional comment explaining why the value is being marked as deleted.
- * @param deleteDate       an optional timestamp indicating when the value was deleted. If not supplied,
- *                         the current time will be used.
- * @param requestingUser   the user making the request.
- * @param apiRequestID     the API request ID.
+ * @param resourceIri          the IRI of the containing resource.
+ * @param resourceClassIri     the IRI of the resource class.
+ * @param propertyIri          the IRI of the property pointing to the value to be marked as deleted.
+ * @param valueIri             the IRI of the value to be marked as deleted.
+ * @param valueTypeIri         the IRI of the value class.
+ * @param deleteComment        an optional comment explaining why the value is being marked as deleted.
+ * @param deleteDate           an optional timestamp indicating when the value was deleted. If not supplied,
+ *                             the current time will be used.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ * @param apiRequestID         the API request ID.
  */
 case class DeleteValueRequestV2(resourceIri: IRI,
                                 resourceClassIri: SmartIri,
@@ -401,6 +414,7 @@ case class DeleteValueRequestV2(resourceIri: IRI,
                                 valueTypeIri: SmartIri,
                                 deleteComment: Option[String] = None,
                                 deleteDate: Option[Instant] = None,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
@@ -408,15 +422,14 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
     /**
      * Converts JSON-LD input into a case class instance.
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -424,12 +437,14 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteValueRequestV2] = {
         Future {
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
                 apiRequestID = apiRequestID,
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
         }
@@ -437,6 +452,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
 
     private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
                                apiRequestID: UUID,
+                               featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM): DeleteValueRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -477,6 +493,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
                     valueTypeIri = valueTypeIri,
                     deleteComment = deleteComment,
                     deleteDate = deleteDate,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = apiRequestID
                 )
@@ -563,8 +580,8 @@ case class DeletionInfo(deleteDate: Instant,
             OntologyConstants.KnoraApiV2Complex.IsDeleted -> JsonLDBoolean(true),
             OntologyConstants.KnoraApiV2Complex.DeleteDate -> JsonLDObject(
                 Map(
-                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
-                    JsonLDConstants.VALUE -> JsonLDString(deleteDate.toString)
+                    JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+                    JsonLDKeywords.VALUE -> JsonLDString(deleteDate.toString)
                 )
             )
         ) ++ maybeDeleteCommentStatement
@@ -656,8 +673,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
                         val valueSmartIri = valueIri.toSmartIri
 
                         val requiredMetadata = Map(
-                            JsonLDConstants.ID -> JsonLDString(valueIri),
-                            JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
+                            JsonLDKeywords.ID -> JsonLDString(valueIri),
+                            JsonLDKeywords.TYPE -> JsonLDString(valueContent.valueType.toString),
                             OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
                             OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
                             OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
@@ -1031,18 +1048,20 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
     /**
      * Converts a JSON-LD object to a subclass of [[ValueContentV2]].
      *
-     * @param jsonLDObject     the JSON-LD object.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDObject         the JSON-LD object.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a subclass of [[ValueContentV2]].
      */
     def fromJsonLDObject(jsonLDObject: JsonLDObject,
                          requestingUser: UserADM,
                          responderManager: ActorRef,
                          storeManager: ActorRef,
+                         featureFactoryConfig: FeatureFactoryConfig,
                          settings: KnoraSettingsImpl,
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
@@ -1058,73 +1077,75 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
     /**
      * Converts a JSON-LD object to a [[ValueContentV2]].
      *
-     * @param jsonLDObject     a JSON-LD object representing a value.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDObject         the JSON-LD object.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[ValueContentV2]].
      */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
+            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr))
 
             valueContent: ValueContentV2 <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2Complex.TextValue =>
-                    TextValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    TextValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.IntValue =>
-                    IntegerValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    IntegerValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.DecimalValue =>
-                    DecimalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    DecimalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.BooleanValue =>
-                    BooleanValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    BooleanValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.DateValue =>
-                    DateValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    DateValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.GeomValue =>
-                    GeomValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    GeomValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.IntervalValue =>
-                    IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.TimeValue =>
-                    TimeValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    TimeValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.LinkValue =>
-                    LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.ListValue =>
-                    HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.UriValue =>
-                    UriValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    UriValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.GeonameValue =>
-                    GeonameValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    GeonameValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.ColorValue =>
-                    ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.StillImageFileValue =>
-                    StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.DocumentFileValue =>
-                    DocumentFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    DocumentFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2Complex.TextFileValue =>
-                    TextFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+                    TextFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, featureFactoryConfig = featureFactoryConfig, settings = settings, log = log)
 
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
             }
@@ -1268,18 +1289,20 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     /**
      * Converts a JSON-LD object to a [[DateValueContentV2]].
      *
-     * @param jsonLDObject     the JSON-LD object.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDObject         the JSON-LD object.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[DateValueContentV2]].
      */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1637,19 +1660,20 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
     /**
      * Converts a JSON-LD object to a [[TextValueContentV2]].
      *
-     * @param jsonLDObject     the JSON-LD object.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDObject         the JSON-LD object.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a [[TextValueContentV2]].
      */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1665,7 +1689,11 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
             maybeMappingFuture: Option[Future[GetMappingResponseV2]] = maybeMappingIri.map {
                 mappingIri =>
                     for {
-                        mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = requestingUser)).mapTo[GetMappingResponseV2]
+                        mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
+                            mappingIri = mappingIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )).mapTo[GetMappingResponseV2]
                     } yield mappingResponse
             }
 
@@ -1778,6 +1806,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1870,6 +1899,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1959,6 +1989,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2053,6 +2084,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2162,6 +2194,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2273,6 +2306,7 @@ object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TimeValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2381,6 +2415,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2480,6 +2515,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2575,6 +2611,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2674,6 +2711,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2839,6 +2877,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2944,6 +2983,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DocumentFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -3033,6 +3073,7 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -3167,6 +3208,7 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorRef,
                                   storeManager: ActorRef,
+                                  featureFactoryConfig: FeatureFactoryConfig,
                                   settings: KnoraSettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))

@@ -46,9 +46,16 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             /* return a list (a graph with all list nodes) */
             requestContext =>
                 val requestMessage: Future[ListGetRequestV2] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
-                } yield ListGetRequestV2(listIri, requestingUser)
+                } yield ListGetRequestV2(
+                    listIri = listIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,
@@ -68,9 +75,16 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             /* return a list node */
             requestContext =>
                 val requestMessage: Future[NodeGetRequestV2] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                     nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
-                } yield NodeGetRequestV2(nodeIri, requestingUser)
+                } yield NodeGetRequestV2(
+                    nodeIri = nodeIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilV2.runRdfRouteWithFuture(
                     requestMessageF = requestMessage,

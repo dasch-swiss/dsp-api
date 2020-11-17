@@ -74,8 +74,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
                     val requestMessage: Future[ListsGetRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ListsGetRequestADM(projectIri, requestingUser)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
+                    } yield ListsGetRequestADM(
+                        projectIri = projectIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilADM.runJsonRoute(
                         requestMessageF = requestMessage,
@@ -104,9 +111,13 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[ListCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield ListCreateRequestADM(
                         createRootNode = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -136,8 +147,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                 val requestMessage: Future[ListGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ListGetRequestADM(listIri, requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield ListGetRequestADM(
+                    iri = listIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -168,12 +186,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
                     val requestMessage: Future[NodeInfoChangeRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
                     } yield NodeInfoChangeRequestADM(
                         listIri = listIri,
                         changeNodeRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -210,9 +228,13 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield ListChildNodeCreateRequestADM(
                         createChildNodeRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -243,10 +265,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             /* return information about a list (without children) */
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
                 val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
+                    requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                } yield ListNodeInfoGetRequestADM(
+                        iri = listIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -266,8 +290,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                 val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield ListNodeInfoGetRequestADM(
+                    iri = listIri,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -299,10 +330,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
                     val requestMessage: Future[NodeNameChangeRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
                     } yield NodeNameChangeRequestADM(
                         nodeIri = nodeIri,
                         changeNodeNameRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -338,10 +370,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
                     val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
                     } yield NodeLabelsChangeRequestADM(
                         nodeIri = nodeIri,
                         changeNodeLabelsRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -377,10 +410,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                 val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
                 val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(requestContext, featureFactoryConfig)
                 } yield NodeCommentsChangeRequestADM(
                     nodeIri = nodeIri,
                     changeNodeCommentsRequest = apiRequest,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
