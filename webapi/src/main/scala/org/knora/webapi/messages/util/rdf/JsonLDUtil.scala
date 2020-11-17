@@ -1273,8 +1273,9 @@ object JsonLDUtil {
             // Make a Set to collect the subjects that have already been processed.
             val processedSubjects: collection.mutable.Set[RdfResource] = collection.mutable.Set.empty
 
-            // Make a Map to collect the top-level entities. Entities will be added to this set
-            // and later removed when they are inlined.
+            // Make a Map to collect the top-level entities. We first assume that an entity is at the top level,
+            // and add it to this collection. Later, it can be inlined (nested inside another entity) and removed
+            // from this collection.
             val topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject] = collection.mutable.Map.empty
 
             // Make a JSON-LD object for each entity, inlining them as we go along.
@@ -1366,7 +1367,7 @@ object JsonLDUtil {
                     // The predicate is not rdf:type. Convert its objects.
                     val objs: Vector[JsonLDValue] = predStatements.map(_.obj).map {
                         case resource: RdfResource =>
-                            // The object is an entity. Recurse to get it.
+                            // The object is an entity. Recurse to get it and inline it here.
                             rdfResourceToJsonLDValue(
                                 resource = resource,
                                 model = model,
@@ -1444,7 +1445,7 @@ object JsonLDUtil {
         // Have we already made a top-level JSON-LD object for this entity?
         topLevelEntities.get(resource) match {
             case Some(jsonLDObject) =>
-                // Yes. Remove it from the top level and inline it here.
+                // Yes. Remove it from the top level so it can be inlined.
                 topLevelEntities -= resource
                 jsonLDObject
 
@@ -1460,7 +1461,7 @@ object JsonLDUtil {
                         val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
 
                         if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
-                            // Yes. Recurse to get it, and inline it here.
+                            // Yes. Recurse to get it so it can be inlined.
                             entityToJsonLDObject(
                                 subj = resource,
                                 statements = resourceStatements,
@@ -1469,7 +1470,7 @@ object JsonLDUtil {
                                 processedSubjects = processedSubjects
                             )
                         } else {
-                            // No. Maybe it was already inlined somewhere else, or maybe it wasn't provided
+                            // No. Maybe it was already inlined, or maybe it wasn't provided
                             // in the model. Does it have an IRI?
                             resource match {
                                 case iriNode: IriNode =>
