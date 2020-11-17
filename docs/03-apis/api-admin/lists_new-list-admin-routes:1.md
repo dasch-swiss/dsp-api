@@ -18,27 +18,26 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Lists Endpoint
+## To use this endpoint activate `new-list-admin-routes:1` [feature toggle](../feature-toggles.md) in the header of requests.
 
 ## Endpoint Overview
 
 **List Item Operations:**
 
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
-- `GET: /admin/lists/<listIri>` : return complete list with children
-- `GET: /admin/lists/infos/<listIri>` : return list information (without children)
-- `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
 
-- `POST: /admin/lists` : create new list
-- `POST: /admin/lists/<parentNodeIri>` : create new child node under the supplied parent node IRI
+- `GET: /admin/lists/<listItemIri>` : if given a root node IRI, return complete list with children. 
+Otherwise, if given a child node IRI, it returns node completely with its immediate children.
 
-- `PUT: /admin/lists/<listItemIri>` : update node information (root or child.)
+- `GET: /admin/lists/<listItemIri>/info` : return information (without children) of the node whose IRI is given 
+(root or child).
+
+- `POST: /admin/lists` : create new list item (root or child node)
+
+- `PUT: /admin/lists/<listItemIri>` : update information of the node.
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/lables` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
-- NOT IMPLEMENTED: `DELETE: /admin/lists/nodes/<nodeIri>` : delete list node including children if not used
-- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
-
-## List Operations
 
 ### Get lists
 
@@ -46,19 +45,31 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  - Return all lists optionally filtered by project
  - GET: `/admin/lists[?projectIri=<projectIri>]`
 
-### Get list
+### Get list item (entire list or a node)
 
  - Required permission: none
- - Return complete list with children
- - GET: `/admin/lists/<listIri>`
+ - Return complete list with all children of the list, if the IRI of the list (i.e. root node) is given. 
+ Otherwise if the IRI of a child node is given, return the entire node with its immediate children.
+ - GET: `/admin/lists/<listItemIri>`
 
 
-### Create new list
+### Get item information (entire list or a node)
+
+ - Required permission: none
+ - Return basic information about the node (root or child) leaving out its list of children.
+ - GET: `/admin/lists/<listItemIri>/info`
+ 
+### Create new item (entire list or a node)
 
   - Required permission: SystemAdmin / ProjectAdmin
   - POST: `/admin/lists`
   - BODY:
   
+**To create an entirely new list**, the IRI of the project must be given in the body of the request to which the list 
+is supposed to be attached. 
+Further basic information about the list such as its `labels` and `comments` must also be provided. 
+Optionally, the request body can contain a `name` for the list which must be unique in the project.
+
 ```json
     {
         "projectIri": "someprojectiri",
@@ -73,24 +84,46 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
     {
         "id": "http://rdfh.ch/lists/0001/a-list-with-IRI",
         "projectIri": "http://rdfh.ch/projects/0001",
+        "name": "a name",
         "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
         "comments": []
     }
 ```
-### Get list's information
 
- - Required permission: none
- - Return list information (without children)
- - GET: `/admin/lists/infos/<listIri>`
- 
-### Update list's information
-The basic information of a list such as its labels, comments, name, or all of them can be updated. The parameters that 
+**To create a new list node**, the IRI of its parent node must be given in the request body by `parentNodeIri`. 
+Furthermore, the request body should also contain the project IRI of the list and basic information of the node as below:
+
+```json
+    {
+        "parentNodeIri": "parentNodeIri",
+        "projectIri": "someprojectiri",
+        "name": "first",
+        "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
+        "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
+    }
+```
+
+Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+
+```json
+    {
+        "id": "http://rdfh.ch/lists/0001/a-child-node-with-IRI",
+        "parentNodeIri": "http://rdfh.ch/lists/0001/a-list-with-IRI",
+        "projectIri": "http://rdfh.ch/projects/0001",
+        "name": "child node with a custom IRI",
+        "labels": [{ "value": "New child node with IRI", "language": "en"}],
+        "comments": [{ "value": "New child node comment", "language": "en"}]
+    }
+```
+
+### Update basic information (entire list or a node)
+The basic information of a list or a node such as its labels, comments, name, or all of them can be updated. The parameters that 
 must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
-list and the IRI of the project it belongs to. 
+list item (root or child node) and the IRI of the project it belongs to. 
 
  - Required permission: SystemAdmin / ProjectAdmin
  - Update list information
- - PUT: `/admin/lists/<listIri>`
+ - PUT: `/admin/lists/<listItemIri>`
  - BODY:
  
 ```json
@@ -102,7 +135,6 @@ list and the IRI of the project it belongs to.
        "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
    }
 ```
-
 If only name of the list must be updated, it can be given as below in the body of the request:
 
 ```json
@@ -158,44 +190,3 @@ There is no need to specify the project IRI because it is automatically extracte
 ```
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
-
-## List Node Operations
-
-### Get List Node Information
-
- - Required permission: none
- - Return list node information (without children)
- - GET: `/admin/lists/nodes/<nodeIri>`
-
-
-### Create new child node
-
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
-    is the listIri, then a new child node is appended to the top level. Children
-    are currently only appended.
-  - POST: `/admin/lists/<parentNodeIri>`
-  - BODY:
-  
-```json
-    {
-        "parentNodeIri": "parentNodeIri",
-        "projectIri": "someprojectiri",
-        "name": "first",
-        "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
-        "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
-    }
-```
-
-Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
-
-```json
-    {
-        "id": "http://rdfh.ch/lists/0001/a-child-node-with-IRI",
-        "parentNodeIri": "http://rdfh.ch/lists/0001/a-list-with-IRI",
-        "projectIri": "http://rdfh.ch/projects/0001",
-        "name": "child node with a custom IRI",
-        "labels": [{ "value": "New child node with IRI", "language": "en"}],
-        "comments": [{ "value": "New child node comment", "language": "en"}]
-    }
-```
