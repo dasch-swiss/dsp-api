@@ -231,7 +231,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             ???
         }
     }
-    @Path("/{IRI}/INFO")
+    @Path("/{IRI}/info")
     @ApiOperation(value = "Get basic node information", nickname = "newGetNodeInfo", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
@@ -239,7 +239,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def getNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "INFO") { iri =>
+    private def getNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "info") { iri =>
         get {
             /* return information about a node, root or child, without children */
             requestContext =>
