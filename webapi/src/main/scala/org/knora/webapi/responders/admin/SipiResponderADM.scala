@@ -69,7 +69,10 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                 filename = request.filename
             ).toString())
 
-            queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+            queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
+                sparql = sparqlQuery,
+                featureFactoryConfig = request.featureFactoryConfig
+            )).mapTo[SparqlExtendedConstructResponse]
 
             _ = if (queryResponse.statements.isEmpty) throw NotFoundException(s"No file value was found for filename ${request.filename}")
             _ = if (queryResponse.statements.size > 1) throw InconsistentTriplestoreDataException(s"Filename ${request.filename} is used in more than one file value")
@@ -101,7 +104,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                     for {
                         maybeRVSettings <- (
                             responderManager ? ProjectRestrictedViewSettingsGetADM(
-                                ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                identifier = ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                featureFactoryConfig = request.featureFactoryConfig,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser)
                             ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
                     } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)

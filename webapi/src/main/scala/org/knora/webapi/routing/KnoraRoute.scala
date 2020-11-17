@@ -70,8 +70,8 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
      * Constructs a route. This can be done:
      *
      * - by statically returning a routing function (if this is an ordinary route that
-     *   doesn't use a feature factory, or if this is a route feature returned by
-     *   a feature factory)
+     * doesn't use a feature factory, or if this is a route feature returned by
+     * a feature factory)
      *
      * - by asking a feature factory for a routing function (if this is a façade route)
      *
@@ -125,11 +125,14 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
     /**
      * Gets a [[ProjectADM]] corresponding to the specified project IRI.
      *
-     * @param projectIri     the project IRI.
-     * @param requestingUser the user making the request.
+     * @param projectIri           the project IRI.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param requestingUser       the user making the request.
      * @return the corresponding [[ProjectADM]].
      */
-    protected def getProjectADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectADM] = {
+    protected def getProjectADM(projectIri: IRI,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                requestingUser: UserADM): Future[ProjectADM] = {
         val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI: $projectIri"))
 
         if (stringFormatter.isKnoraBuiltInProjectIriStr(checkedProjectIri)) {
@@ -138,7 +141,8 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
 
         for {
             projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+                identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+                featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
         } yield projectInfoResponse.project

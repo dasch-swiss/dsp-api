@@ -27,11 +27,13 @@ import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{JsonLDArray, JsonLDBoolean, JsonLDDocument, JsonLDInt, JsonLDKeywords, JsonLDObject, JsonLDString, JsonLDUtil, JsonLDValue}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraJsonLDResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraJsonLDResponseV2, KnoraRequestV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -47,22 +49,32 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
 /**
  * Requests a page of standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
  *
- * @param resourceIri    the IRI of the resource containing the value.
- * @param valueIri       the IRI of the value.
- * @param offset         the start index of the first standoff tag to be returned.
- * @param targetSchema   the schema of the response.
- * @param requestingUser the user making the request.
+ * @param resourceIri          the IRI of the resource containing the value.
+ * @param valueIri             the IRI of the value.
+ * @param offset               the start index of the first standoff tag to be returned.
+ * @param targetSchema         the schema of the response.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
-case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, targetSchema: ApiV2Schema, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetStandoffPageRequestV2(resourceIri: IRI,
+                                    valueIri: IRI,
+                                    offset: Int,
+                                    targetSchema: ApiV2Schema,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
  * Requests all the standoff markup from a text value, except for the first page. A successful response will be a [[GetStandoffResponseV2]].
  *
- * @param resourceIri    the IRI of the resource containing the text value.
- * @param valueIri       the IRI of the text value.
- * @param requestingUser the user making the request.
+ * @param resourceIri          the IRI of the resource containing the text value.
+ * @param valueIri             the IRI of the text value.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
-case class GetRemainingStandoffFromTextValueRequestV2(resourceIri: IRI, valueIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetRemainingStandoffFromTextValueRequestV2(resourceIri: IRI,
+                                                      valueIri: IRI,
+                                                      featureFactoryConfig: FeatureFactoryConfig,
+                                                      requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
  * A response to a [[GetStandoffPageRequestV2]] or a [[GetRemainingStandoffFromTextValueRequestV2]], representing standoff
@@ -75,8 +87,6 @@ case class GetRemainingStandoffFromTextValueRequestV2(resourceIri: IRI, valueIri
 case class GetStandoffResponseV2(valueIri: IRI,
                                  standoff: Seq[StandoffTagV2],
                                  nextOffset: Option[Int]) extends KnoraJsonLDResponseV2 {
-    private val stringFormatter = StringFormatter.getGeneralInstance
-
     /**
      * Converts the response to a data structure that can be used to generate JSON-LD.
      *
@@ -94,7 +104,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
 
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
-            JsonLDConstants.GRAPH -> JsonLDArray(standoffAsJsonLD)
+            JsonLDKeywords.GRAPH -> JsonLDArray(standoffAsJsonLD)
         )
 
         val nextOffsetStatement: Option[(IRI, JsonLDInt)] = nextOffset.map {
@@ -121,12 +131,17 @@ case class GetStandoffResponseV2(valueIri: IRI,
  * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
  * A successful response will be a [[CreateMappingResponseV2]].
  *
- * @param metadata       the metadata describing the mapping.
- * @param xml            the mapping in XML syntax.
- * @param requestingUser the the user making the request.
- * @param apiRequestID   the ID of the API request.
+ * @param metadata             the metadata describing the mapping.
+ * @param xml                  the mapping in XML syntax.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the the user making the request.
+ * @param apiRequestID         the ID of the API request.
  */
-case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, requestingUser: UserADM, apiRequestID: UUID) extends StandoffResponderRequestV2
+case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2,
+                                  xml: CreateMappingRequestXMLV2,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  requestingUser: UserADM,
+                                  apiRequestID: UUID) extends StandoffResponderRequestV2
 
 /**
  * Represents the metadata describing the mapping that is to be created.
@@ -144,6 +159,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
+                            featureFactoryConfig: FeatureFactoryConfig,
                             settings: KnoraSettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
         Future {
@@ -197,8 +213,8 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val body = JsonLDObject(Map(
-            JsonLDConstants.ID -> JsonLDString(mappingIri),
-            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
+            JsonLDKeywords.ID -> JsonLDString(mappingIri),
+            JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
             OntologyConstants.Rdfs.Label -> JsonLDString(label),
             OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
         ))
@@ -217,10 +233,13 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
 /**
  * Represents a request to get a mapping from XML elements and attributes to standoff entities.
  *
- * @param mappingIri     the IRI of the mapping.
- * @param requestingUser the the user making the request.
+ * @param mappingIri           the IRI of the mapping.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the the user making the request.
  */
-case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetMappingRequestV2(mappingIri: IRI,
+                               featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
  * Represents a response to a [[GetMappingRequestV2]].
@@ -235,9 +254,12 @@ case class GetMappingResponseV2(mappingIri: IRI, mapping: MappingXMLtoStandoff, 
  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
  *
  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
+ * @param featureFactoryConfig      the feature factory configuration.
  * @param requestingUser            the the user making the request.
  */
-case class GetXSLTransformationRequestV2(xsltTextRepresentationIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetXSLTransformationRequestV2(xsltTextRepresentationIri: IRI,
+                                         featureFactoryConfig: FeatureFactoryConfig,
+                                         requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
  * Represents a response to a [[GetXSLTransformationRequestV2]].
@@ -645,7 +667,7 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
         val attributesAsJsonLD: Map[IRI, JsonLDValue] = attributes.map(_.toJsonLD).toMap
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
-            JsonLDConstants.TYPE -> JsonLDString(standoffTagClassIri.toString),
+            JsonLDKeywords.TYPE -> JsonLDString(standoffTagClassIri.toString),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart -> JsonLDInt(startPosition),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd -> JsonLDInt(endPosition),

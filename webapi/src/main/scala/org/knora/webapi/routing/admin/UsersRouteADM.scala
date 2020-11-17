@@ -83,8 +83,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         get {
             requestContext =>
                 val requestMessage: Future[UsersGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield UsersGetRequestADM(requestingUser = requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield UsersGetRequestADM(
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -111,9 +117,13 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             entity(as[CreateUserApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[UserCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield UserCreateRequestADM(
                         createRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -137,8 +147,16 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield UserGetRequestADM(UserIdentifierADM(maybeIri = Some(value)), UserInformationTypeADM.RESTRICTED, requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield UserGetRequestADM(
+                    identifier = UserIdentifierADM(maybeIri = Some(value)),
+                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -158,8 +176,16 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield UserGetRequestADM(UserIdentifierADM(maybeEmail = Some(value)), UserInformationTypeADM.RESTRICTED, requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield UserGetRequestADM(
+                    identifier = UserIdentifierADM(maybeEmail = Some(value)),
+                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -179,8 +205,16 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield UserGetRequestADM(UserIdentifierADM(maybeUsername = Some(value)), UserInformationTypeADM.RESTRICTED, requestingUser)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield UserGetRequestADM(
+                    identifier = UserIdentifierADM(maybeUsername = Some(value)),
+                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -211,11 +245,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     /* the api request is already checked at time of creation. see case class. */
 
                     val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield UserChangeBasicUserInformationRequestADM(
-                        userIri,
+                        userIri = userIri,
                         changeUserRequest = apiRequest,
-                        requestingUser,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
@@ -249,11 +287,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     /* the api request is already checked at time of creation. see case class. */
 
                     val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield UserChangePasswordRequestADM(
                         userIri = userIri,
                         changeUserRequest = apiRequest,
-                        requestingUser,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
@@ -287,11 +329,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     /* the api request is already checked at time of creation. see case class. */
 
                     val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield UserChangeStatusRequestADM(
-                        userIri,
+                        userIri = userIri,
                         changeUserRequest = apiRequest,
-                        requestingUser,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
@@ -322,11 +368,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                 /* update existing user's status to false */
                 val requestMessage: Future[UserChangeStatusRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserChangeStatusRequestADM(
-                    userIri,
+                    userIri = userIri,
                     changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
-                    requestingUser,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
@@ -360,11 +410,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     /* the api request is already checked at time of creation. see case class. */
 
                     val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     } yield UserChangeSystemAdminMembershipStatusRequestADM(
-                        userIri,
+                        userIri = userIri,
                         changeUserRequest = apiRequest,
-                        requestingUser,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
@@ -390,11 +444,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
                 val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserProjectMembershipsGetRequestADM(
                     userIri = checkedUserIri,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
                 )
 
                 RouteUtilADM.runJsonRoute(
@@ -419,10 +476,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                 val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserProjectMembershipAddRequestADM(
                     userIri = checkedUserIri,
                     projectIri = checkedProjectIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -450,10 +511,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                 val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserProjectMembershipRemoveRequestADM(
                     userIri = checkedUserIri,
                     projectIri = checkedProjectIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -479,9 +544,13 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
                 val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserProjectAdminMembershipsGetRequestADM(
                     userIri = checkedUserIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -509,10 +578,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                 val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserProjectAdminMembershipAddRequestADM(
                     userIri = checkedUserIri,
                     projectIri = checkedProjectIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -539,10 +612,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                 val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserProjectAdminMembershipRemoveRequestADM(
                     userIri = checkedUserIri,
                     projectIri = checkedProjectIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -568,11 +645,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
                 val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserGroupMembershipsGetRequestADM(
                     userIri = checkedUserIri,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser
                 )
 
                 RouteUtilADM.runJsonRoute(
@@ -597,10 +677,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
                 val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserGroupMembershipAddRequestADM(
                     userIri = checkedUserIri,
                     groupIri = checkedGroupIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -627,10 +711,14 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
                 val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield UserGroupMembershipRemoveRequestADM(
                     userIri = checkedUserIri,
                     groupIri = checkedGroupIri,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = UUID.randomUUID()
                 )

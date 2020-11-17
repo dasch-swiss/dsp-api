@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import java.io.{File, StringReader}
+import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
@@ -29,15 +29,14 @@ import akka.http.scaladsl.model._
 import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{ApplicationActor, LiveManagers}
 import org.knora.webapi.core.Core
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.settings._
 import org.knora.webapi.util.{FileUtil, StartupUtils}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -85,6 +84,11 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+
+    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+        testToggles = Set.empty,
+        parent = new KnoraSettingsFeatureFactoryConfig(settings)
+    )
 
     override def beforeAll: Unit = {
 
@@ -136,16 +140,19 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         responseToString(response)
     }
 
-    protected def parseTrig(trigStr: String): Model = {
-        Rio.parse(new StringReader(trigStr), "", RDFFormat.TRIG)
+    protected def parseTrig(trigStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
     }
 
-    protected def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE, null)
+    protected def parseTurtle(turtleStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
     }
 
-    protected def parseRdfXml(rdfXmlStr: String): Model = {
-        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML, null)
+    protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+        rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
     }
 
     protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {

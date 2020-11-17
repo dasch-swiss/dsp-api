@@ -20,20 +20,20 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.{ApiV2Complex, CoreSpec, MarkupAsXml, SchemaOptions}
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.{ApiV2Complex, CoreSpec, SchemaOptions}
 
 import scala.concurrent.duration._
 
 /**
-  * Tests [[SearchResponderV2]].
-  */
+ * Tests [[SearchResponderV2]].
+ */
 class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -60,6 +60,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 limitToStandoffClass = None,
                 targetSchema = ApiV2Complex,
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -83,6 +84,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 limitToStandoffClass = None,
                 targetSchema = ApiV2Complex,
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anythingUser1
             )
 
@@ -100,6 +102,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
                 targetSchema = ApiV2Complex,
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -117,6 +120,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
                 targetSchema = ApiV2Complex,
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -137,6 +141,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
                 targetSchema = ApiV2Complex,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -155,6 +160,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
                 targetSchema = ApiV2Complex,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -171,6 +177,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 searchValue = "Narrenschiff",
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -187,6 +194,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 searchValue = "Das Narrenschiff",
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -205,6 +213,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                 page = 0,
                 targetSchema = ApiV2Complex,
+                featureFactoryConfig = defaultFeatureFactoryConfig,
                 requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
             )
 

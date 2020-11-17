@@ -21,18 +21,17 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import java.util.UUID
 
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.knora.webapi.sharedtestdata._
 
 /**
-  * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
+  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
   */
-class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
+class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "Administrative Permission Get Requests" should {
         "return 'BadRequest' if the supplied project IRI for AdministrativePermissionsForProjectGetRequestADM is not valid" in {
@@ -112,6 +111,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -128,6 +128,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -143,6 +144,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasPermissions = Set.empty[PermissionADM]
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -158,6 +160,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesReviewerUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -450,6 +453,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -466,6 +470,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -481,6 +486,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
                         hasPermissions = Set.empty[PermissionADM]
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -496,6 +502,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
                         hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser2,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -512,6 +519,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -528,6 +536,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -543,6 +552,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forProperty = Some(SharedTestDataADM.customValueIRI),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -558,11 +568,12 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
             )
-            assert(caught.getMessage === s"Invalid resource class IRI: ${ANYTHING_THING_RESOURCE_CLASS_LocalHost}")
+            assert(caught.getMessage === s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost")
         }
 
         "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -572,6 +583,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
                         forProject = ANYTHING_PROJECT_IRI,
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -585,6 +597,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             val caught = intercept[BadRequestException](
                 PermissionsForProjectGetRequestADM(
                     projectIri = "invalid-project-IRI",
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -596,6 +609,7 @@ class PermissionsMessagesADMSpec extends AnyWordSpecLike with Matchers {
             val caught = intercept[ForbiddenException](
                 PermissionsForProjectGetRequestADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID()
                 )

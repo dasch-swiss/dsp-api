@@ -23,6 +23,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -47,27 +48,32 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
      */
     def receive(msg: ProjectsResponderRequestV1) = msg match {
-        case ProjectsGetRequestV1(userProfile) => projectsGetRequestV1(userProfile)
-        case ProjectsGetV1(userProfile) => projectsGetV1(userProfile)
-        case ProjectInfoByIRIGetRequestV1(iri, userProfile) => projectInfoByIRIGetRequestV1(iri, userProfile)
-        case ProjectInfoByIRIGetV1(iri, userProfile) => projectInfoByIRIGetV1(iri, userProfile)
-        case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => projectInfoByShortnameGetRequestV1(shortname, userProfile)
+        case ProjectsGetRequestV1(featureFactoryConfig, userProfile) => projectsGetRequestV1(featureFactoryConfig, userProfile)
+        case ProjectsGetV1(featureFactoryConfig, userProfile) => projectsGetV1(featureFactoryConfig, userProfile)
+        case ProjectInfoByIRIGetRequestV1(iri, featureFactoryConfig, userProfile) => projectInfoByIRIGetRequestV1(iri, featureFactoryConfig, userProfile)
+        case ProjectInfoByIRIGetV1(iri, featureFactoryConfig, userProfile) => projectInfoByIRIGetV1(iri, featureFactoryConfig, userProfile)
+        case ProjectInfoByShortnameGetRequestV1(shortname, featureFactoryConfig, userProfile) => projectInfoByShortnameGetRequestV1(shortname, featureFactoryConfig, userProfile)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**
      * Gets all the projects and returns them as a [[ProjectsResponseV1]].
      *
-     * @param userProfile the profile of the user that is making the request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user that is making the request.
      * @return all the projects as a [[ProjectsResponseV1]].
      * @throws NotFoundException if no projects are found.
      */
-    private def projectsGetRequestV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
+    private def projectsGetRequestV1(featureFactoryConfig: FeatureFactoryConfig,
+                                     userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
         //log.debug("projectsGetRequestV1")
 
         for {
-            projects <- projectsGetV1(userProfile)
+            projects <- projectsGetV1(
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
 
             result = if (projects.nonEmpty) {
                 ProjectsResponseV1(
@@ -83,10 +89,12 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Gets all the projects and returns them as a sequence containing [[ProjectInfoV1]].
      *
-     * @param userProfile the profile of the user that is making the request.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of the user that is making the request.
      * @return all the projects as a sequence containing [[ProjectInfoV1]].
      */
-    private def projectsGetV1(userProfile: Option[UserProfileV1]): Future[Seq[ProjectInfoV1]] = {
+    private def projectsGetV1(featureFactoryConfig: FeatureFactoryConfig,
+                              userProfile: Option[UserProfileV1]): Future[Seq[ProjectInfoV1]] = {
 
         for {
             sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getProjects(
@@ -106,7 +114,10 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
             }
             //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
 
-            ontologiesForProjects <- getOntologiesForProjects(userProfile = userProfile)
+            ontologiesForProjects <- getOntologiesForProjects(
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
 
             projects = projectsWithProperties.map {
                 case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
@@ -148,7 +159,9 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
      * @param userProfile the requesting user.
      * @return a map of project IRIs to sequences of ontology IRIs.
      */
-    private def getOntologiesForProjects(projectIris: Set[IRI] = Set.empty[IRI], userProfile: Option[UserProfileV1]): Future[Map[IRI, Seq[IRI]]] = {
+    private def getOntologiesForProjects(projectIris: Set[IRI] = Set.empty[IRI],
+                                         featureFactoryConfig: FeatureFactoryConfig,
+                                         userProfile: Option[UserProfileV1]): Future[Map[IRI, Seq[IRI]]] = {
         for {
             // Get a UserADM for the UserProfileV1, because we need it to send a message to OntologyResponderV1.
 
@@ -158,6 +171,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                         case Some(user_iri) =>
                             (responderManager ? UserGetRequestADM(
                                 identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
+                                featureFactoryConfig = featureFactoryConfig,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )).mapTo[UserResponseADM].map(_.user)
 
@@ -169,7 +183,11 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
 
             // Get the ontologies per project.
 
-            namedGraphsResponse <- (responderManager ? NamedGraphsGetRequestV1(projectIris, userADM)).mapTo[NamedGraphsResponseV1]
+            namedGraphsResponse <- (responderManager ? NamedGraphsGetRequestV1(
+                projectIris = projectIris,
+                featureFactoryConfig = featureFactoryConfig,
+                userADM = userADM
+            )).mapTo[NamedGraphsResponseV1]
 
         } yield namedGraphsResponse.vocabularies.map {
             namedGraph: NamedGraphV1 =>
@@ -183,17 +201,25 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
      *
-     * @param projectIri  the IRI of the project requested.
-     * @param userProfile the profile of user that is making the request.
+     * @param projectIri           the IRI of the project requested.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of user that is making the request.
      * @return information about the project as a [[ProjectInfoResponseV1]].
      * @throws NotFoundException when no project for the given IRI can be found
      */
-    private def projectInfoByIRIGetRequestV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def projectInfoByIRIGetRequestV1(projectIri: IRI,
+                                             featureFactoryConfig: FeatureFactoryConfig,
+                                             userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
 
         //log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
 
         for {
-            maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(projectIri, userProfile)
+            maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(
+                projectIri = projectIri,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
+
             projectInfo = maybeProjectInfo match {
                 case Some(pi) => pi
                 case None => throw NotFoundException(s"Project '$projectIri' not found")
@@ -206,11 +232,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
      *
-     * @param projectIri  the IRI of the project requested.
-     * @param userProfile the profile of user that is making the request.
+     * @param projectIri           the IRI of the project requested.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of user that is making the request.
      * @return information about the project as a [[ProjectInfoV1]].
      */
-    private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[Option[ProjectInfoV1]] = {
+    private def projectInfoByIRIGetV1(projectIri: IRI,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      userProfile: Option[UserProfileV1] = None): Future[Option[ProjectInfoV1]] = {
 
         //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
@@ -221,7 +250,13 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
             ).toString())
 
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-            ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris = Set(projectIri), userProfile = userProfile)
+
+            ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
+                projectIris = Set(projectIri),
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
+
             projectOntologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
 
             projectInfo = if (projectResponse.results.bindings.nonEmpty) {
@@ -243,12 +278,15 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     /**
      * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
      *
-     * @param shortName   the shortname of the project requested.
-     * @param userProfile the profile of user that is making the request.
+     * @param shortName            the shortname of the project requested.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param userProfile          the profile of user that is making the request.
      * @return information about the project as a [[ProjectInfoResponseV1]].
      * @throws NotFoundException in the case that no project for the given shortname can be found.
      */
-    private def projectInfoByShortnameGetRequestV1(shortName: String, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+    private def projectInfoByShortnameGetRequestV1(shortName: String,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
+                                                   userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
 
         //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
 
@@ -270,7 +308,12 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                 throw NotFoundException(s"Project '$shortName' not found")
             }
 
-            ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris = Set(projectIri), userProfile = userProfile)
+            ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
+                projectIris = Set(projectIri),
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+            )
+
             projectOntologies = ontologiesForProjects(projectIri)
 
             projectInfo = createProjectInfoV1(

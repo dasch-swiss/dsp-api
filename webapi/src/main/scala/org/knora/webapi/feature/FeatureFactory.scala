@@ -23,12 +23,12 @@ import akka.http.scaladsl.model.{HttpHeader, HttpResponse}
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.RequestContext
 import org.knora.webapi.exceptions.{BadRequestException, FeatureToggleException}
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.settings.KnoraSettings.FeatureToggleBaseConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
+import scala.util.control.Exception._
 
 /**
  * A tagging trait for module-specific factories that produce implementations of features.
@@ -362,8 +362,7 @@ object RequestContextFeatureFactoryConfig {
  * @param parent         the parent [[FeatureFactoryConfig]].
  */
 class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
-                                         parent: FeatureFactoryConfig)(implicit stringFormatter: StringFormatter) extends OverridingFeatureFactoryConfig(parent) {
-
+                                         parent: FeatureFactoryConfig) extends OverridingFeatureFactoryConfig(parent) {
     import FeatureToggle._
     import RequestContextFeatureFactoryConfig._
 
@@ -392,7 +391,7 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext,
                                 }
 
                                 val maybeVersion: Option[Int] = featureNameAndVersion.drop(1).headOption.map {
-                                    versionStr => stringFormatter.validateInt(versionStr, throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
+                                    versionStr: String => allCatch.opt(versionStr.toInt).getOrElse(throw BadRequestException(s"Invalid version number '$versionStr' in feature toggle $featureName"))
                                 }
 
                                 featureName -> FeatureToggle(

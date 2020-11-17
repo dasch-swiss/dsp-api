@@ -24,6 +24,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -114,86 +115,108 @@ sealed trait GroupsResponderRequestADM extends KnoraRequestADM
 /**
  * Get all information about all groups.
  *
- * @param requestingUser the user initiating the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
-case class GroupsGetADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupsGetADM(featureFactoryConfig: FeatureFactoryConfig,
+                        requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Get all information about all groups.
  *
- * @param requestingUser the user initiating the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
-case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a single group identified through its IRI. A successful response will be
  * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
  *
- * @param groupIri       IRI of the group.
- * @param requestingUser the user initiating the request.
+ * @param groupIri             IRI of the group.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
-case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupGetADM(groupIri: IRI,
+                       featureFactoryConfig: FeatureFactoryConfig,
+                       requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a single group identified through its IRI. The response will be a
  * [[GroupGetResponseADM]], or an error if the group was not found.
  *
- * @param groupIri       IRI of the group.
- * @param requestingUser the user initiating the request.
+ * @param groupIri             IRI of the group.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
-case class GroupGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupGetRequestADM(groupIri: IRI,
+                              featureFactoryConfig: FeatureFactoryConfig,
+                              requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a multiple groups identified by their IRIs. The response will be a
  * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
  *
- * @param groupIris      the IRIs of the groups being requested.
- * @param requestingUser the user initiating the request.
+ * @param groupIris            the IRIs of the groups being requested.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
-case class MultipleGroupsGetRequestADM(groupIris: Set[IRI], requestingUser: UserADM) extends GroupsResponderRequestADM
+case class MultipleGroupsGetRequestADM(groupIris: Set[IRI],
+                                       featureFactoryConfig: FeatureFactoryConfig,
+                                       requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Returns all members of the group identified by iri.
  *
- * @param groupIri       IRI of the group.
- * @param requestingUser the user initiating the request.
+ * @param groupIri             IRI of the group.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
-case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupMembersGetRequestADM(groupIri: IRI,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Requests the creation of a new group.
  *
- * @param createRequest  the [[CreateGroupApiRequestADM]] information for creating the new group.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param createRequest        the [[CreateGroupApiRequestADM]] information for creating the new group.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class GroupCreateRequestADM(createRequest: CreateGroupApiRequestADM,
+                                 featureFactoryConfig: FeatureFactoryConfig,
                                  requestingUser: UserADM,
                                  apiRequestID: UUID) extends GroupsResponderRequestADM
 
 /**
  * Request updating of an existing group.
  *
- * @param groupIri           the IRI of the group to be updated.
- * @param changeGroupRequest the data which needs to be update.
- * @param requestingUser     the user initiating the request.
- * @param apiRequestID       the ID of the API request.
+ * @param groupIri             the IRI of the group to be updated.
+ * @param changeGroupRequest   the data which needs to be update.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class GroupChangeRequestADM(groupIri: IRI,
                                  changeGroupRequest: ChangeGroupApiRequestADM,
+                                 featureFactoryConfig: FeatureFactoryConfig,
                                  requestingUser: UserADM,
                                  apiRequestID: UUID) extends GroupsResponderRequestADM
 
 /**
  * Request changing the status (active/inactive) of an existing group.
  *
- * @param groupIri           the IRI of the group to be deleted.
- * @param changeGroupRequest the data which needs to be update.
- * @param requestingUser     the user initiating the request.
- * @param apiRequestID       the ID of the API request.
+ * @param groupIri             the IRI of the group to be deleted.
+ * @param changeGroupRequest   the data which needs to be update.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class GroupChangeStatusRequestADM(groupIri: IRI,
                                        changeGroupRequest: ChangeGroupApiRequestADM,
+                                       featureFactoryConfig: FeatureFactoryConfig,
                                        requestingUser: UserADM,
                                        apiRequestID: UUID) extends GroupsResponderRequestADM
 

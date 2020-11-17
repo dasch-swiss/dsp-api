@@ -24,6 +24,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
@@ -159,9 +160,11 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM
  * no users are found. Administration permission checking is skipped.
  *
  * @param userInformationTypeADM the extent of the information returned.
+ * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user that is making the request.
  */
 case class UsersGetADM(userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+                       featureFactoryConfig: FeatureFactoryConfig,
                        requestingUser: UserADM) extends UsersResponderRequestADM
 
 /**
@@ -169,9 +172,11 @@ case class UsersGetADM(userInformationTypeADM: UserInformationTypeADM = UserInfo
  * something or a NotFound exception if there are no users found. Administration permission checking is performed.
  *
  * @param userInformationTypeADM the extent of the information returned.
+ * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user initiating the request.
  */
 case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+                              featureFactoryConfig: FeatureFactoryConfig,
                               requestingUser: UserADM) extends UsersResponderRequestADM
 
 /**
@@ -179,10 +184,12 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
  *
  * @param identifier             the IRI, email, or username of the user to be queried.
  * @param userInformationTypeADM the extent of the information returned.
+ * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user initiating the request.
  */
 case class UserGetADM(identifier: UserIdentifierADM,
                       userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+                      featureFactoryConfig: FeatureFactoryConfig,
                       requestingUser: UserADM) extends UsersResponderRequestADM {
 }
 
@@ -191,60 +198,70 @@ case class UserGetADM(identifier: UserIdentifierADM,
  *
  * @param identifier             the IRI, email, or username of the user to be queried.
  * @param userInformationTypeADM the extent of the information returned.
+ * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user initiating the request.
  */
 case class UserGetRequestADM(identifier: UserIdentifierADM,
                              userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+                             featureFactoryConfig: FeatureFactoryConfig,
                              requestingUser: UserADM) extends UsersResponderRequestADM {
 }
 
 /**
  * Requests the creation of a new user.
  *
- * @param createRequest  the [[CreateUserApiRequestADM]] information used for creating the new user.
- * @param requestingUser the user creating the new user.
- * @param apiRequestID   the ID of the API request.
+ * @param createRequest        the [[CreateUserApiRequestADM]] information used for creating the new user.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user creating the new user.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Request updating of an existing user.
  *
- * @param userIri           the IRI of the user to be updated.
- * @param changeUserRequest the data which needs to be update.
- * @param requestingUser    the user initiating the request.
- * @param apiRequestID      the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param changeUserRequest    the data which needs to be update.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
                                                     changeUserRequest: ChangeUserApiRequestADM,
+                                                    featureFactoryConfig: FeatureFactoryConfig,
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Request updating the users password.
  *
- * @param userIri           the IRI of the user to be updated.
- * @param changeUserRequest the [[ChangeUserApiRequestADM]] object containing the old and new password.
- * @param requestingUser    the user initiating the request.
- * @param apiRequestID      the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param changeUserRequest    the [[ChangeUserApiRequestADM]] object containing the old and new password.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserChangePasswordRequestADM(userIri: IRI,
                                         changeUserRequest: ChangeUserApiRequestADM,
+                                        featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM,
                                         apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Request updating the users status ('knora-base:isActiveUser' property)
  *
- * @param userIri           the IRI of the user to be updated.
- * @param changeUserRequest the [[ChangeUserApiRequestADM]] containing the new status (true / false).
- * @param requestingUser    the user initiating the request.
- * @param apiRequestID      the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param changeUserRequest    the [[ChangeUserApiRequestADM]] containing the new status (true / false).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserChangeStatusRequestADM(userIri: IRI,
                                       changeUserRequest: ChangeUserApiRequestADM,
+                                      featureFactoryConfig: FeatureFactoryConfig,
                                       requestingUser: UserADM,
                                       apiRequestID: UUID) extends UsersResponderRequestADM
 
@@ -252,125 +269,141 @@ case class UserChangeStatusRequestADM(userIri: IRI,
 /**
  * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
  *
- * @param userIri           the IRI of the user to be updated.
- * @param changeUserRequest the [[ChangeUserApiRequestADM]] containing
- *                          the new system admin membership status (true / false).
- * @param requestingUser    the user initiating the request.
- * @param apiRequestID      the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param changeUserRequest    the [[ChangeUserApiRequestADM]] containing
+ *                             the new system admin membership status (true / false).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserChangeSystemAdminMembershipStatusRequestADM(userIri: IRI,
                                                            changeUserRequest: ChangeUserApiRequestADM,
+                                                           featureFactoryConfig: FeatureFactoryConfig,
                                                            requestingUser: UserADM,
                                                            apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests user's project memberships.
  *
- * @param userIri        the IRI of the user.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
 case class UserProjectMembershipsGetRequestADM(userIri: IRI,
-                                               requestingUser: UserADM,
-                                               apiRequestID: UUID) extends UsersResponderRequestADM
+                                               featureFactoryConfig: FeatureFactoryConfig,
+                                               requestingUser: UserADM) extends UsersResponderRequestADM
 
 /**
  * Requests adding the user to a project.
  *
- * @param userIri        the IRI of the user to be updated.
- * @param projectIri     the IRI of the project.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param projectIri           the IRI of the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserProjectMembershipAddRequestADM(userIri: IRI,
                                               projectIri: IRI,
+                                              featureFactoryConfig: FeatureFactoryConfig,
                                               requestingUser: UserADM,
                                               apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests removing the user from a project.
  *
- * @param userIri        the IRI of the user to be updated.
- * @param projectIri     the IRI of the project.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param projectIri           the IRI of the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserProjectMembershipRemoveRequestADM(userIri: IRI,
                                                  projectIri: IRI,
+                                                 featureFactoryConfig: FeatureFactoryConfig,
                                                  requestingUser: UserADM,
                                                  apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests user's project admin memberships.
  *
- * @param userIri        the IRI of the user.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserProjectAdminMembershipsGetRequestADM(userIri: IRI,
+                                                    featureFactoryConfig: FeatureFactoryConfig,
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests adding the user to a project as project admin.
  *
- * @param userIri        the IRI of the user to be updated.
- * @param projectIri     the IRI of the project.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param projectIri           the IRI of the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserProjectAdminMembershipAddRequestADM(userIri: IRI,
                                                    projectIri: IRI,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
                                                    requestingUser: UserADM,
                                                    apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests removing the user from a project as project admin.
  *
- * @param userIri        the IRI of the user to be updated.
- * @param projectIri     the IRI of the project.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param projectIri           the IRI of the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserProjectAdminMembershipRemoveRequestADM(userIri: IRI,
                                                       projectIri: IRI,
+                                                      featureFactoryConfig: FeatureFactoryConfig,
                                                       requestingUser: UserADM,
                                                       apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests user's group memberships.
  *
- * @param userIri        the IRI of the user.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
  */
 case class UserGroupMembershipsGetRequestADM(userIri: IRI,
-                                             requestingUser: UserADM,
-                                             apiRequestID: UUID) extends UsersResponderRequestADM
+                                             featureFactoryConfig: FeatureFactoryConfig,
+                                             requestingUser: UserADM) extends UsersResponderRequestADM
 
 /**
  * Requests adding the user to a group.
  *
- * @param userIri        the IRI of the user to be updated.
- * @param groupIri       the IRI of the group.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param groupIri             the IRI of the group.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserGroupMembershipAddRequestADM(userIri: IRI,
                                             groupIri: IRI,
+                                            featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM,
                                             apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
  * Requests removing the user from a group.
  *
- * @param userIri        the IRI of the user to be updated.
- * @param groupIri       the IRI of the group.
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
+ * @param userIri              the IRI of the user to be updated.
+ * @param groupIri             the IRI of the group.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class UserGroupMembershipRemoveRequestADM(userIri: IRI,
                                                groupIri: IRI,
+                                               featureFactoryConfig: FeatureFactoryConfig,
                                                requestingUser: UserADM,
                                                apiRequestID: UUID) extends UsersResponderRequestADM
 

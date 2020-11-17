@@ -40,7 +40,10 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
             get { // authenticate credentials
                 requestContext => {
                     requestContext.complete {
-                        doAuthenticateV2(requestContext)
+                        doAuthenticateV2(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                     }
                 }
             } ~
@@ -62,14 +65,15 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
                         requestContext =>
                             requestContext.complete {
                                 doLoginV2(
-                                    KnoraPasswordCredentialsV2(
+                                    credentials = KnoraPasswordCredentialsV2(
                                         UserIdentifierADM(
                                             maybeIri = apiRequest.iri,
                                             maybeEmail = apiRequest.email,
                                             maybeUsername = apiRequest.username
                                         ),
                                         password = apiRequest.password
-                                    )
+                                    ),
+                                    featureFactoryConfig = featureFactoryConfig
                                 )
                             }
                     }
@@ -94,12 +98,13 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
                             requestContext => {
                                 requestContext.complete {
                                     doLoginV2(
-                                        KnoraPasswordCredentialsV2(
+                                        credentials = KnoraPasswordCredentialsV2(
                                             UserIdentifierADM(
                                                 maybeUsername = Some(username)
                                             ),
                                             password = password
-                                        )
+                                        ),
+                                        featureFactoryConfig = featureFactoryConfig
                                     )
                                 }
                             }

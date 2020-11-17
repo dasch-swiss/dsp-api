@@ -113,6 +113,11 @@ object OntologyConstants {
         val Int: IRI = XsdPrefixExpansion + "int"
         val Integer: IRI = XsdPrefixExpansion + "integer"
         val NonNegativeInteger: IRI = XsdPrefixExpansion + "nonNegativeInteger"
+
+        lazy val integerTypes: Set[IRI] = Set(
+            Int, Integer, NonNegativeInteger
+        )
+
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
@@ -1031,9 +1036,9 @@ object OntologyConstants {
 
         val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
-        // The set of custom datatypes defined in knora-api in the simple schema. InstanceChecker relies on
-        // this.
-        val KnoraDatatypes: Set[IRI] = Set(
+        // The set of custom datatypes defined in knora-api in the simple schema. InstanceChecker and
+        // JenaNodeFactory rely on this.
+        lazy val KnoraDatatypes: Set[IRI] = Set(
             Date,
             ListNode,
             Geom,

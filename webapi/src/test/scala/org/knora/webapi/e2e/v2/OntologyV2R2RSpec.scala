@@ -8,13 +8,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
@@ -247,8 +246,8 @@ class OntologyV2R2RSpec extends R2RSpec {
                                     val existingFile: File = httpGetTest.makeFile(mediaType)
 
                                     if (existingFile.exists()) {
-                                        val parsedResponse: Model = parseRdfXml(responseStr)
-                                        val parsedExistingFile: Model = parseRdfXml(httpGetTest.readFile(mediaType))
+                                        val parsedResponse: RdfModel = parseRdfXml(responseStr)
+                                        val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
 
                                         if (parsedResponse != parsedExistingFile) {
                                             httpGetTest.writeFile(responseStr, mediaType)

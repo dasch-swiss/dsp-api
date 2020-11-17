@@ -28,6 +28,7 @@ import akka.util.Timeout
 import akka.pattern.ask
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, InconsistentTriplestoreDataException, NotImplementedException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
@@ -43,6 +44,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.messages.IriConversions._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 object ConstructResponseUtilV2 {
@@ -873,6 +875,7 @@ object ConstructResponseUtilV2 {
      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
      * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
      * @param responderManager          the Knora responder manager.
+     * @param featureFactoryConfig      the feature factory configuration.
      * @param requestingUser            the user making the request.
      * @return a [[TextValueContentV2]].
      */
@@ -883,6 +886,7 @@ object ConstructResponseUtilV2 {
                                        mappings: Map[IRI, MappingAndXSLTransformation],
                                        queryStandoff: Boolean,
                                        responderManager: ActorRef,
+                                       featureFactoryConfig: FeatureFactoryConfig,
                                        requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         // Any knora-base:TextValue may have a language
         val valueLanguageOption: Option[String] = valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
@@ -912,7 +916,12 @@ object ConstructResponseUtilV2 {
                     // concatenated together and returned in a GetStandoffResponseV2.
 
                     for {
-                        standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.subjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
+                        standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(
+                            resourceIri = resourceIri,
+                            valueIri = valueObject.subjectIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )).mapTo[GetStandoffResponseV2]
                     } yield standoff ++ standoffResponse.standoff
                 } else {
                     // We're not supposed to get any more standoff here, either because we have all of it already,
@@ -1007,6 +1016,7 @@ object ConstructResponseUtilV2 {
      * @param versionDate               if defined, represents the requested time in the the resources' version history.
      * @param responderManager          the Knora responder manager.
      * @param targetSchema              the schema of the response.
+     * @param featureFactoryConfig      the feature factory configuration.
      * @param settings                  the application's settings.
      * @param requestingUser            the user making the request.
      * @return a [[LinkValueContentV2]].
@@ -1019,6 +1029,7 @@ object ConstructResponseUtilV2 {
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        targetSchema: ApiV2Schema,
+                                       featureFactoryConfig: FeatureFactoryConfig,
                                        settings: KnoraSettingsImpl,
                                        requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
@@ -1049,6 +1060,7 @@ object ConstructResponseUtilV2 {
                         responderManager = responderManager,
                         requestingUser = requestingUser,
                         targetSchema = targetSchema,
+                        featureFactoryConfig = featureFactoryConfig,
                         settings = settings
                     )
                 } yield linkValue.copy(
@@ -1064,14 +1076,15 @@ object ConstructResponseUtilV2 {
     /**
      * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
      *
-     * @param valueObject      the given [[ValueRdfData]].
-     * @param mappings         the mappings needed for standoff conversions and XSL transformations.
-     * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
-     * @param versionDate      if defined, represents the requested time in the the resources' version history.
-     * @param responderManager the Knora responder manager.
-     * @param targetSchema     the schema of the response.
-     * @param settings         the application's settings.
-     * @param requestingUser   the user making the request.
+     * @param valueObject          the given [[ValueRdfData]].
+     * @param mappings             the mappings needed for standoff conversions and XSL transformations.
+     * @param queryStandoff        if `true`, make separate queries to get the standoff for text values.
+     * @param versionDate          if defined, represents the requested time in the the resources' version history.
+     * @param responderManager     the Knora responder manager.
+     * @param targetSchema         the schema of the response.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application's settings.
+     * @param requestingUser       the user making the request.
      * @return a [[ValueContentV2]] representing a value.
      */
     private def createValueContentV2FromValueRdfData(resourceIri: IRI,
@@ -1081,6 +1094,7 @@ object ConstructResponseUtilV2 {
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
                                                      targetSchema: ApiV2Schema,
+                                                     featureFactoryConfig: FeatureFactoryConfig,
                                                      settings: KnoraSettingsImpl,
                                                      requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
@@ -1101,6 +1115,7 @@ object ConstructResponseUtilV2 {
                     mappings = mappings,
                     queryStandoff = queryStandoff,
                     responderManager = responderManager,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -1184,14 +1199,17 @@ object ConstructResponseUtilV2 {
 
                 targetSchema match {
                     case ApiV2Simple => for {
-                        nodeResponse <- (responderManager ? NodeGetRequestV2(listNodeIri, requestingUser)).mapTo[NodeGetResponseV2]
+                        nodeResponse <- (responderManager ? NodeGetRequestV2(
+                            nodeIri = listNodeIri,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser
+                        )).mapTo[NodeGetResponseV2]
                     } yield listNode.copy(
                         listNodeLabel = nodeResponse.node.getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
                     )
 
                     case ApiV2Complex => FastFuture.successful(listNode)
                 }
-
 
             case OntologyConstants.KnoraBase.IntervalValue =>
                 FastFuture.successful(IntervalValueContentV2(
@@ -1219,6 +1237,7 @@ object ConstructResponseUtilV2 {
                     responderManager = responderManager,
                     requestingUser = requestingUser,
                     targetSchema = targetSchema,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings
                 )
 
@@ -1248,6 +1267,7 @@ object ConstructResponseUtilV2 {
      * @param versionDate              if defined, represents the requested time in the the resources' version history.
      * @param responderManager         the Knora responder manager.
      * @param targetSchema             the schema of the response.
+     * @param featureFactoryConfig     the feature factory configuration.
      * @param settings                 the application's settings.
      * @param requestingUser           the user making the request.
      * @return a [[ReadResourceV2]].
@@ -1259,6 +1279,7 @@ object ConstructResponseUtilV2 {
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
                                         targetSchema: ApiV2Schema,
+                                        featureFactoryConfig: FeatureFactoryConfig,
                                         settings: KnoraSettingsImpl,
                                         requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
@@ -1307,6 +1328,7 @@ object ConstructResponseUtilV2 {
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
                                 targetSchema = targetSchema,
+                                featureFactoryConfig = featureFactoryConfig,
                                 settings = settings
                             )
 
@@ -1369,7 +1391,12 @@ object ConstructResponseUtilV2 {
         }
 
         for {
-            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
+            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )).mapTo[ProjectGetResponseADM]
+
             valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
         } yield ReadResourceV2(
             resourceIri = resourceIri,
@@ -1401,6 +1428,7 @@ object ConstructResponseUtilV2 {
      * @param versionDate                  if defined, represents the requested time in the the resources' version history.
      * @param responderManager             the Knora responder manager.
      * @param targetSchema                 the schema of response.
+     * @param featureFactoryConfig         the feature factory configuration.
      * @param settings                     the application's settings.
      * @param requestingUser               the user making the request.
      * @return a collection of [[ReadResourceV2]] representing the search results.
@@ -1414,6 +1442,7 @@ object ConstructResponseUtilV2 {
                           versionDate: Option[Instant],
                           responderManager: ActorRef,
                           targetSchema: ApiV2Schema,
+                          featureFactoryConfig: FeatureFactoryConfig,
                           settings: KnoraSettingsImpl,
                           requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourcesSequenceV2] = {
 
@@ -1430,6 +1459,7 @@ object ConstructResponseUtilV2 {
                     versionDate = versionDate,
                     responderManager = responderManager,
                     targetSchema = targetSchema,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings,
                     requestingUser = requestingUser
                 )

@@ -8,9 +8,9 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
-        "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
+        "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/http/status",
         "//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo",
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
@@ -37,7 +37,6 @@ scala_library(
         "@maven//:io_swagger_swagger_jaxrs",
         "@maven//:io_swagger_swagger_models",
         "@maven//:javax_ws_rs_jsr311_api",
-        "@maven//:org_apache_jena_apache_jena_libs",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_slf4j_slf4j_api",
     ],

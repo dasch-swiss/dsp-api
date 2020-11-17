@@ -41,7 +41,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
                 requestContext =>
 
                     val requestMessage = for {
-                        userProfile <- getUserADM(requestContext)
+                        userProfile <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
 
                         // TODO: Check that this is the IRI of a resource type and not just any IRI
                         resourceTypeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid resource class IRI: $iri"))
@@ -62,7 +65,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
                 requestContext =>
 
                     val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
+                        userADM <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         params = requestContext.request.uri.query().toMap
 
                         vocabularyId = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
@@ -72,7 +78,11 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
                             case other => Some(stringFormatter.validateAndEscapeIri(vocabularyId, throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
                         }
 
-                    } yield ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userADM)
+                    } yield ResourceTypesForNamedGraphGetRequestV1(
+                        namedGraph = namedGraphIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        userADM = userADM
+                    )
 
                     RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
@@ -88,7 +98,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
                 requestContext =>
 
                     val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
+                        userADM <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         params = requestContext.request.uri.query().toMap
 
                         vocabularyId: Option[String] = params.get("vocabulary")
@@ -98,17 +111,31 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
                         _ = if (vocabularyId.nonEmpty && resourcetypeId.nonEmpty) throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
                     } yield vocabularyId match {
                         case Some("0") => // 0 means that all named graphs should be queried
-                            PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userADM = userADM)
+                            PropertyTypesForNamedGraphGetRequestV1(
+                                namedGraph = None,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userADM = userADM
+                            )
+
                         case Some(vocId) =>
                             val namedGraphIri = stringFormatter.validateAndEscapeIri(vocId, throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
-                            PropertyTypesForNamedGraphGetRequestV1(namedGraph = Some(namedGraphIri), userADM = userADM)
+                            PropertyTypesForNamedGraphGetRequestV1(
+                                namedGraph = Some(namedGraphIri),
+                                featureFactoryConfig = featureFactoryConfig,
+                                userADM = userADM
+                            )
+
                         case None => // no vocabulary id given, check for restype
                             resourcetypeId match {
                                 case Some(restypeId) => // get property types for given resource type
                                     val resourceClassIri = stringFormatter.validateAndEscapeIri(restypeId, throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
                                     PropertyTypesForResourceTypeGetRequestV1(restypeId, userADM)
                                 case None => // no params given, get all property types (behaves like vocbulary=0)
-                                    PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userADM = userADM)
+                                    PropertyTypesForNamedGraphGetRequestV1(
+                                        namedGraph = None,
+                                        featureFactoryConfig = featureFactoryConfig,
+                                        userADM = userADM
+                                    )
                             }
                     }
 
@@ -125,8 +152,14 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
             get {
                 requestContext =>
                     val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
-                    } yield NamedGraphsGetRequestV1(userADM = userADM)
+                        userADM <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
+                    } yield NamedGraphsGetRequestV1(
+                        featureFactoryConfig = featureFactoryConfig,
+                        userADM = userADM
+                    )
 
                     RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
@@ -141,8 +174,14 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
             get {
                 requestContext =>
                     val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
-                    } yield LoadOntologiesRequest(userADM)
+                        userADM <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
+                    } yield LoadOntologiesRequestV1(
+                        featureFactoryConfig = featureFactoryConfig,
+                        userADM = userADM
+                    )
 
                     RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
@@ -158,7 +197,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
                     requestContext =>
 
                         val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+                            userADM <- getUserADM(
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                            )
 
                             // TODO: Check that this is the IRI of a resource type and not just any IRI
                             resourceClassIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid resource class IRI: $iri"))

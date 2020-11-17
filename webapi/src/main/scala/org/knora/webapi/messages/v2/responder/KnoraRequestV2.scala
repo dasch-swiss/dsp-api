@@ -19,15 +19,14 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import java.io.StringWriter
 import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
-import org.apache.jena
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, RdfFeatureFactory, RdfModel, Turtle}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,21 +37,19 @@ import scala.concurrent.{ExecutionContext, Future}
 trait KnoraRequestV2
 
 /**
- * A trait for request messages that are constructed as a [[jena.graph.Graph]].
+ * A trait for request messages that are constructed as an [[RdfModel]].
  */
-trait KnoraGraphRequestV2 {
+trait KnoraRdfModelRequestV2 {
     /**
-     * A [[jena.graph.Graph]] representing the request.
+     * An [[RdfModel]] representing the request.
      */
-    val graph: jena.graph.Graph
+    val rdfModel: RdfModel
 
     /**
      * Returns a Turtle representation of the graph.
      */
-    def toTurtle: String = {
-        val stringWriter = new StringWriter
-        jena.riot.RDFDataMgr.write(stringWriter, graph, jena.riot.Lang.TURTLE)
-        stringWriter.toString
+    def toTurtle(featureFactoryConfig: FeatureFactoryConfig): String = {
+        RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig).format(rdfModel, Turtle)
     }
 }
 
@@ -65,15 +62,14 @@ trait KnoraJsonLDRequestReaderV2[C] {
     /**
      * Converts JSON-LD input into a case class instance.
      *
-     * @param jsonLDDocument   the JSON-LD input.
-     * @param apiRequestID     the UUID of the API request.
-     * @param requestingUser   the user making the request.
-     * @param responderManager a reference to the responder manager.
-     * @param storeManager     a reference to the store manager.
-     * @param settings         the application settings.
-     * @param log              a logging adapter.
-     * @param timeout          a timeout for `ask` messages.
-     * @param executionContext an execution context for futures.
+     * @param jsonLDDocument       the JSON-LD input.
+     * @param apiRequestID         the UUID of the API request.
+     * @param requestingUser       the user making the request.
+     * @param responderManager     a reference to the responder manager.
+     * @param storeManager         a reference to the store manager.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @param settings             the application settings.
+     * @param log                  a logging adapter.
      * @return a case class instance representing the input.
      */
     def fromJsonLD(jsonLDDocument: JsonLDDocument,
@@ -81,6 +77,7 @@ trait KnoraJsonLDRequestReaderV2[C] {
                    requestingUser: UserADM,
                    responderManager: ActorRef,
                    storeManager: ActorRef,
+                   featureFactoryConfig: FeatureFactoryConfig,
                    settings: KnoraSettingsImpl,
                    log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

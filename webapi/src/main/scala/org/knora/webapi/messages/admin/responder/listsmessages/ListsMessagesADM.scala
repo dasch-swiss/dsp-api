@@ -24,6 +24,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -62,7 +63,7 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
     if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
-    
+
     if (labels.isEmpty) {
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
@@ -172,38 +173,46 @@ sealed trait ListsResponderRequestADM extends KnoraRequestADM
 /**
  * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
  *
- * @param projectIri     the IRI of the project.
- * @param requestingUser the user making the request.
+ * @param projectIri           the IRI of the project.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListsGetRequestADM(projectIri: Option[IRI] = None,
+                              featureFactoryConfig: FeatureFactoryConfig,
                               requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Requests a list. A successful response will be a [[ListGetResponseADM]]
  *
- * @param iri            the IRI of the list.
- * @param requestingUser the user making the request.
+ * @param iri                  the IRI of the list.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListGetRequestADM(iri: IRI,
+                             featureFactoryConfig: FeatureFactoryConfig,
                              requestingUser: UserADM) extends ListsResponderRequestADM
 
 
 /**
  * Request basic information about a list. A successful response will be a [[ListInfoGetResponseADM]]
  *
- * @param iri            the IRI of the list node.
- * @param requestingUser the user making the request.
+ * @param iri                  the IRI of the list node.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListInfoGetRequestADM(iri: IRI,
+                                 featureFactoryConfig: FeatureFactoryConfig,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseADM]]
  *
- * @param iri            the IRI of the list node.
- * @param requestingUser the user making the request.
+ * @param iri                  the IRI of the list node.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
  */
 case class ListNodeInfoGetRequestADM(iri: IRI,
+                                     featureFactoryConfig: FeatureFactoryConfig,
                                      requestingUser: UserADM) extends ListsResponderRequestADM
 
 
@@ -221,24 +230,28 @@ case class NodePathGetRequestADM(iri: IRI,
 /**
  * Requests the creation of a new list.
  *
- * @param createListRequest the [[CreateListApiRequestADM]] information used for creating the new list.
- * @param requestingUser    the user creating the new list.
- * @param apiRequestID      the ID of the API request.
+ * @param createListRequest    the [[CreateListApiRequestADM]] information used for creating the new list.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user creating the new list.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
+                                featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
  * Request updating basic information of an existing list.
  *
- * @param listIri           the IRI of the list to be updated.
- * @param changeListRequest the data which needs to be update.
- * @param requestingUser    the user initiating the request.
- * @param apiRequestID      the ID of the API request.
+ * @param listIri              the IRI of the list to be updated.
+ * @param changeListRequest    the data which needs to be update.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ListInfoChangeRequestADM(listIri: IRI,
                                     changeListRequest: ChangeListInfoApiRequestADM,
+                                    featureFactoryConfig: FeatureFactoryConfig,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
@@ -247,11 +260,13 @@ case class ListInfoChangeRequestADM(listIri: IRI,
  *
  * @param parentNodeIri          the IRI of the list node to which we want to attach the newly created node.
  * @param createChildNodeRequest the new node information.
+ * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user making the request.
  * @param apiRequestID           the ID of the API request.
  */
 case class ListChildNodeCreateRequestADM(parentNodeIri: IRI,
                                          createChildNodeRequest: CreateChildNodeApiRequestADM,
+                                         featureFactoryConfig: FeatureFactoryConfig,
                                          requestingUser: UserADM,
                                          apiRequestID: UUID) extends ListsResponderRequestADM
 
@@ -965,7 +980,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
-    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "id" , "parentNodeIri", "projectIri", "name", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")

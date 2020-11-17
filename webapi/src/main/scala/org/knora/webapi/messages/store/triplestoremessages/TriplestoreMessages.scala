@@ -19,27 +19,24 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import java.io.{File, StringReader}
+import java.io.File
 import java.time.Instant
 
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
-import org.eclipse.rdf4j
-import org.eclipse.rdf4j.model.Statement
-import org.eclipse.rdf4j.rio.RDFHandler
-import org.eclipse.rdf4j.rio.turtle.TurtleParser
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException, NotImplementedException, TriplestoreResponseException}
+import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import spray.json._
 
 import scala.collection.mutable
-import scala.compat.java8.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,9 +124,11 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
  * [[SparqlConstructResponse]].
  *
- * @param sparql the SPARQL string.
+ * @param sparql               the SPARQL string.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
+case class SparqlConstructRequest(sparql: String,
+                                  featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
@@ -139,7 +138,9 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
  * @param graphIri   the named graph IRI to be used in the TriG file.
  * @param outputFile the file to be written.
  */
-case class SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) extends TriplestoreRequest
+case class SparqlConstructFileRequest(sparql: String,
+                                      graphIri: IRI,
+                                      outputFile: File) extends TriplestoreRequest
 
 /**
  * A response to a [[SparqlConstructRequest]].
@@ -152,9 +153,11 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
  * [[SparqlExtendedConstructResponse]].
  *
- * @param sparql the SPARQL string.
+ * @param sparql               the SPARQL string.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
+case class SparqlExtendedConstructRequest(sparql: String,
+                                          featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
@@ -168,83 +171,80 @@ object SparqlExtendedConstructResponse {
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
     /**
-     * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
-     */
-    class ConstructResponseTurtleHandler extends RDFHandler {
-
-        implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        /**
-         * A collection of all the statements in the input file, grouped and sorted by subject IRI.
-         */
-        private val statements: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
-
-        override def handleComment(comment: IRI): Unit = {}
-
-        /**
-         * Adds a statement to the collection `statements`.
-         *
-         * @param st the statement to be added.
-         */
-        override def handleStatement(st: Statement): Unit = {
-            val subject: SubjectV2 = st.getSubject match {
-                case iri: rdf4j.model.IRI => IriSubjectV2(iri.stringValue)
-                case blankNode: rdf4j.model.BNode => BlankNodeSubjectV2(blankNode.getID)
-                case other => throw InconsistentTriplestoreDataException(s"Unsupported subject in construct query result: $other")
-            }
-
-            val predicateIri: SmartIri = st.getPredicate.stringValue.toSmartIri
-
-            val objectLiteral: LiteralV2 = st.getObject match {
-                case iri: rdf4j.model.IRI => IriLiteralV2(value = iri.stringValue)
-                case blankNode: rdf4j.model.BNode => BlankNodeLiteralV2(value = blankNode.getID)
-
-                case literal: rdf4j.model.Literal => literal.getDatatype.toString match {
-                    case OntologyConstants.Rdf.LangString => StringLiteralV2(value = literal.stringValue, language = literal.getLanguage.asScala)
-                    case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
-                    case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
-                    case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
-                    case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(value = literal.decimalValue)
-                    case OntologyConstants.Xsd.DateTime => DateTimeLiteralV2(stringFormatter.xsdDateTimeStampToInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTime: ${literal.stringValue}")))
-                    case OntologyConstants.Xsd.Uri => IriLiteralV2(value = literal.stringValue)
-                    case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
-                }
-
-                case other => throw InconsistentTriplestoreDataException(s"Unsupported object in construct query result: $other")
-            }
-
-            val currentStatementsForSubject: Map[SmartIri, Seq[LiteralV2]] = statements.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
-            val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
-
-            val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
-            val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
-
-            statements += (subject -> updatedSubjectStatements)
-        }
-
-        override def endRDF(): Unit = {}
-
-        override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
-
-        override def startRDF(): Unit = {}
-
-        def getConstructResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse(statements.toMap)
-    }
-
-    /**
      * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
      *
-     * @param turtleStr the Turtle document.
-     * @param log       a [[LoggingAdapter]].
+     * @param turtleStr     the Turtle document.
+     * @param rdfFormatUtil an [[RdfFormatUtil]].
+     * @param log           a [[LoggingAdapter]].
      * @return a [[SparqlExtendedConstructResponse]] representing the document.
      */
-    def parseTurtleResponse(turtleStr: String, log: LoggingAdapter): Try[SparqlExtendedConstructResponse] = {
+    def parseTurtleResponse(turtleStr: String, rdfFormatUtil: RdfFormatUtil, log: LoggingAdapter): Try[SparqlExtendedConstructResponse] = {
         val parseTry = Try {
-            val turtleParser = new TurtleParser()
-            val handler = new ConstructResponseTurtleHandler
-            turtleParser.setRDFHandler(handler)
-            turtleParser.parse(new StringReader(turtleStr), "")
-            handler.getConstructResponse
+            implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+            val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
+            val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+
+            for (st: Statement <- rdfModel.getStatements) {
+                val subject: SubjectV2 = st.subj match {
+                    case iriNode: IriNode => IriSubjectV2(iriNode.iri)
+                    case blankNode: BlankNode => BlankNodeSubjectV2(blankNode.id)
+                }
+
+                val predicateIri: SmartIri = st.pred.iri.toSmartIri
+
+                val objectLiteral: LiteralV2 = st.obj match {
+                    case iriNode: IriNode => IriLiteralV2(value = iriNode.iri)
+                    case blankNode: BlankNode => BlankNodeLiteralV2(value = blankNode.id)
+
+                    case literal: RdfLiteral =>
+                        literal match {
+                            case datatypeLiteral: DatatypeLiteral =>
+                                datatypeLiteral.datatype match {
+                                    case datatypeIri if OntologyConstants.Xsd.integerTypes.contains(datatypeIri) =>
+                                        IntLiteralV2(
+                                            datatypeLiteral.integerValue(throw InconsistentTriplestoreDataException(s"Invalid integer: ${datatypeLiteral.value}")).toInt
+                                        )
+
+                                    case OntologyConstants.Xsd.DateTime =>
+                                        DateTimeLiteralV2(
+                                            stringFormatter.xsdDateTimeStampToInstant(
+                                                datatypeLiteral.value,
+                                                throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}")
+                                            )
+                                        )
+
+                                    case OntologyConstants.Xsd.Boolean =>
+                                        BooleanLiteralV2(
+                                            datatypeLiteral.booleanValue(throw InconsistentTriplestoreDataException(s"Invalid xsd:boolean: ${datatypeLiteral.value}"))
+                                        )
+
+                                    case OntologyConstants.Xsd.String => StringLiteralV2(value = datatypeLiteral.value, language = None)
+
+                                    case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(
+                                        datatypeLiteral.decimalValue(throw InconsistentTriplestoreDataException(s"Invalid xsd:decimal: ${datatypeLiteral.value}"))
+                                    )
+
+                                    case OntologyConstants.Xsd.Uri => IriLiteralV2(datatypeLiteral.value)
+
+                                    case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
+                                }
+
+                            case stringWithLanguage: StringWithLanguage =>
+                                StringLiteralV2(value = stringWithLanguage.value, language = Some(stringWithLanguage.language))
+                        }
+                }
+
+                val currentStatementsForSubject: Map[SmartIri, Seq[LiteralV2]] = statementMap.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
+                val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
+
+                val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
+                val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
+
+                statementMap += (subject -> updatedSubjectStatements)
+            }
+
+            SparqlExtendedConstructResponse(statementMap.toMap)
         }
 
         parseTry match {
@@ -270,13 +270,14 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExte
  * @param graphIri   the IRI of the named graph.
  * @param outputFile the destination file.
  */
-case class NamedGraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
+case class NamedGraphFileRequest(graphIri: IRI,
+                                 outputFile: File) extends TriplestoreRequest
 
 /**
  * Requests a named graph, which will be returned as Turtle. A successful response
  * will be a [[NamedGraphDataResponse]].
  *
- * @param graphIri   the IRI of the named graph.
+ * @param graphIri the IRI of the named graph.
  */
 case class NamedGraphDataRequest(graphIri: IRI) extends TriplestoreRequest
 
@@ -604,9 +605,11 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
  */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
-    if(language.isDefined && value.isEmpty) {
+
+    if (language.isDefined && value.isEmpty) {
         throw BadRequestException(s"String value is missing.")
     }
+
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }
 

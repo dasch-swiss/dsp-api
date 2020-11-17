@@ -29,7 +29,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
@@ -87,12 +87,16 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
                 val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-                    requestingUser <- getUserADM(requestContext)
+                    requestingUser <- getUserADM(
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
                 } yield ResourcesGetRequestV2(
                     resourceIris = Seq(resourceIri.toString),
                     valueUuid = Some(valueUuid),
                     versionDate = versionDate,
                     targetSchema = targetSchema,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser
                 )
 
@@ -117,13 +121,17 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[CreateValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
                             requestDoc,
                             apiRequestID = UUID.randomUUID,
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )
@@ -151,13 +159,17 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[UpdateValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
                             requestDoc,
                             apiRequestID = UUID.randomUUID,
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )
@@ -185,13 +197,17 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                     val requestMessageFuture: Future[DeleteValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
+                        requestingUser <- getUserADM(
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
                         requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
                             requestDoc,
                             apiRequestID = UUID.randomUUID,
                             requestingUser = requestingUser,
                             responderManager = responderManager,
                             storeManager = storeManager,
+                            featureFactoryConfig = featureFactoryConfig,
                             settings = settings,
                             log = log
                         )

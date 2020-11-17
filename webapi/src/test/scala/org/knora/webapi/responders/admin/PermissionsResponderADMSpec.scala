@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Status.{Failure, Success}
+import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
@@ -32,7 +32,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.{ANYTHING_PROJECT_IRI, _}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.cache.CacheUtil
 import org.scalatest.PrivateMethodTester
@@ -83,6 +83,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.rootUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = true,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.rootUser.permissionData)
@@ -94,6 +95,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.multiuserUser.groups,
                     isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.multiuserUser.permissionData)
@@ -105,6 +107,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.incunabulaProjectAdminUser.groups,
                     isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI),
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.incunabulaProjectAdminUser.permissionData)
@@ -116,6 +119,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.incunabulaCreatorUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.incunabulaCreatorUser.permissionData)
@@ -127,6 +131,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.incunabulaMemberUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.incunabulaMemberUser.permissionData)
@@ -138,6 +143,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.imagesUser01.groups,
                     isInProjectAdminGroups = Seq(IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.imagesUser01.permissionData)
@@ -149,6 +155,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.imagesReviewerUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.imagesReviewerUser.permissionData)
@@ -160,6 +167,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIris = SharedTestDataV1.anythingUser1.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(SharedTestDataV1.anythingUser1.permissionData)
@@ -213,6 +221,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -227,6 +236,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forGroup = SharedTestDataADM.thingSearcherGroup.id,
                         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -348,6 +358,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
                         hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -365,6 +376,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
                         hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -382,6 +394,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                         hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -399,6 +412,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -415,6 +429,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                         hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
                     ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -427,6 +442,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return all permissions for 'image' project " in {
                 responderManager ! PermissionsForProjectGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -437,6 +453,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return all permissions for 'incunabula' project " in {
                 responderManager ! PermissionsForProjectGetRequestADM(
                     projectIri = INCUNABULA_PROJECT_IRI,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )

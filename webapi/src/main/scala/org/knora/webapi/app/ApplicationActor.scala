@@ -32,6 +32,7 @@ import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.http.handler
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
@@ -104,6 +105,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
      * The application's configuration.
      */
     implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
+
+    /**
+     * The default feature factory configuration, which is used during startup.
+     */
+    val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(knoraSettings)
 
     /**
      * Provides the actor materializer (akka-http)
@@ -353,7 +359,10 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
         /* load ontologies request */
         case LoadOntologies() =>
-            responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+            responderManager ! LoadOntologiesRequestV2(
+                featureFactoryConfig = defaultFeatureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
 
         /* load ontologies response */
         case SuccessResponseV2(_) =>

@@ -21,6 +21,7 @@ package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -43,9 +44,11 @@ sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
  * starts, before it accepts any API requests. A successful response will be a [[LoadOntologiesResponse]].
  *
- * @param userADM the profile of the user making the request.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
  */
-case class LoadOntologiesRequest(userADM: UserADM) extends OntologyResponderRequestV1
+case class LoadOntologiesRequestV1(featureFactoryConfig: FeatureFactoryConfig,
+                                   userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
  * Indicates that all ontologies were loaded.
@@ -166,11 +169,14 @@ case class CheckSubClassResponseV1(isSubClass: Boolean)
  * Requests information about named graphs containing ontologies. This corresponds to the concept of vocabularies in
  * the SALSAH prototype.
  *
- * @param projectIris the IRIs of the projects for which named graphs should be returned. If this set is empty, information
- *                    about all ontology named graphs is returned.
- * @param userADM     the profile of the user making the request.
+ * @param projectIris          the IRIs of the projects for which named graphs should be returned. If this set is empty, information
+ *                             about all ontology named graphs is returned.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
  */
-case class NamedGraphsGetRequestV1(projectIris: Set[IRI] = Set.empty[IRI], userADM: UserADM) extends OntologyResponderRequestV1
+case class NamedGraphsGetRequestV1(projectIris: Set[IRI] = Set.empty[IRI],
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
  * Represents the Knora API V1 response to a [[NamedGraphsGetRequestV1]].
@@ -184,10 +190,13 @@ case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraR
 /**
  * Requests all resource classes that are defined in the given named graph.
  *
- * @param namedGraph the named graph for which the resource classes shall be returned.
- * @param userADM    the profile of the user making the request.
+ * @param namedGraph           the named graph for which the resource classes shall be returned.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
  */
-case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userADM: UserADM) extends OntologyResponderRequestV1
+case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI],
+                                                  featureFactoryConfig: FeatureFactoryConfig,
+                                                  userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
  * Represents the Knora API V1 response to a [[ResourceTypesForNamedGraphGetRequestV1]].
@@ -203,10 +212,13 @@ case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV
  * Requests all property types that are defined in the given named graph.
  * If the named graph is not set, the property types of all named graphs are requested.
  *
- * @param namedGraph the named graph to query for or None if all the named graphs should be queried.
- * @param userADM    the profile of the user making the request.
+ * @param namedGraph           the named graph to query for or None if all the named graphs should be queried.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userADM              the profile of the user making the request.
  */
-case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userADM: UserADM) extends OntologyResponderRequestV1
+case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI],
+                                                  featureFactoryConfig: FeatureFactoryConfig,
+                                                  userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
  * Represents the Knora API V1 response to a [[PropertyTypesForNamedGraphGetRequestV1]].
