@@ -39,7 +39,44 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
 
     private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
-    private val expectedFlatJsonLDDocument = JsonLDDocument(
+    private val turtle =
+        """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;
+          |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
+          |      <http://www.w3.org/2000/01/rdf-schema#label> "bar 1"
+          |    ];
+          |  <http://example.org/foo#hasOtherFoo> <http://rdfh.ch/foo2>;
+          |  <http://www.w3.org/2000/01/rdf-schema#label> "foo 1" .
+          |
+          |<http://rdfh.ch/foo2> a <http://example.org/foo#Foo>;
+          |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
+          |      <http://www.w3.org/2000/01/rdf-schema#label> "bar 2"
+          |    ];
+          |  <http://example.org/foo#hasIndex> 3;
+          |  <http://www.w3.org/2000/01/rdf-schema#label> "foo 2" .""".stripMargin
+
+    private val hierarchicalJsonLD = JsonLDDocument(
+        JsonLDObject(value = Map(
+            "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+            "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
+            )),
+            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+            "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
+                "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+                "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
+                ))
+            ))
+        ))
+    )
+
+    private val flatJsonLD = JsonLDDocument(
         JsonLDObject(value = Map("@graph" -> JsonLDArray(value = Vector(
             JsonLDObject(value = Map(
                 "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
@@ -134,31 +171,9 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         }
 
         "convert a hierarchical JsonLDDocument to a flat one" in {
-            val hierarchicalJsonLD = JsonLDDocument(
-                JsonLDObject(value = Map(
-                    "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-                    "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-                    "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
-                        "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
-                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-                    )),
-                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
-                    "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-                        "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-                        "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-                        "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
-                        "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
-                            "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
-                            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
-                        ))
-                    ))
-                ))
-            )
-
             val jsonLDTestResponse = JsonLDTestResponse(hierarchicalJsonLD)
 
-            val flatJsonLDStr: String = jsonLDTestResponse.format(
+            val jsonLDResponseStr: String = jsonLDTestResponse.format(
                 rdfFormat = JsonLD,
                 targetSchema = ApiV2Complex,
                 schemaOptions = Set(FlatJsonLD),
@@ -166,29 +181,29 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
                 settings = settings
             )
 
-            val flatJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(flatJsonLDStr)
-            assert(flatJsonLDDocument == expectedFlatJsonLDDocument)
+            val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
+            assert(jsonLDResponseDoc == flatJsonLD)
+        }
+
+        "convert Turtle to a hierarchical JSON-LD document" in {
+            val turtleTestResponse = TurtleTestResponse(turtle)
+
+            val jsonLDResponseStr: String = turtleTestResponse.format(
+                rdfFormat = JsonLD,
+                targetSchema = InternalSchema,
+                schemaOptions = Set(HierarchicalJsonLD),
+                featureFactoryConfig = featureFactoryConfig,
+                settings = settings
+            )
+
+            val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
+            assert(jsonLDResponseDoc == hierarchicalJsonLD)
         }
 
         "convert Turtle to a flat JSON-LD document" in {
-            val turtle =
-                """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;
-                  |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
-                  |      <http://www.w3.org/2000/01/rdf-schema#label> "bar 1"
-                  |    ];
-                  |  <http://example.org/foo#hasOtherFoo> <http://rdfh.ch/foo2>;
-                  |  <http://www.w3.org/2000/01/rdf-schema#label> "foo 1" .
-                  |
-                  |<http://rdfh.ch/foo2> a <http://example.org/foo#Foo>;
-                  |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
-                  |      <http://www.w3.org/2000/01/rdf-schema#label> "bar 2"
-                  |    ];
-                  |  <http://example.org/foo#hasIndex> 3;
-                  |  <http://www.w3.org/2000/01/rdf-schema#label> "foo 2" .""".stripMargin
-
             val turtleTestResponse = TurtleTestResponse(turtle)
 
-            val flatJsonLDStr: String = turtleTestResponse.format(
+            val jsonLDResponseStr: String = turtleTestResponse.format(
                 rdfFormat = JsonLD,
                 targetSchema = InternalSchema,
                 schemaOptions = Set(FlatJsonLD),
@@ -196,8 +211,8 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
                 settings = settings
             )
 
-            val flatJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(flatJsonLDStr)
-            assert(flatJsonLDDocument == expectedFlatJsonLDDocument)
+            val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
+            assert(jsonLDResponseDoc == flatJsonLD)
         }
     }
 }
