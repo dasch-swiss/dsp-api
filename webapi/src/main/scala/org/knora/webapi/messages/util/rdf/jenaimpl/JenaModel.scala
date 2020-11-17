@@ -296,7 +296,8 @@ class JenaModel(private val dataset: jena.query.Dataset,
         thisModelNamedGraphIris == thatModelNamedGraphIris &&
             datasetGraph.getDefaultGraph.isIsomorphicWith(thatDatasetGraph.getDefaultGraph) &&
             thisModelNamedGraphIris.forall {
-                node => datasetGraph.getGraph(node).isIsomorphicWith(thatDatasetGraph.getGraph(node))
+                namedGraphIri: jena.graph.Node =>
+                    datasetGraph.getGraph(namedGraphIri).isIsomorphicWith(thatDatasetGraph.getGraph(namedGraphIri))
             }
     }
 
@@ -320,7 +321,7 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
      *
      * @param iri the IRI of the datatype.
      */
-    private class KnoraDatatype(iri: IRI)  extends jena.datatypes.BaseDatatype(iri) {
+    private class KnoraDatatype(iri: IRI) extends jena.datatypes.BaseDatatype(iri) {
         override def unparse(value: java.lang.Object): String = {
             value.toString
         }

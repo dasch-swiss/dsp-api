@@ -235,9 +235,15 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                     case jsonLDArray: JsonLDArray =>
                         // More than one.
                         for (elem <- jsonLDArray.value) {
+                            // Is the object of @type a JsonLDString?
                             elem match {
-                                case typeIri: JsonLDString => addRdfType(typeIri)
-                                case _ => invalidType
+                                case typeIri: JsonLDString =>
+                                    // Yes. Add the type to the model.
+                                    addRdfType(typeIri)
+
+                                case _ =>
+                                    // No. The JSON-LD is invalid.
+                                    invalidType
                             }
                         }
 
@@ -267,9 +273,15 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                     case jsonLDArray: JsonLDArray =>
                         // Add each of the array's elements to the model.
                         for (elem <- jsonLDArray.value) {
+                            // Is the element a JsonLDObject?
                             elem match {
-                                case jsonLDObject: JsonLDObject => jsonLDObject.addToModel(model)
-                                case _ => invalidGraph
+                                case jsonLDObject: JsonLDObject =>
+                                    // Yes. Add it to the model.
+                                    jsonLDObject.addToModel(model)
+
+                                case _ =>
+                                    // No. The JSON-LD is invalid.
+                                    invalidGraph
                             }
                         }
 
