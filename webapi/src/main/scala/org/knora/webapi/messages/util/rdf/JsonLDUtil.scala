@@ -1368,7 +1368,7 @@ object JsonLDUtil {
                     val objs: Vector[JsonLDValue] = predStatements.map(_.obj).map {
                         case resource: RdfResource =>
                             // The object is an entity. Recurse to get it and inline it here.
-                            referencedEntityToJsonLDValue(
+                            referencedRdfResourceToJsonLDValue(
                                 resource = resource,
                                 model = model,
                                 topLevelEntities = topLevelEntities,
@@ -1431,7 +1431,7 @@ object JsonLDUtil {
     /**
      * Given an [[RdfResource]] that is referred to by another entity, make a [[JsonLDValue]] to
      * represent the referenced resource. This will be either a complete entity for nesting, or just
-     * the referenced entity's IRI.
+     * the referenced resource's IRI.
      *
      * @param resource          the resource to be converted.
      * @param model             the [[RdfModel]] that is being read.
@@ -1439,12 +1439,15 @@ object JsonLDUtil {
      * @param processedSubjects the subjects that have already been processed.
      * @return a JSON-LD value representing the resource.
      */
-    private def referencedEntityToJsonLDValue(resource: RdfResource,
-                                              model: RdfModel,
-                                              topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
-                                              processedSubjects: collection.mutable.Set[RdfResource])
-                                             (implicit stringFormatter: StringFormatter): JsonLDValue = {
-        // Have we already made a top-level JSON-LD object for this entity?
+    private def referencedRdfResourceToJsonLDValue(resource: RdfResource,
+                                                   model: RdfModel,
+                                                   topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
+                                                   processedSubjects: collection.mutable.Set[RdfResource])
+                                                  (implicit stringFormatter: StringFormatter): JsonLDValue = {
+        // How we deal with circular references: the referenced resource is not yet in topLevelEntities, but it
+        // is already marked as processed. Therefore we will return its IRI rather than inlining it.
+
+        // Is this entity already in topLevelEntities?
         topLevelEntities.get(resource) match {
             case Some(jsonLDObject) =>
                 // Yes. Remove it from the top level so it can be inlined.
@@ -1459,9 +1462,10 @@ object JsonLDUtil {
                         iriToJsonLDObject(iriNode.iri)
 
                     case _ =>
-                        // It's not a Knora ontology entity. Is it in the model, and have we not processed it yet?
+                        // It's not a Knora ontology entity. See if it's in the model.
                         val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
 
+                        // Is it in the model and not yet marked as processed?
                         if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
                             // Yes. Recurse to get it so it can be inlined.
                             entityToJsonLDObject(
