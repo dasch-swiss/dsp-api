@@ -26,7 +26,7 @@ http_archive(
 # register default and our custom scala toolchain
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
 scala_register_toolchains()
-register_toolchains("//toolchains:knora_api_scala_toolchain")
+register_toolchains("//toolchains:dsp_api_scala_toolchain")
 
 # set the default scala version
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
