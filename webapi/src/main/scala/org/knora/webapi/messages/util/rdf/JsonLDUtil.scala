@@ -1313,7 +1313,7 @@ object JsonLDUtil {
     }
 
     /**
-     * Converts an RDF entity to a [[JsonLDObject]].
+     * Converts an RDF entity to a [[JsonLDObject]] representing the statements about the entity.
      *
      * @param subj              the subject of the entity.
      * @param statements        the statements representing the entity.
@@ -1368,7 +1368,7 @@ object JsonLDUtil {
                     val objs: Vector[JsonLDValue] = predStatements.map(_.obj).map {
                         case resource: RdfResource =>
                             // The object is an entity. Recurse to get it and inline it here.
-                            rdfResourceToJsonLDValue(
+                            referencedEntityToJsonLDValue(
                                 resource = resource,
                                 model = model,
                                 topLevelEntities = topLevelEntities,
@@ -1429,7 +1429,9 @@ object JsonLDUtil {
     }
 
     /**
-     * Converts an [[RdfResource]] to a [[JsonLDValue]].
+     * Given an [[RdfResource]] that is referred to by another entity, make a [[JsonLDValue]] to
+     * represent the referenced resource. This will be either a complete entity for nesting, or just
+     * the referenced entity's IRI.
      *
      * @param resource          the resource to be converted.
      * @param model             the [[RdfModel]] that is being read.
@@ -1437,11 +1439,11 @@ object JsonLDUtil {
      * @param processedSubjects the subjects that have already been processed.
      * @return a JSON-LD value representing the resource.
      */
-    private def rdfResourceToJsonLDValue(resource: RdfResource,
-                                         model: RdfModel,
-                                         topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
-                                         processedSubjects: collection.mutable.Set[RdfResource])
-                                        (implicit stringFormatter: StringFormatter): JsonLDValue = {
+    private def referencedEntityToJsonLDValue(resource: RdfResource,
+                                              model: RdfModel,
+                                              topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
+                                              processedSubjects: collection.mutable.Set[RdfResource])
+                                             (implicit stringFormatter: StringFormatter): JsonLDValue = {
         // Have we already made a top-level JSON-LD object for this entity?
         topLevelEntities.get(resource) match {
             case Some(jsonLDObject) =>
