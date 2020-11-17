@@ -1257,10 +1257,11 @@ object JsonLDUtil {
      *
      * An error is returned if the same blank node is used more than once.
      *
-     * @param model the [[RdfModel]] to be read.
+     * @param model         the [[RdfModel]] to be read.
+     * @param schemaOptions the schema options submitted with the request.
      * @return the corresponding [[JsonLDDocument]].
      */
-    def fromRdfModel(model: RdfModel): JsonLDDocument = {
+    def fromRdfModel(model: RdfModel, schemaOptions: Set[SchemaOption] = Set.empty): JsonLDDocument = {
         if (model.getContexts.nonEmpty) {
             throw BadRequestException("Named graphs in JSON-LD are not supported")
         }
@@ -1303,7 +1304,8 @@ object JsonLDUtil {
                         statements = statements,
                         model = model,
                         topLevelEntities = topLevelEntities,
-                        processedSubjects = processedSubjects
+                        processedSubjects = processedSubjects,
+                        schemaOptions = schemaOptions
                     )
 
                     // Add it to the collection of top-level entities.
@@ -1332,13 +1334,15 @@ object JsonLDUtil {
      * @param model             the [[RdfModel]] that is being read.
      * @param topLevelEntities  the top-level entities that have been constructed so far.
      * @param processedSubjects the subjects that have already been processed.
+     * @param schemaOptions     the schema options that were submitted with the request.
      * @return the JSON-LD object that was constructed.
      */
     private def entityToJsonLDObject(subj: RdfResource,
                                      statements: Set[Statement],
                                      model: RdfModel,
                                      topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
-                                     processedSubjects: collection.mutable.Set[RdfResource])
+                                     processedSubjects: collection.mutable.Set[RdfResource],
+                                     schemaOptions: Set[SchemaOption])
                                     (implicit stringFormatter: StringFormatter): JsonLDObject = {
         // Mark the subject as processed.
         processedSubjects += subj
@@ -1384,7 +1388,8 @@ object JsonLDUtil {
                                 resource = resource,
                                 model = model,
                                 topLevelEntities = topLevelEntities,
-                                processedSubjects = processedSubjects
+                                processedSubjects = processedSubjects,
+                                schemaOptions = schemaOptions
                             )
 
                         case literal: RdfLiteral => rdfLiteralToJsonLDValue(literal)
@@ -1449,58 +1454,70 @@ object JsonLDUtil {
      * @param model             the [[RdfModel]] that is being read.
      * @param topLevelEntities  the top-level entities that have been constructed so far.
      * @param processedSubjects the subjects that have already been processed.
+     * @param schemaOptions     the schema options that were submitted with the request.
      * @return a JSON-LD value representing the resource.
      */
     private def referencedRdfResourceToJsonLDValue(resource: RdfResource,
                                                    model: RdfModel,
                                                    topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
-                                                   processedSubjects: collection.mutable.Set[RdfResource])
+                                                   processedSubjects: collection.mutable.Set[RdfResource],
+                                                   schemaOptions: Set[SchemaOption])
                                                   (implicit stringFormatter: StringFormatter): JsonLDValue = {
-        // How we deal with circular references: the referenced resource is not yet in topLevelEntities, but it
-        // is already marked as processed. Therefore we will return its IRI rather than inlining it.
+        /**
+         * Inlines a resource if possible, otherwise calls the specified function.
+         *
+         * @param nonInliningFunction a function to be called if the resource cannot be inlined.
+         * @return a [[JsonLDValue]] representing the resource.
+         */
+        def inlineResource(nonInliningFunction: => JsonLDValue): JsonLDValue = {
+            // How we deal with circular references: the referenced resource is not yet in topLevelEntities, but it
+            // is already marked as processed. Therefore we will return its IRI rather than inlining it.
 
-        // Is this entity already in topLevelEntities?
-        topLevelEntities.get(resource) match {
-            case Some(jsonLDObject) =>
-                // Yes. Remove it from the top level so it can be inlined.
-                topLevelEntities -= resource
-                jsonLDObject
+            // Is this entity already in topLevelEntities?
+            topLevelEntities.get(resource) match {
+                case Some(jsonLDObject) =>
+                    // Yes. Remove it from the top level so it can be inlined.
+                    topLevelEntities -= resource
+                    jsonLDObject
 
-            case None =>
-                // No. Is it a Knora ontology entity?
-                resource match {
-                    case iriNode: IriNode if iriNode.iri.toSmartIri.isKnoraDefinitionIri =>
-                        // Yes. Just use its IRI, because we don't inline ontology entities.
-                        iriToJsonLDObject(iriNode.iri)
+                case None =>
+                    // No. See if it's in the model.
+                    val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
 
-                    case _ =>
-                        // It's not a Knora ontology entity. See if it's in the model.
-                        val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
+                    // Is it in the model and not yet marked as processed?
+                    if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
+                        // Yes. Recurse to get it so it can be inlined.
+                        entityToJsonLDObject(
+                            subj = resource,
+                            statements = resourceStatements,
+                            model = model,
+                            topLevelEntities = topLevelEntities,
+                            processedSubjects = processedSubjects,
+                            schemaOptions = schemaOptions
+                        )
+                    } else {
+                        // No. Do something else with it.
+                        nonInliningFunction
+                    }
+            }
+        }
 
-                        // Is it in the model and not yet marked as processed?
-                        if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
-                            // Yes. Recurse to get it so it can be inlined.
-                            entityToJsonLDObject(
-                                subj = resource,
-                                statements = resourceStatements,
-                                model = model,
-                                topLevelEntities = topLevelEntities,
-                                processedSubjects = processedSubjects
-                            )
-                        } else {
-                            // No. Maybe it was already inlined, or maybe it wasn't provided
-                            // in the model. Does it have an IRI?
-                            resource match {
-                                case iriNode: IriNode =>
-                                    // Yes. Just use that.
-                                    iriToJsonLDObject(iriNode.iri)
-
-                                case blankNode: BlankNode =>
-                                    // No, it's a blank node. This shouldn't happen.
-                                    throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place")
-                            }
-                        }
+        // Is this resource an IRI?
+        resource match {
+            case iriNode: IriNode =>
+                // Yes. Is it a Knora definition IRI, or did the client ask for flat JSON-LD?
+                if (iriNode.iri.toSmartIri.isKnoraDefinitionIri || SchemaOptions.returnFlatJsonLD(schemaOptions)) {
+                    // Yes. Don't try to inline it, just return its IRI.
+                    iriToJsonLDObject(iriNode.iri)
+                } else {
+                    // No. Try to inline it.
+                    inlineResource(iriToJsonLDObject(iriNode.iri))
                 }
+
+            case blankNode: BlankNode =>
+                // No, it's a blank node. It should be possible to inline it. If not, the input model is invalid;
+                // return an error.
+                inlineResource(throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place"))
         }
     }
 }

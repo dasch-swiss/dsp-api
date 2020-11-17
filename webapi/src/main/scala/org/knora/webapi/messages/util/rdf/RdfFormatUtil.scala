@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
-import org.knora.webapi.RdfMediaTypes
+import org.knora.webapi.{RdfMediaTypes, SchemaOption}
 import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
 
 /**
@@ -158,16 +158,23 @@ trait RdfFormatUtil {
     /**
      * Converts an [[RdfModel]] to a string.
      *
-     * @param rdfModel    the model to be formatted.
-     * @param rdfFormat   the format to be used.
-     * @param prettyPrint if `true`, the output should be pretty-printed.
+     * @param rdfModel      the model to be formatted.
+     * @param rdfFormat     the format to be used.
+     * @param schemaOptions the schema options that were submitted with the request.
+     * @param prettyPrint   if `true`, the output should be pretty-printed.
      * @return a string representation of the RDF model.
      */
-    def format(rdfModel: RdfModel, rdfFormat: RdfFormat, prettyPrint: Boolean = true): String = {
+    def format(rdfModel: RdfModel,
+               rdfFormat: RdfFormat,
+               schemaOptions: Set[SchemaOption] = Set.empty,
+               prettyPrint: Boolean = true): String = {
         rdfFormat match {
             case JsonLD =>
                 // Use JsonLDUtil to convert to JSON-LD.
-                val jsonLDDocument: JsonLDDocument = JsonLDUtil.fromRdfModel(rdfModel)
+                val jsonLDDocument: JsonLDDocument = JsonLDUtil.fromRdfModel(
+                    model = rdfModel,
+                    schemaOptions = schemaOptions
+                )
 
                 if (prettyPrint) {
                     jsonLDDocument.toPrettyString
