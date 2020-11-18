@@ -64,7 +64,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
             case InternalSchema => throw AssertionException(s"Response cannot be returned in the internal schema")
         }
 
-        // Convert this response message to a JSON-LD document.
+        // Convert this response message to a JsonLDDocument.
         val jsonLDDocument: JsonLDDocument = toJsonLDDocument(
             targetSchema = targetApiV2Schema,
             settings = settings,
@@ -74,8 +74,8 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
         // Which response format was requested?
         rdfFormat match {
             case JsonLD =>
-                // JSON-LD. Use the JsonLDDocument to generate the formatted text.
-                jsonLDDocument.toPrettyString
+                // JSON-LD. Have the JsonLDDocument format itself.
+                jsonLDDocument.toPrettyString(SchemaOptions.returnFlatJsonLD(schemaOptions))
 
             case nonJsonLD: NonJsonLD =>
                 // Some other format. Convert the JSON-LD document to an RDF model.
@@ -85,7 +85,8 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
                 // Convert the model to the requested format.
                 rdfFormatUtil.format(
                     rdfModel = rdfModel,
-                    rdfFormat = nonJsonLD
+                    rdfFormat = nonJsonLD,
+                    schemaOptions = schemaOptions
                 )
         }
     }
@@ -132,7 +133,8 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
                 // Return the model in the requested format.
                 rdfFormatUtil.format(
                     rdfModel = rdfModel,
-                    rdfFormat = rdfFormat
+                    rdfFormat = rdfFormat,
+                    schemaOptions = schemaOptions
                 )
         }
     }

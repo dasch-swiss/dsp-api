@@ -39,20 +39,81 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
 
     private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
+    private val turtle =
+        """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;
+          |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
+          |      <http://www.w3.org/2000/01/rdf-schema#label> "bar 1"
+          |    ];
+          |  <http://example.org/foo#hasOtherFoo> <http://rdfh.ch/foo2>;
+          |  <http://www.w3.org/2000/01/rdf-schema#label> "foo 1" .
+          |
+          |<http://rdfh.ch/foo2> a <http://example.org/foo#Foo>;
+          |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
+          |      <http://www.w3.org/2000/01/rdf-schema#label> "bar 2"
+          |    ];
+          |  <http://example.org/foo#hasIndex> 3;
+          |  <http://www.w3.org/2000/01/rdf-schema#label> "foo 2" .""".stripMargin
+
+    private val hierarchicalJsonLD = JsonLDDocument(
+        JsonLDObject(value = Map(
+            "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+            "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
+            )),
+            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+            "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
+                "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+                "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
+                ))
+            ))
+        ))
+    )
+
+    private val flatJsonLD = JsonLDDocument(
+        JsonLDObject(value = Map("@graph" -> JsonLDArray(value = Vector(
+            JsonLDObject(value = Map(
+                "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+                "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
+                )),
+                "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")))
+            )),
+            JsonLDObject(value = Map(
+                "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+                "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
+                ))
+            ))
+        )))),
+        isFlat = true
+    )
+
     /**
      * A test implementation of [[KnoraTurtleResponseV2]].
      */
-    case class TurtleTestMessage(turtle: String) extends KnoraTurtleResponseV2
+    case class TurtleTestResponse(turtle: String) extends KnoraTurtleResponseV2
 
     /**
      * A test implementation of [[KnoraJsonLDResponseV2]].
      */
-    case class JsonLDTestMessage(jsonLD: String) extends KnoraJsonLDResponseV2 {
+    case class JsonLDTestResponse(jsonLDDocument: JsonLDDocument) extends KnoraJsonLDResponseV2 {
         override protected def toJsonLDDocument(targetSchema: ApiV2Schema,
                                                 settings: KnoraSettingsImpl,
-                                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-            JsonLDUtil.parseJsonLD(jsonLD)
-        }
+                                                schemaOptions: Set[SchemaOption]): JsonLDDocument = jsonLDDocument
     }
 
     "KnoraResponseV2" should {
@@ -61,10 +122,10 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             val turtle: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
 
             // Wrap it in a KnoraTurtleResponseV2.
-            val turtleTestMessage = TurtleTestMessage(turtle)
+            val turtleTestResponse = TurtleTestResponse(turtle)
 
             // Ask the KnoraTurtleResponseV2 to convert the content to JSON-LD.
-            val jsonLD: String = turtleTestMessage.format(
+            val jsonLD: String = turtleTestResponse.format(
                 rdfFormat = JsonLD,
                 targetSchema = InternalSchema,
                 schemaOptions = Set.empty,
@@ -88,10 +149,10 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             val jsonLD: String = FileUtil.readTextFile(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
 
             // Wrap it in a KnoraJsonLDResponseV2.
-            val jsonLDTestMessage = JsonLDTestMessage(jsonLD)
+            val jsonLDTestResponse = JsonLDTestResponse(JsonLDUtil.parseJsonLD(jsonLD))
 
             // Ask the KnoraJsonLDResponseV2 to convert the content to Turtle.
-            val turtle: String = jsonLDTestMessage.format(
+            val turtle: String = jsonLDTestResponse.format(
                 rdfFormat = Turtle,
                 targetSchema = ApiV2Complex,
                 schemaOptions = Set.empty,
@@ -108,6 +169,51 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
 
             // Compare the two models.
             parsedTurtle should ===(parsedExpectedTurtle)
+        }
+
+        "convert a hierarchical JsonLDDocument to a flat one" in {
+            val jsonLDTestResponse = JsonLDTestResponse(hierarchicalJsonLD)
+
+            val jsonLDResponseStr: String = jsonLDTestResponse.format(
+                rdfFormat = JsonLD,
+                targetSchema = ApiV2Complex,
+                schemaOptions = Set(FlatJsonLD),
+                featureFactoryConfig = featureFactoryConfig,
+                settings = settings
+            )
+
+            val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
+            assert(jsonLDResponseDoc.body == flatJsonLD.body)
+        }
+
+        "convert Turtle to a hierarchical JSON-LD document" in {
+            val turtleTestResponse = TurtleTestResponse(turtle)
+
+            val jsonLDResponseStr: String = turtleTestResponse.format(
+                rdfFormat = JsonLD,
+                targetSchema = InternalSchema,
+                schemaOptions = Set(HierarchicalJsonLD),
+                featureFactoryConfig = featureFactoryConfig,
+                settings = settings
+            )
+
+            val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
+            assert(jsonLDResponseDoc.body == hierarchicalJsonLD.body)
+        }
+
+        "convert Turtle to a flat JSON-LD document" in {
+            val turtleTestResponse = TurtleTestResponse(turtle)
+
+            val jsonLDResponseStr: String = turtleTestResponse.format(
+                rdfFormat = JsonLD,
+                targetSchema = InternalSchema,
+                schemaOptions = Set(FlatJsonLD),
+                featureFactoryConfig = featureFactoryConfig,
+                settings = settings
+            )
+
+            val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
+            assert(jsonLDResponseDoc.body == flatJsonLD.body)
         }
     }
 }
