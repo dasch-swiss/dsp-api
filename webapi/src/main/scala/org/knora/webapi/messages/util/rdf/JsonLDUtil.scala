@@ -1404,7 +1404,7 @@ object JsonLDUtil {
                 case jsonArray: JsonArray =>
                     val content: Seq[JsonLDValue] = jsonArray.asScala.map {
                         elem => jsonValueToJsonLDValue(elem)
-                    }
+                    }.toVector
 
                     JsonLDArray(content)
 
