@@ -33,7 +33,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 - `PUT: /admin/lists/<listItemIri>` : update node information (root or child.)
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
-- `PUT: /admin/lists/<listItemIri>/lables` : update labels of the node (root or child).
+- `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
 - NOT IMPLEMENTED: `DELETE: /admin/lists/nodes/<nodeIri>` : delete list node including children if not used
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used

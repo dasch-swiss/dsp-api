@@ -36,7 +36,7 @@ Otherwise, if given a child node IRI, it returns node completely with its immedi
 
 - `PUT: /admin/lists/<listItemIri>` : update information of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
-- `PUT: /admin/lists/<listItemIri>/lables` : update labels of the node (root or child).
+- `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
 
 ### Get lists

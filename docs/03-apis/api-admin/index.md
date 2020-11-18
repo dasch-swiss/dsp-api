@@ -27,7 +27,7 @@ The Knora admin API makes it possible to administer Knora projects, users, user 
 - [Projects Endpoint](projects.md)
 - [Groups Endpoint](groups.md)
 - [Lists Endpoint](lists.md)
-- [New Lists Endpoint](lists_new-list-admin-routes:1.md)
+- [New Lists Endpoint](lists_new-list-admin-routes_v1.md)
 - [Permissions Endpoint](permissions.md)
 - [Stores Endpoint](stores.md)
 
