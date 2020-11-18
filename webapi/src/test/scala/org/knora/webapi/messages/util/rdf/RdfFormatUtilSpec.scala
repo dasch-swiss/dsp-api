@@ -117,7 +117,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             val inputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)
             checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
 
-            val outputJsonLD: String = inputJsonLDDocument.toPrettyString
+            val outputJsonLD: String = inputJsonLDDocument.toPrettyString()
             val outputJsonLDDocument: JsonLDDocument = rdfFormatUtil.parseToJsonLDDocument(rdfStr = outputJsonLD, rdfFormat = JsonLD)
             checkJsonLDDocumentForRdfTypeBook(outputJsonLDDocument)
             assert(inputJsonLDDocument == outputJsonLDDocument)

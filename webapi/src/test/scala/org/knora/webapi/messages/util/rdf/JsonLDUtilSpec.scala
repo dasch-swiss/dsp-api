@@ -121,7 +121,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                 """.stripMargin
 
             val compactedJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(ontologyJsonLDInputStr)
-            val formattedCompactedDoc = compactedJsonLDDoc.toPrettyString
+            val formattedCompactedDoc = compactedJsonLDDoc.toPrettyString()
             val receivedOutputAsJsValue: JsValue = JsonParser(formattedCompactedDoc)
             val expectedOutputAsJsValue: JsValue = JsonParser(ontologyCompactedJsonLDOutputStr)
             receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
@@ -280,6 +280,87 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                 outputJsonLD.body == expectedWithFoo1AtTopLevel ||
                 outputJsonLD.body == expectedWithFoo2AtTopLevel
             )
+        }
+
+        "convert an RDF model to flat or hierarchical JSON-LD" in {
+            // A simple Turtle document.
+            val turtle =
+                """@prefix foo: <http://example.org/foo#> .
+                  |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                  |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+                  |
+                  |<http://rdfh.ch/foo1> a foo:Foo;
+                  |  rdfs:label "foo 1";
+                  |  foo:hasBar [
+                  |    a foo:Bar;
+                  |    rdfs:label "bar 1"
+                  |  ];
+                  |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
+                  |
+                  |<http://rdfh.ch/foo2> a foo:Foo;
+                  |  rdfs:label "foo 2";
+                  |  foo:hasIndex "3"^^xsd:integer;
+                  |  foo:hasBar [
+                  |    a foo:Bar;
+                  |    rdfs:label "bar 2"
+                  |  ].
+                  |""".stripMargin
+
+            // Parse it to an RDF4J Model.
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+
+            // Convert the model to a hierarchical JsonLDDocument.
+            val hierarchicalJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(model = inputModel, flatJsonLD = false)
+
+            val expectedHierarchicalJsonLD = JsonLDObject(value = Map(
+                "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
+                )),
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+                "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
+                    "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+                    "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                    "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                        "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
+                    ))
+                ))
+            ))
+
+            assert(hierarchicalJsonLD.body == expectedHierarchicalJsonLD)
+
+            // Convert the model to a flat JsonLDDocument.
+            val flatJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(model = inputModel, flatJsonLD = true)
+
+            val expectedFlatJsonLD = JsonLDObject(value = Map("@graph" -> JsonLDArray(value = Vector(
+                JsonLDObject(value = Map(
+                    "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+                    "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                        "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
+                    )),
+                    "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")))
+                )),
+                JsonLDObject(value = Map(
+                    "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                    "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+                    "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                    "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
+                        "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
+                        "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
+                    ))
+                ))
+            ))))
+
+            assert(flatJsonLD.body == expectedFlatJsonLD)
         }
     }
 }

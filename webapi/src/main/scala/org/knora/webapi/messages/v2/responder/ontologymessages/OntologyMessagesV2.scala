@@ -1313,7 +1313,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             ontologyMetadata.toJsonLD(targetSchema) + (JsonLDKeywords.GRAPH -> JsonLDArray(allEntitiesSorted))
         )
 
-        JsonLDDocument(body = body, context = context)
+        JsonLDDocument(body = body, context = context, isFlat = true)
     }
 }
 
@@ -1542,7 +1542,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
             JsonLDKeywords.GRAPH -> JsonLDArray(ontologiesJson)
         ))
 
-        JsonLDDocument(body = body, context = context)
+        JsonLDDocument(body = body, context = context, isFlat = true)
     }
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {

@@ -91,6 +91,23 @@ object RouteUtilV2 {
     val MARKUP_STANDOFF: String = "standoff"
 
     /**
+     * The name of the HTTP header that can be used to request hierarchical or flat JSON-LD.
+     */
+    val JSON_LD_RENDERING_HEADER: String = "x-knora-json-ld-rendering"
+
+    /**
+     * Indicates that flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
+     * rather than nested. Blank nodes will still be nested in any case.
+     */
+    val JSON_LD_RENDERING_FLAT: String = "flat"
+
+    /**
+     * Indicates that hierarchical JSON-LD should be returned, i.e. objects with IRIs should be nested when
+     * possible, rather than referenced by IRI.
+     */
+    val JSON_LD_RENDERING_HIERARCHICAL: String = "hierarchical"
+
+    /**
      * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
      * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
      * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
@@ -151,6 +168,20 @@ object RouteUtilV2 {
         }
     }
 
+    private def getJsonLDRendering(requestContext: RequestContext): Option[JsonLDRendering] = {
+        def nameToJsonLDRendering(jsonLDRenderingName: String): JsonLDRendering = {
+            jsonLDRenderingName match {
+                case JSON_LD_RENDERING_FLAT => FlatJsonLD
+                case JSON_LD_RENDERING_HIERARCHICAL => HierarchicalJsonLD
+                case _ => throw BadRequestException(s"Unrecognised JSON-LD rendering: $jsonLDRenderingName")
+            }
+        }
+
+        requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map {
+            header => nameToJsonLDRendering(header.value)
+        }
+    }
+
     /**
      * Gets the schema options submitted in the request.
      *
@@ -158,7 +189,10 @@ object RouteUtilV2 {
      * @return the set of schema options submitted in the request, including default options.
      */
     def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] = {
-        getStandoffRendering(requestContext).toSet
+        Set(
+            getStandoffRendering(requestContext),
+            getJsonLDRendering(requestContext)
+        ).flatten
     }
 
     /**
