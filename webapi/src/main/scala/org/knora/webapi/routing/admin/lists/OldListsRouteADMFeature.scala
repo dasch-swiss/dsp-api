@@ -42,6 +42,8 @@ object OldListsRouteADMFeature {
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
+@Api(value = "lists (old endpoint)", produces = "application/json")
+@Path("/admin/lists")
 class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     with Feature with Authenticator with ListADMJsonProtocol {
 
