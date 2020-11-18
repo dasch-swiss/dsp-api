@@ -20,8 +20,9 @@
 package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
-import org.knora.webapi.{RdfMediaTypes, SchemaOption, SchemaOptions}
+import org.knora.webapi.{IRI, RdfMediaTypes, SchemaOption, SchemaOptions}
 import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
+import java.io.{InputStream, OutputStream}
 
 /**
  * A trait for supported RDF formats.
@@ -104,6 +105,36 @@ case object RdfXml extends NonJsonLD {
     override val toMediaType: MediaType = RdfMediaTypes.`application/rdf+xml`
 
     override val supportsNamedGraphs: Boolean = false
+}
+
+/**
+ * A trait for classes that process streams of RDF data.
+ */
+trait RdfStreamProcessor {
+    /**
+     * Signals the start of the RDF data.
+     */
+    def start(): Unit
+
+    /**
+     * Handles a namespace declaration.
+     *
+     * @param prefix    the prefix.
+     * @param namespace the namespace.
+     */
+    def handleNamespace(prefix: String, namespace: IRI): Unit
+
+    /**
+     * Handles a statement.
+     *
+     * @param statement the statement.
+     */
+    def handleStatement(statement: Statement): Unit
+
+    /**
+     * Signals the end of the RDF data.
+     */
+    def finish(): Unit
 }
 
 /**
@@ -220,4 +251,24 @@ trait RdfFormatUtil {
      * @return a string representation of the RDF model.
      */
     protected def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String
+
+    /**
+     * Parses RDF input, processing it with an [[RdfStreamProcessor]].
+     *
+     * @param inputStream        the input stream from which the RDF data should be read.
+     * @param rdfFormat          the input format.
+     * @param rdfStreamProcessor the [[RdfStreamProcessor]] that will be used to process the input.
+     */
+    protected def parseToStream(inputStream: InputStream,
+                                rdfFormat: NonJsonLD,
+                                rdfStreamProcessor: RdfStreamProcessor): Unit
+
+    /**
+     * Creates an [[RdfStreamProcessor]] that writes formatted output.
+     *
+     * @param outputStream the output stream to which the formatted RDF data should be written.
+     * @param rdfFormat    the output format.
+     * @return an an [[RdfStreamProcessor]].
+     */
+    protected def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor
 }
