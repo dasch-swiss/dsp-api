@@ -1009,6 +1009,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                  apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
 
             projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
+
             // check if the requesting user is allowed to perform operation
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
                 // not project or a system admin
@@ -1077,7 +1078,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID): Future[NodeInfoGetResponseADM] = for {
+
             projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
+
+            // check if the requesting user is allowed to perform operation
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
+
             changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest =
                 ChangeNodeInfoApiRequestADM(
                     listIri = nodeIri,
@@ -1086,6 +1095,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 featureFactoryConfig = featureFactoryConfig
             )
             changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
+            
             /* Verify that the node info was updated */
             maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri,
                                                 featureFactoryConfig = featureFactoryConfig,
