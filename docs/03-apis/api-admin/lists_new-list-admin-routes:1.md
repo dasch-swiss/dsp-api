@@ -24,6 +24,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 **List Item Operations:**
 
+- `POST: /admin/lists` : create new list item (root or child node)
+
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
 
 - `GET: /admin/lists/<listItemIri>` : if given a root node IRI, return complete list with children. 
@@ -32,9 +34,7 @@ Otherwise, if given a child node IRI, it returns node completely with its immedi
 - `GET: /admin/lists/<listItemIri>/info` : return information (without children) of the node whose IRI is given 
 (root or child).
 
-- `POST: /admin/lists` : create new list item (root or child node)
-
-- `PUT: /admin/lists/<listItemIri>` : update information of the node.
+- `PUT: /admin/lists/<listItemIri>` : update information of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/lables` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
