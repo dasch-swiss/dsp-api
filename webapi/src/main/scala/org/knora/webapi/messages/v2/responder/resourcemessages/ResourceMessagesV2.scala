@@ -222,7 +222,7 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
             // here instead of RDF4J.
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
-            val stringReader = new StringReader(headerJSONLD.toCompactString)
+            val stringReader = new StringReader(headerJSONLD.toCompactString())
             val stringWriter = new StringWriter()
 
             val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)

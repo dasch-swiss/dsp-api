@@ -59,25 +59,6 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
                         schemaOptions: Set[SchemaOption],
                         featureFactoryConfig: FeatureFactoryConfig,
                         settings: KnoraSettingsImpl): String = {
-        /**
-         * Formats JSON-LD by first converting it to an RdfModel.
-         *
-         * @param jsonLDDocument the document to be formatted.
-         * @param rdfFormat the output format.
-         * @return the formatted document.
-         */
-        def formatViaRdfModel(jsonLDDocument: JsonLDDocument, rdfFormat: RdfFormat): String = {
-            val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-            val rdfModel: RdfModel = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
-
-            // Convert the model to the requested format.
-            rdfFormatUtil.format(
-                rdfModel = rdfModel,
-                rdfFormat = rdfFormat,
-                schemaOptions = schemaOptions
-            )
-        }
-
         val targetApiV2Schema = targetSchema match {
             case apiV2Schema: ApiV2Schema => apiV2Schema
             case InternalSchema => throw AssertionException(s"Response cannot be returned in the internal schema")
@@ -93,19 +74,20 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
         // Which response format was requested?
         rdfFormat match {
             case JsonLD =>
-                // JSON-LD. Did the client request flat JSON-LD?
-                if (SchemaOptions.returnFlatJsonLD(schemaOptions)) {
-                    // Yes. Convert the JsonLDDocument to an RdfModel, then
-                    // format the RdfModel as flat JSON-LD.
-                    formatViaRdfModel(jsonLDDocument = jsonLDDocument, rdfFormat = JsonLD)
-                } else {
-                    // No. Just format it as is.
-                    jsonLDDocument.toPrettyString
-                }
+                // JSON-LD. Have the JsonLDDocument format itself.
+                jsonLDDocument.toPrettyString(SchemaOptions.returnFlatJsonLD(schemaOptions))
 
             case nonJsonLD: NonJsonLD =>
                 // Some other format. Convert it to an RdfModel to format it.
-                formatViaRdfModel(jsonLDDocument = jsonLDDocument, rdfFormat = nonJsonLD)
+                val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+                val rdfModel: RdfModel = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
+
+                // Convert the model to the requested format.
+                rdfFormatUtil.format(
+                    rdfModel = rdfModel,
+                    rdfFormat = nonJsonLD,
+                    schemaOptions = schemaOptions
+                )
         }
     }
 
@@ -147,8 +129,6 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
                 // Some other format. Parse the Turtle to an RdfModel.
                 val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
                 val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
-
-                println(s"KnoraTurtleResponseV2: got schema options $schemaOptions")
 
                 // Return the model in the requested format.
                 rdfFormatUtil.format(

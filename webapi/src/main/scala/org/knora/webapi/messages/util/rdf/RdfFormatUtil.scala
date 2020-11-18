@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
-import org.knora.webapi.{RdfMediaTypes, SchemaOption}
+import org.knora.webapi.{RdfMediaTypes, SchemaOption, SchemaOptions}
 import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
 
 /**
@@ -138,20 +138,24 @@ trait RdfFormatUtil {
     /**
      * Parses an RDF string to a [[JsonLDDocument]].
      *
-     * @param rdfStr    the RDF string to be parsed.
-     * @param rdfFormat the format of the string.
+     * @param rdfStr     the RDF string to be parsed.
+     * @param rdfFormat  the format of the string.
+     * @param flatJsonLD if `true`, return flat JSON-LD.
      * @return the corresponding [[JsonLDDocument]].
      */
-    def parseToJsonLDDocument(rdfStr: String, rdfFormat: RdfFormat): JsonLDDocument = {
+    def parseToJsonLDDocument(rdfStr: String, rdfFormat: RdfFormat, flatJsonLD: Boolean = false): JsonLDDocument = {
         rdfFormat match {
             case JsonLD =>
                 // Use JsonLDUtil to parse JSON-LD.
-                JsonLDUtil.parseJsonLD(rdfStr)
+                JsonLDUtil.parseJsonLD(jsonLDString = rdfStr, flatten = flatJsonLD)
 
             case nonJsonLD: NonJsonLD =>
                 // Use an implementation-specific function to parse other formats to an RdfModel.
                 // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
-                JsonLDUtil.fromRdfModel(parseNonJsonLDToRdfModel(rdfStr = rdfStr, rdfFormat = nonJsonLD))
+                JsonLDUtil.fromRdfModel(
+                    model = parseNonJsonLDToRdfModel(rdfStr = rdfStr, rdfFormat = nonJsonLD),
+                    flatJsonLD = flatJsonLD
+                )
         }
     }
 
@@ -173,13 +177,14 @@ trait RdfFormatUtil {
                 // Use JsonLDUtil to convert to JSON-LD.
                 val jsonLDDocument: JsonLDDocument = JsonLDUtil.fromRdfModel(
                     model = rdfModel,
-                    schemaOptions = schemaOptions
+                    flatJsonLD = SchemaOptions.returnFlatJsonLD(schemaOptions)
                 )
 
+                // Format the document as a string.
                 if (prettyPrint) {
-                    jsonLDDocument.toPrettyString
+                    jsonLDDocument.toPrettyString()
                 } else {
-                    jsonLDDocument.toCompactString
+                    jsonLDDocument.toCompactString()
                 }
 
             case nonJsonLD: NonJsonLD =>

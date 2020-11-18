@@ -20,6 +20,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     private val password = SharedTestDataADM.testPass
 
     private val metadataAsTurtle: String = FileUtil.readTextFile(new File("test_data/metadataE2EV2/metadata.ttl"))
+    private val metadataAsFlatJsonLD: String = FileUtil.readTextFile(new File("test_data/metadataE2EV2/metadata-flat.jsonld"))
 
     private val expectedRdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(
         rdfStr = metadataAsTurtle,
@@ -39,13 +40,8 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
         }
 
         "perform a put request for the metadata of beol project given as JSON-LD" in {
-            val metadataAsJsonLD: String = rdfFormatUtil.parseToJsonLDDocument(
-                rdfStr = metadataAsTurtle,
-                rdfFormat = Turtle
-            ).toPrettyString
-
             val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
-                HttpEntity(RdfMediaTypes.`application/json`, metadataAsJsonLD)) ~>
+                HttpEntity(RdfMediaTypes.`application/json`, metadataAsFlatJsonLD)) ~>
                 addCredentials(BasicHttpCredentials(beolUserEmail, password))
 
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -64,8 +60,7 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
         }
 
         "get the created metadata graph as flat JSON-LD" in {
-            val expectedMetadataAsFlatJsonLD: String = FileUtil.readTextFile(new File("test_data/metadataE2EV2/metadata-flat.jsonld"))
-            val expectedFlatJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedMetadataAsFlatJsonLD)
+            val expectedFlatJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(metadataAsFlatJsonLD)
 
             val request = Get(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}").
                 addHeader(RawHeader(RouteUtilV2.JSON_LD_RENDERING_HEADER, RouteUtilV2.JSON_LD_RENDERING_FLAT))

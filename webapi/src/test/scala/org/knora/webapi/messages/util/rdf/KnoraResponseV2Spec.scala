@@ -98,7 +98,8 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
                     "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
                 ))
             ))
-        ))))
+        )))),
+        isFlat = true
     )
 
     /**
@@ -182,7 +183,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             )
 
             val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-            assert(jsonLDResponseDoc == flatJsonLD)
+            assert(jsonLDResponseDoc.body == flatJsonLD.body)
         }
 
         "convert Turtle to a hierarchical JSON-LD document" in {
@@ -197,7 +198,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             )
 
             val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-            assert(jsonLDResponseDoc == hierarchicalJsonLD)
+            assert(jsonLDResponseDoc.body == hierarchicalJsonLD.body)
         }
 
         "convert Turtle to a flat JSON-LD document" in {
@@ -212,7 +213,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             )
 
             val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-            assert(jsonLDResponseDoc == flatJsonLD)
+            assert(jsonLDResponseDoc.body == flatJsonLD.body)
         }
     }
 }

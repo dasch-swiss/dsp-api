@@ -21,11 +21,11 @@ package org.knora.webapi.util.rdf
 
 import java.io.File
 
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.{CoreSpec, FlatJsonLD}
 import spray.json.{JsValue, JsonParser}
 
 /**
@@ -121,7 +121,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                 """.stripMargin
 
             val compactedJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(ontologyJsonLDInputStr)
-            val formattedCompactedDoc = compactedJsonLDDoc.toPrettyString
+            val formattedCompactedDoc = compactedJsonLDDoc.toPrettyString()
             val receivedOutputAsJsValue: JsValue = JsonParser(formattedCompactedDoc)
             val expectedOutputAsJsValue: JsValue = JsonParser(ontologyCompactedJsonLDOutputStr)
             receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
@@ -310,7 +310,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
             // Convert the model to a hierarchical JsonLDDocument.
-            val hierarchicalJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(inputModel)
+            val hierarchicalJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(model = inputModel, flatJsonLD = false)
 
             val expectedHierarchicalJsonLD = JsonLDObject(value = Map(
                 "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
@@ -335,7 +335,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             assert(hierarchicalJsonLD.body == expectedHierarchicalJsonLD)
 
             // Convert the model to a flat JsonLDDocument.
-            val flatJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(inputModel, Set(FlatJsonLD))
+            val flatJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(model = inputModel, flatJsonLD = true)
 
             val expectedFlatJsonLD = JsonLDObject(value = Map("@graph" -> JsonLDArray(value = Vector(
                 JsonLDObject(value = Map(
