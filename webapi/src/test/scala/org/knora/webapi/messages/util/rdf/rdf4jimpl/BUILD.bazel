@@ -39,7 +39,7 @@ scala_test(
         "//webapi:main_library",
         "//webapi:test_library",
         "@maven//:org_apache_jena_apache_jena_libs"
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON_LD,
 )
 
 scala_test(
@@ -79,5 +79,5 @@ scala_test(
         "//webapi:main_library",
         "//webapi:test_library",
         "@maven//:org_apache_jena_apache_jena_libs"
-    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON_LD,
 )
