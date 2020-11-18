@@ -21,8 +21,9 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi.IRI
+
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM, ListNodeInfoGetRequestADM, ListNodeInfoGetResponseADM}
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM, ListNodeInfoGetRequestADM, ChildNodeInfoGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.listsmessages._
@@ -79,11 +80,11 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
                         requestingUser: UserADM): Future[NodeGetResponseV2] = {
 
         for {
-            nodeResponse: ListNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(
+            nodeResponse: ChildNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(
                 iri = nodeIri,
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
-            )).mapTo[ListNodeInfoGetResponseADM]
+            )).mapTo[ChildNodeInfoGetResponseADM]
         } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, requestingUser.lang, settings.fallbackLanguage)
 
     }

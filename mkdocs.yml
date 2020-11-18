@@ -16,6 +16,7 @@ nav:
   - APIs:
       - The Knora APIs:
           - Index: 03-apis/index.md
+          - Feature Toggles: 03-apis/feature-toggles.md
       - API V1:
           - Index: 03-apis/api-v1/index.md
           - Introduction: 03-apis/api-v1/introduction.md
@@ -33,6 +34,7 @@ nav:
           - Introduction: 03-apis/api-v2/introduction.md
           - Authentication: 03-apis/api-v2/authentication.md
           - Knora IRIs: 03-apis/api-v2/knora-iris.md
+          - Metadata:  03-apis/api-v2/metadata.md
           - Reading and Searching Resources: 03-apis/api-v2/reading-and-searching-resources.md
           - Reading the User's Permissions on Resources and Values: 03-apis/api-v2/reading-user-permissions.md
           - Getting Lists: 03-apis/api-v2/getting-lists.md
@@ -51,6 +53,7 @@ nav:
           - Projects Endpoint: 03-apis/api-admin/projects.md
           - Groups Endpoint: 03-apis/api-admin/groups.md
           - Lists Endpoint: 03-apis/api-admin/lists.md
+          - New Lists Endpoint: 03-apis/api-admin/lists_new-list-admin-routes_v1.md
           - Permissions Endpoint: 03-apis/api-admin/permissions.md
           - Stores Endpoint: 03-apis/api-admin/stores.md
       - Util API:
@@ -74,6 +77,8 @@ nav:
               - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
               - Consistency Checking: 05-internals/design/principles/consistency-checking.md
               - Authentication: 05-internals/design/principles/authentication.md
+              - Feature Toggles: 05-internals/design/principles/feature-toggles.md
+              - RDF Processing API: 05-internals/design/principles/rdf-api.md
           - API V1 Design:
               - Index: 05-internals/design/api-v1/index.md
               - How to Add an API v1 Route: 05-internals/design/api-v1/how-to-add-a-route.md
@@ -109,6 +114,7 @@ nav:
           - Updating Repositories: 05-internals/development/updating-repositories.md
           - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
           - Starting GraphDB: 05-internals/development/graphdb.md
+          - Third-Party Dependencies: 05-internals/development/third-party.md
   - Salsah:
       - Index: 06-salsah/index.md
   - SIPI:
