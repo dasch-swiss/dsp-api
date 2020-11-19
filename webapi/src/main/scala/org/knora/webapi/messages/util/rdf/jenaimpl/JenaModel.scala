@@ -234,6 +234,10 @@ class JenaModel(private val dataset: jena.query.Dataset,
         ).asScala.map(JenaStatement).toSet
     }
 
+    override def contains(statement: Statement): Boolean = {
+        datasetGraph.contains(statement.asJenaQuad)
+    }
+
     override def setNamespace(prefix: String, namespace: IRI): Unit = {
         def setNamespaceInGraph(graph: jena.graph.Graph): Unit = {
             val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping

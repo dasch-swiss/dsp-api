@@ -35,11 +35,11 @@ class StreamProcessorAsRDFHandler(streamProcessor: RdfStreamProcessor) extends r
     override def endRDF(): Unit = streamProcessor.finish()
 
     override def handleNamespace(prefix: String, namespace: String): Unit = {
-        streamProcessor.handleNamespace(prefix, namespace)
+        streamProcessor.processNamespace(prefix, namespace)
     }
 
     override def handleStatement(statement: rdf4j.model.Statement): Unit = {
-        streamProcessor.handleStatement(RDF4JStatement(statement))
+        streamProcessor.processStatement(RDF4JStatement(statement))
     }
 
     override def handleComment(comment: String): Unit = {}
@@ -54,11 +54,11 @@ class RDFHandlerAsStreamProcessor(rdfWriter: rdf4j.rio.RDFHandler) extends RdfSt
 
     override def start(): Unit = rdfWriter.startRDF()
 
-    override def handleNamespace(prefix: String, namespace: IRI): Unit = {
+    override def processNamespace(prefix: String, namespace: IRI): Unit = {
         rdfWriter.handleNamespace(prefix, namespace)
     }
 
-    override def handleStatement(statement: Statement): Unit = {
+    override def processStatement(statement: Statement): Unit = {
         rdfWriter.handleStatement(statement.asRDF4JStatement)
     }
 
@@ -112,7 +112,7 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
         stringWriter.toString
     }
 
-    override def parseToStream(inputStream: InputStream,
+    override def parseToStream(rdfSource: RdfSource,
                                rdfFormat: NonJsonLD,
                                rdfStreamProcessor: RdfStreamProcessor): Unit = {
         // Construct an RDF4J parser for the requested format.
@@ -121,8 +121,24 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
         // Wrap the RdfStreamProcessor in a StreamProcessorAsRDFHandler and set it as the parser's RDFHandler.
         parser.setRDFHandler(new StreamProcessorAsRDFHandler(rdfStreamProcessor))
 
-        // Parse the input.
-        parser.parse(inputStream, "")
+        // Parse from the input source.
+        rdfSource match {
+            case RdfStringSource(rdfStr) => parser.parse(new StringReader(rdfStr), "")
+            case RdfInputStreamSource(inputStream) => parser.parse(inputStream, "")
+        }
+    }
+
+    override def streamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
+        val model: rdf4j.model.Model = rdf4j.rio.Rio.parse(
+            inputStream,
+            "",
+            rdfFormatToRDF4JFormat(rdfFormat)
+        )
+
+        new RDF4JModel(
+            model = model,
+            nodeFactory = nodeFactory
+        )
     }
 
     override def makeFormattingStreamProcessor(outputStream: OutputStream,

@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
@@ -25,12 +26,14 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Updates a Knora repository to work with the current version of Knora.
  *
- * @param system   the Akka [[ActorSystem]].
- * @param appActor a reference to the main application actor.
- * @param settings the Knora application settings.
+ * @param system               the Akka [[ActorSystem]].
+ * @param appActor             a reference to the main application actor.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param settings             the Knora application settings.
  */
 class RepositoryUpdater(system: ActorSystem,
                         appActor: ActorRef,
+                        featureFactoryConfig: FeatureFactoryConfig,
                         settings: KnoraSettingsImpl) extends LazyLogging {
 
     private val knoraBaseVersionQuery =
@@ -171,7 +174,10 @@ class RepositoryUpdater(system: ActorSystem,
 
         for {
             // Ask the store actor to download the repository to the file.
-            _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
+            _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(
+                outputFile = downloadedRepositoryFile,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[FileWrittenResponse]
 
             // Run the transformations to produce an output file.
             _ = doTransformations(

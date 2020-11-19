@@ -160,7 +160,7 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
             }
         }
 
-        "add and find quads" in {
+        "add, find, and remove quads" in {
             val labelPred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
             val commentPred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Comment)
             val context1 = "http://example.org/graph1"
@@ -212,6 +212,83 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
             assert(model.find(subj = None, pred = None, obj = None, context = Some(context2)) == graph2)
             assert(model.find(subj = None, pred = Some(labelPred), obj = None) == Set(graph1LabelStatement, graph2LabelStatement))
             assert(model.find(subj = None, pred = Some(commentPred), obj = None) == Set(graph1CommentStatement, graph2CommentStatement))
+
+            model.removeStatement(graph1CommentStatement)
+            assert(!model.contains(graph1CommentStatement))
+
+            assert(model.contains(graph1LabelStatement))
+            assert(model.contains(graph2LabelStatement))
+            assert(model.contains(graph2CommentStatement))
+        }
+
+        "Remove a statement from the default graph, rather than an otherwise identical statement in a named graph" in {
+            val subj: IriNode = nodeFactory.makeIriNode("http://example.org/foo")
+            val pred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+            val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "Foo", datatype = OntologyConstants.Xsd.String)
+
+            val statementInDefaultGraph: Statement = nodeFactory.makeStatement(
+                subj = subj,
+                pred = pred,
+                obj = obj,
+                context = None
+            )
+
+            val context = "http://example.org/namedGraph"
+
+            val statementInNamedGraph = nodeFactory.makeStatement(
+                subj = subj,
+                pred = pred,
+                obj = obj,
+                context = Some(context)
+            )
+
+            model.addStatement(statementInDefaultGraph)
+            model.addStatement(statementInNamedGraph)
+
+            assert(model.contains(statementInDefaultGraph))
+            assert(model.contains(statementInNamedGraph))
+
+            model.removeStatement(statementInDefaultGraph)
+
+            assert(!model.contains(statementInDefaultGraph))
+            assert(model.contains(statementInNamedGraph))
+        }
+
+        "Remove a statement from the default graph, and an otherwise identical statement in a named graph" in {
+            val subj: IriNode = nodeFactory.makeIriNode("http://example.org/bar")
+            val pred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+            val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "Bar", datatype = OntologyConstants.Xsd.String)
+
+            val statementInDefaultGraph: Statement = nodeFactory.makeStatement(
+                subj = subj,
+                pred = pred,
+                obj = obj,
+                context = None
+            )
+
+            val context = "http://example.org/namedGraph"
+
+            val statementInNamedGraph = nodeFactory.makeStatement(
+                subj = subj,
+                pred = pred,
+                obj = obj,
+                context = Some(context)
+            )
+
+            model.addStatement(statementInDefaultGraph)
+            model.addStatement(statementInNamedGraph)
+
+            assert(model.contains(statementInDefaultGraph))
+            assert(model.contains(statementInNamedGraph))
+
+            model.remove(
+                subj = Some(subj),
+                pred = Some(pred),
+                obj = Some(obj)
+            )
+
+            assert(!model.contains(statementInDefaultGraph))
+            assert(!model.contains(statementInNamedGraph))
         }
     }
 }

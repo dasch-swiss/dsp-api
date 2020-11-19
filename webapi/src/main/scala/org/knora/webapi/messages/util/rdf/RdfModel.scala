@@ -206,6 +206,14 @@ trait RdfModel {
     def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement]
 
     /**
+     * Checks whether the model contains the specified statement.
+     *
+     * @param statement the statement.
+     * @return `true` if the model contains the statement.
+     */
+    def contains(statement: Statement): Boolean
+
+    /**
      * Returns a set of all the subjects in the model.
      */
     def getSubjects: Set[RdfResource]

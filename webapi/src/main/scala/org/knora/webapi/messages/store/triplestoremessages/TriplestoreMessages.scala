@@ -134,13 +134,15 @@ case class SparqlConstructRequest(sparql: String,
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
  * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
  *
- * @param sparql     the SPARQL string.
- * @param graphIri   the named graph IRI to be used in the TriG file.
- * @param outputFile the file to be written.
+ * @param sparql               the SPARQL string.
+ * @param graphIri             the named graph IRI to be used in the TriG file.
+ * @param outputFile           the file to be written.
+ * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlConstructFileRequest(sparql: String,
                                       graphIri: IRI,
-                                      outputFile: File) extends TriplestoreRequest
+                                      outputFile: File,
+                                      featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * A response to a [[SparqlConstructRequest]].
@@ -267,11 +269,13 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExte
  * Requests a named graph, which will be written to the specified file in Trig format. A successful response
  * will be a [[FileWrittenResponse]].
  *
- * @param graphIri   the IRI of the named graph.
- * @param outputFile the destination file.
+ * @param graphIri             the IRI of the named graph.
+ * @param outputFile           the destination file.
+ * @param featureFactoryConfig the feature factory configuration.
  */
 case class NamedGraphFileRequest(graphIri: IRI,
-                                 outputFile: File) extends TriplestoreRequest
+                                 outputFile: File,
+                                 featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Requests a named graph, which will be returned as Turtle. A successful response
@@ -394,8 +398,11 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
 
 /**
  * Requests that the repository is downloaded to a TriG file. A successful response will be a [[FileWrittenResponse]].
+ *
+ * @param outputFile           the output file.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class DownloadRepositoryRequest(outputFile: File) extends TriplestoreRequest
+case class DownloadRepositoryRequest(outputFile: File, featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Indicates that a file was written successfully.

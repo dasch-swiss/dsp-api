@@ -25,8 +25,6 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.eclipse.rdf4j.model.Statement
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions._
@@ -41,10 +39,12 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, ReadOntologyMetadataV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 /**
  * Returns information about Knora projects.
@@ -457,32 +457,30 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
         /**
-         * An [[RDFHandler]] for combining several named graphs into one.
+         * An [[RdfStreamProcessor]] for combining several named graphs into one.
          *
-         * @param outputWriter an [[RDFWriter]] for writing the combined result.
+         * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the combined result.
          */
-        class CombiningRdfHandler(outputWriter: RDFWriter) extends RDFHandler {
+        class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
             private var startedStatements = false
 
             // Ignore this, since it will be done before the first file is written.
-            override def startRDF(): Unit = {}
+            override def start(): Unit = {}
 
             // Ignore this, since it will be done after the last file is written.
-            override def endRDF(): Unit = {}
+            override def finish(): Unit = {}
 
-            override def handleNamespace(prefix: IRI, uri: IRI): Unit = {
+            override def processNamespace(prefix: IRI, namespace: IRI): Unit = {
                 // Only accept namespaces from the first graph, to prevent conflicts.
                 if (!startedStatements) {
-                    outputWriter.handleNamespace(prefix, uri)
+                    formattingStreamProcessor.processNamespace(prefix, namespace)
                 }
             }
 
-            override def handleStatement(st: Statement): Unit = {
+            override def processStatement(statement: Statement): Unit = {
                 startedStatements = true
-                outputWriter.handleStatement(st)
+                formattingStreamProcessor.processStatement(statement)
             }
-
-            override def handleComment(comment: IRI): Unit = outputWriter.handleComment(comment)
         }
 
         /**
@@ -492,33 +490,51 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
          * @param resultFile          the output file.
          */
         def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: File): Unit = {
-            // TODO: Provide a streaming API in RdfFormatUtil for this.
+            val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+            var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
-            var maybeBufferedFileWriter: Option[BufferedWriter] = None
+            val trigFileTry: Try[Unit] = Try {
+                maybeBufferedFileOutputStream = Some(new BufferedOutputStream(new FileOutputStream(resultFile)))
 
-            try {
-                maybeBufferedFileWriter = Some(new BufferedWriter(new FileWriter(resultFile)))
-                val trigFileWriter: RDFWriter = Rio.createWriter(RDFFormat.TRIG, maybeBufferedFileWriter.get)
-                val combiningRdfHandler = new CombiningRdfHandler(trigFileWriter)
-                trigFileWriter.startRDF()
+                val formattingStreamProcessor: RdfStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
+                    outputStream = maybeBufferedFileOutputStream.get,
+                    rdfFormat = TriG
+                )
+
+                val combiningRdfProcessor = new CombiningRdfProcessor(formattingStreamProcessor)
+                formattingStreamProcessor.start()
 
                 for (namedGraphTrigFile: NamedGraphTrigFile <- namedGraphTrigFiles) {
-                    var maybeBufferedFileReader: Option[BufferedReader] = None
+                    var maybeBufferedFileInputStream: Option[BufferedInputStream] = None
 
-                    try {
-                        maybeBufferedFileReader = Some(new BufferedReader(new FileReader(namedGraphTrigFile.dataFile)))
-                        val trigFileParser = Rio.createParser(RDFFormat.TRIG)
-                        trigFileParser.setRDFHandler(combiningRdfHandler)
-                        trigFileParser.parse(maybeBufferedFileReader.get, "")
+                    val namedGraphTry: Try[Unit] = Try {
+                        maybeBufferedFileInputStream = Some(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile)))
+
+                        rdfFormatUtil.parseToStream(
+                            rdfSource = RdfInputStreamSource(maybeBufferedFileInputStream.get),
+                            rdfFormat = TriG,
+                            rdfStreamProcessor = combiningRdfProcessor
+                        )
+
                         namedGraphTrigFile.dataFile.delete
-                    } finally {
-                        maybeBufferedFileReader.foreach(_.close)
+                    }
+
+                    maybeBufferedFileInputStream.foreach(_.close)
+
+                    namedGraphTry match {
+                        case Success(_) => ()
+                        case Failure(ex) => throw ex
                     }
                 }
 
-                trigFileWriter.endRDF()
-            } finally {
-                maybeBufferedFileWriter.foreach(_.close)
+                formattingStreamProcessor.finish()
+            }
+
+            maybeBufferedFileOutputStream.foreach(_.close)
+
+            trigFileTry match {
+                case Success(_) => ()
+                case Failure(ex) => throw ex
             }
         }
 
@@ -554,7 +570,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                             storeManager ?
                                 NamedGraphFileRequest(
                                     graphIri = trigFile.graphIri,
-                                    outputFile = trigFile.dataFile
+                                    outputFile = trigFile.dataFile,
+                                    featureFactoryConfig = featureFactoryConfig
                                 )
                             ).mapTo[FileWrittenResponse]
                     } yield fileWrittenResponse
@@ -574,7 +591,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             _: FileWrittenResponse <- (storeManager ? SparqlConstructFileRequest(
                 sparql = adminDataSparql,
                 graphIri = adminDataNamedGraphTrigFile.graphIri,
-                outputFile = adminDataNamedGraphTrigFile.dataFile
+                outputFile = adminDataNamedGraphTrigFile.dataFile,
+                featureFactoryConfig = featureFactoryConfig
             )).mapTo[FileWrittenResponse]
 
             // Download the project's permission data.
@@ -589,7 +607,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             _: FileWrittenResponse <- (storeManager ? SparqlConstructFileRequest(
                 sparql = permissionDataSparql,
                 graphIri = permissionDataNamedGraphTrigFile.graphIri,
-                outputFile = permissionDataNamedGraphTrigFile.dataFile
+                outputFile = permissionDataNamedGraphTrigFile.dataFile,
+                featureFactoryConfig = featureFactoryConfig
             )).mapTo[FileWrittenResponse]
 
             // Stream the combined results into the output file.

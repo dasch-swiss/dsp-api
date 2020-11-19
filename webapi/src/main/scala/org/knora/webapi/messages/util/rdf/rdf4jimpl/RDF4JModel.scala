@@ -221,11 +221,11 @@ class RDF4JModel(private val model: rdf4j.model.Model,
     }
 
     override def removeStatement(statement: Statement): Unit = {
-        remove(
-            Some(statement.subj),
-            Some(statement.pred),
-            Some(statement.obj),
-            statement.context
+        model.remove(
+            statement.subj.asRDF4JResource,
+            statement.pred.asRDF4JIri,
+            statement.obj.asRDF4JValue,
+            statement.context.map(definedContext => valueFactory.createIRI(definedContext)).orNull
         )
     }
 
@@ -248,6 +248,15 @@ class RDF4JModel(private val model: rdf4j.model.Model,
         }
 
         filteredModel.asScala.map(RDF4JStatement).toSet
+    }
+
+    override def contains(statement: Statement): Boolean = {
+        model.contains(
+            statement.subj.asRDF4JResource,
+            statement.pred.asRDF4JIri,
+            statement.obj.asRDF4JValue,
+            statement.context.map(definedContext => valueFactory.createIRI(definedContext)).orNull
+        )
     }
 
     override def setNamespace(prefix: String, namespace: IRI): Unit = {

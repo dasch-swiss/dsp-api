@@ -33,19 +33,19 @@ class StreamProcessorAsStreamRDF(streamProcessor: RdfStreamProcessor) extends je
     override def start(): Unit = streamProcessor.start()
 
     override def triple(triple: jena.graph.Triple): Unit = {
-        streamProcessor.handleStatement(
+        streamProcessor.processStatement(
             JenaStatement(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
         )
     }
 
     override def quad(quad: jena.sparql.core.Quad): Unit = {
-        streamProcessor.handleStatement(JenaStatement(quad))
+        streamProcessor.processStatement(JenaStatement(quad))
     }
 
     override def base(s: String): Unit = {}
 
     override def prefix(prefixStr: String, namespace: String): Unit = {
-        streamProcessor.handleNamespace(prefixStr, namespace)
+        streamProcessor.processNamespace(prefixStr, namespace)
     }
 
     override def finish(): Unit = streamProcessor.finish()
@@ -60,11 +60,11 @@ class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends 
 
     override def start(): Unit = streamRDF.start()
 
-    override def handleNamespace(prefix: String, namespace: IRI): Unit = {
+    override def processNamespace(prefix: String, namespace: IRI): Unit = {
         streamRDF.prefix(prefix, namespace)
     }
 
-    override def handleStatement(statement: Statement): Unit = {
+    override def processStatement(statement: Statement): Unit = {
         streamRDF.quad(statement.asJenaQuad)
     }
 
@@ -135,14 +135,37 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfForm
         stringWriter.toString
     }
 
-    override def parseToStream(inputStream: InputStream,
+    override def parseToStream(rdfSource: RdfSource,
                                rdfFormat: NonJsonLD,
                                rdfStreamProcessor: RdfStreamProcessor): Unit = {
         // Wrap the RdfStreamProcessor in a StreamProcessorAsStreamRDF.
         val streamRDF = new StreamProcessorAsStreamRDF(rdfStreamProcessor)
 
-        // Parse the input.
-        jena.riot.RDFDataMgr.parse(streamRDF, inputStream, rdfFormatToJenaParsingLang(rdfFormat))
+        // Build a parser.
+        val parser = jena.riot.RDFParser.create()
+
+        // Configure it to read from the input source.
+        rdfSource match {
+            case RdfStringSource(rdfStr) => parser.source(new StringReader(rdfStr))
+            case RdfInputStreamSource(inputStream) => parser.source(inputStream)
+        }
+
+        // Add the other configuration and run the parser.
+        parser.lang(rdfFormatToJenaParsingLang(rdfFormat))
+            .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+            .parse(streamRDF)
+    }
+
+    override def streamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
+        val model: JenaModel = modelFactory.makeEmptyModel
+
+        jena.riot.RDFDataMgr.read(
+            model.getDataset.asDatasetGraph,
+            inputStream,
+            rdfFormatToJenaParsingLang(rdfFormat)
+        )
+
+        model
     }
 
     override def makeFormattingStreamProcessor(outputStream: OutputStream,
