@@ -55,7 +55,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         getListOrNode(featureFactoryConfig) ~
         updateList(featureFactoryConfig) ~
         createListChildNode(featureFactoryConfig) ~
-        deleteListNode(featureFactoryConfig) ~
         getListInfo(featureFactoryConfig) ~
         getListNodeInfo(featureFactoryConfig) ~
         updateNodeName(featureFactoryConfig) ~
@@ -250,15 +249,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                         log = log
                     )
             }
-        }
-    }
-
-    /* delete list node which should also delete its children */
-    private def deleteListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
-        delete {
-            /* delete (deactivate) list */
-            throw NotImplementedException("Method not implemented.")
-            ???
         }
     }
 

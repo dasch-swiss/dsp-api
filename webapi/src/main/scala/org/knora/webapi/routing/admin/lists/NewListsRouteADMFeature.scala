@@ -54,7 +54,6 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             createListItem(featureFactoryConfig) ~
             getListItem(featureFactoryConfig) ~
             updateListItem(featureFactoryConfig) ~
-            deleteListItem(featureFactoryConfig) ~
             getNodeInfo(featureFactoryConfig) ~
             updateNodeName(featureFactoryConfig) ~
             updateNodeLabels(featureFactoryConfig) ~
@@ -225,14 +224,6 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
-    /* delete list node which should also delete its children */
-    private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
-        delete {
-            /* delete (deactivate) list */
-            throw NotImplementedException("Method not implemented.")
-            ???
-        }
-    }
     @Path("/{IRI}/info")
     @ApiOperation(value = "Get basic node information", nickname = "newGetNodeInfo", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(

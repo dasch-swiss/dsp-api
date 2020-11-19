@@ -357,6 +357,18 @@ case class NodeCommentsChangeRequestADM(nodeIri: IRI,
                                         requestingUser: UserADM,
                                         apiRequestID: UUID) extends ListsResponderRequestADM
 
+/**
+ * Requests deletion of a node (root or child). A successful response will be a [[ListItemDeleteResponseADM]]
+ *
+ * @param nodeIri              the IRI of the node (root or child).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ */
+case class ListItemDeleteRequestADM(nodeIri: IRI,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
@@ -428,6 +440,16 @@ case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends N
 case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = nodePathGetResponseADMFormat.write(this)
+}
+
+/**
+ * Responds to a [[ListItemDeleteRequestADM]] by returning a success message.
+ *
+ * @param iri the IRI of the node that is deleted.
+ */
+case class ListItemDeleteResponseADM(iri: IRI) extends KnoraResponseADM with ListADMJsonProtocol {
+
+    def toJsValue = JsString(s"The node $iri is successfully deleted.")
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

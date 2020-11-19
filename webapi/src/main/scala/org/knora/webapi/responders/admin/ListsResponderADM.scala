@@ -63,6 +63,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodeNameChangeRequest(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID)
         case NodeLabelsChangeRequestADM(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID)
         case NodeCommentsChangeRequestADM(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        case ListItemDeleteRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID) => deleteListItemRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -1120,6 +1121,35 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         } yield taskResult
     }
 
+    private def deleteListItemRequestADM(nodeIri: IRI,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        requestingUser: UserADM,
+                                        apiRequestID: UUID): Future[ListItemDeleteResponseADM] = {
+        /**
+         * The actual task run with an IRI lock.
+         */
+        def nodeDeleteTask(nodeIri: IRI,
+                           featureFactoryConfig: FeatureFactoryConfig,
+                           requestingUser: UserADM,
+                           apiRequestID: UUID): Future[ListItemDeleteResponseADM] = for {
+            projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
+
+            // check if the requesting user is allowed to perform operation
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
+
+        } yield ListItemDeleteResponseADM(iri = nodeIri)
+        for {
+            // run list info update with an local IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                nodeIri,
+                () => nodeDeleteTask(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+    }
     ////////////////////
     // Helper Methods //
     ////////////////////

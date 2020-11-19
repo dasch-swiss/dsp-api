@@ -47,7 +47,7 @@ object NewListsRouteADMFeatureE2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing users endpoint.
+  * End-to-End (E2E) test specification for testing new lists endpoint.
   */
 class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
