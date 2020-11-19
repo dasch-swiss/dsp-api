@@ -23,10 +23,13 @@ import org.eclipse.rdf4j
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.JavaUtil._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
 sealed trait RDF4JNode extends RdfNode {
     def rdf4jValue: rdf4j.model.Value
@@ -284,6 +287,10 @@ class RDF4JModel(private val model: rdf4j.model.Model,
             context: rdf4j.model.Resource => context.stringValue
         }
     }
+
+    override def asRepository: RdfRepository = {
+        new RDF4JRepository(model)
+    }
 }
 
 /**
@@ -345,4 +352,49 @@ class RDF4JModelFactory(private val nodeFactory: RDF4JNodeFactory) extends RdfMo
         model = new rdf4j.model.impl.LinkedHashModel,
         nodeFactory = nodeFactory
     )
+}
+
+/**
+ * An [[RdfRepository]] that wraps an [[rdf4j.model.Model]] in an [[rdf4j.repository.sail.SailRepository]].
+ *
+ * @param model the model to be queried.
+ */
+class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
+    // Construct an in-memory SailRepository containing the model.
+    val repository = new rdf4j.repository.sail.SailRepository(new rdf4j.sail.memory.MemoryStore())
+    repository.init()
+    val connection: rdf4j.repository.sail.SailRepositoryConnection = repository.getConnection
+    connection.add(model)
+    connection.close()
+
+    override def doSelect(selectQuery: String): SparqlSelectResponse = {
+        // Run the query.
+
+        val connection = repository.getConnection
+        val tupleQuery: rdf4j.query.TupleQuery = connection.prepareTupleQuery(selectQuery)
+        val tupleQueryResult: rdf4j.query.TupleQueryResult = tupleQuery.evaluate
+
+        // Convert the query result to a SparqlSelectResponse.
+
+        val header = SparqlSelectResponseHeader(tupleQueryResult.getBindingNames.asScala)
+        val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
+
+        while (tupleQueryResult.hasNext) {
+            val bindings: Iterable[rdf4j.query.Binding] = tupleQueryResult.next.asScala
+
+            val rowMap: Map[String, String] = bindings.map {
+                binding => binding.getName -> binding.getValue.stringValue
+            }.toMap
+
+            rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" })))
+        }
+
+        tupleQueryResult.close()
+        connection.close()
+
+        SparqlSelectResponse(
+            head = header,
+            results = SparqlSelectResponseBody(bindings = rowBuffer)
+        )
+    }
 }

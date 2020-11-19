@@ -21,6 +21,7 @@ package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectResponse
 
 import scala.util.control.Exception.allCatch
 
@@ -250,6 +251,11 @@ trait RdfModel {
      */
     def getContexts: Set[IRI]
 
+    /**
+     * Returns an [[RdfRepository]] that can be used to query this model.
+     */
+    def asRepository: RdfRepository
+
     override def hashCode(): Int = super.hashCode()
 
     override def equals(obj: Any): Boolean = {
@@ -340,4 +346,17 @@ trait RdfNodeFactory {
  */
 trait RdfModelFactory {
     def makeEmptyModel: RdfModel
+}
+
+/**
+ * Represents a simple in-memory repository that can run SPARQL queries.
+ */
+trait RdfRepository {
+    /**
+     * Does a SPARQL SELECT query.
+     *
+     * @param selectQuery the query.
+     * @return the query result.
+     */
+    def doSelect(selectQuery: String): SparqlSelectResponse
 }
