@@ -13,8 +13,8 @@ http_archive(
 )
 
 # download rules_scala repository
-rules_scala_version="056d5921d2c595e7ce2d54a627e8bc68ece7e28d" # 16.06.2020
-rules_scala_version_sha256="a39010b90ce921fd627c7158d43c16d8bd540e85d339ce9ac975e37213a843d4"
+rules_scala_version="8866f55712b30bbb96335cc11bc5ae5aad5cf8d4" # 18.11.2020
+rules_scala_version_sha256="cdc13aba7f0f89ae52c9c50394a10f24ac0e18923108598ac9dafce5be6a789a"
 http_archive(
     name = "io_bazel_rules_scala",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
@@ -23,21 +23,20 @@ http_archive(
     sha256 = rules_scala_version_sha256,
 )
 
+# Stores Scala version and other configuration
+# 2.12 is a default version, other versions can be use by passing them explicitly:
+# scala_config(scala_version = "2.11.12")
+load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
+scala_config(scala_version = "2.12.11")
+
 # register default and our custom scala toolchain
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
 scala_register_toolchains()
 register_toolchains("//toolchains:dsp_api_scala_toolchain")
 
-# set the default scala version
+# needed by rules_scala
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
-scala_repositories((
-    "2.12.11",
-    {
-       "scala_compiler": "e901937dbeeae1715b231a7cfcd547a10d5bbf0dfb9d52d2886eae18b4d62ab6",
-       "scala_library": "dbfe77a3fc7a16c0c7cb6cb2b91fecec5438f2803112a744cb1b187926a138be",
-       "scala_reflect": "5f9e156aeba45ef2c4d24b303405db259082739015190b3b334811843bd90d6a"
-    }
-))
+scala_repositories()
 
 #
 # Download the protobuf repository (needed by go and rules_scala_annex)
@@ -85,8 +84,8 @@ java_repositories()
 # download rules_jvm_external used for maven dependency resolution
 # defined in the third_party sub-folder
 #
-rules_jvm_external_version = "3.2" # 24.02.2020
-rules_jvm_external_version_sha256 = "82262ff4223c5fda6fb7ff8bd63db8131b51b413d26eb49e3131037e79e324af"
+rules_jvm_external_version = "3.3" # 7.07.2020
+rules_jvm_external_version_sha256 = "d85951a92c0908c80bd8551002d66cb23c3434409c814179c0ff026b53544dab"
 
 http_archive(
     name = "rules_jvm_external",
@@ -178,30 +177,37 @@ go_rules_dependencies()
 go_register_toolchains()
 
 #
-# Download the rules_docker repository at release v0.14.4
+# Download rules_python at release 0.1.0 (needed by rules_docker)
 #
-rules_docker_version="0.14.4"
-rules_docker_version_sha256="4521794f0fba2e20f3bf15846ab5e01d5332e587e9ce81629c7f96c793bb7036"
+http_archive(
+    name = "rules_python",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.1.0/rules_python-0.1.0.tar.gz",
+    sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
+)
+
+# legacy variant used by rules_docker. Remove after rules_docker was updated to
+# newest rules_python
+load("@rules_python//python/legacy_pip_import:pip.bzl", "pip_import", "pip_repositories")
+pip_repositories()
+
+#
+# Download the rules_docker repository at release v0.15.0
+#
+rules_docker_version="0.15.0"
+rules_docker_version_sha256="1698624e878b0607052ae6131aa216d45ebb63871ec497f26c67455b34119c80"
 http_archive(
     name = "io_bazel_rules_docker",
+    patches = ["//:rules_docker.pr1650.patch"],
     sha256 = rules_docker_version_sha256,
     strip_prefix = "rules_docker-%s" % rules_docker_version,
     url = "https://github.com/bazelbuild/rules_docker/releases/download/v%s/rules_docker-v%s.tar.gz" % (rules_docker_version, rules_docker_version),
 )
 
-load(
-    "@io_bazel_rules_docker//repositories:repositories.bzl",
-    container_repositories = "repositories",
-)
+load("@io_bazel_rules_docker//repositories:repositories.bzl", container_repositories = "repositories")
 container_repositories()
 
 load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
-
 container_deps()
-
-load("@io_bazel_rules_docker//repositories:pip_repositories.bzl", "pip_deps")
-
-pip_deps()
 
 # load container_pull method
 load(
