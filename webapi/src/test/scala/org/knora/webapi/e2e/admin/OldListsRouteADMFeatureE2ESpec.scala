@@ -37,7 +37,7 @@ import org.knora.webapi.{E2ESpec, IRI}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object ListsADME2ESpec {
+object OldListsRouteADMFeatureE2ESpec {
     val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -48,7 +48,7 @@ object ListsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class OldListsRouteADMFeatureE2ESpec extends E2ESpec(OldListsRouteADMFeatureE2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
@@ -244,6 +244,28 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
                             filename = "get-list-node-info-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "return a complete node with children" in {
+                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+
+                val receivedNode: NodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[NodeADM]
+                receivedNode.nodeinfo.id should be ("http://rdfh.ch/lists/0001/treeList03")
+                receivedNode.nodeinfo.name should be (Some("Tree list node 03"))
+                receivedNode.children.size should be (2)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "get-node-response",
                             fileExtension = "json"
                         ),
                         text = responseToString(response)
@@ -591,6 +613,127 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 )
             }
 
+            "update node name" in {
+                val updateNodeName =
+                    s"""{
+                       |    "name": "updated root node name"
+                       |}""".stripMargin
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-rootNode-name-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+                receivedListInfo.name should be (Some("updated root node name"))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-rootNode-name-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update node labels" in {
+                val updateNodeLabels =
+                    s"""{
+                       |    "labels": [{"language": "se", "value": "nya märkningen"}]
+                       |}""".stripMargin
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-rootNode-labels-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeLabels
+                    )
+                )
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels", HttpEntity(ContentTypes.`application/json`, updateNodeLabels)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels should contain (StringLiteralV2(value = "nya märkningen", language = Some("se")))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-rootNode-labels-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update node comments" in {
+                val updateCommentsLabels =
+                    s"""{
+                       |    "comments": [{"language": "se", "value": "nya kommentarer"}]
+                       |}""".stripMargin
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-rootNode-comments-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateCommentsLabels
+                    )
+                )
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments", HttpEntity(ContentTypes.`application/json`, updateCommentsLabels)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+                val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments should contain (StringLiteralV2(value = "nya kommentarer", language = Some("se")))
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-rootNode-comments-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
             "update basic list information with repeated comment and label in different languages" in {
 
                 val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
@@ -922,6 +1065,175 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
                             filename = "add-second-child-to-root-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update node information of a node that has custom IRI with a new name" in {
+                val newName = "modified third child"
+                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+                val updateNodeName =
+                    s"""{
+                       |    "listIri": "${customChildNodeIRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+                       |    "name": "${newName}"
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-node-info-name-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+                receivedNodeInfo.name.get should be (newName)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-node-info-name-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+            "update name of the node that has custom IRI" in {
+                val newName = "updated third child name"
+                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+                val updateNodeName =
+                    s"""{
+                       |    "name": "${newName}"
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-name-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+                receivedNodeInfo.name.get should be (newName)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-name-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update labels of the node that has custom IRI" in {
+                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+                val updateNodeLabels =
+                    s"""{
+                       |    "labels": [{"language": "se", "value": "nya märkningen för nod"}]
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-labels-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeLabels
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels", HttpEntity(ContentTypes.`application/json`, updateNodeLabels)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+                val labels: Seq[StringLiteralV2] = receivedNodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels should contain (StringLiteralV2(value = "nya märkningen för nod", language = Some("se")))
+
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-labels-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update comments of the node that has custom IRI" in {
+                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+                val updateNodeComments =
+                    s"""{
+                       |    "comments": [{"language": "se", "value": "nya kommentarer för nod"}]
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-comments-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeComments
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments", HttpEntity(ContentTypes.`application/json`, updateNodeComments)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+                val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments should contain (StringLiteralV2(value = "nya kommentarer för nod", language = Some("se")))
+
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-comments-response",
                             fileExtension = "json"
                         ),
                         text = responseToString(response)

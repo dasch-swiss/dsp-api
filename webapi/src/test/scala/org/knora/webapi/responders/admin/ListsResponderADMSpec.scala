@@ -26,8 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{DuplicateValueException, ForbiddenException}
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.exceptions.{DuplicateValueException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
@@ -111,13 +110,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic list information (anything list)" in {
-                responderManager ! ListInfoGetRequestADM(
+                responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/treeList",
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
-                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -125,13 +124,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic list information (anything other list)" in {
-                responderManager ! ListInfoGetRequestADM(
+                responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/otherTreeList",
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
 
-                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -145,7 +144,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
 
-                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -178,7 +177,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             "create a list" in {
                 responderManager ! ListCreateRequestADM(
-                    createListRequest = CreateListApiRequestADM(
+                    createRootNode = CreateNodeApiRequestADM(
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("neuelistename"),
                         labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
@@ -210,26 +209,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 newListIri.set(listInfo.id)
             }
 
-            "return a 'ForbiddenException' if the user creating the list is not project or system admin" in {
-                responderManager ! ListCreateRequestADM(
-                    createListRequest = CreateListApiRequestADM(
-                        projectIri = IMAGES_PROJECT_IRI,
-                        name = None,
-                        labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
-                        comments = Seq.empty[StringLiteralV2]
-                    ),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser02,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsg(Failure(ForbiddenException(LIST_CREATE_PERMISSION_ERROR)))
-            }
-
             "update basic list information" in {
-                responderManager ! ListInfoChangeRequestADM(
+                responderManager ! NodeInfoChangeRequestADM(
                     listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
+                    changeNodeRequest = ChangeNodeInfoApiRequestADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("updated name"),
@@ -247,7 +230,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
 
-                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
                 val listInfo = received.listinfo
                 listInfo.projectIri should be(IMAGES_PROJECT_IRI)
@@ -268,9 +251,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "not update basic list information if name is duplicate" in {
-                responderManager ! ListInfoChangeRequestADM(
+                responderManager ! NodeInfoChangeRequestADM(
                     listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
+                    changeNodeRequest = ChangeNodeInfoApiRequestADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("sommer")),
@@ -281,34 +264,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 expectMsg(Failure(DuplicateValueException("The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF.")))
             }
 
-            "return a 'ForbiddenException' if the user changing the list is not project or system admin" in {
-                responderManager ! ListInfoChangeRequestADM(
-                    listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
-                        listIri = newListIri.get,
-                        projectIri = IMAGES_PROJECT_IRI,
-                        labels = Some(Seq(
-                            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                            StringLiteralV2(value = "Changed list", language = Some("en"))
-                        )),
-                        comments = Some(Seq(
-                            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                            StringLiteralV2(value = "New comment", language = Some("en"))
-                        )
-                        )),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser02,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsg(Failure(ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)))
-            }
-
             "add child to list - to the root node" in {
                 responderManager ! ListChildNodeCreateRequestADM(
-                    parentNodeIri = newListIri.get,
-                    createChildNodeRequest = CreateChildNodeApiRequestADM(
-                        parentNodeIri = newListIri.get,
+                    createChildNodeRequest = CreateNodeApiRequestADM(
+                        parentNodeIri = Some(newListIri.get),
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("first"),
                         labels = Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
@@ -319,7 +278,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
 
-                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
                 val nodeInfo = received.nodeinfo
 
                 // check correct node info
@@ -351,105 +310,102 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             "add second child to list - to the root node" in {
                 responderManager ! ListChildNodeCreateRequestADM(
-                    parentNodeIri = newListIri.get,
-                    createChildNodeRequest = CreateChildNodeApiRequestADM(
-                        parentNodeIri = newListIri.get,
-                        projectIri = IMAGES_PROJECT_IRI,
-                        name = Some("second"),
-                        labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
-                        comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
-                    ),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
+                       createChildNodeRequest = CreateNodeApiRequestADM(
+                           parentNodeIri = Some(newListIri.get),
+                           projectIri = IMAGES_PROJECT_IRI,
+                           name = Some("second"),
+                           labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
+                           comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+                       ),
+                        featureFactoryConfig = defaultFeatureFactoryConfig,
+                        requestingUser = SharedTestDataADM.imagesUser01,
+                        apiRequestID = UUID.randomUUID
+               )
 
-                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
-                val nodeInfo = received.nodeinfo
+               val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
+               val nodeInfo = received.nodeinfo
 
-                // check correct node info
-                val childNodeInfo = nodeInfo match {
-                    case info: ListChildNodeInfoADM => info
-                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-                }
+               // check correct node info
+               val childNodeInfo = nodeInfo match {
+                   case info: ListChildNodeInfoADM => info
+                   case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+               }
 
-                // check labels
-                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-                labels.size should be(1)
-                labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
-
-
-                // check comments
-                val comments = childNodeInfo.comments.stringLiterals
-                comments.size should be(1)
-                comments.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
-
-                // check position
-                val position = childNodeInfo.position
-                position should be(1)
-
-                // check has root node
-                val rootNode = childNodeInfo.hasRootNode
-                rootNode should be(newListIri.get)
-
-                secondChildIri.set(childNodeInfo.id)
-            }
-
-            "add child to second child node" in {
-                responderManager ! ListChildNodeCreateRequestADM(
-                    parentNodeIri = secondChildIri.get,
-                    createChildNodeRequest = CreateChildNodeApiRequestADM(
-                        parentNodeIri = secondChildIri.get,
-                        projectIri = IMAGES_PROJECT_IRI,
-                        name = Some("third"),
-                        labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
-                        comments = Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
-                    ),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
-                val nodeInfo = received.nodeinfo
-
-                // check correct node info
-                val childNodeInfo = nodeInfo match {
-                    case info: ListChildNodeInfoADM => info
-                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-                }
-
-                // check labels
-                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-                labels.size should be(1)
-                labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+               // check labels
+               val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+               labels.size should be(1)
+               labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
 
 
-                // check comments
-                val comments = childNodeInfo.comments.stringLiterals
-                comments.size should be(1)
-                comments.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+               // check comments
+               val comments = childNodeInfo.comments.stringLiterals
+               comments.size should be(1)
+               comments.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
 
-                // check position
-                val position = childNodeInfo.position
-                position should be(0)
+               // check position
+               val position = childNodeInfo.position
+               position should be(1)
 
-                // check has root node
-                val rootNode = childNodeInfo.hasRootNode
-                rootNode should be(newListIri.get)
+               // check has root node
+               val rootNode = childNodeInfo.hasRootNode
+               rootNode should be(newListIri.get)
 
-                thirdChildIri.set(childNodeInfo.id)
-            }
+               secondChildIri.set(childNodeInfo.id)
+           }
+
+           "add child to second child node" in {
+               responderManager ! ListChildNodeCreateRequestADM(
+                   createChildNodeRequest = CreateNodeApiRequestADM(
+                       parentNodeIri = Some(secondChildIri.get),
+                       projectIri = IMAGES_PROJECT_IRI,
+                       name = Some("third"),
+                       labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
+                       comments = Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+                   ),
+                   featureFactoryConfig = defaultFeatureFactoryConfig,
+                   requestingUser = SharedTestDataADM.imagesUser01,
+                   apiRequestID = UUID.randomUUID
+               )
+
+               val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
+               val nodeInfo = received.nodeinfo
+
+               // check correct node info
+               val childNodeInfo = nodeInfo match {
+                   case info: ListChildNodeInfoADM => info
+                   case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+               }
+
+               // check labels
+               val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+               labels.size should be(1)
+               labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
 
 
-            "change node order" ignore {
+               // check comments
+               val comments = childNodeInfo.comments.stringLiterals
+               comments.size should be(1)
+               comments.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
 
-            }
+               // check position
+               val position = childNodeInfo.position
+               position should be(0)
 
-            "delete node if not in use" ignore {
+               // check has root node
+               val rootNode = childNodeInfo.hasRootNode
+               rootNode should be(newListIri.get)
 
-            }
+               thirdChildIri.set(childNodeInfo.id)
+           }
 
+
+           "change node order" ignore {
+
+           }
+
+           "delete node if not in use" ignore {
+
+           }
         }
     }
 }

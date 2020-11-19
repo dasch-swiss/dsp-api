@@ -42,6 +42,8 @@ object OldListsRouteADMFeature {
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
+@Api(value = "lists (old endpoint)", produces = "application/json")
+@Path("/admin/lists")
 class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     with Feature with Authenticator with ListADMJsonProtocol {
 
@@ -49,13 +51,16 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
 
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
         getLists(featureFactoryConfig) ~
-            createList(featureFactoryConfig) ~
-            getList(featureFactoryConfig) ~
-            updateList(featureFactoryConfig) ~
-            createListChildNode(featureFactoryConfig) ~
-            deleteListNode(featureFactoryConfig) ~
-            getListInfo(featureFactoryConfig) ~
-            getListNodeInfo(featureFactoryConfig)
+        createList(featureFactoryConfig) ~
+        getListOrNode(featureFactoryConfig) ~
+        updateList(featureFactoryConfig) ~
+        createListChildNode(featureFactoryConfig) ~
+        deleteListNode(featureFactoryConfig) ~
+        getListInfo(featureFactoryConfig) ~
+        getListNodeInfo(featureFactoryConfig) ~
+        updateNodeName(featureFactoryConfig) ~
+        updateNodeLabels(featureFactoryConfig) ~
+        updateNodeComments(featureFactoryConfig)
 
     /* return all lists optionally filtered by project */
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
@@ -105,7 +110,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     private def createList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
         post {
             /* create a list */
-            entity(as[CreateListApiRequestADM]) { apiRequest =>
+            entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val requestMessage: Future[ListCreateRequestADM] = for {
                         requestingUser <- getUserADM(
@@ -113,7 +118,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                             featureFactoryConfig = featureFactoryConfig
                         )
                     } yield ListCreateRequestADM(
-                        createListRequest = apiRequest,
+                        createRootNode = apiRequest,
                         featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
@@ -137,7 +142,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    private def getList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+    private def getListOrNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         get {
             /* return a list (a graph with all list nodes) */
             requestContext =>
@@ -169,10 +174,10 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update list
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[ListInfoGetResponseADM])
+    @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" to update", required = true,
-            dataTypeClass = classOf[ChangeListInfoApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[ChangeNodeInfoApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -180,18 +185,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
-            entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
+            entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                    val requestMessage: Future[ListInfoChangeRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield ListInfoChangeRequestADM(
+                    val requestMessage: Future[NodeInfoChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                    } yield NodeInfoChangeRequestADM(
                         listIri = listIri,
-                        changeListRequest = apiRequest,
+                        changeNodeRequest = apiRequest,
                         featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
@@ -213,10 +214,10 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * create a new child node
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
+    @ApiOperation(value = "Add new node", nickname = "addListNode", httpMethod = "POST", response = classOf[ChildNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
-            dataTypeClass = classOf[CreateChildNodeApiRequestADM], paramType = "body")
+            dataTypeClass = classOf[CreateNodeApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -224,9 +225,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
     private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
-            entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
+            entity(as[CreateNodeApiRequestADM]) { apiRequest =>
                 requestContext =>
-                    val parentNodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
                         requestingUser <- getUserADM(
@@ -234,7 +235,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                             featureFactoryConfig = featureFactoryConfig
                         )
                     } yield ListChildNodeCreateRequestADM(
-                        parentNodeIri = parentNodeIri,
                         createChildNodeRequest = apiRequest,
                         featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser,
@@ -267,17 +267,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
             /* return information about a list (without children) */
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                val requestMessage: Future[ListInfoGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield ListInfoGetRequestADM(
-                    iri = listIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
+                val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                } yield ListNodeInfoGetRequestADM(
+                        iri = listIri,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessageF = requestMessage,
@@ -315,13 +310,127 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
                     responderManager = responderManager,
                     log = log
                 )
-        } ~
-            put {
-                /* update list node */
-                throw NotImplementedException("Method not implemented.")
-                ???
-            } ~
-            delete {
+        }
+    }
+    /**
+     * update node name
+     */
+    @Path("/{IRI}/name")
+    @ApiOperation(value = "Update Node Name", nickname = "putNodeName", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"node name\" to update", required = true,
+            dataTypeClass = classOf[ChangeNodeNameApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    private def updateNodeName(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "name") { iri =>
+        put {
+            /* update name of an existing list node (either root or child) */
+            entity(as[ChangeNodeNameApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+
+                    val requestMessage: Future[NodeNameChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                    } yield NodeNameChangeRequestADM(
+                        nodeIri = nodeIri,
+                        changeNodeNameRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
+                    )
+            }
+        }
+    }
+    /**
+     * update node labels
+     */
+    @Path("/{IRI}/labels")
+    @ApiOperation(value = "Update Node Labels", nickname = "putNodeLabels", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"node labels\" to update", required = true,
+            dataTypeClass = classOf[ChangeNodeLabelsApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    private def updateNodeLabels(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "labels") { iri =>
+        put {
+            /* update labels of an existing list node (either root or child) */
+            entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+
+                    val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                    } yield NodeLabelsChangeRequestADM(
+                        nodeIri = nodeIri,
+                        changeNodeLabelsRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
+                    )
+            }
+        }
+    }
+    /**
+     * update node comments
+     */
+    @Path("/{IRI}/comments")
+    @ApiOperation(value = "Update Node Comments", nickname = "putNodeComments", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"node comments\" to update", required = true,
+            dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    private def updateNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "comments") { iri =>
+    put {
+        /* update labels of an existing list node (either root or child) */
+        entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest =>
+            requestContext =>
+                val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+
+                val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                } yield NodeCommentsChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodeCommentsRequest = apiRequest,
+                    featureFactoryConfig = featureFactoryConfig,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    featureFactoryConfig = featureFactoryConfig,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log
+                )
+        }
+    } ~ delete {
                 /* delete list node */
                 throw NotImplementedException("Method not implemented.")
                 ???

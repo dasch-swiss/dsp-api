@@ -29,8 +29,6 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
 /**
  * Provides an akka-http-routing function for API routes that deal with lists.
  */
-@Api(value = "lists", produces = "application/json")
-@Path("/admin/lists")
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     private val featureFactory: ListsRouteADMFeatureFactory = new ListsRouteADMFeatureFactory(routeData)
 

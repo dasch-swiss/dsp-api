@@ -28,6 +28,7 @@ object ListsMessagesUtilADM {
     val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
     val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
     val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
+    val LIST_NODE_CREATE_PERMISSION_ERROR = "A list node can only be created by the project or system administrator."
     val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
     val UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR = "List labels and comments cannot be empty."
 }
