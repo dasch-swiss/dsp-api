@@ -21,7 +21,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.repository.sail.SailRepository
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, SparqlSelectResultBody}
 
 class UpgradePluginPR1372Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1372" should {
@@ -49,9 +49,9 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
                   |} ORDER BY ?value
                   |""".stripMargin
 
-            val queryResult1: SparqlSelectResponse = doSelect(selectQuery = query, connection = connection)
+            val queryResult1: SparqlSelectResult = doSelect(selectQuery = query, connection = connection)
 
-            val expectedResultBody: SparqlSelectResponseBody = expectedResult(
+            val expectedResultBody: SparqlSelectResultBody = expectedResult(
                 Seq(
                     Map(
                         "value" -> "http://rdfh.ch/0001/thing-with-history/values/1c"

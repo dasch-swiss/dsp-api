@@ -188,11 +188,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
                         case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
-                        case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                        case _ => throw InconsistentRepositoryDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
 
-                case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+                case None => throw InconsistentRepositoryDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
             // check if xsltFileValueContent represents an XSL transformation

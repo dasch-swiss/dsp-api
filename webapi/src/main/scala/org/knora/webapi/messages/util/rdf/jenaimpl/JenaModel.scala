@@ -24,7 +24,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 
@@ -403,7 +402,7 @@ class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfMode
  * @param dataset the dataset to be queried.
  */
 class JenaRepository(private val dataset: jena.query.Dataset) extends RdfRepository {
-    override def doSelect(selectQuery: String): SparqlSelectResponse = {
+    override def doSelect(selectQuery: String): SparqlSelectResult = {
         // Run the query.
 
         val queryExecution: jena.query.QueryExecution =
@@ -413,7 +412,7 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
 
         // Convert the query result to a SparqlSelectResponse.
 
-        val header = SparqlSelectResponseHeader(resultSet.getResultVars.asScala)
+        val header = SparqlSelectResultHeader(resultSet.getResultVars.asScala)
         val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
         while (resultSet.hasNext) {
@@ -429,9 +428,9 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
 
         queryExecution.close()
 
-        SparqlSelectResponse(
+        SparqlSelectResult(
             head = header,
-            results = SparqlSelectResponseBody(bindings = rowBuffer)
+            results = SparqlSelectResultBody(bindings = rowBuffer)
         )
     }
 }

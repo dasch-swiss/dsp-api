@@ -30,6 +30,7 @@ import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -219,7 +220,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         storeManager ! SparqlSelectRequest(lastModSparqlQuery)
 
         expectMsgPF(timeout) {
-            case response: SparqlSelectResponse =>
+            case response: SparqlSelectResult =>
                 val rows = response.results.bindings
                 assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 
@@ -390,7 +391,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(sparqlQuery)
 
             expectMsgPF(timeout) {
-                case sparqlSelectResponse: SparqlSelectResponse =>
+                case sparqlSelectResponse: SparqlSelectResult =>
                     assert(sparqlSelectResponse.results.bindings.head.rowMap.keySet == Set("value"))
             }
         }
@@ -863,7 +864,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
@@ -952,7 +953,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // There should be no new version of the LinkValue, and the direct link should still be there.
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
@@ -1031,7 +1032,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // still be there.
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
@@ -1090,7 +1091,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // The LinkValue should point to its previous version, and the direct link should still be there.
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     standoffLinkValueIri.set(response.results.bindings.head.rowMap("linkValue"))
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
@@ -1156,7 +1157,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // The LinkValue should point to its previous version. There should be no direct link.
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     standoffLinkValueIri.unset()
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
@@ -1233,7 +1234,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(sparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
@@ -1403,7 +1404,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(sparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
@@ -1487,7 +1488,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(oldLinkValueSparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
@@ -1507,7 +1508,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(newLinkValueSparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
@@ -1550,7 +1551,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
@@ -1900,7 +1901,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // It should have no previousValue, and the direct link should exist.
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
@@ -1968,7 +1969,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(decrementedLinkValueSparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
@@ -2029,7 +2030,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
 
             expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
+                case response: SparqlSelectResult =>
                     standoffLinkValueIri.unset()
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)

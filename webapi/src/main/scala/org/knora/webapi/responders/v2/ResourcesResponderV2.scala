@@ -41,6 +41,7 @@ import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -231,7 +232,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceClassOntologyIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
             readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(Set(resourceClassOntologyIri), createResourceRequestV2.requestingUser)).mapTo[ReadOntologyMetadataV2]
             ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption.getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
+            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
 
             _ = if (projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
                 throw BadRequestException(s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project")
@@ -468,11 +469,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     resourceIri = deleteResourceV2.resourceIri
                 ).toString()
 
-                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
                 rows = sparqlSelectResponse.results.bindings
 
-                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentRepositoryDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                     throw UpdateNotPerformedException(s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug.")
                 }
             } yield SuccessResponseV2("Resource marked as deleted")
@@ -842,7 +843,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 val propertyIriForObjectClassConstraint = propertyInfoForObjectClassConstraint.entityInfoContent.propertyIri
 
                 val objectClassConstraint: SmartIri = propertyInfoForObjectClassConstraint.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                    throw InconsistentTriplestoreDataException(s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"))
+                    throw InconsistentRepositoryDataException(s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"))
 
                 // Check each value.
                 for (valueToCreate: CreateValueInNewResourceV2 <- valuesToCreate) {
@@ -1410,11 +1411,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
                         case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
-                        case _ => throw InconsistentTriplestoreDataException(s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                        case _ => throw InconsistentRepositoryDataException(s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
 
-                case None => throw InconsistentTriplestoreDataException(s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+                case None => throw InconsistentRepositoryDataException(s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
             // check if gravsearchFileValueContent represents a text file
@@ -1757,7 +1758,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // _ = println(sparql)
 
-                response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
+                response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
                 rows: Seq[VariableResultsRow] = response.results.bindings
 
                 // Did we get any results?
@@ -1895,7 +1896,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             // _ = println(sparql)
 
-            response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
+            response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
             _ = if (rows.isEmpty) {
@@ -2005,7 +2006,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 maybeEndDate = resourceHistoryRequest.endDate
             ).toString()
 
-            valueHistoryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(historyRequestSparql)).mapTo[SparqlSelectResponse]
+            valueHistoryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(historyRequestSparql)).mapTo[SparqlSelectResult]
 
             valueHistoryEntries: Seq[ResourceHistoryEntry] = valueHistoryResponse.results.bindings.map {
                 row: VariableResultsRow =>
@@ -2013,7 +2014,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     val author: IRI = row.rowMap("author")
 
                     ResourceHistoryEntry(
-                        versionDate = stringFormatter.xsdDateTimeStampToInstant(versionDateStr, throw InconsistentTriplestoreDataException(s"Could not parse version date: $versionDateStr")),
+                        versionDate = stringFormatter.xsdDateTimeStampToInstant(versionDateStr, throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")),
                         author = author
                     )
             }

@@ -25,7 +25,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.{IRI, Model, Statement, Value}
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import org.knora.webapi.util.JavaUtil._
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 
 import scala.collection.JavaConverters._
@@ -56,7 +56,7 @@ class UpgradePluginPR1307 extends UpgradePlugin {
          */
         val startIndex: Int = Models.getPropertyLiteral(statements, oldIri, StandoffTagHasStartIndexIri).toOption match {
             case Some(index) => index.intValue
-            case None => throw InconsistentTriplestoreDataException(s"$oldIri has no knora-base:standoffTagHasStartIndex")
+            case None => throw InconsistentRepositoryDataException(s"$oldIri has no knora-base:standoffTagHasStartIndex")
         }
 
         /**

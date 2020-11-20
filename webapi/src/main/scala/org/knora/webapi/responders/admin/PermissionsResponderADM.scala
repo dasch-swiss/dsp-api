@@ -38,6 +38,7 @@ import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
@@ -110,7 +111,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                             requestingUser = KnoraSystemInstances.Users.SystemUser
                         )).mapTo[Option[GroupADM]]
 
-                        group = maybeGroup.getOrElse(throw InconsistentTriplestoreDataException(s"Cannot find information for group: '$groupIri'. Please report as possible bug."))
+                        group = maybeGroup.getOrElse(throw InconsistentRepositoryDataException(s"Cannot find information for group: '$groupIri'. Please report as possible bug."))
                         res = (group.project.id, groupIri)
                     } yield res
             }
@@ -348,7 +349,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"administrativePermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
-            permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"getProjectAdministrativePermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
             /* extract response rows */
@@ -366,7 +367,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
 
                     /* construct permission object */
-                    AdministrativePermissionADM(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
+                    AdministrativePermissionADM(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentRepositoryDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
             }.toSeq
 
             /* construct response object */
@@ -394,7 +395,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"administrativePermissionForIriGetRequestV1 - query: $sparqlQueryString")
 
-            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"getAdministrativePermissionForIriV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             /* extract response rows */
@@ -414,7 +415,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             //_ = log.debug(s"administrativePermissionForIriGetRequestV1 - hasPermissions: ${MessageUtil.toSource(hasPermissions)}")
 
             /* construct the permission object */
-            permission = permissionsmessages.AdministrativePermissionADM(iri = administrativePermissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIri has no project attached")).head, forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIri has no group attached")).head, hasPermissions = hasPermissions)
+            permission = permissionsmessages.AdministrativePermissionADM(iri = administrativePermissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Permission $administrativePermissionIri has no project attached")).head, forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentRepositoryDataException(s"Permission $administrativePermissionIri has no group attached")).head, hasPermissions = hasPermissions)
 
             /* construct the response object */
             response = AdministrativePermissionForIriGetResponseADM(permission)
@@ -442,7 +443,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"administrativePermissionForProjectGroupGetADM - query: $sparqlQueryString")
 
-            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"administrativePermissionForProjectGroupGetADM - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
@@ -451,7 +452,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
                 /* check if we only got one administrative permission back */
                 val apCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-                if (apCount > 1) throw InconsistentTriplestoreDataException(s"Only one administrative permission instance allowed for project: $projectIri and group: $groupIri combination, but found $apCount.")
+                if (apCount > 1) throw InconsistentRepositoryDataException(s"Only one administrative permission instance allowed for project: $projectIri and group: $groupIri combination, but found $apCount.")
 
                 /* get the iri of the retrieved permission */
                 val returnedPermissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
@@ -604,7 +605,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"objectAccessPermissionsForResourceGetV1 - query: $sparqlQueryString")
 
-            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"objectAccessPermissionsForResourceGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
@@ -644,7 +645,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"objectAccessPermissionsForValueGetV1 - query: $sparqlQueryString")
 
-            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"objectAccessPermissionsForValueGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
@@ -689,7 +690,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
-            permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
             /* extract response rows */
@@ -707,7 +708,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
 
                     /* construct permission object */
-                    DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraAdmin.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraAdmin.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraAdmin.ForProperty), hasPermissions = hasPermissions)
+                    DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraAdmin.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraAdmin.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraAdmin.ForProperty), hasPermissions = hasPermissions)
             }.toSeq
 
             /* construct response object */
@@ -737,7 +738,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ).toString())
             //_ = log.debug(s"defaultObjectAccessPermissionForIriGetRequestADM - query: $sparqlQueryString")
 
-            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"defaultObjectAccessPermissionForIriGetRequestADM - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
@@ -753,7 +754,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
 
-            defaultObjectAccessPermission = permissionsmessages.DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
+            defaultObjectAccessPermission = permissionsmessages.DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
             result = DefaultObjectAccessPermissionForIriGetResponseADM(defaultObjectAccessPermission)
 
@@ -803,7 +804,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
                     // _ = logger.debug(s"defaultObjectAccessPermissionGetADM - query: $sparqlQueryString")
 
-                    permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+                    permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
                     // _ = log.debug(s"defaultObjectAccessPermissionGetADM - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
                     permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
@@ -812,7 +813,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
                         /* check if we only got one default object access permission back */
                         val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-                        if (doapCount > 1) throw InconsistentTriplestoreDataException(s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.")
+                        if (doapCount > 1) throw InconsistentRepositoryDataException(s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.")
 
                         /* get the iri of the retrieved permission */
                         val permissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
@@ -821,7 +822,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                             case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                         }
                         val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
-                        val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
+                        val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
                         // write permission to cache
                         PermissionsMessagesUtilADM.writeDefaultObjectAccessPermissionADMToCache(doap)

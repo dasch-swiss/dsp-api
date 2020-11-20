@@ -23,7 +23,6 @@ import org.eclipse.rdf4j
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.JavaUtil._
@@ -367,7 +366,7 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
     connection.add(model)
     connection.close()
 
-    override def doSelect(selectQuery: String): SparqlSelectResponse = {
+    override def doSelect(selectQuery: String): SparqlSelectResult = {
         // Run the query.
 
         val connection = repository.getConnection
@@ -376,7 +375,7 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
 
         // Convert the query result to a SparqlSelectResponse.
 
-        val header = SparqlSelectResponseHeader(tupleQueryResult.getBindingNames.asScala)
+        val header = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala)
         val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
         while (tupleQueryResult.hasNext) {
@@ -392,9 +391,9 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
         tupleQueryResult.close()
         connection.close()
 
-        SparqlSelectResponse(
+        SparqlSelectResult(
             head = header,
-            results = SparqlSelectResponseBody(bindings = rowBuffer)
+            results = SparqlSelectResultBody(bindings = rowBuffer)
         )
     }
 }

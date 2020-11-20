@@ -27,7 +27,7 @@ import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DataConversionException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, DataConversionException, InconsistentRepositoryDataException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -1657,11 +1657,11 @@ object Cardinality extends Enumeration {
      */
     case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int, guiOrder: Option[Int] = None) {
         if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(owlCardinalityIri)) {
-            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property: $owlCardinalityIri")
+            throw InconsistentRepositoryDataException(s"Invalid OWL cardinality property: $owlCardinalityIri")
         }
 
         if (!(owlCardinalityValue == 0 || owlCardinalityValue == 1)) {
-            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value: $owlCardinalityValue")
+            throw InconsistentRepositoryDataException(s"Invalid OWL cardinality value: $owlCardinalityValue")
         }
 
         override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
@@ -1706,7 +1706,7 @@ object Cardinality extends Enumeration {
 
     /**
      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-     * [[InconsistentTriplestoreDataException]].
+     * [[InconsistentRepositoryDataException]].
      *
      * @param name the name of the value.
      * @return the requested value.
@@ -1714,7 +1714,7 @@ object Cardinality extends Enumeration {
     def lookup(name: String): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Cardinality not found: $name")
+            case None => throw InconsistentRepositoryDataException(s"Cardinality not found: $name")
         }
     }
 
@@ -1726,7 +1726,7 @@ object Cardinality extends Enumeration {
      * @return a [[Value]].
      */
     def owlCardinality2KnoraCardinality(propertyIri: IRI, owlCardinality: OwlCardinalityInfo): KnoraCardinalityInfo = {
-        val cardinality = owlCardinality2KnoraCardinalityMap.getOrElse(owlCardinality.copy(guiOrder = None), throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality $owlCardinality for $propertyIri"))
+        val cardinality = owlCardinality2KnoraCardinalityMap.getOrElse(owlCardinality.copy(guiOrder = None), throw InconsistentRepositoryDataException(s"Invalid OWL cardinality $owlCardinality for $propertyIri"))
 
         KnoraCardinalityInfo(
             cardinality = cardinality,
@@ -1804,7 +1804,7 @@ sealed trait EntityInfoContentV2 {
     }
 
     /**
-     * A convenience method that returns the canonical `rdf:type` of this entity. Throws [[InconsistentTriplestoreDataException]]
+     * A convenience method that returns the canonical `rdf:type` of this entity. Throws [[InconsistentRepositoryDataException]]
      * if the entity's predicates do not include `rdf:type`.
      *
      * @return the entity's `rdf:type`.
@@ -1812,7 +1812,7 @@ sealed trait EntityInfoContentV2 {
     def getRdfType: SmartIri
 
     /**
-     * A convenience method that returns all the objects of this entity's `rdf:type` predicate. Throws [[InconsistentTriplestoreDataException]]
+     * A convenience method that returns all the objects of this entity's `rdf:type` predicate. Throws [[InconsistentRepositoryDataException]]
      * * if the entity's predicates do not include `rdf:type`.
      *
      * @return all the values of `rdf:type` for this entity, sorted for determinism.
@@ -2619,11 +2619,11 @@ case class ClassInfoContentV2(classIri: SmartIri,
         if (classTypeSet.size == 1) {
             classTypeSet.head
         } else {
-            throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is invalid")
+            throw InconsistentRepositoryDataException(s"The rdf:type of $classIri is invalid")
         }
     }
 
-    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is missing or invalid")).toVector.sorted
+    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"The rdf:type of $classIri is missing or invalid")).toVector.sorted
 
     /**
      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
@@ -2835,7 +2835,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
         val predicatesWithAdjustedRdfType: Map[SmartIri, PredicateInfoV2] = if (ontologySchema == InternalSchema && targetSchema == ApiV2Simple) {
             // Yes. Is this an object property?
             val rdfTypeIri = OntologyConstants.Rdf.Type.toSmartIri
-            val sourcePropertyType: SmartIri = getPredicateIriObject(rdfTypeIri).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type"))
+            val sourcePropertyType: SmartIri = getPredicateIriObject(rdfTypeIri).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no rdf:type"))
 
             if (sourcePropertyType.toString == OntologyConstants.Owl.ObjectProperty) {
                 // Yes. See if we need to change it to a datatype property. Does it have a knora-base:objectClassConstraint?
@@ -2903,11 +2903,11 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
         if (propertyTypeSet.size == 1) {
             propertyTypeSet.head
         } else {
-            throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is invalid")
+            throw InconsistentRepositoryDataException(s"The rdf:type of $propertyIri is invalid")
         }
     }
 
-    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is missing or invalid")).toVector.sorted
+    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"The rdf:type of $propertyIri is missing or invalid")).toVector.sorted
 
     /**
      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
@@ -3005,18 +3005,18 @@ case class IndividualInfoContentV2(individualIri: SmartIri,
                                    predicates: Map[SmartIri, PredicateInfoV2],
                                    ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[IndividualInfoContentV2] {
     override def getRdfType: SmartIri = {
-        val rdfTypePred = predicates.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has no rdf:type"))
+        val rdfTypePred = predicates.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"OWL named individual $individualIri has no rdf:type"))
 
         val nonIndividualTypes: Seq[SmartIri] = getRdfTypes.filter(iri => iri.toString != OntologyConstants.Owl.NamedIndividual)
 
         if (nonIndividualTypes.size != 1) {
-            throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has too many objects for rdf:type: ${rdfTypePred.objects.mkString(", ")}")
+            throw InconsistentRepositoryDataException(s"OWL named individual $individualIri has too many objects for rdf:type: ${rdfTypePred.objects.mkString(", ")}")
         }
 
         nonIndividualTypes.head
     }
 
-    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $individualIri is missing or invalid")).toVector.sorted
+    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"The rdf:type of $individualIri is missing or invalid")).toVector.sorted
 
     override def toOntologySchema(targetSchema: OntologySchema): IndividualInfoContentV2 = {
         copy(

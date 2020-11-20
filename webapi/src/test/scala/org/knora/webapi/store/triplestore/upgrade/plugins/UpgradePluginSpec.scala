@@ -28,8 +28,8 @@ import org.eclipse.rdf4j.repository.sail.{SailRepository, SailRepositoryConnecti
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.eclipse.rdf4j.sail.memory.MemoryStore
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, SparqlSelectResultBody, SparqlSelectResultHeader, VariableResultsRow}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -72,17 +72,17 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
     }
 
     /**
-      * Wraps expected SPARQL SELECT results in a [[SparqlSelectResponseBody]].
+      * Wraps expected SPARQL SELECT results in a [[SparqlSelectResultBody]].
       *
       * @param rows the expected results.
-      * @return a [[SparqlSelectResponseBody]] containing the expected results.
+      * @return a [[SparqlSelectResultBody]] containing the expected results.
       */
-    def expectedResult(rows: Seq[Map[String, String]]): SparqlSelectResponseBody = {
+    def expectedResult(rows: Seq[Map[String, String]]): SparqlSelectResultBody = {
         val rowMaps = rows.map {
             mapToWrap => VariableResultsRow(new ErrorHandlingMap[String, String](mapToWrap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
         }
 
-        SparqlSelectResponseBody(bindings = rowMaps)
+        SparqlSelectResultBody(bindings = rowMaps)
     }
 
     /**
@@ -90,13 +90,13 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
       *
       * @param selectQuery the query.
       * @param connection a connection to the repository.
-      * @return a [[SparqlSelectResponse]] containing the query results.
+      * @return a [[SparqlSelectResult]] containing the query results.
       */
-    def doSelect(selectQuery: String, connection: SailRepositoryConnection): SparqlSelectResponse = {
+    def doSelect(selectQuery: String, connection: SailRepositoryConnection): SparqlSelectResult = {
         val tupleQuery: TupleQuery = connection.prepareTupleQuery(selectQuery)
         val tupleQueryResult: TupleQueryResult = tupleQuery.evaluate
 
-        val header = SparqlSelectResponseHeader(tupleQueryResult.getBindingNames.asScala)
+        val header = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala)
         val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
         while (tupleQueryResult.hasNext) {
@@ -111,9 +111,9 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
 
         tupleQueryResult.close()
 
-        SparqlSelectResponse(
+        SparqlSelectResult(
             head = header,
-            results = SparqlSelectResponseBody(bindings = rowBuffer)
+            results = SparqlSelectResultBody(bindings = rowBuffer)
         )
     }
 }

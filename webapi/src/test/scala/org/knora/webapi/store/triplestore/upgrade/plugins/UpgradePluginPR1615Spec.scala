@@ -21,7 +21,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.repository.sail.SailRepository
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectResponse
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 
 class UpgradePluginPR1615Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1615" should {
@@ -45,7 +45,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
                   |}
                   |""".stripMargin
 
-            val queryResult1: SparqlSelectResponse = doSelect(selectQuery = query1, connection = connection)
+            val queryResult1: SparqlSelectResult = doSelect(selectQuery = query1, connection = connection)
             assert(queryResult1.results.bindings.isEmpty)
 
             // Check that other data is still there.
@@ -56,7 +56,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
                   |}
                   |""".stripMargin
 
-            val queryResult2: SparqlSelectResponse = doSelect(selectQuery = query2, connection = connection)
+            val queryResult2: SparqlSelectResult = doSelect(selectQuery = query2, connection = connection)
             assert(queryResult2.results.bindings.nonEmpty)
 
             connection.close()

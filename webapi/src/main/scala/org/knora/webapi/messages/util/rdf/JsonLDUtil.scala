@@ -1253,8 +1253,8 @@ object JsonLDUtil {
 
             // Are there still conflicts?
             if (hasPrefixConflicts(longKnoraPrefixes)) {
-                // Yes. This shouldn't happen, so throw InconsistentTriplestoreDataException.
-                throw InconsistentTriplestoreDataException(s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes.map(_.toString)).mkString(", ")}")
+                // Yes. This shouldn't happen, so throw InconsistentRepositoryDataException.
+                throw InconsistentRepositoryDataException(s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes.map(_.toString)).mkString(", ")}")
             } else {
                 // No. Use the long prefixes.
                 longKnoraPrefixes.toMap

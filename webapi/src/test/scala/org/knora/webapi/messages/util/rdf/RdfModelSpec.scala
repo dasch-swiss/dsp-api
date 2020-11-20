@@ -19,11 +19,14 @@
 
 package org.knora.webapi.util.rdf
 
+import java.io.{BufferedInputStream, FileInputStream}
+
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.{CoreSpec, IRI}
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.{CoreSpec, IRI}
 
 /**
  * Tests implementations of [[RdfModel]].
@@ -39,6 +42,7 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
     private val model: RdfModel = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig).makeEmptyModel
     private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
     /**
      * Adds a statement, then searches for it by subject and predicate.
@@ -289,6 +293,42 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
             assert(!model.contains(statementInDefaultGraph))
             assert(!model.contains(statementInNamedGraph))
+        }
+
+
+        "do a SPARQL SELECT query" in {
+            val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/anything-data.ttl"))
+            val anythingModel: RdfModel = rdfFormatUtil.streamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
+            fileInputStream.close()
+
+            val rdfRepository: RdfRepository = anythingModel.asRepository
+
+            val selectQuery =
+                """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                  |
+                  |SELECT ?resource ?value WHERE {
+                  |    ?resource anything:hasDecimal ?value .
+                  |} ORDER BY ?resource""".stripMargin
+
+            val queryResult: SparqlSelectResult = rdfRepository.doSelect(selectQuery)
+
+            assert(queryResult.head.vars == Seq("resource", "value"))
+
+            val results: Seq[Map[String, String]] = queryResult.results.bindings.map(_.rowMap)
+
+            val expectedResults = Seq(
+                Map(
+                    "resource" -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+                    "value" -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
+                ),
+                Map(
+                    "resource" -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
+                    "value" -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ"
+                )
+            )
+
+            assert(results == expectedResults)
         }
     }
 }

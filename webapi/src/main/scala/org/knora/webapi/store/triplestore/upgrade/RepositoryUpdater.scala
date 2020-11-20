@@ -12,13 +12,14 @@ import org.eclipse.rdf4j.model.impl.{LinkedHashModel, SimpleValueFactory}
 import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
@@ -109,7 +110,7 @@ class RepositoryUpdater(system: ActorSystem,
      */
     private def getRepositoryVersion: Future[Option[String]] = {
         for {
-            repositoryVersionResponse: SparqlSelectResponse <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResponse]
+            repositoryVersionResponse: SparqlSelectResult <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResult]
 
             bindings = repositoryVersionResponse.results.bindings
 
@@ -133,7 +134,7 @@ class RepositoryUpdater(system: ActorSystem,
                 // The repository has a version string. Get the plugins for all subsequent versions.
                 val pluginForRepositoryVersion: PluginForKnoraBaseVersion = pluginsForVersionsMap.getOrElse(
                     repositoryVersion,
-                    throw InconsistentTriplestoreDataException(s"No such repository version $repositoryVersion")
+                    throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
                 )
 
                 RepositoryUpdatePlan.pluginsForVersions.filter(_.versionNumber > pluginForRepositoryVersion.versionNumber)

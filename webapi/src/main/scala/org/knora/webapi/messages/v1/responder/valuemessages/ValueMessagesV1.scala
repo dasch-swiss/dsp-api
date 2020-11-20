@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotImplementedException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException, NotImplementedException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -591,7 +591,7 @@ object KnoraCalendarV1 extends Enumeration {
 
     /**
      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-     * [[InconsistentTriplestoreDataException]].
+     * [[InconsistentRepositoryDataException]].
      *
      * @param name the name of the value.
      * @return the requested value.
@@ -599,7 +599,7 @@ object KnoraCalendarV1 extends Enumeration {
     def lookup(name: String): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Calendar type not supported: $name")
+            case None => throw InconsistentRepositoryDataException(s"Calendar type not supported: $name")
         }
     }
 }
@@ -617,7 +617,7 @@ object KnoraPrecisionV1 extends Enumeration {
 
     /**
      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-     * [[InconsistentTriplestoreDataException]].
+     * [[InconsistentRepositoryDataException]].
      *
      * @param name the name of the value.
      * @return the requested value.
@@ -625,7 +625,7 @@ object KnoraPrecisionV1 extends Enumeration {
     def lookup(name: String): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Calendar precision not supported: $name")
+            case None => throw InconsistentRepositoryDataException(s"Calendar precision not supported: $name")
         }
     }
 }
@@ -779,7 +779,7 @@ case class TextValueWithStandoffV1(utf8str: String,
 
                 // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
                 stringFormatter.fromSparqlEncodedString(utf8str) == otherText.utf8str
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -808,7 +808,7 @@ case class TextValueWithStandoffV1(utf8str: String,
 
                 utf8strIdentical && standoffIdentical && textValueWithStandoffV1.mappingIri == this.mappingIri
 
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -847,7 +847,7 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String] = None) e
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case otherText: TextValueV1 => otherText.utf8str == utf8str
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -864,7 +864,7 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String] = None) e
         currentVersion match {
             case textValueSimpleV1: TextValueSimpleV1 => textValueSimpleV1 == this
             case _: TextValueWithStandoffV1 => false
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 
@@ -932,7 +932,7 @@ case class LinkUpdateV1(targetResourceIri: IRI, targetExists: Boolean = true) ex
         other match {
             case linkV1: LinkV1 => targetResourceIri == linkV1.targetResourceIri
             case linkValueV1: LinkValueV1 => targetResourceIri == linkValueV1.objectIri
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -992,7 +992,7 @@ case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValue
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case listValueV1: HierarchicalListValueV1 => listValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1005,7 +1005,7 @@ case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValue
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case listValueV1: HierarchicalListValueV1 => listValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1032,7 +1032,7 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case integerValueV1: IntegerValueV1 => integerValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1045,7 +1045,7 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case integerValueV1: IntegerValueV1 => integerValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1081,7 +1081,7 @@ case class BooleanValueV1(bval: Boolean) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case booleanValueV1: BooleanValueV1 => booleanValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1108,7 +1108,7 @@ case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case uriValueV1: UriValueV1 => uriValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1121,7 +1121,7 @@ case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case uriValueV1: UriValueV1 => uriValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1147,7 +1147,7 @@ case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case decimalValueV1: DecimalValueV1 => decimalValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1160,7 +1160,7 @@ case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case decimalValueV1: DecimalValueV1 => decimalValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 
@@ -1192,7 +1192,7 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case intervalValueV1: IntervalValueV1 => intervalValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1205,7 +1205,7 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case intervalValueV1: IntervalValueV1 => intervalValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1232,7 +1232,7 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case timeValueV1: TimeValueV1 => timeValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1245,7 +1245,7 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case timeValueV1: TimeValueV1 => timeValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1270,7 +1270,7 @@ case class JulianDayNumberValueV1(dateval1: Int,
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case dateValueV1: DateValueV1 => DateUtilV1.julianDayNumberValueV1ToDateValueV1(this) == other
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1358,7 +1358,7 @@ case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case colorValueV1: ColorValueV1 => colorValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1371,7 +1371,7 @@ case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case colorValueV1: ColorValueV1 => colorValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1398,7 +1398,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case geomValueV1: GeomValueV1 => geomValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1411,7 +1411,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case geomValueV1: GeomValueV1 => geomValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1438,7 +1438,7 @@ case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiVal
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case geonameValueV1: GeonameValueV1 => geonameValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1451,7 +1451,7 @@ case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiVal
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case geonameValueV1: GeonameValueV1 => geonameValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 }
@@ -1501,7 +1501,7 @@ case class StillImageFileValueV1(internalMimeType: String,
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case stillImageFileValueV1: StillImageFileValueV1 => stillImageFileValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1514,7 +1514,7 @@ case class StillImageFileValueV1(internalMimeType: String,
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case stillImageFileValueV1: StillImageFileValueV1 => stillImageFileValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 
@@ -1554,7 +1554,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case movingImageFileValueV1: MovingImageFileValueV1 => movingImageFileValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1567,7 +1567,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case movingImageFileValueV1: MovingImageFileValueV1 => movingImageFileValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 
@@ -1597,7 +1597,7 @@ case class TextFileValueV1(internalMimeType: String,
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case textFileValueV1: TextFileValueV1 => textFileValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+            case otherValue => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -1610,7 +1610,7 @@ case class TextFileValueV1(internalMimeType: String,
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case textFileValueV1: TextFileValueV1 => textFileValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+            case other => throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 

@@ -22,8 +22,8 @@ package org.knora.webapi.messages.util.search.gravsearch.mainquery
 import org.knora.webapi._
 import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.search.{AndExpression, CompareExpression, CompareExpressionOperator, ConstructClause, ConstructQuery, FilterPattern, IriRef, OptionalPattern, QueryPattern, QueryVariable, StatementPattern, UnionPattern, ValuesPattern, WhereClause, XsdLiteral}
 import org.knora.webapi.messages.util.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
@@ -111,7 +111,7 @@ object GravsearchMainQueryGenerator {
      * @param mainResourceVar  the variable representing the main resource.
      * @return a [[DependentResourcesPerMainResource]].
      */
-    def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
+    def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResult,
                                                 transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
                                                 mainResourceVar: QueryVariable): DependentResourcesPerMainResource = {
 
@@ -165,7 +165,7 @@ object GravsearchMainQueryGenerator {
      * @param mainResourceVar  the variable representing the main resource.
      * @return [[ValueObjectVariablesAndValueObjectIris]].
      */
-    def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
+    def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResult,
                                                  transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
                                                  mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
 

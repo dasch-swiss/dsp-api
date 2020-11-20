@@ -22,8 +22,9 @@ package org.knora.webapi.responders.v1
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
@@ -155,7 +156,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }
-            listQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResponse]
+            listQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
 
             // Group the results to map each node to the SPARQL query results representing its children.
             groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] = listQueryResponse.results.bindings.groupBy(row => row.rowMap("node"))
@@ -227,7 +228,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }
-            nodePathResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(nodePathQuery)).mapTo[SparqlSelectResponse]
+            nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery)).mapTo[SparqlSelectResult]
 
             /*
 

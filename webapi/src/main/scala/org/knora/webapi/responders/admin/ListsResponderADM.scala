@@ -32,6 +32,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -108,7 +109,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
                     ListRootNodeInfoADM(
                         id = listIri.toString,
-                        projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
+                        projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri, throw InconsistentRepositoryDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         name = name,
                         labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                         comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
@@ -155,8 +156,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
                     rootNodeInfo = maybeRootNodeInfo match {
                         case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
-                        case Some(info: ListChildNodeInfoADM) => throw InconsistentTriplestoreDataException("A child node info was found, although we are expecting a root node info. Please report this as a possible bug.")
-                        case Some(_) | None => throw InconsistentTriplestoreDataException("No info about list node found, although list node should exist. Please report this as a possible bug.")
+                        case Some(info: ListChildNodeInfoADM) => throw InconsistentRepositoryDataException("A child node info was found, although we are expecting a root node info. Please report this as a possible bug.")
+                        case Some(_) | None => throw InconsistentRepositoryDataException("No info about list node found, although list node should exist. Please report this as a possible bug.")
                     }
 
                     list = ListADM(listinfo = rootNodeInfo, children = children)
@@ -272,7 +273,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                             case Some(iris: Seq[LiteralV2]) =>
                                 iris.headOption match {
                                     case Some(iri: IriLiteralV2) => Some(iri.value)
-                                    case other => throw InconsistentTriplestoreDataException(s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                    case other => throw InconsistentRepositoryDataException(s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
                                 }
                             case None => None
                         }
@@ -281,7 +282,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                             case Some(iris: Seq[LiteralV2]) =>
                                 iris.headOption match {
                                     case Some(iri: IriLiteralV2) => Some(iri.value)
-                                    case other => throw InconsistentTriplestoreDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                    case other => throw InconsistentRepositoryDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
                                 }
                             case None => None
                         }
@@ -290,7 +291,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                             case Some(values: Seq[LiteralV2]) =>
                                 values.headOption match {
                                     case Some(value: BooleanLiteralV2) => value.value
-                                    case Some(other) => throw InconsistentTriplestoreDataException(s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other")
+                                    case Some(other) => throw InconsistentRepositoryDataException(s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other")
                                     case None => false
                                 }
                             case None => false
@@ -301,7 +302,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                         if (isRootNode) {
                             ListRootNodeInfoADM(
                                 id = nodeIri.toString,
-                                projectIri = attachedToProjectOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
+                                projectIri = attachedToProjectOption.getOrElse(throw InconsistentRepositoryDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
                                 name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
                                 labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                                 comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
@@ -312,8 +313,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                 name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
                                 labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                                 comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
-                                position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri.")),
-                                hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri."))
+                                position = positionOption.getOrElse(throw InconsistentRepositoryDataException(s"Required position property missing for list node $nodeIri.")),
+                                hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentRepositoryDataException(s"Required hasRootNode property missing for list node $nodeIri."))
                             )
                         }
                 }
@@ -403,7 +404,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                 case Some(iris: Seq[LiteralV2]) =>
                                     iris.headOption match {
                                         case Some(iri: IriLiteralV2) => Some(iri.value)
-                                        case other => throw InconsistentTriplestoreDataException(s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                        case other => throw InconsistentRepositoryDataException(s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
                                     }
                                 case None => None
                             }
@@ -412,7 +413,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                 case Some(iris: Seq[LiteralV2]) =>
                                     iris.headOption match {
                                         case Some(iri: IriLiteralV2) => Some(iri.value)
-                                        case other => throw InconsistentTriplestoreDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                        case other => throw InconsistentRepositoryDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
                                     }
                                 case None => None
                             }
@@ -421,7 +422,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                 case Some(values: Seq[LiteralV2]) =>
                                     values.headOption match {
                                         case Some(value: BooleanLiteralV2) => value.value
-                                        case Some(other) => throw InconsistentTriplestoreDataException(s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other")
+                                        case Some(other) => throw InconsistentRepositoryDataException(s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other")
                                         case None => false
                                     }
                                 case None => false
@@ -432,7 +433,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                             if (isRootNode) {
                                 ListRootNodeADM(
                                     id = nodeIri.toString,
-                                    projectIri = attachedToProjectOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
+                                    projectIri = attachedToProjectOption.getOrElse(throw InconsistentRepositoryDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
                                     name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
                                     labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                                     comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
@@ -444,8 +445,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                     name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
                                     labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                                     comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
-                                    position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri.")),
-                                    hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri.")),
+                                    position = positionOption.getOrElse(throw InconsistentRepositoryDataException(s"Required position property missing for list node $nodeIri.")),
+                                    hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentRepositoryDataException(s"Required hasRootNode property missing for list node $nodeIri.")),
                                     children = children
                                 )
                             }
@@ -488,7 +489,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(nodeIri)).head._2
 
-            val hasRootNode: IRI = propsMap.getOrElse(OntologyConstants.KnoraBase.HasRootNode.toSmartIri, throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri.")).head.toString
+            val hasRootNode: IRI = propsMap.getOrElse(OntologyConstants.KnoraBase.HasRootNode.toSmartIri, throw InconsistentRepositoryDataException(s"Required hasRootNode property missing for list node $nodeIri.")).head.toString
 
             val nameOption = propsMap.get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value)
 
@@ -496,7 +497,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
 
             val positionOption: Option[Int] = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri).map(_.head.asInstanceOf[IntLiteralV2].value)
-            val position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri."))
+            val position = positionOption.getOrElse(throw InconsistentRepositoryDataException(s"Required position property missing for list node $nodeIri."))
 
             val children: Seq[ListChildNodeADM] = propsMap.get(OntologyConstants.KnoraBase.HasSubListNode.toSmartIri) match {
                 case Some(iris: Seq[LiteralV2]) =>
@@ -612,7 +613,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }
-            nodePathResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(nodePathQuery)).mapTo[SparqlSelectResponse]
+            nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery)).mapTo[SparqlSelectResult]
 
             /*
 

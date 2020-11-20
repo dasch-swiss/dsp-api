@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, NotFoundException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -183,7 +183,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                     vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinalityInfo.cardinality.toString,
                                     valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
                                     gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
                                     guiorder = cardinalityInfo.guiOrder
                                 )
@@ -197,14 +197,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                     description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)),
                                     vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinalityInfo.cardinality.toString,
-                                    valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                    valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                     attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
                                     gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
                                     guiorder = cardinalityInfo.guiOrder
                                 )
                             }
                         case None =>
-                            throw new InconsistentTriplestoreDataException(s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist")
+                            throw new InconsistentRepositoryDataException(s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist")
                     }
             }.toVector.sortBy(_.guiorder)
 
@@ -291,8 +291,8 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                     NamedGraphV1(
                         id = ontologyMetadata.ontologyIri.toString,
                         shortname = project.shortname,
-                        longname = project.longname.getOrElse(throw InconsistentTriplestoreDataException(s"Project ${project.id} has no longname")),
-                        description = project.description.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"Project ${project.id} has no description")).toString,
+                        longname = project.longname.getOrElse(throw InconsistentRepositoryDataException(s"Project ${project.id} has no longname")),
+                        description = project.description.headOption.getOrElse(throw InconsistentRepositoryDataException(s"Project ${project.id} has no description")).toString,
                         project_id = project.id,
                         uri = ontologyMetadata.ontologyIri.toString,
                         active = project.status
@@ -362,13 +362,13 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                             prop =>
                                 PropertyTypeV1(
                                     id = prop.id,
-                                    label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
+                                    label = prop.label.getOrElse(throw InconsistentRepositoryDataException(s"No label given for ${prop.id}"))
                                 )
                         }.toVector
 
                         ResourceTypeV1(
                             id = resClassIri,
-                            label = resInfo.restype_info.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for $resClassIri")),
+                            label = resInfo.restype_info.label.getOrElse(throw InconsistentRepositoryDataException(s"No label given for $resClassIri")),
                             properties = properties
                         )
                 }.toVector
@@ -434,7 +434,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                 description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)),
                                 vocabulary = entityInfo.ontologyIri,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
@@ -445,7 +445,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                 label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)),
                                 description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)),
                                 vocabulary = entityInfo.ontologyIri,
-                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )

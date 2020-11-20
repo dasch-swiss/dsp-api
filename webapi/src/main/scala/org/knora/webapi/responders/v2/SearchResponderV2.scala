@@ -22,12 +22,13 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException, GravsearchException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, GravsearchException, InconsistentRepositoryDataException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, SparqlSelectResultBody, VariableResultsRow}
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.prequery.{AbstractPrequeryGenerator, NonTriplestoreSpecificGravsearchToCountPrequeryTransformer, NonTriplestoreSpecificGravsearchToPrequeryTransformer}
 import org.knora.webapi.messages.util.search.gravsearch.types._
@@ -100,7 +101,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(countSparql)
 
-            countResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResponse]
+            countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
             // query response should contain one result with one row with the name "count"
             _ = if (countResponse.results.bindings.length != 1) {
@@ -155,7 +156,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(searchSparql)
 
-            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
             // _ = println(prequeryResponseNotMerged)
 
             mainResourceVar = QueryVariable("resource")
@@ -341,7 +342,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(triplestoreSpecificCountQuery.toSparql)
 
-            countResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql)).mapTo[SparqlSelectResponse]
+            countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql)).mapTo[SparqlSelectResult]
 
             // query response should contain one result with one row with the name "count"
             _ = if (countResponse.results.bindings.length != 1) {
@@ -429,7 +430,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
             _ = log.debug(triplestoreSpecificPrequerySparql)
 
-            prequeryResponseNotMerged: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql)).mapTo[SparqlSelectResponse]
+            prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql)).mapTo[SparqlSelectResult]
             pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
             // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
@@ -616,7 +617,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     }
 
                     // Get the value class that's the object of the knora-base:objectClassConstraint of the ORDER BY property.
-                    val orderByValueType: SmartIri = internalOrderByPropertyDef.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"))
+                    val orderByValueType: SmartIri = internalOrderByPropertyDef.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentRepositoryDataException(s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"))
 
                     // Determine which subproperty of knora-base:valueHas corresponds to that value class.
                     val orderByValuePredicate = orderByValueType.toString match {
@@ -647,7 +648,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 offset = resourcesInProjectGetRequestV2.page * settings.v2ResultsPerPage
             ).toString
 
-            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
+            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
             mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
             // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -751,7 +752,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(countSparql)
 
-            countResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResponse]
+            countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
             // query response should contain one result with one row with the name "count"
             _ = if (countResponse.results.bindings.length != 1) {
@@ -819,7 +820,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     if (subjectIsMainResource) {
                         val subjIri: IRI = subject match {
                             case IriSubjectV2(value) => value
-                            case other => throw InconsistentTriplestoreDataException(s"Unexpected subject of resource: $other")
+                            case other => throw InconsistentRepositoryDataException(s"Unexpected subject of resource: $other")
                         }
 
                         acc + subjIri
@@ -860,7 +861,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
      * @param mainResourceVar           the name of the column representing the main resource.
      * @return the merged results.
      */
-    private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResponse, mainResourceVar: QueryVariable): SparqlSelectResponse = {
+    private def mergePrequeryResults(prequeryResponseNotMerged: SparqlSelectResult, mainResourceVar: QueryVariable): SparqlSelectResult = {
         // Make a Map of merged results per main resource IRI.
         val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
             row =>
@@ -906,7 +907,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         }
 
         prequeryResponseNotMerged.copy(
-            results = SparqlSelectResponseBody(prequeryRowsMerged)
+            results = SparqlSelectResultBody(prequeryRowsMerged)
         )
     }
 }

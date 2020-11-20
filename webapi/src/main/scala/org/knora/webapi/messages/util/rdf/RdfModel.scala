@@ -21,7 +21,6 @@ package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectResponse
 
 import scala.util.control.Exception.allCatch
 
@@ -358,5 +357,5 @@ trait RdfRepository {
      * @param selectQuery the query.
      * @return the query result.
      */
-    def doSelect(selectQuery: String): SparqlSelectResponse
+    def doSelect(selectQuery: String): SparqlSelectResult
 }

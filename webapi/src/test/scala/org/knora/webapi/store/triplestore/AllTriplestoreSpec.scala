@@ -23,8 +23,9 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.settings.TriplestoreTypes
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM}
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -237,7 +238,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println(msg)
                         afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
                         (afterLoadCount > 0) should ===(true)
@@ -250,7 +251,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 storeManager ! SparqlSelectRequest(namedGraphQuery)
                 //println(result)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println(msg)
                         msg.results.bindings.nonEmpty should ===(true)
                 }
@@ -264,7 +265,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println("vor insert: " + msg)
                         msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
                 }
@@ -275,7 +276,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println(msg)
                         msg.results.bindings.size should ===(3)
                 }
@@ -283,7 +284,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println("nach instert" + msg)
                         afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
                         (afterChangeCount - afterLoadCount) should ===(3)
@@ -299,7 +300,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println("vor revert: " + msg)
                         msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
                 }
@@ -309,7 +310,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println("nach revert: " + msg)
                         msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
                 }
@@ -317,7 +318,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse =>
+                    case msg: SparqlSelectResult =>
                         //println("check: " + msg)
                         msg.results.bindings.size should ===(0)
                 }
@@ -333,7 +334,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
                     }
                     expectMsgPF(timeout) {
-                        case msg: SparqlSelectResponse =>
+                        case msg: SparqlSelectResult =>
                             //println(msg)
                             msg.results.bindings.size should ===(3)
                     }
@@ -347,7 +348,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
                     }
                     expectMsgPF(timeout) {
-                        case msg: SparqlSelectResponse =>
+                        case msg: SparqlSelectResult =>
                             //println(msg)
                             msg.results.bindings.size should ===(1)
                     }

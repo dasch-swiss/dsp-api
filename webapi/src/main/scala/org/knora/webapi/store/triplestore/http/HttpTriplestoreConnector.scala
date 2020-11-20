@@ -44,9 +44,9 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
-import org.knora.webapi.messages.util.SparqlResultProtocol._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
@@ -205,15 +205,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
+     * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
      *
      * @param sparql the SPARQL SELECT query string.
-     * @return a [[SparqlSelectResponse]].
+     * @return a [[SparqlSelectResult]].
      */
-    private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResponse] = {
-        def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResponse] = {
+    private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResult] = {
+        def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResult] = {
             val parseTry = Try {
-                resultStr.parseJson.convertTo[SparqlSelectResponse]
+                resultStr.parseJson.convertTo[SparqlSelectResult]
             }
 
             parseTry match {

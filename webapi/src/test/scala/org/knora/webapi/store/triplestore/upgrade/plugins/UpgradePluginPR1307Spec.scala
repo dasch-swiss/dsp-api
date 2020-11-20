@@ -21,7 +21,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.repository.sail.SailRepository
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, SparqlSelectResultBody}
 
 class UpgradePluginPR1307Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1307" should {
@@ -48,9 +48,9 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
                   |}
                   |""".stripMargin
 
-            val queryResult1: SparqlSelectResponse = doSelect(selectQuery = query1, connection = connection)
+            val queryResult1: SparqlSelectResult = doSelect(selectQuery = query1, connection = connection)
 
-            val expectedResult1: SparqlSelectResponseBody = expectedResult(
+            val expectedResult1: SparqlSelectResultBody = expectedResult(
                 Seq(
                     Map(
                         "s" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ",
@@ -72,9 +72,9 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
                   |} ORDER BY ?tag
                   |""".stripMargin
 
-            val queryResult2: SparqlSelectResponse = doSelect(selectQuery = query2, connection = connection)
+            val queryResult2: SparqlSelectResult = doSelect(selectQuery = query2, connection = connection)
 
-            val expectedResult2: SparqlSelectResponseBody = expectedResult(
+            val expectedResult2: SparqlSelectResultBody = expectedResult(
                 Seq(
                     Map("tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/0"),
                     Map("tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1"),
@@ -104,9 +104,9 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
                   |} ORDER BY ?tag
                   |""".stripMargin
 
-            val queryResult3: SparqlSelectResponse = doSelect(selectQuery = query3, connection = connection)
+            val queryResult3: SparqlSelectResult = doSelect(selectQuery = query3, connection = connection)
 
-            val expectedResult3: SparqlSelectResponseBody = expectedResult(
+            val expectedResult3: SparqlSelectResultBody = expectedResult(
                 Seq(
                     Map(
                         "startIndex" -> "0",
