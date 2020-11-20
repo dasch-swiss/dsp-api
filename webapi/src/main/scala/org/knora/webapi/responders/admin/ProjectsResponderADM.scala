@@ -510,7 +510,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                     val namedGraphTry: Try[Unit] = Try {
                         maybeBufferedFileInputStream = Some(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile)))
 
-                        rdfFormatUtil.parseToStream(
+                        rdfFormatUtil.parseWithStreamProcessor(
                             rdfSource = RdfInputStreamSource(maybeBufferedFileInputStream.get),
                             rdfFormat = TriG,
                             rdfStreamProcessor = combiningRdfProcessor

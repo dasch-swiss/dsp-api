@@ -264,7 +264,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
                 val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
 
-                for (st: Statement <- rdfModel.getStatements) {
+                for (st: Statement <- rdfModel) {
                     val subjectIri = st.subj.stringValue
                     val predicateIri = st.pred.stringValue
                     val objectIri = st.obj.stringValue
@@ -356,7 +356,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 featureFactoryConfig = featureFactoryConfig
             )
 
-            rdfFormatUtil.parseToStream(
+            rdfFormatUtil.parseWithStreamProcessor(
                 rdfSource = rdfSource,
                 rdfFormat = Turtle,
                 rdfStreamProcessor = contextAddingProcessor

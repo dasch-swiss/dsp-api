@@ -90,7 +90,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             subj = Some(rdfNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
             pred = Some(rdfNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
             obj = None
-        )
+        ).toSet
 
         assert(statements.size == 1)
         assert(statements.head.obj == rdfNodeFactory.makeIriNode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"))
@@ -193,7 +193,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             val inputStream = new BufferedInputStream(new FileInputStream("test_data/ontologies/anything-onto.ttl"))
             val testStreamProcessor = new TestStreamProcessor
 
-            rdfFormatUtil.parseToStream(
+            rdfFormatUtil.parseWithStreamProcessor(
                 rdfSource = RdfInputStreamSource(inputStream),
                 rdfFormat = Turtle,
                 rdfStreamProcessor = testStreamProcessor
@@ -215,7 +215,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
                 rdfFormat = Turtle
             )
 
-            rdfFormatUtil.parseToStream(
+            rdfFormatUtil.parseWithStreamProcessor(
                 rdfSource = RdfInputStreamSource(fileInputStream),
                 rdfFormat = Turtle,
                 rdfStreamProcessor = formattingStreamProcessor
@@ -228,7 +228,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
             val testStreamProcessor = new TestStreamProcessor
 
-            rdfFormatUtil.parseToStream(
+            rdfFormatUtil.parseWithStreamProcessor(
                 rdfSource = RdfInputStreamSource(byteArrayInputStream),
                 rdfFormat = Turtle,
                 rdfStreamProcessor = testStreamProcessor
@@ -238,11 +238,21 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             testStreamProcessor.check()
         }
 
-        "stream RDF data into an RdfModel" in {
+        "stream RDF data from an InputStream into an RdfModel, then into an OutputStream, then back into an RdfModel" in {
             val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/ontologies/anything-onto.ttl"))
-            val rdfModel: RdfModel = rdfFormatUtil.streamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
+            val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
             fileInputStream.close()
             assert(rdfModel.contains(expectedThingLabelStatement))
+
+            val byteArrayOutputStream = new ByteArrayOutputStream()
+            rdfFormatUtil.rdfModelToOutputStream(rdfModel = rdfModel, outputStream = byteArrayOutputStream, rdfFormat = Turtle)
+            byteArrayOutputStream.close()
+
+            val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
+            val copyOfRdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = byteArrayInputStream, rdfFormat = Turtle)
+            byteArrayInputStream.close()
+
+            assert(copyOfRdfModel == rdfModel)
         }
     }
 }

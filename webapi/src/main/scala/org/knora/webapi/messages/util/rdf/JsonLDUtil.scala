@@ -1470,7 +1470,7 @@ object JsonLDUtil {
                 // Have we already processed this subject?
                 if (!processedSubjects.contains(subj)) {
                     // No. Get the statements about it.
-                    val statements: Set[Statement] = model.find(Some(subj), None, None)
+                    val statements: Set[Statement] = model.find(Some(subj), None, None).toSet
 
                     // Make a JsonLDObject representing the entity and any nested entities.
                     val jsonLDObject: JsonLDObject = entityToJsonLDObject(
@@ -1660,7 +1660,7 @@ object JsonLDUtil {
 
                 case None =>
                     // No. See if it's in the model.
-                    val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
+                    val resourceStatements: Set[Statement] = model.find(Some(resource), None, None).toSet
 
                     // Is it in the model and not yet marked as processed?
                     if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {

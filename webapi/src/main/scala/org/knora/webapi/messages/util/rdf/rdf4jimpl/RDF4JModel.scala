@@ -171,14 +171,18 @@ class RDF4JModel(private val model: rdf4j.model.Model,
 
     private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
 
+    private class StatementIterator(rdf4jIterator: java.util.Iterator[rdf4j.model.Statement]) extends Iterator[Statement] {
+        override def hasNext: Boolean = rdf4jIterator.hasNext
+
+        override def next(): Statement = RDF4JStatement(rdf4jIterator.next())
+    }
+
     /**
      * Returns the underlying [[rdf4j.model.Model]].
      */
     def getModel: rdf4j.model.Model = model
 
     override def getNodeFactory: RdfNodeFactory = nodeFactory
-
-    override def getStatements: Set[Statement] = model.asScala.toSet.map(RDF4JStatement)
 
     override def addStatement(statement: Statement): Unit = {
         model.add(statement.asRDF4JStatement)
@@ -231,7 +235,10 @@ class RDF4JModel(private val model: rdf4j.model.Model,
         )
     }
 
-    override def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement] = {
+    override def find(subj: Option[RdfResource],
+                      pred: Option[IriNode],
+                      obj: Option[RdfNode],
+                      context: Option[IRI] = None): Iterator[Statement] = {
         val filteredModel: rdf4j.model.Model = context match {
             case Some(definedContext) =>
                 model.filter(
@@ -249,7 +256,7 @@ class RDF4JModel(private val model: rdf4j.model.Model,
                 )
         }
 
-        filteredModel.asScala.map(RDF4JStatement).toSet
+        new StatementIterator(filteredModel.iterator)
     }
 
     override def contains(statement: Statement): Boolean = {
@@ -289,6 +296,16 @@ class RDF4JModel(private val model: rdf4j.model.Model,
 
     override def asRepository: RdfRepository = {
         new RDF4JRepository(model)
+    }
+
+    override def size: Int = model.size
+
+    override def iterator: Iterator[Statement] = {
+        new StatementIterator(model.iterator)
+    }
+
+    override def clear(): Unit = {
+        model.remove(null, null, null)
     }
 }
 
@@ -395,5 +412,9 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
             head = header,
             results = SparqlSelectResultBody(bindings = rowBuffer)
         )
+    }
+
+    override def shutDown(): Unit = {
+        repository.shutDown()
     }
 }

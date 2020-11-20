@@ -254,9 +254,9 @@ trait RdfFormatUtil {
      * @param rdfFormat          the input format.
      * @param rdfStreamProcessor the [[RdfStreamProcessor]] that will be used to process the input.
      */
-    def parseToStream(rdfSource: RdfSource,
-                      rdfFormat: NonJsonLD,
-                      rdfStreamProcessor: RdfStreamProcessor): Unit
+    def parseWithStreamProcessor(rdfSource: RdfSource,
+                                 rdfFormat: NonJsonLD,
+                                 rdfStreamProcessor: RdfStreamProcessor): Unit
 
     /**
      * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]].
@@ -265,7 +265,16 @@ trait RdfFormatUtil {
      * @param rdfFormat the data format.
      * @return the corresponding [[RdfModel]].
      */
-    def streamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
+    def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
+
+    /**
+     * Formats an [[RdfModel]], writing the output to an [[OutputStream]].
+     *
+     * @param rdfModel the model to be written.
+     * @param outputStream the output stream.
+     * @param rdfFormat the output format.
+     */
+    def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit
 
     /**
      * Creates an [[RdfStreamProcessor]] that writes formatted output.
@@ -275,6 +284,11 @@ trait RdfFormatUtil {
      * @return an an [[RdfStreamProcessor]].
      */
     def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor
+
+    /**
+     * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+     */
+    def getRdfModelFactory: RdfModelFactory
 
     /**
      * Parses RDF in a format other than JSON-LD to an [[RdfModel]].
@@ -294,9 +308,4 @@ trait RdfFormatUtil {
      * @return a string representation of the RDF model.
      */
     protected def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String
-
-    /**
-     * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
-     */
-    def getRdfModelFactory: RdfModelFactory
 }

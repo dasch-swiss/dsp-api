@@ -112,9 +112,9 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
         stringWriter.toString
     }
 
-    override def parseToStream(rdfSource: RdfSource,
-                               rdfFormat: NonJsonLD,
-                               rdfStreamProcessor: RdfStreamProcessor): Unit = {
+    override def parseWithStreamProcessor(rdfSource: RdfSource,
+                                          rdfFormat: NonJsonLD,
+                                          rdfStreamProcessor: RdfStreamProcessor): Unit = {
         // Construct an RDF4J parser for the requested format.
         val parser: rdf4j.rio.RDFParser = rdf4j.rio.Rio.createParser(rdfFormatToRDF4JFormat(rdfFormat))
 
@@ -128,7 +128,7 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
         }
     }
 
-    override def streamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
+    override def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
         val model: rdf4j.model.Model = rdf4j.rio.Rio.parse(
             inputStream,
             "",
@@ -148,5 +148,15 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
 
         // Wrap it in an RDFHandlerAsStreamProcessor.
         new RDFHandlerAsStreamProcessor(rdfWriter)
+    }
+
+    override def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
+        import RDF4JConversions._
+
+        // Construct an RDF4J writer for the requested format.
+        val rdfWriter: rdf4j.rio.RDFWriter = rdf4j.rio.Rio.createWriter(rdfFormatToRDF4JFormat(rdfFormat), outputStream)
+
+        // Format the RDF.
+        rdf4j.rio.Rio.write(rdfModel.asRDF4JModel, rdfWriter)
     }
 }

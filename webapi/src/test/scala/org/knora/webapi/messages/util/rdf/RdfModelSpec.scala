@@ -24,7 +24,6 @@ import java.io.{BufferedInputStream, FileInputStream}
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.{CoreSpec, IRI}
 
@@ -55,7 +54,7 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
     private def addAndFindBySubjAndPred(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit = {
         val statement: Statement = nodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
         model.addStatement(statement)
-        assert(model.find(subj = Some(subj), pred = Some(pred), obj = None) == Set(statement))
+        assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(statement))
     }
 
     "An RdfModel" should {
@@ -66,7 +65,7 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
             model.add(subj = subj, pred = pred, obj = obj)
             val expectedStatement: Statement = nodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
-            assert(model.find(subj = Some(subj), pred = Some(pred), obj = None) == Set(expectedStatement))
+            assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(expectedStatement))
         }
 
         "add a triple with a datatype literal object" in {
@@ -135,13 +134,13 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
             )
 
             model.addStatements(statements)
-            assert(model.find(subj = Some(subj), pred = None, obj = None) == statements)
+            assert(model.find(subj = Some(subj), pred = None, obj = None).toSet == statements)
 
             val stringWithLangFindResult: Set[Statement] = model.find(
                 subj = Some(subj),
                 pred = Some(stringWithLangStatement.pred),
                 obj = Some(stringWithLangStatement.obj)
-            )
+            ).toSet
 
             assert(stringWithLangFindResult.size == 1)
 
@@ -212,10 +211,10 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
             model.addStatements(graph1)
             model.addStatements(graph2)
 
-            assert(model.find(subj = None, pred = None, obj = None, context = Some(context1)) == graph1)
-            assert(model.find(subj = None, pred = None, obj = None, context = Some(context2)) == graph2)
-            assert(model.find(subj = None, pred = Some(labelPred), obj = None) == Set(graph1LabelStatement, graph2LabelStatement))
-            assert(model.find(subj = None, pred = Some(commentPred), obj = None) == Set(graph1CommentStatement, graph2CommentStatement))
+            assert(model.find(subj = None, pred = None, obj = None, context = Some(context1)).toSet == graph1)
+            assert(model.find(subj = None, pred = None, obj = None, context = Some(context2)).toSet == graph2)
+            assert(model.find(subj = None, pred = Some(labelPred), obj = None).toSet == Set(graph1LabelStatement, graph2LabelStatement))
+            assert(model.find(subj = None, pred = Some(commentPred), obj = None).toSet == Set(graph1CommentStatement, graph2CommentStatement))
 
             model.removeStatement(graph1CommentStatement)
             assert(!model.contains(graph1CommentStatement))
@@ -298,7 +297,7 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
         "do a SPARQL SELECT query" in {
             val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/anything-data.ttl"))
-            val anythingModel: RdfModel = rdfFormatUtil.streamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
+            val anythingModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
             fileInputStream.close()
 
             val rdfRepository: RdfRepository = anythingModel.asRepository

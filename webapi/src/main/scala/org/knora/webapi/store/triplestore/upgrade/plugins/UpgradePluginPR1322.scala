@@ -19,32 +19,32 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.eclipse.rdf4j.model.{IRI, Model, Resource}
-import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
-import scala.collection.JavaConverters._
 
 /**
  * Transforms a repository for Knora PR 1322.
  */
-class UpgradePluginPR1322 extends UpgradePlugin {
-    private val valueFactory = SimpleValueFactory.getInstance
+class UpgradePluginPR1322(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-    // RDF4J IRI objects representing the IRIs used in this transformation.
-    private val ValueHasUUIDIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasUUID)
-    private val ValueCreationDateIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueCreationDate)
-    private val PreviousValueIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.PreviousValue)
+    // IRI objects representing the IRIs used in this transformation.
+    private val ValueHasUUIDIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
+    private val ValueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
+    private val PreviousValueIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
 
-    override def transform(model: Model): Unit = {
+    override def transform(model: RdfModel): Unit = {
         // Add a random UUID to each current value version.
-        for (valueIri: IRI <- collectCurrentValueIris(model)) {
+        for (valueIri: IriNode <- collectCurrentValueIris(model)) {
             model.add(
-                valueIri,
-                ValueHasUUIDIri,
-                valueFactory.createLiteral(stringFormatter.makeRandomBase64EncodedUuid)
+                subj = valueIri,
+                pred = ValueHasUUIDIri,
+                obj = nodeFactory.makeStringLiteral(stringFormatter.makeRandomBase64EncodedUuid)
             )
         }
     }
@@ -52,11 +52,12 @@ class UpgradePluginPR1322 extends UpgradePlugin {
     /**
      * Collects the IRIs of all values that are current value versions.
      */
-    private def collectCurrentValueIris(model: Model): Set[IRI] = {
-        model.filter(null, ValueCreationDateIri, null).subjects.asScala.toSet.filter {
-            resource: Resource => model.filter(null, PreviousValueIri, resource).asScala.toSet.isEmpty
+    private def collectCurrentValueIris(model: RdfModel): Iterator[IriNode] = {
+        model.find(None, Some(ValueCreationDateIri), None).map(_.subj).filter {
+            resource: RdfResource => model.find(None, Some(PreviousValueIri), Some(resource)).isEmpty
         }.map {
-            resource: Resource => valueFactory.createIRI(resource.stringValue)
+            case iriNode: IriNode => iriNode
+            case other => throw InconsistentRepositoryDataException(s"Unexpected subject for $ValueCreationDateIri: $other")
         }
     }
 }

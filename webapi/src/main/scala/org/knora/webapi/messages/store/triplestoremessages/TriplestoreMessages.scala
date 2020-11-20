@@ -133,7 +133,7 @@ object SparqlExtendedConstructResponse {
             val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
             val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
 
-            for (st: Statement <- rdfModel.getStatements) {
+            for (st: Statement <- rdfModel) {
                 val subject: SubjectV2 = st.subj match {
                     case iriNode: IriNode => IriSubjectV2(iriNode.iri)
                     case blankNode: BlankNode => BlankNodeSubjectV2(blankNode.id)

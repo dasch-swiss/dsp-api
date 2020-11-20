@@ -184,6 +184,12 @@ class JenaModel(private val dataset: jena.query.Dataset,
 
     private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
+    private class StatementIterator(jenaIterator: java.util.Iterator[jena.sparql.core.Quad]) extends Iterator[Statement] {
+        override def hasNext: Boolean = jenaIterator.hasNext
+
+        override def next(): Statement = JenaStatement(jenaIterator.next())
+    }
+
     /**
      * Returns the underlying [[jena.query.Dataset]].
      */
@@ -194,8 +200,6 @@ class JenaModel(private val dataset: jena.query.Dataset,
     override def addStatement(statement: Statement): Unit = {
         datasetGraph.add(statement.asJenaQuad)
     }
-
-    override def getStatements: Set[Statement] = datasetGraph.find.asScala.map(JenaStatement).toSet
 
     /**
      * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
@@ -227,13 +231,18 @@ class JenaModel(private val dataset: jena.query.Dataset,
         datasetGraph.delete(statement.asJenaQuad)
     }
 
-    override def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement] = {
-        datasetGraph.find(
-            contextNodeOrWildcard(context),
-            asJenaNodeOrWildcard(subj),
-            asJenaNodeOrWildcard(pred),
-            asJenaNodeOrWildcard(obj)
-        ).asScala.map(JenaStatement).toSet
+    override def find(subj: Option[RdfResource],
+                      pred: Option[IriNode],
+                      obj: Option[RdfNode],
+                      context: Option[IRI] = None): Iterator[Statement] = {
+        new StatementIterator(
+            datasetGraph.find(
+                contextNodeOrWildcard(context),
+                asJenaNodeOrWildcard(subj),
+                asJenaNodeOrWildcard(pred),
+                asJenaNodeOrWildcard(obj)
+            )
+        )
     }
 
     override def contains(statement: Statement): Boolean = {
@@ -315,6 +324,29 @@ class JenaModel(private val dataset: jena.query.Dataset,
 
     override def asRepository: RdfRepository = {
         new JenaRepository(dataset)
+    }
+
+    override def size: Int = {
+        // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
+
+        // Get the size of the default graph.
+        val defaultGraphSize: Int = datasetGraph.getDefaultGraph.size
+
+        // Get the sum of the sizes of the named graphs.
+        val sumOfNamedGraphSizes: Int = datasetGraph.listGraphNodes.asScala.map {
+            namedGraphIri => datasetGraph.getGraph(namedGraphIri)
+        }.map(_.size).sum
+
+        // Return the sum of those sizes.
+        defaultGraphSize + sumOfNamedGraphSizes
+    }
+
+    override def iterator: Iterator[Statement] = {
+        new StatementIterator(datasetGraph.find)
+    }
+
+    override def clear(): Unit = {
+        datasetGraph.clear()
     }
 }
 
@@ -432,5 +464,9 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
             head = header,
             results = SparqlSelectResultBody(bindings = rowBuffer)
         )
+    }
+
+    override def shutDown(): Unit = {
+        dataset.close()
     }
 }
