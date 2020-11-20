@@ -8,6 +8,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
+import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -238,25 +239,25 @@ class RepositoryUpdater(system: ActorSystem,
      * @param model the [[RdfModel]].
      */
     private def addBuiltInNamedGraphsToModel(model: RdfModel): Unit = {
+        // Add each built-in named graph to the model.
         for (builtInNamedGraph <- RepositoryUpdatePlan.builtInNamedGraphs) {
-            val context = builtInNamedGraph.iri
+            val context: IRI = builtInNamedGraph.iri
+
+            // Remove the existing named graph from the model.
             model.remove(None, None, None, Some(context))
 
+            // Read the current named graph from a file.
             val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.filename, Turtle)
 
-            // Set the context on each statement.
+            // Copy it into the model, adding the named graph IRI to each statement.
             for (statement: Statement <- namedGraphModel) {
-                namedGraphModel.removeStatement(statement)
-
-                namedGraphModel.add(
-                    statement.subj,
-                    statement.pred,
-                    statement.obj,
-                    Some(context)
+                model.add(
+                    subj = statement.subj,
+                    pred = statement.pred,
+                    obj = statement.obj,
+                    context = Some(context)
                 )
             }
-
-            model.addStatementsFromModel(namedGraphModel)
         }
     }
 
