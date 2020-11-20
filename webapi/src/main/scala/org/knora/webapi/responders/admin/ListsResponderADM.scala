@@ -135,7 +135,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         for {
             // this query will give us only the information about the root node.
-            exists <- listRootNodeByIriExists(rootNodeIri)
+            exists <- rootNodeByIriExists(rootNodeIri)
 
             // _ = log.debug(s"listGetADM - exists: {}", exists)
 
@@ -199,7 +199,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         for {
-                exists <- listRootNodeByIriExists(nodeIri)
+                exists <- rootNodeByIriExists(nodeIri)
                 // Is root node IRI given?
                 result <- if (exists) {
                     for {
@@ -1121,10 +1121,64 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         } yield taskResult
     }
 
+    /**
+     * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,
+     * delete the list and return a confirmation message.
+     *
+     * @param nodeIri                       the node's IRI.
+     * @param featureFactoryConfig          the feature factory configuration.
+     * @param requestingUser                the requesting user.
+     * @param apiRequestID                  the unique api request ID.
+     * @return a [[NodeInfoGetResponseADM]]
+     * @throws ForbiddenException           in the case that the user is not allowed to perform the operation.
+     * @throws UpdateNotPerformedException  in the case the node is in use and cannot be deleted.
+     */
     private def deleteListItemRequestADM(nodeIri: IRI,
                                         featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM,
                                         apiRequestID: UUID): Future[ListItemDeleteResponseADM] = {
+        // check if node itself or any of its children is in use.
+        def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Future[Unit] = for {
+            // Is node itself in use?
+            _ <- isNodeUsed(nodeIri = nodeIri,
+                            errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because it is in use"))
+
+
+            _ = nodeChildren.foreach(child =>
+                isNodeUsed(nodeIri = child.id,
+                    errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${child.id} is in use"))
+            )
+        } yield ()
+
+        def deleteNode(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM]): Future[Unit] = for {
+            // get the data graph of the project.
+            dataNamedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
+
+            childIris: Seq[IRI] = children.map(child => child.id)
+            // Generate SPARQL for erasing the node and all its children.
+            sparqlDeleteNode = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
+                    nodeIri = nodeIri,
+                    children = childIris
+                    ).toString()
+
+            // Do the update.
+            _ <- (storeManager ? SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
+
+            // Verify that the node was deleted correctly.
+            nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
+
+            _ = if (nodeStillExists) {
+                throw UpdateNotPerformedException(s"Node <${nodeIri}> was not erased. Please report this as a possible bug.")
+            }
+        } yield ()
+
+        def updateParentNode(nodeIri: IRI, positionOfDeletedNode: Int): Future[ListNodeADM] = for {
+            parentNode <- getParentNode(nodeIri, featureFactoryConfig)
+           // Todo:         updatedSiblings = updatePostionOfSiblings(positionOfDeletedNode)
+
+        } yield parentNode
         /**
          * The actual task run with an IRI lock.
          */
@@ -1139,8 +1193,25 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 // not project or a system admin
                 throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
             }
-
-        } yield ListItemDeleteResponseADM(iri = nodeIri)
+            maybeNode: Option[ListNodeADM] <- listNodeGetADM(nodeIri = nodeIri,
+                                                             shallow = false,
+                                                             featureFactoryConfig = featureFactoryConfig,
+                                                             requestingUser = KnoraSystemInstances.Users.SystemUser)
+            response: ListItemDeleteResponseADM <- maybeNode match {
+                case Some(rootNode: ListRootNodeADM) =>
+                    for {
+                        _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
+                        _ <- deleteNode(nodeIri = rootNode.id, projectIri = projectIri, children = rootNode.children)
+                    } yield ListDeleteResponseADM(rootNode.id)
+                case Some(childNode : ListChildNodeADM) =>
+                    for {
+                        _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                        _ <- deleteNode(nodeIri = childNode.id, projectIri = projectIri, children = childNode.children)
+                        parentNode <-  updateParentNode(childNode.id, childNode.position)
+                    } yield ChildNodeDeleteResponseADM(node = parentNode)
+                case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
+            }
+        } yield response
         for {
             // run list info update with an local IRI lock
             taskResult <- IriLocker.runWithIriLock(
@@ -1150,6 +1221,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
         } yield taskResult
     }
+
     ////////////////////
     // Helper Methods //
     ////////////////////
@@ -1174,13 +1246,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Helper method for checking if a list node identified by IRI exists and is a root node.
      *
-     * @param listNodeIri the IRI of the project.
+     * @param rootNodeIri the IRI of the project.
      * @return a [[Boolean]].
      */
-    private def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+    private def rootNodeByIriExists(rootNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri).toString)
-            // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString)
+            // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = askResponse.result
@@ -1188,6 +1260,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         } yield result
     }
 
+    /**
+     * Helper method for checking if a node identified by IRI exists.
+     *
+     * @param nodeIri the IRI of the project.
+     * @return a [[Boolean]].
+     */
+    private def nodeByIriExists(nodeIri: IRI): Future[Boolean] = {
+        for {
+            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString)
+            // _ = log.debug("rootNodeByIriExists - query: {}", askString)
+
+            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = askResponse.result
+
+        } yield result
+    }
     /**
      * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
      * name is NOT used inside any list of this project.
@@ -1212,17 +1300,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
     }
 
+    /**
+     * Helper method to generate a sparql statement for updating node information.
+     *
+     * @param changeNodeInfoRequest   the node information to change.
+     * @param featureFactoryConfig          the feature factory configuration.
+     * @return a [[String]].
+     */
     private def getUpdateNodeInfoSparqlStatement(changeNodeInfoRequest: ChangeNodeInfoApiRequestADM,
                                                  featureFactoryConfig: FeatureFactoryConfig): Future[String] = for {
-        /* Get the project information */
-        maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(
-                                                            maybeIri = Some(changeNodeInfoRequest.projectIri)),
-                                                            featureFactoryConfig = featureFactoryConfig,
-                                                            KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
-        project: ProjectADM = maybeProject match {
-            case Some(project: ProjectADM) => project
-            case None => throw BadRequestException(s"Project '${changeNodeInfoRequest.projectIri}' not found.")
-        }
+        // get the data graph of the project.
+        dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri, featureFactoryConfig)
 
         /* verify that the list name is unique for the project */
         nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeNodeInfoRequest.projectIri, changeNodeInfoRequest.name)
@@ -1244,10 +1332,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
         hasOldName: Boolean = node.getName.nonEmpty
 
-
-        // get the data graph of the project.
-        dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
-
         // Update the list
         changeNodeInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateListInfo(
             dataNamedGraph = dataNamedGraph,
@@ -1256,13 +1340,20 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             hasOldName = hasOldName,
             isRootNode = isRootNode,
             maybeName = changeNodeInfoRequest.name,
-            projectIri = project.id,
+            projectIri = changeNodeInfoRequest.projectIri,
             listClassIri = OntologyConstants.KnoraBase.ListNode,
             maybeLabels = changeNodeInfoRequest.labels,
             maybeComments = changeNodeInfoRequest.comments
         ).toString
     } yield changeNodeInfoSparqlString
 
+    /**
+     * Helper method to get projectIri of a node.
+     *
+     * @param nodeIri                   the IRI of the node.
+     * @param featureFactoryConfig      the feature factory configuration.
+     * @return a [[IRI]].
+     */
     private def getProjectIriFromNode(nodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig):Future[IRI] = for {
         maybeNode <- listNodeGetADM(nodeIri = nodeIri,
                                     shallow = true,
@@ -1285,4 +1376,72 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
         }
     } yield projectIri
+
+    /**
+     * Helper method to check if a node is in use.
+     *
+     * @param nodeIri                   the IRI of the node.
+     * @param errorFun                  a function that throws an exception. It will be called if the node is used.
+     * @return a [[Boolean]].
+     */
+    protected def isNodeUsed(nodeIri: IRI,
+                             errorFun: => Nothing): Future[Unit] = for {
+        isNodeUsedSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.isNodeUsed(
+            triplestore = settings.triplestoreType,
+            nodeIri = nodeIri).toString())
+
+        isNodeUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isNodeUsedSparql)).mapTo[SparqlSelectResponse]
+        _ = if (isNodeUsedResponse.results.bindings.nonEmpty) {
+            errorFun
+        }
+    } yield ()
+
+    /**
+     * Helper method to get the data named graph of a project.
+     *
+     * @param projectIri                the IRI of the project.
+     * @param featureFactoryConfig      the feature factory configuration.
+     * @return a [[IRI]].
+     */
+    protected def getDataNamedGraph(projectIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[IRI] = for {
+        /* Get the project information */
+        maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(
+            maybeIri = Some(projectIri)),
+            featureFactoryConfig = featureFactoryConfig,
+            KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+
+        project: ProjectADM = maybeProject match {
+            case Some(project: ProjectADM) => project
+            case None => throw BadRequestException(s"Project '${projectIri}' not found.")
+        }
+        // Get the IRI of the named graph from which the resource will be erased.
+        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+    } yield dataNamedGraph
+
+    /**
+     * Helper method to get parent of a node.
+     *
+     * @param nodeIri                the IRI of the node.
+     * @param featureFactoryConfig   the feature factory configuration.
+     * @return a [[ListNodeADM]].
+     */
+    protected def getParentNode(nodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[ListNodeADM] = for {
+        // query statement
+        getParentNodeSparqlString: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getParentNode(
+                                                    triplestore = settings.triplestoreType,
+                                                    nodeIri = nodeIri
+                                                    ).toString)
+        parentNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
+            sparql = getParentNodeSparqlString,
+            featureFactoryConfig = featureFactoryConfig
+        )).mapTo[SparqlExtendedConstructResponse]
+        parentStatements = parentNodeResponse.statements.headOption.getOrElse(
+                            throw BadRequestException(s"The parent node for ${nodeIri} not found, report this as a bug."))
+        maybeNode <- listNodeGetADM(nodeIri = parentStatements._1.toString,
+                                    shallow = true,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = KnoraSystemInstances.Users.SystemUser)
+        parentNode = maybeNode.getOrElse(throw BadRequestException(s"The parent node for ${nodeIri} not found, report this as a bug."))
+    } yield parentNode
 }
+

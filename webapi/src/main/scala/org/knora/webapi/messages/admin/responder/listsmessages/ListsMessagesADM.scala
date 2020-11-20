@@ -358,7 +358,7 @@ case class NodeCommentsChangeRequestADM(nodeIri: IRI,
                                         apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
- * Requests deletion of a node (root or child). A successful response will be a [[ListItemDeleteResponseADM]]
+ * Requests deletion of a node (root or child). A successful response will be a [[ListDeleteResponseADM]]
  *
  * @param nodeIri              the IRI of the node (root or child).
  * @param featureFactoryConfig the feature factory configuration.
@@ -442,15 +442,30 @@ case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends Kno
     def toJsValue = nodePathGetResponseADMFormat.write(this)
 }
 
-/**
- * Responds to a [[ListItemDeleteRequestADM]] by returning a success message.
- *
- * @param iri the IRI of the node that is deleted.
- */
-case class ListItemDeleteResponseADM(iri: IRI) extends KnoraResponseADM with ListADMJsonProtocol {
 
-    def toJsValue = JsString(s"The node $iri is successfully deleted.")
+abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJsonProtocol
+
+/**
+ * Responds to deletion of a list by returning a success message.
+ *
+ * @param iri the IRI of the list that is deleted.
+ */
+case class ListDeleteResponseADM(iri: IRI) extends ListItemDeleteResponseADM {
+
+    def toJsValue = JsString(s"The list $iri is successfully deleted.")
 }
+/**
+ *  Responds to deletion of a child node by returning its parent node together with list of its immediate children
+ *  whose position is updated.
+ *
+ * @param node the updated parent node.
+ */
+case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
+
+    def toJsValue = listNodeDeleteResponseADMFormat.write(this)
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -1181,4 +1196,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeNodeNameApiRequestADMFormat: RootJsonFormat[ChangeNodeNameApiRequestADM] = jsonFormat(ChangeNodeNameApiRequestADM, "name")
     implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
     implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
+    implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] = jsonFormat(ChildNodeDeleteResponseADM, "node")
+
 }
