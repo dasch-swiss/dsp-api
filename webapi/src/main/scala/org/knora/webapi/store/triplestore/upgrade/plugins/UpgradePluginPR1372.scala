@@ -52,7 +52,11 @@ class UpgradePluginPR1372(featureFactoryConfig: FeatureFactoryConfig) extends Up
      */
     private def collectPastValueIris(model: RdfModel): Iterator[IriNode] = {
         model.find(None, Some(ValueCreationDateIri), None).map(_.subj).filter {
-            resource: RdfResource => model.find(None, Some(PreviousValueIri), Some(resource)).nonEmpty
+            resource: RdfResource => model.find(
+                subj = None,
+                pred = Some(PreviousValueIri),
+                obj = Some(resource)
+            ).nonEmpty
         }.map {
             case iriNode: IriNode => iriNode
             case other => throw InconsistentRepositoryDataException(s"Unexpected subject for $ValueCreationDateIri: $other")

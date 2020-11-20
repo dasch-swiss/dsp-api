@@ -227,9 +227,9 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
     protected[feature] def getLocalConfig(featureName: String): Option[FeatureToggle]
 
     /**
-     * Returns an [[HttpHeader]] giving the state of all feature toggles.
+     * Returns a string giving the state of all feature toggles.
      */
-    def makeHttpResponseHeader: Option[HttpHeader] = {
+    def makeToggleSettingsString: Option[String] = {
         // Convert each toggle to its string representation.
         val enabledToggles: Set[String] = getAllBaseConfigs.map {
             baseConfig: FeatureToggleBaseConfig =>
@@ -246,10 +246,19 @@ abstract class FeatureFactoryConfig(protected val maybeParent: Option[FeatureFac
         // Are any toggles enabled?
         if (enabledToggles.nonEmpty) {
             // Yes. Return a header.
-            Some(RawHeader(FeatureToggle.RESPONSE_HEADER, enabledToggles.mkString(",")))
+            Some(enabledToggles.mkString(","))
         } else {
             // No. Don't return a header.
             None
+        }
+    }
+
+    /**
+     * Returns an [[HttpHeader]] giving the state of all feature toggles.
+     */
+    def makeHttpResponseHeader: Option[HttpHeader] = {
+        makeToggleSettingsString.map {
+            settingsStr: String => RawHeader(FeatureToggle.RESPONSE_HEADER, settingsStr)
         }
     }
 

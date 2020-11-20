@@ -244,7 +244,12 @@ class RepositoryUpdater(system: ActorSystem,
             val context: IRI = builtInNamedGraph.iri
 
             // Remove the existing named graph from the model.
-            model.remove(None, None, None, Some(context))
+            model.remove(
+                subj = None,
+                pred = None,
+                obj = None,
+                context = Some(context)
+            )
 
             // Read the current named graph from a file.
             val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.filename, Turtle)

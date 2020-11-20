@@ -34,6 +34,10 @@ class UpgradePluginPR1615(featureFactoryConfig: FeatureFactoryConfig) extends Up
 
     override def transform(model: RdfModel): Unit = {
         // Remove the singleton instance of knora-base:ForbiddenResource.
-        model.remove(Some(ForbiddenResourceIri), None, None)
+        model.remove(
+            subj = Some(ForbiddenResourceIri),
+            pred = None,
+            obj = None
+        )
     }
 }

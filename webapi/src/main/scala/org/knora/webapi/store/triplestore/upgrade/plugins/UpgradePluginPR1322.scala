@@ -54,7 +54,11 @@ class UpgradePluginPR1322(featureFactoryConfig: FeatureFactoryConfig) extends Up
      */
     private def collectCurrentValueIris(model: RdfModel): Iterator[IriNode] = {
         model.find(None, Some(ValueCreationDateIri), None).map(_.subj).filter {
-            resource: RdfResource => model.find(None, Some(PreviousValueIri), Some(resource)).isEmpty
+            resource: RdfResource => model.find(
+                subj = None,
+                pred = Some(PreviousValueIri),
+                obj = Some(resource)
+            ).isEmpty
         }.map {
             case iriNode: IriNode => iriNode
             case other => throw InconsistentRepositoryDataException(s"Unexpected subject for $ValueCreationDateIri: $other")

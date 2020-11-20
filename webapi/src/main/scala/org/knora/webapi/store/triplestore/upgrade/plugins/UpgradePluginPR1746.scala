@@ -64,11 +64,17 @@ class UpgradePluginPR1746(featureFactoryConfig: FeatureFactoryConfig, log: Logge
                         rdfLiteral match {
                             case datatypeLiteral: DatatypeLiteral =>
                                 if (datatypeLiteral.datatype == OntologyConstants.Xsd.String) {
-                                    replaceEmptyStringWithDummy(statement, None)
+                                    replaceEmptyStringWithDummy(
+                                        statement = statement,
+                                        languageTag = None
+                                    )
                                 }
 
                             case stringWithLanguage: StringWithLanguage =>
-                                replaceEmptyStringWithDummy(statement, Some(stringWithLanguage.language))
+                                replaceEmptyStringWithDummy(
+                                    statement = statement,
+                                    languageTag = Some(stringWithLanguage.language)
+                                )
                         }
                     }
 

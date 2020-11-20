@@ -158,7 +158,11 @@ class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends Up
 
 
         // A map of text value IRIs to their contexts.
-        val textValueSubjectsAndContexts: Map[IriNode, Option[IRI]] = model.find(None, Some(rdfTypeIri), Some(TextValueIri)).map {
+        val textValueSubjectsAndContexts: Map[IriNode, Option[IRI]] = model.find(
+            subj = None,
+            pred = Some(rdfTypeIri),
+            obj = Some(TextValueIri)
+        ).map {
             statement =>
                 (nodeFactory.makeIriNode(statement.subj.stringValue), statement.context)
         }.toMap
@@ -166,7 +170,11 @@ class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends Up
         textValueSubjectsAndContexts.map {
             case (textValueSubj: IriNode, textValueContext: Option[IRI]) =>
                 // Get the statements about the text value.
-                val textValueStatements: Set[Statement] = model.find(Some(textValueSubj), None, None).toSet
+                val textValueStatements: Set[Statement] = model.find(
+                    subj = Some(textValueSubj),
+                    pred = None,
+                    obj = None
+                ).toSet
 
                 // Get the statements whose subject is the text value and whose predicate is knora-base:valueHasStandoff.
                 val valueHasStandoffStatements: Set[Statement] = textValueStatements.filter {
@@ -186,7 +194,11 @@ class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends Up
                     standoffSubj: IriNode =>
                         standoffSubj -> StandoffRdf(
                             oldIri = standoffSubj,
-                            statements = model.find(Some(standoffSubj), None, None).toSet
+                            statements = model.find(
+                                subj = Some(standoffSubj),
+                                pred = None,
+                                obj = None
+                            ).toSet
                         )
                 }.toMap
 

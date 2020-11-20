@@ -552,6 +552,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
         msg += "------------------------------------------------\n"
 
+        defaultFeatureFactoryConfig.makeToggleSettingsString match {
+            case Some(toggleSettingsString) => msg += s"Default feature toggle settings: $toggleSettingsString\n"
+            case None => ()
+        }
+
         if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
             msg += "------------------------------------------------\n"
