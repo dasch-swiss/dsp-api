@@ -18,21 +18,23 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Lists Endpoint
-## To use this endpoint activate `new-list-admin-routes:1` [feature toggle](../feature-toggles.md) in the header of requests.
+## To use some of the routes in this endpoint the [feature toggle](../feature-toggles.md), `new-list-admin-routes:1` must
+ be activated.
 
 ## Endpoint Overview
 
 **List Item Operations:**
 
-- `POST: /admin/lists` : create new list item (root or child node)
+- `POST: /admin/lists` : create new list item (root or child node). To use activate: `new-list-admin-routes:1`.
 
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
 
-- `GET: /admin/lists/<listItemIri>` : if given a root node IRI, return complete list with children. 
-Otherwise, if given a child node IRI, it returns node completely with its immediate children.
+- `GET: /admin/lists/<listItemIri>` : if given a root node IRI, return complete list with all children. 
+Otherwise, if given a child node IRI, it returns node completely with its immediate children. 
+To use activate: `new-list-admin-routes:1`.
 
 - `GET: /admin/lists/<listItemIri>/info` : return information (without children) of the node whose IRI is given 
-(root or child).
+(root or child). To use activate: `new-list-admin-routes:1`.
 
 - `PUT: /admin/lists/<listItemIri>` : update information of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
@@ -46,26 +48,32 @@ Otherwise, if given a child node IRI, it returns node completely with its immedi
  - GET: `/admin/lists[?projectIri=<projectIri>]`
 
 ### Get list item (entire list or a node)
-
+To use activate: `new-list-admin-routes:1`.
  - Required permission: none
- - Return complete list with all children of the list, if the IRI of the list (i.e. root node) is given. 
- Otherwise if the IRI of a child node is given, return the entire node with its immediate children.
+ - Response:
+    - If the IRI of the list (i.e. root node) is given, return complete `list` including its basic information, `listinfo`,
+  and all children of the list.
+   - If the IRI of a child node is given, return the entire `node` including its basic information, `nodeinfo`, 
+ with its immediate children.
  - GET: `/admin/lists/<listItemIri>`
 
 
 ### Get item information (entire list or a node)
-
+To use activate: `new-list-admin-routes:1`.
  - Required permission: none
- - Return basic information about the node (root or child) leaving out its list of children.
+ - Response:
+    - If the IRI of the list (i.e. root node) is given, return basic information of the list, `listinfo` without children.
+   - If the IRI of a child node is given, return basic information of the node, `nodeinfo`, without its children.
  - GET: `/admin/lists/<listItemIri>/info`
  
 ### Create new item (entire list or a node)
-
+To use activate: `new-list-admin-routes:1`.
   - Required permission: SystemAdmin / ProjectAdmin
   - POST: `/admin/lists`
   - BODY:
   
-**To create an entirely new list**, the IRI of the project must be given in the body of the request to which the list 
+#### Create an entirely new list
+The IRI of the project must be given in the body of the request to which the list 
 is supposed to be attached. 
 Further basic information about the list such as its `labels` and `comments` must also be provided. 
 Optionally, the request body can contain a `name` for the list which must be unique in the project.
@@ -81,39 +89,82 @@ Optionally, the request body can contain a `name` for the list which must be uni
 Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
 
 ```json
-    {
-        "id": "http://rdfh.ch/lists/0001/a-list-with-IRI",
-        "projectIri": "http://rdfh.ch/projects/0001",
-        "name": "a name",
-        "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
-        "comments": []
-    }
+  {
+    "id": "http://rdfh.ch/lists/0001/a-list",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "a new list",
+    "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
+    "comments": []
+  }
 ```
 
-**To create a new list node**, the IRI of its parent node must be given in the request body by `parentNodeIri`. 
-Furthermore, the request body should also contain the project IRI of the list and basic information of the node as below:
+The response will contain the basic information of the list, `listinfo` and an empty list of its children, as below:
 
 ```json
-    {
-        "parentNodeIri": "parentNodeIri",
-        "projectIri": "someprojectiri",
-        "name": "first",
-        "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
-        "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
+{
+    "list": {
+        "children": [],
+        "listinfo": {
+            "comments": [],
+            "id": "http://rdfh.ch/lists/0001/a-list",
+            "isRootNode": true,
+            "labels": [
+                {
+                    "value": "Neue Liste mit IRI",
+                    "language": "de"
+                }
+            ],
+            "name": "a new list",
+            "projectIri": "http://rdfh.ch/projects/0001"
+        }
+    }
+}
+```
+
+#### Create a new child node
+The IRI of its parent node must be given in the request body by `parentNodeIri`. 
+Furthermore, the request body should also contain the project IRI of the list and basic information of the node as below:
+  
+```json
+     {   
+         "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+         "projectIri": "http://rdfh.ch/projects/0001",
+         "name": "a child",
+         "labels": [{ "value": "New List Node", "language": "en"}],
+         "comments": []
     }
 ```
 
 Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
 
 ```json
-    {
-        "id": "http://rdfh.ch/lists/0001/a-child-node-with-IRI",
-        "parentNodeIri": "http://rdfh.ch/lists/0001/a-list-with-IRI",
-        "projectIri": "http://rdfh.ch/projects/0001",
-        "name": "child node with a custom IRI",
-        "labels": [{ "value": "New child node with IRI", "language": "en"}],
-        "comments": [{ "value": "New child node comment", "language": "en"}]
+{    "id": "http://rdfh.ch/lists/0001/a-childNode",
+     "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+     "projectIri": "http://rdfh.ch/projects/0001",
+     "name": "a child",
+     "labels": [{ "value": "New List Node", "language": "en"}],
+     "comments": []
+}
+```
+
+The response will contain the basic information of the node, `nodeinfo`, as below:
+
+```json
+{
+    "nodeinfo": {
+        "comments": [],
+        "hasRootNode": "http://rdfh.ch/lists/0001/a-list",
+        "id": "http://rdfh.ch/lists/0001/a-childNode",
+        "labels": [
+            {
+                "value": "New List Node",
+                "language": "en"
+            }
+        ],
+        "name": "a new child",
+        "position": 1
     }
+}
 ```
 
 ### Update basic information (entire list or a node)
@@ -123,6 +174,9 @@ list item (root or child node) and the IRI of the project it belongs to.
 
  - Required permission: SystemAdmin / ProjectAdmin
  - Update list information
+ - Response:
+     - If the IRI of the list (i.e. root node) is given, return basic information of the list, `listinfo` without children.
+    - If the IRI of a child node is given, return basic information of the node, `nodeinfo`, without its children.
  - PUT: `/admin/lists/<listItemIri>`
  - BODY:
  
