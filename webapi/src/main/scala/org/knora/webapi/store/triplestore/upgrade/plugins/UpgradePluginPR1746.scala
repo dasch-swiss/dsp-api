@@ -54,7 +54,7 @@ class UpgradePluginPR1746(featureFactoryConfig: FeatureFactoryConfig, log: Logge
                 context = statement.context
             )
 
-            log.warn(s"Changed empty object of <${statement.subj}> to FIXME")
+            log.warn(s"Changed empty object of <${statement.subj}> <${statement.pred}> to FIXME")
         }
 
         for (statement: Statement <- model) {
