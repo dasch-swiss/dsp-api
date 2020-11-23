@@ -41,6 +41,8 @@ To use activate: `new-list-admin-routes:1`.
 - `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
 
+- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and 
+all its children, if not used
 ### Get lists
 
  - Required permission: none
@@ -244,3 +246,18 @@ There is no need to specify the project IRI because it is automatically extracte
 ```
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
+### Delete a list or a node
+An entire list or a single node of it can be completely deleted, if not in use. Before deleting an entire list 
+(i.e. root node), the data and ontologies are checked for any usage of the list or its children. If not in use, the list 
+and all its children are deleted.
+
+Similarily, before deleting a single node of a list, it is verified that the node itself and none of its children are used.
+If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by shifting the 
+remaining child nodes with respect to the position of the deleted node. 
+
+- Required permission: SystemAdmin / ProjectAdmin
+- Response:
+    - If the IRI of the list (i.e. root node) is given, the `iri` of the deleted list with a flag `deleted: true` is returned.
+    - If the IRI of a child node is given, the updated parent node is returned.
+
+- Delete `/admin/lists/<listItemIri>`

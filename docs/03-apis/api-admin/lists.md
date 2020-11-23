@@ -36,10 +36,11 @@ If IRI of the child node is given, return the node with its immediate children.
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
-- NOT IMPLEMENTED: `DELETE: /admin/lists/nodes/<nodeIri>` : delete list node including children if not used
-- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
 
-## List Operations
+- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and 
+all its children, if not used
+
+## List Item Operations
 
 ### Get lists
 
@@ -204,8 +205,6 @@ There is no need to specify the project IRI because it is automatically extracte
 ```
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
-
-## List Node Operations
 ### Get node
 
  - Required permission: none
@@ -326,3 +325,19 @@ If only name of the node must be updated, it can be given as below in the body o
 Alternatively, basic information of the child node can be updated individually as explained above (See 
 [update node name](#update-list-or-nodes-name), [update node labels](#update-list-or-nodes-labels), and 
 [update node comments](#update-list-or-nodes-comments)).
+
+### Delete a list or a node
+An entire list or a single node of it can be completely deleted, if not in use. Before deleting an entire list 
+(i.e. root node), the data and ontologies are checked for any usage of the list or its children. If not in use, the list 
+and all its children are deleted.
+
+Similarily, before deleting a single node of a list, it is verified that the node itself and none of its children are used.
+If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by shifting the 
+remaining child nodes with respect to the position of the deleted node. 
+
+- Required permission: SystemAdmin / ProjectAdmin
+- Response:
+    - If the IRI of the list (i.e. root node) is given, the `iri` of the deleted list with a flag `deleted: true` is returned.
+    - If the IRI of a child node is given, the updated parent node is returned.
+
+- Delete `/admin/lists/<listItemIri>`
