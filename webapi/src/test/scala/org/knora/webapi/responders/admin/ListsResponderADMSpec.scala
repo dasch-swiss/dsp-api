@@ -397,7 +397,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
            }
         }
         "used to delete list items" should {
-            "should not delete a node that is in use" in {
+            "not delete a node that is in use" in {
                 val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
                 responderManager ! ListItemDeleteRequestADM(
                     nodeIri = nodeInUseIri,
@@ -406,6 +406,31 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException(s"Node ${nodeInUseIri} cannot be deleted, because it is in use.")))
+
+            }
+
+            "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val usedChild = "http://rdfh.ch/lists/0001/treeList10"
+                expectMsg(Failure(BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${usedChild} is in use.")))
+
+            }
+
+            "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
+                val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeInUseInOntologyIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"Node ${nodeInUseInOntologyIri} cannot be deleted, because it is in use.")))
 
             }
         }
