@@ -1149,33 +1149,30 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         } yield ()
 
-        def deleteNode(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM]): Future[Unit] = for {
+        def deleteListItem(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM], isRootNode: Boolean = false): Future[Unit] = for {
             // get the data graph of the project.
             dataNamedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
+            // delete the children
+            errorCheckFutures: Seq[Future[Unit]] =  children.map(child => deleteNode(dataNamedGraph, child.id))
+            _ <- Future.sequence(errorCheckFutures)
 
-            childIris: Seq[IRI] = children.map(child => child.id)
-            // Generate SPARQL for erasing the node and all its children.
-            sparqlDeleteNode = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode(
-                    triplestore = settings.triplestoreType,
-                    dataNamedGraph = dataNamedGraph,
-                    nodeIri = nodeIri,
-                    children = childIris
-                    ).toString()
-
-            // Do the update.
-            _ <- (storeManager ? SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
-
-            // Verify that the node was deleted correctly.
-            nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
-
-            _ = if (nodeStillExists) {
-                throw UpdateNotPerformedException(s"Node <${nodeIri}> was not erased. Please report this as a possible bug.")
-            }
+            // delete the node itself
+            _<- deleteNode(dataNamedGraph, nodeIri, isRootNode)
         } yield ()
 
-        def updateParentNode(nodeIri: IRI, positionOfDeletedNode: Int): Future[ListNodeADM] = for {
-            parentNode <- getParentNode(nodeIri, featureFactoryConfig)
-           // Todo:         updatedSiblings = updatePostionOfSiblings(positionOfDeletedNode)
+        def updateParentNode(deletedNodeIri: IRI,
+                             positionOfDeletedNode: Int,
+                             parentNodeIri: IRI,
+                             featureFactoryConfig: FeatureFactoryConfig): Future[ListNodeADM] = for {
+            maybeNode <- listNodeGetADM(nodeIri = parentNodeIri,
+                                        shallow = true,
+                                        featureFactoryConfig = featureFactoryConfig,
+                                        requestingUser = KnoraSystemInstances.Users.SystemUser)
+            parentNode = maybeNode.getOrElse(throw BadRequestException(s"The parent node of ${deletedNodeIri} not found, report this as a bug."))
+            remainingChildren = parentNode.getChildren
+            _ = if(remainingChildren.exists(child => child.id == deletedNodeIri)) {
+                throw UpdateNotPerformedException(s"Node ${deletedNodeIri} is not deleted properly, report this as a bug.")
+            }
 
         } yield parentNode
         /**
@@ -1200,14 +1197,25 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 case Some(rootNode: ListRootNodeADM) =>
                     for {
                         _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
-                        _ <- deleteNode(nodeIri = rootNode.id, projectIri = projectIri, children = rootNode.children)
+                        _ <- deleteListItem(nodeIri = rootNode.id,
+                                            projectIri = projectIri,
+                                            children = rootNode.children,
+                                            isRootNode = true)
                     } yield ListDeleteResponseADM(rootNode.id)
                 case Some(childNode : ListChildNodeADM) =>
                     for {
                         _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        _ <- deleteNode(nodeIri = childNode.id, projectIri = projectIri, children = childNode.children)
-                        parentNode <-  updateParentNode(childNode.id, childNode.position)
-                    } yield ChildNodeDeleteResponseADM(node = parentNode)
+                        //get parent node IRI before deleting the node
+                        parentNodeIri <- getParentNodeIRI(nodeIri, featureFactoryConfig)
+                        //delete the node
+                        _ <- deleteListItem(nodeIri = childNode.id, projectIri = projectIri, children = childNode.children)
+                        //update the parent node
+                        updatedParentNode <- updateParentNode(deletedNodeIri = nodeIri,
+                                                             positionOfDeletedNode = childNode.position,
+                                                             parentNodeIri = parentNodeIri,
+                                                             featureFactoryConfig = featureFactoryConfig
+                                                            )
+                    } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
                 case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
             }
         } yield response
@@ -1424,7 +1432,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * @param featureFactoryConfig   the feature factory configuration.
      * @return a [[ListNodeADM]].
      */
-    protected def getParentNode(nodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[ListNodeADM] = for {
+    protected def getParentNodeIRI(nodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[IRI] = for {
         // query statement
         getParentNodeSparqlString: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getParentNode(
                                                     triplestore = settings.triplestoreType,
@@ -1436,11 +1444,28 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )).mapTo[SparqlExtendedConstructResponse]
         parentStatements = parentNodeResponse.statements.headOption.getOrElse(
                             throw BadRequestException(s"The parent node for ${nodeIri} not found, report this as a bug."))
-        maybeNode <- listNodeGetADM(nodeIri = parentStatements._1.toString,
-                                    shallow = true,
-                                    featureFactoryConfig = featureFactoryConfig,
-                                    requestingUser = KnoraSystemInstances.Users.SystemUser)
-        parentNode = maybeNode.getOrElse(throw BadRequestException(s"The parent node for ${nodeIri} not found, report this as a bug."))
-    } yield parentNode
+        parentNodeIri = parentStatements._1.toString
+    } yield parentNodeIri
+
+    protected def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean = false):Future[Unit] = for {
+
+        // Generate SPARQL for erasing a node.
+        sparqlDeleteNode: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode(
+            triplestore = settings.triplestoreType,
+            dataNamedGraph = dataNamedGraph,
+            nodeIri = nodeIri,
+            isRootNode = isRootNode
+        ).toString())
+
+        // Do the update.
+        _ <- (storeManager ? SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
+
+        // Verify that the node was deleted correctly.
+        nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
+
+        _ = if (nodeStillExists) {
+            throw UpdateNotPerformedException(s"Node <${nodeIri}> was not erased. Please report this as a possible bug.")
+        }
+    } yield ()
 }
 

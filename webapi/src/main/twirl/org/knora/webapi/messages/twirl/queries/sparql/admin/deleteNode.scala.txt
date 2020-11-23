@@ -27,59 +27,40 @@
  * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
                              results from the WHERE clause of the update.
  * @param nodeIri            the IRI of the list we want to update.
- * @param children           set of IRIs of the nodes children.
+ * @param isRootNode         flag to identify node type.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
   nodeIri: IRI,
-  children: Seq[IRI]
+  isRootNode: Boolean
   )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-WITH <@dataNamedGraph>
 DELETE {
-    @* Delete all children *@
-    @for(child <- children) {
-        ?child ?p ?o .
-    }
-    @* Delete node itself and all statements where it is a subject *@
-    ?nodeIri ?p ?o .
-
-
-}
-
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
-}
-
-WHERE {
-    BIND(IRI("@nodeIri") AS ?nodeIri)
-    {
-    @* Collect all statements whose subject is the node. *@
-        ?nodeIri rdf:type knora-base:ListNode .
-    }
-    @if(children.size>0) {
-    UNION {
-     @* Collect all statements whose subject is one of the children. *@
-        @for(child <- children) {
-            ?child rdf:type knora-base:ListNode .
+    GRAPH ?dataNamedGraph {
+        @if(!isRootNode){
+            ?parentNode knora-base:hasSubListNode ?node .
         }
+        ?node ?p ?o .
     }
+}
+
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@nodeIri") AS ?node)
+
+    ?node rdf:type knora-base:ListNode .
+    @if(!isRootNode){
+        ?parentNode rdf:type knora-base:ListNode .
+        ?parentNode knora-base:hasSubListNode ?node .
     }
+    ?node ?p ?o .
 }

@@ -647,6 +647,8 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
     def getName(): Option[String] = name
     def getLabels(): StringLiteralSequenceV2 = labels
     def getComments(): StringLiteralSequenceV2 = comments
+    def getChildren(): Seq[ListChildNodeADM] = children
+    def getNodeId(): IRI = id
     /**
      * Gets the label in the user's preferred language.
      *
