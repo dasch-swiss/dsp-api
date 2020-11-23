@@ -1143,11 +1143,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             _ <- isNodeUsed(nodeIri = nodeIri,
                             errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because it is in use."))
 
+            errorCheckFutures: Seq[Future[Unit]] = nodeChildren.map(child => isNodeUsed(nodeIri = child.id,
+                errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${child.id} is in use.")))
+            _ <- Future.sequence(errorCheckFutures)
 
-            _ = nodeChildren.foreach(child =>
-                isNodeUsed(nodeIri = child.id,
-                    errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${child.id} is in use."))
-            )
         } yield ()
 
         def deleteNode(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM]): Future[Unit] = for {
