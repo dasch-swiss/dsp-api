@@ -1095,7 +1095,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     comments= Some(changeNodeCommentsRequest.comments)),
                 featureFactoryConfig = featureFactoryConfig
             )
-            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
+            _ <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
             
             /* Verify that the node info was updated */
             maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri,
@@ -1149,32 +1149,58 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         } yield ()
 
-        def deleteListItem(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM], isRootNode: Boolean = false): Future[Unit] = for {
+        def deleteListItem(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM], isRootNode: Boolean): Future[IRI] = for {
             // get the data graph of the project.
             dataNamedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
+
             // delete the children
-            errorCheckFutures: Seq[Future[Unit]] =  children.map(child => deleteNode(dataNamedGraph, child.id))
+            errorCheckFutures: Seq[Future[Unit]] =  children.map(child => deleteNode(dataNamedGraph, child.id, isRootNode = false))
             _ <- Future.sequence(errorCheckFutures)
 
             // delete the node itself
             _<- deleteNode(dataNamedGraph, nodeIri, isRootNode)
-        } yield ()
+
+
+        } yield dataNamedGraph
 
         def updateParentNode(deletedNodeIri: IRI,
                              positionOfDeletedNode: Int,
                              parentNodeIri: IRI,
+                             dataNamedGraph: IRI,
                              featureFactoryConfig: FeatureFactoryConfig): Future[ListNodeADM] = for {
             maybeNode <- listNodeGetADM(nodeIri = parentNodeIri,
-                                        shallow = true,
+                                        shallow = false,
                                         featureFactoryConfig = featureFactoryConfig,
                                         requestingUser = KnoraSystemInstances.Users.SystemUser)
             parentNode = maybeNode.getOrElse(throw BadRequestException(s"The parent node of ${deletedNodeIri} not found, report this as a bug."))
+            
             remainingChildren = parentNode.getChildren
             _ = if(remainingChildren.exists(child => child.id == deletedNodeIri)) {
                 throw UpdateNotPerformedException(s"Node ${deletedNodeIri} is not deleted properly, report this as a bug.")
             }
-
-        } yield parentNode
+            // shift the siblings that were positioned after the deleted node, one place to left.
+            updatedChildren <- updatePositionsAfterDeletion(position = positionOfDeletedNode,
+                                                                siblings = remainingChildren,
+                                                                dataNamedGraph = dataNamedGraph,
+                                                                featureFactoryConfig=featureFactoryConfig)
+            // return updated parent node with shifted children.
+            updatedParentNode = parentNode match {
+                case (rootNode : ListRootNodeADM) => ListRootNodeADM(id = rootNode.id,
+                                                                    projectIri = rootNode.projectIri,
+                                                                    name = rootNode.name,
+                                                                    labels = rootNode.labels,
+                                                                    comments = rootNode.comments,
+                                                                    children = updatedChildren)
+                case (childNode: ListChildNodeADM) => ListChildNodeADM(id = childNode.id,
+                                                                        name = childNode.name,
+                                                                        labels = childNode.labels,
+                                                                        comments = childNode.comments,
+                                                                        position = childNode.position,
+                                                                        hasRootNode = childNode.hasRootNode,
+                                                                        children = updatedChildren)
+                case _ => throw UpdateNotPerformedException(s"Parent node ${deletedNodeIri} could not be updated, report this as a possible bug.")
+            }
+        } yield updatedParentNode
         /**
          * The actual task run with an IRI lock.
          */
@@ -1182,6 +1208,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                            featureFactoryConfig: FeatureFactoryConfig,
                            requestingUser: UserADM,
                            apiRequestID: UUID): Future[ListItemDeleteResponseADM] = for {
+
             projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
 
             // check if the requesting user is allowed to perform operation
@@ -1208,13 +1235,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                         //get parent node IRI before deleting the node
                         parentNodeIri <- getParentNodeIRI(nodeIri, featureFactoryConfig)
                         //delete the node
-                        _ <- deleteListItem(nodeIri = childNode.id, projectIri = projectIri, children = childNode.children)
+                        dataNamedGraph <- deleteListItem(nodeIri = childNode.id,
+                                                        projectIri = projectIri,
+                                                        children = childNode.children,
+                                                        isRootNode = false)
                         //update the parent node
                         updatedParentNode <- updateParentNode(deletedNodeIri = nodeIri,
-                                                             positionOfDeletedNode = childNode.position,
-                                                             parentNodeIri = parentNodeIri,
-                                                             featureFactoryConfig = featureFactoryConfig
-                                                            )
+                                                              positionOfDeletedNode = childNode.position,
+                                                              parentNodeIri = parentNodeIri,
+                                                              dataNamedGraph = dataNamedGraph,
+                                                              featureFactoryConfig = featureFactoryConfig)
+
                     } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
                 case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
             }
@@ -1447,7 +1478,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         parentNodeIri = parentStatements._1.toString
     } yield parentNodeIri
 
-    protected def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean = false):Future[Unit] = for {
+    /**
+     * Helper method to delete a node.
+     *
+     * @param dataNamedGraph                    the data named graph of the project.
+     * @param nodeIri                           the IRI of the node.
+     * @param isRootNode                        is the node to be deleted a root node?
+     * @throws UpdateNotPerformedException      if the node could not be deleted.
+     * @return a [[ListNodeADM]].
+     */
+    protected def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean):Future[Unit] = for {
 
         // Generate SPARQL for erasing a node.
         sparqlDeleteNode: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode(
@@ -1467,5 +1507,60 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             throw UpdateNotPerformedException(s"Node <${nodeIri}> was not erased. Please report this as a possible bug.")
         }
     } yield ()
+
+    /**
+     * Helper method to shift sibling nodes to the left after deletion of a node.
+     *
+     * @param position                          the position of the deleted node.
+     * @param siblings                          the list of remaining child nodes after deletion.
+     * @throws UpdateNotPerformedException      if the position of a node could not be updated.
+     * @return a sequence of [[ListChildNodeADM]].
+     */
+    protected def updatePositionsAfterDeletion(position: Int,
+                                               siblings: Seq[ListChildNodeADM],
+                                               dataNamedGraph: IRI,
+                                               featureFactoryConfig: FeatureFactoryConfig): Future[Seq[ListChildNodeADM]] = for {
+        (siblingsPositionedBefore, siblingsPositionedAfter) <- Future(siblings.partition(node => node.position < position))
+        // shift the children which were after deleted node one positon to the left.
+        updatePositionFutures: Seq[Future[ListChildNodeADM]] = siblingsPositionedAfter.map(child =>
+            updatePositionOfNode(nodeIri = child.id,
+                                 newPosition = child.position-1,
+                                 dataNamedGraph = dataNamedGraph,
+                                 featureFactoryConfig= featureFactoryConfig))
+        updatedSiblings: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
+    } yield siblingsPositionedBefore ++ updatedSiblings
+
+    /**
+     * Helper method to update position of a node without changing its parent.
+     *
+     * @param nodeIri                          the IRI of the node that must be shifted.
+     * @param newPosition                      the new position of the child node.
+     * @throws UpdateNotPerformedException     if the position of the node could not be updated.
+     * @return a [[ListChildNodeADM]].
+     */
+    protected def updatePositionOfNode(nodeIri: IRI,
+                                       newPosition: Int,
+                                       dataNamedGraph:IRI,
+                                       featureFactoryConfig: FeatureFactoryConfig): Future[ListChildNodeADM] = for {
+        // Generate SPARQL for erasing a node.
+        sparqlUpdateNodePosition: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateNodePosition(
+            triplestore = settings.triplestoreType,
+            dataNamedGraph = dataNamedGraph,
+            nodeIri = nodeIri,
+            newPosition = newPosition
+        ).toString())
+
+        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdateNodePosition)).mapTo[SparqlUpdateResponse]
+        /* Verify that the node info was updated */
+        maybeNode <- listNodeGetADM(nodeIri = nodeIri,
+                                    shallow = false,
+                                   featureFactoryConfig = featureFactoryConfig,
+                                   requestingUser = KnoraSystemInstances.Users.SystemUser)
+        childNode: ListChildNodeADM = maybeNode.getOrElse(throw BadRequestException(s"Node with ${nodeIri} could not be found to update its position.")).asInstanceOf[ListChildNodeADM]
+        _ = if(!childNode.position.equals(newPosition)){
+            throw UpdateNotPerformedException(s"The position of the node ${nodeIri} could not be updated, report this as a possible bug.")
+        }
+
+    } yield childNode
 }
 
