@@ -1228,7 +1228,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                             projectIri = projectIri,
                                             children = rootNode.children,
                                             isRootNode = true)
-                    } yield ListDeleteResponseADM(rootNode.id)
+                    } yield ListDeleteResponseADM(rootNode.id, deleted = true)
                 case Some(childNode : ListChildNodeADM) =>
                     for {
                         _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)

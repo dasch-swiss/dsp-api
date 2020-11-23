@@ -450,9 +450,9 @@ abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJs
  *
  * @param iri the IRI of the list that is deleted.
  */
-case class ListDeleteResponseADM(iri: IRI) extends ListItemDeleteResponseADM {
+case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDeleteResponseADM {
 
-    def toJsValue = JsString(s"The list $iri is successfully deleted.")
+    def toJsValue = listDeleteResponseADMFormat.write(this)
 }
 /**
  *  Responds to deletion of a child node by returning its parent node together with list of its immediate children
@@ -931,7 +931,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
     }
 
-
     implicit object ListRootNodeFormat extends JsonFormat[ListRootNodeADM] {
 
         def write(node: ListRootNodeADM): JsValue = {
@@ -1199,5 +1198,5 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
     implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
     implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] = jsonFormat(ChildNodeDeleteResponseADM, "node")
-
+    implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM]= jsonFormat(ListDeleteResponseADM, "iri", "deleted")
 }

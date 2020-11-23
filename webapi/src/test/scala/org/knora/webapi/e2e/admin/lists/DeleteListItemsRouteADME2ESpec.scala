@@ -31,6 +31,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util.AkkaHttpUtils
+import spray.json.{JsObject, JsValue}
 
 import scala.concurrent.duration._
 
@@ -90,12 +92,34 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ES
                 val encodedNodeUrl = java.net.URLEncoder.encode(SharedListsTestDataADM.otherTreeListInfo.id, "utf-8")
                 val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-
-                // println(s"response: ${response.toString}")
-
                 response.status should be(StatusCodes.Forbidden)
             }
 
+            "delete a middle node and shift its siblings" in {
+                val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
+                val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+                val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+                val children = node.getChildren
+                children.size should be (2)
+                // last child must be shifted one place to left
+                val lastChild = children.last
+                lastChild.id should be ("http://rdfh.ch/lists/0001/notUsedList03")
+                lastChild.position should be (1)
+                // first child must have its child
+                val firstChild = children.head
+                firstChild.children.size should be (1)
+            }
+
+            "delete a list entirely with all its children" in {
+                val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
+                val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+                val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+                deletedStatus.convertTo[Boolean] should be (true)
+            }
         }
     }
 }

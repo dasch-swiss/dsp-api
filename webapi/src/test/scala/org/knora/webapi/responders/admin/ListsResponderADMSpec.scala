@@ -51,7 +51,7 @@ object ListsResponderADMSpec {
 class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with ImplicitSender {
 
     // The default timeout for receiving reply messages from actors.
-    implicit private val timeout = 20.seconds
+    implicit private val timeout = 5.seconds
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -483,6 +483,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 )
                 val received: ListDeleteResponseADM = expectMsgType[ListDeleteResponseADM](timeout)
                 received.iri should be (listIri)
+                received.deleted should be (true)
             }
         }
 
