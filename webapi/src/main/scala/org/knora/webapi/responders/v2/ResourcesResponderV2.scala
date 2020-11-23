@@ -1667,6 +1667,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 header = TEIHeader(
                     headerInfo = headerResource,
                     headerXSLT = headerXSLT,
+                    featureFactoryConfig = featureFactoryConfig,
                     settings = settings
                 ),
                 body = TEIBody(

@@ -99,13 +99,15 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
         val rdfWriter: rdf4j.rio.RDFWriter = rdfFormat match {
             case Turtle => rdf4j.rio.Rio.createWriter(rdf4j.rio.RDFFormat.TURTLE, stringWriter)
             case TriG => rdf4j.rio.Rio.createWriter(rdf4j.rio.RDFFormat.TRIG, stringWriter)
-            case RdfXml => new rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter(stringWriter)
+            case RdfXml => rdf4j.rio.Rio.createWriter(rdf4j.rio.RDFFormat.RDFXML, stringWriter)
         }
 
         // Configure the RDFWriter.
-        rdfWriter.getWriterConfig.
-            set[java.lang.Boolean](rdf4j.rio.helpers.BasicWriterSettings.INLINE_BLANK_NODES, true).
-            set[java.lang.Boolean](rdf4j.rio.helpers.BasicWriterSettings.PRETTY_PRINT, true)
+        if (prettyPrint) {
+            rdfWriter.getWriterConfig.
+                set[java.lang.Boolean](rdf4j.rio.helpers.BasicWriterSettings.INLINE_BLANK_NODES, true).
+                set[java.lang.Boolean](rdf4j.rio.helpers.BasicWriterSettings.PRETTY_PRINT, prettyPrint)
+        }
 
         // Format the RDF.
         rdf4j.rio.Rio.write(rdfModel.asRDF4JModel, rdfWriter)
