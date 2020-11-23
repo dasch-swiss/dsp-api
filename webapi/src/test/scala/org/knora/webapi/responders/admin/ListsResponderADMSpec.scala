@@ -26,7 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{DuplicateValueException}
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
@@ -68,113 +68,111 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     "The Lists Responder" when {
 
-        "used to query information about lists" should {
-
-            "return all lists" in {
-                responderManager ! ListsGetRequestADM(
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01
-                )
-
-                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
-
-                received.lists.size should be(7)
-            }
-
-            "return all lists belonging to the images project" in {
-                responderManager ! ListsGetRequestADM(
-                    projectIri = Some(IMAGES_PROJECT_IRI),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01
-                )
-
-                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
-
-                // log.debug("received: " + received)
-
-                received.lists.size should be(4)
-            }
-
-            "return all lists belonging to the anything project" in {
-                responderManager ! ListsGetRequestADM(
-                    projectIri = Some(ANYTHING_PROJECT_IRI),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01
-                )
-
-                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
-
-                // log.debug("received: " + received)
-
-                received.lists.size should be(2)
-            }
-
-            "return basic list information (anything list)" in {
-                responderManager ! ListNodeInfoGetRequestADM(
-                    iri = "http://rdfh.ch/lists/0001/treeList",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.anythingUser1
-                )
-
-                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
-
-                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-                received.listinfo.sorted should be(treeListInfo.sorted)
-            }
-
-            "return basic list information (anything other list)" in {
-                responderManager ! ListNodeInfoGetRequestADM(
-                    iri = "http://rdfh.ch/lists/0001/otherTreeList",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.anythingUser1
-                )
-
-                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
-
-                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-                received.listinfo.sorted should be(otherTreeListInfo.sorted)
-            }
-
-            "return basic node information (images list - sommer)" in {
-                responderManager ! ListNodeInfoGetRequestADM(
-                    iri = "http://rdfh.ch/lists/00FF/526f26ed04",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01
-                )
-
-                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-
-                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-                received.nodeinfo.sorted should be(summerNodeInfo.sorted)
-            }
-
-            "return a full list response" in {
-                responderManager ! ListGetRequestADM(
-                    iri = "http://rdfh.ch/lists/0001/treeList",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.anythingUser1
-                )
-
-                val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
-
-                // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
-
-                received.list.listinfo.sorted should be(treeListInfo.sorted)
-
-                received.list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
-            }
-        }
+//        "used to query information about lists" should {
+//
+//            "return all lists" in {
+//                responderManager ! ListsGetRequestADM(
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.imagesUser01
+//                )
+//
+//                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
+//
+//                received.lists.size should be(7)
+//            }
+//
+//            "return all lists belonging to the images project" in {
+//                responderManager ! ListsGetRequestADM(
+//                    projectIri = Some(IMAGES_PROJECT_IRI),
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.imagesUser01
+//                )
+//
+//                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
+//
+//                // log.debug("received: " + received)
+//
+//                received.lists.size should be(4)
+//            }
+//
+//            "return all lists belonging to the anything project" in {
+//                responderManager ! ListsGetRequestADM(
+//                    projectIri = Some(ANYTHING_PROJECT_IRI),
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.imagesUser01
+//                )
+//
+//                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
+//
+//                // log.debug("received: " + received)
+//
+//                received.lists.size should be(2)
+//            }
+//
+//            "return basic list information (anything list)" in {
+//                responderManager ! ListNodeInfoGetRequestADM(
+//                    iri = "http://rdfh.ch/lists/0001/treeList",
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.anythingUser1
+//                )
+//
+//                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
+//
+//                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
+//
+//                received.listinfo.sorted should be(treeListInfo.sorted)
+//            }
+//
+//            "return basic list information (anything other list)" in {
+//                responderManager ! ListNodeInfoGetRequestADM(
+//                    iri = "http://rdfh.ch/lists/0001/otherTreeList",
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.anythingUser1
+//                )
+//
+//                val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
+//
+//                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
+//
+//                received.listinfo.sorted should be(otherTreeListInfo.sorted)
+//            }
+//
+//            "return basic node information (images list - sommer)" in {
+//                responderManager ! ListNodeInfoGetRequestADM(
+//                    iri = "http://rdfh.ch/lists/00FF/526f26ed04",
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.imagesUser01
+//                )
+//
+//                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
+//
+//                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
+//
+//                received.nodeinfo.sorted should be(summerNodeInfo.sorted)
+//            }
+//
+//            "return a full list response" in {
+//                responderManager ! ListGetRequestADM(
+//                    iri = "http://rdfh.ch/lists/0001/treeList",
+//                    featureFactoryConfig = defaultFeatureFactoryConfig,
+//                    requestingUser = SharedTestDataADM.anythingUser1
+//                )
+//
+//                val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
+//
+//                // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
+//
+//                received.list.listinfo.sorted should be(treeListInfo.sorted)
+//
+//                received.list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
+//            }
+//        }
+        val newListIri = new MutableTestIri
+        val firstChildIri = new MutableTestIri
+        val secondChildIri = new MutableTestIri
+        val thirdChildIri = new MutableTestIri
 
         "used to modify lists" should {
-
-            val newListIri = new MutableTestIri
-            val firstChildIri = new MutableTestIri
-            val secondChildIri = new MutableTestIri
-            val thirdChildIri = new MutableTestIri
-
             "create a list" in {
                 responderManager ! ListCreateRequestADM(
                     createRootNode = CreateNodeApiRequestADM(
@@ -397,15 +395,20 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                thirdChildIri.set(childNodeInfo.id)
            }
-
-
-           "change node order" ignore {
-
-           }
-
-           "delete node if not in use" ignore {
-
-           }
         }
+        "used to delete list items" should {
+            "should not delete a node that is in use" in {
+                val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeInUseIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"Node ${nodeInUseIri} cannot be deleted, because it is in use.")))
+
+            }
+        }
+
     }
 }

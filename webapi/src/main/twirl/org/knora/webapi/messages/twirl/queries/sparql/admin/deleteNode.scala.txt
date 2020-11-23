@@ -73,10 +73,13 @@ WHERE {
     {
     @* Collect all statements whose subject is the node. *@
         ?nodeIri rdf:type knora-base:ListNode .
-    } UNION {
+    }
+    @if(children.size>0) {
+    UNION {
      @* Collect all statements whose subject is one of the children. *@
         @for(child <- children) {
             ?child rdf:type knora-base:ListNode .
         }
+    }
     }
 }

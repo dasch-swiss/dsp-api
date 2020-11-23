@@ -1141,12 +1141,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Future[Unit] = for {
             // Is node itself in use?
             _ <- isNodeUsed(nodeIri = nodeIri,
-                            errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because it is in use"))
+                            errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because it is in use."))
 
 
             _ = nodeChildren.foreach(child =>
                 isNodeUsed(nodeIri = child.id,
-                    errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${child.id} is in use"))
+                    errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${child.id} is in use."))
             )
         } yield ()
 

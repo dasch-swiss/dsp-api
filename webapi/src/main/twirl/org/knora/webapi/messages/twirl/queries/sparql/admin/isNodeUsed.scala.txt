@@ -33,6 +33,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
 SELECT DISTINCT ?isUsed
 @* Ensure that inference is not used in this query. *@
@@ -40,10 +41,12 @@ SELECT DISTINCT ?isUsed
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@nodeIri") AS ?node)
+  	BIND(IRI("@nodeIri") AS ?node)
     BIND(true AS ?isUsed)
-
-    ?s ?p ?node .
-
-    FILTER(!(?p = knora-base:hasSubListNode))
+	{
+    	?s ?p "hlist=<@nodeIri>" .
+  	} UNION {
+  		?s ?p ?node .
+  	}
+  FILTER((?p = knora-base:valueHasListNode) || (?p = salsah-gui:guiAttribute))
 }
