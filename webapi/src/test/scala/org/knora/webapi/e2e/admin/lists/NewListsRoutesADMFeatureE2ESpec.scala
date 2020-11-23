@@ -117,7 +117,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
 
                 // log.debug("lists: {}", lists)
 
-                lists.size should be (7)
+                lists.size should be (8)
                 clientTestDataCollector.addFile(
                     TestDataFileContent(
                         filePath = TestDataFilePath(
@@ -168,7 +168,7 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
 
                 // log.debug("lists: {}", lists)
 
-                lists.size should be (2)
+                lists.size should be (3)
 
                 clientTestDataCollector.addFile(
                     TestDataFileContent(
