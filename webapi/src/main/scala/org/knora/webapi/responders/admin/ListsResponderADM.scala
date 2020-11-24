@@ -1216,6 +1216,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         } yield ()
 
+        /**
+         * Delete a list (root node) or a child node after verifying that neither the node itself nor any of its children
+         * are used. If not used, delete the children of the node first, then delete the node itself.
+         *
+         * @param nodeIri              the node's IRI.
+         * @param projectIri           the feature factory configuration.
+         * @param children             the children of the node.
+         * @param isRootNode           the flag to determine the type of the node, root or child.
+         * @return a [[IRI]]
+         * @throws UpdateNotPerformedException in case a node is in use.
+         */
         def deleteListItem(nodeIri: IRI, projectIri: IRI, children: Seq[ListChildNodeADM], isRootNode: Boolean): Future[IRI] = for {
             // get the data graph of the project.
             dataNamedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
@@ -1230,6 +1241,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         } yield dataNamedGraph
 
+        /**
+         * Update the parent node of the deleted node by updating its remaining children.
+         * Shift the remaining children of the parent node with respect to the position of the deleted node.
+         *
+         * @param deletedNodeIri            the IRI of the deleted node.
+         * @param positionOfDeletedNode     the position of the deleted node.
+         * @param parentNodeIri             the IRI of the deleted node's parent.
+         * @param dataNamedGraph            the data named graph.
+         * @param featureFactoryConfig      the feature factory configuration.
+         * @return a [[ListNodeADM]]
+         * @throws UpdateNotPerformedException if the node that had to be deleted is still in the list of parent's children.
+         */
         def updateParentNode(deletedNodeIri: IRI,
                              positionOfDeletedNode: Int,
                              parentNodeIri: IRI,

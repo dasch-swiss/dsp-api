@@ -21,7 +21,7 @@
 @import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
- * Updates an existing list with the provided values.
+ * Updates an existing node's position.
  *
  * @param dataNamedGraph     the named graph to update.
  * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred

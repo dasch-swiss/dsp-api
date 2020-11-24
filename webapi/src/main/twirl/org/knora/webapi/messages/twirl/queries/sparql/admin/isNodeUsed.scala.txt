@@ -44,9 +44,8 @@ WHERE {
   	BIND(IRI("@nodeIri") AS ?node)
     BIND(true AS ?isUsed)
 	{
-    	?s ?p "hlist=<@nodeIri>" .
+    	?s salsah-gui:guiAttribute "hlist=<@nodeIri>" .
   	} UNION {
-  		?s ?p ?node .
+  		?s knora-base:valueHasListNode ?node .
   	}
-  FILTER((?p = knora-base:valueHasListNode) || (?p = salsah-gui:guiAttribute))
 }

@@ -21,7 +21,7 @@
 @import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
- * Updates an existing list with the provided values.
+ * Delete a node (root or child). If a child node is deleted, remove it from the list of its parent's sublist nodes.
  *
  * @param dataNamedGraph     the named graph to update.
  * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
