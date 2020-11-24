@@ -20,8 +20,9 @@
 package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
-import org.knora.webapi.{RdfMediaTypes, SchemaOption, SchemaOptions}
+import org.knora.webapi.{IRI, RdfMediaTypes, SchemaOption, SchemaOptions}
 import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
+import java.io.{InputStream, OutputStream}
 
 /**
  * A trait for supported RDF formats.
@@ -107,14 +108,58 @@ case object RdfXml extends NonJsonLD {
 }
 
 /**
+ * A trait for classes that process streams of RDF data.
+ */
+trait RdfStreamProcessor {
+    /**
+     * Signals the start of the RDF data.
+     */
+    def start(): Unit
+
+    /**
+     * Processes a namespace declaration.
+     *
+     * @param prefix    the prefix.
+     * @param namespace the namespace.
+     */
+    def processNamespace(prefix: String, namespace: IRI): Unit
+
+    /**
+     * Processes a statement.
+     *
+     * @param statement the statement.
+     */
+    def processStatement(statement: Statement): Unit
+
+    /**
+     * Signals the end of the RDF data.
+     */
+    def finish(): Unit
+}
+
+/**
+ * Represents a source of RDF data to be processed using an [[RdfStreamProcessor]].
+ */
+sealed trait RdfSource
+
+/**
+ * An [[RdfSource]] that reads RDF data from a string.
+ *
+ * @param rdfStr a string containing RDF data.
+ */
+case class RdfStringSource(rdfStr: String) extends RdfSource
+
+/**
+ * An [[RdfSource]] that reads data from an [[InputStream]].
+ *
+ * @param inputStream the input stream.
+ */
+case class RdfInputStreamSource(inputStream: InputStream) extends RdfSource
+
+/**
  * Formats and parses RDF.
  */
 trait RdfFormatUtil {
-    /**
-     * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
-     */
-    def getRdfModelFactory: RdfModelFactory
-
     /**
      * Parses an RDF string to an [[RdfModel]].
      *
@@ -193,7 +238,7 @@ trait RdfFormatUtil {
                     throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
                 }
 
-                // Use an implementation-specific function to convert to other formats.
+                // Use an implementation-specific function to convert to formats other than JSON-LD.
                 formatNonJsonLD(
                     rdfModel = rdfModel,
                     rdfFormat = nonJsonLD,
@@ -201,6 +246,49 @@ trait RdfFormatUtil {
                 )
         }
     }
+
+    /**
+     * Parses RDF input, processing it with an [[RdfStreamProcessor]].
+     *
+     * @param rdfSource          the input source from which the RDF data should be read.
+     * @param rdfFormat          the input format.
+     * @param rdfStreamProcessor the [[RdfStreamProcessor]] that will be used to process the input.
+     */
+    def parseWithStreamProcessor(rdfSource: RdfSource,
+                                 rdfFormat: NonJsonLD,
+                                 rdfStreamProcessor: RdfStreamProcessor): Unit
+
+    /**
+     * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]].
+     *
+     * @param inputStream the input stream.
+     * @param rdfFormat the data format.
+     * @return the corresponding [[RdfModel]].
+     */
+    def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
+
+    /**
+     * Formats an [[RdfModel]], writing the output to an [[OutputStream]].
+     *
+     * @param rdfModel the model to be written.
+     * @param outputStream the output stream.
+     * @param rdfFormat the output format.
+     */
+    def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit
+
+    /**
+     * Creates an [[RdfStreamProcessor]] that writes formatted output.
+     *
+     * @param outputStream the output stream to which the formatted RDF data should be written.
+     * @param rdfFormat    the output format.
+     * @return an an [[RdfStreamProcessor]].
+     */
+    def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor
+
+    /**
+     * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+     */
+    def getRdfModelFactory: RdfModelFactory
 
     /**
      * Parses RDF in a format other than JSON-LD to an [[RdfModel]].

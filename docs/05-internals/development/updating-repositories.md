@@ -51,18 +51,18 @@ it to `org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater`.
 
 3. Download the entire repository from the triplestore into a TriG file.
 
-4. Read the TriG file into an RDF4J `Model`.
+4. Read the TriG file into an `RdfModel`.
 
-5. Update the `Model` by running the necessary transformations, and replacing the
+5. Update the `RdfModel` by running the necessary transformations, and replacing the
    built-in Knora ontologies with the current ones.
 
-6. Save the `Model` to a new TriG file.
+6. Save the `RdfModel` to a new TriG file.
 
 7. Empty the repository in the triplestore.
 
 8. Upload the transformed repository file to the triplestore.
 
-To update the `Model`, `RepositoryUpdater` runs a sequence of upgrade plugins, each of which
+To update the `RdfModel`, `RepositoryUpdater` runs a sequence of upgrade plugins, each of which
 is a class in `org.knora.webapi.store.triplestore.upgrade.plugins` and is registered
 in `RepositoryUpdatePlan`.
 
@@ -94,32 +94,27 @@ with existing data, the following must happen:
   in the string constant `org.knora.webapi.KnoraBaseVersion`.
   
 - A plugin must be added in the package `org.knora.webapi.store.triplestore.upgrade.plugins`,
-  and registered in `RepositoryUpdatePlan`, to transform
-  existing repositories so that they are compatible with the code changes
-  introduced in the pull request.
+  to transform existing repositories so that they are compatible with the code changes
+  introduced in the pull request. Each new plugin must be registered
+  by adding it to the sequence returned by `RepositoryUpdatePlan.makePluginsForVersions`.
 
-The order of version numbers must correspond to the order in which the pull requests
-are merged.
+The order of version numbers (and the plugins) must correspond to the order in which the
+pull requests are merged.
 
 An upgrade plugin is a Scala class that extends `UpgradePlugin`. The name of the plugin
 class should refer to the pull request that made the transformation necessary,
 using the format `UpgradePluginPRNNNN`, where `NNNN` is the number of the pull request.
 
-A plugin's `transform` method takes an RDF4J `Model` (a mutable object representing
-the repository) and modifies it as needed. For details on how to do this, see
-[The RDF Model API](https://rdf4j.eclipse.org/documentation/programming/model/)
-in the RDF4J documentation.
+A plugin's `transform` method takes an `RdfModel` (a mutable object representing
+the repository) and modifies it as needed.
 
 Before transforming the data, a plugin can check whether a required manual transformation
 has been carried out. If the requirement is not met, the plugin can throw
-`InconsistentTriplestoreDataException` to abort the upgrade process.
-
-The plugin must then be appended to the sequence `pluginsForVersions` in
-`RepositoryUpdatePlan`.
+`InconsistentRepositoryDataException` to abort the upgrade process.
 
 ## Testing Update Plugins
 
 Each plugin should have a unit test that extends `UpgradePluginSpec`. A typical
-test loads a TriG file containing test data into a `Model`, runs the plugin,
-makes an RDF4J `SailRepository` containing the transformed `Model`, and uses
+test loads a TriG file containing test data into a `RdfModel`, runs the plugin,
+makes an `RdfRepository` containing the transformed `RdfModel`, and uses
 SPARQL to check the result.

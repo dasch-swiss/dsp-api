@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentTriplestoreDataException, InvalidApiJsonException}
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentRepositoryDataException, InvalidApiJsonException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -826,7 +826,7 @@ object SalsahGuiConversions {
     def iri2SalsahGuiElement(iri: IRI): String = {
         iris2SalsahGuiElements.get(iri) match {
             case Some(salsahGuiElement) => salsahGuiElement
-            case None => throw new InconsistentTriplestoreDataException(s"No SALSAH GUI element found for IRI: $iri")
+            case None => throw new InconsistentRepositoryDataException(s"No SALSAH GUI element found for IRI: $iri")
         }
     }
 
@@ -839,7 +839,7 @@ object SalsahGuiConversions {
     def salsahGuiElement2Iri(salsahGuiElement: String): IRI = {
         salsahGuiElements2Iris.get(salsahGuiElement) match {
             case Some(iri) => iri
-            case None => throw new InconsistentTriplestoreDataException(s"No IRI found for SALSAH GUI element: $salsahGuiElement")
+            case None => throw new InconsistentRepositoryDataException(s"No IRI found for SALSAH GUI element: $salsahGuiElement")
         }
     }
 }

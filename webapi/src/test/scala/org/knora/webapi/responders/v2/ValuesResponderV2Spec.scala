@@ -30,6 +30,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder._
@@ -237,7 +238,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 storeManager ! SparqlSelectRequest(sparqlQuery)
 
                 expectMsgPF(timeout) {
-                    case sparqlSelectResponse: SparqlSelectResponse =>
+                    case sparqlSelectResponse: SparqlSelectResult =>
                         val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
 
                         val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
@@ -320,7 +321,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! SparqlSelectRequest(sparqlQuery)
 
         expectMsgPF(timeout) {
-            case response: SparqlSelectResponse =>
+            case response: SparqlSelectResult =>
                 val rows = response.results.bindings
 
                 if (rows.isEmpty) {
@@ -346,7 +347,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! SparqlSelectRequest(sparqlQuery)
 
         expectMsgPF(timeout) {
-            case response: SparqlSelectResponse =>
+            case response: SparqlSelectResult =>
                 val rows = response.results.bindings
 
                 if (rows.isEmpty) {

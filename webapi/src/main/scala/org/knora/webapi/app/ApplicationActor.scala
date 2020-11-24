@@ -31,7 +31,7 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi.core.LiveActorMaker
-import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
+import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.http.handler
 import org.knora.webapi.http.version.ServerVersion
@@ -143,7 +143,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
             case _: ArithmeticException => Resume
             case _: NullPointerException => Restart
             case _: IllegalArgumentException => Stop
-            case e: InconsistentTriplestoreDataException =>
+            case e: InconsistentRepositoryDataException =>
                 logger.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: {}", e.message)
                 Stop
             case e: SipiException =>
@@ -551,6 +551,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         msg += "\n"
         msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
         msg += "------------------------------------------------\n"
+
+        defaultFeatureFactoryConfig.makeToggleSettingsString match {
+            case Some(toggleSettingsString) => msg += s"Default feature toggle settings: $toggleSettingsString\n"
+            case None => ()
+        }
 
         if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting DB over HTTP is turned ON.\n"

@@ -40,14 +40,14 @@ import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, Cl
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, NameValuePair}
-import org.eclipse.rdf4j
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
-import org.knora.webapi.messages.util.SparqlResultProtocol._
-import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, RdfModel, Statement, Turtle}
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
@@ -187,8 +187,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case SparqlSelectRequest(sparql: String) => try2Message(sender(), sparqlHttpSelect(sparql), log)
         case sparqlConstructRequest: SparqlConstructRequest => try2Message(sender(), sparqlHttpConstruct(sparqlConstructRequest), log)
         case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest => try2Message(sender(), sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest), log)
-        case SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpConstructFile(sparql, graphIri, outputFile), log)
-        case NamedGraphFileRequest(graphIri: IRI, outputFile: File) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile), log)
+        case SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File, featureFactoryConfig: FeatureFactoryConfig) => try2Message(sender(), sparqlHttpConstructFile(sparql, graphIri, outputFile, featureFactoryConfig), log)
+        case NamedGraphFileRequest(graphIri: IRI, outputFile: File, featureFactoryConfig: FeatureFactoryConfig) => try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile, featureFactoryConfig), log)
         case NamedGraphDataRequest(graphIri: IRI) => try2Message(sender(), sparqlHttpGraphData(graphIri), log)
         case SparqlUpdateRequest(sparql: String) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql: String) => try2Message(sender(), sparqlHttpAsk(sparql), log)
@@ -198,22 +198,22 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case HelloTriplestore(msg: String) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
         case CheckTriplestoreRequest() => try2Message(sender(), checkTriplestore(), log)
         case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), updateLuceneIndex(subjectIri), log)
-        case DownloadRepositoryRequest(outputFile: File) => try2Message(sender(), downloadRepository(outputFile), log)
+        case DownloadRepositoryRequest(outputFile: File, featureFactoryConfig: FeatureFactoryConfig) => try2Message(sender(), downloadRepository(outputFile, featureFactoryConfig), log)
         case UploadRepositoryRequest(inputFile: File) => try2Message(sender(), uploadRepository(inputFile), log)
         case InsertGraphDataContentRequest(graphContent: String, graphName: String) => try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
     /**
-     * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
+     * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
      *
      * @param sparql the SPARQL SELECT query string.
-     * @return a [[SparqlSelectResponse]].
+     * @return a [[SparqlSelectResult]].
      */
-    private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResponse] = {
-        def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResponse] = {
+    private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResult] = {
+        def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResult] = {
             val parseTry = Try {
-                resultStr.parseJson.convertTo[SparqlSelectResponse]
+                resultStr.parseJson.convertTo[SparqlSelectResult]
             }
 
             parseTry match {
@@ -247,6 +247,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             responseMessage <- parseJsonResponse(sparql, resultStr)
         } yield responseMessage
     }
+
     /**
      * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
      *
@@ -263,7 +264,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
                 val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
 
-                for (st: Statement <- rdfModel.getStatements) {
+                for (st: Statement <- rdfModel) {
                     val subjectIri = st.subj.stringValue
                     val predicateIri = st.pred.stringValue
                     val objectIri = st.obj.stringValue
@@ -294,56 +295,79 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Adds a named graph to CONSTRUCT query results.
+     * Adds a context IRI to RDF statements.
      *
-     * @param graphIri  the IRI of the named graph.
-     * @param rdfWriter an [[rdf4j.rio.RDFWriter]] for writing the result.
+     * @param graphIri                  the IRI of the named graph.
+     * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the result.
+     * @param featureFactoryConfig      the feature factory configuration.
      */
-    private class ConstructToGraphHandler(graphIri: IRI, rdfWriter: rdf4j.rio.RDFWriter) extends rdf4j.rio.RDFHandler {
-        private val valueFactory: rdf4j.model.impl.SimpleValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance()
-        private val context: rdf4j.model.Resource = valueFactory.createIRI(graphIri)
+    private class ContextAddingProcessor(graphIri: IRI,
+                                         formattingStreamProcessor: RdfStreamProcessor,
+                                         featureFactoryConfig: FeatureFactoryConfig) extends RdfStreamProcessor {
+        private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
-        override def startRDF(): Unit = rdfWriter.startRDF()
+        override def start(): Unit = formattingStreamProcessor.start()
 
-        override def endRDF(): Unit = rdfWriter.endRDF()
-
-        override def handleNamespace(prefix: IRI, uri: IRI): Unit = rdfWriter.handleNamespace(prefix, uri)
-
-        override def handleStatement(st: rdf4j.model.Statement): Unit = {
-            val outputStatement = valueFactory.createStatement(
-                st.getSubject,
-                st.getPredicate,
-                st.getObject,
-                context
-            )
-
-            rdfWriter.handleStatement(outputStatement)
+        override def processNamespace(prefix: String, namespace: IRI): Unit = {
+            formattingStreamProcessor.processNamespace(prefix = prefix, namespace = namespace)
         }
 
-        override def handleComment(comment: IRI): Unit = rdfWriter.handleComment(comment)
+        override def processStatement(statement: Statement): Unit = {
+            val outputStatement = nodeFactory.makeStatement(
+                subj = statement.subj,
+                pred = statement.pred,
+                obj = statement.obj,
+                context = Some(graphIri)
+            )
+
+            formattingStreamProcessor.processStatement(outputStatement)
+        }
+
+        override def finish(): Unit = formattingStreamProcessor.finish()
     }
 
     /**
-     * Saves a graph in Turtle format to a file in TriG format.
+     * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
+     * and writes the result to a file in TriG format.
      *
-     * @param input      the Turtle data.
-     * @param outputFile the output file.
+     * @param rdfSource            the RDF data source.
+     * @param graphIri             the named graph IRI to be added.
+     * @param outputFile           the output file.
+     * @param featureFactoryConfig the feature factory configuration.
      */
-    private def turtleToTrig(input: Reader, graphIri: IRI, outputFile: File): Unit = {
-        // TODO: Provide a streaming API in RdfFormatUtil for this.
+    private def turtleToTrig(rdfSource: RdfSource,
+                             graphIri: IRI,
+                             outputFile: File,
+                             featureFactoryConfig: FeatureFactoryConfig): Unit = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+        var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
-        var maybeBufferedFileWriter: Option[BufferedWriter] = None
+        val parseTry: Try[Unit] = Try {
+            maybeBufferedFileOutputStream = Some(new BufferedOutputStream(new FileOutputStream(outputFile)))
 
-        try {
-            maybeBufferedFileWriter = Some(new BufferedWriter(new FileWriter(outputFile)))
-            val turtleParser = rdf4j.rio.Rio.createParser(rdf4j.rio.RDFFormat.TURTLE)
-            val trigFileWriter: rdf4j.rio.RDFWriter = rdf4j.rio.Rio.createWriter(rdf4j.rio.RDFFormat.TRIG, maybeBufferedFileWriter.get)
-            val constructToGraphHandler = new ConstructToGraphHandler(graphIri = graphIri, rdfWriter = trigFileWriter)
-            turtleParser.setRDFHandler(constructToGraphHandler)
-            turtleParser.parse(input, "")
-        } finally {
-            maybeBufferedFileWriter.foreach(_.close)
-            input.close()
+            val formattingStreamProcessor: RdfStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
+                outputStream = maybeBufferedFileOutputStream.get,
+                rdfFormat = TriG
+            )
+
+            val contextAddingProcessor = new ContextAddingProcessor(
+                graphIri = graphIri,
+                formattingStreamProcessor = formattingStreamProcessor,
+                featureFactoryConfig = featureFactoryConfig
+            )
+
+            rdfFormatUtil.parseWithStreamProcessor(
+                rdfSource = rdfSource,
+                rdfFormat = Turtle,
+                rdfStreamProcessor = contextAddingProcessor
+            )
+        }
+
+        maybeBufferedFileOutputStream.foreach(_.close)
+
+        parseTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
         }
     }
 
@@ -355,10 +379,19 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @param outputFile the output file.
      * @return a [[FileWrittenResponse]].
      */
-    private def sparqlHttpConstructFile(sparql: String, graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
+    private def sparqlHttpConstructFile(sparql: String,
+                                        graphIri: IRI,
+                                        outputFile: File,
+                                        featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
         for {
             turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
-            _ = turtleToTrig(input = new StringReader(turtleStr), graphIri = graphIri, outputFile = outputFile)
+
+            _ = turtleToTrig(
+                rdfSource = RdfStringSource(turtleStr),
+                graphIri = graphIri,
+                outputFile = outputFile,
+                featureFactoryConfig = featureFactoryConfig
+            )
         } yield FileWrittenResponse()
     }
 
@@ -589,18 +622,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             val httpGet = new HttpGet(checkRepositoryPath)
             httpGet.addHeader("Accept", mimeTypeApplicationJson)
 
-            val responseStr = {
+            val responseStr: String = {
                 var maybeResponse: Option[CloseableHttpResponse] = None
 
-                try {
+                val responseTry: Try[String] = Try {
                     maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
                     EntityUtils.toString(maybeResponse.get.getEntity)
-                } finally {
-                    maybeResponse match {
-                        case Some(response) => response.close()
-                        case None => ()
-                    }
                 }
+
+                maybeResponse.foreach(_.close())
+                responseTry.get
             }
 
             val nameShouldBe = settings.triplestoreDatabaseName
@@ -687,27 +718,25 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             val httpGet = new HttpGet(checkRepositoryPath)
             httpGet.addHeader("Accept", mimeTypeApplicationJson)
 
-            val responseStr = {
+            val responseStr: String = {
                 var maybeResponse: Option[CloseableHttpResponse] = None
 
-                try {
+                val responseTry: Try[String] = Try {
                     maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
                     EntityUtils.toString(maybeResponse.get.getEntity)
-                } finally {
-                    maybeResponse match {
-                        case Some(response) => response.close()
-                        case None => ()
-                    }
                 }
+
+                maybeResponse.foreach(_.close())
+                responseTry.get
             }
 
-            val jsonArr = JsonParser(responseStr).asInstanceOf[JsArray]
+            val jsonArr: JsArray = JsonParser(responseStr).asInstanceOf[JsArray]
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
             val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
 
-            val idShouldBe = settings.triplestoreDatabaseName
+            val idShouldBe: String = settings.triplestoreDatabaseName
             val sesameTypeForSEShouldBe = "owlim:MonitorRepository"
             val sesameTypeForFreeShouldBe = "graphdb:FreeSailRepository"
 
@@ -750,15 +779,24 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Requests the contents of a named graph in TriG format, saving the response in a file.
      *
-     * @param graphIri   the IRI of the named graph.
-     * @param outputFile the file to be written.
+     * @param graphIri             the IRI of the named graph.
+     * @param outputFile           the file to be written.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a string containing the contents of the graph in TriG format.
      */
-    private def sparqlHttpGraphFile(graphIri: IRI, outputFile: File): Try[FileWrittenResponse] = {
+    private def sparqlHttpGraphFile(graphIri: IRI,
+                                    outputFile: File,
+                                    featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
         val httpContext: HttpClientContext = makeHttpContext
         val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
         httpGet.addHeader("Accept", mimeTypeTextTurtle)
-        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile, Some(graphIri), convertToTrig = true)
+
+        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(
+            outputFile = outputFile,
+            featureFactoryConfig = featureFactoryConfig,
+            maybeGraphIri = Some(graphIri),
+            convertToTrig = true
+        )
 
         doHttpRequest(
             client = queryHttpClient,
@@ -796,7 +834,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
      * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
      * @return the triplestore's response.
      */
-    private def getSparqlHttpResponse(sparql: String, isUpdate: Boolean, acceptMimeType: String = mimeTypeApplicationSparqlResultsJson): Try[String] = {
+    private def getSparqlHttpResponse(sparql: String,
+                                      isUpdate: Boolean,
+                                      acceptMimeType: String = mimeTypeApplicationSparqlResultsJson): Try[String] = {
 
         val httpContext: HttpClientContext = makeHttpContext
 
@@ -835,9 +875,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Dumps the whole repository in TriG format, saving the response in a file.
      *
+     * @param outputFile           the output file.
+     * @param featureFactoryConfig the feature factory configuration.
      * @return a string containing the contents of the graph in TriG format.
      */
-    private def downloadRepository(outputFile: File): Try[FileWrittenResponse] = {
+    private def downloadRepository(outputFile: File, featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
         val httpContext: HttpClientContext = makeHttpContext
 
         val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
@@ -864,7 +906,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             .setDefaultCredentialsProvider(credsProvider)
             .setDefaultRequestConfig(queryRequestConfig)
             .build
-        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(outputFile)
+
+        val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(
+            outputFile = outputFile,
+            featureFactoryConfig = featureFactoryConfig
+        )
 
         doHttpRequest(
             client = queryHttpClient,
@@ -1024,9 +1070,45 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     def writeResponseFile(outputFile: File,
+                          featureFactoryConfig: FeatureFactoryConfig,
                           maybeGraphIri: Option[IRI] = None,
                           convertToTrig: Boolean = false)(response: CloseableHttpResponse): FileWrittenResponse = {
         Option(response.getEntity) match {
+            case Some(responseEntity: HttpEntity) =>
+                // Stream the HTTP entity to the output file.
+                if (convertToTrig) {
+                    // Stream the HTTP entity to the temporary .ttl file.
+                    val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
+                    Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
+
+                    // Convert the Turtle to Trig.
+
+                    var maybeBufferedInputStream: Option[BufferedInputStream] = None
+
+                    val processFileTry: Try[Unit] = Try {
+                        maybeBufferedInputStream = Some(new BufferedInputStream(new FileInputStream(turtleFile)))
+
+                        turtleToTrig(
+                            rdfSource = RdfInputStreamSource(maybeBufferedInputStream.get),
+                            graphIri = maybeGraphIri.get,
+                            outputFile = outputFile,
+                            featureFactoryConfig = featureFactoryConfig
+                        )
+                    }
+
+                    maybeBufferedInputStream.foreach(_.close())
+                    turtleFile.delete()
+
+                    processFileTry match {
+                        case Success(_) => ()
+                        case Failure(ex) => throw ex
+                    }
+                } else {
+                    Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
+                }
+
+                FileWrittenResponse()
+
             case None =>
                 if (maybeGraphIri.nonEmpty) {
                     log.error(s"Triplestore returned no content for graph ${maybeGraphIri.get}")
@@ -1035,25 +1117,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                     log.error(s"Triplestore returned no content for repository dump")
                     throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
                 }
-            case Some(responseEntity: HttpEntity) =>
-                // TODO: Provide a streaming API in RdfFormatUtil for this.
-
-                // Stream the HTTP entity to the output file.
-                if (convertToTrig) {
-                    // Stream the HTTP entity to the temporary .ttl file.
-                    val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
-                    Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
-
-                    // Convert the Turtle to Trig.
-                    val bufferedReader = new BufferedReader(new FileReader(turtleFile))
-                    turtleToTrig(input = bufferedReader, graphIri = maybeGraphIri.get, outputFile = outputFile)
-                    turtleFile.delete()
-
-                } else {
-                    Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
-                }
-
-                FileWrittenResponse()
         }
     }
 }
