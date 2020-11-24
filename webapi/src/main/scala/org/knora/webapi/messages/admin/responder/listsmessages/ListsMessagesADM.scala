@@ -85,12 +85,12 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
  * @param labels        labels of the list node.
  * @param comments      comments of the list node.
  */
-case class CreateNodeApiRequestADM( id: Option[IRI] = None,
-                                    parentNodeIri: Option[IRI] = None,
-                                    projectIri: IRI,
-                                    name: Option[String] = None,
-                                    labels: Seq[StringLiteralV2],
-                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+case class CreateNodeApiRequestADM(id: Option[IRI] = None,
+                                   parentNodeIri: Option[IRI] = None,
+                                   projectIri: IRI,
+                                   name: Option[String] = None,
+                                   labels: Seq[StringLiteralV2],
+                                   comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
     stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
@@ -117,13 +117,13 @@ case class CreateNodeApiRequestADM( id: Option[IRI] = None,
 /**
  * Represents an API request payload that asks the Knora API server to update an existing node's basic information (root or child).
  *
- * @param listIri       the IRI of the node to change.
- * @param projectIri    the IRI of the project the list belongs to.
- * @param hasRootNode  the flag to identify a child node.
- * @param position      the position of the node, if not a root node.
- * @param name          the name of the node
- * @param labels        the labels.
- * @param comments      the comments.
+ * @param listIri     the IRI of the node to change.
+ * @param projectIri  the IRI of the project the list belongs to.
+ * @param hasRootNode the flag to identify a child node.
+ * @param position    the position of the node, if not a root node.
+ * @param name        the name of the node
+ * @param labels      the labels.
+ * @param comments    the comments.
  */
 case class ChangeNodeInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
@@ -153,7 +153,7 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    if(hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
+    if (hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
         throw BadRequestException(s"Invalid root node IRI is given.")
     }
     // If payload contains label or comments they should not be empty
@@ -171,7 +171,7 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
 /**
  * Represents an API request payload that asks the Knora API server to update an existing node's name (root or child).
  *
- * @param name          the new name of the node.
+ * @param name the new name of the node.
  */
 case class ChangeNodeNameApiRequestADM(name: String) extends ListADMJsonProtocol {
 
@@ -181,7 +181,7 @@ case class ChangeNodeNameApiRequestADM(name: String) extends ListADMJsonProtocol
 /**
  * Represents an API request payload that asks the Knora API server to update an existing node's labels (root or child).
  *
- * @param labels          the new labels of the node
+ * @param labels the new labels of the node
  */
 case class ChangeNodeLabelsApiRequestADM(labels: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
@@ -191,12 +191,13 @@ case class ChangeNodeLabelsApiRequestADM(labels: Seq[StringLiteralV2]) extends L
 /**
  * Represents an API request payload that asks the Knora API server to update an existing node's comments (root or child).
  *
- * @param comments          the new comments of the node.
+ * @param comments the new comments of the node.
  */
 case class ChangeNodeCommentsApiRequestADM(comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -244,9 +245,9 @@ case class ListNodeInfoGetRequestADM(iri: IRI,
  * Requests the path from the root node of a list to a particular node. A successful response will be
  * a [[NodePathGetResponseADM]].
  *
- * @param iri            the IRI of the node.
+ * @param iri                  the IRI of the node.
  * @param featureFactoryConfig the feature factory configuration.
- * @param requestingUser the user making the request.
+ * @param requestingUser       the user making the request.
  */
 case class NodePathGetRequestADM(iri: IRI,
                                  featureFactoryConfig: FeatureFactoryConfig,
@@ -256,30 +257,30 @@ case class NodePathGetRequestADM(iri: IRI,
 /**
  * Requests the creation of a new list.
  *
- * @param createRootNode    the [[CreateNodeApiRequestADM]] information used for creating the root node of the list.
+ * @param createRootNode       the [[CreateNodeApiRequestADM]] information used for creating the root node of the list.
  * @param featureFactoryConfig the feature factory configuration.
- * @param requestingUser    the user creating the new list.
- * @param apiRequestID      the ID of the API request.
+ * @param requestingUser       the user creating the new list.
+ * @param apiRequestID         the ID of the API request.
  */
 case class ListCreateRequestADM(createRootNode: CreateNodeApiRequestADM,
                                 featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ListsResponderRequestADM {
     // check if the requesting user is allowed to perform operation
-        if (!requestingUser.permissions.isProjectAdmin(createRootNode.projectIri) && !requestingUser.permissions.isSystemAdmin) {
-            // not project or a system admin
-            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-        }
+    if (!requestingUser.permissions.isProjectAdmin(createRootNode.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        // not project or a system admin
+        throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+    }
 }
 
 /**
  * Request updating basic information of an existing node.
  *
- * @param listIri           the IRI of the node to be updated (root or child ).
- * @param changeNodeRequest the data which needs to be update.
+ * @param listIri              the IRI of the node to be updated (root or child ).
+ * @param changeNodeRequest    the data which needs to be update.
  * @param featureFactoryConfig the feature factory configuration.
- * @param requestingUser    the user initiating the request.
- * @param apiRequestID      the ID of the API request.
+ * @param requestingUser       the user initiating the request.
+ * @param apiRequestID         the ID of the API request.
  */
 case class NodeInfoChangeRequestADM(listIri: IRI,
                                     changeNodeRequest: ChangeNodeInfoApiRequestADM,
@@ -297,8 +298,7 @@ case class NodeInfoChangeRequestADM(listIri: IRI,
 /**
  * Request the creation of a new list node, root or child.
  *
-
- * @param createChildNodeRequest  the new node information.
+ * @param createChildNodeRequest the new node information.
  * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user making the request.
  * @param apiRequestID           the ID of the API request.
@@ -317,9 +317,10 @@ case class ListChildNodeCreateRequestADM(createChildNodeRequest: CreateNodeApiRe
 
 /**
  * Request updating the name of an existing node.
+ *
  * @param nodeIri               the IRI of the node whose name should be updated.
  * @param changeNodeNameRequest the payload containing the new name.
- * @param featureFactoryConfig the feature factory configuration.
+ * @param featureFactoryConfig  the feature factory configuration.
  * @param requestingUser        the user initiating the request.
  * @param apiRequestID          the ID of the API request.
  */
@@ -331,11 +332,12 @@ case class NodeNameChangeRequestADM(nodeIri: IRI,
 
 /**
  * Request updating the labels of an existing node.
- * @param nodeIri                   the IRI of the node whose name should be updated.
- * @param changeNodeLabelsRequest   the payload containing the new labels.
- * @param featureFactoryConfig the feature factory configuration.
- * @param requestingUser            the user initiating the request.
- * @param apiRequestID              the ID of the API request.
+ *
+ * @param nodeIri                 the IRI of the node whose name should be updated.
+ * @param changeNodeLabelsRequest the payload containing the new labels.
+ * @param featureFactoryConfig    the feature factory configuration.
+ * @param requestingUser          the user initiating the request.
+ * @param apiRequestID            the ID of the API request.
  */
 case class NodeLabelsChangeRequestADM(nodeIri: IRI,
                                       changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
@@ -345,11 +347,12 @@ case class NodeLabelsChangeRequestADM(nodeIri: IRI,
 
 /**
  * Request updating the comments of an existing node.
- * @param nodeIri                       the IRI of the node whose name should be updated.
- * @param changeNodeCommentsRequest     the payload containing the new comments.
- * @param featureFactoryConfig the feature factory configuration.
- * @param requestingUser                the user initiating the request.
- * @param apiRequestID                  the ID of the API request.
+ *
+ * @param nodeIri                   the IRI of the node whose name should be updated.
+ * @param changeNodeCommentsRequest the payload containing the new comments.
+ * @param featureFactoryConfig      the feature factory configuration.
+ * @param requestingUser            the user initiating the request.
+ * @param apiRequestID              the ID of the API request.
  */
 case class NodeCommentsChangeRequestADM(nodeIri: IRI,
                                         changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
@@ -402,6 +405,7 @@ case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(
 
     def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
 }
+
 /**
  * Provides basic information about any node (root or child) without it's children.
  *
@@ -454,9 +458,10 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 
     def toJsValue: JsValue = listDeleteResponseADMFormat.write(this)
 }
+
 /**
- *  Responds to deletion of a child node by returning its parent node together with list of its immediate children
- *  whose position is updated.
+ * Responds to deletion of a child node by returning its parent node together with list of its immediate children
+ * whose position is updated.
  *
  * @param node the updated parent node.
  */
@@ -466,10 +471,9 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
-abstract class ListItemADM (info: ListNodeInfoADM, children: Seq[ListChildNodeADM])
+abstract class ListItemADM(info: ListNodeInfoADM, children: Seq[ListChildNodeADM])
 
 case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM]) extends ListItemADM(listinfo, children) {
     /**
@@ -517,7 +521,9 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
     def sorted: ListNodeInfoADM
 
     def getName: Option[String] = name
+
     def getLabels: StringLiteralSequenceV2 = labels
+
     def getComments: StringLiteralSequenceV2 = comments
 
     /**
@@ -645,10 +651,15 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
     def sorted: ListNodeADM
 
     def getName: Option[String] = name
+
     def getLabels: StringLiteralSequenceV2 = labels
+
     def getComments: StringLiteralSequenceV2 = comments
+
     def getChildren: Seq[ListChildNodeADM] = children
+
     def getNodeId: IRI = id
+
     /**
      * Gets the label in the user's preferred language.
      *
@@ -1180,7 +1191,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
-    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] = jsonFormat(CreateNodeApiRequestADM, "id" , "parentNodeIri", "projectIri", "name", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] = jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(ChangeNodeInfoApiRequestADM, "listIri", "projectIri", "hasRootNode", "position", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
@@ -1192,5 +1203,5 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
     implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
     implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] = jsonFormat(ChildNodeDeleteResponseADM, "node")
-    implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM]= jsonFormat(ListDeleteResponseADM, "iri", "deleted")
+    implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] = jsonFormat(ListDeleteResponseADM, "iri", "deleted")
 }
