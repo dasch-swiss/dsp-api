@@ -19,10 +19,8 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import io.swagger.annotations._
-import javax.ws.rs.Path
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.routing.admin.lists._
 import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
