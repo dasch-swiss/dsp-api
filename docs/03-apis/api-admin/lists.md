@@ -24,7 +24,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 **List Item Operations:**
 
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
-- `GET: /admin/lists/<listIri>` : return complete list with children
+- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given. 
+If IRI of the child node is given, return the node with its immediate children. 
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
 - `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
 
@@ -35,10 +36,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
-- NOT IMPLEMENTED: `DELETE: /admin/lists/nodes/<nodeIri>` : delete list node including children if not used
-- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
 
-## List Operations
+- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and 
+all its children, if not used
+
+## List Item Operations
 
 ### Get lists
 
@@ -49,7 +51,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ### Get list
 
  - Required permission: none
- - Return complete list with children
+ - Return complete `list` including basic information of the list, `listinfo`, and all its children.
  - GET: `/admin/lists/<listIri>`
 
 
@@ -70,17 +72,40 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
 
 ```json
-    {
-        "id": "http://rdfh.ch/lists/0001/a-list-with-IRI",
-        "projectIri": "http://rdfh.ch/projects/0001",
-        "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
-        "comments": []
+  {
+    "id": "http://rdfh.ch/lists/0001/a-list",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "a new list",
+    "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
+    "comments": []
+  }
+```
+
+The response will contain the basic information of the list, `listinfo` and an empty list of its children, as below:
+```json
+{
+    "list": {
+        "children": [],
+        "listinfo": {
+            "comments": [],
+            "id": "http://rdfh.ch/lists/0001/a-list",
+            "isRootNode": true,
+            "labels": [
+                {
+                    "value": "Neue Liste mit IRI",
+                    "language": "de"
+                }
+            ],
+            "name": "a new list",
+            "projectIri": "http://rdfh.ch/projects/0001"
+        }
     }
+}
 ```
 ### Get list's information
 
  - Required permission: none
- - Return list information (without children)
+ - Return list information, `listinfo` (without children).
  - GET: `/admin/lists/infos/<listIri>`
  
 ### Update list's information
@@ -94,15 +119,37 @@ list and the IRI of the project it belongs to.
  - BODY:
  
 ```json
-   {
-       "listIri": "listIri",
-       "projectIri": "someprojectiri",
-       "name": "a new name",
-       "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-       "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-   }
+ {   "listIri": "http://rdfh.ch/lists/0001/a-list",
+      "projectIri": "http://rdfh.ch/projects/0001",
+      "name": "new name for the list",
+      "labels": [{ "value": "a new label for the list", "language": "en"}],
+      "comments": [{ "value": "a new comment for the list", "language": "en"}]
+  }
 ```
 
+The response will contain the basic information of the list, `listinfo`, without its children, as below:
+```json
+{
+    "listinfo": {
+        "comments": [
+            {
+                "value": "a new comment for the list",
+                "language": "en"
+            }
+        ],
+        "id": "http://rdfh.ch/lists/0001/a-list",
+        "isRootNode": true,
+        "labels": [
+            {
+                "value": "a new label for the list",
+                "language": "en"
+            }
+        ],
+        "name": "new name for the list",
+        "projectIri": "http://rdfh.ch/projects/0001"
+    }
+}
+```
 If only name of the list must be updated, it can be given as below in the body of the request:
 
 ```json
@@ -113,7 +160,7 @@ If only name of the list must be updated, it can be given as below in the body o
   }
 ```
 
-Alternatively, basic information `name`, `labels`, or `comments` or a list or a child node can be updated individually 
+Alternatively, basic information `name`, `labels`, or `comments` of the root node (i.e. list) can be updated individually 
 as explained below.
 
 ### Update list or node's name
@@ -158,13 +205,16 @@ There is no need to specify the project IRI because it is automatically extracte
 ```
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
+### Get node
 
-## List Node Operations
+ - Required permission: none
+ - Return complete `node` including basic information of the list, `nodeinfo`, and all its immediate children.
+ - GET: `/admin/lists/<nodeIri>`
 
 ### Get List Node Information
 
  - Required permission: none
- - Return list node information (without children)
+ - Return node information, `nodeinfo`, (without children).
  - GET: `/admin/lists/nodes/<nodeIri>`
 
 
@@ -178,24 +228,116 @@ There is no need to specify the project IRI because it is automatically extracte
   - BODY:
   
 ```json
-    {
-        "parentNodeIri": "parentNodeIri",
-        "projectIri": "someprojectiri",
-        "name": "first",
-        "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
-        "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
+     {   
+         "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+         "projectIri": "http://rdfh.ch/projects/0001",
+         "name": "a child",
+         "labels": [{ "value": "New List Node", "language": "en"}],
+         "comments": []
     }
 ```
 
 Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
 
 ```json
-    {
-        "id": "http://rdfh.ch/lists/0001/a-child-node-with-IRI",
-        "parentNodeIri": "http://rdfh.ch/lists/0001/a-list-with-IRI",
-        "projectIri": "http://rdfh.ch/projects/0001",
-        "name": "child node with a custom IRI",
-        "labels": [{ "value": "New child node with IRI", "language": "en"}],
-        "comments": [{ "value": "New child node comment", "language": "en"}]
-    }
+{    "id": "http://rdfh.ch/lists/0001/a-childNode",
+     "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+     "projectIri": "http://rdfh.ch/projects/0001",
+     "name": "a child",
+     "labels": [{ "value": "New List Node", "language": "en"}],
+     "comments": []
+}
 ```
+
+The response will contain the basic information of the node, `nodeinfo`, as below:
+```json
+{
+    "nodeinfo": {
+        "comments": [],
+        "hasRootNode": "http://rdfh.ch/lists/0001/a-list",
+        "id": "http://rdfh.ch/lists/0001/a-childNode",
+        "labels": [
+            {
+                "value": "New List Node",
+                "language": "en"
+            }
+        ],
+        "name": "a new child",
+        "position": 1
+    }
+}
+```
+
+### Update node's information
+The basic information of a node such as its labels, comments, name, or all of them can be updated. The parameters that 
+must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
+node and the IRI of the project it belongs to. 
+
+ - Required permission: SystemAdmin / ProjectAdmin
+ - Update node information
+ - PUT: `/admin/lists/<nodeIri>`
+ - BODY:
+ 
+```json
+  {   "listIri": "http://rdfh.ch/lists/0001/a-childNode",
+       "projectIri": "http://rdfh.ch/projects/0001",
+       "name": "new node name",
+       "labels": [{ "value": "new node label", "language": "en"}],
+       "comments": [{ "value": "new node comment", "language": "en"}]
+   }
+```
+
+The response will contain the basic information of the node as `nodeInfo` without its children, as below:
+
+```json
+{
+    "nodeinfo": {
+        "comments": [
+            {
+                "value": "new node comment",
+                "language": "en"
+            }
+        ],
+        "hasRootNode": "http://rdfh.ch/lists/0001/a-list",
+        "id": "http://rdfh.ch/lists/0001/a-childNode",
+        "labels": [
+            {
+                "value": "new node label",
+                "language": "en"
+            }
+        ],
+        "name": "new node name",
+        "position": 0
+    }
+}
+```
+
+If only name of the node must be updated, it can be given as below in the body of the request:
+
+```json
+   {
+      "listIri": "nodeIri",
+      "projectIri": "projectIri",
+      "name": "another name"
+  }
+```
+
+Alternatively, basic information of the child node can be updated individually as explained above (See 
+[update node name](#update-list-or-nodes-name), [update node labels](#update-list-or-nodes-labels), and 
+[update node comments](#update-list-or-nodes-comments)).
+
+### Delete a list or a node
+An entire list or a single node of it can be completely deleted, if not in use. Before deleting an entire list 
+(i.e. root node), the data and ontologies are checked for any usage of the list or its children. If not in use, the list 
+and all its children are deleted.
+
+Similarily, before deleting a single node of a list, it is verified that the node itself and none of its children are used.
+If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by shifting the 
+remaining child nodes with respect to the position of the deleted node. 
+
+- Required permission: SystemAdmin / ProjectAdmin
+- Response:
+    - If the IRI of the list (i.e. root node) is given, the `iri` of the deleted list with a flag `deleted: true` is returned.
+    - If the IRI of a child node is given, the updated parent node is returned.
+
+- Delete `/admin/lists/<listItemIri>`
