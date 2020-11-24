@@ -25,7 +25,7 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
@@ -110,6 +110,17 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ES
                 // first child must have its child
                 val firstChild = children.head
                 firstChild.children.size should be (1)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "delete-list-node-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
 
             "delete a list entirely with all its children" in {
@@ -119,6 +130,17 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ES
                 response.status should be(StatusCodes.OK)
                 val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
                 deletedStatus.convertTo[Boolean] should be (true)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "delete-list-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
             }
         }
     }
