@@ -140,7 +140,7 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
     }
 
     if (!stringFormatter.isKnoraListIriStr(listIri)) {
-        throw BadRequestException(s"Invalid IRI is given: ${listIri}.")
+        throw BadRequestException(s"Invalid IRI is given: $listIri.")
     }
 
     // Check that project Iri is given
@@ -378,7 +378,7 @@ case class ListItemDeleteRequestADM(nodeIri: IRI,
  * @param lists a [[ListRootNodeInfoADM]] sequence.
  */
 case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
-    def toJsValue = listsGetResponseADMFormat.write(this)
+    def toJsValue: JsValue = listsGetResponseADMFormat.write(this)
 }
 
 abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraResponseADM with ListADMJsonProtocol
@@ -390,7 +390,7 @@ abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraRespon
  */
 case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list) {
 
-    def toJsValue = listGetResponseADMFormat.write(this)
+    def toJsValue: JsValue = listGetResponseADMFormat.write(this)
 }
 
 /**
@@ -400,7 +400,7 @@ case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list
  */
 case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(node) {
 
-    def toJsValue = listNodeGetResponseADMFormat.write(this)
+    def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
 }
 /**
  * Provides basic information about any node (root or child) without it's children.
@@ -439,7 +439,7 @@ case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends N
  */
 case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
-    def toJsValue = nodePathGetResponseADMFormat.write(this)
+    def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
 }
 
 
@@ -452,7 +452,7 @@ abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJs
  */
 case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDeleteResponseADM {
 
-    def toJsValue = listDeleteResponseADMFormat.write(this)
+    def toJsValue: JsValue = listDeleteResponseADMFormat.write(this)
 }
 /**
  *  Responds to deletion of a child node by returning its parent node together with list of its immediate children
@@ -462,7 +462,7 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
  */
 case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
 
-    def toJsValue = listNodeDeleteResponseADMFormat.write(this)
+    def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
 }
 
 
@@ -516,9 +516,9 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
      */
     def sorted: ListNodeInfoADM
 
-    def getName(): Option[String] = name
-    def getLabels(): StringLiteralSequenceV2 = labels
-    def getComments(): StringLiteralSequenceV2 = comments
+    def getName: Option[String] = name
+    def getLabels: StringLiteralSequenceV2 = labels
+    def getComments: StringLiteralSequenceV2 = comments
 
     /**
      * Gets the label in the user's preferred language.
@@ -644,11 +644,11 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
      */
     def sorted: ListNodeADM
 
-    def getName(): Option[String] = name
-    def getLabels(): StringLiteralSequenceV2 = labels
-    def getComments(): StringLiteralSequenceV2 = comments
-    def getChildren(): Seq[ListChildNodeADM] = children
-    def getNodeId(): IRI = id
+    def getName: Option[String] = name
+    def getLabels: StringLiteralSequenceV2 = labels
+    def getComments: StringLiteralSequenceV2 = comments
+    def getChildren: Seq[ListChildNodeADM] = children
+    def getNodeId: IRI = id
     /**
      * Gets the label in the user's preferred language.
      *
@@ -826,8 +826,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
             nodeInfo match {
-                case root: ListRootNodeInfoADM => {
-
+                case root: ListRootNodeInfoADM =>
                     if (root.name.nonEmpty) {
                         JsObject(
                             "id" -> root.id.toJson,
@@ -847,10 +846,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                         )
                     }
 
-
-                }
-                case child: ListChildNodeInfoADM => {
-
+                case child: ListChildNodeInfoADM =>
                     if (child.name.nonEmpty) {
                         JsObject(
                             "id" -> child.id.toJson,
@@ -869,7 +865,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                             "hasRootNode" -> child.hasRootNode.toJson
                         )
                     }
-                }
             }
         }
 
@@ -965,7 +960,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         def write(node: ListNodeADM): JsValue = {
 
             node match {
-                case root: ListRootNodeADM => {
+                case root: ListRootNodeADM =>
                     JsObject(
                         "id" -> root.id.toJson,
                         "projectIri" -> root.projectIri.toJson,
@@ -975,8 +970,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                         "isRootNode" -> true.toJson,
                         "children" -> JsArray(root.children.map(write).toVector)
                     )
-                }
-                case child: ListChildNodeADM => {
+
+                case child: ListChildNodeADM =>
                     JsObject(
                         "id" -> child.id.toJson,
                         "name" -> child.name.toJson,
@@ -986,7 +981,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                         "hasRootNode" -> child.hasRootNode.toJson,
                         "children" -> JsArray(child.children.map(write).toVector)
                     )
-                }
             }
         }
 
@@ -1161,10 +1155,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
 
         /**
-         * Converts a [[JsValue]] to a [[Node]].
+         * Converts a [[JsValue]] to a [[NodeADM]].
          *
          * @param value a [[JsValue]].
-         * @return a [[Node]].
+         * @return a [[NodeADM]].
          */
         def read(value: JsValue): NodeADM = {
 

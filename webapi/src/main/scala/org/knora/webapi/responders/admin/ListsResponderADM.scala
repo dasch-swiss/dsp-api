@@ -189,7 +189,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                                         requestingUser = requestingUser)
                     nodeinfo = maybeNodeInfo match {
                         case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
-                        case _ => throw NotFoundException(s"Information not found for node '${nodeIri}'")
+                        case _ => throw NotFoundException(s"Information not found for node '$nodeIri'")
                     }
                     // make a NodeADM instance
                     entirenode = ListNodeGetResponseADM(node = NodeADM(nodeinfo = nodeinfo,
@@ -1141,10 +1141,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Future[Unit] = for {
             // Is node itself in use?
             _ <- isNodeUsed(nodeIri = nodeIri,
-                            errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because it is in use."))
+                            errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use."))
 
             errorCheckFutures: Seq[Future[Unit]] = nodeChildren.map(child => isNodeUsed(nodeIri = child.id,
-                errorFun = throw BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${child.id} is in use.")))
+                errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.")))
             _ <- Future.sequence(errorCheckFutures)
 
         } yield ()
@@ -1172,11 +1172,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                         shallow = false,
                                         featureFactoryConfig = featureFactoryConfig,
                                         requestingUser = KnoraSystemInstances.Users.SystemUser)
-            parentNode = maybeNode.getOrElse(throw BadRequestException(s"The parent node of ${deletedNodeIri} not found, report this as a bug."))
+            parentNode = maybeNode.getOrElse(throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug."))
             
             remainingChildren = parentNode.getChildren
             _ = if(remainingChildren.exists(child => child.id == deletedNodeIri)) {
-                throw UpdateNotPerformedException(s"Node ${deletedNodeIri} is not deleted properly, report this as a bug.")
+                throw UpdateNotPerformedException(s"Node $deletedNodeIri is not deleted properly, report this as a bug.")
             }
             // shift the siblings that were positioned after the deleted node, one place to left.
             updatedChildren <- updatePositionsAfterDeletion(position = positionOfDeletedNode,
@@ -1185,20 +1185,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                                                 featureFactoryConfig=featureFactoryConfig)
             // return updated parent node with shifted children.
             updatedParentNode = parentNode match {
-                case (rootNode : ListRootNodeADM) => ListRootNodeADM(id = rootNode.id,
+                case rootNode : ListRootNodeADM => ListRootNodeADM(id = rootNode.id,
                                                                     projectIri = rootNode.projectIri,
                                                                     name = rootNode.name,
                                                                     labels = rootNode.labels,
                                                                     comments = rootNode.comments,
                                                                     children = updatedChildren)
-                case (childNode: ListChildNodeADM) => ListChildNodeADM(id = childNode.id,
+
+                case childNode: ListChildNodeADM => ListChildNodeADM(id = childNode.id,
                                                                         name = childNode.name,
                                                                         labels = childNode.labels,
                                                                         comments = childNode.comments,
                                                                         position = childNode.position,
                                                                         hasRootNode = childNode.hasRootNode,
                                                                         children = updatedChildren)
-                case _ => throw UpdateNotPerformedException(s"Parent node ${deletedNodeIri} could not be updated, report this as a possible bug.")
+
+                case _ => throw UpdateNotPerformedException(s"Parent node $deletedNodeIri could not be updated, report this as a possible bug.")
             }
         } yield updatedParentNode
         /**
@@ -1324,7 +1326,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
         listNodeName match {
-            case Some(name) => {
+            case Some(name) =>
                 for {
                     askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
                     //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
@@ -1333,7 +1335,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     result = askResponse.result
 
                 } yield !result
-            }
+
             case None => FastFuture.successful(true)
         }
     }
@@ -1450,7 +1452,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         project: ProjectADM = maybeProject match {
             case Some(project: ProjectADM) => project
-            case None => throw BadRequestException(s"Project '${projectIri}' not found.")
+            case None => throw BadRequestException(s"Project '$projectIri' not found.")
         }
         // Get the IRI of the named graph from which the resource will be erased.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
@@ -1474,7 +1476,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             featureFactoryConfig = featureFactoryConfig
         )).mapTo[SparqlExtendedConstructResponse]
         parentStatements = parentNodeResponse.statements.headOption.getOrElse(
-                            throw BadRequestException(s"The parent node for ${nodeIri} not found, report this as a bug."))
+                            throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
         parentNodeIri = parentStatements._1.toString
     } yield parentNodeIri
 
@@ -1504,7 +1506,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
 
         _ = if (nodeStillExists) {
-            throw UpdateNotPerformedException(s"Node <${nodeIri}> was not erased. Please report this as a possible bug.")
+            throw UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug.")
         }
     } yield ()
 
@@ -1556,9 +1558,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                     shallow = false,
                                    featureFactoryConfig = featureFactoryConfig,
                                    requestingUser = KnoraSystemInstances.Users.SystemUser)
-        childNode: ListChildNodeADM = maybeNode.getOrElse(throw BadRequestException(s"Node with ${nodeIri} could not be found to update its position.")).asInstanceOf[ListChildNodeADM]
+        childNode: ListChildNodeADM = maybeNode.getOrElse(throw BadRequestException(s"Node with $nodeIri could not be found to update its position.")).asInstanceOf[ListChildNodeADM]
         _ = if(!childNode.position.equals(newPosition)){
-            throw UpdateNotPerformedException(s"The position of the node ${nodeIri} could not be updated, report this as a possible bug.")
+            throw UpdateNotPerformedException(s"The position of the node $nodeIri could not be updated, report this as a possible bug.")
         }
 
     } yield childNode
