@@ -26,7 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{DuplicateValueException}
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
@@ -78,7 +78,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
-                received.lists.size should be(7)
+                received.lists.size should be(8)
             }
 
             "return all lists belonging to the images project" in {
@@ -106,7 +106,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 // log.debug("received: " + received)
 
-                received.lists.size should be(2)
+                received.lists.size should be(3)
             }
 
             "return basic list information (anything list)" in {
@@ -167,14 +167,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 received.list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
             }
         }
+        val newListIri = new MutableTestIri
+        val firstChildIri = new MutableTestIri
+        val secondChildIri = new MutableTestIri
+        val thirdChildIri = new MutableTestIri
 
         "used to modify lists" should {
-
-            val newListIri = new MutableTestIri
-            val firstChildIri = new MutableTestIri
-            val secondChildIri = new MutableTestIri
-            val thirdChildIri = new MutableTestIri
-
             "create a list" in {
                 responderManager ! ListCreateRequestADM(
                     createRootNode = CreateNodeApiRequestADM(
@@ -397,15 +395,97 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                thirdChildIri.set(childNodeInfo.id)
            }
-
-
-           "change node order" ignore {
-
-           }
-
-           "delete node if not in use" ignore {
-
-           }
         }
+        "used to delete list items" should {
+            "not delete a node that is in use" in {
+                val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeInUseIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"Node ${nodeInUseIri} cannot be deleted, because it is in use.")))
+
+            }
+
+            "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val usedChild = "http://rdfh.ch/lists/0001/treeList10"
+                expectMsg(Failure(BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${usedChild} is in use.")))
+
+            }
+
+            "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
+                val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeInUseInOntologyIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"Node ${nodeInUseInOntologyIri} cannot be deleted, because it is in use.")))
+
+            }
+
+            "delete a middle child node that is not in use" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
+                val parentNode = received.node
+                val remainingChildren = parentNode.getChildren
+                remainingChildren.size should be (2)
+                //last child should be shifted to left
+                remainingChildren.last.position should be (1)
+
+                // first node should still have its child
+                val firstChild = remainingChildren.head
+                firstChild.id should be ("http://rdfh.ch/lists/0001/notUsedList01")
+                firstChild.position should be (0)
+                firstChild.children.size should be (1)
+            }
+
+            "delete a child node that is not in use" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = nodeIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
+                val parentNode = received.node
+                val remainingChildren = parentNode.getChildren
+                remainingChildren.size should be (1)
+                val firstChild = remainingChildren.head
+                firstChild.id should be ("http://rdfh.ch/lists/0001/notUsedList03")
+                firstChild.position should be (0)
+            }
+
+            "delete a list (i.e. root node) that is not in use in ontology" in {
+                val listIri = "http://rdfh.ch/lists/0001/notUsedList"
+                responderManager ! ListItemDeleteRequestADM(
+                    nodeIri = listIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListDeleteResponseADM = expectMsgType[ListDeleteResponseADM](timeout)
+                received.iri should be (listIri)
+                received.deleted should be (true)
+            }
+        }
+
     }
 }

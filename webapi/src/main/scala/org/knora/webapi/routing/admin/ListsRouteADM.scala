@@ -19,11 +19,10 @@
 
 package org.knora.webapi.routing.admin
 
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
-import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.routing.admin.lists.ListsRouteADMFeatureFactory
+import org.knora.webapi.routing.admin.lists._
 import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
 
 /**
@@ -31,8 +30,12 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
  */
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     private val featureFactory: ListsRouteADMFeatureFactory = new ListsRouteADMFeatureFactory(routeData)
+    private val deleteNodeRoute: DeleteListItemsRouteADM = new DeleteListItemsRouteADM(routeData)
+    private val updateNodeRoute: UpdateListItemsRouteADM = new UpdateListItemsRouteADM(routeData)
 
     override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-        featureFactory.makeRoute(featureFactoryConfig)
+        featureFactory.makeRoute(featureFactoryConfig) ~
+        deleteNodeRoute.makeRoute(featureFactoryConfig) ~
+        updateNodeRoute.makeRoute(featureFactoryConfig)
     }
 }
