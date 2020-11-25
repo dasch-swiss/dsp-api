@@ -85,6 +85,7 @@ def dependencies():
 
             # other
             "org.eclipse.rdf4j:rdf4j-runtime:3.0.0",
+            "org.eclipse.rdf4j:rdf4j-shacl:3.0.0",
             "org.rogach:scallop_2.12:3.2.0",
             "com.google.gwt:gwt-servlet:2.8.0",
             "net.sf.saxon:Saxon-HE:9.9.0-2",

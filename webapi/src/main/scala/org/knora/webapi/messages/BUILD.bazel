@@ -37,6 +37,7 @@ scala_library(
         "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
         "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory",
+        "@maven//:org_eclipse_rdf4j_rdf4j_shacl",
         "@maven//:org_jodd_jodd",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_scala_lang_scala_library",

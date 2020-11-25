@@ -19,10 +19,13 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import java.io._
+
 import akka.http.scaladsl.model.MediaType
-import org.knora.webapi.{IRI, RdfMediaTypes, SchemaOption, SchemaOptions}
 import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
-import java.io.{InputStream, OutputStream}
+import org.knora.webapi.{IRI, RdfMediaTypes, SchemaOption, SchemaOptions}
+
+import scala.util.{Failure, Success, Try}
 
 /**
  * A trait for supported RDF formats.
@@ -248,6 +251,55 @@ trait RdfFormatUtil {
     }
 
     /**
+     * Reads an RDF file into an [[RdfModel]].
+     *
+     * @param file      the file.
+     * @param rdfFormat the file format.
+     * @return a [[RdfModel]] representing the contents of the file.
+     */
+    def fileToRdfModel(file: File, rdfFormat: NonJsonLD): RdfModel = {
+        var maybeFileInputStream: Option[InputStream] = None
+
+        val modelTry = Try {
+            val fileInputStream = new BufferedInputStream(new FileInputStream(file))
+            maybeFileInputStream = Some(fileInputStream)
+            inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = rdfFormat)
+        }
+
+        maybeFileInputStream.foreach(_.close())
+        modelTry.get
+    }
+
+    /**
+     * Writes an [[RdfModel]] to a file.
+     *
+     * @param rdfModel  the [[RdfModel]].
+     * @param file      the file to be written.
+     * @param rdfFormat the file format.
+     */
+    def rdfModelToFile(rdfModel: RdfModel, file: File, rdfFormat: NonJsonLD): Unit = {
+        var maybeFileOutputStream: Option[OutputStream] = None
+
+        val writeTry: Try[Unit] = Try {
+            val fileOutputStream = new BufferedOutputStream(new FileOutputStream(file))
+            maybeFileOutputStream = Some(fileOutputStream)
+
+            rdfModelToOutputStream(
+                rdfModel = rdfModel,
+                outputStream = fileOutputStream,
+                rdfFormat = rdfFormat
+            )
+        }
+
+        maybeFileOutputStream.foreach(_.close())
+
+        writeTry match {
+            case Success(()) => ()
+            case Failure(ex) => throw ex
+        }
+    }
+
+    /**
      * Parses RDF input, processing it with an [[RdfStreamProcessor]].
      *
      * @param rdfSource          the input source from which the RDF data should be read.
@@ -262,7 +314,7 @@ trait RdfFormatUtil {
      * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]].
      *
      * @param inputStream the input stream.
-     * @param rdfFormat the data format.
+     * @param rdfFormat   the data format.
      * @return the corresponding [[RdfModel]].
      */
     def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
@@ -270,9 +322,9 @@ trait RdfFormatUtil {
     /**
      * Formats an [[RdfModel]], writing the output to an [[OutputStream]].
      *
-     * @param rdfModel the model to be written.
+     * @param rdfModel     the model to be written.
      * @param outputStream the output stream.
-     * @param rdfFormat the output format.
+     * @param rdfFormat    the output format.
      */
     def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit
 

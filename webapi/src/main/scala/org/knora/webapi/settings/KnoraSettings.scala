@@ -250,6 +250,8 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
         None
     }
 
+    val shaclShapesDir: File = new File(config.getString("app.shacl.shapes-dir"))
+
     val featureToggles: Set[FeatureToggleBaseConfig] = if (config.hasPath(featureTogglesPath)) {
         Try {
             config.getObject(featureTogglesPath).asScala.toMap.map {
