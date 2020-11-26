@@ -1231,6 +1231,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
         } yield ()
+
         /**
          * Changes position of the node within its original parent.
          *
@@ -1244,7 +1245,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                            parentIri: IRI,
                                            newPosition: Int,
                                            dataNamedGraph: IRI): Future[Unit] = for {
-
 
             // get parent node with its immediate children
             maybeParentNode <- listNodeGetADM(nodeIri = parentIri,
@@ -1289,6 +1289,76 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
             }
         } yield ()
+
+        /**
+         * Changes position of the node, remove from current parent and add to the sepcified parent.
+         * It shifts the new siblings and old siblings.
+         *
+         * @param node the node whose position should be updated.
+         * @param newParentIri the IRI of the new parent node.
+         * @param currParentIri the IRI of the current parent node.
+         * @param newPosition the new node position.
+         * @param dataNamedGraph the new node position.
+         * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
+         */
+        def updateParentAndPosition(node: ListChildNodeADM,
+                                   newParentIri: IRI,
+                                   currParentIri: IRI,
+                                   newPosition: Int,
+                                   dataNamedGraph: IRI): Future[Unit] = for {
+            // get current parent node with its immediate children
+            maybeCurrentParentNode <- listNodeGetADM(nodeIri = currParentIri,
+                shallow = true,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+            currentSiblings = maybeCurrentParentNode.get.getChildren
+            // get new parent node with its immediate children
+            maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri,
+                shallow = true,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+            newSiblings = maybeNewParentNode.get.getChildren
+
+            currentNodePosition = node.position
+
+            // update the position of the node itself
+            _ <- updatePositionOfNode(
+                nodeIri = node.id,
+                newPosition = newPosition,
+                dataNamedGraph = dataNamedGraph,
+                featureFactoryConfig = featureFactoryConfig)
+
+            // shift current siblings with a higher position to left as if the node is deleted
+            _ <- shiftNodes(startPos = currentNodePosition+1,
+                endPos = currentSiblings.last.position,
+                nodes = currentSiblings,
+                shiftToLeft = true,
+                dataNamedGraph = dataNamedGraph,
+                featureFactoryConfig = featureFactoryConfig
+            )
+
+            // shift new siblings with a in the same and higher position to right
+            // as if the node is inserted in the given position
+            _ <- shiftNodes(startPos = newPosition,
+                endPos = newSiblings.last.position,
+                nodes = newSiblings,
+                shiftToLeft = false,
+                dataNamedGraph = dataNamedGraph,
+                featureFactoryConfig = featureFactoryConfig
+            )
+
+            /* update the sublists of parent nodes */
+            _ <- changeParentNode(nodeIri = node.id,
+                oldParentIri = currParentIri,
+                newParentIri = newParentIri,
+                dataNamedGraph = dataNamedGraph,
+                featureFactoryConfig = featureFactoryConfig
+            )
+
+        } yield ()
+
         /**
          * The actual task run with an IRI lock.
          */
@@ -1322,14 +1392,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // get node's current parent
-            currentParentNodeIri <- getParentNodeIRI(nodeIri, featureFactoryConfig)
-
-            _<- updatePositionWithinSameParent(node = node,
+            currentParentNodeIri: IRI <- getParentNodeIRI(nodeIri, featureFactoryConfig)
+            _ <- if (currentParentNodeIri == changeNodePositionRequest.parentIri) {
+                updatePositionWithinSameParent(node = node,
                         parentIri = currentParentNodeIri,
                         newPosition = changeNodePositionRequest.position,
                         dataNamedGraph = dataNamedGraph
                     )
-
+            } else {
+                updateParentAndPosition(node=node,
+                    newParentIri = changeNodePositionRequest.parentIri,
+                    currParentIri = currentParentNodeIri,
+                    newPosition = changeNodePositionRequest.position,
+                    dataNamedGraph = dataNamedGraph
+                )
+            }
             /* Verify that the node position and parent children position were updated */
             _ <- verifyParentChildrenUpdate()
             maybeResponse <- listGetADM(rootNodeIri = node.hasRootNode,
@@ -1891,4 +1968,55 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
         updatedNodes: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
     } yield staticStartNodes ++ updatedNodes ++ staticEndNotes
+
+    /**
+     * Helper method to change parent node of a node.
+     *
+     * @param nodeIri the IRI of the node.
+     * @param oldParentIri the IRI of the current parent node.
+     * @param newParentIri the IRI of the new parent node.
+     * @param dataNamedGraph the data named graph of the project.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @throws UpdateNotPerformedException if the parent of a node could not be updated.
+     */
+    protected def changeParentNode(nodeIri: IRI,
+                                   oldParentIri: IRI,
+                                   newParentIri: IRI,
+                                   dataNamedGraph: IRI,
+                                   featureFactoryConfig: FeatureFactoryConfig): Future[Unit] = for {
+
+        // Generate SPARQL for changing the parent node of the node.
+        sparqlChangeParentNode: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.changeParentNode(
+            triplestore = settings.triplestoreType,
+            dataNamedGraph = dataNamedGraph,
+            nodeIri = nodeIri,
+            currentParentIri = oldParentIri,
+            newParentIri = newParentIri
+        ).toString())
+
+        _ <- (storeManager ? SparqlUpdateRequest(sparqlChangeParentNode)).mapTo[SparqlUpdateResponse]
+
+        /* verify that parents were updated */
+        // get old parent node with its immediate children
+        maybeOldParent <- listNodeGetADM(nodeIri = oldParentIri,
+            shallow = true,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+        )
+        childrenOfOldParent = maybeOldParent.get.getChildren
+        _ = if(childrenOfOldParent.exists(node => node.id == nodeIri)) {
+            throw UpdateNotPerformedException(s"Node ${nodeIri} is still a child of ${oldParentIri}. Report this as a bug.")
+        }
+        // get new parent node with its immediate children
+        maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri,
+            shallow = true,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+        )
+        childrenOfNewParent = maybeNewParentNode.get.getChildren
+        _ = if(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
+            throw UpdateNotPerformedException(s"Node ${nodeIri} is not added to parent node ${newParentIri}. ")
+        }
+
+    } yield ()
 }

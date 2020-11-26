@@ -413,7 +413,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 expectMsg(Failure(UpdateNotPerformedException(s"The given position is the same as node's current position.")))
             }
 
-            "reposition a node from position 3 to 1 (shift to right)" in {
+            "reposition node List014 from position 3 to 1 (shift to right)" in {
                 val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
                 val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
                 responderManager ! NodePositionChangeRequestADM(
@@ -449,7 +449,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 isShifted should be(true)
             }
 
-            "reposition a node from position 0 to 4 (shift to left)" in {
+            "reposition node List011 from position 0 to 4 (shift to left)" in {
                 val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
                 val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
                 responderManager ! NodePositionChangeRequestADM(
@@ -484,7 +484,107 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val isShifted = children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList015" && child.position == 3)
                 isShifted should be(true)
             }
+
+            "reposition node List013 in position 2 of another parent" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList013"
+                val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
+                val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 2,
+                        parentIri = newParentIri
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListADM = expectMsgType[ListADM](timeout)
+                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+
+                /* check children of new parent node */
+                val childrenOfNewParent = received.children
+                // node must be in children of new parent
+                childrenOfNewParent.size should be (4)
+                val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
+                isNodeAdd should be(true)
+
+                // last node of new parent must be shifted one place to right
+                val isShifted = childrenOfNewParent.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3)
+                isShifted should be(true)
+
+                /* check old parent node */
+                responderManager ! ListGetRequestADM(
+                    iri = oldParentIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser
+                )
+                val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+                // node must not be in children of old parent
+                val oldParentChildren = receivedNode.node.children
+                oldParentChildren.size should be (4)
+                val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri)
+                isNodeUpdated should be(false)
+
+                // nodes of old siblings must be shifted to the left.
+                val lastNode = oldParentChildren.last
+                lastNode.id should be("http://rdfh.ch/lists/0001/notUsedList011")
+                lastNode.position should be(3)
+            }
+
+            "put List013 back in position 2 of its original parent node" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList013"
+                val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 2,
+                        parentIri = newParentIri
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListADM = expectMsgType[ListADM](timeout)
+                received.children.size should be (3)
+
+            }
+
+            "put List011 back in its original place" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 0,
+                        parentIri = parentIri
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListADM = expectMsgType[ListADM](timeout)
+                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+            }
+
+            "put List014 back in its original position" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 3,
+                        parentIri = parentIri
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListADM = expectMsgType[ListADM](timeout)
+                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+            }
         }
+
         "used to delete list items" should {
             "not delete a node that is in use" in {
                 val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
