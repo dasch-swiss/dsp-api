@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.InvalidRdfException
 import org.knora.webapi.messages.OntologyConstants
 
 import scala.util.control.Exception.allCatch
@@ -135,6 +136,72 @@ trait Statement {
     def obj: RdfNode
 
     def context: Option[IRI]
+
+    /**
+     * Returns the object of this statement as an [[RdfResource]].
+     */
+    def getResourceObject: RdfResource = {
+        obj match {
+            case rdfResource: RdfResource => rdfResource
+            case _ => throw InvalidRdfException(s"The object of $pred is not a resource")
+        }
+    }
+
+    /**
+     * Returns the object of this statement as an [[IriNode]].
+     */
+    def getIriObject: IriNode = {
+        obj match {
+            case iriNode: IriNode => iriNode
+            case _ => throw InvalidRdfException(s"The object of $pred is not an IRI")
+        }
+    }
+
+    /**
+     * Returns the object of this statement as a [[BlankNode]].
+     */
+    def getBlankNodeObject: BlankNode = {
+        obj match {
+            case blankNode: BlankNode => blankNode
+            case _ => throw InvalidRdfException(s"The object of $pred is not a blank node")
+        }
+    }
+
+    /**
+     * Returns the boolean value of the object of this statement.
+     */
+    def getBooleanObject: Boolean = {
+        def invalid: Nothing = throw InvalidRdfException(s"The object of $pred is not a boolean value")
+
+        obj match {
+            case datatypeLiteral: DatatypeLiteral => datatypeLiteral.booleanValue(invalid)
+            case _ => invalid
+        }
+    }
+
+    /**
+     * Returns the integer value of the object of this statement.
+     */
+    def getIntegerObject: BigInt = {
+        def invalid: Nothing = throw InvalidRdfException(s"The object of $pred is not an integer")
+
+        obj match {
+            case datatypeLiteral: DatatypeLiteral => datatypeLiteral.integerValue(invalid)
+            case _ => invalid
+        }
+    }
+
+    /**
+     * Returns the decimal value of the object of this statement.
+     */
+    def getDecimalObject: BigDecimal = {
+        def invalid: Nothing = throw InvalidRdfException(s"The object of $pred is not a decimal")
+
+        obj match {
+            case datatypeLiteral: DatatypeLiteral => datatypeLiteral.decimalValue(invalid)
+            case _ => invalid
+        }
+    }
 }
 
 /**

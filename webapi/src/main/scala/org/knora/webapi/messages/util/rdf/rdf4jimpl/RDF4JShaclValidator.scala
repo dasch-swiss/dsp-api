@@ -35,7 +35,8 @@ import scala.util.{Failure, Success, Try}
  */
 class RDF4JShaclValidator(baseDir: File,
                           rdfFormatUtil: RDF4JFormatUtil,
-                          private val nodeFactory: RDF4JNodeFactory) extends AbstractShaclValidator[rdf4j.model.Model](baseDir, rdfFormatUtil) {
+                          private val nodeFactory: RDF4JNodeFactory)
+    extends AbstractShaclValidator[rdf4j.model.Model](baseDir, rdfFormatUtil) {
 
     import RDF4JConversions._
 

@@ -34,7 +34,8 @@ import org.knora.webapi.messages.util.rdf._
  */
 class JenaShaclValidator(baseDir: File,
                          rdfFormatUtil: JenaFormatUtil,
-                         private val nodeFactory: JenaNodeFactory) extends AbstractShaclValidator[jena.shacl.Shapes](baseDir, rdfFormatUtil) {
+                         private val nodeFactory: JenaNodeFactory)
+    extends AbstractShaclValidator[jena.shacl.Shapes](baseDir, rdfFormatUtil) {
 
     import JenaConversions._
 

@@ -19,10 +19,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import java.io.File
 import java.nio.file.Path
-
-import org.knora.webapi.exceptions.AssertionException
 
 /**
  * A trait for the results of SHACL validation operations.
@@ -53,70 +50,4 @@ trait ShaclValidator {
      * @return a [[ShaclValidationResult]].
      */
     def validate(rdfModel: RdfModel, shaclPath: Path): ShaclValidationResult
-}
-
-/**
- * An abstract base class for classes that validate RDF models using SHACL shapes.
- *
- * @param baseDir       the base directory that SHACL graphs are loaded from.
- * @param rdfFormatUtil an [[RdfFormatUtil]].
- * @tparam ShaclGraphT an implementation-specific representation of a graph of SHACL shapes.
- */
-abstract class AbstractShaclValidator[ShaclGraphT](baseDir: File, rdfFormatUtil: RdfFormatUtil) extends ShaclValidator {
-
-    /**
-     * A map of relative paths to objects representing graphs of SHACL shapes.
-     */
-    private val shaclGraphs: Map[Path, ShaclGraphT] = if (baseDir.exists) {
-        loadShaclGraphs(baseDir, baseDir)
-    } else {
-        Map.empty
-    }
-
-    def validate(rdfModel: RdfModel, shaclPath: Path): ShaclValidationResult = {
-        validateWithShaclGraph(
-            rdfModel = rdfModel,
-            shaclGraph = shaclGraphs.getOrElse(shaclPath, throw AssertionException(s"SHACL graph $shaclPath not found"))
-        )
-    }
-
-    /**
-     * Recursively loads graphs of SHACL shapes from a directory and its subdirectories.
-     *
-     * @param baseDir the base directory that SHACL graphs are loaded from.
-     * @param dir     the base directory or a subdirectory.
-     * @return a map of file paths (relative to the base directory) to graphs of SHACL shapes.
-     */
-    private def loadShaclGraphs(baseDir: File, dir: File): Map[Path, ShaclGraphT] = {
-        // Parse the files representing SHACL graphs in this directory.
-        val modelsInDir: Map[Path, ShaclGraphT] = dir.listFiles.collect {
-            case file: File if file.isFile && file.getName.endsWith(".ttl") =>
-                // Map each SHACL file's relative path to a ShapesT containing the SHACL graph.
-                val relativePath: Path = baseDir.toPath.relativize(file.toPath)
-                val shaclModel: RdfModel = rdfFormatUtil.fileToRdfModel(file = file, rdfFormat = Turtle)
-                relativePath -> rdfModelToShaclGraph(shaclModel)
-        }.toMap
-
-        // Recurse in subdirectories.
-        modelsInDir ++ dir.listFiles.filter(_.isDirectory).flatMap {
-            subDir => loadShaclGraphs(baseDir = baseDir, dir = subDir)
-        }
-    }
-
-    /**
-     * Validates the default graph of an [[RdfModel]] using a graph of SHACL shapes.
-     *
-     * @param rdfModel the [[RdfModel]] to be validated.
-     * @param shaclGraph a graph of SHACL shapes.
-     * @return the validation result.
-     */
-    protected def validateWithShaclGraph(rdfModel: RdfModel, shaclGraph: ShaclGraphT): ShaclValidationResult
-
-    /**
-     * Converts the default graph of an [[RdfModel]] to a [[ShaclGraphT]].
-     *
-     * @param rdfModel an [[RdfModel]] whose default graph contains SHACL shapes.
-     * @return a [[ShaclGraphT]] representing the SHACL shapes.
-     */
-    protected def rdfModelToShaclGraph(rdfModel: RdfModel): ShaclGraphT
 }
