@@ -64,6 +64,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodeNameChangeRequest(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID)
         case NodeLabelsChangeRequestADM(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID)
         case NodeCommentsChangeRequestADM(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        case NodePositionChangeRequestADM(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID) => nodePositionChangeRequest(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID)
         case ListItemDeleteRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID) => deleteListItemRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -1043,7 +1044,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
             if (updatedNode.getLabels.stringLiterals.diff(changeNodeLabelsRequest.labels).nonEmpty)
-                throw UpdateNotPerformedException("Node's 'labels' where not updated. Please report this as a possible bug.")
+                throw UpdateNotPerformedException("Node's 'labels' were not updated. Please report this as a possible bug.")
 
         }
 
@@ -1121,7 +1122,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                           apiRequestID: UUID): Future[NodeInfoGetResponseADM] = {
         def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
             if (updatedNode.getComments.stringLiterals.diff(changeNodeCommentsRequest.comments).nonEmpty)
-                throw UpdateNotPerformedException("Node's 'comments' where not updated. Please report this as a possible bug.")
+                throw UpdateNotPerformedException("Node's 'comments' were not updated. Please report this as a possible bug.")
 
         }
 
@@ -1177,6 +1178,149 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 apiRequestID,
                 nodeIri,
                 () => nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    /**
+     * Changes position of the node
+     *
+     * @param nodeIri                   the node's IRI.
+     * @param changeNodePositionRequest the new node comments.
+     * @param featureFactoryConfig      the feature factory configuration.
+     * @param requestingUser            the requesting user.
+     * @param apiRequestID              the unique api request ID.
+     * @return a [[NodeInfoGetResponseADM]]
+     * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+     * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+     */
+    private def nodePositionChangeRequest(nodeIri: IRI,
+                                          changeNodePositionRequest: ChangeNodePositionApiRequestADM,
+                                          featureFactoryConfig: FeatureFactoryConfig,
+                                          requestingUser: UserADM,
+                                          apiRequestID: UUID): Future[ListADM] = {
+
+        def verifyNodePosition(updatedNode: ListChildNodeADM, newPosition: Int): Unit = {
+            if (updatedNode.position != newPosition)
+                throw UpdateNotPerformedException("Node's 'position' was not updated. Please report this as a possible bug.")
+
+        }
+        /**
+         * Changes position of the node within its original parent.
+         *
+         * @param node the node whose position should be updated.
+         * @param parentIri the IRI of the parent node.
+         * @param newPosition the new node position.
+         * @param dataNamedGraph the new node position.
+         * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
+         */
+        def updatePositionWithinSameParent(node: ListChildNodeADM,
+                                           parentIri: IRI,
+                                           newPosition: Int,
+                                           dataNamedGraph: IRI): Future[Unit] = for {
+            // get parent node with its immediate children
+            maybeParentNode <- listNodeGetADM(nodeIri = parentIri,
+                shallow = true,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+            parentNode = maybeParentNode.getOrElse(throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug."))
+            currPosition = node.position
+
+            // update position of siblings
+            _ <- if(currPosition < newPosition) {
+                for {
+                    // shift siblings to left
+                    updatedSiblings <- shiftNodes(startPos = currPosition+1,
+                        endPos = newPosition,
+                        nodes = parentNode.getChildren,
+                        shiftToLeft = true,
+                        dataNamedGraph = dataNamedGraph,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield updatedSiblings
+            } else if (currPosition > newPosition) {
+                for {
+                    // shift siblings to right
+                    updatedSiblings <- shiftNodes(startPos = newPosition,
+                        endPos = currPosition-1,
+                        nodes = parentNode.getChildren,
+                        shiftToLeft = false,
+                        dataNamedGraph = dataNamedGraph,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield updatedSiblings
+            } else {
+                throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
+            }
+            // update the position of the node itself
+            _ <- updatePositionOfNode(
+                    nodeIri = node.id,
+                    newPosition = newPosition,
+                    dataNamedGraph = dataNamedGraph,
+                    featureFactoryConfig = featureFactoryConfig)
+        } yield ()
+        /**
+         * The actual task run with an IRI lock.
+         */
+        def nodePositionChangeTask(nodeIri: IRI,
+                                   changeNodePositionRequest: ChangeNodePositionApiRequestADM,
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM,
+                                   apiRequestID: UUID): Future[ListADM] = for {
+
+            projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
+
+            // get data names graph of the project
+            dataNamedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
+
+            // check if the requesting user is allowed to perform operation
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
+
+            // get node in its current position
+            maybeNode <- listNodeGetADM(nodeIri = nodeIri,
+                shallow = true,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+            node = maybeNode match {
+                case Some(node: ListChildNodeADM) => node
+                case _ =>
+                    throw BadRequestException(s"Update of position is only allowed for child nodes!")
+            }
+
+            // get node's current parent
+            currentParentNodeIri <- getParentNodeIRI(nodeIri, featureFactoryConfig)
+
+            _<- updatePositionWithinSameParent(node = node,
+                        parentIri = currentParentNodeIri,
+                        newPosition = changeNodePositionRequest.position,
+                        dataNamedGraph = dataNamedGraph
+                    )
+
+            /* Verify that the node info was updated */
+            maybeNode <- listNodeInfoGetADM(
+                nodeIri = nodeIri,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+            updatednode = maybeNode.getOrElse(throw UpdateNotPerformedException(s"Could not retrieve node after update. Please report this as a bug!")).asInstanceOf[ListChildNodeADM]
+            _ = verifyNodePosition(updatednode, changeNodePositionRequest.position)
+            maybeResponse <- listGetADM(rootNodeIri = updatednode.hasRootNode,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = requestingUser
+            )
+        } yield maybeResponse.get
+
+        for {
+            // run list info update with an local IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                nodeIri,
+                () => nodePositionChangeTask(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID)
             )
         } yield taskResult
     }
@@ -1672,6 +1816,35 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     } yield siblingsPositionedBefore ++ updatedSiblings
 
     /**
+     * Helper method to shift sibling nodes to the right before insertion of a node.
+     *
+     * @param position the position of the new node.
+     * @param siblings the list of siblings.
+     * @throws UpdateNotPerformedException if the position of a node could not be updated.
+     * @return a sequence of [[ListChildNodeADM]].
+     */
+    protected def updatePositionsBeforeInsertion(position: Int,
+                                                 siblings: Seq[ListChildNodeADM],
+                                                 dataNamedGraph: IRI,
+                                                 featureFactoryConfig: FeatureFactoryConfig): Future[Seq[ListChildNodeADM]] = for {
+        (siblingsPositionedBefore: Seq[ListChildNodeADM],
+        siblingsPositionedAfter: Seq[ListChildNodeADM]) <- Future(siblings.partition(node => node.position >= position))
+
+        // shift the children which were after deleted node one positon to the left.
+        updatePositionFutures: Seq[Future[ListChildNodeADM]] = siblingsPositionedAfter.map {
+            child =>
+                updatePositionOfNode(
+                    nodeIri = child.id,
+                    newPosition = child.position + 1,
+                    dataNamedGraph = dataNamedGraph,
+                    featureFactoryConfig = featureFactoryConfig
+                )
+        }
+
+        updatedSiblings: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
+    } yield siblingsPositionedBefore ++ updatedSiblings
+
+    /**
      * Helper method to update position of a node without changing its parent.
      *
      * @param nodeIri     the IRI of the node that must be shifted.
@@ -1706,4 +1879,28 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
     } yield childNode
+
+    protected def shiftNodes(startPos: Int,
+                             endPos: Int,
+                             nodes: Seq[ListChildNodeADM],
+                             shiftToLeft: Boolean,
+                             dataNamedGraph: IRI,
+                             featureFactoryConfig: FeatureFactoryConfig): Future[Seq[ListChildNodeADM]] = for {
+
+        nodesTobeUpdated: Seq[ListChildNodeADM] <- Future(nodes.filter(node => node.position <= startPos && node.position >= endPos))
+
+        updatePositionFutures = nodesTobeUpdated.map {
+            child =>
+                val currPos = child.position
+                val newPos = if(shiftToLeft){ currPos-1 } else currPos+1
+
+                updatePositionOfNode(
+                    nodeIri = child.id,
+                    newPosition = newPos,
+                    dataNamedGraph = dataNamedGraph,
+                    featureFactoryConfig = featureFactoryConfig
+                )
+        }
+        updatedNodes: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
+    } yield updatedNodes
 }

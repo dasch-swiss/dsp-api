@@ -198,6 +198,17 @@ case class ChangeNodeCommentsApiRequestADM(comments: Seq[StringLiteralV2]) exten
     def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
 }
 
+/**
+ * Represents an API request payload that asks the Knora API server to update the position of child node.
+ *
+ * @param position  the new position of the node.
+ * @param parentIri the parent node Iri.
+ */
+case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extends ListADMJsonProtocol {
+
+    def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -356,6 +367,21 @@ case class NodeLabelsChangeRequestADM(nodeIri: IRI,
  */
 case class NodeCommentsChangeRequestADM(nodeIri: IRI,
                                         changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        requestingUser: UserADM,
+                                        apiRequestID: UUID) extends ListsResponderRequestADM
+
+/**
+ * Request updating the position of an existing node.
+ *
+ * @param nodeIri                   the IRI of the node whose position should be updated.
+ * @param changeNodePositionRequest the payload containing the new comments.
+ * @param featureFactoryConfig      the feature factory configuration.
+ * @param requestingUser            the user initiating the request.
+ * @param apiRequestID              the ID of the API request.
+ */
+case class NodePositionChangeRequestADM(nodeIri: IRI,
+                                        changeNodePositionRequest: ChangeNodePositionApiRequestADM,
                                         featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM,
                                         apiRequestID: UUID) extends ListsResponderRequestADM
@@ -1202,6 +1228,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeNodeNameApiRequestADMFormat: RootJsonFormat[ChangeNodeNameApiRequestADM] = jsonFormat(ChangeNodeNameApiRequestADM, "name")
     implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
     implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
+    implicit val changeNodePositionApiRequestADMFormat: RootJsonFormat[ChangeNodePositionApiRequestADM] = jsonFormat(ChangeNodePositionApiRequestADM, "position", "parentNodeIri")
     implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] = jsonFormat(ChildNodeDeleteResponseADM, "node")
     implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] = jsonFormat(ListDeleteResponseADM, "iri", "deleted")
 }

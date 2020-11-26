@@ -182,7 +182,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update list
      */
     @Path("/{IRI}")
-    @ApiOperation(value = "Update basic node information", nickname = "newPutListItem", httpMethod = "PUT", response = classOf[RootNodeInfoGetResponseADM])
+    @ApiOperation(value = "Update basic node information", nickname = "newPutListItem", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" item to update", required = true,
             dataTypeClass = classOf[ChangeNodeInfoApiRequestADM], paramType = "body"),
