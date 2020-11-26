@@ -413,6 +413,36 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 expectMsg(Failure(UpdateNotPerformedException(s"The given position is the same as node's current position.")))
             }
 
+            "not reposition a node if new position is out of range" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 30,
+                        parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed is=5!")))
+            }
+
+            "not reposition a node to another parent node if new position is out of range" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 30,
+                        parentIri = "http://rdfh.ch/lists/0001/notUsedList"
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed is=4!")))
+            }
+
             "reposition node List014 from position 3 to 1 (shift to right)" in {
                 val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
                 val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"

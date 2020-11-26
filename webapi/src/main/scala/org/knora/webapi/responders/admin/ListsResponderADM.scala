@@ -1200,6 +1200,30 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                           requestingUser: UserADM,
                                           apiRequestID: UUID): Future[ListADM] = {
         /**
+         * Checks if the given position is in range.
+         * The highest position a node can be placed is to the end of the parents children; that means length of existing
+         * children + 1
+         *
+         * @param parentNode the parent to which the node should belong.
+         * @param isNewParent identifier that node is added to another parent or not.
+         *
+         * @throws BadRequestException if given position is out of range.
+         */
+        def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
+            val numberOfChildren = parentNode.getChildren.size
+            // If the node must be added to a new parent, highest valid position is numberOfChildren+1
+            // That means the furthests a node can be positioned is being appended to the end of children of the new parent.
+            if(isNewParent && changeNodePositionRequest.position >  numberOfChildren + 1) {
+                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren + 1}!")
+            }
+
+            // If node remains in its current parent, the highest valid position is numberOfChildren
+            // That means nodes are only reorganized within the same parent.
+            if (!isNewParent && changeNodePositionRequest.position > numberOfChildren) {
+                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren}!")
+            }
+        }
+        /**
          * Checks that the position of the node is updated and node is sublist of specified parent.
          * It also checks the sibling nodes are shifted accordingly.
          *
@@ -1253,6 +1277,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 requestingUser = KnoraSystemInstances.Users.SystemUser
             )
             parentNode = maybeParentNode.getOrElse(throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug."))
+            _ = isNewPositionValid(parentNode, false)
             currPosition = node.position
 
             // update the position of the node itself
@@ -1319,7 +1344,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = KnoraSystemInstances.Users.SystemUser
             )
-            newSiblings = maybeNewParentNode.get.getChildren
+            newParent = maybeNewParentNode.get
+            _ = isNewPositionValid(newParent, true)
+            newSiblings = newParent.getChildren
 
             currentNodePosition = node.position
 
