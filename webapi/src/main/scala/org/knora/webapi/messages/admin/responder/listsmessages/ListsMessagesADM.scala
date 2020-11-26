@@ -205,6 +205,14 @@ case class ChangeNodeCommentsApiRequestADM(comments: Seq[StringLiteralV2]) exten
  * @param parentIri the parent node Iri.
  */
 case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extends ListADMJsonProtocol {
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (parentIri.isEmpty) {
+        throw BadRequestException(s"IRI of parent node is missing.")
+    }
+    if (!stringFormatter.isKnoraListIriStr(parentIri)) {
+        throw BadRequestException(s"Invalid IRI is given: $parentIri.")
+    }
 
     def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
 }

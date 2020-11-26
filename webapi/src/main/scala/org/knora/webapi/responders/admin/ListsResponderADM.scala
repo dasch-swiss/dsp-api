@@ -1199,12 +1199,38 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                           featureFactoryConfig: FeatureFactoryConfig,
                                           requestingUser: UserADM,
                                           apiRequestID: UUID): Future[ListADM] = {
+        /**
+         * Checks that the position of the node is updated and node is sublist of specified parent.
+         * It also checks the sibling nodes are shifted accordingly.
+         *
+         * @throws UpdateNotPerformedException if any of the
+         */
+        def verifyParentChildrenUpdate(): Future[Unit] = for {
+            maybeParentNode <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri,
+                                                shallow = true,
+                                                featureFactoryConfig = featureFactoryConfig,
+                                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                            )
+            updatedChildren: Seq[ListChildNodeADM] = maybeParentNode.get.getChildren
+            (siblingsPositionedBefore: Seq[ListChildNodeADM],
+            rest: Seq[ListChildNodeADM]) = updatedChildren.partition(node => node.position < changeNodePositionRequest.position)
 
-        def verifyNodePosition(updatedNode: ListChildNodeADM, newPosition: Int): Unit = {
-            if (updatedNode.position != newPosition)
-                throw UpdateNotPerformedException("Node's 'position' was not updated. Please report this as a possible bug.")
+            // verify that node is among children of specified parent in correct position
+            updatedNode = rest.head
+            _ = if (updatedNode.id != nodeIri || updatedNode.position!= changeNodePositionRequest.position) {
+                throw UpdateNotPerformedException(s"Node is not repositioned correctly in specified parent node. Report this as a bug.")
+            }
+            leftPositions: Seq[Int] = siblingsPositionedBefore.map(child => child.position)
+            _ = if(leftPositions != leftPositions.sorted) {
+                throw UpdateNotPerformedException(s"something has gone wrong with shifting nodes. Report this as a bug.")
+            }
+            siblingsPositionedAfter = rest.slice(1, rest.length)
+            rightSiblings: Seq[Int] = siblingsPositionedAfter.map(child => child.position)
+            _ = if(rightSiblings != rightSiblings.sorted) {
+                throw UpdateNotPerformedException(s"something has gone wrong with shifting nodes. Report this as a bug.")
+            }
 
-        }
+        } yield ()
         /**
          * Changes position of the node within its original parent.
          *
@@ -1218,6 +1244,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                            parentIri: IRI,
                                            newPosition: Int,
                                            dataNamedGraph: IRI): Future[Unit] = for {
+
+
             // get parent node with its immediate children
             maybeParentNode <- listNodeGetADM(nodeIri = parentIri,
                 shallow = true,
@@ -1226,6 +1254,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
             parentNode = maybeParentNode.getOrElse(throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug."))
             currPosition = node.position
+
+            // update the position of the node itself
+            _ <- updatePositionOfNode(
+                nodeIri = node.id,
+                newPosition = newPosition,
+                dataNamedGraph = dataNamedGraph,
+                featureFactoryConfig = featureFactoryConfig)
 
             // update position of siblings
             _ <- if(currPosition < newPosition) {
@@ -1253,12 +1288,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             } else {
                 throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
             }
-            // update the position of the node itself
-            _ <- updatePositionOfNode(
-                    nodeIri = node.id,
-                    newPosition = newPosition,
-                    dataNamedGraph = dataNamedGraph,
-                    featureFactoryConfig = featureFactoryConfig)
         } yield ()
         /**
          * The actual task run with an IRI lock.
@@ -1301,15 +1330,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                         dataNamedGraph = dataNamedGraph
                     )
 
-            /* Verify that the node info was updated */
-            maybeNode <- listNodeInfoGetADM(
-                nodeIri = nodeIri,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-            )
-            updatednode = maybeNode.getOrElse(throw UpdateNotPerformedException(s"Could not retrieve node after update. Please report this as a bug!")).asInstanceOf[ListChildNodeADM]
-            _ = verifyNodePosition(updatednode, changeNodePositionRequest.position)
-            maybeResponse <- listGetADM(rootNodeIri = updatednode.hasRootNode,
+            /* Verify that the node position and parent children position were updated */
+            _ <- verifyParentChildrenUpdate()
+            maybeResponse <- listGetADM(rootNodeIri = node.hasRootNode,
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
             )
@@ -1341,7 +1364,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                          featureFactoryConfig: FeatureFactoryConfig,
                                          requestingUser: UserADM,
                                          apiRequestID: UUID): Future[ListItemDeleteResponseADM] = {
-        // check if node itself or any of its children is in use.
+        /**
+         * Checks if node itself or any of its children is in use.
+         *
+         * @param nodeIri    the node's IRI.
+         * @param nodeChildren the children of the node.
+         * @throws BadRequestException in case a node or one of its children is in use.
+         */
         def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Future[Unit] = for {
             // Is node itself in use?
             _ <- isNodeUsed(
@@ -1419,9 +1448,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // shift the siblings that were positioned after the deleted node, one place to left.
-            updatedChildren <- updatePositionsAfterDeletion(
-                position = positionOfDeletedNode,
-                siblings = remainingChildren,
+            updatedChildren <- shiftNodes(startPos = positionOfDeletedNode+1,
+                endPos = remainingChildren.last.position,
+                nodes = remainingChildren,
+                shiftToLeft = true,
                 dataNamedGraph = dataNamedGraph,
                 featureFactoryConfig = featureFactoryConfig
             )
@@ -1787,68 +1817,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     } yield ()
 
     /**
-     * Helper method to shift sibling nodes to the left after deletion of a node.
-     *
-     * @param position the position of the deleted node.
-     * @param siblings the list of remaining child nodes after deletion.
-     * @throws UpdateNotPerformedException if the position of a node could not be updated.
-     * @return a sequence of [[ListChildNodeADM]].
-     */
-    protected def updatePositionsAfterDeletion(position: Int,
-                                               siblings: Seq[ListChildNodeADM],
-                                               dataNamedGraph: IRI,
-                                               featureFactoryConfig: FeatureFactoryConfig): Future[Seq[ListChildNodeADM]] = for {
-        (siblingsPositionedBefore: Seq[ListChildNodeADM],
-        siblingsPositionedAfter: Seq[ListChildNodeADM]) <- Future(siblings.partition(node => node.position < position))
-
-        // shift the children which were after deleted node one positon to the left.
-        updatePositionFutures: Seq[Future[ListChildNodeADM]] = siblingsPositionedAfter.map {
-            child =>
-                updatePositionOfNode(
-                    nodeIri = child.id,
-                    newPosition = child.position - 1,
-                    dataNamedGraph = dataNamedGraph,
-                    featureFactoryConfig = featureFactoryConfig
-                )
-        }
-
-        updatedSiblings: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
-    } yield siblingsPositionedBefore ++ updatedSiblings
-
-    /**
-     * Helper method to shift sibling nodes to the right before insertion of a node.
-     *
-     * @param position the position of the new node.
-     * @param siblings the list of siblings.
-     * @throws UpdateNotPerformedException if the position of a node could not be updated.
-     * @return a sequence of [[ListChildNodeADM]].
-     */
-    protected def updatePositionsBeforeInsertion(position: Int,
-                                                 siblings: Seq[ListChildNodeADM],
-                                                 dataNamedGraph: IRI,
-                                                 featureFactoryConfig: FeatureFactoryConfig): Future[Seq[ListChildNodeADM]] = for {
-        (siblingsPositionedBefore: Seq[ListChildNodeADM],
-        siblingsPositionedAfter: Seq[ListChildNodeADM]) <- Future(siblings.partition(node => node.position >= position))
-
-        // shift the children which were after deleted node one positon to the left.
-        updatePositionFutures: Seq[Future[ListChildNodeADM]] = siblingsPositionedAfter.map {
-            child =>
-                updatePositionOfNode(
-                    nodeIri = child.id,
-                    newPosition = child.position + 1,
-                    dataNamedGraph = dataNamedGraph,
-                    featureFactoryConfig = featureFactoryConfig
-                )
-        }
-
-        updatedSiblings: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
-    } yield siblingsPositionedBefore ++ updatedSiblings
-
-    /**
      * Helper method to update position of a node without changing its parent.
      *
      * @param nodeIri     the IRI of the node that must be shifted.
      * @param newPosition the new position of the child node.
+     * @param dataNamedGraph the data named graph of the project.
+     * @param featureFactoryConfig the feature factory configuration.
      * @throws UpdateNotPerformedException if the position of the node could not be updated.
      * @return a [[ListChildNodeADM]].
      */
@@ -1880,6 +1854,19 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     } yield childNode
 
+    /**
+     * Helper method to shift nodes between positions startPos and endPos to the left if 'shiftToLeft' is true,
+     * otherwise shift them one position to the right.
+     *
+     * @param startPos the position of first node in range that must be shifted.
+     * @param endPos the position of last node in range that must be shifted.
+     * @param nodes the list of all nodes.
+     * @param shiftToLeft shift nodes to left if true, otherwise to right.
+     * @param dataNamedGraph the data named graph of the project.
+     * @param featureFactoryConfig the feature factory configuration.
+     * @throws UpdateNotPerformedException if the position of a node could not be updated.
+     * @return a sequence of [[ListChildNodeADM]].
+     */
     protected def shiftNodes(startPos: Int,
                              endPos: Int,
                              nodes: Seq[ListChildNodeADM],
@@ -1887,8 +1874,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                              dataNamedGraph: IRI,
                              featureFactoryConfig: FeatureFactoryConfig): Future[Seq[ListChildNodeADM]] = for {
 
-        nodesTobeUpdated: Seq[ListChildNodeADM] <- Future(nodes.filter(node => node.position <= startPos && node.position >= endPos))
-
+        nodesTobeUpdated: Seq[ListChildNodeADM] <- Future(nodes.filter(node => node.position >= startPos && node.position <= endPos))
+        staticStartNodes = nodes.filter(node => node.position < startPos)
+        staticEndNotes = nodes.filter(node => node.position > endPos)
         updatePositionFutures = nodesTobeUpdated.map {
             child =>
                 val currPos = child.position
@@ -1902,5 +1890,5 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 )
         }
         updatedNodes: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
-    } yield updatedNodes
+    } yield staticStartNodes ++ updatedNodes ++ staticEndNotes
 }

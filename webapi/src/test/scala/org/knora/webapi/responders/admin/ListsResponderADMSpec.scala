@@ -26,7 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException}
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
@@ -396,6 +396,95 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                thirdChildIri.set(childNodeInfo.id)
            }
         }
+
+        "used to reposition nodes" should {
+            "not reposition a node if new position is the same as old one" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 3,
+                        parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(UpdateNotPerformedException(s"The given position is the same as node's current position.")))
+            }
+
+            "reposition a node from position 3 to 1 (shift to right)" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 1,
+                        parentIri = parentIri
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListADM = expectMsgType[ListADM](timeout)
+                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+
+                /* check parent node */
+                responderManager ! ListGetRequestADM(
+                    iri = parentIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser
+                )
+                val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+                val children = receivedNode.node.children
+                val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 1)
+                isNodeUpdated should be(true)
+                // node in position 4 must not have changed
+                val staticNode = children.last
+                staticNode.id should be("http://rdfh.ch/lists/0001/notUsedList015")
+                staticNode.position should be(4)
+
+                // node in position 1 must have been shifted to position 2
+                val isShifted = children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList012" && child.position == 2)
+                isShifted should be(true)
+            }
+
+            "reposition a node from position 0 to 4 (shift to left)" in {
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                responderManager ! NodePositionChangeRequestADM(
+                    nodeIri = nodeIri,
+                    changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+                        position = 4,
+                        parentIri = parentIri
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser,
+                    apiRequestID = UUID.randomUUID
+                )
+                val received: ListADM = expectMsgType[ListADM](timeout)
+                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+
+                /* check parent node */
+                responderManager ! ListGetRequestADM(
+                    iri = parentIri,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.anythingAdminUser
+                )
+                val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+                val children = receivedNode.node.children
+                val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 4)
+                isNodeUpdated should be(true)
+                // node that was in position 1 must be in 0 now
+                val firstNode = children.head
+                firstNode.id should be("http://rdfh.ch/lists/0001/notUsedList014")
+                firstNode.position should be(0)
+
+                // last node must be one before last now
+                val isShifted = children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList015" && child.position == 3)
+                isShifted should be(true)
+            }
+        }
         "used to delete list items" should {
             "not delete a node that is in use" in {
                 val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
@@ -453,7 +542,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val firstChild = remainingChildren.head
                 firstChild.id should be ("http://rdfh.ch/lists/0001/notUsedList01")
                 firstChild.position should be (0)
-                firstChild.children.size should be (1)
+                firstChild.children.size should be (5)
             }
 
             "delete a child node that is not in use" in {

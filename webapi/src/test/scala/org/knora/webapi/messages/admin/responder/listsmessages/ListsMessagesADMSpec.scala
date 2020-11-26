@@ -483,5 +483,36 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
         }
 
+        "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "",
+                   |    "position": 1
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
+
+            thrown.getMessage should equal ("IRI of parent node is missing.")
+
+        }
+
+        "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when parent node IRI is invalid" in {
+            val invalid_parentIri = "invalid-iri"
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "${invalid_parentIri}",
+                   |    "position": 1
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
+
+            thrown.getMessage should equal (s"Invalid IRI is given: $invalid_parentIri.")
+
+        }
     }
 }
