@@ -109,7 +109,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ES
                 lastChild.position should be (1)
                 // first child must have its child
                 val firstChild = children.head
-                firstChild.children.size should be (1)
+                firstChild.children.size should be (5)
 
                 clientTestDataCollector.addFile(
                     TestDataFileContent(
