@@ -94,9 +94,11 @@ rules_jvm_external_version_sha256 = "d85951a92c0908c80bd8551002d66cb23c3434409c8
 
 http_archive(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % rules_jvm_external_version,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % rules_jvm_external_version,
-    sha256 = rules_jvm_external_version_sha256,
+    # strip_prefix = "rules_jvm_external-%s" % rules_jvm_external_version,
+    strip_prefix = "rules_jvm_external-35bea7eec6bfacba946517e7a8d8b23480b8476e",
+    # url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % rules_jvm_external_version,
+    url = "https://github.com/cheister/rules_jvm_external/archive/35bea7eec6bfacba946517e7a8d8b23480b8476e.zip",
+    # sha256 = rules_jvm_external_version_sha256,
 )
 
 # load the dependencies defined in the third_party sub-folder
