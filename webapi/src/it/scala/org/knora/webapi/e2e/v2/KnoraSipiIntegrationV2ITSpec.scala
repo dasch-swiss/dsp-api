@@ -298,7 +298,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             logger.debug("token: {}", loginToken)
         }
-        
+
         "get an image from Sipi" in {
             val request = Get(s"$baseInternalSipiUrl/0803/incunabula_0000000002.jp2/full/499,630/0/default.jpg")
             val response = singleAwaitingRequest(request)
