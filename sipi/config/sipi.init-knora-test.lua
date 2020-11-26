@@ -34,6 +34,8 @@ require "get_knora_session"
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix,identifier,cookie)
+    server.log("pre_flight called in sipi.init-knora-test.lua", server.loglevel.LOG_DEBUG)
+
 
     --
     -- For Knora Sipi integration testing
@@ -98,14 +100,8 @@ function pre_flight(prefix,identifier,cookie)
         return 'deny'
     end
 
-    server.log("pre_flight - status: " .. response_json.status, server.loglevel.LOG_DEBUG)
     server.log("pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
 
-    if response_json.status ~= 0 then
-        -- something went wrong with the request, Knora returned a non zero status
-        return 'deny'
-    end
-    
     if response_json.permissionCode == 0 then
         -- no view permission on file
         return 'deny'
@@ -114,11 +110,20 @@ function pre_flight(prefix,identifier,cookie)
         -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
         -- currently, only size is used
 
-        server.log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
-        server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+        local restrictedViewSize
 
-        local restrictedViewSize = response_json.restrictedViewSettings.size
-        if restrictedViewSize == nil then
+        if response_json.restrictedViewSettings ~= nil then
+            -- server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+
+            if response_json.restrictedViewSettings.size ~= nil then
+                server.log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
+                restrictedViewSize = response_json.restrictedViewSettings.size
+            else
+                server.log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
+                restrictedViewSize = config.thumb_size
+            end
+        else
+            server.log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
             restrictedViewSize = config.thumb_size
         end
 
