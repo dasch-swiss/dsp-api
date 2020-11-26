@@ -115,13 +115,7 @@ function pre_flight(prefix, identifier, cookie)
         return 'deny'
     end
 
-    server.log("pre_flight - status: " .. response_json.status, server.loglevel.LOG_DEBUG)
     server.log("pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
-
-    if response_json.status ~= 0 then
-        -- something went wrong with the request, Knora returned a non zero status
-        return 'deny'
-    end
 
     if response_json.permissionCode == 0 then
         -- no view permission on file

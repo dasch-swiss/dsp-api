@@ -45,7 +45,7 @@ case class SipiFileInfoGetRequestADM(projectID: String,
                                      requestingUser: UserADM) extends SipiResponderRequestADM
 
 /**
- * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
+ * Represents the JSON response to a request for a information about a `FileValue`.
  *
  * @param permissionCode         a code representing the user's maximum permission on the file.
  * @param restrictedViewSettings the project's restricted view settings.
