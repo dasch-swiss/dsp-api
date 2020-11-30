@@ -65,6 +65,10 @@ test-data/admin/lists/update-childNode-labels-request.json
 test-data/admin/lists/update-childNode-labels-response.json
 test-data/admin/lists/update-childNode-name-request.json
 test-data/admin/lists/update-childNode-name-response.json
+test-data/admin/lists/update-childNode-position-new-parent-request.json
+test-data/admin/lists/update-childNode-position-new-parent-response.json
+test-data/admin/lists/update-childNode-position-request.json
+test-data/admin/lists/update-childNode-position-response.json
 test-data/admin/lists/update-list-info-comment-label-multiple-languages-request.json
 test-data/admin/lists/update-list-info-comment-label-multiple-languages-response.json
 test-data/admin/lists/update-list-info-request.json
