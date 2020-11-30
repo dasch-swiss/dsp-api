@@ -1204,16 +1204,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          * The highest position a node can be placed is to the end of the parents children; that means length of existing
          * children + 1
          *
-         * @param parentNode the parent to which the node should belong.
+         * @param parentNode  the parent to which the node should belong.
          * @param isNewParent identifier that node is added to another parent or not.
-         *
          * @throws BadRequestException if given position is out of range.
          */
         def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
             val numberOfChildren = parentNode.getChildren.size
             // If the node must be added to a new parent, highest valid position is numberOfChildren+1
             // That means the furthests a node can be positioned is being appended to the end of children of the new parent.
-            if(isNewParent && changeNodePositionRequest.position >  numberOfChildren + 1) {
+            if (isNewParent && changeNodePositionRequest.position > numberOfChildren + 1) {
                 throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren + 1}.")
             }
 
@@ -1223,6 +1222,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren}.")
             }
         }
+
         /**
          * Checks that the position of the node is updated and node is sublist of specified parent.
          * It also checks the sibling nodes are shifted accordingly.
@@ -1232,10 +1232,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          */
         def verifyParentChildrenUpdate(): Future[ListNodeADM] = for {
             maybeParentNode <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri,
-                                                shallow = false,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                requestingUser = KnoraSystemInstances.Users.SystemUser
-                                            )
+                shallow = false,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
             updatedParent = maybeParentNode.get
             updatedChildren: Seq[ListChildNodeADM] = updatedParent.getChildren
             (siblingsPositionedBefore: Seq[ListChildNodeADM],
@@ -1243,16 +1243,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // verify that node is among children of specified parent in correct position
             updatedNode = rest.head
-            _ = if (updatedNode.id != nodeIri || updatedNode.position!= changeNodePositionRequest.position) {
+            _ = if (updatedNode.id != nodeIri || updatedNode.position != changeNodePositionRequest.position) {
                 throw UpdateNotPerformedException(s"Node is not repositioned correctly in specified parent node. Please report this as a bug.")
             }
             leftPositions: Seq[Int] = siblingsPositionedBefore.map(child => child.position)
-            _ = if(leftPositions != leftPositions.sorted) {
+            _ = if (leftPositions != leftPositions.sorted) {
                 throw UpdateNotPerformedException(s"Something has gone wrong with shifting nodes. Please report this as a bug.")
             }
             siblingsPositionedAfter = rest.slice(1, rest.length)
             rightSiblings: Seq[Int] = siblingsPositionedAfter.map(child => child.position)
-            _ = if(rightSiblings != rightSiblings.sorted) {
+            _ = if (rightSiblings != rightSiblings.sorted) {
                 throw UpdateNotPerformedException(s"Something has gone wrong with shifting nodes. Please report this as a bug.")
             }
 
@@ -1261,9 +1261,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
          * Changes position of the node within its original parent.
          *
-         * @param node the node whose position should be updated.
-         * @param parentIri the IRI of the parent node.
-         * @param newPosition the new node position.
+         * @param node           the node whose position should be updated.
+         * @param parentIri      the IRI of the parent node.
+         * @param newPosition    the new node position.
          * @param dataNamedGraph the new node position.
          * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
          */
@@ -1290,10 +1290,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 featureFactoryConfig = featureFactoryConfig)
 
             // update position of siblings
-            _ <- if(currPosition < newPosition) {
+            _ <- if (currPosition < newPosition) {
                 for {
                     // shift siblings to left
-                    updatedSiblings <- shiftNodes(startPos = currPosition+1,
+                    updatedSiblings <- shiftNodes(startPos = currPosition + 1,
                         endPos = newPosition,
                         nodes = parentNode.getChildren,
                         shiftToLeft = true,
@@ -1305,7 +1305,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 for {
                     // shift siblings to right
                     updatedSiblings <- shiftNodes(startPos = newPosition,
-                        endPos = currPosition-1,
+                        endPos = currPosition - 1,
                         nodes = parentNode.getChildren,
                         shiftToLeft = false,
                         dataNamedGraph = dataNamedGraph,
@@ -1321,18 +1321,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          * Changes position of the node, remove from current parent and add to the sepcified parent.
          * It shifts the new siblings and old siblings.
          *
-         * @param node the node whose position should be updated.
-         * @param newParentIri the IRI of the new parent node.
-         * @param currParentIri the IRI of the current parent node.
-         * @param newPosition the new node position.
+         * @param node           the node whose position should be updated.
+         * @param newParentIri   the IRI of the new parent node.
+         * @param currParentIri  the IRI of the current parent node.
+         * @param newPosition    the new node position.
          * @param dataNamedGraph the new node position.
          * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
          */
         def updateParentAndPosition(node: ListChildNodeADM,
-                                   newParentIri: IRI,
-                                   currParentIri: IRI,
-                                   newPosition: Int,
-                                   dataNamedGraph: IRI): Future[Unit] = for {
+                                    newParentIri: IRI,
+                                    currParentIri: IRI,
+                                    newPosition: Int,
+                                    dataNamedGraph: IRI): Future[Unit] = for {
             // get current parent node with its immediate children
             maybeCurrentParentNode <- listNodeGetADM(nodeIri = currParentIri,
                 shallow = true,
@@ -1360,7 +1360,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 featureFactoryConfig = featureFactoryConfig)
 
             // shift current siblings with a higher position to left as if the node is deleted
-            _ <- shiftNodes(startPos = currentNodePosition+1,
+            _ <- shiftNodes(startPos = currentNodePosition + 1,
                 endPos = currentSiblings.last.position,
                 nodes = currentSiblings,
                 shiftToLeft = true,
@@ -1424,12 +1424,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             currentParentNodeIri: IRI <- getParentNodeIRI(nodeIri, featureFactoryConfig)
             _ <- if (currentParentNodeIri == changeNodePositionRequest.parentIri) {
                 updatePositionWithinSameParent(node = node,
-                        parentIri = currentParentNodeIri,
-                        newPosition = changeNodePositionRequest.position,
-                        dataNamedGraph = dataNamedGraph
-                    )
+                    parentIri = currentParentNodeIri,
+                    newPosition = changeNodePositionRequest.position,
+                    dataNamedGraph = dataNamedGraph
+                )
             } else {
-                updateParentAndPosition(node=node,
+                updateParentAndPosition(node = node,
                     newParentIri = changeNodePositionRequest.parentIri,
                     currParentIri = currentParentNodeIri,
                     newPosition = changeNodePositionRequest.position,
@@ -1469,7 +1469,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
          * Checks if node itself or any of its children is in use.
          *
-         * @param nodeIri    the node's IRI.
+         * @param nodeIri      the node's IRI.
          * @param nodeChildren the children of the node.
          * @throws BadRequestException in case a node or one of its children is in use.
          */
@@ -1550,7 +1550,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // shift the siblings that were positioned after the deleted node, one place to left.
-            updatedChildren <- shiftNodes(startPos = positionOfDeletedNode+1,
+            updatedChildren <- shiftNodes(startPos = positionOfDeletedNode + 1,
                 endPos = remainingChildren.last.position,
                 nodes = remainingChildren,
                 shiftToLeft = true,
@@ -1921,9 +1921,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Helper method to update position of a node without changing its parent.
      *
-     * @param nodeIri     the IRI of the node that must be shifted.
-     * @param newPosition the new position of the child node.
-     * @param dataNamedGraph the data named graph of the project.
+     * @param nodeIri              the IRI of the node that must be shifted.
+     * @param newPosition          the new position of the child node.
+     * @param dataNamedGraph       the data named graph of the project.
      * @param featureFactoryConfig the feature factory configuration.
      * @throws UpdateNotPerformedException if the position of the node could not be updated.
      * @return a [[ListChildNodeADM]].
@@ -1960,11 +1960,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * Helper method to shift nodes between positions startPos and endPos to the left if 'shiftToLeft' is true,
      * otherwise shift them one position to the right.
      *
-     * @param startPos the position of first node in range that must be shifted.
-     * @param endPos the position of last node in range that must be shifted.
-     * @param nodes the list of all nodes.
-     * @param shiftToLeft shift nodes to left if true, otherwise to right.
-     * @param dataNamedGraph the data named graph of the project.
+     * @param startPos             the position of first node in range that must be shifted.
+     * @param endPos               the position of last node in range that must be shifted.
+     * @param nodes                the list of all nodes.
+     * @param shiftToLeft          shift nodes to left if true, otherwise to right.
+     * @param dataNamedGraph       the data named graph of the project.
      * @param featureFactoryConfig the feature factory configuration.
      * @throws UpdateNotPerformedException if the position of a node could not be updated.
      * @return a sequence of [[ListChildNodeADM]].
@@ -1982,7 +1982,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         updatePositionFutures = nodesTobeUpdated.map {
             child =>
                 val currPos = child.position
-                val newPos = if(shiftToLeft){ currPos-1 } else currPos+1
+                val newPos = if (shiftToLeft) {
+                    currPos - 1
+                } else currPos + 1
 
                 updatePositionOfNode(
                     nodeIri = child.id,
@@ -1997,10 +1999,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
      * Helper method to change parent node of a node.
      *
-     * @param nodeIri the IRI of the node.
-     * @param oldParentIri the IRI of the current parent node.
-     * @param newParentIri the IRI of the new parent node.
-     * @param dataNamedGraph the data named graph of the project.
+     * @param nodeIri              the IRI of the node.
+     * @param oldParentIri         the IRI of the current parent node.
+     * @param newParentIri         the IRI of the new parent node.
+     * @param dataNamedGraph       the data named graph of the project.
      * @param featureFactoryConfig the feature factory configuration.
      * @throws UpdateNotPerformedException if the parent of a node could not be updated.
      */
@@ -2029,7 +2031,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         childrenOfOldParent = maybeOldParent.get.getChildren
-        _ = if(childrenOfOldParent.exists(node => node.id == nodeIri)) {
+        _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
             throw UpdateNotPerformedException(s"Node ${nodeIri} is still a child of ${oldParentIri}. Report this as a bug.")
         }
         // get new parent node with its immediate children
@@ -2039,7 +2041,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         childrenOfNewParent = maybeNewParentNode.get.getChildren
-        _ = if(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
+        _ = if (!childrenOfNewParent.exists(node => node.id == nodeIri)) {
             throw UpdateNotPerformedException(s"Node ${nodeIri} is not added to parent node ${newParentIri}. ")
         }
 

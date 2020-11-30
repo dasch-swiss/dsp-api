@@ -308,93 +308,93 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             "add second child to list - to the root node" in {
                 responderManager ! ListChildNodeCreateRequestADM(
-                       createChildNodeRequest = CreateNodeApiRequestADM(
-                           parentNodeIri = Some(newListIri.get),
-                           projectIri = IMAGES_PROJECT_IRI,
-                           name = Some("second"),
-                           labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
-                           comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
-                       ),
-                        featureFactoryConfig = defaultFeatureFactoryConfig,
-                        requestingUser = SharedTestDataADM.imagesUser01,
-                        apiRequestID = UUID.randomUUID
-               )
+                    createChildNodeRequest = CreateNodeApiRequestADM(
+                        parentNodeIri = Some(newListIri.get),
+                        projectIri = IMAGES_PROJECT_IRI,
+                        name = Some("second"),
+                        labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
+                        comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
 
-               val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-               val nodeInfo = received.nodeinfo
+                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
+                val nodeInfo = received.nodeinfo
 
-               // check correct node info
-               val childNodeInfo = nodeInfo match {
-                   case info: ListChildNodeInfoADM => info
-                   case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-               }
+                // check correct node info
+                val childNodeInfo = nodeInfo match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
 
-               // check labels
-               val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-               labels.size should be(1)
-               labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
-
-
-               // check comments
-               val comments = childNodeInfo.comments.stringLiterals
-               comments.size should be(1)
-               comments.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
-
-               // check position
-               val position = childNodeInfo.position
-               position should be(1)
-
-               // check has root node
-               val rootNode = childNodeInfo.hasRootNode
-               rootNode should be(newListIri.get)
-
-               secondChildIri.set(childNodeInfo.id)
-           }
-
-           "add child to second child node" in {
-               responderManager ! ListChildNodeCreateRequestADM(
-                   createChildNodeRequest = CreateNodeApiRequestADM(
-                       parentNodeIri = Some(secondChildIri.get),
-                       projectIri = IMAGES_PROJECT_IRI,
-                       name = Some("third"),
-                       labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
-                       comments = Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
-                   ),
-                   featureFactoryConfig = defaultFeatureFactoryConfig,
-                   requestingUser = SharedTestDataADM.imagesUser01,
-                   apiRequestID = UUID.randomUUID
-               )
-
-               val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-               val nodeInfo = received.nodeinfo
-
-               // check correct node info
-               val childNodeInfo = nodeInfo match {
-                   case info: ListChildNodeInfoADM => info
-                   case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-               }
-
-               // check labels
-               val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-               labels.size should be(1)
-               labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+                // check labels
+                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+                labels.size should be(1)
+                labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
 
 
-               // check comments
-               val comments = childNodeInfo.comments.stringLiterals
-               comments.size should be(1)
-               comments.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                // check comments
+                val comments = childNodeInfo.comments.stringLiterals
+                comments.size should be(1)
+                comments.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
 
-               // check position
-               val position = childNodeInfo.position
-               position should be(0)
+                // check position
+                val position = childNodeInfo.position
+                position should be(1)
 
-               // check has root node
-               val rootNode = childNodeInfo.hasRootNode
-               rootNode should be(newListIri.get)
+                // check has root node
+                val rootNode = childNodeInfo.hasRootNode
+                rootNode should be(newListIri.get)
 
-               thirdChildIri.set(childNodeInfo.id)
-           }
+                secondChildIri.set(childNodeInfo.id)
+            }
+
+            "add child to second child node" in {
+                responderManager ! ListChildNodeCreateRequestADM(
+                    createChildNodeRequest = CreateNodeApiRequestADM(
+                        parentNodeIri = Some(secondChildIri.get),
+                        projectIri = IMAGES_PROJECT_IRI,
+                        name = Some("third"),
+                        labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
+                        comments = Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+                    ),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
+
+                val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
+                val nodeInfo = received.nodeinfo
+
+                // check correct node info
+                val childNodeInfo = nodeInfo match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+                labels.size should be(1)
+                labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+
+
+                // check comments
+                val comments = childNodeInfo.comments.stringLiterals
+                comments.size should be(1)
+                comments.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+
+                // check position
+                val position = childNodeInfo.position
+                position should be(0)
+
+                // check has root node
+                val rootNode = childNodeInfo.hasRootNode
+                rootNode should be(newListIri.get)
+
+                thirdChildIri.set(childNodeInfo.id)
+            }
         }
 
         "used to reposition nodes" should {
@@ -529,7 +529,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val childrenOfNewParent = parentNode.getChildren
 
                 // node must be in children of new parent
-                childrenOfNewParent.size should be (4)
+                childrenOfNewParent.size should be(4)
                 val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
                 isNodeAdd should be(true)
 
@@ -546,7 +546,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
                 // node must not be in children of old parent
                 val oldParentChildren = receivedNode.node.children
-                oldParentChildren.size should be (4)
+                oldParentChildren.size should be(4)
                 val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri)
                 isNodeUpdated should be(false)
 
@@ -575,7 +575,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 /* check children of new parent node */
                 val childrenOfNewParent = parentNode.getChildren
-                childrenOfNewParent.size should be (5)
+                childrenOfNewParent.size should be(5)
                 val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
                 isNodeUpdated should be(true)
 
@@ -671,15 +671,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
                 val parentNode = received.node
                 val remainingChildren = parentNode.getChildren
-                remainingChildren.size should be (2)
+                remainingChildren.size should be(2)
                 //last child should be shifted to left
-                remainingChildren.last.position should be (1)
+                remainingChildren.last.position should be(1)
 
                 // first node should still have its child
                 val firstChild = remainingChildren.head
-                firstChild.id should be ("http://rdfh.ch/lists/0001/notUsedList01")
-                firstChild.position should be (0)
-                firstChild.children.size should be (5)
+                firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
+                firstChild.position should be(0)
+                firstChild.children.size should be(5)
             }
 
             "delete a child node that is not in use" in {
@@ -693,10 +693,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
                 val parentNode = received.node
                 val remainingChildren = parentNode.getChildren
-                remainingChildren.size should be (1)
+                remainingChildren.size should be(1)
                 val firstChild = remainingChildren.head
-                firstChild.id should be ("http://rdfh.ch/lists/0001/notUsedList03")
-                firstChild.position should be (0)
+                firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+                firstChild.position should be(0)
             }
 
             "delete a list (i.e. root node) that is not in use in ontology" in {
@@ -708,8 +708,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     apiRequestID = UUID.randomUUID
                 )
                 val received: ListDeleteResponseADM = expectMsgType[ListDeleteResponseADM](timeout)
-                received.iri should be (listIri)
-                received.deleted should be (true)
+                received.iri should be(listIri)
+                received.deleted should be(true)
             }
         }
 

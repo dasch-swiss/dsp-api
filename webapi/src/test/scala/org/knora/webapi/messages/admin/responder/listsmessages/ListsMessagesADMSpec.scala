@@ -37,9 +37,10 @@ object ListsMessagesADMSpec {
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
+
 /**
-  * This spec is used to test 'ListAdminMessages'.
-  */
+ * This spec is used to test 'ListAdminMessages'.
+ */
 class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with ListADMJsonProtocol {
 
     val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
@@ -48,7 +49,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
         "work for a 'ListRootNodeInfoADM'" in {
 
-            val listInfo = ListRootNodeInfoADM (
+            val listInfo = ListRootNodeInfoADM(
                 id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
@@ -66,7 +67,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
         "work for a 'ListChildNodeInfoADM'" in {
 
-            val listNodeInfo = ListChildNodeInfoADM (
+            val listNodeInfo = ListChildNodeInfoADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
@@ -162,9 +163,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+            thrown.getMessage should equal(PROJECT_IRI_MISSING_ERROR)
 
         }
 
@@ -181,7 +182,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
             val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+            thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when labels is empty" in {
@@ -197,7 +198,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
             val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal (LABEL_MISSING_ERROR)
+            thrown.getMessage should equal(LABEL_MISSING_ERROR)
         }
 
         "throw a 'BadRequestException' for `CreateListApiRequestADM` when an invalid list IRI is given" in {
@@ -215,7 +216,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
             val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal ("Invalid list IRI")
+            thrown.getMessage should equal("Invalid list IRI")
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when value of a label is missing" in {
@@ -229,9 +230,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal ("String value is missing.")
+            thrown.getMessage should equal("String value is missing.")
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when value of a comment is missing" in {
@@ -246,9 +247,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
 
-            thrown.getMessage should equal ("String value is missing.")
+            thrown.getMessage should equal("String value is missing.")
         }
 
         "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when list IRI is empty" in {
@@ -263,9 +264,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal ("IRI of list item is missing.")
+            thrown.getMessage should equal("IRI of list item is missing.")
         }
 
         "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when list IRI is invalid" in {
@@ -273,16 +274,16 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
             val payload =
                 s"""
                    |{
-                   |    "listIri": "${invalidIri}",
+                   |    "listIri": "$invalidIri",
                    |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
                    |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                    |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal (s"Invalid IRI is given: ${invalidIri}.")
+            thrown.getMessage should equal(s"Invalid IRI is given: $invalidIri.")
         }
 
         "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when project IRI is empty" in {
@@ -296,9 +297,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+            thrown.getMessage should equal(PROJECT_IRI_MISSING_ERROR)
         }
 
         "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when project IRI is invalid" in {
@@ -312,9 +313,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+            thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
         }
 
         "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when labels and comments are empty" in {
@@ -329,9 +330,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-            thrown.getMessage should equal (UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
+            thrown.getMessage should equal(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
         }
 
         "throw 'ForbiddenException' if user requesting `createChildNodeRequest` is not system or project admin" in {
@@ -366,7 +367,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
                         )
-                    )),
+                        )),
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID
@@ -387,9 +388,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal (LIST_NODE_IRI_INVALID_ERROR)
+            thrown.getMessage should equal(LIST_NODE_IRI_INVALID_ERROR)
 
         }
 
@@ -405,9 +406,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal (LIST_NODE_IRI_INVALID_ERROR)
+            thrown.getMessage should equal(LIST_NODE_IRI_INVALID_ERROR)
 
         }
 
@@ -423,9 +424,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+            thrown.getMessage should equal(PROJECT_IRI_MISSING_ERROR)
 
         }
 
@@ -441,9 +442,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+            thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
 
         }
 
@@ -459,9 +460,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal (LABEL_MISSING_ERROR)
+            thrown.getMessage should equal(LABEL_MISSING_ERROR)
 
         }
 
@@ -477,9 +478,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
 
-            thrown.getMessage should equal ("Invalid list node IRI")
+            thrown.getMessage should equal("Invalid list node IRI")
 
         }
 
@@ -493,9 +494,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
-            thrown.getMessage should equal ("IRI of parent node is missing.")
+            thrown.getMessage should equal("IRI of parent node is missing.")
 
         }
 
@@ -504,14 +505,14 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
             val payload =
                 s"""
                    |{
-                   |    "parentNodeIri": "${invalid_parentIri}",
+                   |    "parentNodeIri": "$invalid_parentIri",
                    |    "position": 1
                    |}
                 """.stripMargin
 
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
-            thrown.getMessage should equal (s"Invalid IRI is given: $invalid_parentIri.")
+            thrown.getMessage should equal(s"Invalid IRI is given: $invalid_parentIri.")
 
         }
     }
