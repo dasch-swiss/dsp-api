@@ -254,8 +254,10 @@ The position of an existing child node can be updated. The child node can be eit
 current parent node, or can be added to another parent node in a specific position. The IRI of the parent node 
 and the new position of the child node must be given in the request body. 
 
-Suppose a parent node `parentNode1` has five children in positions 0-4. To change the position of its child node 
-`childNode4` from its original position 3 to position 1, the request body should specify the IRI of its parent node 
+If a node is supposed to be repositioned to the end of a parent node's children, give `position: -1`.
+
+Suppose a parent node `parentNode1` has five children in positions 0-4, to change the position of its child node 
+`childNode4` from its original position 3 to position 1 the request body should specify the IRI of its parent node 
 and the new position as below:
 ```json
    {
@@ -265,9 +267,10 @@ and the new position as below:
 ```
 
 Then the node `childNode4` will be put in position 1, and its siblings will be shifted accordingly. The new position given 
-in the request body cannot be the same as the child node's original position. In case of repositioning the node within its 
-current parent, the maximum permitted position is the length of its children list, i.e. in this example the highest allowed 
-position is 4.
+in the request body cannot be the same as the child node's original position. If `position: -1` is given, the node will 
+be positioned at the end of children list, and its siblings will be shifted to left. In case of repositioning the node 
+within its current parent, the maximum permitted position is the length of its children list, i.e. in this example the 
+highest allowed position is 4.
 
 To reposition a child node `childNode4` to another parent node `parentNode2` in a specific position, for 
 example `position: 3`, the IRI of the new parent node and the position the node must be placed within children of 
@@ -282,12 +285,14 @@ example `position: 3`, the IRI of the new parent node and the position the node 
 
 In this case, the `childNode4` is removed from the list of children of its old parent `parentNode1` and its old 
 siblings are shifted accordingly. Then the node `childNode4` is added to the specified new parent, i.e. `parentNode2`, in 
-the given position. The new siblings are shifted accordingly. 
+the given position. The new siblings are shifted accordingly.
 
-Note that, the furthest the node can be placed is at the end of the list of the children of `parentNode2`, 
-the maximum permitted position is length of children of `parentNode2`+1. That means 
+Note that, the furthest the node can be placed is at the end of the list of the children of `parentNode2`. That means 
 if `parentNode2` had 3 children with positions 0-2, then `childNode4` can be placed in position 0-3 within children 
-of its new parent node. 
+of its new parent node. If the `position: -1` is given, the node will be appended to the end of new parent's children, 
+and new siblings will not be shifted. 
+
+Values less than -1 are not permitted for parameter `position`.
  
 - Required permission: SystemAdmin / ProjectAdmin
 - Response: returns the updated parent node with all its children.

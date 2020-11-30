@@ -1210,16 +1210,25 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          */
         def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
             val numberOfChildren = parentNode.getChildren.size
-            // If the node must be added to a new parent, highest valid position is numberOfChildren+1
-            // That means the furthests a node can be positioned is being appended to the end of children of the new parent.
-            if (isNewParent && changeNodePositionRequest.position > numberOfChildren + 1) {
-                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren + 1}.")
+            // If the node must be added to a new parent, highest valid position is numberOfChildre.
+            // For example, if the new parent already has 3 children, the highest occupied position is 2, node can be
+            // placed in position 3. That means the furthest a node can be positioned is being appended to the end of
+            // children of the new parent.
+            if (isNewParent && changeNodePositionRequest.position > numberOfChildren) {
+                throw BadRequestException(s"Invalid position given, maximum allowed position is = $numberOfChildren.")
             }
 
-            // If node remains in its current parent, the highest valid position is numberOfChildren
-            // That means nodes are only reorganized within the same parent.
-            if (!isNewParent && changeNodePositionRequest.position > numberOfChildren) {
-                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren}.")
+            // If node remains in its current parent, the highest valid position is numberOfChildren -1
+            // That means if the parent node has 4 children, the highest position is 3.
+            // Nodes are only reorganized within the same parent.
+            if (!isNewParent && changeNodePositionRequest.position > numberOfChildren - 1) {
+                throw BadRequestException(s"Invalid position given, maximum allowed position is = ${numberOfChildren - 1}.")
+            }
+
+            // The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
+            // Values less than -1 are not allowed.
+            if (changeNodePositionRequest.position < -1) {
+                throw BadRequestException(s"Invalid position given, minimum allowed is -1.")
             }
         }
 
@@ -1227,10 +1236,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          * Checks that the position of the node is updated and node is sublist of specified parent.
          * It also checks the sibling nodes are shifted accordingly.
          *
+         * @param newPosition the new position of the node.
          * @return the updated parent node with all its children as [[ListNodeADM]]
          * @throws UpdateNotPerformedException if some thing has gone wrong during the update.
          */
-        def verifyParentChildrenUpdate(): Future[ListNodeADM] = for {
+        def verifyParentChildrenUpdate(newPosition: Int): Future[ListNodeADM] = for {
             maybeParentNode <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri,
                 shallow = false,
                 featureFactoryConfig = featureFactoryConfig,
@@ -1239,11 +1249,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             updatedParent = maybeParentNode.get
             updatedChildren: Seq[ListChildNodeADM] = updatedParent.getChildren
             (siblingsPositionedBefore: Seq[ListChildNodeADM],
-            rest: Seq[ListChildNodeADM]) = updatedChildren.partition(node => node.position < changeNodePositionRequest.position)
+            rest: Seq[ListChildNodeADM]) = updatedChildren.partition(node => node.position < newPosition)
 
             // verify that node is among children of specified parent in correct position
             updatedNode = rest.head
-            _ = if (updatedNode.id != nodeIri || updatedNode.position != changeNodePositionRequest.position) {
+            _ = if (updatedNode.id != nodeIri || updatedNode.position != newPosition) {
                 throw UpdateNotPerformedException(s"Node is not repositioned correctly in specified parent node. Please report this as a bug.")
             }
             leftPositions: Seq[Int] = siblingsPositionedBefore.map(child => child.position)
@@ -1263,14 +1273,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          *
          * @param node           the node whose position should be updated.
          * @param parentIri      the IRI of the parent node.
-         * @param newPosition    the new node position.
+         * @param givenPosition  the new node position.
          * @param dataNamedGraph the new node position.
+         * @return the new position of the node [[Int]]
          * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
          */
         def updatePositionWithinSameParent(node: ListChildNodeADM,
                                            parentIri: IRI,
-                                           newPosition: Int,
-                                           dataNamedGraph: IRI): Future[Unit] = for {
+                                           givenPosition: Int,
+                                           dataNamedGraph: IRI): Future[Int] = for {
 
             // get parent node with its immediate children
             maybeParentNode <- listNodeGetADM(nodeIri = parentIri,
@@ -1280,7 +1291,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
             parentNode = maybeParentNode.getOrElse(throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug."))
             _ = isNewPositionValid(parentNode, false)
+            parentChildren = parentNode.getChildren
             currPosition = node.position
+
+            // if givenPosition is -1, append the child to the end of the list of children
+            newPosition = if (givenPosition == -1) {
+                parentChildren.size - 1
+            } else givenPosition
 
             // update the position of the node itself
             _ <- updatePositionOfNode(
@@ -1295,7 +1312,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     // shift siblings to left
                     updatedSiblings <- shiftNodes(startPos = currPosition + 1,
                         endPos = newPosition,
-                        nodes = parentNode.getChildren,
+                        nodes = parentChildren,
                         shiftToLeft = true,
                         dataNamedGraph = dataNamedGraph,
                         featureFactoryConfig = featureFactoryConfig
@@ -1306,7 +1323,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     // shift siblings to right
                     updatedSiblings <- shiftNodes(startPos = newPosition,
                         endPos = currPosition - 1,
-                        nodes = parentNode.getChildren,
+                        nodes = parentChildren,
                         shiftToLeft = false,
                         dataNamedGraph = dataNamedGraph,
                         featureFactoryConfig = featureFactoryConfig
@@ -1315,7 +1332,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             } else {
                 throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
             }
-        } yield ()
+        } yield newPosition
 
         /**
          * Changes position of the node, remove from current parent and add to the sepcified parent.
@@ -1324,15 +1341,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
          * @param node           the node whose position should be updated.
          * @param newParentIri   the IRI of the new parent node.
          * @param currParentIri  the IRI of the current parent node.
-         * @param newPosition    the new node position.
+         * @param givenPosition  the new node position.
          * @param dataNamedGraph the new node position.
+         * @return the new position of the node [[Int]]
          * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
          */
         def updateParentAndPosition(node: ListChildNodeADM,
                                     newParentIri: IRI,
                                     currParentIri: IRI,
-                                    newPosition: Int,
-                                    dataNamedGraph: IRI): Future[Unit] = for {
+                                    givenPosition: Int,
+                                    dataNamedGraph: IRI): Future[Int] = for {
             // get current parent node with its immediate children
             maybeCurrentParentNode <- listNodeGetADM(nodeIri = currParentIri,
                 shallow = true,
@@ -1352,6 +1370,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             currentNodePosition = node.position
 
+            // if givenPosition is -1, append the child to the end of the list of children
+            newPosition = if (givenPosition == -1) {
+                newSiblings.size
+            } else givenPosition
+
             // update the position of the node itself
             _ <- updatePositionOfNode(
                 nodeIri = node.id,
@@ -1368,15 +1391,23 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 featureFactoryConfig = featureFactoryConfig
             )
 
-            // shift new siblings with a in the same and higher position to right
-            // as if the node is inserted in the given position
-            _ <- shiftNodes(startPos = newPosition,
-                endPos = newSiblings.last.position,
-                nodes = newSiblings,
-                shiftToLeft = false,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-            )
+            // Is node supposed to be added to the end of new parent's children list?
+            _ <- if (givenPosition == -1) {
+                // Yes. New siblings should not be shifted
+                Future(newSiblings)
+            } else {
+                // No. Shift new siblings with the same and higher position
+                // to right, as if the node is inserted in the given position
+                for {
+                    updatedSiblings <- shiftNodes(startPos = newPosition,
+                        endPos = newSiblings.last.position,
+                        nodes = newSiblings,
+                        shiftToLeft = false,
+                        dataNamedGraph = dataNamedGraph,
+                        featureFactoryConfig = featureFactoryConfig
+                    )
+                } yield updatedSiblings
+            }
 
             /* update the sublists of parent nodes */
             _ <- changeParentNode(nodeIri = node.id,
@@ -1386,7 +1417,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 featureFactoryConfig = featureFactoryConfig
             )
 
-        } yield ()
+        } yield newPosition
 
         /**
          * The actual task run with an IRI lock.
@@ -1422,22 +1453,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // get node's current parent
             currentParentNodeIri: IRI <- getParentNodeIRI(nodeIri, featureFactoryConfig)
-            _ <- if (currentParentNodeIri == changeNodePositionRequest.parentIri) {
+            newPosition <- if (currentParentNodeIri == changeNodePositionRequest.parentIri) {
                 updatePositionWithinSameParent(node = node,
                     parentIri = currentParentNodeIri,
-                    newPosition = changeNodePositionRequest.position,
+                    givenPosition = changeNodePositionRequest.position,
                     dataNamedGraph = dataNamedGraph
                 )
             } else {
                 updateParentAndPosition(node = node,
                     newParentIri = changeNodePositionRequest.parentIri,
                     currParentIri = currentParentNodeIri,
-                    newPosition = changeNodePositionRequest.position,
+                    givenPosition = changeNodePositionRequest.position,
                     dataNamedGraph = dataNamedGraph
                 )
             }
             /* Verify that the node position and parent children position were updated */
-            parentNode <- verifyParentChildrenUpdate()
+            parentNode <- verifyParentChildrenUpdate(newPosition)
         } yield NodePositionChangeResponseADM(node = parentNode)
 
         for {
