@@ -504,6 +504,15 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
     def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
 }
 
+/**
+ * Responds to change of a child node's position by returning its parent node together with list of its children.
+ *
+ * @param node the updated parent node.
+ */
+case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraResponseADM with ListADMJsonProtocol {
+
+    def toJsValue: JsValue = changeNodePositionApiResponseADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -1237,6 +1246,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
     implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
     implicit val changeNodePositionApiRequestADMFormat: RootJsonFormat[ChangeNodePositionApiRequestADM] = jsonFormat(ChangeNodePositionApiRequestADM, "position", "parentNodeIri")
+    implicit val changeNodePositionApiResponseADMFormat: RootJsonFormat[NodePositionChangeResponseADM] = jsonFormat(NodePositionChangeResponseADM, "node")
     implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] = jsonFormat(ChildNodeDeleteResponseADM, "node")
     implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] = jsonFormat(ListDeleteResponseADM, "iri", "deleted")
 }

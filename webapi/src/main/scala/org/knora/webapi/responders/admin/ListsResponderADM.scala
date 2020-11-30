@@ -1190,7 +1190,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * @param featureFactoryConfig      the feature factory configuration.
      * @param requestingUser            the requesting user.
      * @param apiRequestID              the unique api request ID.
-     * @return a [[NodeInfoGetResponseADM]]
+     * @return a [[NodePositionChangeResponseADM]]
      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
      */
@@ -1198,7 +1198,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                           changeNodePositionRequest: ChangeNodePositionApiRequestADM,
                                           featureFactoryConfig: FeatureFactoryConfig,
                                           requestingUser: UserADM,
-                                          apiRequestID: UUID): Future[ListADM] = {
+                                          apiRequestID: UUID): Future[NodePositionChangeResponseADM] = {
         /**
          * Checks if the given position is in range.
          * The highest position a node can be placed is to the end of the parents children; that means length of existing
@@ -1214,47 +1214,49 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // If the node must be added to a new parent, highest valid position is numberOfChildren+1
             // That means the furthests a node can be positioned is being appended to the end of children of the new parent.
             if(isNewParent && changeNodePositionRequest.position >  numberOfChildren + 1) {
-                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren + 1}!")
+                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren + 1}.")
             }
 
             // If node remains in its current parent, the highest valid position is numberOfChildren
             // That means nodes are only reorganized within the same parent.
             if (!isNewParent && changeNodePositionRequest.position > numberOfChildren) {
-                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren}!")
+                throw BadRequestException(s"Invalid position given, maximum allowed is=${numberOfChildren}.")
             }
         }
         /**
          * Checks that the position of the node is updated and node is sublist of specified parent.
          * It also checks the sibling nodes are shifted accordingly.
          *
-         * @throws UpdateNotPerformedException if any of the
+         * @return the updated parent node with all its children as [[ListNodeADM]]
+         * @throws UpdateNotPerformedException if some thing has gone wrong during the update.
          */
-        def verifyParentChildrenUpdate(): Future[Unit] = for {
+        def verifyParentChildrenUpdate(): Future[ListNodeADM] = for {
             maybeParentNode <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri,
-                                                shallow = true,
+                                                shallow = false,
                                                 featureFactoryConfig = featureFactoryConfig,
                                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                                             )
-            updatedChildren: Seq[ListChildNodeADM] = maybeParentNode.get.getChildren
+            updatedParent = maybeParentNode.get
+            updatedChildren: Seq[ListChildNodeADM] = updatedParent.getChildren
             (siblingsPositionedBefore: Seq[ListChildNodeADM],
             rest: Seq[ListChildNodeADM]) = updatedChildren.partition(node => node.position < changeNodePositionRequest.position)
 
             // verify that node is among children of specified parent in correct position
             updatedNode = rest.head
             _ = if (updatedNode.id != nodeIri || updatedNode.position!= changeNodePositionRequest.position) {
-                throw UpdateNotPerformedException(s"Node is not repositioned correctly in specified parent node. Report this as a bug.")
+                throw UpdateNotPerformedException(s"Node is not repositioned correctly in specified parent node. Please report this as a bug.")
             }
             leftPositions: Seq[Int] = siblingsPositionedBefore.map(child => child.position)
             _ = if(leftPositions != leftPositions.sorted) {
-                throw UpdateNotPerformedException(s"something has gone wrong with shifting nodes. Report this as a bug.")
+                throw UpdateNotPerformedException(s"Something has gone wrong with shifting nodes. Please report this as a bug.")
             }
             siblingsPositionedAfter = rest.slice(1, rest.length)
             rightSiblings: Seq[Int] = siblingsPositionedAfter.map(child => child.position)
             _ = if(rightSiblings != rightSiblings.sorted) {
-                throw UpdateNotPerformedException(s"something has gone wrong with shifting nodes. Report this as a bug.")
+                throw UpdateNotPerformedException(s"Something has gone wrong with shifting nodes. Please report this as a bug.")
             }
 
-        } yield ()
+        } yield updatedParent
 
         /**
          * Changes position of the node within its original parent.
@@ -1393,7 +1395,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                    changeNodePositionRequest: ChangeNodePositionApiRequestADM,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM,
-                                   apiRequestID: UUID): Future[ListADM] = for {
+                                   apiRequestID: UUID): Future[NodePositionChangeResponseADM] = for {
 
             projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
 
@@ -1435,12 +1437,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 )
             }
             /* Verify that the node position and parent children position were updated */
-            _ <- verifyParentChildrenUpdate()
-            maybeResponse <- listGetADM(rootNodeIri = node.hasRootNode,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = requestingUser
-            )
-        } yield maybeResponse.get
+            parentNode <- verifyParentChildrenUpdate()
+        } yield NodePositionChangeResponseADM(node = parentNode)
 
         for {
             // run list info update with an local IRI lock

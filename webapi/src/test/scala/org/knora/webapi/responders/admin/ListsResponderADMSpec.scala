@@ -425,7 +425,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed is=5!")))
+                expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed is=5.")))
             }
 
             "not reposition a node to another parent node if new position is out of range" in {
@@ -440,7 +440,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed is=4!")))
+                expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed is=4.")))
             }
 
             "reposition node List014 from position 3 to 1 (shift to right)" in {
@@ -456,19 +456,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                val received: ListADM = expectMsgType[ListADM](timeout)
-                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
 
-                /* check parent node */
-                responderManager ! ListGetRequestADM(
-                    iri = parentIri,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.anythingAdminUser
-                )
-                val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
-                val children = receivedNode.node.children
+                val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+                val parentNode = received.node
+                parentNode.getNodeId should be(parentIri)
+
+                val children = parentNode.getChildren
                 val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 1)
                 isNodeUpdated should be(true)
+
                 // node in position 4 must not have changed
                 val staticNode = children.last
                 staticNode.id should be("http://rdfh.ch/lists/0001/notUsedList015")
@@ -492,19 +488,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                val received: ListADM = expectMsgType[ListADM](timeout)
-                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+                val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+                val parentNode = received.node
 
                 /* check parent node */
-                responderManager ! ListGetRequestADM(
-                    iri = parentIri,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.anythingAdminUser
-                )
-                val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
-                val children = receivedNode.node.children
+                parentNode.getNodeId should be(parentIri)
+                val children = parentNode.getChildren
                 val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 4)
                 isNodeUpdated should be(true)
+
                 // node that was in position 1 must be in 0 now
                 val firstNode = children.head
                 firstNode.id should be("http://rdfh.ch/lists/0001/notUsedList014")
@@ -529,11 +521,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                val received: ListADM = expectMsgType[ListADM](timeout)
-                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+                val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+                val parentNode = received.node
+                parentNode.getNodeId should be(newParentIri)
 
                 /* check children of new parent node */
-                val childrenOfNewParent = received.children
+                val childrenOfNewParent = parentNode.getChildren
+
                 // node must be in children of new parent
                 childrenOfNewParent.size should be (4)
                 val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
@@ -575,8 +569,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                val received: ListADM = expectMsgType[ListADM](timeout)
-                received.children.size should be (3)
+                val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+                val parentNode = received.node
+                parentNode.getNodeId should be(newParentIri)
+
+                /* check children of new parent node */
+                val childrenOfNewParent = parentNode.getChildren
+                childrenOfNewParent.size should be (5)
+                val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
+                isNodeUpdated should be(true)
 
             }
 
@@ -593,8 +594,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                val received: ListADM = expectMsgType[ListADM](timeout)
-                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+                val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+                val parentNode = received.node
+                parentNode.getNodeId should be(parentIri)
+                val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
+                isNodeUpdated should be(true)
             }
 
             "put List014 back in its original position" in {
@@ -610,8 +614,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anythingAdminUser,
                     apiRequestID = UUID.randomUUID
                 )
-                val received: ListADM = expectMsgType[ListADM](timeout)
-                received.listinfo.id should be("http://rdfh.ch/lists/0001/notUsedList")
+                val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+                val parentNode = received.node
+                parentNode.getNodeId should be(parentIri)
+                val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 3)
+                isNodeUpdated should be(true)
             }
         }
 
