@@ -348,7 +348,7 @@ and the new position as below:
 
 Then the node `childNode4` will be put in position 1, and its siblings will be shifted accordingly. The new position given 
 in the request body cannot be the same as the child node's original position. If `position: -1` is given, the node will 
-be positioned at the end of children list, and its siblings will be shifted to left. In case of repositioning the node 
+be moved to the end of children list, and its siblings will be shifted to left. In case of repositioning the node 
 within its current parent, the maximum permitted position is the length of its children list, i.e. in this example the 
 highest allowed position is 4.
 
