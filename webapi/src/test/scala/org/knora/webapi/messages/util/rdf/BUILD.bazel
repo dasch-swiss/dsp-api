@@ -10,5 +10,6 @@ filegroup(
         "RdfFormatUtilSpec.scala",
         "JsonLDUtilSpec.scala",
         "KnoraResponseV2Spec.scala",
+        "ShaclValidatorSpec.scala",
     ],
 )

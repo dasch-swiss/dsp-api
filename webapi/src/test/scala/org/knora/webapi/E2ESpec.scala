@@ -78,6 +78,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
+    RdfFeatureFactory.init(settings)
 
     val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 

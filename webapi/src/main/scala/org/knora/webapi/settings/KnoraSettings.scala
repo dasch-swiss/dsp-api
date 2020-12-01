@@ -20,7 +20,7 @@
 package org.knora.webapi.settings
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.time.Instant
 
 import akka.ConfigurationException
@@ -249,6 +249,8 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
     } else {
         None
     }
+
+    val shaclShapesDir: Path = Paths.get(config.getString("app.shacl.shapes-dir"))
 
     val featureToggles: Set[FeatureToggleBaseConfig] = if (config.hasPath(featureTogglesPath)) {
         Try {
