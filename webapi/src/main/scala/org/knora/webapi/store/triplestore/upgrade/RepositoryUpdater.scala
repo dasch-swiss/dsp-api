@@ -11,12 +11,12 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.rdf._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,8 +32,6 @@ class RepositoryUpdater(system: ActorSystem,
                         appActor: ActorRef,
                         featureFactoryConfig: FeatureFactoryConfig,
                         settings: KnoraSettingsImpl) extends LazyLogging {
-    // RDF factories.
-    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
     private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
     // A SPARQL query to find out the knora-base version in a repository.
@@ -211,7 +209,7 @@ class RepositoryUpdater(system: ActorSystem,
                                   pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Unit = {
         // Parse the input file.
         log.info("Reading repository file...")
-        val model = readFileIntoModel(file = downloadedRepositoryFile, rdfFormat = TriG)
+        val model = rdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = TriG)
         log.info(s"Read ${model.size} statements.")
 
         // Run the update plugins.
@@ -226,7 +224,7 @@ class RepositoryUpdater(system: ActorSystem,
 
         // Write the output file.
         log.info(s"Writing output file (${model.size} statements)...")
-        writeModelToFile(
+        rdfFormatUtil.rdfModelToFile(
             rdfModel = model,
             file = transformedRepositoryFile,
             rdfFormat = TriG
@@ -267,47 +265,14 @@ class RepositoryUpdater(system: ActorSystem,
     }
 
     /**
-     * Reads an RDF file into an [[RdfModel]].
-     *
-     * @param file   the file.
-     * @param rdfFormat the file format.
-     * @return a [[RdfModel]] representing the contents of the file.
-     */
-    def readFileIntoModel(file: File, rdfFormat: NonJsonLD): RdfModel = {
-        val fileInputStream = new BufferedInputStream(new FileInputStream(file))
-        val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = rdfFormat)
-        fileInputStream.close()
-        rdfModel
-    }
-
-    /**
      * Reads a file from the CLASSPATH into an [[RdfModel]].
      *
-     * @param filename the filename.
-     * @param rdfFormat   the file format.
+     * @param filename  the filename.
+     * @param rdfFormat the file format.
      * @return an [[RdfModel]] representing the contents of the file.
      */
     def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
         val fileContent: String = FileUtil.readTextResource(filename)
         rdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
-    }
-
-    /**
-     * Writes an [[RdfModel]] to a file.
-     *
-     * @param rdfModel the model to be written.
-     * @param file the file.
-     * @param rdfFormat the file format.
-     */
-    def writeModelToFile(rdfModel: RdfModel, file: File, rdfFormat: NonJsonLD): Unit = {
-        val fileOutputStream = new BufferedOutputStream(new FileOutputStream(file))
-
-        rdfFormatUtil.rdfModelToOutputStream(
-            rdfModel = rdfModel,
-            outputStream = fileOutputStream,
-            rdfFormat = rdfFormat
-        )
-
-        fileOutputStream.close()
     }
 }

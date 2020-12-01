@@ -319,18 +319,6 @@ object StringFormatter {
     }
 
     /**
-     * Initialises the singleton instance of [[StringFormatter]] for use in a client program that will connect to Knora.
-     */
-    def initForClient(knoraHostAndPort: String): Unit = {
-        this.synchronized {
-            generalInstance match {
-                case Some(_) => ()
-                case None => generalInstance = Some(new StringFormatter(maybeKnoraHostAndPort = Some(knoraHostAndPort)))
-            }
-        }
-    }
-
-    /**
      * Initialises the singleton instance of [[StringFormatter]] for a test.
      */
     def initForTest(): Unit = {
