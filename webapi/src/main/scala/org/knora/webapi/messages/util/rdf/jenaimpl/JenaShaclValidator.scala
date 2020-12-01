@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.util.rdf.jenaimpl
 
-import java.io.File
+import java.nio.file.Path
 
 import org.apache.jena
 import org.apache.jena.query.DatasetFactory
@@ -32,7 +32,7 @@ import org.knora.webapi.messages.util.rdf._
  * @param rdfFormatUtil an [[JenaFormatUtil]].
  * @param nodeFactory   a [[JenaNodeFactory]].
  */
-class JenaShaclValidator(baseDir: File,
+class JenaShaclValidator(baseDir: Path,
                          rdfFormatUtil: JenaFormatUtil,
                          private val nodeFactory: JenaNodeFactory)
     extends AbstractShaclValidator[jena.shacl.Shapes](baseDir, rdfFormatUtil) {

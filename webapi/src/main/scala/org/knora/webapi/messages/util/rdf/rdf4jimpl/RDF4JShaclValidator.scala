@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.util.rdf.rdf4jimpl
 
-import java.io.File
+import java.nio.file.Path
 
 import org.eclipse.rdf4j
 import org.knora.webapi.messages.util.rdf._
@@ -33,7 +33,7 @@ import scala.util.{Failure, Success, Try}
  * @param rdfFormatUtil an [[RdfFormatUtil]].
  * @param nodeFactory   an [[RDF4JNodeFactory]].
  */
-class RDF4JShaclValidator(baseDir: File,
+class RDF4JShaclValidator(baseDir: Path,
                           rdfFormatUtil: RDF4JFormatUtil,
                           private val nodeFactory: RDF4JNodeFactory)
     extends AbstractShaclValidator[rdf4j.model.Model](baseDir, rdfFormatUtil) {
