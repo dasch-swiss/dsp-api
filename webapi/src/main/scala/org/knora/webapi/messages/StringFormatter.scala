@@ -319,18 +319,6 @@ object StringFormatter {
     }
 
     /**
-     * Initialises the singleton instance of [[StringFormatter]] for use in a client program that will connect to Knora.
-     */
-    def initForClient(knoraHostAndPort: String): Unit = {
-        this.synchronized {
-            generalInstance match {
-                case Some(_) => ()
-                case None => generalInstance = Some(new StringFormatter(maybeKnoraHostAndPort = Some(knoraHostAndPort)))
-            }
-        }
-    }
-
-    /**
      * Initialises the singleton instance of [[StringFormatter]] for a test.
      */
     def initForTest(): Unit = {
@@ -1453,7 +1441,7 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
                     }
                 )
             } else {
-                throw InconsistentTriplestoreDataException(s"Link value predicate IRI $iri does not end with 'Value'")
+                throw InconsistentRepositoryDataException(s"Link value predicate IRI $iri does not end with 'Value'")
             }
         }
 
@@ -2985,10 +2973,10 @@ class StringFormatter private(val maybeSettings: Option[KnoraSettingsImpl] = Non
     }
 
     /**
-     * Calls `decodeUuidWithErr`, throwing [[InconsistentTriplestoreDataException]] if the string cannot be parsed.
+     * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
      */
     def decodeUuid(uuidStr: String): UUID = {
-        decodeUuidWithErr(uuidStr, throw InconsistentTriplestoreDataException(s"Invalid UUID: $uuidStr"))
+        decodeUuidWithErr(uuidStr, throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
     }
 
     /**

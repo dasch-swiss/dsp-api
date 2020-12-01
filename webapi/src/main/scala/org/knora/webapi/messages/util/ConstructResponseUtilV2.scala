@@ -27,7 +27,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import akka.pattern.ask
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, InconsistentTriplestoreDataException, NotImplementedException}
+import org.knora.webapi.exceptions.{AssertionException, InconsistentRepositoryDataException, NotImplementedException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -117,7 +117,7 @@ object ConstructResponseUtilV2 {
          */
         def maybeStringObject(predicateIri: SmartIri): Option[String] = {
             assertions.get(predicateIri).map {
-                literal => literal.asStringLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
+                literal => literal.asStringLiteral(throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
             }
         }
 
@@ -129,7 +129,7 @@ object ConstructResponseUtilV2 {
          * @return the string object of the predicate.
          */
         def requireStringObject(predicateIri: SmartIri): String = {
-            maybeStringObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
+            maybeStringObject(predicateIri).getOrElse(throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
@@ -140,7 +140,7 @@ object ConstructResponseUtilV2 {
          */
         def maybeIriObject(predicateIri: SmartIri): Option[IRI] = {
             assertions.get(predicateIri).map {
-                literal => literal.asIriLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
+                literal => literal.asIriLiteral(throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
             }
         }
 
@@ -152,7 +152,7 @@ object ConstructResponseUtilV2 {
          * @return the IRI object of the predicate.
          */
         def requireIriObject(predicateIri: SmartIri): IRI = {
-            maybeIriObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
+            maybeIriObject(predicateIri).getOrElse(throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
@@ -163,7 +163,7 @@ object ConstructResponseUtilV2 {
          */
         def maybeIntObject(predicateIri: SmartIri): Option[Int] = {
             assertions.get(predicateIri).map {
-                literal => literal.asIntLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
+                literal => literal.asIntLiteral(throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
             }
         }
 
@@ -175,7 +175,7 @@ object ConstructResponseUtilV2 {
          * @return the integer object of the predicate.
          */
         def requireIntObject(predicateIri: SmartIri): Int = {
-            maybeIntObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
+            maybeIntObject(predicateIri).getOrElse(throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
@@ -186,7 +186,7 @@ object ConstructResponseUtilV2 {
          */
         def maybeBooleanObject(predicateIri: SmartIri): Option[Boolean] = {
             assertions.get(predicateIri).map {
-                literal => literal.asBooleanLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
+                literal => literal.asBooleanLiteral(throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
             }
         }
 
@@ -198,7 +198,7 @@ object ConstructResponseUtilV2 {
          * @return the boolean object of the predicate.
          */
         def requireBooleanObject(predicateIri: SmartIri): Boolean = {
-            maybeBooleanObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
+            maybeBooleanObject(predicateIri).getOrElse(throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
         /**
@@ -209,7 +209,7 @@ object ConstructResponseUtilV2 {
          */
         def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] = {
             assertions.get(predicateIri).map {
-                literal => literal.asDecimalLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
+                literal => literal.asDecimalLiteral(throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
             }
         }
 
@@ -221,7 +221,7 @@ object ConstructResponseUtilV2 {
          * @return the decimal object of the predicate.
          */
         def requireDecimalObject(predicateIri: SmartIri): BigDecimal = {
-            maybeDecimalObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
+            maybeDecimalObject(predicateIri).getOrElse(throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
 
 
@@ -233,7 +233,7 @@ object ConstructResponseUtilV2 {
          */
         def maybeDateTimeObject(predicateIri: SmartIri): Option[Instant] = {
             assertions.get(predicateIri).map {
-                literal => literal.asDateTimeLiteral(throw InconsistentTriplestoreDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
+                literal => literal.asDateTimeLiteral(throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")).value
             }
         }
 
@@ -245,7 +245,7 @@ object ConstructResponseUtilV2 {
          * @return the timestamp object of the predicate.
          */
         def requireDateTimeObject(predicateIri: SmartIri): Instant = {
-            maybeDateTimeObject(predicateIri).getOrElse(throw InconsistentTriplestoreDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
+            maybeDateTimeObject(predicateIri).getOrElse(throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"))
         }
     }
 
@@ -330,7 +330,7 @@ object ConstructResponseUtilV2 {
         // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
         val resultsWithIriSubjects: Statements = constructQueryResults.statements.map {
             case (iriSubject: IriSubjectV2, statements: ConstructPredicateObjects) => iriSubject.value -> statements
-            case (otherSubject: SubjectV2, _: ConstructPredicateObjects) => throw InconsistentTriplestoreDataException(s"Unexpected subject: $otherSubject")
+            case (otherSubject: SubjectV2, _: ConstructPredicateObjects) => throw InconsistentRepositoryDataException(s"Unexpected subject: $otherSubject")
         }
 
         // split statements about resources and other statements (value objects and standoff)
@@ -374,7 +374,7 @@ object ConstructResponseUtilV2 {
                     case (pred: SmartIri, objs: Seq[LiteralV2]) if pred.toString == OntologyConstants.KnoraBase.HasValue =>
                         objs.map {
                             case IriLiteralV2(iri) => iri
-                            case other => throw InconsistentTriplestoreDataException(s"Unexpected object for $resourceIri knora-base:hasValue: $other")
+                            case other => throw InconsistentRepositoryDataException(s"Unexpected object for $resourceIri knora-base:hasValue: $other")
                         }
                 }.flatten.toSet
 
@@ -511,7 +511,7 @@ object ConstructResponseUtilV2 {
 
                         val resourceProjectLiteral: LiteralV2 = assertionsExplicit.getOrElse(
                             OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                            throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
+                            throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
                         ).head
 
                         // add the resource's project to the value's assertions, and get the user's permission on the value
@@ -557,10 +557,10 @@ object ConstructResponseUtilV2 {
                         }
 
                         // Get the rdf:type of the value.
-                        val rdfTypeLiteral: LiteralV2 = valueStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Value $valObjIri has no rdf:type"))
+                        val rdfTypeLiteral: LiteralV2 = valueStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"Value $valObjIri has no rdf:type"))
 
                         val valueObjectClass: SmartIri = rdfTypeLiteral.asIriLiteral(
-                            throw InconsistentTriplestoreDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral")
+                            throw InconsistentRepositoryDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral")
                         ).value.toSmartIri
 
                         // check if it is a link value
@@ -1128,9 +1128,9 @@ object ConstructResponseUtilV2 {
                     ontologySchema = InternalSchema,
                     valueHasStartJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri),
                     valueHasEndJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri),
-                    valueHasStartPrecision = DatePrecisionV2.parse(startPrecisionStr, throw InconsistentTriplestoreDataException(s"Invalid date precision: $startPrecisionStr")),
-                    valueHasEndPrecision = DatePrecisionV2.parse(endPrecisionStr, throw InconsistentTriplestoreDataException(s"Invalid date precision: $endPrecisionStr")),
-                    valueHasCalendar = CalendarNameV2.parse(calendarNameStr, throw InconsistentTriplestoreDataException(s"Invalid calendar name: $calendarNameStr")),
+                    valueHasStartPrecision = DatePrecisionV2.parse(startPrecisionStr, throw InconsistentRepositoryDataException(s"Invalid date precision: $startPrecisionStr")),
+                    valueHasEndPrecision = DatePrecisionV2.parse(endPrecisionStr, throw InconsistentRepositoryDataException(s"Invalid date precision: $endPrecisionStr")),
+                    valueHasCalendar = CalendarNameV2.parse(calendarNameStr, throw InconsistentRepositoryDataException(s"Invalid calendar name: $calendarNameStr")),
                     comment = valueCommentOption
                 ))
 
@@ -1302,7 +1302,7 @@ object ConstructResponseUtilV2 {
 
         val resourceLabel: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.Rdfs.Label.toSmartIri)
         val resourceClassStr: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri)
-        val resourceClass = resourceClassStr.toSmartIriWithErr(throw InconsistentTriplestoreDataException(s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>"))
+        val resourceClass = resourceClassStr.toSmartIriWithErr(throw InconsistentRepositoryDataException(s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>"))
         val resourceAttachedToUser: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
         val resourceAttachedToProject: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri)
         val resourcePermissions: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)

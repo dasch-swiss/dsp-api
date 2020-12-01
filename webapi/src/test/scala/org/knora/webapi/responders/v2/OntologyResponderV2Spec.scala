@@ -4402,7 +4402,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a class that's missing a cardinality for a link value property" in {
@@ -4411,7 +4411,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
 
@@ -4421,7 +4421,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a class with a cardinality whose subject class constraint is incompatible with the class" in {
@@ -4430,7 +4430,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class without an rdfs:label" in {
@@ -4439,7 +4439,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource property without an rdfs:label" in {
@@ -4448,7 +4448,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class that is also a standoff class" in {
@@ -4457,7 +4457,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class with a cardinality on an undefined property" in {
@@ -4466,7 +4466,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class with a directly defined cardinality on a non-resource property" in {
@@ -4475,7 +4475,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class with a cardinality on knora-base:resourceProperty" in {
@@ -4484,7 +4484,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class with a cardinality on knora-base:hasValue" in {
@@ -4493,7 +4493,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource class with a base class that has a Knora IRI but isn't a resource class" in {
@@ -4502,7 +4502,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a standoff class with a cardinality on a resource property" in {
@@ -4511,7 +4511,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a standoff class with a base class that's not a standoff class" in {
@@ -4520,7 +4520,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property with a subject class constraint of foaf:Person" in {
@@ -4529,7 +4529,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a Knora value property with a subject class constraint of knora-base:TextValue" in {
@@ -4538,7 +4538,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property with a subject class constraint of salsah-gui:Guielement" in {
@@ -4547,7 +4547,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property with an object class constraint of foaf:Person" in {
@@ -4556,7 +4556,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property whose object class constraint is incompatible with its base property" in {
@@ -4565,7 +4565,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link property isn't really a link property" in {
@@ -4574,7 +4574,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link value property isn't really a link value property" in {
@@ -4583,7 +4583,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource property with no object class constraint" ignore { // Consistency checks don't allow this in GraphDB.
@@ -4592,7 +4592,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource property with no rdfs:label" in {
@@ -4601,7 +4601,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property that's a subproperty of both knora-base:hasValue and knora-base:hasLinkTo" in {
@@ -4610,7 +4610,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property that's a subproperty of knora-base:hasFileValue" in {
@@ -4619,7 +4619,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a resource property with a base property that has a Knora IRI but isn't a resource property" in {
@@ -4628,7 +4628,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a property that contains salsah-gui:guiOrder" ignore { // Consistency checks don't allow this in GraphDB.
@@ -4637,7 +4637,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a cardinality that contains salsah-gui:guiElement" in {
@@ -4646,7 +4646,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load an ontology containing a cardinality that contains salsah-gui:guiAttribute" in {
@@ -4655,7 +4655,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing an owl:TransitiveProperty" in {
@@ -4664,7 +4664,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology with a class that has cardinalities both on property P and on a subproperty of P" in {
@@ -4673,7 +4673,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing mismatched cardinalities for a link property and a link value property" in {
@@ -4682,7 +4682,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing an invalid cardinality on a boolean property" in {
@@ -4691,7 +4691,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing a class with a cardinality on a property from a non-shared ontology in another project" in {
@@ -4700,7 +4700,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing a class with a base class defined in a non-shared ontology in another project" in {
@@ -4709,7 +4709,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing a property with a base property defined in a non-shared ontology in another project" in {
@@ -4718,7 +4718,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing a property whose subject class constraint is defined in a non-shared ontology in another project" in {
@@ -4727,7 +4727,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing a property whose object class constraint is defined in a non-shared ontology in another project" in {
@@ -4736,7 +4736,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
 
         "not load a project-specific ontology containing a class with two cardinalities that override the same base class cardinality of 1 or 0-1" in {
@@ -4745,7 +4745,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             customLoadTestData(invalidOnto)
-            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentRepositoryDataException] should ===(true)
         }
     }
 }

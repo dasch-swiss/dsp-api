@@ -21,11 +21,12 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.twirl.SearchCriterion
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.{DateUtilV1, PermissionUtilADM, ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
@@ -168,7 +169,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
             // _ = println("================" + pagingSparql)
 
-            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            searchResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
 
             // Get the IRIs of all the properties mentioned in the search results.
             propertyIris: Set[IRI] = searchResponse.results.bindings.flatMap(_.rowMap.get("resourceProperty")).toSet
@@ -199,7 +200,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
+                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
@@ -220,7 +221,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)
                         )
                         val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
-                        val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
+                        val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentRepositoryDataException(s"Resource $resourceIri has no rdfs:label"))
 
                         // Collect the matching values in the resource.
                         val mapOfMatchingValues: Map[IRI, MatchingValue] = rows.filter(_.rowMap.get("valueObject").nonEmpty).foldLeft(Map.empty[IRI, MatchingValue]) {
@@ -243,7 +244,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                                         val propertyIri = row.rowMap("resourceProperty")
                                         val propertyLabel = entityInfoResponse.propertyInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)) match {
                                             case Some(label) => label
-                                            case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
+                                            case None => throw InconsistentRepositoryDataException(s"Property $propertyIri has no rdfs:label")
                                         }
 
                                         valueIri -> MatchingValue(
@@ -351,7 +352,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                     val propertyObjectClassConstraint: IRI = if (propertyEntityInfo.isLinkProp) {
                         OntologyConstants.KnoraBase.Resource
                     } else {
-                        propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $prop has no knora-base:objectClassConstraint"))
+                        propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $prop has no knora-base:objectClassConstraint"))
                     }
 
                     // Ensure that the property's objectClassConstraint is valid, and that the specified operator can be
@@ -505,7 +506,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
             // _ = println(searchSparql)
 
-            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+            searchResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
 
             // Collect all the resource class IRIs mentioned in the search results.
             resourceClassIris: Set[IRI] = searchResponse.results.bindings.map(_.rowMap("resourceClass")).toSet
@@ -532,7 +533,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
+                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
@@ -550,7 +551,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                         val resourceEntityInfo = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
                         val resourceClassLabel = resourceEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage))
                         val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
-                        val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
+                        val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentRepositoryDataException(s"Resource $resourceIri has no rdfs:label"))
 
                         // If there were search criteria referring to values, collect the matching values in the resource.
                         val matchingValues: Vector[MatchingValue] = if (searchCriteria.nonEmpty) {
@@ -606,7 +607,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                                             val propertyIri = searchCriterion.propertyIri
                                             val propertyLabel = propertyInfo.propertyInfoMap(propertyIri).getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)) match {
                                                 case Some(label) => label
-                                                case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
+                                                case None => throw InconsistentRepositoryDataException(s"Property $propertyIri has no rdfs:label")
                                             }
 
                                             valueIri -> MatchingValue(

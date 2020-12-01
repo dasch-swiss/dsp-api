@@ -19,13 +19,13 @@
 
 package org.knora.webapi.util.rdf
 
-import java.io.File
+import java.io._
 
-import org.knora.webapi.{CoreSpec, IRI}
 import org.knora.webapi.feature.{FeatureFactoryConfig, FeatureToggle, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.{CoreSpec, IRI}
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
@@ -40,14 +40,55 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
     private val rdfNodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
     private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
 
-    StringFormatter.initForTest()
+    private val expectedThingLabelStatement = rdfNodeFactory.makeStatement(
+        rdfNodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#Thing"),
+        rdfNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label),
+        rdfNodeFactory.makeStringWithLanguage(value = "Thing", language = "en")
+    )
+
+    /**
+     * Processes `anything-onto.ttl` and checks whether the expected content is received.
+     */
+    class TestStreamProcessor extends RdfStreamProcessor {
+        var startCalled: Boolean = false
+        var finishCalled: Boolean = false
+        var gotKnoraBaseNamespace = false
+        var gotThingLabelStatement: Boolean = false
+
+        override def start(): Unit = {
+            startCalled = true
+        }
+
+        override def processNamespace(prefix: String, namespace: IRI): Unit = {
+            if (prefix == "knora-base" && namespace == "http://www.knora.org/ontology/knora-base#") {
+                gotKnoraBaseNamespace = true
+            }
+        }
+
+        override def processStatement(statement: Statement): Unit = {
+            if (statement == expectedThingLabelStatement) {
+                gotThingLabelStatement = true
+            }
+        }
+
+        override def finish(): Unit = {
+            finishCalled = true
+        }
+
+        def check(): Unit = {
+            assert(startCalled)
+            assert(gotKnoraBaseNamespace)
+            assert(gotThingLabelStatement)
+            assert(finishCalled)
+        }
+    }
 
     private def checkModelForRdfTypeBook(rdfModel: RdfModel): Unit = {
         val statements: Set[Statement] = rdfModel.find(
             subj = Some(rdfNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
             pred = Some(rdfNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
             obj = None
-        )
+        ).toSet
 
         assert(statements.size == 1)
         assert(statements.head.obj == rdfNodeFactory.makeIriNode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"))
@@ -144,6 +185,72 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
 
             val outputTurtle: String = rdfFormatUtil.format(rdfModel = outputModel, rdfFormat = Turtle)
             assert(outputTurtle.contains("\"JULIAN:1481 CE\"^^knora-api:Date"))
+        }
+
+        "parse RDF from a stream and process it using an RdfStreamProcessor" in {
+            val inputStream = new BufferedInputStream(new FileInputStream("test_data/ontologies/anything-onto.ttl"))
+            val testStreamProcessor = new TestStreamProcessor
+
+            rdfFormatUtil.parseWithStreamProcessor(
+                rdfSource = RdfInputStreamSource(inputStream),
+                rdfFormat = Turtle,
+                rdfStreamProcessor = testStreamProcessor
+            )
+
+            inputStream.close()
+            testStreamProcessor.check()
+        }
+
+        "process streamed RDF and write the formatted result to an output stream" in {
+            // Read the file, process it with an RdfStreamProcessor, and write the result
+            // to a ByteArrayOutputStream.
+
+            val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/ontologies/anything-onto.ttl"))
+            val byteArrayOutputStream = new ByteArrayOutputStream()
+
+            val formattingStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
+                outputStream = byteArrayOutputStream,
+                rdfFormat = Turtle
+            )
+
+            rdfFormatUtil.parseWithStreamProcessor(
+                rdfSource = RdfInputStreamSource(fileInputStream),
+                rdfFormat = Turtle,
+                rdfStreamProcessor = formattingStreamProcessor
+            )
+
+            fileInputStream.close()
+
+            // Read back the ByteArrayOutputStream and check that it's correct.
+
+            val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
+            val testStreamProcessor = new TestStreamProcessor
+
+            rdfFormatUtil.parseWithStreamProcessor(
+                rdfSource = RdfInputStreamSource(byteArrayInputStream),
+                rdfFormat = Turtle,
+                rdfStreamProcessor = testStreamProcessor
+            )
+
+            byteArrayInputStream.close()
+            testStreamProcessor.check()
+        }
+
+        "stream RDF data from an InputStream into an RdfModel, then into an OutputStream, then back into an RdfModel" in {
+            val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/ontologies/anything-onto.ttl"))
+            val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
+            fileInputStream.close()
+            assert(rdfModel.contains(expectedThingLabelStatement))
+
+            val byteArrayOutputStream = new ByteArrayOutputStream()
+            rdfFormatUtil.rdfModelToOutputStream(rdfModel = rdfModel, outputStream = byteArrayOutputStream, rdfFormat = Turtle)
+            byteArrayOutputStream.close()
+
+            val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
+            val copyOfRdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = byteArrayInputStream, rdfFormat = Turtle)
+            byteArrayInputStream.close()
+
+            assert(copyOfRdfModel == rdfModel)
         }
     }
 }

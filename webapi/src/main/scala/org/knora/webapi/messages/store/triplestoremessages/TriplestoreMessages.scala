@@ -60,65 +60,11 @@ case class CheckConnection() extends TriplestoreRequest
 case class CheckConnectionACK()
 
 /**
- * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
+ * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResult]].
  *
  * @param sparql the SPARQL string.
  */
 case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
-
-/**
- * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
- * returned by the triplestore
- *
- * @param head    the header of the response, containing the variable names.
- * @param results the body of the response, containing rows of query results.
- */
-case class SparqlSelectResponse(head: SparqlSelectResponseHeader, results: SparqlSelectResponseBody) {
-
-    /**
-     * Returns the contents of the first row of results.
-     *
-     * @return a [[Map]] representing the contents of the first row of results.
-     */
-    @throws[InconsistentTriplestoreDataException]("if the query returned no results.")
-    def getFirstRow: VariableResultsRow = {
-        if (results.bindings.isEmpty) {
-            throw TriplestoreResponseException(s"A SPARQL query unexpectedly returned an empty result")
-        }
-
-        results.bindings.head
-    }
-}
-
-/**
- * Represents the header of a JSON response to a SPARQL SELECT query.
- *
- * @param vars the names of the variables that were used in the SPARQL SELECT statement.
- */
-case class SparqlSelectResponseHeader(vars: Seq[String])
-
-/**
- * Represents the body of a JSON response to a SPARQL SELECT query.
- *
- * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
- *                 Empty rows are not allowed.
- */
-case class SparqlSelectResponseBody(bindings: Seq[VariableResultsRow]) {
-    require(bindings.forall(_.rowMap.nonEmpty), "Empty rows are not allowed in a SparqlSelectResponseBody")
-}
-
-
-/**
- * Represents a row of results in a JSON response to a SPARQL SELECT query.
- *
- * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
- *               name or value.
- */
-case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
-    require(rowMap.forall {
-        case (key, value) => key.nonEmpty && value.nonEmpty
-    }, "An empty string is not allowed as a variable name or value in a VariableResultsRow")
-}
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
@@ -134,13 +80,15 @@ case class SparqlConstructRequest(sparql: String,
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
  * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
  *
- * @param sparql     the SPARQL string.
- * @param graphIri   the named graph IRI to be used in the TriG file.
- * @param outputFile the file to be written.
+ * @param sparql               the SPARQL string.
+ * @param graphIri             the named graph IRI to be used in the TriG file.
+ * @param outputFile           the file to be written.
+ * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlConstructFileRequest(sparql: String,
                                       graphIri: IRI,
-                                      outputFile: File) extends TriplestoreRequest
+                                      outputFile: File,
+                                      featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * A response to a [[SparqlConstructRequest]].
@@ -185,7 +133,7 @@ object SparqlExtendedConstructResponse {
             val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
             val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
 
-            for (st: Statement <- rdfModel.getStatements) {
+            for (st: Statement <- rdfModel) {
                 val subject: SubjectV2 = st.subj match {
                     case iriNode: IriNode => IriSubjectV2(iriNode.iri)
                     case blankNode: BlankNode => BlankNodeSubjectV2(blankNode.id)
@@ -203,26 +151,26 @@ object SparqlExtendedConstructResponse {
                                 datatypeLiteral.datatype match {
                                     case datatypeIri if OntologyConstants.Xsd.integerTypes.contains(datatypeIri) =>
                                         IntLiteralV2(
-                                            datatypeLiteral.integerValue(throw InconsistentTriplestoreDataException(s"Invalid integer: ${datatypeLiteral.value}")).toInt
+                                            datatypeLiteral.integerValue(throw InconsistentRepositoryDataException(s"Invalid integer: ${datatypeLiteral.value}")).toInt
                                         )
 
                                     case OntologyConstants.Xsd.DateTime =>
                                         DateTimeLiteralV2(
                                             stringFormatter.xsdDateTimeStampToInstant(
                                                 datatypeLiteral.value,
-                                                throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}")
+                                                throw InconsistentRepositoryDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}")
                                             )
                                         )
 
                                     case OntologyConstants.Xsd.Boolean =>
                                         BooleanLiteralV2(
-                                            datatypeLiteral.booleanValue(throw InconsistentTriplestoreDataException(s"Invalid xsd:boolean: ${datatypeLiteral.value}"))
+                                            datatypeLiteral.booleanValue(throw InconsistentRepositoryDataException(s"Invalid xsd:boolean: ${datatypeLiteral.value}"))
                                         )
 
                                     case OntologyConstants.Xsd.String => StringLiteralV2(value = datatypeLiteral.value, language = None)
 
                                     case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(
-                                        datatypeLiteral.decimalValue(throw InconsistentTriplestoreDataException(s"Invalid xsd:decimal: ${datatypeLiteral.value}"))
+                                        datatypeLiteral.decimalValue(throw InconsistentRepositoryDataException(s"Invalid xsd:decimal: ${datatypeLiteral.value}"))
                                     )
 
                                     case OntologyConstants.Xsd.Uri => IriLiteralV2(datatypeLiteral.value)
@@ -267,11 +215,13 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExte
  * Requests a named graph, which will be written to the specified file in Trig format. A successful response
  * will be a [[FileWrittenResponse]].
  *
- * @param graphIri   the IRI of the named graph.
- * @param outputFile the destination file.
+ * @param graphIri             the IRI of the named graph.
+ * @param outputFile           the destination file.
+ * @param featureFactoryConfig the feature factory configuration.
  */
 case class NamedGraphFileRequest(graphIri: IRI,
-                                 outputFile: File) extends TriplestoreRequest
+                                 outputFile: File,
+                                 featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Requests a named graph, which will be returned as Turtle. A successful response
@@ -394,8 +344,11 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
 
 /**
  * Requests that the repository is downloaded to a TriG file. A successful response will be a [[FileWrittenResponse]].
+ *
+ * @param outputFile           the output file.
+ * @param featureFactoryConfig the feature factory configuration.
  */
-case class DownloadRepositoryRequest(outputFile: File) extends TriplestoreRequest
+case class DownloadRepositoryRequest(outputFile: File, featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
 
 /**
  * Indicates that a file was written successfully.
@@ -716,6 +669,56 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
+
+/**
+ * A spray-json protocol that parses JSON returned by a SPARQL endpoint. Empty values and empty rows are
+ * ignored.
+ */
+object SparqlResultProtocol extends DefaultJsonProtocol {
+
+    /**
+     * Converts a [[JsValue]] to a [[VariableResultsRow]].
+     */
+    implicit object VariableResultsJsonFormat extends JsonFormat[VariableResultsRow] {
+        def read(jsonVal: JsValue): VariableResultsRow = {
+
+            // Collapse the JSON structure into a simpler Map of SPARQL variable names to values.
+            val mapToWrap: Map[String, String] = jsonVal.asJsObject.fields.foldLeft(Map.empty[String, String]) {
+                case (acc, (key, value)) => value.asJsObject.getFields("value") match {
+                    case Seq(JsString(valueStr)) if valueStr.nonEmpty => // Ignore empty strings.
+                        acc + (key -> valueStr)
+                    case _ => acc
+                }
+            }
+
+            // Wrap that Map in an ErrorHandlingMap that will gracefully report errors about missing values when they
+            // are accessed later.
+            VariableResultsRow(new ErrorHandlingMap(mapToWrap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
+        }
+
+        def write(variableResultsRow: VariableResultsRow): JsValue = ???
+    }
+
+    /**
+     * Converts a [[JsValue]] to a [[SparqlSelectResultBody]].
+     */
+    implicit object SparqlSelectResponseBodyFormat extends JsonFormat[SparqlSelectResultBody] {
+        def read(jsonVal: JsValue): SparqlSelectResultBody = {
+            jsonVal.asJsObject.fields.get("bindings") match {
+                case Some(bindingsJson: JsArray) =>
+                    // Filter out empty rows.
+                    SparqlSelectResultBody(bindingsJson.convertTo[Seq[VariableResultsRow]].filter(_.rowMap.keySet.nonEmpty))
+
+                case _ => SparqlSelectResultBody(Nil)
+            }
+        }
+
+        def write(sparqlSelectResponseBody: SparqlSelectResultBody): JsValue = ???
+    }
+
+    implicit val headerFormat: JsonFormat[SparqlSelectResultHeader] = jsonFormat1(SparqlSelectResultHeader)
+    implicit val responseFormat: JsonFormat[SparqlSelectResult] = jsonFormat2(SparqlSelectResult)
+}
 
 /**
  * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.

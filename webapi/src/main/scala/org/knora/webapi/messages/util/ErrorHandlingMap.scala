@@ -19,13 +19,13 @@
 
 package org.knora.webapi.messages.util
 
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 
 import scala.collection.{GenTraversableOnce, Iterator, MapLike}
 
 /**
  * A [[Map]] that facilitates error-handling, by wrapping an ordinary [[Map]] and overriding the `default`
- * method to provide custom behaviour (by default, throwing an [[InconsistentTriplestoreDataException]]) if a required
+ * method to provide custom behaviour (by default, throwing an [[InconsistentRepositoryDataException]]) if a required
  * value is missing.
  *
  * @param toWrap           the [[Map]] to wrap.
@@ -38,7 +38,7 @@ import scala.collection.{GenTraversableOnce, Iterator, MapLike}
  */
 class ErrorHandlingMap[A, B](toWrap: Map[A, B],
                              private val errorTemplateFun: A => String,
-                             private val errorFun: String => B = { errorMessage: String => throw InconsistentTriplestoreDataException(errorMessage) })
+                             private val errorFun: String => B = { errorMessage: String => throw InconsistentRepositoryDataException(errorMessage) })
     extends Map[A, B] with MapLike[A, B, ErrorHandlingMap[A, B]] {
 
     // As an optimization, if the Map we're supposed to wrap is another ErrorHandlingMap, wrap its underlying wrapped Map instead.

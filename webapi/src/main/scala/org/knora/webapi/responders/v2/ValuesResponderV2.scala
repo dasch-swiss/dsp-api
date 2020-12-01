@@ -33,6 +33,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -181,7 +182,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
                 _ = if ((cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome) && currentValuesForProp.isEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
+                    throw InconsistentRepositoryDataException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
                 }
 
                 _ = if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || (cardinalityInfo.cardinality == Cardinality.MayHaveOne && currentValuesForProp.nonEmpty)) {
@@ -1513,7 +1514,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 classInfoResponse: ReadOntologyV2 <- (responderManager ? classInfoRequest).mapTo[ReadOntologyV2]
                 classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw InconsistentTriplestoreDataException(s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"))
+                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw InconsistentRepositoryDataException(s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"))
 
                 // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
 
@@ -1549,10 +1550,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     valueIri = deletedValueIri
                 ).toString()
 
-                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
                 rows = sparqlSelectResponse.results.bindings
 
-                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentRepositoryDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                     throw UpdateNotPerformedException(s"The request to mark value <${deleteValueRequest.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
                 }
             } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
@@ -1839,7 +1840,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                               requestingUser: UserADM): Future[ReadResourceV2] = {
         for {
             // Get the property's object class constraint.
-            objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
+            objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentRepositoryDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
 
             // If the property points to a text value, also query the resource's standoff links.
             maybeStandoffLinkToPropertyIri: Option[SmartIri] = if (objectClassConstraint.toString == OntologyConstants.KnoraBase.TextValue) {
@@ -2025,7 +2026,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                    featureFactoryConfig: FeatureFactoryConfig,
                                                    requestingUser: UserADM): Future[Unit] = {
         for {
-            objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
+            objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentRepositoryDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
 
             result: Unit <- valueContent match {
                 case linkValueContent: LinkValueContentV2 =>
@@ -2227,7 +2228,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
             case None =>
                 // We didn't find the LinkValue. This shouldn't happen.
-                throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
+                throw InconsistentRepositoryDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
         }
     }
 
@@ -2285,7 +2286,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
             case None =>
                 // We didn't find the LinkValue. This shouldn't happen.
-                throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
+                throw InconsistentRepositoryDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
         }
     }
 

@@ -24,9 +24,10 @@ import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.core.ActorMaker
 import org.knora.webapi.exceptions.UnsupportedTriplestoreException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
 import org.knora.webapi.messages.util.FakeTriplestore
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes, _}
+import org.knora.webapi.settings._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -38,12 +39,15 @@ import scala.concurrent.ExecutionContext
  * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
  * triple stores.
  *
- * @param appActor a reference to the main application actor.
+ * @param appActor                    a reference to the main application actor.
+ * @param settings                    the application settings.
+ * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
  */
-class TriplestoreManager(appActor: ActorRef) extends Actor with ActorLogging {
+class TriplestoreManager(appActor: ActorRef,
+                         settings: KnoraSettingsImpl,
+                         defaultFeatureFactoryConfig: FeatureFactoryConfig) extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    private val settings = KnoraSettings(context.system)
     protected implicit val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     private var storeActorRef: ActorRef = _
@@ -69,7 +73,8 @@ class TriplestoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
         system = context.system,
         appActor = appActor,
-        settings = settings
+        settings = settings,
+        featureFactoryConfig = defaultFeatureFactoryConfig
     )
 
     override def preStart() {

@@ -31,6 +31,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
@@ -91,7 +92,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             groups: Seq[Future[GroupADM]] = statements.map {
                 case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
 
-                    val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
+                    val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
 
                     for {
                         maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
@@ -102,16 +103,16 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
                         projectADM: ProjectADM = maybeProjectADM match {
                             case Some(project) => project
-                            case None => throw InconsistentTriplestoreDataException(s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.")
+                            case None => throw InconsistentRepositoryDataException(s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.")
                         }
 
                         group = GroupADM(
                             id = groupIri.toString,
-                            name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")).head.asInstanceOf[StringLiteralV2].value,
-                            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
+                            name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no name attached")).head.asInstanceOf[StringLiteralV2].value,
+                            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                             project = projectADM,
-                            status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
-                            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value
+                            status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
+                            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value
                         )
 
                     } yield group
@@ -261,7 +262,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             ).toString())
             //_ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-            groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
             //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
             // get project member IRI from results rows
@@ -674,7 +675,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         val maybeProjectIri = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri)
         val projectIriFuture: Future[IRI] = maybeProjectIri match {
             case Some(iri) => FastFuture.successful(iri.head.asInstanceOf[IriLiteralV2].value)
-            case None => FastFuture.failed(throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached"))
+            case None => FastFuture.failed(throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached"))
         }
 
         if (propsMap.nonEmpty) {
@@ -686,15 +687,15 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )).mapTo[Option[ProjectADM]]
 
-                project: ProjectADM = maybeProject.getOrElse(throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached."))
+                project: ProjectADM = maybeProject.getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached."))
 
                 groupADM: GroupADM = GroupADM(
                     id = groupIri,
-                    name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")).head.asInstanceOf[StringLiteralV2].value,
-                    description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
+                    name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no groupName attached")).head.asInstanceOf[StringLiteralV2].value,
+                    description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                     project = project,
-                    status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
-                    selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri, throw InconsistentTriplestoreDataException(s"Group $groupIri has no selfJoin attached")).head.asInstanceOf[BooleanLiteralV2].value
+                    status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
+                    selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri, throw InconsistentRepositoryDataException(s"Group $groupIri has no selfJoin attached")).head.asInstanceOf[BooleanLiteralV2].value
                 )
             } yield Some(groupADM)
         } else {

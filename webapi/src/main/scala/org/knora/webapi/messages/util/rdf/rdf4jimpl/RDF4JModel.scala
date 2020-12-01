@@ -23,10 +23,12 @@ import org.eclipse.rdf4j
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.JavaUtil._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
 sealed trait RDF4JNode extends RdfNode {
     def rdf4jValue: rdf4j.model.Value
@@ -169,14 +171,18 @@ class RDF4JModel(private val model: rdf4j.model.Model,
 
     private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
 
+    private class StatementIterator(rdf4jIterator: java.util.Iterator[rdf4j.model.Statement]) extends Iterator[Statement] {
+        override def hasNext: Boolean = rdf4jIterator.hasNext
+
+        override def next(): Statement = RDF4JStatement(rdf4jIterator.next())
+    }
+
     /**
      * Returns the underlying [[rdf4j.model.Model]].
      */
     def getModel: rdf4j.model.Model = model
 
     override def getNodeFactory: RdfNodeFactory = nodeFactory
-
-    override def getStatements: Set[Statement] = model.asScala.toSet.map(RDF4JStatement)
 
     override def addStatement(statement: Statement): Unit = {
         model.add(statement.asRDF4JStatement)
@@ -221,15 +227,18 @@ class RDF4JModel(private val model: rdf4j.model.Model,
     }
 
     override def removeStatement(statement: Statement): Unit = {
-        remove(
-            Some(statement.subj),
-            Some(statement.pred),
-            Some(statement.obj),
-            statement.context
+        model.remove(
+            statement.subj.asRDF4JResource,
+            statement.pred.asRDF4JIri,
+            statement.obj.asRDF4JValue,
+            statement.context.map(definedContext => valueFactory.createIRI(definedContext)).orNull
         )
     }
 
-    override def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement] = {
+    override def find(subj: Option[RdfResource],
+                      pred: Option[IriNode],
+                      obj: Option[RdfNode],
+                      context: Option[IRI] = None): Iterator[Statement] = {
         val filteredModel: rdf4j.model.Model = context match {
             case Some(definedContext) =>
                 model.filter(
@@ -247,7 +256,16 @@ class RDF4JModel(private val model: rdf4j.model.Model,
                 )
         }
 
-        filteredModel.asScala.map(RDF4JStatement).toSet
+        new StatementIterator(filteredModel.iterator)
+    }
+
+    override def contains(statement: Statement): Boolean = {
+        model.contains(
+            statement.subj.asRDF4JResource,
+            statement.pred.asRDF4JIri,
+            statement.obj.asRDF4JValue,
+            statement.context.map(definedContext => valueFactory.createIRI(definedContext)).orNull
+        )
     }
 
     override def setNamespace(prefix: String, namespace: IRI): Unit = {
@@ -274,6 +292,20 @@ class RDF4JModel(private val model: rdf4j.model.Model,
         model.contexts.asScala.toSet.filter(_ != null).map {
             context: rdf4j.model.Resource => context.stringValue
         }
+    }
+
+    override def asRepository: RdfRepository = {
+        new RDF4JRepository(model)
+    }
+
+    override def size: Int = model.size
+
+    override def iterator: Iterator[Statement] = {
+        new StatementIterator(model.iterator)
+    }
+
+    override def clear(): Unit = {
+        model.remove(null, null, null)
     }
 }
 
@@ -336,4 +368,53 @@ class RDF4JModelFactory(private val nodeFactory: RDF4JNodeFactory) extends RdfMo
         model = new rdf4j.model.impl.LinkedHashModel,
         nodeFactory = nodeFactory
     )
+}
+
+/**
+ * An [[RdfRepository]] that wraps an [[rdf4j.model.Model]] in an [[rdf4j.repository.sail.SailRepository]].
+ *
+ * @param model the model to be queried.
+ */
+class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
+    // Construct an in-memory SailRepository containing the model.
+    val repository = new rdf4j.repository.sail.SailRepository(new rdf4j.sail.memory.MemoryStore())
+    repository.init()
+    val connection: rdf4j.repository.sail.SailRepositoryConnection = repository.getConnection
+    connection.add(model)
+    connection.close()
+
+    override def doSelect(selectQuery: String): SparqlSelectResult = {
+        // Run the query.
+
+        val connection = repository.getConnection
+        val tupleQuery: rdf4j.query.TupleQuery = connection.prepareTupleQuery(selectQuery)
+        val tupleQueryResult: rdf4j.query.TupleQueryResult = tupleQuery.evaluate
+
+        // Convert the query result to a SparqlSelectResponse.
+
+        val header = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala)
+        val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
+
+        while (tupleQueryResult.hasNext) {
+            val bindings: Iterable[rdf4j.query.Binding] = tupleQueryResult.next.asScala
+
+            val rowMap: Map[String, String] = bindings.map {
+                binding => binding.getName -> binding.getValue.stringValue
+            }.toMap
+
+            rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" })))
+        }
+
+        tupleQueryResult.close()
+        connection.close()
+
+        SparqlSelectResult(
+            head = header,
+            results = SparqlSelectResultBody(bindings = rowBuffer)
+        )
+    }
+
+    override def shutDown(): Unit = {
+        repository.shutDown()
+    }
 }

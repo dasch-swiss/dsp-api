@@ -23,11 +23,11 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotImplementedException, OntologyConstraintException}
+import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, NotImplementedException, OntologyConstraintException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.util.GroupedProps._
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, LocationV1, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
@@ -555,7 +555,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
 
         Future(TimeValueV1(
-            timeStamp = stringFormatter.xsdDateTimeStampToInstant(timeStampStr, throw InconsistentTriplestoreDataException(s"Can't parse timestamp: $timeStampStr"))
+            timeStamp = stringFormatter.xsdDateTimeStampToInstant(timeStampStr, throw InconsistentRepositoryDataException(s"Can't parse timestamp: $timeStampStr"))
         ))
     }
 
@@ -577,7 +577,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
                                           userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
 
         // get the IRI of the mapping
-        val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
+        val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentRepositoryDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
 
         for {
 
@@ -631,7 +631,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
                               userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
 
-        val valueHasString: String = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
+        val valueHasString: String = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentRepositoryDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
         val valueHasLanguage: Option[String] = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasLanguage).map(_.literals.head)
 
         if (valueProps.standoff.nonEmpty) {

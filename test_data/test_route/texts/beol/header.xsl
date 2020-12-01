@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+An example stylesheet that transforms an RDF/XML representation of a beol:letter into
+a TEI/XML header. This stylesheet assumes that the input consists only of
+<rdf:Description> elements.
+
+-->
 <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
                xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -13,25 +20,6 @@
     <xsl:function name="knora-api:iaf" as="xs:string">
         <xsl:param name="input" as="xs:string"/>
         <xsl:sequence select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
-    </xsl:function>
-
-    <!-- Given a link value IRI and the document root node, returns the IRI of the target resource. -->
-    <xsl:function name="knora-api:getTargetResourceIri" as="xs:anyURI">
-        <xsl:param name="linkValueIri" as="xs:anyURI"/>
-        <xsl:param name="documentRoot" as="item()"/>
-
-        <xsl:choose>
-            <xsl:when test="boolean($documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person)">
-                <!-- The target resource is nested in the LinkValue. -->
-                <xsl:value-of
-                        select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person/@rdf:about"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <!-- The target resource is not nested in the LinkValue. -->
-                <xsl:value-of
-                        select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
-            </xsl:otherwise>
-        </xsl:choose>
     </xsl:function>
 
     <!-- https://www.safaribooksonline.com/library/view/xslt-cookbook/0596003722/ch03s03.html?orpq -->
@@ -137,10 +125,9 @@
 
     </xsl:function>
 
-    <xsl:template match="rdf:RDF">
-        <xsl:variable name="resourceIri" select="beol:letter/@rdf:about"/>
-        <xsl:variable name="label" select="beol:letter/rdfs1:label/text()"/>
-
+    <xsl:template match="//rdf:RDF">
+        <xsl:variable name="resourceIri" select="//rdf:Description[./rdf:type/@rdf:resource='http://0.0.0.0:3333/ontology/0801/beol/v2#letter']/@rdf:about"/>
+        <xsl:variable name="label" select="//rdf:Description[@rdf:about=$resourceIri]/rdfs1:label/text()"/>
 
         <teiHeader>
             <fileDesc>
@@ -164,31 +151,31 @@
                     <xsl:attribute name="ref">
                         <xsl:value-of select="$resourceIri"/>
                     </xsl:attribute>
-                    <xsl:apply-templates/>
+                    <xsl:apply-templates select="//rdf:Description/beol:hasAuthorValue"/>
+                    <xsl:apply-templates select="//rdf:Description/beol:hasRecipientValue"/>
                 </correspDesc>
             </profileDesc>
         </teiHeader>
     </xsl:template>
 
-    <xsl:template match="beol:letter/beol:hasAuthorValue">
+    <xsl:template match="//rdf:Description/beol:hasAuthorValue">
         <xsl:variable name="authorValueIri" select="@rdf:resource"/>
-        <xsl:variable name="authorIri" select="knora-api:getTargetResourceIri($authorValueIri, /.)"/>
+        <xsl:variable name="authorIri" select="//rdf:Description[@rdf:about=$authorValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
 
         <xsl:variable name="authorIAFValue"
-                      select="//beol:person[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//rdf:Description[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="authorFamilyNameValue"
-                      select="//beol:person[@rdf:about=$authorIri]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//rdf:Description[@rdf:about=$authorIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="authorGivenNameValue"
-                      select="//beol:person[@rdf:about=$authorIri]//beol:hasGivenName/@rdf:resource"/>
+                      select="//rdf:Description[@rdf:about=$authorIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="sent">
-
             <xsl:variable name="authorIAFText"
-                          select="//knora-api:TextValue[@rdf:about=$authorIAFValue]/knora-api:valueAsString/text()"/>
+                          select="//rdf:Description[@rdf:about=$authorIAFValue]/knora-api:valueAsString/text()"/>
             <xsl:variable name="authorFamilyNameText"
-                          select="//knora-api:TextValue[@rdf:about=$authorFamilyNameValue]/knora-api:valueAsString/text()"/>
+                          select="//rdf:Description[@rdf:about=$authorFamilyNameValue]/knora-api:valueAsString/text()"/>
             <xsl:variable name="authorGivenNameText"
-                          select="//knora-api:TextValue[@rdf:about=$authorGivenNameValue]/knora-api:valueAsString/text()"/>
+                          select="//rdf:Description[@rdf:about=$authorGivenNameValue]/knora-api:valueAsString/text()"/>
 
             <persName>
                 <xsl:attribute name="ref">
@@ -203,32 +190,32 @@
             <xsl:variable name="dateValue" select="//beol:creationDate/@rdf:resource"/>
 
             <xsl:variable name="dateObj"
-                          select="//knora-api:DateValue[@rdf:about=$dateValue]"/>
+                          select="//rdf:Description[@rdf:about=$dateValue]"/>
 
             <xsl:copy-of select="knora-api:dateformat($dateObj)"/>
 
         </correspAction>
     </xsl:template>
 
-    <xsl:template match="beol:letter/beol:hasRecipientValue">
+    <xsl:template match="//rdf:Description/beol:hasRecipientValue">
         <xsl:variable name="recipientValueIri" select="@rdf:resource"/>
-        <xsl:variable name="recipientIri" select="knora-api:getTargetResourceIri($recipientValueIri, /.)"/>
+        <xsl:variable name="recipientIri" select="//rdf:Description[@rdf:about=$recipientValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
 
         <xsl:variable name="recipientIAFValue"
-                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//rdf:Description[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="recipientFamilyNameValue"
-                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//rdf:Description[@rdf:about=$recipientIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="recipientGivenNameValue"
-                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasGivenName/@rdf:resource"/>
+                      select="//rdf:Description[@rdf:about=$recipientIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="received">
 
             <xsl:variable name="recipientIAFText"
-                          select="//knora-api:TextValue[@rdf:about=$recipientIAFValue]/knora-api:valueAsString/text()"/>
+                          select="//rdf:Description[@rdf:about=$recipientIAFValue]/knora-api:valueAsString/text()"/>
             <xsl:variable name="recipientFamilyNameText"
-                          select="//knora-api:TextValue[@rdf:about=$recipientFamilyNameValue]/knora-api:valueAsString/text()"/>
+                          select="//rdf:Description[@rdf:about=$recipientFamilyNameValue]/knora-api:valueAsString/text()"/>
             <xsl:variable name="recipientGivenNameText"
-                          select="//knora-api:TextValue[@rdf:about=$recipientGivenNameValue]/knora-api:valueAsString/text()"/>
+                          select="//rdf:Description[@rdf:about=$recipientGivenNameValue]/knora-api:valueAsString/text()"/>
 
             <persName>
                 <xsl:attribute name="ref">
@@ -244,7 +231,7 @@
     </xsl:template>
 
     <!-- ignore text if there is no template for the element containing it -->
-    <xsl:template match="text()"></xsl:template>
+    <xsl:template match="text()"/>
 
 
 </xsl:transform>
