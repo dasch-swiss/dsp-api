@@ -38,6 +38,7 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         classOf[NewListsRouteADMFeature],
         classOf[OldListsRouteADMFeature],
         classOf[DeleteListItemsRouteADM],
+        classOf[UpdateListItemsRouteADM],
         classOf[PermissionsRouteADM],
         classOf[ProjectsRouteADM],
         classOf[StoreRouteADM],
