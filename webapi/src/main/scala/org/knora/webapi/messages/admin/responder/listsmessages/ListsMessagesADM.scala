@@ -198,6 +198,25 @@ case class ChangeNodeCommentsApiRequestADM(comments: Seq[StringLiteralV2]) exten
     def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
 }
 
+/**
+ * Represents an API request payload that asks the Knora API server to update the position of child node.
+ *
+ * @param position  the new position of the node.
+ * @param parentIri the parent node Iri.
+ */
+case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extends ListADMJsonProtocol {
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (parentIri.isEmpty) {
+        throw BadRequestException(s"IRI of parent node is missing.")
+    }
+    if (!stringFormatter.isKnoraListIriStr(parentIri)) {
+        throw BadRequestException(s"Invalid IRI is given: $parentIri.")
+    }
+
+    def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -361,6 +380,21 @@ case class NodeCommentsChangeRequestADM(nodeIri: IRI,
                                         apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
+ * Request updating the position of an existing node.
+ *
+ * @param nodeIri                   the IRI of the node whose position should be updated.
+ * @param changeNodePositionRequest the payload containing the new comments.
+ * @param featureFactoryConfig      the feature factory configuration.
+ * @param requestingUser            the user initiating the request.
+ * @param apiRequestID              the ID of the API request.
+ */
+case class NodePositionChangeRequestADM(nodeIri: IRI,
+                                        changeNodePositionRequest: ChangeNodePositionApiRequestADM,
+                                        featureFactoryConfig: FeatureFactoryConfig,
+                                        requestingUser: UserADM,
+                                        apiRequestID: UUID) extends ListsResponderRequestADM
+
+/**
  * Requests deletion of a node (root or child). A successful response will be a [[ListDeleteResponseADM]]
  *
  * @param nodeIri              the IRI of the node (root or child).
@@ -470,6 +504,15 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
     def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
 }
 
+/**
+ * Responds to change of a child node's position by returning its parent node together with list of its children.
+ *
+ * @param node the updated parent node.
+ */
+case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraResponseADM with ListADMJsonProtocol {
+
+    def toJsValue: JsValue = changeNodePositionApiResponseADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -1202,6 +1245,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeNodeNameApiRequestADMFormat: RootJsonFormat[ChangeNodeNameApiRequestADM] = jsonFormat(ChangeNodeNameApiRequestADM, "name")
     implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] = jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
     implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] = jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
+    implicit val changeNodePositionApiRequestADMFormat: RootJsonFormat[ChangeNodePositionApiRequestADM] = jsonFormat(ChangeNodePositionApiRequestADM, "position", "parentNodeIri")
+    implicit val changeNodePositionApiResponseADMFormat: RootJsonFormat[NodePositionChangeResponseADM] = jsonFormat(NodePositionChangeResponseADM, "node")
     implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] = jsonFormat(ChildNodeDeleteResponseADM, "node")
     implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] = jsonFormat(ListDeleteResponseADM, "iri", "deleted")
 }

@@ -44,8 +44,8 @@ object UpdateListItemsRouteADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing update node props routes.
-  */
+ * End-to-End (E2E) test specification for testing update node props routes.
+ */
 class UpdateListItemsRouteADME2ESpec extends E2ESpec(UpdateListItemsRouteADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
@@ -214,7 +214,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec(UpdateListItemsRouteADME2ES
                 val newName = "updated third child name"
                 val updateNodeName =
                     s"""{
-                       |    "name": "${newName}"
+                       |    "name": "$newName"
                        |}""".stripMargin
 
                 clientTestDataCollector.addFile(
@@ -230,13 +230,13 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec(UpdateListItemsRouteADME2ES
 
                 val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name", HttpEntity(ContentTypes.`application/json`, updateNodeName))~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
 
                 response.status should be(StatusCodes.OK)
 
                 val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
-                receivedNodeInfo.name.get should be (newName)
+                receivedNodeInfo.name.get should be(newName)
 
                 clientTestDataCollector.addFile(
                     TestDataFileContent(
@@ -269,15 +269,15 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec(UpdateListItemsRouteADME2ES
 
                 val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels", HttpEntity(ContentTypes.`application/json`, updateNodeLabels))~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels", HttpEntity(ContentTypes.`application/json`, updateNodeLabels)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
 
                 response.status should be(StatusCodes.OK)
 
                 val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
                 val labels: Seq[StringLiteralV2] = receivedNodeInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels should contain (StringLiteralV2(value = "nya märkningen för nod", language = Some("se")))
+                labels.size should be(1)
+                labels should contain(StringLiteralV2(value = "nya märkningen för nod", language = Some("se")))
 
 
                 clientTestDataCollector.addFile(
@@ -311,15 +311,15 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec(UpdateListItemsRouteADME2ES
 
                 val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments", HttpEntity(ContentTypes.`application/json`, updateNodeComments))~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments", HttpEntity(ContentTypes.`application/json`, updateNodeComments)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
 
                 response.status should be(StatusCodes.OK)
 
                 val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
                 val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
-                comments.size should be (1)
-                comments should contain (StringLiteralV2(value = "nya kommentarer för nod", language = Some("se")))
+                comments.size should be(1)
+                comments should contain(StringLiteralV2(value = "nya kommentarer för nod", language = Some("se")))
 
 
                 clientTestDataCollector.addFile(
@@ -327,6 +327,196 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec(UpdateListItemsRouteADME2ES
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
                             filename = "update-childNode-comments-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "not update the position of a node if given IRI is invalid" in {
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                val newPosition = 1
+                val nodeIri = "invalid-iri"
+                val updateNodeName =
+                    s"""{
+                       |    "parentNodeIri": "$parentIri",
+                       |    "position": $newPosition
+                       |}""".stripMargin
+
+                val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "update only the position of the child node within same parent" in {
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                val newPosition = 1
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+                val updateNodeName =
+                    s"""{
+                       |    "parentNodeIri": "$parentIri",
+                       |    "position": $newPosition
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+                receivedNode.getNodeId should be(parentIri)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "reposition child node to the end of its parent's children" in {
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+                val newPosition = -1
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
+                val updateNodeName =
+                    s"""{
+                       |    "parentNodeIri": "$parentIri",
+                       |    "position": $newPosition
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-to-end-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+                receivedNode.getNodeId should be(parentIri)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-to-end-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "update parent and position of the child node" in {
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList"
+                val newPosition = 2
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
+                val updateNodeName =
+                    s"""{
+                       |    "parentNodeIri": "$parentIri",
+                       |    "position": $newPosition
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-new-parent-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+                receivedNode.getNodeId should be(parentIri)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-new-parent-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "reposition child node to end of another parent's children" in {
+                val parentIri = "http://rdfh.ch/lists/0001/notUsedList"
+                val newPosition = -1
+                val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
+                val updateNodeName =
+                    s"""{
+                       |    "parentNodeIri": "$parentIri",
+                       |    "position": $newPosition
+                       |}""".stripMargin
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-new-parent-to-end-request",
+                            fileExtension = "json"
+                        ),
+                        text = updateNodeName
+                    )
+                )
+
+                val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position", HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                response.status should be(StatusCodes.OK)
+
+                val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+                receivedNode.getNodeId should be(parentIri)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-childNode-position-new-parent-to-end-response",
                             fileExtension = "json"
                         ),
                         text = responseToString(response)
