@@ -24,7 +24,7 @@ import akka.util.Timeout
 import akka.pattern.ask
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
@@ -413,9 +413,9 @@ object PermissionUtilADM extends LazyLogging {
         val assertionMap: Map[IRI, String] = assertions.toMap
 
         // Anything with permissions must have an creator and a project.
-        val entityCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentTriplestoreDataException(s"Entity $entityIri has no creator"))
-        val entityProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Entity $entityIri has no project"))
-        val entityPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Entity $entityIri has no knora-base:hasPermissions predicate"))
+        val entityCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentRepositoryDataException(s"Entity $entityIri has no creator"))
+        val entityProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentRepositoryDataException(s"Entity $entityIri has no project"))
+        val entityPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentRepositoryDataException(s"Entity $entityIri has no knora-base:hasPermissions predicate"))
 
         getUserPermissionADM(
             entityCreator = entityCreator,
@@ -433,7 +433,7 @@ object PermissionUtilADM extends LazyLogging {
      *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
      *         user group IRIs.
      */
-    def parsePermissions(permissionLiteral: String, errorFun: String => Nothing = { permissionLiteral: String => throw InconsistentTriplestoreDataException(s"invalid permission literal: $permissionLiteral") }): Map[EntityPermission, Set[IRI]] = {
+    def parsePermissions(permissionLiteral: String, errorFun: String => Nothing = { permissionLiteral: String => throw InconsistentRepositoryDataException(s"invalid permission literal: $permissionLiteral") }): Map[EntityPermission, Set[IRI]] = {
         val permissions: Seq[String] = permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
 
         permissions.map {
@@ -478,7 +478,7 @@ object PermissionUtilADM extends LazyLogging {
                         permissionType match {
                             case PermissionType.AP =>
                                 if (!OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations.contains(abbreviation)) {
-                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
+                                    throw InconsistentRepositoryDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                                 }
 
                                 if (splitPermission.length > 1) {
@@ -491,7 +491,7 @@ object PermissionUtilADM extends LazyLogging {
 
                             case PermissionType.OAP =>
                                 if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
-                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
+                                    throw InconsistentRepositoryDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                                 }
                                 val shortGroups: Array[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter)
                                 val groups: Set[IRI] = shortGroups.map(_.replace(OntologyConstants.KnoraAdmin.KnoraAdminPrefix, OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion)).toSet
@@ -519,7 +519,7 @@ object PermissionUtilADM extends LazyLogging {
                     logger.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
                     iris.map(iri => PermissionADM.projectResourceCreateRestrictedPermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraAdmin.ProjectAdminAllPermission => Set(PermissionADM.ProjectAdminAllPermission)
@@ -530,7 +530,7 @@ object PermissionUtilADM extends LazyLogging {
                 if (iris.nonEmpty) {
                     iris.map(iri => PermissionADM.projectAdminGroupRestrictedPermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission => Set(PermissionADM.ProjectAdminRightsAllPermission)
@@ -539,35 +539,35 @@ object PermissionUtilADM extends LazyLogging {
                 if (iris.nonEmpty) {
                     iris.map(iri => PermissionADM.changeRightsPermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.DeletePermission =>
                 if (iris.nonEmpty) {
                     iris.map(iri => PermissionADM.deletePermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.ModifyPermission =>
                 if (iris.nonEmpty) {
                     iris.map(iri => PermissionADM.modifyPermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.ViewPermission =>
                 if (iris.nonEmpty) {
                     iris.map(iri => PermissionADM.viewPermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.RestrictedViewPermission =>
                 if (iris.nonEmpty) {
                     iris.map(iri => PermissionADM.restrictedViewPermission(iri))
                 } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
+                    throw InconsistentRepositoryDataException(s"Missing additional permission information.")
                 }
         }
 
@@ -651,7 +651,7 @@ object PermissionUtilADM extends LazyLogging {
                         }
                     }
                 } else {
-                    throw InconsistentTriplestoreDataException("Permissions cannot be empty")
+                    throw InconsistentRepositoryDataException("Permissions cannot be empty")
                 }
             case PermissionType.AP =>
 
@@ -669,7 +669,7 @@ object PermissionUtilADM extends LazyLogging {
                     }
 
                 } else {
-                    throw InconsistentTriplestoreDataException("Permissions cannot be empty")
+                    throw InconsistentRepositoryDataException("Permissions cannot be empty")
                 }
         }
     }
@@ -740,9 +740,9 @@ object PermissionUtilADM extends LazyLogging {
         val assertionMap: Map[IRI, String] = assertions.toMap
 
         // Anything with permissions must have an creator and a project.
-        val entityCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentTriplestoreDataException(s"entity $entityIri has no creator"))
-        val entityProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"entity $entityIri has no project"))
-        val entityPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"entity $entityIri has no knora-base:hasPermissions predicate"))
+        val entityCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentRepositoryDataException(s"entity $entityIri has no creator"))
+        val entityProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentRepositoryDataException(s"entity $entityIri has no project"))
+        val entityPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentRepositoryDataException(s"entity $entityIri has no knora-base:hasPermissions predicate"))
 
         getUserPermissionV1(entityIri = entityIri, entityCreator = entityCreator, entityProject = entityProject, entityPermissionLiteral = entityPermissionLiteral, userProfile = userProfile)
     }
@@ -790,11 +790,11 @@ object PermissionUtilADM extends LazyLogging {
         val providedProjects = Vector(valuePropsProject, entityProject).flatten.distinct
 
         if (providedProjects.isEmpty) {
-            throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was provided for entity $valueIri")
+            throw InconsistentRepositoryDataException(s"No knora-base:attachedToProject was provided for entity $valueIri")
         }
 
         if (providedProjects.size > 1) {
-            throw InconsistentTriplestoreDataException(s"Two different values of knora-base:attachedToProject were provided for entity $valueIri: ${valuePropsProject.get} and ${entityProject.get}")
+            throw InconsistentRepositoryDataException(s"Two different values of knora-base:attachedToProject were provided for entity $valueIri: ${valuePropsProject.get} and ${entityProject.get}")
         }
 
         val valuePropsAssertionsWithoutProject: Vector[(IRI, IRI)] = valuePropsAssertions.filter(_._1 != OntologyConstants.KnoraBase.AttachedToProject)

@@ -31,16 +31,16 @@ import org.apache.jena.sparql.core.Quad
 import org.apache.jena.tdb.{TDB, TDBFactory}
 import org.apache.jena.update.{UpdateAction, UpdateFactory, UpdateRequest}
 import org.apache.lucene.store._
-import org.knora.webapi._
 import org.knora.webapi.exceptions.{TriplestoreInternalException, TriplestoreResponseException, UnexpectedMessageException}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, SparqlSelectResultBody, SparqlSelectResultHeader, VariableResultsRow}
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 
 /**
@@ -49,7 +49,7 @@ import scala.concurrent.Future
 class JenaTDBActor extends Actor with ActorLogging {
 
     private val system = context.system
-    private implicit val executionContext = system.dispatcher
+    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val settings = KnoraSettings(system)
 
 
@@ -57,7 +57,6 @@ class JenaTDBActor extends Actor with ActorLogging {
     private val loadExistingData = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.loadExistingData")
     private val storagePath = new File(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
     private val tdbStoragePath = new File(storagePath + "/db")
-    private val luceneIndexPath = new File(storagePath + "/lucene")
 
     private val tsType = settings.triplestoreType
 
@@ -70,11 +69,8 @@ class JenaTDBActor extends Actor with ActorLogging {
         false
     }
 
-    private val unionGraphModelName = "urn:x-arq:UnionGraph"
-
-
     // Jena prefers to have 1 global dataset
-    lazy val dataset = getDataset
+    lazy val dataset: Dataset = getDataset
 
     var initialized: Boolean = false
 
@@ -129,12 +125,12 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-     * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResponse]].
+     * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResult]].
      *
      * @param queryString the SPARQL request to be submitted.
-     * @return [[SparqlSelectResponse]].
+     * @return [[SparqlSelectResult]].
      */
-    private def executeSparqlSelectQuery(queryString: String): Future[SparqlSelectResponse] = {
+    private def executeSparqlSelectQuery(queryString: String): Future[SparqlSelectResult] = {
 
         // Start read transaction
         this.dataset.begin(ReadWrite.READ)
@@ -192,9 +188,9 @@ class JenaTDBActor extends Actor with ActorLogging {
             //println("==>> SparqlSelect End")
 
             Future.successful(
-                SparqlSelectResponse(
-                    SparqlSelectResponseHeader(resultVars.asScala),
-                    SparqlSelectResponseBody(variableResultsRows)
+                SparqlSelectResult(
+                    SparqlSelectResultHeader(resultVars.asScala),
+                    SparqlSelectResultBody(variableResultsRows)
                 )
             )
         } catch {

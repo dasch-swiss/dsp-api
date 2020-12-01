@@ -31,6 +31,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.{KnoraSystemInstances, MessageUtil, PermissionUtilADM, ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
@@ -148,7 +149,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
             propertyInfo = entityInfoResponse.propertyInfoMap(createValueRequest.propertyIri)
             propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                throw InconsistentTriplestoreDataException(s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint")
+                throw InconsistentRepositoryDataException(s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint")
             }
 
             // Check that the object of the property (the value to be created, or the target of the link to be created) will have
@@ -202,10 +203,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             }
 
             // Get the IRI of project of the containing resource.
-            projectIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
+            projectIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentRepositoryDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
 
             // Get the resource class of the containing resource
-            resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).restype_id
+            resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentRepositoryDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).restype_id
 
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
@@ -661,7 +662,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                     resourceIri = resourceIri
                 ).toString()
                 //_ = print(getFileValuesSparql)
-                getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
+                getFileValuesResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResult]
                 // _ <- Future(println(getFileValuesResponse))
 
                 // check that the resource to be updated exists and it is a subclass of knora-base:Representation
@@ -808,7 +809,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 propertyInfo = entityInfoResponse.propertyInfoMap(propertyIri)
                 propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                    throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                    throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                 }
 
                 // Check that the object of the property (the value to be updated, or the target of the link to be updated) will have
@@ -863,7 +864,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Get the resource class of the containing resource
-                resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}")).restype_id
+                resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentRepositoryDataException(s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}")).restype_id
 
                 _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissions: ${changeValueRequest.userProfile.permissions} ")
                 defaultObjectAccessPermissions <- {
@@ -924,7 +925,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                         val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
                             case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
-                        }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${changeValueRequest.valueIri} has no permissions"))
+                        }.map(_._2).getOrElse(throw InconsistentRepositoryDataException(s"Value ${changeValueRequest.valueIri} has no permissions"))
 
                         changeOrdinaryValueV1AfterChecks(
                             projectIri = currentValueQueryResult.projectIri,
@@ -1113,7 +1114,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val valuePermissions: String = currentValueQueryResult.permissionRelevantAssertions.find {
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
-                    }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
+                    }.map(_._2).getOrElse(throw InconsistentRepositoryDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
 
                     val linkPropertyIri = stringFormatter.linkValuePropertyIriToLinkPropertyIri(findResourceWithValueResult.propertyIri)
 
@@ -1218,10 +1219,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 valueIri = deletedValueIri
             ).toString()
-            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentRepositoryDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(id = deletedValueIri)
@@ -1288,7 +1289,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                     currentValueIri = versionHistoryRequest.currentValueIri
                 ).toString()
             }
-            selectResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            selectResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows = selectResponse.results.bindings
 
             _ = if (rows.isEmpty) {
@@ -1314,7 +1315,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                     val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
+                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), throw InconsistentRepositoryDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
                         // It's a LinkValue.
                         PermissionUtilADM.getUserPermissionV1(
                             entityIri = valueIri,
@@ -1500,7 +1501,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valueIri = valueIri
             ).toString())
 
-            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
             maybeValueQueryResult <- sparqlQueryResults2ValueQueryResult(
@@ -1540,7 +1541,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 linkValueIri = linkValueIri
             ).toString())
 
-            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows = response.results.bindings
 
             _ = if (rows.isEmpty) {
@@ -1600,7 +1601,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 ).toString()
             }
 
-            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
             maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
@@ -1643,7 +1644,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 ).toString()
             }
 
-            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
             maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
@@ -1683,7 +1684,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
 
             for {
-                projectShortcode: String <- Future(valueIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid value IRI: $valueIri")))
+                projectShortcode: String <- Future(valueIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $valueIri")))
 
                 value <- valueUtilV1.makeValueV1(
                     valueProps = valueProps,
@@ -1694,16 +1695,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 )
 
                 // Get the value's class IRI.
-                valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
+                valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no rdf:type"))
 
                 // Get the IRI of the value's creator.
-                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no knora-base:attachedToUser"))
+                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no knora-base:attachedToUser"))
 
                 // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $valueIri has no knora-base:attachedToProject"))
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"The resource containing value $valueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
-                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
+                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no valueCreationDate"))
 
                 // Get the optional comment on the value.
                 comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
@@ -1720,7 +1721,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 maybePermissionCode = valueClassIri match {
                     case OntologyConstants.KnoraBase.LinkValue =>
-                        val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
+                        val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Link value $valueIri has no rdf:predicate"))
 
                         PermissionUtilADM.getUserPermissionWithValuePropsV1(
                             valueIri = valueIri,
@@ -1777,7 +1778,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
 
             for {
-                projectShortcode: String <- Future(linkValueIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid value IRI: $linkValueIri")))
+                projectShortcode: String <- Future(linkValueIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $linkValueIri")))
 
                 linkValueMaybe <- valueUtilV1.makeValueV1(
                     valueProps = valueProps,
@@ -1789,17 +1790,17 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 linkValueV1: LinkValueV1 = linkValueMaybe match {
                     case linkValue: LinkValueV1 => linkValue
-                    case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
+                    case other => throw InconsistentRepositoryDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
                 }
 
                 // Get the IRI of the value's owner.
-                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
+                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
 
                 // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
-                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
+                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Value $linkValueIri has no valueCreationDate"))
 
                 // Get the optional comment on the value.
                 comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
@@ -1927,7 +1928,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 ).toString()
             }
 
-            updateVerificationResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            updateVerificationResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             rows = updateVerificationResponse.results.bindings
 
             resultOption <- sparqlQueryResults2ValueQueryResult(
@@ -2016,7 +2017,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 searchValueIri = valueIri
             ).toString())
-            findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResponse]
+            findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResult]
 
             _ = if (findResourceResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"No resource found containing value $valueIri")
@@ -2659,7 +2660,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 case None =>
                     // We didn't find the LinkValue. This shouldn't happen.
-                    throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource $sourceResourceIri to resource $targetResourceIri using property $linkPropertyIri, but it seems to be missing")
+                    throw InconsistentRepositoryDataException(s"There should be a knora-base:LinkValue describing a direct link from resource $sourceResourceIri to resource $targetResourceIri using property $linkPropertyIri, but it seems to be missing")
             }
         } yield linkUpdate
     }

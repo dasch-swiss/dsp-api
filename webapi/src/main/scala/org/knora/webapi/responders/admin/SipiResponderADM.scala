@@ -22,7 +22,7 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi.exceptions.{InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, NotFoundException}
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectIdentifierADM, ProjectRestrictedViewSettingsADM, ProjectRestrictedViewSettingsGetADM}
 import org.knora.webapi.messages.admin.responder.sipimessages.{SipiFileInfoGetRequestADM, SipiFileInfoGetResponseADM, SipiResponderRequestADM}
@@ -75,11 +75,11 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
             )).mapTo[SparqlExtendedConstructResponse]
 
             _ = if (queryResponse.statements.isEmpty) throw NotFoundException(s"No file value was found for filename ${request.filename}")
-            _ = if (queryResponse.statements.size > 1) throw InconsistentTriplestoreDataException(s"Filename ${request.filename} is used in more than one file value")
+            _ = if (queryResponse.statements.size > 1) throw InconsistentRepositoryDataException(s"Filename ${request.filename} is used in more than one file value")
 
             fileValueIriSubject: IriSubjectV2 = queryResponse.statements.keys.head match {
                 case iriSubject: IriSubjectV2 => iriSubject
-                case _ => throw InconsistentTriplestoreDataException(s"The subject of the file value with filename ${request.filename} is not an IRI")
+                case _ => throw InconsistentRepositoryDataException(s"The subject of the file value with filename ${request.filename} is not an IRI")
             }
 
             assertions: Seq[(String, String)] = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {

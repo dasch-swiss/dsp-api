@@ -19,12 +19,12 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.Model
+import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
  * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
  */
 class NoopPlugin extends UpgradePlugin {
-    override def transform(model: Model): Unit = {}
+    override def transform(model: RdfModel): Unit = {}
 }

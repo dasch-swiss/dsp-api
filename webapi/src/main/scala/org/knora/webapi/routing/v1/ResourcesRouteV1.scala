@@ -35,7 +35,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException, ForbiddenException, InconsistentTriplestoreDataException, SipiException}
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException, ForbiddenException, InconsistentRepositoryDataException, SipiException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
@@ -161,7 +161,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                             resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
 
                                         } yield CreateValueV1WithComment(TextValueWithStandoffV1(
-                                            utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for TextValue contains invalid characters")),
+                                            utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentRepositoryDataException("utf8str for TextValue contains invalid characters")),
                                             language = richtext.language,
                                             resource_reference = resourceReferences,
                                             standoff = textWithStandoffTags.standoffTagV2,
@@ -466,7 +466,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
                         case (propertyIri, propertyInfo) =>
                             val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                                throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                                throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 
                             propertyObjectClassConstraint.toSmartIri.getOntologyFromEntity.toString

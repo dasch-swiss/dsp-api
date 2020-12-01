@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages
 
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi._
 
 /**
@@ -123,6 +123,16 @@ object OntologyConstants {
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
         val DateTime: IRI = XsdPrefixExpansion + "dateTime"
         val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
+    }
+
+    object Shacl {
+        val ShaclPrefixExpansion: IRI = "http://www.w3.org/ns/shacl#"
+
+        val Conforms: IRI = ShaclPrefixExpansion + "conforms"
+        val Result: IRI = ShaclPrefixExpansion + "result"
+        val SourceConstraintComponent: IRI = ShaclPrefixExpansion + "sourceConstraintComponent"
+        val DatatypeConstraintComponent: IRI = ShaclPrefixExpansion + "DatatypeConstraintComponent"
+        val MaxCountConstraintComponent: IRI = ShaclPrefixExpansion + "MaxCountConstraintComponent"
     }
 
     /**
@@ -618,7 +628,7 @@ object OntologyConstants {
             def lookup(name: String): Value = {
                 valueMap.get(name) match {
                     case Some(value) => value
-                    case None => throw InconsistentTriplestoreDataException(s"salsah-gui attribute type not found: $name")
+                    case None => throw InconsistentRepositoryDataException(s"salsah-gui attribute type not found: $name")
                 }
             }
         }

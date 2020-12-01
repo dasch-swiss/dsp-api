@@ -19,32 +19,43 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.eclipse.rdf4j.model.util.Models
-import org.eclipse.rdf4j.model.{Literal, Model}
-import org.knora.webapi.util.JavaUtil._
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1367Spec extends UpgradePluginSpec {
-    private val valueFactory = SimpleValueFactory.getInstance
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
     "Upgrade plugin PR1367" should {
         "fix the datatypes of decimal literals" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("test_data/upgrade/pr1367.trig")
+            val model: RdfModel = trigFileToModel("test_data/upgrade/pr1367.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpgradePluginPR1367
+            val plugin = new UpgradePluginPR1367(defaultFeatureFactoryConfig)
             plugin.transform(model)
 
             // Check that the decimal datatype was fixed.
-            val literal: Literal = Models.getPropertyLiteral(
-                model,
-                valueFactory.createIRI("http://rdfh.ch/0001/thing-with-history/values/1"),
-                valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasDecimal)
-            ).toOption.get
 
-            assert(literal.getDatatype == valueFactory.createIRI(OntologyConstants.Xsd.Decimal))
+            val subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
+            val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
+
+            model.find(
+                subj = Some(subj),
+                pred = Some(pred),
+                obj = None
+            ).toSet.headOption match {
+                case Some(statement: Statement) =>
+                    statement.obj match {
+                        case datatypeLiteral: DatatypeLiteral =>
+                            assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Decimal)
+
+                        case other =>
+                            throw AssertionException(s"Unexpected object for $pred: $other")
+                    }
+
+                case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
+            }
         }
     }
 }

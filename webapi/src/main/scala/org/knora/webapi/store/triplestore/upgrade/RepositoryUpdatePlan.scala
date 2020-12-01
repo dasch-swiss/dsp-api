@@ -1,24 +1,28 @@
 package org.knora.webapi.store.triplestore.upgrade
 
-import org.knora.webapi.store.triplestore.upgrade.plugins.{NoopPlugin, UpgradePluginPR1307, UpgradePluginPR1322, UpgradePluginPR1367, UpgradePluginPR1372, UpgradePluginPR1615, UpgradePluginPR1746}
+import com.typesafe.scalalogging.Logger
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.store.triplestore.upgrade.plugins._
 
 /**
  * The plan for updating a repository to work with the current version of Knora.
  */
 object RepositoryUpdatePlan {
     /**
-     * A list of all repository update plugins in chronological order.
+     * Constructs list of all repository update plugins in chronological order.
+     *
+     * @param featureFactoryConfig the feature factor configuration.
      */
-    val pluginsForVersions: Seq[PluginForKnoraBaseVersion] = Seq(
-        PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpgradePluginPR1307, prBasedVersionString = Some("PR 1307")),
-        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322, prBasedVersionString = Some("PR 1322")),
-        PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367, prBasedVersionString = Some("PR 1367")),
-        PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372, prBasedVersionString = Some("PR 1372")),
+    def makePluginsForVersions(featureFactoryConfig: FeatureFactoryConfig, log: Logger): Seq[PluginForKnoraBaseVersion] = Seq(
+        PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpgradePluginPR1307(featureFactoryConfig), prBasedVersionString = Some("PR 1307")),
+        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322(featureFactoryConfig), prBasedVersionString = Some("PR 1322")),
+        PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367(featureFactoryConfig), prBasedVersionString = Some("PR 1367")),
+        PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372(featureFactoryConfig), prBasedVersionString = Some("PR 1372")),
         PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
         PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin), // PR 1206
         PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin), // PR 1403
-        PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615),
-        PluginForKnoraBaseVersion(versionNumber = 9, plugin = new UpgradePluginPR1746)
+        PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615(featureFactoryConfig)),
+        PluginForKnoraBaseVersion(versionNumber = 9, plugin = new UpgradePluginPR1746(featureFactoryConfig, log))
     )
 
     /**

@@ -19,30 +19,27 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.eclipse.rdf4j.model.util.Models
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.{IRI, Model, Statement, Value}
-import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import org.knora.webapi.util.JavaUtil._
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
-
-import scala.collection.JavaConverters._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
  * Transforms a repository for Knora PR 1307.
  */
-class UpgradePluginPR1307 extends UpgradePlugin {
-    private val valueFactory = SimpleValueFactory.getInstance
+class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
-    // RDF4J IRI objects representing the IRIs used in this transformation.
-    private val TextValueIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.TextValue)
-    private val ValueHasStandoffIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasStandoff)
-    private val StandoffTagHasStartIndexIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
-    private val StandoffTagHasStartParentIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
-    private val StandoffTagHasEndParentIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
-    private val ValueHasMaxStandoffStartIndexIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
+    // IRI objects representing the IRIs used in this transformation.
+    private val rdfTypeIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
+    private val TextValueIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
+    private val ValueHasStandoffIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
+    private val StandoffTagHasStartIndexIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
+    private val StandoffTagHasStartParentIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
+    private val StandoffTagHasEndParentIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
+    private val ValueHasMaxStandoffStartIndexIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
 
     /**
      * Represents a standoff tag to be transformed.
@@ -50,49 +47,53 @@ class UpgradePluginPR1307 extends UpgradePlugin {
      * @param oldIri     the tag's old IRI.
      * @param statements the statements about the tag.
      */
-    case class StandoffRdf(oldIri: IRI, statements: Model) {
+    case class StandoffRdf(oldIri: IriNode, statements: Set[Statement]) {
+        def notFound = throw InconsistentRepositoryDataException(s"$oldIri does not have knora-base:standoffTagHasStartIndex with an integer object")
+
         /**
          * The value of knora-base:standoffTagHasStartIndex.
          */
-        val startIndex: Int = Models.getPropertyLiteral(statements, oldIri, StandoffTagHasStartIndexIri).toOption match {
-            case Some(index) => index.intValue
-            case None => throw InconsistentTriplestoreDataException(s"$oldIri has no knora-base:standoffTagHasStartIndex")
+        val startIndex: Int = statements.find {
+            statement => statement.subj == oldIri && statement.pred == StandoffTagHasStartIndexIri
+        } match {
+            case Some(statement: Statement) =>
+                statement.obj match {
+                    case datatypeLiteral: DatatypeLiteral => datatypeLiteral.integerValue(notFound).toInt
+                    case _ => notFound
+                }
+
+            case None => notFound
         }
 
         /**
          * The tag's new IRI.
          */
-        lazy val newIri: IRI = {
+        lazy val newIri: IriNode = {
             val oldSubjStr: String = oldIri.stringValue
             val slashPos: Int = oldSubjStr.lastIndexOf('/')
-            valueFactory.createIRI(oldSubjStr.substring(0, slashPos + 1) + startIndex.toString)
+            nodeFactory.makeIriNode(oldSubjStr.substring(0, slashPos + 1) + startIndex.toString)
         }
 
-        def transform(model: Model, standoff: Map[IRI, StandoffRdf]): Unit = {
-            for (statement: Statement <- statements.asScala.toSet) {
+        def transform(model: RdfModel, standoff: Map[IriNode, StandoffRdf]): Unit = {
+            for (statement: Statement <- statements) {
                 // Change statements with knora-base:standoffTagHasStartParent and knora-base:standoffTagHasEndParent to point
                 // to the new IRIs of those tags.
-                val newStatementObj: Value = if (statement.getPredicate == StandoffTagHasStartParentIri || statement.getPredicate == StandoffTagHasEndParentIri) {
-                    val targetTagOldIri: IRI = valueFactory.createIRI(statement.getObject.stringValue)
+                val newStatementObj: RdfNode = if (statement.pred == StandoffTagHasStartParentIri || statement.pred == StandoffTagHasEndParentIri) {
+                    val targetTagOldIri: IriNode = nodeFactory.makeIriNode(statement.obj.stringValue)
                     standoff(targetTagOldIri).newIri
                 } else {
-                    statement.getObject
+                    statement.obj
                 }
 
                 // Remove each statement that uses this tag's old IRI.
-                model.remove(
-                    oldIri,
-                    statement.getPredicate,
-                    statement.getObject,
-                    statement.getContext
-                )
+                model.removeStatement(statement)
 
                 // Replace it with a statement that uses this tag's new IRI.
                 model.add(
-                    newIri,
-                    statement.getPredicate,
-                    newStatementObj,
-                    statement.getContext
+                    subj = newIri,
+                    pred = statement.pred,
+                    obj = newStatementObj,
+                    context = statement.context
                 )
             }
         }
@@ -108,48 +109,43 @@ class UpgradePluginPR1307 extends UpgradePlugin {
      * @param standoff                   the standoff tags attached to this text value, as a map of old standoff tag IRIs to
      *                                   [[StandoffRdf]] objects.
      */
-    case class TextValueRdf(iri: IRI, context: IRI, valueHasStandoffStatements: Model, standoff: Map[IRI, StandoffRdf]) {
-        def transform(model: Model): Unit = {
+    case class TextValueRdf(iri: IriNode, context: Option[IRI], valueHasStandoffStatements: Set[Statement], standoff: Map[IriNode, StandoffRdf]) {
+        def transform(model: RdfModel): Unit = {
             // Transform the text value's standoff tags.
             for (standoffTag <- standoff.values) {
                 standoffTag.transform(model = model, standoff = standoff)
             }
 
             if (standoff.nonEmpty) {
-                for (statement: Statement <- valueHasStandoffStatements.asScala.toSet) {
+                for (statement: Statement <- valueHasStandoffStatements) {
                     // Replace each statement in valueHasStandoffStatements with one that points to the standoff
                     // tag's new IRI.
 
-                    val targetTagOldIri: IRI = valueFactory.createIRI(statement.getObject.stringValue)
-                    val targetTagNewIri: IRI = standoff(targetTagOldIri).newIri
+                    val targetTagOldIri: IriNode = nodeFactory.makeIriNode(statement.obj.stringValue)
+                    val targetTagNewIri: IriNode = standoff(targetTagOldIri).newIri
 
-                    model.remove(
-                        iri,
-                        statement.getPredicate,
-                        statement.getObject,
-                        statement.getContext
-                    )
+                    model.removeStatement(statement)
 
                     model.add(
-                        iri,
-                        statement.getPredicate,
-                        targetTagNewIri,
-                        statement.getContext
+                        subj = iri,
+                        pred = statement.pred,
+                        obj = targetTagNewIri,
+                        context = statement.context
                     )
                 }
 
                 // Add a statement to the text value with the predicate knora-base:valueHasMaxStandoffStartIndex.
                 model.add(
-                    iri,
-                    ValueHasMaxStandoffStartIndexIri,
-                    valueFactory.createLiteral(new java.math.BigInteger(standoff.values.map(_.startIndex).max.toString)),
-                    context
+                    subj = iri,
+                    pred = ValueHasMaxStandoffStartIndexIri,
+                    obj = nodeFactory.makeDatatypeLiteral(standoff.values.map(_.startIndex).max.toString, OntologyConstants.Xsd.Integer),
+                    context = context
                 )
             }
         }
     }
 
-    override def transform(model: Model): Unit = {
+    override def transform(model: RdfModel): Unit = {
         for (textValue <- collectTextValues(model)) {
             textValue.transform(model)
         }
@@ -158,32 +154,51 @@ class UpgradePluginPR1307 extends UpgradePlugin {
     /**
      * Collects the text values and standoff tags in the repository.
      */
-    private def collectTextValues(model: Model): Vector[TextValueRdf] = {
-        // Pairs of text value IRI and text value context.
-        val textValueSubjectsAndContexts: Vector[(IRI, IRI)] = model.filter(null, RDF.TYPE, TextValueIri).asScala.map {
+    private def collectTextValues(model: RdfModel): Vector[TextValueRdf] = {
+
+
+        // A map of text value IRIs to their contexts.
+        val textValueSubjectsAndContexts: Map[IriNode, Option[IRI]] = model.find(
+            subj = None,
+            pred = Some(rdfTypeIri),
+            obj = Some(TextValueIri)
+        ).map {
             statement =>
-                (valueFactory.createIRI(statement.getSubject.stringValue), valueFactory.createIRI(statement.getContext.stringValue))
-        }.toVector
+                (nodeFactory.makeIriNode(statement.subj.stringValue), statement.context)
+        }.toMap
 
         textValueSubjectsAndContexts.map {
-            case (textValueSubj: IRI, textValueContext: IRI) =>
+            case (textValueSubj: IriNode, textValueContext: Option[IRI]) =>
                 // Get the statements about the text value.
-                val textValueStatements: Model = model.filter(textValueSubj, null, null)
+                val textValueStatements: Set[Statement] = model.find(
+                    subj = Some(textValueSubj),
+                    pred = None,
+                    obj = None
+                ).toSet
 
                 // Get the statements whose subject is the text value and whose predicate is knora-base:valueHasStandoff.
-                val valueHasStandoffStatements: Model = textValueStatements.filter(null, ValueHasStandoffIri, null)
+                val valueHasStandoffStatements: Set[Statement] = textValueStatements.filter {
+                    statement => statement.pred == ValueHasStandoffIri
+                }
 
                 // Get the IRIs of the text value's standoff tags.
-                val standoffSubjects: Set[IRI] = valueHasStandoffStatements.objects.asScala.map {
-                    value => valueFactory.createIRI(value.stringValue)
-                }.toSet
+                val standoffSubjects: Set[IriNode] = valueHasStandoffStatements.map {
+                    statement => statement.obj match {
+                        case iriNode: IriNode => iriNode
+                        case other => throw InconsistentRepositoryDataException(s"Unexpected object for $textValueSubj $ValueHasStandoffIri: $other")
+                    }
+                }
 
                 // Make a map of standoff IRIs to StandoffRdf objects.
-                val standoff: Map[IRI, StandoffRdf] = standoffSubjects.map {
-                    standoffSubj: IRI =>
+                val standoff: Map[IriNode, StandoffRdf] = standoffSubjects.map {
+                    standoffSubj: IriNode =>
                         standoffSubj -> StandoffRdf(
                             oldIri = standoffSubj,
-                            statements = model.filter(standoffSubj, null, null)
+                            statements = model.find(
+                                subj = Some(standoffSubj),
+                                pred = None,
+                                obj = None
+                            ).toSet
                         )
                 }.toMap
 
@@ -193,6 +208,6 @@ class UpgradePluginPR1307 extends UpgradePlugin {
                     valueHasStandoffStatements = valueHasStandoffStatements,
                     standoff = standoff
                 )
-        }
+        }.toVector
     }
 }

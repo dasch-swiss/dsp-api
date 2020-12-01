@@ -24,9 +24,11 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
 
 sealed trait JenaNode extends RdfNode {
@@ -182,6 +184,12 @@ class JenaModel(private val dataset: jena.query.Dataset,
 
     private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
+    private class StatementIterator(jenaIterator: java.util.Iterator[jena.sparql.core.Quad]) extends Iterator[Statement] {
+        override def hasNext: Boolean = jenaIterator.hasNext
+
+        override def next(): Statement = JenaStatement(jenaIterator.next())
+    }
+
     /**
      * Returns the underlying [[jena.query.Dataset]].
      */
@@ -192,8 +200,6 @@ class JenaModel(private val dataset: jena.query.Dataset,
     override def addStatement(statement: Statement): Unit = {
         datasetGraph.add(statement.asJenaQuad)
     }
-
-    override def getStatements: Set[Statement] = datasetGraph.find.asScala.map(JenaStatement).toSet
 
     /**
      * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
@@ -225,13 +231,22 @@ class JenaModel(private val dataset: jena.query.Dataset,
         datasetGraph.delete(statement.asJenaQuad)
     }
 
-    override def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement] = {
-        datasetGraph.find(
-            contextNodeOrWildcard(context),
-            asJenaNodeOrWildcard(subj),
-            asJenaNodeOrWildcard(pred),
-            asJenaNodeOrWildcard(obj)
-        ).asScala.map(JenaStatement).toSet
+    override def find(subj: Option[RdfResource],
+                      pred: Option[IriNode],
+                      obj: Option[RdfNode],
+                      context: Option[IRI] = None): Iterator[Statement] = {
+        new StatementIterator(
+            datasetGraph.find(
+                contextNodeOrWildcard(context),
+                asJenaNodeOrWildcard(subj),
+                asJenaNodeOrWildcard(pred),
+                asJenaNodeOrWildcard(obj)
+            )
+        )
+    }
+
+    override def contains(statement: Statement): Boolean = {
+        datasetGraph.contains(statement.asJenaQuad)
     }
 
     override def setNamespace(prefix: String, namespace: IRI): Unit = {
@@ -305,6 +320,33 @@ class JenaModel(private val dataset: jena.query.Dataset,
         datasetGraph.listGraphNodes.asScala.toSet.map {
             node: jena.graph.Node => node.getURI
         }
+    }
+
+    override def asRepository: RdfRepository = {
+        new JenaRepository(dataset)
+    }
+
+    override def size: Int = {
+        // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
+
+        // Get the size of the default graph.
+        val defaultGraphSize: Int = datasetGraph.getDefaultGraph.size
+
+        // Get the sum of the sizes of the named graphs.
+        val sumOfNamedGraphSizes: Int = datasetGraph.listGraphNodes.asScala.map {
+            namedGraphIri => datasetGraph.getGraph(namedGraphIri)
+        }.map(_.size).sum
+
+        // Return the sum of those sizes.
+        defaultGraphSize + sumOfNamedGraphSizes
+    }
+
+    override def iterator: Iterator[Statement] = {
+        new StatementIterator(datasetGraph.find)
+    }
+
+    override def clear(): Unit = {
+        datasetGraph.clear()
     }
 }
 
@@ -384,4 +426,47 @@ class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfMode
         dataset = jena.query.DatasetFactory.create,
         nodeFactory = nodeFactory
     )
+}
+
+/**
+ * An [[RdfRepository]] that wraps a [[jena.query.Dataset]].
+ *
+ * @param dataset the dataset to be queried.
+ */
+class JenaRepository(private val dataset: jena.query.Dataset) extends RdfRepository {
+    override def doSelect(selectQuery: String): SparqlSelectResult = {
+        // Run the query.
+
+        val queryExecution: jena.query.QueryExecution =
+            jena.query.QueryExecutionFactory.create(selectQuery, dataset)
+
+        val resultSet: jena.query.ResultSet = queryExecution.execSelect
+
+        // Convert the query result to a SparqlSelectResponse.
+
+        val header = SparqlSelectResultHeader(resultSet.getResultVars.asScala)
+        val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
+
+        while (resultSet.hasNext) {
+            val querySolution: jena.query.QuerySolution = resultSet.next
+            val varNames: Iterator[String] = querySolution.varNames.asScala
+
+            val rowMap: Map[String, String] = varNames.map {
+                varName => varName -> querySolution.get(varName).asNode.toString
+            }.toMap
+
+            rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" })))
+        }
+
+        queryExecution.close()
+
+        SparqlSelectResult(
+            head = header,
+            results = SparqlSelectResultBody(bindings = rowBuffer)
+        )
+    }
+
+    override def shutDown(): Unit = {
+        dataset.close()
+    }
 }

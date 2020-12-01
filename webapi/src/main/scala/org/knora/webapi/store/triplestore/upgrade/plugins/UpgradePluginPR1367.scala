@@ -19,44 +19,42 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.eclipse.rdf4j.model.{IRI, Literal, Model, Statement}
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-
-import scala.collection.JavaConverters._
 
 /**
  * Transforms a repository for Knora PR 1367.
  */
-class UpgradePluginPR1367 extends UpgradePlugin {
-    private val valueFactory = SimpleValueFactory.getInstance
+class UpgradePluginPR1367(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
-    // RDF4J IRI objects representing the IRIs used in this transformation.
-    private val XsdValueHasDecimalIri: IRI = valueFactory.createIRI("http://www.w3.org/2001/XMLSchema#valueHasDecimal")
-
-    override def transform(model: Model): Unit = {
+    override def transform(model: RdfModel): Unit = {
         // Fix the datatypes of decimal literals.
-        for (statement: Statement <- model.asScala.toSet) {
-            statement.getObject match {
-                case literal: Literal =>
-                    if (literal.getDatatype == XsdValueHasDecimalIri) {
-                        model.remove(
-                            statement.getSubject,
-                            statement.getPredicate,
-                            statement.getObject,
-                            statement.getContext
-                        )
 
-                        model.add(
-                            statement.getSubject,
-                            statement.getPredicate,
-                            valueFactory.createLiteral(BigDecimal(statement.getObject.stringValue).underlying),
-                            statement.getContext
+        val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+        val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+
+        for (statement: Statement <- model) {
+            statement.obj match {
+                case literal: DatatypeLiteral =>
+                    if (literal.datatype == "http://www.w3.org/2001/XMLSchema#valueHasDecimal") {
+                        statementsToRemove += statement
+
+                        statementsToAdd += nodeFactory.makeStatement(
+                            subj = statement.subj,
+                            pred = statement.pred,
+                            obj = nodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Decimal),
+                            context = statement.context
                         )
                     }
 
                 case _ => ()
             }
         }
+
+        model.removeStatements(statementsToRemove.toSet)
+        model.addStatements(statementsToAdd.toSet)
     }
 }

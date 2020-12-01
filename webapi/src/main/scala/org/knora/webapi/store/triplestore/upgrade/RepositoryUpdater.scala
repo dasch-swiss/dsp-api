@@ -8,31 +8,33 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
-import org.eclipse.rdf4j.model.impl.{LinkedHashModel, SimpleValueFactory}
-import org.eclipse.rdf4j.model.{Model, Statement}
-import org.eclipse.rdf4j.rio.helpers.StatementCollector
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
-import org.knora.webapi.messages.StringFormatter
 
-import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Updates a Knora repository to work with the current version of Knora.
  *
- * @param system   the Akka [[ActorSystem]].
- * @param appActor a reference to the main application actor.
- * @param settings the Knora application settings.
+ * @param system               the Akka [[ActorSystem]].
+ * @param appActor             a reference to the main application actor.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param settings             the Knora application settings.
  */
 class RepositoryUpdater(system: ActorSystem,
                         appActor: ActorRef,
+                        featureFactoryConfig: FeatureFactoryConfig,
                         settings: KnoraSettingsImpl) extends LazyLogging {
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
+    // A SPARQL query to find out the knora-base version in a repository.
     private val knoraBaseVersionQuery =
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |
@@ -61,14 +63,12 @@ class RepositoryUpdater(system: ActorSystem,
     private val log: Logger = logger
 
     /**
-     * Constructs RDF4J values.
-     */
-    private val valueFactory: SimpleValueFactory = SimpleValueFactory.getInstance
-
-    /**
      * A map of version strings to plugins.
      */
-    private val pluginsForVersionsMap: Map[String, PluginForKnoraBaseVersion] = RepositoryUpdatePlan.pluginsForVersions.map {
+    private val pluginsForVersionsMap: Map[String, PluginForKnoraBaseVersion] = RepositoryUpdatePlan.makePluginsForVersions(
+        featureFactoryConfig = featureFactoryConfig,
+        log = log
+    ).map {
         knoraBaseVersion => knoraBaseVersion.versionString -> knoraBaseVersion
     }.toMap
 
@@ -106,7 +106,7 @@ class RepositoryUpdater(system: ActorSystem,
      */
     private def getRepositoryVersion: Future[Option[String]] = {
         for {
-            repositoryVersionResponse: SparqlSelectResponse <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResponse]
+            repositoryVersionResponse: SparqlSelectResult <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery)).mapTo[SparqlSelectResult]
 
             bindings = repositoryVersionResponse.results.bindings
 
@@ -130,14 +130,14 @@ class RepositoryUpdater(system: ActorSystem,
                 // The repository has a version string. Get the plugins for all subsequent versions.
                 val pluginForRepositoryVersion: PluginForKnoraBaseVersion = pluginsForVersionsMap.getOrElse(
                     repositoryVersion,
-                    throw InconsistentTriplestoreDataException(s"No such repository version $repositoryVersion")
+                    throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
                 )
 
-                RepositoryUpdatePlan.pluginsForVersions.filter(_.versionNumber > pluginForRepositoryVersion.versionNumber)
+                pluginsForVersionsMap.values.filter(_.versionNumber > pluginForRepositoryVersion.versionNumber).toSeq
 
             case None =>
                 // The repository has no version string. Include all updates.
-                RepositoryUpdatePlan.pluginsForVersions
+                pluginsForVersionsMap.values.toSeq
         }
     }
 
@@ -171,7 +171,10 @@ class RepositoryUpdater(system: ActorSystem,
 
         for {
             // Ask the store actor to download the repository to the file.
-            _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(downloadedRepositoryFile)).mapTo[FileWrittenResponse]
+            _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(
+                outputFile = downloadedRepositoryFile,
+                featureFactoryConfig = featureFactoryConfig
+            )).mapTo[FileWrittenResponse]
 
             // Run the transformations to produce an output file.
             _ = doTransformations(
@@ -206,7 +209,7 @@ class RepositoryUpdater(system: ActorSystem,
                                   pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Unit = {
         // Parse the input file.
         log.info("Reading repository file...")
-        val model = readFileIntoModel(downloadedRepositoryFile, RDFFormat.TRIG)
+        val model = rdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = TriG)
         log.info(s"Read ${model.size} statements.")
 
         // Run the update plugins.
@@ -221,80 +224,55 @@ class RepositoryUpdater(system: ActorSystem,
 
         // Write the output file.
         log.info(s"Writing output file (${model.size} statements)...")
-        val fileWriter = new FileWriter(transformedRepositoryFile)
-        val bufferedWriter = new BufferedWriter(fileWriter)
-        Rio.write(model, fileWriter, RDFFormat.TRIG)
-        bufferedWriter.close()
-        fileWriter.close()
+        rdfFormatUtil.rdfModelToFile(
+            rdfModel = model,
+            file = transformedRepositoryFile,
+            rdfFormat = TriG
+        )
     }
 
     /**
-     * Adds Knora's built-in named graphs to a [[Model]].
+     * Adds Knora's built-in named graphs to an [[RdfModel]].
      *
-     * @param model the [[Model]].
+     * @param model the [[RdfModel]].
      */
-    private def addBuiltInNamedGraphsToModel(model: Model): Unit = {
+    private def addBuiltInNamedGraphsToModel(model: RdfModel): Unit = {
+        // Add each built-in named graph to the model.
         for (builtInNamedGraph <- RepositoryUpdatePlan.builtInNamedGraphs) {
-            val context = valueFactory.createIRI(builtInNamedGraph.iri)
-            model.remove(null, null, null, context)
+            val context: IRI = builtInNamedGraph.iri
 
-            val namedGraphModel: Model = readResourceIntoModel(builtInNamedGraph.filename, RDFFormat.TURTLE)
+            // Remove the existing named graph from the model.
+            model.remove(
+                subj = None,
+                pred = None,
+                obj = None,
+                context = Some(context)
+            )
 
-            // Set the context on each statement.
-            for (statement: Statement <- namedGraphModel.asScala.toSet) {
-                namedGraphModel.remove(
-                    statement.getSubject,
-                    statement.getPredicate,
-                    statement.getObject,
-                    statement.getContext
-                )
+            // Read the current named graph from a file.
+            val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.filename, Turtle)
 
-                namedGraphModel.add(
-                    statement.getSubject,
-                    statement.getPredicate,
-                    statement.getObject,
-                    context
+            // Copy it into the model, adding the named graph IRI to each statement.
+            for (statement: Statement <- namedGraphModel) {
+                model.add(
+                    subj = statement.subj,
+                    pred = statement.pred,
+                    obj = statement.obj,
+                    context = Some(context)
                 )
             }
-
-            model.addAll(namedGraphModel)
         }
     }
 
     /**
-     * Reads an RDF file into a [[Model]].
+     * Reads a file from the CLASSPATH into an [[RdfModel]].
      *
-     * @param file   the file.
-     * @param format the file format.
-     * @return a [[Model]] representing the contents of the file.
+     * @param filename  the filename.
+     * @param rdfFormat the file format.
+     * @return an [[RdfModel]] representing the contents of the file.
      */
-    def readFileIntoModel(file: File, format: RDFFormat): Model = {
-        val fileReader = new FileReader(file)
-        val bufferedReader = new BufferedReader(fileReader)
-        val model = new LinkedHashModel()
-        val trigParser: RDFParser = Rio.createParser(format)
-        trigParser.setRDFHandler(new StatementCollector(model))
-        trigParser.parse(bufferedReader, "")
-        fileReader.close()
-        bufferedReader.close()
-        model
-    }
-
-    /**
-     * Reads a file from the CLASSPATH into a [[Model]].
-     *
-     * @param filename the filename.
-     * @param format   the file format.
-     * @return a [[Model]] representing the contents of the file.
-     */
-    def readResourceIntoModel(filename: String, format: RDFFormat): Model = {
+    def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
         val fileContent: String = FileUtil.readTextResource(filename)
-        val stringReader = new StringReader(fileContent)
-        val model = new LinkedHashModel()
-        val trigParser: RDFParser = Rio.createParser(format)
-        trigParser.setRDFHandler(new StatementCollector(model))
-        trigParser.parse(stringReader, "")
-        model
+        rdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
     }
 }
-

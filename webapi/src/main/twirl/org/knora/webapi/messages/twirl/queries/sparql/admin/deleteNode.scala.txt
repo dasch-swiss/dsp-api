@@ -1,0 +1,66 @@
+@*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
+@**
+ * Delete a node (root or child). If a child node is deleted, remove it from the list of its parent's sublist nodes.
+ *
+ * @param dataNamedGraph     the named graph to update.
+ * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
+                             results from the WHERE clause of the update.
+ * @param nodeIri            the IRI of the list we want to update.
+ * @param isRootNode         flag to identify node type.
+ *@
+@(dataNamedGraph: IRI,
+  triplestore: String,
+  nodeIri: IRI,
+  isRootNode: Boolean
+  )
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+DELETE {
+    GRAPH ?dataNamedGraph {
+        @if(!isRootNode){
+            ?parentNode knora-base:hasSubListNode ?node .
+        }
+        ?node ?p ?o .
+    }
+}
+
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@nodeIri") AS ?node)
+
+    ?node rdf:type knora-base:ListNode .
+    @if(!isRootNode){
+        ?parentNode rdf:type knora-base:ListNode .
+        ?parentNode knora-base:hasSubListNode ?node .
+    }
+    ?node ?p ?o .
+}
