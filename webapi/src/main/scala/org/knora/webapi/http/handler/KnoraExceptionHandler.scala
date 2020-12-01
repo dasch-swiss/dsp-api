@@ -32,7 +32,7 @@ import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
- * into HttpResponses. It is brought implicitly into scope at the top level [[KnoraLiveService]].
+ * into HttpResponses. It is brought implicitly into scope by the application actor.
  */
 object KnoraExceptionHandler extends LazyLogging {
 
@@ -156,7 +156,7 @@ object KnoraExceptionHandler extends LazyLogging {
         // ... and the HTTP status code.
         HttpResponse(
             status = httpStatus,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json`), jsonLDDocument.toCompactString)
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), jsonLDDocument.toCompactString(false))
         )
     }
 

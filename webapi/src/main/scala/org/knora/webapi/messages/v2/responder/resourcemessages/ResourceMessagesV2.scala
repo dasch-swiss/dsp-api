@@ -19,7 +19,6 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import java.io.{StringReader, StringWriter}
 import java.time.Instant
 import java.util.UUID
 
@@ -27,8 +26,7 @@ import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
+import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
@@ -44,7 +42,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
-import org.knora.webapi.{messages, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -193,14 +190,13 @@ case class ResourceTEIGetRequestV2(resourceIri: IRI,
  */
 case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 
-    def toXML: String =
+    def toXML: String = {
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
            |${header.toXML}
            |${body.toXML}
-           |</TEI>
-        """.stripMargin
-
+           |</TEI>""".stripMargin
+    }
 }
 
 /**
@@ -210,29 +206,31 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
  * @param headerXSLT XSLT to be applied to the resource's metadata in RDF/XML.
  *
  */
-case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], settings: KnoraSettingsImpl) {
+case class TEIHeader(headerInfo: ReadResourceV2,
+                     headerXSLT: Option[String],
+                     featureFactoryConfig: FeatureFactoryConfig,
+                     settings: KnoraSettingsImpl) {
 
     def toXML: String = {
-
         if (headerXSLT.nonEmpty) {
+            val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
-            val headerJSONLD: JsonLDDocument = ReadResourcesSequenceV2(Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+            // Convert the resource to a JsonLDDocument.
+            val headerJsonLD: JsonLDDocument = ReadResourcesSequenceV2(Seq(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
 
-            // TODO: Change the XSLT transformation used here to handle rdf:Description, so we can use RdfFormatUtil
-            // here instead of RDF4J.
+            // Convert the JsonLDDocument to an RdfModel.
+            val rdfModel: RdfModel = headerJsonLD.toRdfModel(rdfFormatUtil.getRdfModelFactory)
 
-            val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
-            val stringReader = new StringReader(headerJSONLD.toCompactString)
-            val stringWriter = new StringWriter()
+            // Format the RdfModel as RDF/XML. To ensure that it contains only rdf:Description elements,
+            // set prettyPrint to false.
+            val teiXmlHeader: String = rdfFormatUtil.format(
+                rdfModel = rdfModel,
+                rdfFormat = RdfXml,
+                prettyPrint = false
+            )
 
-            val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
-
-            rdfParser.setRDFHandler(rdfWriter)
-            rdfParser.parse(stringReader, "")
-
-            val teiHeaderInfos = stringWriter.toString
-            XMLUtil.applyXSLTransformation(teiHeaderInfos, headerXSLT.get)
-
+            // Run an XSL transformation to convert the RDF/XML to a TEI/XML header.
+            XMLUtil.applyXSLTransformation(xml = teiXmlHeader, xslt = headerXSLT.get)
         } else {
             s"""
                |<teiHeader>

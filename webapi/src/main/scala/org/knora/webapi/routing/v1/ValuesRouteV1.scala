@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException, NotFoundException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException, NotFoundException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -123,7 +123,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                 resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
 
                             } yield (TextValueWithStandoffV1(
-                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentRepositoryDataException("utf8str for for TextValue contains invalid characters")),
                                 language = textWithStandoffTags.language,
                                 resource_reference = resourceReferences,
                                 standoff = textWithStandoffTags.standoffTagV2,
@@ -231,7 +231,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                 resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
 
                             } yield (TextValueWithStandoffV1(
-                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentRepositoryDataException("utf8str for for TextValue contains invalid characters")),
                                 language = richtext.language,
                                 resource_reference = resourceReferences,
                                 standoff = textWithStandoffTags.standoffTagV2,

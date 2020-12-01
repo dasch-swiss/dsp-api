@@ -53,7 +53,7 @@ included in the request body, for example:
 }
 ``` 
 
-In addition, in the body of the request, it is possible to specify a custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) for a permission through
+In addition, in the body of the request, it is possible to specify a custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) for a permission through
 the `@id` attribute which will then be assigned to the permission; otherwise the permission will get a unique random IRI.
 A custom permission IRI must be `http://rdfh.ch/permissions/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
 is the shortcode of the project that the permission belongs to), plus a custom ID string. For example:

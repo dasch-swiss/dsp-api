@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages
 
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi._
 
 /**
@@ -618,7 +618,7 @@ object OntologyConstants {
             def lookup(name: String): Value = {
                 valueMap.get(name) match {
                     case Some(value) => value
-                    case None => throw InconsistentTriplestoreDataException(s"salsah-gui attribute type not found: $name")
+                    case None => throw InconsistentRepositoryDataException(s"salsah-gui attribute type not found: $name")
                 }
             }
         }

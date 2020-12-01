@@ -73,6 +73,23 @@ case object MarkupAsStandoff extends MarkupRendering
 case object NoMarkup extends MarkupRendering
 
 /**
+ * A trait representing options that affect the format of JSON-LD responses.
+ */
+sealed trait JsonLDRendering extends SchemaOption
+
+/**
+ * Indicates that flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
+ * rather than nested. Blank nodes will still be nested in any case.
+ */
+case object FlatJsonLD extends JsonLDRendering
+
+/**
+ * Indicates that hierarchical JSON-LD should be returned, i.e. objects with IRIs should be nested when
+ * possible, rather than referenced by IRI.
+ */
+case object HierarchicalJsonLD extends JsonLDRendering
+
+/**
  * Utility functions for working with schema options.
  */
 object SchemaOptions {
@@ -117,5 +134,16 @@ object SchemaOptions {
      */
     def renderMarkupAsStandoff(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean = {
         targetSchema == ApiV2Complex && schemaOptions.contains(MarkupAsStandoff)
+    }
+
+    /**
+     * Determines whether flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
+     * rather than nested.
+     *
+     * @param schemaOptions the schema options submitted with the request.
+     * @return `true` if flat JSON-LD should be returned.
+     */
+    def returnFlatJsonLD(schemaOptions: Set[SchemaOption]): Boolean = {
+        schemaOptions.contains(FlatJsonLD)
     }
 }

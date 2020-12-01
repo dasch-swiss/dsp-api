@@ -26,7 +26,7 @@ import io.swagger.models.auth.BasicAuthDefinition
 import io.swagger.models.{ExternalDocs, Scheme}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.routing.admin._
-
+import org.knora.webapi.routing.admin.lists._
 /**
  * Provides the '/api-docs' endpoint serving the 'swagger.json' OpenAPI specification
  */
@@ -35,7 +35,9 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     // List all routes here
     override val apiClasses: Set[Class[_]] = Set(
         classOf[GroupsRouteADM],
-        classOf[ListsRouteADM],
+        classOf[NewListsRouteADMFeature],
+        classOf[OldListsRouteADMFeature],
+        classOf[DeleteListItemsRouteADM],
         classOf[PermissionsRouteADM],
         classOf[ProjectsRouteADM],
         classOf[StoreRouteADM],

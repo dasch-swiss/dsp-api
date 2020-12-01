@@ -324,15 +324,15 @@ object TriplestoreResponseException {
 }
 
 /**
- * Indicates that the triplestore returned inconsistent data.
+ * Indicates an inconsistency in repository data.
  *
  * @param message a description of the error.
  */
-case class InconsistentTriplestoreDataException(message: String, cause: Option[Throwable] = None) extends TriplestoreException(message, cause)
+case class InconsistentRepositoryDataException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
 
-object InconsistentTriplestoreDataException {
-    def apply(message: String, e: Throwable, log: LoggingAdapter): InconsistentTriplestoreDataException =
-        InconsistentTriplestoreDataException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+object InconsistentRepositoryDataException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): InconsistentRepositoryDataException =
+        InconsistentRepositoryDataException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
 /**

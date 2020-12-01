@@ -19,23 +19,20 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.repository.sail.SailRepository
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1322Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1322" should {
         "add UUIDs to values" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("test_data/upgrade/pr1322.trig")
+            val model: RdfModel = trigFileToModel("test_data/upgrade/pr1322.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpgradePluginPR1322
+            val plugin = new UpgradePluginPR1322(defaultFeatureFactoryConfig)
             plugin.transform(model)
 
             // Make an in-memory repository containing the transformed model.
-            val repository: SailRepository = makeRepository(model)
-            val connection = repository.getConnection
+            val repository: RdfRepository = model.asRepository
 
             // Check that UUIDs were added.
 
@@ -48,9 +45,9 @@ class UpgradePluginPR1322Spec extends UpgradePluginSpec {
                   |} ORDER BY ?value
                   |""".stripMargin
 
-            val queryResult1: SparqlSelectResponse = doSelect(selectQuery = query, connection = connection)
+            val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query)
 
-            val expectedResultBody: SparqlSelectResponseBody = expectedResult(
+            val expectedResultBody: SparqlSelectResultBody = expectedResult(
                 Seq(
                     Map(
                         "value" -> "http://rdfh.ch/0001/thing-with-history/values/1c"
@@ -63,7 +60,6 @@ class UpgradePluginPR1322Spec extends UpgradePluginSpec {
 
             assert(queryResult1.results == expectedResultBody)
 
-            connection.close()
             repository.shutDown()
         }
     }

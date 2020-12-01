@@ -28,7 +28,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
@@ -211,7 +212,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
         for {
             sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.ckanDokubib(settings.triplestoreType, projectIri, limit).toString())
-            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
             bilder: Seq[String] = responseRows.groupBy(_.rowMap("bild")).keys.toVector
@@ -331,7 +332,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
         for {
             sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
-            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
             booksWithPages: Map[String, Seq[String]] = responseRows.groupBy(_.rowMap("book")).map {
@@ -397,7 +398,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                 projectIri = projectIri,
                 resType = resType
             ).toString())
-            resourcesResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            resourcesResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             resourcesResponseRows: Seq[VariableResultsRow] = resourcesResponse.results.bindings
             resIri = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
             result = limit match {

@@ -1828,3 +1828,48 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "header.xsl";
   knora-base:valueHasUUID "geQNPU4USB61YhNHHarQ5A" .
+
+<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/a-childNodeUsed> a knora-base:ListValue;
+  knora-base:valueHasUUID "hxENf5B-TSyor_Bu8OJpcD"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2020-11-23T08:58:03.897Z"^^xsd:dateTime;
+  knora-base:valueHasListNode <http://rdfh.ch/lists/0001/treeList10>;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "http://rdfh.ch/lists/0001/treeList10";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+
+<http://rdfh.ch/lists/0001/notUsedList> a knora-base:ListNode;
+  knora-base:isRootNode true;
+  knora-base:listNodeName "notUsedList";
+  rdfs:label "a list that is not used"@en, "unbenutzte Liste"@de;
+  rdfs:comment "a list that is not in used in ontology or data"@en;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:hasSubListNode <http://rdfh.ch/lists/0001/notUsedList01>, <http://rdfh.ch/lists/0001/notUsedList02>,
+    <http://rdfh.ch/lists/0001/notUsedList03> .
+
+<http://rdfh.ch/lists/0001/notUsedList01> a knora-base:ListNode;
+  knora-base:listNodeName "node 1";
+  knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
+  knora-base:listNodePosition 0;
+  rdfs:label "node 1"@en ;
+  knora-base:hasSubListNode <http://rdfh.ch/lists/0001/notUsedList011> .
+
+<http://rdfh.ch/lists/0001/notUsedList02> a knora-base:ListNode;
+  knora-base:listNodeName "node 2";
+  knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
+  knora-base:listNodePosition 1;
+  rdfs:label "node 2"@en .
+
+<http://rdfh.ch/lists/0001/notUsedList03> a knora-base:ListNode;
+  knora-base:listNodeName "node 3";
+  knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
+  knora-base:listNodePosition 2;
+  rdfs:label "node 3"@en .
+
+<http://rdfh.ch/lists/0001/notUsedList011> a knora-base:ListNode;
+  knora-base:listNodeName "child of node 1";
+  knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
+  knora-base:listNodePosition 0;
+  rdfs:label "child of node 1"@en .

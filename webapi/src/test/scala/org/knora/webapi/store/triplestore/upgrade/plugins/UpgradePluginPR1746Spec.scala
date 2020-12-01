@@ -19,42 +19,55 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.eclipse.rdf4j.model.util.Models
-import org.eclipse.rdf4j.model.{Literal, Model}
+import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.util.JavaUtil._
+import org.knora.webapi.messages.util.rdf._
 
-class UpgradePluginPR1746Spec extends UpgradePluginSpec {
-    private val valueFactory = SimpleValueFactory.getInstance
+class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
+    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+
+    private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit = {
+        model.find(
+            subj = Some(subj),
+            pred = Some(pred),
+            obj = None
+        ).toSet.headOption match {
+            case Some(statement: Statement) =>
+                statement.obj match {
+                    case rdfLiteral: RdfLiteral => assert(rdfLiteral == expectedObj)
+                    case other => throw AssertionException(s"Unexpected object for $pred: $other")
+                }
+
+            case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
+        }
+    }
 
     "Upgrade plugin PR1746" should {
         "replace empty string with FIXME" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("test_data/upgrade/pr1746.trig")
+            val model: RdfModel = trigFileToModel("test_data/upgrade/pr1746.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpgradePluginPR1746
+            val plugin = new UpgradePluginPR1746(defaultFeatureFactoryConfig, logger)
             plugin.transform(model)
 
             // Check that the empty valueHasString is replaced with FIXME.
-            val literal: Literal = Models.getPropertyLiteral(
-                model,
-                valueFactory.createIRI("http://rdfh.ch/0001/thing-with-empty-string/values/1"),
-                valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasString)
-            ).toOption.get
+            checkLiteral(
+                model = model,
+                subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-empty-string/values/1"),
+                pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasString),
+                expectedObj = nodeFactory.makeStringLiteral("FIXME")
+            )
 
-            assert(literal.stringValue() == "FIXME")
 
             // Check that the empty string literal value with lang tag is replaced with FIXME.
-            val stringLiteral: Literal = Models.getPropertyLiteral(
-                model,
-                valueFactory.createIRI("http://rdfh.ch/projects/XXXX"),
-                valueFactory.createIRI("http://www.knora.org/ontology/knora-admin#projectDescription")
-            ).toOption.get
-
-            assert(stringLiteral.getLabel == "FIXME")
-            assert(stringLiteral.getLanguage.get == "en")
+            checkLiteral(
+                model = model,
+                subj = nodeFactory.makeIriNode("http://rdfh.ch/projects/XXXX"),
+                pred = nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#projectDescription"),
+                expectedObj = nodeFactory.makeStringWithLanguage(value = "FIXME", language = "en")
+            )
         }
     }
 }

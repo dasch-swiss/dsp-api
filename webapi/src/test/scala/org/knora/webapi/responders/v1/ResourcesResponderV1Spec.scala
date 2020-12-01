@@ -30,6 +30,7 @@ import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, Onto
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{ObjectAccessPermissionADM, ObjectAccessPermissionsForResourceGetADM, PermissionADM}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{DateUtilV1, KnoraSystemInstances, MessageUtil, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -754,7 +755,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         storeManager ! SparqlSelectRequest(lastModSparqlQuery)
 
         expectMsgPF(timeout) {
-            case response: SparqlSelectResponse =>
+            case response: SparqlSelectResult =>
                 val rows = response.results.bindings
                 assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 

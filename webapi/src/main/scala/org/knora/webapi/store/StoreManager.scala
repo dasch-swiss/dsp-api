@@ -23,6 +23,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import org.knora.webapi.core.{LiveActorMaker, _}
 import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
@@ -60,9 +61,18 @@ class StoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     protected val settings: KnoraSettingsImpl = KnoraSettings(system)
 
     /**
+     * The default feature factory configuration.
+     */
+    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
+
+    /**
      * Starts the Triplestore Manager Actor
      */
-    protected lazy val triplestoreManager: ActorRef = makeActor(Props(new TriplestoreManager(appActor) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
+    protected lazy val triplestoreManager: ActorRef = makeActor(Props(new TriplestoreManager(
+        appActor = appActor,
+        settings = settings,
+        defaultFeatureFactoryConfig = defaultFeatureFactoryConfig
+    ) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
 
     /**
      * Starts the IIIF Manager Actor

@@ -37,7 +37,7 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.exceptions.{AssertionException, InconsistentTriplestoreDataException, SparqlGenerationException}
+@import org.knora.webapi.exceptions.{AssertionException, InconsistentRepositoryDataException, SparqlGenerationException}
 @import org.knora.webapi.messages.v1.responder.ontologymessages._
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 @import org.knora.webapi.messages.OntologyConstants
@@ -154,7 +154,7 @@
                                                     }
                                                 }
 
-                                                @defining(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
+                                                @defining(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
 
                                                     @if(propertyInfo.isLinkProp) {
 

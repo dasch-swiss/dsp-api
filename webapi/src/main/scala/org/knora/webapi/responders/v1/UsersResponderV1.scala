@@ -29,6 +29,7 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
@@ -87,7 +88,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 triplestore = settings.triplestoreType
             ).toString())
 
-            usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
             usersResponseRows: Seq[VariableResultsRow] = usersResponse.results.bindings
 
@@ -147,7 +148,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
             // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
             maybeUserDataV1 <- userDataQueryResponse2UserDataV1(userDataQueryResponse, short)
 
@@ -186,7 +187,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
                     // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
                     maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
                         userDataQueryResponse = userDataQueryResponse,
@@ -264,7 +265,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                     ).toString())
                     //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
-                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
                     //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
                     maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
@@ -331,7 +332,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
             //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
             groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -365,7 +366,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
             //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
             groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -399,7 +400,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
             //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
             groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -421,13 +422,13 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     ////////////////////
 
     /**
-     * Helper method used to create a [[UserDataV1]] from the [[SparqlSelectResponse]] containing user data.
+     * Helper method used to create a [[UserDataV1]] from the [[SparqlSelectResult]] containing user data.
      *
-     * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
+     * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
      * @param short                 denotes if all information should be returned. If short == true, then no token and password should be returned.
      * @return a [[UserDataV1]] containing the user's basic data.
      */
-    private def userDataQueryResponse2UserDataV1(userDataQueryResponse: SparqlSelectResponse, short: Boolean): Future[Option[UserDataV1]] = {
+    private def userDataQueryResponse2UserDataV1(userDataQueryResponse: SparqlSelectResult, short: Boolean): Future[Option[UserDataV1]] = {
 
         // log.debug("userDataQueryResponse2UserDataV1 - " + MessageUtil.toSource(userDataQueryResponse))
 
@@ -462,13 +463,13 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     /**
-     * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
+     * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResult]] containing user data.
      *
-     * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
+     * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
      * @param featureFactoryConfig  the feature factory configuration.
      * @return a [[UserProfileV1]] containing the user's data.
      */
-    private def userDataQueryResponse2UserProfileV1(userDataQueryResponse: SparqlSelectResponse,
+    private def userDataQueryResponse2UserProfileV1(userDataQueryResponse: SparqlSelectResult,
                                                     featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
 
         // log.debug("userDataQueryResponse2UserProfileV1 - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
