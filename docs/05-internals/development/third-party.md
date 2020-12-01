@@ -32,6 +32,10 @@ If there are any problems downloading the Maven dependencies, set the
 $ RJE_VERBOSE=true bazel fetch @maven//...
 ```
 
+Note: If you are on macOS Big Sur and have the Cisco VPN client installed,
+make sure that the packet filters are not active, or they may be a problem
+downloading the dependencies.
+
 ## Docker Image Versions
 
 The required Docker image versions of `Sipi` and `Fuseki` are defined in the
