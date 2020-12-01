@@ -38,11 +38,9 @@ object TestContainers {
     SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", "api")
     SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
     SipiContainer.withCommand("--config=/sipi/config/sipi.knora-docker-config.lua")
-    SipiContainer.withClasspathResourceMapping("/sipi/config/sipi.knora-docker-config.lua",
+    SipiContainer.withClasspathResourceMapping(
         "/sipi/config/sipi.knora-docker-config.lua",
-        BindMode.READ_ONLY)
-    SipiContainer.withClasspathResourceMapping("/sipi/config/sipi.knora-docker-config.lua",
-        "/sipi/config/sipi.init-knora.lua",
+        "/sipi/config/sipi.knora-docker-config.lua",
         BindMode.READ_ONLY)
     SipiContainer.start()
 
